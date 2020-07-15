@@ -35,12 +35,10 @@ class DarkShortcut(ks.layers.Layer):
 
     def build(self, input_shape):
         self._activation_fn = ks.layers.Activation(activation=self._activation)
-        self._adder = ks.layers.Add()
         super().build(input_shape)
 
     def call(self, input):
-        x = self._adder(input)
-        ks.layers.add(input)
+        x = ks.layers.add(input)
         x = self._activation_fn(x)
         return x
 
