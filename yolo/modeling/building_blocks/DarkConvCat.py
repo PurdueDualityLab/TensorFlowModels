@@ -97,5 +97,5 @@ if __name__ == "__main__":
     test = DarkConvCat(20)
     z = test([y, x])
 
-    test3 = DarkResidual().from_config(test.get_config())
+    test3 = DarkConvCat().from_config(test.get_config())
     print(test3.get_config())
