@@ -1,7 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.custom.building_blocks import DarkConv
+from yolo.modeling.building_blocks import DarkConv
 
 
 class DarkResidual(ks.layers.Layer):
