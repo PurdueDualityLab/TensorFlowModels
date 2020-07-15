@@ -66,14 +66,13 @@ class DarkResidual(ks.layers.Layer):
         self._conv1 = DarkConv()
         self._conv2 = DarkConv()
 
-        self._shortcut = tf.layers.Add()
         self._activation_fn = ks.layers.Activation(activation=self._sc_activation)
 
         super().build(input_shape)
         return
 
     def call(self, input):
-        x = self._adder(input)
+        x = ks.layers.add(input)
         x = self._activation_fn(x)
         return x
 

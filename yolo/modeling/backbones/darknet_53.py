@@ -4,4 +4,4 @@ import sys
 print(sys.path[0])
 # test.printer()
 
-from yolo import custom
+from yolo.modeling import custom
