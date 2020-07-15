@@ -20,6 +20,28 @@ class DarkResidual(ks.layers.Layer):
                  downsample=False,
                  **kwargs):
 
+        '''
+        DarkNet block with Residual connection for Yolo v3 Backbone 
+
+        Args:
+            filters: integer for output depth, or the number of features to learn
+            use_bias: boolean to indicate wither to use bias in convolution layer
+            kernel_initializer: string to indicate which function to use to initialize weigths
+            bias_initializer: string to indicate which function to use to initialize bias
+            use_bn: boolean for wether to use batchnormalization
+            use_sync_bn: boolean for wether sync batch normalization statistics
+                         of all batch norm layers to the models global statistics (across all input batches)
+            norm_moment: float for moment to use for batchnorm
+            norm_epsilon: float for batchnorm epsilon
+            conv_activation: string or None for activation function to use in layer,
+                        if None activation is replaced by linear
+            leaky_alpha: float to use as alpha if activation function is leaky
+            sc_activation: string for activation function to use in layer
+            downsample: boolean for if image input is larger than layer output, set downsample to True 
+                        so the dimentions are forced to match
+            **kwargs: Keyword Arguments
+
+        '''
         # downsample
         self._downsample = downsample
 
