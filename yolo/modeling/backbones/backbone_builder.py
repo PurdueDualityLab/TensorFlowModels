@@ -8,7 +8,7 @@ from yolo.modeling.backbones.darknet_53 import darknet53_config
 
 class DarkNet_builder(ks.Model):
     def __init__(self, layer_specs, **kwargs):
-        super(YOLO_builder, self).__init__(**kwargs)
+        super(DarkNet_builder, self).__init__(**kwargs)
         self.layers = layer_specs
 
         self._layer_dict = {"DarkConv", nn_blocks.DarkConv,
