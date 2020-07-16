@@ -5,10 +5,10 @@ darknet53_config = [
     ("DarkRes", 1, 128, None, True, False),  # 3
     ("DarkRes", 1, 128, None, False, False),  # 2
     ("DarkRes", 1, 256, None, True, False),  # 3
-    # 14 route 61 last shortcut or last conv
+    # 14 route 61 last block
     ("DarkRes", 7, 256, None, False, True),
     ("DarkRes", 1, 512, None, True, False),  # 3
-    # 14 route 61 last shortcut or last conv
+    # 14 route 61 last block
     ("DarkRes", 7, 512, None, False, True),
     ("DarkRes", 1, 1024, None, True, False),  # 3
     ("DarkRes", 3, 1024, None, False, True),  # 6  #route
