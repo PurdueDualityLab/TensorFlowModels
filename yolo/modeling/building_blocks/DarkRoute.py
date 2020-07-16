@@ -4,7 +4,7 @@ import tensorflow.keras as ks
 from . import DarkConv
 
 
-class DarkConvCat(ks.layers.Layer):
+class DarkRoute(ks.layers.Layer):
     def __init__(self,
                  filters=1,
                  use_bias=True,

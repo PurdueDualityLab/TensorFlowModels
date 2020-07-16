@@ -18,18 +18,13 @@ class BlockConfig(object):
         self.downsample = downsample
         self.output = output
         return
-    
+
     def __repr__(self):
         return f"layer: {self.layers}, repititions: {self.reps}, filters: {self.filters}, kernel size: {self.kernel_size}, downsample: {self.downsample}, route/output: {self.output}\n"
+
 
 def build_block_specs(config):
     specs = []
     for layer in config:
         specs.append(BlockConfig(*layer))
     return specs
-
-    
-
-
-
-
