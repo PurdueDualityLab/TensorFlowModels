@@ -6,7 +6,7 @@ from yolo.modeling.backbones.get_config import build_block_specs
 from yolo.modeling.backbones.darknet_53 import darknet53_config
 
 
-class DarkNet_builder(ks.Model):
+class backbone_builder(ks.Model):
     def __init__(self, layer_specs, **kwargs):
         super(DarkNet_builder, self).__init__(**kwargs)
         self.layers = layer_specs
