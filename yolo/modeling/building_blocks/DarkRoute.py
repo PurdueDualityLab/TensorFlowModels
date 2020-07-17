@@ -85,17 +85,3 @@ class DarkRoute(ks.layers.Layer):
         }
         layer_config.update(super().get_config())
         return layer_config
-
-if __name__ == "__main__":
-    from . import DarkResidual
-    # need to build proper unit tests below is temporary
-    norm = tf.random_normal_initializer()
-
-    # this variable needs to be a different size
-    x = tf.Variable(initial_value=norm(shape=[1,224,224,20], dtype=tf.dtypes.float32))
-    y = DarkResidual(20, downsample=True)(x)
-    test = DarkConvCat(20)
-    z = test([y, x])
-
-    test3 = DarkConvCat().from_config(test.get_config())
-    print(test3.get_config())

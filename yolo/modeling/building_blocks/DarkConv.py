@@ -146,18 +146,3 @@ class DarkConv(ks.layers.Layer):
         }
         layer_config.update(super(DarkConv, self).get_config())
         return layer_config
-
-
-if __name__ == "__main__":
-    # need to build proper unit tests below is temporary
-    norm = tf.random_normal_initializer()
-    x = tf.Variable(
-        initial_value=norm(
-            shape=[
-                1,
-                224,
-                224,
-                3],
-            dtype=tf.dtypes.float32))
-    test = DarkConv(13)
-    test1 = DarkConv().from_config(test.get_config())

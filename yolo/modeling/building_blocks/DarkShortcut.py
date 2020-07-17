@@ -49,26 +49,3 @@ class DarkShortcut(ks.layers.Layer):
         }
         layer_config.update(super().get_config())
         return layer_config
-
-
-if __name__ == "__main__":
-    # need to build proper unit tests below is temporary
-    norm = tf.random_normal_initializer()
-    # this variable needs to be a different size
-    x = tf.Variable(
-        initial_value=norm(
-            shape=[
-                1,
-                224,
-                224,
-                3],
-            dtype=tf.dtypes.float32))
-
-    from . import DarkConv
-    x = bottleneck_shortcut = DarkConv(64, (3, 3), (1, 1))(x)
-    x = DarkConv(32, (1, 1), (1, 1))(x)
-    x = DarkConv(64, (3, 3), (1, 1))(x)
-    x = DarkShortcut('linear')([x, bottleneck_shortcut])
-
-    test = DarkShortcut('linear')
-    test1 = DarkShortcut().from_config(test.get_config())
