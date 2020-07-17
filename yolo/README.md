@@ -4,6 +4,6 @@
 
 ## Model Architecture
 
-## Building Walk Through 
+## Usage Walk Through
 
 
