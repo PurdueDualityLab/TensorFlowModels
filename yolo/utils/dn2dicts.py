@@ -1,30 +1,63 @@
-if __name__ == '__main__':
-    import argparse
-    import json
-    from pprint import pprint
+#!/usr/bin/env python3
+"Convert a DarkNet config file into a Python literal file in a list of dictionaries format"
 
-    parser = argparse.ArgumentParser()
-    parser.description = "Convert a DarkNet config file into a Python AST limited file in a dictionary format"
-    parser.add_argument('config', help='name of the config file')
-    parser.add_argument('dictsfile', help='name of the Python AST limited file')
-    args = parser.parse_args()
+from absl import app, flags
+from absl.flags import FLAGS as args
+import argparse
+import json
+from pprint import pprint
 
-    config = args.config
-    dictsfile = args.dictsfile
+flags.DEFINE_string('config', 'yolov3.cfg', 'name of the config file')
+flags.DEFINE_string('dictsfile', 'yolov3.py', 'name of the Python literal file')
+
+def parseValue(v):
+    """
+    Parse non-string literals found in darknet config files
+    """
+    if ',  ' in v:
+        vals = v.split(',  ')
+        return tuple(parseValue(v) for v in vals)
+    elif ',' in v:
+        vals = v.split(',')
+        return tuple(parseValue(v) for v in vals)
+    else:
+        if '.' in v:
+            try:
+                return float(v.strip())
+            except ValueError:
+                return v
+        else:
+            try:
+                return int(v.strip())
+            except ValueError:
+                return v
+
+
+def convertConfigFile(configfile):
     output = []
     mydict = None
-    with open(config) as configfile:
-        i = 0
-        for line in configfile:
-            if line.startswith('[') and line != '[net]\n':
-                mydict = {}
-                mydict['_type'] = line.strip('[] \n')
-                output.append(mydict)
-            elif mydict is not None:
-                line, *_ = line.strip().split('#', 1)
-                if '=' in line:
-                    k, v = line.strip().split('=', 1)
-                    mydict[k] = v
 
+    for line in configfile:
+        if line.startswith('[') and line != '[net]\n':
+            mydict = {}
+            mydict['_type'] = line.strip('[] \n')
+            output.append(mydict)
+        elif mydict is not None:
+            line, *_ = line.strip().split('#', 1)
+            if '=' in line:
+                k, v = line.strip().split('=', 1)
+                mydict[k] = parseValue(v)
+
+    return output
+
+
+def main(argv):
+    config = args.config
+    dictsfile = args.dictsfile
+    with open(config) as configfile:
+        output = convertConfigFile(configfile)
     with open(dictsfile, 'w') as dictsfilew:
         pprint(output, dictsfilew)
+
+if __name__ == '__main__':
+    app.run(main)
