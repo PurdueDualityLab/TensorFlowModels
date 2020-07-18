@@ -4,7 +4,8 @@ import tensorflow.keras as ks
 from . import DarkConv
 
 
-class DarkRoute(ks.layers.Layer):
+@ks.utils.register_keras_serializable(package='yolo')
+class DarkUpsampleRoute(ks.layers.Layer):
     def __init__(self,
                  filters=1,
                  use_bias=True,

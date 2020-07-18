@@ -1,5 +1,14 @@
 class BlockConfig(object):
-    def __init__(self, layer, reps, filters, kernel_size, downsample, output):
+    def __init__(
+            self,
+            layer,
+            reps,
+            filters,
+            kernel_size,
+            strides,
+            padding,
+            downsample,
+            output):
         '''
         get layer config to make code more readable
 
@@ -11,16 +20,18 @@ class BlockConfig(object):
             downsample: boolean, to down sample the input width and height
             output: boolean, true if the layer is required as an output
         '''
-        self.layers = layer
-        self.reps = reps
+        self.name = layer
+        self.repititions = reps
         self.filters = filters
         self.kernel_size = kernel_size
+        self.strides = strides
+        self.padding = padding
         self.downsample = downsample
         self.output = output
         return
 
     def __repr__(self):
-        return f"layer: {self.layers}, repititions: {self.reps}, filters: {self.filters}, kernel size: {self.kernel_size}, downsample: {self.downsample}, route/output: {self.output}\n"
+        return f"layer: {self.name}, repititions: {self.repititions}, filters: {self.filters}, padding: {self.padding}, strides: {self.strides}, kernel size: {self.kernel_size}, downsample: {self.downsample}, route/output: {self.output}\n"
 
 
 def build_block_specs(config):

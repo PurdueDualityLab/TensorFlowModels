@@ -3,6 +3,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 
 
+@ks.utils.register_keras_serializable(package='yolo')
 class DarkConv(ks.layers.Layer):
     def __init__(self,
                  filters=1,

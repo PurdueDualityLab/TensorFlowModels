@@ -4,6 +4,7 @@ import tensorflow.keras as ks
 from yolo.modeling.building_blocks import DarkConv
 
 
+@ks.utils.register_keras_serializable(package='yolo')
 class DarkResidual(ks.layers.Layer):
     def __init__(self,
                  filters=1,
@@ -19,9 +20,8 @@ class DarkResidual(ks.layers.Layer):
                  sc_activation='linear',
                  downsample=False,
                  **kwargs):
-
         '''
-        DarkNet block with Residual connection for Yolo v3 Backbone 
+        DarkNet block with Residual connection for Yolo v3 Backbone
 
         Args:
             filters: integer for output depth, or the number of features to learn
@@ -37,7 +37,7 @@ class DarkResidual(ks.layers.Layer):
                         if None activation is replaced by linear
             leaky_alpha: float to use as alpha if activation function is leaky
             sc_activation: string for activation function to use in layer
-            downsample: boolean for if image input is larger than layer output, set downsample to True 
+            downsample: boolean for if image input is larger than layer output, set downsample to True
                         so the dimentions are forced to match
             **kwargs: Keyword Arguments
 
@@ -109,7 +109,8 @@ class DarkResidual(ks.layers.Layer):
                                leaky_alpha=self._leaky_alpha)
 
         self._shortcut = ks.layers.Add()
-        self._activation_fn = ks.layers.Activation(activation=self._sc_activation)
+        self._activation_fn = ks.layers.Activation(
+            activation=self._sc_activation)
 
         super().build(input_shape)
         return
@@ -118,7 +119,6 @@ class DarkResidual(ks.layers.Layer):
         shortcut = inputs
         if self._downsample:
             shortcut = self._dconv(inputs)
-            print(shortcut.shape)
 
         x = self._conv1(shortcut)
         x = self._conv2(x)
