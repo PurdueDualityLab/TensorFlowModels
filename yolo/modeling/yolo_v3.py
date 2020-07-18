@@ -5,7 +5,7 @@ from yolo.modeling.backbones.detection_heads import *
 
 class DarkNet53(ks.Model):
     def __init__(self, classes = 1000):
-        self.back_bone = backbone_builder("darknet53")
+        self.back_bone = Backbone_Builder("darknet53")
         self.head = DarkNet53_head.classification(classes)
         super(DarkNet53, self).__init__()
         return
