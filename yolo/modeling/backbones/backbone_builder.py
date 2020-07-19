@@ -67,3 +67,7 @@ class Backbone_Builder(ks.Model):
                     downsample=config.downsample,
                     name = f"{name}_{i}")(x)
         return x
+
+
+m = Backbone_Builder("darknet53")
+m.summary()
