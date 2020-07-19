@@ -1,0 +1,62 @@
+backend: tensorflow
+class_name: yolo>SIMOSequential
+config:
+  layers:
+
+  - class_name: yolo>DarkConv
+    config:
+      filters: 32
+      kernel_size: !!python/tuple [3, 3]
+
+  - class_name: yolo>DarkResidual
+    config:
+      filters: 64
+      downsample: True
+
+  - class_name: yolo>DarkResidual
+    config:
+      filters: 128
+      downsample: True
+
+  - class_name: yolo>DarkResidual
+    config:
+      filters: 128
+
+  - &route1
+    class_name: yolo>DarkResidual
+    config:
+      filters: 256
+      downsample: True
+
+  - !repeat:7
+    class_name: yolo>DarkResidual
+    config:
+      filters: 256
+
+  - class_name: yolo>DarkResidual
+    config:
+      filters: 512
+      downsample: True
+
+  - &route2
+    !repeat:7
+    class_name: yolo>DarkResidual
+    config:
+      filters: 512
+
+  - class_name: yolo>DarkResidual
+    config:
+      filters: 1024
+      downsample: True
+
+  - &route3
+    !repeat:3
+    class_name: yolo>DarkResidual
+    config:
+      filters: 1024
+
+  name: sequential
+  outputs:
+  - *route1
+  - *route2
+  - *route3
