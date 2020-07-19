@@ -32,13 +32,23 @@ def parseValue(v):
             except ValueError:
                 return v
 
+def dict_check(dictionary, key, check_val):
+    try:
+        return prev_layer['filters'] == check_val
+    except:
+        return False
+    return False
 
 def convertConfigFile(configfile):
     output = []
     mydict = None
 
     for line in configfile:
-        if line.startswith('[') and line != '[net]\n':
+        if line == '[net]\n':
+            mydict = {} 
+            mydict['_type'] = line.strip('[] \n')
+            output.append(mydict)
+        elif line.startswith('['): #and line != '[net]\n':
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
@@ -47,7 +57,6 @@ def convertConfigFile(configfile):
             if '=' in line:
                 k, v = line.strip().split('=', 1)
                 mydict[k] = parseValue(v)
-
     return output
 
 
@@ -58,6 +67,7 @@ def main(argv):
         output = convertConfigFile(configfile)
     with open(dictsfile, 'w') as dictsfilew:
         pprint(output, dictsfilew)
+    return output
 
 if __name__ == '__main__':
     app.run(main)
