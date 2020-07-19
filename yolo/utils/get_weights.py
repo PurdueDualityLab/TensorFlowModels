@@ -229,6 +229,7 @@ def load_weights(config_file, weights_file):
         print("error: could not read the entire weights file")
     return net, bytes_read
 
-config = "yolov3.cfg"
-weights = "yolov3_416.weights"
-net,_ = load_weights(config, weights)
+if __name__ == '__main__':
+    config = "yolo/utils/yolov3.cfg"
+    weights = "pretrained/yolov3_416.weights"
+    net,_ = load_weights(config, weights)

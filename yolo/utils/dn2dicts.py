@@ -50,7 +50,7 @@ def convertConfigFile(configfile):
     for line in configfile:
         if line.startswith('[') and line != '[net]\n':
             mydict = {}
-            mydict['_type'] = line.strip('[] \n')
+            mydict['ltype'] = line.strip('[] \n')
             output.append(mydict)
         elif mydict is not None:
             line, *_ = line.strip().split('#', 1)
