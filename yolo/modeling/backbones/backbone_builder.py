@@ -71,3 +71,20 @@ class Backbone_Builder(ks.Model):
 
 m = Backbone_Builder("darknet53")
 m.summary()
+
+for layer in m.layers:
+    print()
+    print(layer)
+    for weight in layer.get_weights():
+        print(weight.shape)
+
+# x = tf.ones(shape = [1, 416, 416, 3])
+
+# p = ks.layers.Conv2D(3, kernel_size = (3,3), strides = (1,1), padding = "same")
+# l = ks.layers.BatchNormalization()
+# y = p(x)
+# z = l(y)
+
+# print(p.get_weights())
+# print(l.get_weights())
+
