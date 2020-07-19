@@ -94,10 +94,7 @@ class place_layer(object):
     def __repr__(self):
         return f"shape: {self.shape}"
 
-
-'''
-testing the size degradation and increase in the encoder and decoder
-'''
+"""calculate image size changes"""
 def get_size(path):
     data = os.stat(path)
     return data.st_size
@@ -120,6 +117,8 @@ def len_width_up(n, f, p, s):
     '''
     return int(((n - 1) * s - 2*p + (f - 1)) + 1)
 
+
+"""load a config file as a dictionary"""
 def get_cfg(file_name):
     output = []
     mydict = None
@@ -137,25 +136,26 @@ def get_cfg(file_name):
                     mydict[k] = v
     return output
 
+"""c style read n float 32"""
 def read_n_floats(n, bfile):
     return list(struct.unpack("f" * n,  bfile.read(4 * n)))
 
+"""c style read n int 32"""
 def read_n_int(n,  bfile, unsigned = False):
     if unsigned:
         return list(struct.unpack("<"+"i" * n,  bfile.read(4 * n)))
     else:
         return list(struct.unpack("<"+"i" * n,  bfile.read(4 * n)))
 
+"""c style read n int 64"""
 def read_n_long(n,  bfile, unsigned = False):
     if unsigned:
         return list(struct.unpack("<"+"Q" * n,  bfile.read(8 * n)))
     else:
         return list(struct.unpack("<"+"q" * n,  bfile.read(8 * n)))
 
-
-
-
-def build_conv(layer_dict, file, prevlayer):
+"""consturct layer and load weights from file"""
+def build_layer(layer_dict, file, prevlayer):
     bytes_read = 0 
     if layer_dict['ltype'] == 'convolutional':
         print('\nconvolutional')
@@ -181,6 +181,7 @@ def build_conv(layer_dict, file, prevlayer):
         layer = layer_dict
     return layer, bytes_read
 
+"""read the file ans construct weights nets"""
 def read_file(config, weights):
     bytes_read = 0
 
@@ -208,7 +209,7 @@ def read_file(config, weights):
     net = [None]
     for layer_dict in config:
         #try:
-        layer, num_read = build_conv(layer_dict, weights, net[-1])
+        layer, num_read = build_layer(layer_dict, weights, net[-1])
         if layer_dict["ltype"] != 'yolo' and layer.shape[-1] != 255:
             net.append(layer)
         
@@ -216,7 +217,6 @@ def read_file(config, weights):
         #except:
             #break
     return net, bytes_read
-
 
 def load_weights(config_file, weights_file):
     config = get_cfg(config_file)
@@ -230,5 +230,5 @@ def load_weights(config_file, weights_file):
     return net, bytes_read
 
 config = "yolov3.cfg"
-weights = "yolov3.weights"
+weights = "yolov3_416.weights"
 net,_ = load_weights(config, weights)
