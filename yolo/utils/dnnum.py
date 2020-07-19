@@ -2,20 +2,34 @@
 "Number the blocks in a DarkNet config file"
 
 from absl import app, flags
-from absl.flags import FLAGS as args
+from absl.flags import argparse_flags
+import argparse
 
-flags.DEFINE_string('filename', 'yolov3.cfg', 'name of the config file')
+def makeParser(parser):
+    parser.add_argument('filename', default=None, help='name of the config file. Defaults to YOLOv3', nargs='?', type=argparse.FileType('r'))
 
-def main(argv):
+parser = argparse_flags.ArgumentParser()
+makeParser(parser)
+
+def numberConfig(file):
+    i = 0
+    for line in file:
+        if line.startswith('[') and line != '[net]\n':
+            print(f"{i:4d}|{line}", end='')
+            i += 1
+        else:
+            print(f"    |{line}", end='')
+
+def main(argv, args=None):
+    if args is None:
+        args = parser.parse_args(argv[1:])
+
     filename = args.filename
-    with open(filename) as file:
-        i = 0
-        for line in file:
-            if line.startswith('[') and line != '[net]\n':
-                print(f"{i:4d}|{line}", end='')
-                i += 1
-            else:
-                print(f"    |{line}", end='')
+    if filename is None:
+        with open('yolo/utils/yolov3.cfg') as file:
+            numberConfig(file)
+    else:
+        numberConfig(filename)
 
 if __name__ == '__main__':
     app.run(main)
