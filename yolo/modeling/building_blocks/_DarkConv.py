@@ -63,6 +63,8 @@ class DarkConv(ks.layers.Layer):
 
         # batchnorm params
         self._use_bn = use_bn
+        if self._use_bn:
+            self._use_bias = False
         self._use_sync_bn = use_sync_bn
         self._norm_moment = norm_moment
         self._norm_epsilon = norm_epsilon
@@ -97,7 +99,7 @@ class DarkConv(ks.layers.Layer):
             kernel_regularizer=ks.regularizers.l2(self._l2_regularization),
             bias_regularizer=self._bias_regularizer)
 
-        if self._use_bias:
+        if self._use_bn:
             if self._use_sync_bn:
                 self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
                     momentum=self._norm_moment,

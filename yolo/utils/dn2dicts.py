@@ -40,7 +40,15 @@ def parseValue(v):
                 return v
 
 
-def convertConfigFile(configfile):
+def dict_check(dictionary, key, check_val):
+    try:
+        return prev_layer['filters'] == check_val
+    except BaseException:
+        return False
+    return False
+
+
+def convertConfigFile(configfile, break_script="######################"):
     """
     Convert an opened config file to a list of dictinaries.
     """
@@ -48,16 +56,22 @@ def convertConfigFile(configfile):
     mydict = None
 
     for line in configfile:
-        if line.startswith('[') and line != '[net]\n':
+        if break_script is not None and line == f"{break_script}\n":
+            mydict = {"_type": "decoder_encoder_split"}
+            output.append(mydict)
+        if line == '[net]\n':
             mydict = {}
-            mydict['ltype'] = line.strip('[] \n')
+            mydict['_type'] = line.strip('[] \n')
+            output.append(mydict)
+        elif line.startswith('['):  # and line != '[net]\n':
+            mydict = {}
+            mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
         elif mydict is not None:
             line, *_ = line.strip().split('#', 1)
             if '=' in line:
                 k, v = line.strip().split('=', 1)
                 mydict[k] = parseValue(v)
-
     return output
 
 

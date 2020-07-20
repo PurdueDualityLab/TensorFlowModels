@@ -31,5 +31,6 @@ def main(argv, args=None):
     else:
         numberConfig(filename)
 
+
 if __name__ == '__main__':
     app.run(main)
