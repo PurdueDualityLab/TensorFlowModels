@@ -2,33 +2,22 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 from .dn2dicts import *
-import struct
 
 
 class Config(ABC):
-    # @abstractmethod
-    def __init__(self, **kwargs):
-        return
-
     @property
     @abstractmethod
     def shape(self):
         return
 
-    @abstractmethod
     def load_weights(self):
-        return
+        return 0
 
-    @abstractmethod
-    def get_weights(parameter_list):
-        pass
+    def get_weights(self):
+        return None
 
 
 class Building_Blocks(ABC):
-    @abstractmethod
-    def __init__(self):
-        return
-
     @property
     @abstractmethod
     def shape(self):
@@ -38,9 +27,8 @@ class Building_Blocks(ABC):
     def interleave_weights(self):
         return
 
-    @abstractmethod
-    def get_weights(parameter_list):
-        pass
+    def get_weights(self):
+        return None
 
 
 @dataclass
@@ -78,18 +66,17 @@ class convCFG(Config):
 
     def load_weights(self, files):
         bytes_read = self.filters
-        self.biases = np.array(read_n_floats(self.filters, files))
+        self.biases = read_n_floats(self.filters, files)
 
         if self.batch_normalize == 1:
-            self.scales = np.array(read_n_floats(self.filters, files))
-            self.rolling_mean = np.array(read_n_floats(self.filters, files))
-            self.rolling_variance = np.array(
-                read_n_floats(self.filters, files))
+            self.scales = read_n_floats(self.filters, files)
+            self.rolling_mean = read_n_floats(self.filters, files)
+            self.rolling_variance = read_n_floats(self.filters, files)
             bytes_read += self.filters * 3
 
         # used as a guide:
         # https://github.com/thtrieu/darkflow/blob/master/darkflow/dark/convolution.py
-        self.weights = np.array(read_n_floats(self.nweights, files))
+        self.weights = read_n_floats(self.nweights, files)
         self.weights = self.weights.reshape(
             self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
@@ -121,12 +108,6 @@ class placeCFG(Config):
     def shape(self):
         return (self.w, self.h, self.c)
 
-    def load_weights(self):
-        return 0
-
-    def get_weights(parameter_list):
-        return 0
-
 
 @dataclass
 class upsampleCFG(Config):
@@ -139,12 +120,6 @@ class upsampleCFG(Config):
     @property
     def shape(self):
         return (self.stride * self.w, self.stride * self.h, self.c)
-
-    def load_weights(self):
-        return 0
-
-    def get_weights(parameter_list):
-        return 0
 
 
 def len_width(n, f, p, s):
@@ -169,20 +144,26 @@ def len_width_up(n, f, p, s):
 
 def read_n_floats(n, bfile):
     """c style read n float 32"""
-    return list(struct.unpack("f" * n, bfile.read(4 * n)))
+    return np.frombuffer(bfile.read(4 * n), np.dtype(f'{n}f4'))
 
 
 def read_n_int(n, bfile, unsigned=False):
     """c style read n int 32"""
+    buffer = bfile.read(4 * n)
+    if n == 1:
+        n = ''
     if unsigned:
-        return list(struct.unpack("<" + "i" * n, bfile.read(4 * n)))
+        return np.frombuffer(buffer, np.dtype(f'<{n}u4'))
     else:
-        return list(struct.unpack("<" + "i" * n, bfile.read(4 * n)))
+        return np.frombuffer(buffer, np.dtype(f'<{n}i4'))
 
 
 def read_n_long(n, bfile, unsigned=False):
     """c style read n int 64"""
+    buffer = bfile.read(8 * n)
+    if n == 1:
+        n = ''
     if unsigned:
-        return list(struct.unpack("<" + "Q" * n, bfile.read(8 * n)))
+        return np.frombuffer(buffer, np.dtype(f'<{n}u8'))
     else:
-        return list(struct.unpack("<" + "q" * n, bfile.read(8 * n)))
+        return np.frombuffer(buffer, np.dtype(f'<{n}i8'))
