@@ -45,21 +45,21 @@ class convCFG(Config):
     _type:str = None
     size:int = field(init = True, repr = True, default = 0)
     stride:int = field(init = True, repr = True, default = 0)
-    pad:int = field(init = True, repr = True, default = 0)
+    pad:int = field(init = True, repr = False, default = 0)
     filters:int = field(init = True, repr = True, default = 0)
-    activation:str = field(init = True, default = 'linear')
-    groups:int = field(init = True, default = 1)
-    batch_normalize:int = field(init = True, default = 0)
-    w:int = field(init = True, default = 0)
-    h:int = field(init = True, default = 0)
-    c:int = field(init = True, default = 0)
+    activation:str = field(init = True, repr = False, default = 'linear')
+    groups:int = field(init = True, repr = False, default = 1)
+    batch_normalize:int = field(init = True, repr = False, default = 0)
+    w:int = field(init = True, repr = True, default = 0)
+    h:int = field(init = True, repr = True, default = 0)
+    c:int = field(init = True, repr = True, default = 0)
 
-    nweights:int = field(repr = True, default = 0)
-    biases:np.array = field(repr = True, default = None)
-    weights:np.array = field(repr = True, default = None)
-    scales:np.array = field(repr = True, default = None)
-    rolling_mean:np.array = field(repr = True, default = None)
-    rolling_variance:np.array = field(repr = True, default = None)
+    nweights:int = field(repr = False, default = 0)
+    biases:np.array = field(repr = False, default = None)
+    weights:np.array = field(repr = False, default = None)
+    scales:np.array = field(repr = False, default = None)
+    rolling_mean:np.array = field(repr = False, default = None)
+    rolling_variance:np.array = field(repr = False, default = None)
 
     def __post_init__(self):
         self.pad = int(self.pad) if self.size != 1 else 0
@@ -86,12 +86,16 @@ class convCFG(Config):
         self.weights = np.array(read_n_floats(self.nweights, files))
         self.weights = self.weights.reshape(self.filters, self.c, self.size, self.size).transpose([2,3,1,0])
         bytes_read += self.nweights
-        print(f"weights shape: {self.weights.shape}")
+        #print(f"weights shape: {self.weights.shape}")
         return bytes_read * 4
 
-    def get_weights(parameter_list):
-        print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
-        return [self.weights, self.biases, self.biases, self.scales, self.rolling_mean, self.rolling_variance]
+    def get_weights(self, printing = False):
+        if printing:
+            print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
+        if self.batch_normalize:
+            return [self.weights, self.biases, self.scales, self.rolling_mean, self.rolling_variance]
+        else:
+            return [self.weights, self.biases]
 
 @dataclass
 class placeCFG(Config):

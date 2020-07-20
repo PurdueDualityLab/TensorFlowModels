@@ -39,11 +39,14 @@ def dict_check(dictionary, key, check_val):
         return False
     return False
 
-def convertConfigFile(configfile):
+def convertConfigFile(configfile, break_script = "######################"):
     output = []
     mydict = None
 
     for line in configfile:
+        if break_script != None and line == f"{break_script}\n":
+            mydict = {"_type": "decoder_encoder_split"} 
+            output.append(mydict)
         if line == '[net]\n':
             mydict = {} 
             mydict['_type'] = line.strip('[] \n')
