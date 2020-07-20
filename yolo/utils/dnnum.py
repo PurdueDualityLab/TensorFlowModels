@@ -6,6 +6,7 @@ from absl.flags import FLAGS as args
 
 flags.DEFINE_string('filename', 'yolov3.cfg', 'name of the config file')
 
+
 def main(argv):
     filename = args.filename
     with open(filename) as file:
@@ -16,6 +17,7 @@ def main(argv):
                 i += 1
             else:
                 print(f"    |{line}", end='')
+
 
 if __name__ == '__main__':
     app.run(main)

@@ -8,7 +8,11 @@ import json
 from pprint import pprint
 
 flags.DEFINE_string('config', 'yolov3.cfg', 'name of the config file')
-flags.DEFINE_string('dictsfile', 'yolov3.py', 'name of the Python literal file')
+flags.DEFINE_string(
+    'dictsfile',
+    'yolov3.py',
+    'name of the Python literal file')
+
 
 def parseValue(v):
     """
@@ -32,26 +36,28 @@ def parseValue(v):
             except ValueError:
                 return v
 
+
 def dict_check(dictionary, key, check_val):
     try:
         return prev_layer['filters'] == check_val
-    except:
+    except BaseException:
         return False
     return False
 
-def convertConfigFile(configfile, break_script = "######################"):
+
+def convertConfigFile(configfile, break_script="######################"):
     output = []
     mydict = None
 
     for line in configfile:
-        if break_script != None and line == f"{break_script}\n":
-            mydict = {"_type": "decoder_encoder_split"} 
+        if break_script is not None and line == f"{break_script}\n":
+            mydict = {"_type": "decoder_encoder_split"}
             output.append(mydict)
         if line == '[net]\n':
-            mydict = {} 
+            mydict = {}
             mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
-        elif line.startswith('['): #and line != '[net]\n':
+        elif line.startswith('['):  # and line != '[net]\n':
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
@@ -71,6 +77,7 @@ def main(argv):
     with open(dictsfile, 'w') as dictsfilew:
         pprint(output, dictsfilew)
     return output
+
 
 if __name__ == '__main__':
     app.run(main)
