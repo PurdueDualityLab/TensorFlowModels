@@ -14,7 +14,7 @@ class Config(ABC):
         return 0
 
     def get_weights(self):
-        return None
+        return []
 
 
 class Building_Blocks(ABC):
@@ -28,7 +28,7 @@ class Building_Blocks(ABC):
         return
 
     def get_weights(self):
-        return None
+        return []
 
 
 @dataclass

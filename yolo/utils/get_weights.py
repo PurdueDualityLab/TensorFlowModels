@@ -1,10 +1,12 @@
 import struct
 import numpy as np
 import os
-from .configClasses import *
-from .dn2dicts import *
 import itertools
 
+
+from .configClasses import *
+from .dn2dicts import *
+from ..modeling.backbones.backbone_builder import Backbone_Builder
 
 def get_size(path):
     """calculate image size changes"""
@@ -124,7 +126,6 @@ def get_darknet53_tf_format(net, only_weights=True):
             blocks.append(layer)
             layer = net.pop(0)
         encoder.append(blocks)
-    del combo_blocks[0]
     new_net = combo_blocks + encoder
     weights = []
     if only_weights:
@@ -147,10 +148,3 @@ def load_weights(config_file, weights_file):
     if (bytes_read != size):
         print("error: could not read the entire weights file")
     return encoder, decoder, outputs, bytes_read
-
-
-if __name__ == '__main__':
-    config = "yolo/utils/yolov3.cfg"
-    weights = "pretrained/yolov3_416.weights"
-    encoder, decoder, outputs, _ = load_weights(config, weights)
-    encoder, weights = get_darknet53_tf_format(encoder[:])
