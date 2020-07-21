@@ -6,7 +6,7 @@ from yolo.modeling.backbones.get_config import build_block_specs
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
-    def __init__(self, name):
+    def __init__(self, name, config = None):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -16,13 +16,14 @@ class Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._model_name = name
         self._input_shape = (None, None, None, 3)
-
+        
         layer_specs = self._get_config(name)
         if layer_specs is None:
             raise Exception("config file not found")
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
+
         super(Backbone_Builder, self).__init__(inputs=inputs, outputs=output)
         return
 
@@ -67,24 +68,3 @@ class Backbone_Builder(ks.Model):
                     downsample=config.downsample,
                     name = f"{name}_{i}")(x)
         return x
-
-
-m = Backbone_Builder("darknet53")
-m.summary()
-
-for layer in m.layers:
-    print()
-    print(layer)
-    for weight in layer.get_weights():
-        print(weight.shape)
-
-# x = tf.ones(shape = [1, 416, 416, 3])
-
-# p = ks.layers.Conv2D(3, kernel_size = (3,3), strides = (1,1), padding = "same")
-# l = ks.layers.BatchNormalization()
-# y = p(x)
-# z = l(y)
-
-# print(p.get_weights())
-# print(l.get_weights())
-

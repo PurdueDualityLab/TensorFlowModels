@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from dn2dicts import *
 import struct
+
+from yolo.utils.dn2dicts import *
 
 
 class Config(ABC):
@@ -125,7 +126,7 @@ class placeCFG(Config):
         return 0
 
     def get_weights(parameter_list):
-        return 0
+        return []
 
 
 @dataclass
@@ -144,7 +145,7 @@ class upsampleCFG(Config):
         return 0
 
     def get_weights(parameter_list):
-        return 0
+        return []
 
 
 def len_width(n, f, p, s):
