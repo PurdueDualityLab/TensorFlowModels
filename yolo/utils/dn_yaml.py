@@ -5,7 +5,8 @@ Shortcuts for describing DarkNet models in YAML
 import copy
 import os
 import uuid
-from yolo.modeling.backbones import configs, general
+from yolo.modeling import building_blocks
+from yolo.modeling.backbones import configs
 
 try:
     import yaml
@@ -37,7 +38,7 @@ else:
                 times = int(times_)
             else:
                 times = int(tag_suffix)
-                name = 'repeat_' + str(uuid.uuid1()).replace('-', '')
+                name = "yaml_repeat_" + str(tf.keras.backend.get_uid("yaml_repeat"))
             oneLayer = self.construct_mapping(node, deep=True)
 
             def myCopyWithName(d: dict, i: int):
@@ -78,11 +79,12 @@ else:
 
 
 if __name__ == '__main__':
-    from yolo.modeling.building_blocks import *
     with open('yolo/modeling/backbones/configs/darknet_53.yml', mode='r') as file:
         config = file.read()
     loaded_model = load_darknet_from_yaml(config)
     print(loaded_model)
     with open('test.yml', mode='w') as file:
         print(loaded_model.to_yaml(), file=file)
+    loaded_model(tf.keras.Input(shape=(300, 300, 3)))
+    loaded_model.summary()
     #tf.keras.utils.plot_model(loaded_model, to_file='model.png', show_shapes=False, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
