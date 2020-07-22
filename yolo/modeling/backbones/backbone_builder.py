@@ -3,10 +3,11 @@ import tensorflow.keras as ks
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
+import yaml
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
-    def __init__(self, name, config = None):
+    def __init__(self, name, config = None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -16,18 +17,18 @@ class Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._model_name = name
         self._input_shape = (None, None, None, 3)
-        
-        layer_specs = self._get_config(name)
+    
+        layer_specs = self._get_model_config(name)
         if layer_specs is None:
             raise Exception("config file not found")
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
+        print(kwargs)
+        super().__init__(inputs=inputs, outputs=output, name = self._model_name)
+        return 
 
-        super(Backbone_Builder, self).__init__(inputs=inputs, outputs=output)
-        return
-
-    def _get_config(self, name):
+    def _get_model_config(self, name):
         if name == "darknet53":
             from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
             return build_block_specs(darknet53_config)
@@ -68,3 +69,10 @@ class Backbone_Builder(ks.Model):
                     downsample=config.downsample,
                     name = f"{name}_{i}")(x)
         return x
+
+# model = Backbone_Builder("darknet53")
+# config = model.to_json()
+# print(config)
+# with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
+#     data = tf.keras.models.model_from_json(config)
+#     print(data)
