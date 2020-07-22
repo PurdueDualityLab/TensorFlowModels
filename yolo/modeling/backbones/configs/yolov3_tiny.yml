@@ -1,0 +1,65 @@
+backend: tensorflow
+class_name: Functional
+config:
+  name: yolov3_tiny
+  input_layers:
+  - ['input', 0, 0]
+
+  layers:
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, null, null, 3]
+      dtype: float32
+      name: input
+      ragged: false
+      sparse: false
+    inbound_nodes: []
+    name: input
+
+  - class_name: Sequential
+    config:
+      name: route1
+      layers:
+      - class_name: yolo>DarkConv
+        config:
+          filters: 16
+          kernel_size: !!python/tuple [3, 3]
+
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 32
+
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 64
+
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 128
+
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 256
+    inbound_nodes:
+    - - ['input', 0, 0, {}]
+    name: route1
+
+  - class_name: Sequential
+    config:
+      name: route2
+      layers:
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 512
+
+      - class_name: yolo>darkyolotiny
+        config:
+          filters: 1024
+    inbound_nodes:
+    - - ['route1', 0, 0, {}]
+    name: route2
+
+  output_layers:
+    route1: ['route1', 0, 0]
+    route2: ['route2', 0, 0]
+keras_version: 2.4.0

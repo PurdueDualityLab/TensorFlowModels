@@ -30,6 +30,9 @@ class Backbone_Builder(ks.Model):
         if name == "darknet53":
             from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
             return build_block_specs(darknet53_config)
+        elif name == "yolov3_tiny":
+            from yolo.modeling.backbones.configs.yolov3_tiny import yolov3_tiny_config
+            return build_block_specs(yolov3_tiny_config)
         else:
             return None
 
@@ -53,6 +56,10 @@ class Backbone_Builder(ks.Model):
                     kernel_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
+                    name = f"{name}_{i}")(x)
+            elif config.name == "darkyolotiny":
+                x = nn_blocks.darkyolotiny(
+                    filters=config.filters,
                     name = f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(
@@ -87,4 +94,3 @@ for layer in m.layers:
 
 # print(p.get_weights())
 # print(l.get_weights())
-
