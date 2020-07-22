@@ -42,6 +42,9 @@ class darkyolotiny(ks.layers.Layer):
         return
 
     def build(self, input_shape):
+        self.maxpool = tf.keras.layers.MaxPool2D(
+            pool_size=2, strides=2, padding='valid', data_format=None)
+
         self.convlayer = DarkConv(filters=self._filters,
                                   kernel_size=(3, 3),
                                   strides=(1, 1),
@@ -56,15 +59,12 @@ class darkyolotiny(ks.layers.Layer):
                                   activation=self._conv_activation,
                                   leaky_alpha=self._leaky_alpha)
 
-        self.maxpool = tf.keras.layers.MaxPool2D(
-            pool_size=2, strides=2, padding='valid', data_format=None)
-
         super().build(input_shape)
         return
 
     def call(self, inputs):
-        output1 = self.convlayer(inputs)
-        output = self.maxpool(output1)
+        output1 = self.maxpool(inputs)
+        output = self.convlayer(output1)
         return output
 
     def get_config(self):
