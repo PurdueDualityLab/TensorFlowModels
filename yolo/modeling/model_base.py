@@ -6,5 +6,9 @@ class model(object):
     def __init__(self,):
         return
     
-    def connect_attributes(self):
+    def train(self):
         return
+    
+    def 
+
+    

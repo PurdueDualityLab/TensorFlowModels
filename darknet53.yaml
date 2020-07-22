@@ -1,0 +1,594 @@
+backend: tensorflow
+class_name: Backbone_Builder
+config:
+  input_layers:
+  - - input_1
+    - 0
+    - 0
+  layers:
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple
+      - null
+      - null
+      - null
+      - 3
+      dtype: float32
+      name: input_1
+      ragged: false
+      sparse: false
+    inbound_nodes: []
+    name: input_1
+  - class_name: yolo>DarkConv
+    config:
+      activation: leaky
+      bias_initializer: zeros
+      bias_regularizer: null
+      dilation_rate: !!python/tuple
+      - 1
+      - 1
+      dtype: float32
+      filters: 32
+      kernel_initializer: glorot_uniform
+      kernel_size: 3
+      l2_regularization: 0.0005
+      leaky_alpha: 0.1
+      name: DarkConv_0_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      padding: same
+      strides: 1
+      trainable: true
+      use_bias: false
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - input_1
+        - 0
+        - 0
+        - {}
+    name: DarkConv_0_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: true
+      dtype: float32
+      filters: 64
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_1_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkConv_0_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_1_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: true
+      dtype: float32
+      filters: 128
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_2_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_1_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_2_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 128
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_3_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_2_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_3_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: true
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_4_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_3_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_4_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_4_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_1
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_1
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_2
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_1
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_2
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_3
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_2
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_3
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_4
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_3
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_4
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_5
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_4
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_5
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 256
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_5_6
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_5
+        - 0
+        - 0
+        - {}
+    name: DarkRes_5_6
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: true
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_6_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_5_6
+        - 0
+        - 0
+        - {}
+    name: DarkRes_6_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_6_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_1
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_1
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_2
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_1
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_2
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_3
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_2
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_3
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_4
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_3
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_4
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_5
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_4
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_5
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 512
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_7_6
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_5
+        - 0
+        - 0
+        - {}
+    name: DarkRes_7_6
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: true
+      dtype: float32
+      filters: 1024
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_8_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_7_6
+        - 0
+        - 0
+        - {}
+    name: DarkRes_8_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 1024
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_9_0
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_8_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_9_0
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 1024
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_9_1
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_9_0
+        - 0
+        - 0
+        - {}
+    name: DarkRes_9_1
+  - class_name: yolo>DarkResidual
+    config:
+      bias_initializer: zeros
+      conv_activation: leaky
+      downsample: false
+      dtype: float32
+      filters: 1024
+      kernel_initializer: glorot_uniform
+      leaky_alpha: 0.1
+      name: DarkRes_9_2
+      norm_epsilon: 0.001
+      norm_moment: 0.99
+      sc_activation: linear
+      trainable: true
+      use_bias: true
+      use_bn: true
+      use_sync_bn: false
+    inbound_nodes:
+    - - - DarkRes_9_1
+        - 0
+        - 0
+        - {}
+    name: DarkRes_9_2
+  name: darknet53
+  output_layers:
+    route0:
+    - DarkRes_5_6
+    - 0
+    - 0
+    route1:
+    - DarkRes_7_6
+    - 0
+    - 0
+    route2:
+    - DarkRes_9_2
+    - 0
+    - 0
+keras_version: 2.3.0-tf
