@@ -10,11 +10,43 @@ class Config(ABC):
     def shape(self):
         return
 
-    def load_weights(self):
+    def load_weights(self, files):
         return 0
 
     def get_weights(self):
         return []
+
+    @classmethod
+    def from_dict(clz, prevlayer, layer_dict):
+        l = {
+            "_type": layer_dict["_type"],
+            "w": prevlayer.shape[0],
+            "h": prevlayer.shape[1],
+            "c": prevlayer.shape[2]}
+        return clz(**l)
+
+
+class _LayerBuilder(dict):
+    """
+    This class defines a registry for the layer builder in the DarkNet weight
+    parser. It allows for syntactic sugar when registering Config subclasses to
+    the parser.
+    """
+
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError as e:
+            raise KeyError(f"Unknown layer type: {layer_type}") from e
+
+    def register(self, *layer_types: str):
+        def decorator(clz):
+            for layer_type in layer_types:
+                self[layer_type] = clz
+            return clz
+        return decorator
+
+layer_builder = _LayerBuilder()
 
 
 class Building_Blocks(ABC):
@@ -31,9 +63,14 @@ class Building_Blocks(ABC):
         return []
 
 
+@layer_builder.register('conv', 'convolutional')
 @dataclass
 class convCFG(Config):
     _type: str = None
+    w: int = field(init=True, repr=True, default=0)
+    h: int = field(init=True, repr=True, default=0)
+    c: int = field(init=True, repr=True, default=0)
+
     size: int = field(init=True, repr=True, default=0)
     stride: int = field(init=True, repr=True, default=0)
     pad: int = field(init=True, repr=False, default=0)
@@ -41,9 +78,6 @@ class convCFG(Config):
     activation: str = field(init=True, repr=False, default='linear')
     groups: int = field(init=True, repr=False, default=1)
     batch_normalize: int = field(init=True, repr=False, default=0)
-    w: int = field(init=True, repr=True, default=0)
-    h: int = field(init=True, repr=True, default=0)
-    c: int = field(init=True, repr=True, default=0)
 
     nweights: int = field(repr=False, default=0)
     biases: np.array = field(repr=False, default=None)
@@ -76,8 +110,8 @@ class convCFG(Config):
 
         # used as a guide:
         # https://github.com/thtrieu/darkflow/blob/master/darkflow/dark/convolution.py
-        self.weights = read_n_floats(self.nweights, files)
-        self.weights = self.weights.reshape(
+        weights = read_n_floats(self.nweights, files)
+        self.weights = weights.reshape(
             self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
         # print(f"weights shape: {self.weights.shape}")
@@ -96,7 +130,14 @@ class convCFG(Config):
         else:
             return [self.weights, self.biases]
 
+    @classmethod
+    def from_dict(clz, prevlayer, layer_dict):
+        layer_dict.update(
+            {"w": prevlayer.shape[0], "h": prevlayer.shape[1], "c": prevlayer.shape[2]})
+        return clz(**layer_dict)
 
+
+@layer_builder.register('shortcut', 'route', 'yolo')
 @dataclass
 class placeCFG(Config):
     _type: str = None
@@ -109,17 +150,41 @@ class placeCFG(Config):
         return (self.w, self.h, self.c)
 
 
+@layer_builder.register('net')
+@dataclass
+class netCFG(placeCFG):
+    @classmethod
+    def from_dict(clz, prevlayer, layer_dict):
+        l = {
+            "_type": layer_dict["_type"],
+            "w": layer_dict["width"],
+            "h": layer_dict["height"],
+            "c": layer_dict["channels"]}
+        return clz(**l)
+
+
+@layer_builder.register('upsample')
 @dataclass
 class upsampleCFG(Config):
     _type: str = None
     w: int = field(init=True, default=0)
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
+
     stride: int = field(init=True, default=2)
 
     @property
     def shape(self):
         return (self.stride * self.w, self.stride * self.h, self.c)
+
+    @classmethod
+    def from_dict(clz, prevlayer, layer_dict):
+        l = {
+            "w": prevlayer.shape[0],
+            "h": prevlayer.shape[1],
+            "c": prevlayer.shape[2],
+            "stride": layer_dict["stride"]}
+        return clz(**l)
 
 
 def len_width(n, f, p, s):
@@ -144,26 +209,16 @@ def len_width_up(n, f, p, s):
 
 def read_n_floats(n, bfile):
     """c style read n float 32"""
-    return np.frombuffer(bfile.read(4 * n), np.dtype(f'{n}f4'))
+    return np.fromfile(bfile, 'f4', n)
 
 
 def read_n_int(n, bfile, unsigned=False):
     """c style read n int 32"""
-    buffer = bfile.read(4 * n)
-    if n == 1:
-        n = ''
-    if unsigned:
-        return np.frombuffer(buffer, np.dtype(f'<{n}u4'))
-    else:
-        return np.frombuffer(buffer, np.dtype(f'<{n}i4'))
+    dtype = '<u4' if unsigned else '<i4'
+    return np.fromfile(bfile, dtype, n)
 
 
 def read_n_long(n, bfile, unsigned=False):
     """c style read n int 64"""
-    buffer = bfile.read(8 * n)
-    if n == 1:
-        n = ''
-    if unsigned:
-        return np.frombuffer(buffer, np.dtype(f'<{n}u8'))
-    else:
-        return np.frombuffer(buffer, np.dtype(f'<{n}i8'))
+    dtype = '<u8' if unsigned else '<i8'
+    return np.fromfile(bfile, dtype, n)
