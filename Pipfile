@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 tensorflow = "==2.*"
+absl-py = ">=0.7.0"
+numpy = "*"
 
 # Optional packages
 # yaml = "*"        # for serialization and deserialization of models from YAML
