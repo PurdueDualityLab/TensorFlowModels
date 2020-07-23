@@ -18,7 +18,7 @@ With this library, our goal as an independent team is to provide the research co
 
 In addition to the native implementations, we are providing a Darknet Native Config to Tensorflow converter. This tool will take a custom config from Darknet (for any convolutional Model), and re-constuct the model in Tensorflow 2.x. If a weights file Is provided, the tool will also load the Darknet weights into the constructed tensorflow model directly. This was done to allow better future proofing with minor alterations, and to provide simple Backwards compatibility for older models like Yolo v1 and Yolo v2. 
 
-**We will try to provide loss funtions for models built from Config files, but if we are not able to find one, or have not yet implemented it, you will find the warning:
+**We will try to provide loss functions for models built from Config files, but if we are not able to find one, or have not yet implemented it, you will find the warning:
 
 ``` WARNING: Model from Config, loss function not found, for custom training, please construct, or find the loss function for this model, if the model is used as an industry standard, please post an issure request, and we will try to implement the loss function as soon as possible.``` 
 
