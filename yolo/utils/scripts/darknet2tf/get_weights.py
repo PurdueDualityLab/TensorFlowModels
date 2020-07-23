@@ -28,7 +28,7 @@ def build_layer(layer_dict, file, prevlayer):
 
 
 def read_file(config, weights):
-    """read the file and construct weights nets"""
+    """read the file and construct weights net list"""
     bytes_read = 0
 
     major, minor, revision = read_n_int(3, weights)
@@ -73,6 +73,7 @@ def read_file(config, weights):
 
 
 def interleve_weights(block):
+    """merge weights to fit the DarkResnet block style"""
     weights_temp = []
     for layer in block:
         weights = layer.get_weights()
@@ -85,6 +86,7 @@ def interleve_weights(block):
 
 
 def get_darknet53_tf_format(net, only_weights=True):
+    """convert weights from darknet sequntial to tensorflow weave, Darknet53 Backbone"""
     combo_blocks = []
     for i in range(2):
         layer = net.pop(0)
@@ -114,6 +116,10 @@ def load_weights(config_file, weights_file):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
+
+    Args: 
+        config_file: str, path to yolo config file from Darknet 
+        weights_file: str, path to yolo weights file from Darknet 
     """
     with open(config_file) as config:
         config = convertConfigFile(config)
