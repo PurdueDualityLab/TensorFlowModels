@@ -11,6 +11,9 @@ class DarkNet53(ks.Model):
             ks.layers.Dense(classes, activation = "sigmoid")
         ])
         if load_backbone_weights:
+            if weights_file is None:
+                weights_file = tf.keras.utils.get_file('yolo_v3.weights',
+                'https://pjreddie.com/media/files/yolov3.weights', cache_dir='cache', cache_subdir='weights')
             self._load_backbone_weights(config_file, weights_file)
         return
 
