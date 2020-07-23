@@ -34,5 +34,14 @@ In addition to the native implementations, we are providing a Darknet Native Con
 
 ```user interfaceing not yet implemented```
 
+## Tests and Benchmark Statistics
 
+```user interfaceing not yet implemented```
 
+## Community guidelines
+
+```not yet implemented```
+
+## Citations
+
+```will get to it```
