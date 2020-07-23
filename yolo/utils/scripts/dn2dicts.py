@@ -59,17 +59,13 @@ def convertConfigFile(configfile, break_script="######################"):
         if break_script is not None and line == f"{break_script}\n":
             mydict = {"_type": "decoder_encoder_split"}
             output.append(mydict)
-        if line == '[net]\n':
+        elif line.startswith('['):
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
-        elif line.startswith('['):  # and line != '[net]\n':
-            mydict = {}
-            mydict['_type'] = line.strip('[] \n')
-            output.append(mydict)
-        elif mydict is not None:
+        else:
             line, *_ = line.strip().split('#', 1)
-            if '=' in line:
+            if line.strip() != '':
                 k, v = line.strip().split('=', 1)
                 mydict[k] = parseValue(v)
     return output
@@ -83,7 +79,8 @@ def main(argv, args=None):
     dictsfile = args.dictsfile
 
     if config is None:
-        with open('yolo/utils/yolov3.cfg') as config:
+        from ..file_manager import download
+        with open(download('yolov3', 'cfg')) as config:
             output = convertConfigFile(config)
     else:
         output = convertConfigFile(config)
