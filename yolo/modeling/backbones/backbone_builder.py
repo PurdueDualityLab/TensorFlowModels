@@ -3,7 +3,6 @@ import tensorflow.keras as ks
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
-import yaml
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):

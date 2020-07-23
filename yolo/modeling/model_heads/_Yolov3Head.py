@@ -1,5 +1,69 @@
 import tensorflow as tf
-from yolo.modeling.building_blocks import _DarkConv
-from yolo.modeling.building_blocks import _DarkRouteProcess
+import tensorflow.keras as ks
+from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.building_blocks import DarkRouteProcess
+from yolo.modeling.building_blocks import DarkUpsampleRoute
+# for testing
+from yolo.modeling.backbones.backbone_builder import Backbone_Builder 
 
-@ks.utils.register_keras_serializable(package='yolo')
+
+# @ks.utils.register_keras_serializable(package='yolo')
+class _Yolov3Head(tf.keras.Model):
+    def __init__(self, model_type, repetitions_override=None, **kwargs):
+        self.type_dict = {"spp" : 3, "tiny" : 1, "regular" : 3}
+        self._model_type = model_type
+
+        if repetitions_override != None:
+            self._repetitions = repetitions_override
+        else:
+            self._repetitions = self.type_dict[model_type]
+
+        super().__init__(**kwargs)
+        return
+
+    def build(self, input_shape):
+        self.routes = dict()
+        self.upsamples = dict()
+        self.prediction_heads = dict()
+
+        self.filters = list(reversed(input_shape.keys()))
+
+        for i, key in enumerate(self.filters):
+            if i == 0 and self._model_type == "spp":
+                self.routes[key] = DarkRouteProcess(filters= key, repetitions= self._repetitions + 1, insert_spp=True)
+            else:
+                self.routes[key] = DarkRouteProcess(filters= key, repetitions= self._repetitions)
+            
+            if i != len(self.filters) - 1:
+                self.upsamples[key] = DarkUpsampleRoute(filters=key//4)
+            
+            self.prediction_heads[key] = DarkConv(filters = 255, kernel_size = (1,1), strides = (1,1), padding = "same", activation=None)
+
+        print(self.routes)
+        print(self.upsamples)
+        print(self.prediction_heads)
+        return
+
+    def call(self, inputs):
+        layer_in = inputs[self.filters[0]]
+        outputs = dict()
+        for i in range(len(self.filters)):
+            x_prev, x = self.routes[self.filters[i]](layer_in)
+            if i + 1 < len(self.filters):
+                x_next = inputs[self.filters[i + 1]]
+                layer_in = self.upsamples[self.filters[i]](x_prev, x_next)  
+                print(layer_in.shape)
+            outputs[self.filters[i]] = self.prediction_heads[self.filters[i]](x)
+        return outputs
+
+x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
+head_inputs = [256, 512, 1024]
+model = Backbone_Builder("darknet53")
+y = model(x)
+#print(y.values())
+
+head = _Yolov3Head("spp")
+z = head(y)
+
+for key in z.keys():
+    print(z[key].shape)

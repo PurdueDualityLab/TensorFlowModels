@@ -60,9 +60,8 @@ class DarkUpsampleRoute(ks.layers.Layer):
         self._upsample = ks.layers.UpSampling2D(size=self._upsampling_size)
         super().build(input_shape)
 
-    def call(self, inputs):
-        inputToConvolve, inputRouted = inputs
-
+    def call(self, inputToConvolve, inputRouted):
+        #= inputs
         x = self._conv(inputToConvolve)
         x = self._upsample(x)
         x = ks.layers.concatenate([x, inputRouted])
