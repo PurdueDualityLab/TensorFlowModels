@@ -11,7 +11,6 @@ models in the YOLO family (YOLOv3 and older).
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from .dn2dicts import *
 
 
 class Config(ABC):

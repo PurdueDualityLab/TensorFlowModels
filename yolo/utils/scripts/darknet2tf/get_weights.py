@@ -8,8 +8,8 @@ import os
 import itertools
 
 
-from .configClasses import *
-from .dn2dicts import *
+from .config_classes import *
+from ..dn2dicts import convertConfigFile
 
 def get_size(path):
     """calculate image size changes"""

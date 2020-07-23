@@ -1,5 +1,5 @@
 """
-Run a script from the yolo utils package using slightly shorter syntax:
+Run a script from the yolo utils package:
 
 python3 -m yolo dnnum yolov3.cfg
 
@@ -10,14 +10,14 @@ from absl import app, flags
 from absl.flags import argparse_flags
 import importlib
 import sys
-from . import utils
+from .utils import scripts
 
 
 def makeParser(parser):
     subparsers = parser.add_subparsers(help='utility script to run', metavar='util', dest="_util")
     subparsers.required = True
-    for util in utils.__all__:
-        module = importlib.import_module('yolo.utils.' + util)
+    for util in scripts.__all__:
+        module = importlib.import_module('yolo.utils.scripts.' + util)
         if hasattr(module, 'makeParser'):
             sub = subparsers.add_parser(util, help=module.__doc__)
             module.makeParser(sub)
@@ -35,7 +35,7 @@ def main(argv):
 
     args = parser.parse_args(argv[1:])
     util = args._util
-    module = importlib.import_module('yolo.utils.' + util)
+    module = importlib.import_module('yolo.utils.scripts.' + util)
     module.main(argv, args=args)
 
 if __name__ == '__main__':
