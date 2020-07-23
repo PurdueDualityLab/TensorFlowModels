@@ -24,11 +24,15 @@ In addition to the native implementations, we are providing a Darknet Native Con
 
 ## Install Instructions
 
+```not yet defined```
 
 ## Usage Instructions
 
+```user interfaceing not yet implemented```
 
-## Custom Instructions
+## Custom Training Instructions
+
+```user interfaceing not yet implemented```
 
 
 
