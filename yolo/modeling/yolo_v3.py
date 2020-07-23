@@ -1,9 +1,10 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
+from ..utils.file_manager import download
 
 class DarkNet53(ks.Model):
-    def __init__(self, classes = 1000, load_backbone_weights = False, config_file = "yolov3.cfg", weights_file = None):
+    def __init__(self, classes = 1000, load_backbone_weights = False, config_file = None, weights_file = None):
         super(DarkNet53, self).__init__()
         self.backbone = Backbone_Builder("darknet53")
         self.head = ks.Sequential([
@@ -11,9 +12,10 @@ class DarkNet53(ks.Model):
             ks.layers.Dense(classes, activation = "sigmoid")
         ])
         if load_backbone_weights:
+            if config_file is None:
+                config_file = download('yolov3', 'cfg')
             if weights_file is None:
-                weights_file = tf.keras.utils.get_file('yolo_v3.weights',
-                'https://pjreddie.com/media/files/yolov3.weights', cache_dir='cache', cache_subdir='weights')
+                weights_file = download('yolov3', 'weights')
             self._load_backbone_weights(config_file, weights_file)
         return
 
