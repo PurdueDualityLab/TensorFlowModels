@@ -1,3 +1,7 @@
+"""
+This file contains the code to parse DarkNet weight files.
+"""
+
 import struct
 import numpy as np
 import os
@@ -6,7 +10,6 @@ import itertools
 
 from .configClasses import *
 from .dn2dicts import *
-from ..modeling.backbones.backbone_builder import Backbone_Builder
 
 def get_size(path):
     """calculate image size changes"""
@@ -25,7 +28,7 @@ def build_layer(layer_dict, file, prevlayer):
 
 
 def read_file(config, weights):
-    """read the file ans construct weights nets"""
+    """read the file and construct weights nets"""
     bytes_read = 0
 
     major, minor, revision = read_n_int(3, weights)
@@ -108,12 +111,17 @@ def get_darknet53_tf_format(net, only_weights=True):
 
 
 def load_weights(config_file, weights_file):
-    config = convertConfigFile(open(config_file))
+    """
+    Parse the config and weights files and read the DarkNet layer's encoder,
+    decoder, and output layers. The number of bytes in the file is also returned.
+    """
+    with open(config_file) as config:
+        config = convertConfigFile(config)
     size = get_size(weights_file)
     with open(weights_file, "rb") as weights:
         encoder, decoder, outputs, bytes_read = read_file(config, weights)
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
     if (bytes_read != size):
-        print("error: could not read the entire weights file")
+        raise IOError('could not read the entire weights file')
     return encoder, decoder, outputs, bytes_read

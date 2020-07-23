@@ -1,3 +1,13 @@
+"""
+This file contains the layers (Config objects) that are used by the Darknet
+config file parser.
+
+For more details on the layer types and layer parameters, visit https://github.com/AlexeyAB/darknet/wiki/CFG-Parameters-in-the-different-layers
+
+Currently, the parser is incomplete and we can only guarantee that it works for
+models in the YOLO family (YOLOv3 and older).
+"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
@@ -5,19 +15,56 @@ from .dn2dicts import *
 
 
 class Config(ABC):
+    """
+    The base class for all layers that are used by the parser. Each subclass
+    defines a new layer type. Most nodes correspond to distinct layers that
+    appear in the final network. [net] corresponds to the input to the model.
+
+    Each subclass must be a @dataclass and must have the following fields:
+    ```{python}
+        _type: str = None
+        w: int = field(init=True, repr=True, default=0)
+        h: int = field(init=True, repr=True, default=0)
+        c: int = field(init=True, repr=True, default=0)
+    ```
+
+    These fields are used when linking different layers together, but weren't
+    included in the Config class due to limitations in the dataclasses package.
+    (w, h, c) will correspond to the different input dimensions of a DarkNet
+    layer: the width, height, and number of channels.
+    """
+
     @property
     @abstractmethod
     def shape(self):
+        '''
+        Output shape of the layer. The output must be a 3-tuple of ints
+        corresponding to the the width, height, and number of channels of the
+        output.
+        '''
         return
 
     def load_weights(self, files):
+        '''
+        Load the weights for the current layer from a file and return the
+        number of bytes read.
+        '''
         return 0
 
     def get_weights(self):
+        '''
+        Return a list of Numpy arrays consisting of all of the weights that
+        were loaded from the weights file.
+        '''
         return []
 
     @classmethod
     def from_dict(clz, prevlayer, layer_dict):
+        '''
+        Create a layer instance from the previous layer and a dictionary
+        containing all of the parameters for the DarkNet layer. This is how
+        linking is done by the parser.
+        '''
         l = {
             "_type": layer_dict["_type"],
             "w": prevlayer.shape[0],

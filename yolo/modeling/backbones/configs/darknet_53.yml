@@ -89,4 +89,5 @@ config:
   output_layers:
     route1: ['route1', 0, 0]
     route2: ['route2', 0, 0]
+    route3: ['route3', 0, 0]
 keras_version: 2.4.0
