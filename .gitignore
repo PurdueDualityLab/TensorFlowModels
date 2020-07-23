@@ -139,3 +139,4 @@ cython_debug/
 
 .DS_Store
 cache
+yolov3_416.weights
