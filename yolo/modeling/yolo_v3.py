@@ -59,7 +59,7 @@ class Yolov3_spp():
         pass
 
 x = tf.ones(shape=[1, 224, 224, 3], dtype = tf.float32)
-model = DarkNet53(classes = 1000, load_backbone_weights = False, weights_file = "yolov3_416.weights")
+model = DarkNet53(classes = 1000, load_backbone_weights = True, weights_file = "yolov3_416.weights")
 model.get_summary()
 y = model(x)
 
