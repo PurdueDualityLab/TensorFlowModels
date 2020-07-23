@@ -139,4 +139,7 @@ cython_debug/
 
 .DS_Store
 cache
+<<<<<<< HEAD
 yolov3_416.weights
+=======
+>>>>>>> 1c106cea4dbc6ccbad5f32ff76e3952fa260a379
