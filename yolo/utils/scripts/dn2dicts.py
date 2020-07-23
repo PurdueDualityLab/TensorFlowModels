@@ -2,16 +2,19 @@
 "Convert a DarkNet config file into a Python literal file in a list of dictionaries format"
 
 from absl import app, flags
-from absl.flags import FLAGS as args
+from absl.flags import argparse_flags
 import argparse
 import json
 from pprint import pprint
+import sys
 
-flags.DEFINE_string('config', 'yolov3.cfg', 'name of the config file')
-flags.DEFINE_string(
-    'dictsfile',
-    'yolov3.py',
-    'name of the Python literal file')
+
+def makeParser(parser):
+    parser.add_argument('config', default=None, help='name of the config file. Defaults to YOLOv3', nargs='?', type=argparse.FileType('r'))
+    parser.add_argument('dictsfile', default=sys.stdout, nargs='?', help='name of the Python literal file', type=argparse.FileType('w'))
+
+parser = argparse_flags.ArgumentParser()
+makeParser(parser)
 
 
 def parseValue(v):
@@ -46,6 +49,9 @@ def dict_check(dictionary, key, check_val):
 
 
 def convertConfigFile(configfile, break_script="######################"):
+    """
+    Convert an opened config file to a list of dictinaries.
+    """
     output = []
     mydict = None
 
@@ -53,31 +59,33 @@ def convertConfigFile(configfile, break_script="######################"):
         if break_script is not None and line == f"{break_script}\n":
             mydict = {"_type": "decoder_encoder_split"}
             output.append(mydict)
-        if line == '[net]\n':
+        elif line.startswith('['):
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
             output.append(mydict)
-        elif line.startswith('['):  # and line != '[net]\n':
-            mydict = {}
-            mydict['_type'] = line.strip('[] \n')
-            output.append(mydict)
-        elif mydict is not None:
+        else:
             line, *_ = line.strip().split('#', 1)
-            if '=' in line:
+            if line.strip() != '':
                 k, v = line.strip().split('=', 1)
                 mydict[k] = parseValue(v)
     return output
 
 
-def main(argv):
+def main(argv, args=None):
+    if args is None:
+        args = parser.parse_args(argv[1:])
+
     config = args.config
     dictsfile = args.dictsfile
-    with open(config) as configfile:
-        output = convertConfigFile(configfile)
-    with open(dictsfile, 'w') as dictsfilew:
-        pprint(output, dictsfilew)
-    return output
 
+    if config is None:
+        from ..file_manager import download
+        with open(download('yolov3', 'cfg')) as config:
+            output = convertConfigFile(config)
+    else:
+        output = convertConfigFile(config)
+
+    pprint(output, dictsfile)
 
 if __name__ == '__main__':
     app.run(main)
