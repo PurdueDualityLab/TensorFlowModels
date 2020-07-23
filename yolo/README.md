@@ -9,7 +9,7 @@ With this library, our goal as an independent team is to provide the research co
 ## What you will find in this repo
 
 | Object Detectors | Classifiers      |
-| ---------------- | ---------------- |
+| :--------------: | :--------------: |
 | Yolo-v3          | Darknet53        |
 | Yolo-v3 tiny     | CSPDarknet53     |
 | Yolo-v3 spp      |
