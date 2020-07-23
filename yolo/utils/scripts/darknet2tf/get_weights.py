@@ -20,7 +20,10 @@ def get_size(path):
 def build_layer(layer_dict, file, prevlayer):
     """consturct layer and load weights from file"""
     layer = layer_builder[layer_dict['_type']].from_dict(prevlayer, layer_dict)
-    bytes_read = layer.load_weights(file)
+    if file is not None:
+        bytes_read = layer.load_weights(file)
+    else:
+        bytes_read = 0
 
     #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
     #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
@@ -31,22 +34,23 @@ def read_file(config, weights):
     """read the file and construct weights net list"""
     bytes_read = 0
 
-    major, minor, revision = read_n_int(3, weights)
-    bytes_read += 12
+    if weights is not None:
+        major, minor, revision = read_n_int(3, weights)
+        bytes_read += 12
 
-    if ((major * 10 + minor) >= 2):
-        print("64 seen")
-        iseen = read_n_long(1, weights, unsigned=True)[0]
-        bytes_read += 8
-    else:
-        print("32 seen")
-        iseen = read_n_int(1, weights, unsigned=True)[0]
-        bytes_read += 4
+        if ((major * 10 + minor) >= 2):
+            print("64 seen")
+            iseen = read_n_long(1, weights, unsigned=True)[0]
+            bytes_read += 8
+        else:
+            print("32 seen")
+            iseen = read_n_int(1, weights, unsigned=True)[0]
+            bytes_read += 4
 
-    print(f"major: {major}")
-    print(f"minor: {minor}")
-    print(f"revision: {revision}")
-    print(f"iseen: {iseen}")
+        print(f"major: {major}")
+        print(f"minor: {minor}")
+        print(f"revision: {revision}")
+        print(f"iseen: {iseen}")
 
     encoder = [None]
     decoder = []

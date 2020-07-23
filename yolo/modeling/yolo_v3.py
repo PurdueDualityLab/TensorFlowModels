@@ -14,7 +14,7 @@ class DarkNet53(ks.Model):
             config_file="yolov3.cfg",
             weights_file=None):
         """
-        load the model and the sequential head so that the backbone can be applied for classification 
+        load the model and the sequential head so that the backbone can be applied for classification
 
         Model tested on ImageNet Tiny
 
@@ -23,7 +23,7 @@ class DarkNet53(ks.Model):
             load_backbone_weights: bool, if true we will auto load the original darnet weights to use in the model
             config_file: str path for the location of the configuration file to use when decoding darknet weights
             weights_file: str path with the file containing the dark net weights
-            
+
         """
         super(DarkNet53, self).__init__()
         self.backbone = Backbone_Builder("darknet53")
@@ -47,6 +47,7 @@ class DarkNet53(ks.Model):
     def _load_backbone_weights(self, config, weights):
         from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
         encoder, decoder, outputs, _ = load_weights(config, weights)
+        print(encoder, decoder, outputs)
         encoder, weight_list = get_darknet53_tf_format(encoder[:])
         print(
             f"\nno. layers: {len(self.back_bone.layers)}, no. weights: {len(weight_list)}")
