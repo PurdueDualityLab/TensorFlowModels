@@ -16,7 +16,7 @@ class Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._model_name = name
         self._input_shape = (None, None, None, 3)
-    
+
         layer_specs = self._get_model_config(name)
         if layer_specs is None:
             raise Exception("config file not found")
@@ -25,12 +25,15 @@ class Backbone_Builder(ks.Model):
         output = self._build_struct(layer_specs, inputs)
         print(kwargs)
         super().__init__(inputs=inputs, outputs=output, name = self._model_name)
-        return 
+        return
 
     def _get_model_config(self, name):
         if name == "darknet53":
             from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
             return build_block_specs(darknet53_config)
+        elif name == "yolov3_tiny":
+            from yolo.modeling.backbones.configs.yolov3_tiny import yolov3_tiny_config
+            return build_block_specs(yolov3_tiny_config)
         else:
             return None
 
@@ -52,6 +55,10 @@ class Backbone_Builder(ks.Model):
                     kernel_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
+                    name = f"{name}_{i}")(x)
+            elif config.name == "darkyolotiny":
+                x = nn_blocks.darkyolotiny(
+                    filters=config.filters,
                     name = f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(
