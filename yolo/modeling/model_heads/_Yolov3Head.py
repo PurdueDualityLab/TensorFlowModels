@@ -26,16 +26,22 @@ class _Yolov3Head(tf.keras.Model):
         self.upsamples = dict()
         self.prediction_heads = dict()
 
-        self.filters = list(reversed(input_shape.keys()))
+        self.filters = list(reversed(list(input_shape.keys())))
+
+        if self._model_type == "tiny":
+            filter_mod = 2
+        else:
+            filter_mod = 1
 
         for i, key in enumerate(self.filters):
             if i == 0 and self._model_type == "spp":
                 self.routes[key] = DarkRouteProcess(filters= key, repetitions= self._repetitions + 1, insert_spp=True)
             else:
-                self.routes[key] = DarkRouteProcess(filters= key, repetitions= self._repetitions)
+                self.routes[key] = DarkRouteProcess(filters= key//filter_mod, repetitions= self._repetitions, insert_spp=False)
             
             if i != len(self.filters) - 1:
-                self.upsamples[key] = DarkUpsampleRoute(filters=key//4)
+                self.upsamples[key] = DarkUpsampleRoute(filters=key//(4 * filter_mod))
+                filter_mod = 1
             
             self.prediction_heads[key] = DarkConv(filters = 255, kernel_size = (1,1), strides = (1,1), padding = "same", activation=None)
 
@@ -49,20 +55,21 @@ class _Yolov3Head(tf.keras.Model):
         outputs = dict()
         for i in range(len(self.filters)):
             x_prev, x = self.routes[self.filters[i]](layer_in)
+            print(x_prev.shape)
             if i + 1 < len(self.filters):
                 x_next = inputs[self.filters[i + 1]]
+                print(x_next.shape)
                 layer_in = self.upsamples[self.filters[i]](x_prev, x_next)  
                 print(layer_in.shape)
             outputs[self.filters[i]] = self.prediction_heads[self.filters[i]](x)
         return outputs
 
 x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
-head_inputs = [256, 512, 1024]
-model = Backbone_Builder("darknet53")
+model = Backbone_Builder("darknet_tiny")
 y = model(x)
-#print(y.values())
+print(y.values())
 
-head = _Yolov3Head("spp")
+head = _Yolov3Head("tiny")
 z = head(y)
 
 for key in z.keys():
