@@ -21,10 +21,10 @@ except:
 import tensorflow as tf
 
 if yaml is None:
-    def load_darknet_from_yaml(yaml_string, custom_objects=None):
+    def load_darknet_from_yaml(yaml_string, custom_objects=None, loader=None):
         raise ImportError('Requires yaml module installed (`pip install pyyaml`).')
 else:
-    class DarkNetYAMLLoader(yaml.SafeLoader):
+    class DarkNetYAMLLoaderBase:
         "A special YAML loader with the apply to use the repeat constructor"
 
         def repeat_constructor(self, tag_suffix: str, node):
@@ -32,6 +32,9 @@ else:
             The repeat constructor allows for the repetition of a layer muliple
             times. It creates the same configuration and deep copies it so it can
             appear multiple times without being routed in multiple places.
+
+            For more details about PyYAML multi-constructors, look at
+            https://pyyaml.org/wiki/PyYAMLDocumentation#cb68
             """
             if ',' in tag_suffix:
                 times_, name = tag_suffix.split(',', 1)
@@ -67,12 +70,19 @@ else:
         def construct_python_tuple(self, node):
             return tuple(self.construct_sequence(node))
 
+    class DarkNetYAMLLoader(yaml.Loader, DarkNetYAMLLoaderBase):
+        pass
+
+    class DarkNetSafeYAMLLoader(yaml.SafeLoader, DarkNetYAMLLoaderBase):
+        pass
+
+    # Add functionality to use python/tuple, even in safe mode.
     DarkNetYAMLLoader.add_constructor('tag:yaml.org,2002:python/tuple', DarkNetYAMLLoader.construct_python_tuple)
     DarkNetYAMLLoader.add_multi_constructor('!repeat:', DarkNetYAMLLoader.repeat_constructor)
     DarkNetYAMLLoader.add_constructor('!darknet', DarkNetYAMLLoader.darknet)
 
-    def load_darknet_from_yaml(yaml_string, custom_objects=None):
-        configDict = yaml.load(yaml_string, DarkNetYAMLLoader)
+    def load_darknet_from_yaml(yaml_string, custom_objects=None, loader=DarkNetSafeYAMLLoader):
+        configDict = yaml.load(yaml_string, loader)
         #import pprint
         #pprint.pprint(configDict)
         return tf.keras.layers.deserialize(configDict, custom_objects=custom_objects)
