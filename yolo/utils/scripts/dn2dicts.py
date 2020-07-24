@@ -80,7 +80,7 @@ def main(argv, args=None):
 
     if config is None:
         from ..file_manager import download
-        with open(download('yolov3', 'cfg')) as config:
+        with open(download('yolov3.cfg')) as config:
             output = convertConfigFile(config)
     else:
         output = convertConfigFile(config)
