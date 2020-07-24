@@ -9,8 +9,8 @@ import tensorflow.keras as ks
 import os
 
 urls = {
-    'yolov3.cfg': ('https://rfaw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg', 'cfg', 'c4dc8d5b76d218e4878ef105d50b39e4f64fb3bb'),
-    'yolov3.weights': ('https://pjreddie.com/media/files/yolov3.weights', 'weights', '520878f12e97cf820529daea502acca380f1cb8e'),
+    'yolov3.cfg': ('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg', 'cfg', '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
+    'yolov3.weights': ('https://pjreddie.com/media/files/yolov3.weights', 'weights', '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
 }
 
 def download(name: str) -> str:

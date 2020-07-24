@@ -2,11 +2,12 @@
 This file contains the code to parse DarkNet weight files.
 """
 
-import struct
 import numpy as np
 import os
 import itertools
+import pathlib
 
+from typing import Union
 
 from .config_classes import *
 from ..dn2dicts import convertConfigFile
@@ -116,14 +117,20 @@ def get_darknet53_tf_format(net, only_weights=True):
     return new_net, weights
 
 
-def load_weights(config_file, weights_file):
+def load_weights(config_file: Union[str, pathlib.Path], weights_file: Union[str, pathlib.Path]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
 
-    Args: 
-        config_file: str, path to yolo config file from Darknet 
-        weights_file: str, path to yolo weights file from Darknet 
+    Args:
+        config_file: str, path to yolo config file from Darknet
+        weights_file: str, path to yolo weights file from Darknet
+
+    Returns:
+        A tuple containing the following components:
+            encoder: the encoder as a list of layer Config objects
+            decoder: the decoder as a list of layer Config objects
+            outputs: the outputs as a list of layer Config objects
     """
     with open(config_file) as config:
         config = convertConfigFile(config)
@@ -134,4 +141,4 @@ def load_weights(config_file, weights_file):
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
     if (bytes_read != size):
         raise IOError('could not read the entire weights file')
-    return encoder, decoder, outputs, bytes_read
+    return encoder, decoder, outputs

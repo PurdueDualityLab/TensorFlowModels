@@ -11,7 +11,7 @@ class DarkNet53(ks.Model):
             self,
             classes=1000,
             load_backbone_weights=False,
-            config_file="yolov3.cfg",
+            config_file=None,
             weights_file=None):
         """
         load the model and the sequential head so that the backbone can be applied for classification
@@ -46,26 +46,26 @@ class DarkNet53(ks.Model):
 
     def _load_backbone_weights(self, config, weights):
         from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
-        encoder, decoder, outputs, _ = load_weights(config, weights)
+        encoder, decoder, outputs = load_weights(config, weights)
         print(encoder, decoder, outputs)
         encoder, weight_list = get_darknet53_tf_format(encoder[:])
         print(
-            f"\nno. layers: {len(self.back_bone.layers)}, no. weights: {len(weight_list)}")
+            f"\nno. layers: {len(self.backbone.layers)}, no. weights: {len(weight_list)}")
         for i, (layer, weights) in enumerate(
-                zip(self.back_bone.layers, weight_list)):
+                zip(self.backbone.layers, weight_list)):
             print(
                 f"loaded weights for layer: {i}  -> name: {layer.name}",
                 sep='      ',
                 end="\r")
             layer.set_weights(weights)
-        self.back_bone.trainable = False
+        self.backbone.trainable = False
         print(
-            f"\nsetting back_bone.trainable to: {self.back_bone.trainable}\n")
+            f"\nsetting backbone.trainable to: {self.backbone.trainable}\n")
         print(f"...training will only affect classification head...")
         return
 
     def get_summary(self):
-        self.back_bone.summary()
+        self.backbone.summary()
         self.head.build(input_shape=[None, None, None, 1024])
         self.head.summary()
         print(f"backbone trainable: {self.backbone.trainable}")
