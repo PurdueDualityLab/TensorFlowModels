@@ -8,6 +8,8 @@ Currently, the parser is incomplete and we can only guarantee that it works for
 models in the YOLO family (YOLOv3 and older).
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
@@ -40,6 +42,9 @@ class Config(ABC):
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
         output.
+
+        Returns:
+            A tuple corresponding to the output shape of the layer.
         '''
         return
 
