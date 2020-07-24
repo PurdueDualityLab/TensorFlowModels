@@ -8,6 +8,8 @@ Currently, the parser is incomplete and we can only guarantee that it works for
 models in the YOLO family (YOLOv3 and older).
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
@@ -40,20 +42,29 @@ class Config(ABC):
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
         output.
+
+        Returns:
+            A tuple corresponding to the output shape of the layer.
         '''
         return
 
     def load_weights(self, files):
         '''
-        Load the weights for the current layer from a file and return the
-        number of bytes read.
+        Load the weights for the current layer from a file.
+
+        Arguments:
+            files: Name of the DarkNet weights file
+
+        Returns:
+            the number of bytes read.
         '''
         return 0
 
     def get_weights(self):
         '''
-        Return a list of Numpy arrays consisting of all of the weights that
-        were loaded from the weights file.
+        Returns:
+            a list of Numpy arrays consisting of all of the weights that
+            were loaded from the weights file
         '''
         return []
 
@@ -86,6 +97,9 @@ class _LayerBuilder(dict):
             raise KeyError(f"Unknown layer type: {layer_type}") from e
 
     def register(self, *layer_types: str):
+        '''
+        Register a parser node (layer) class with the layer builder.
+        '''
         def decorator(clz):
             for layer_type in layer_types:
                 self[layer_type] = clz

@@ -9,6 +9,7 @@ verify_ssl = true
 tensorflow = "==2.*"
 absl-py = ">=0.7.0"
 numpy = "*"
+importlib-resources = {version = "*", markers="python_version < '3.7'"}
 
 # Optional packages
 # yaml = "*"        # for serialization and deserialization of models from YAML
