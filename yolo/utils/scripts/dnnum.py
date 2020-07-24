@@ -27,7 +27,7 @@ def main(argv, args=None):
     filename = args.filename
     if filename is None:
         from ..file_manager import download
-        with open(download('yolov3', 'cfg')) as file:
+        with open(download('yolov3.cfg')) as file:
             numberConfig(file)
     else:
         numberConfig(filename)

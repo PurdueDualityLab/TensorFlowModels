@@ -45,15 +45,21 @@ class Config(ABC):
 
     def load_weights(self, files):
         '''
-        Load the weights for the current layer from a file and return the
-        number of bytes read.
+        Load the weights for the current layer from a file.
+
+        Arguments:
+            files: Name of the DarkNet weights file
+
+        Returns:
+            the number of bytes read.
         '''
         return 0
 
     def get_weights(self):
         '''
-        Return a list of Numpy arrays consisting of all of the weights that
-        were loaded from the weights file.
+        Returns:
+            a list of Numpy arrays consisting of all of the weights that
+            were loaded from the weights file
         '''
         return []
 
@@ -86,6 +92,9 @@ class _LayerBuilder(dict):
             raise KeyError(f"Unknown layer type: {layer_type}") from e
 
     def register(self, *layer_types: str):
+        '''
+        Register a parser node (layer) class with the layer builder.
+        '''
         def decorator(clz):
             for layer_type in layer_types:
                 self[layer_type] = clz

@@ -25,9 +25,9 @@ def main(argv, args=None):
     weights = args.weights
     output = args.output
     if cfg is None:
-        cfg = download('yolov3', 'cfg')
+        cfg = download('yolov3.cfg')
     if weights is None:
-        weights = download('yolov3', 'weights')
+        weights = download('yolov3.weights')
 
     # This is horrible design that makes it impossible to load any model except
     # YOLOv3, but I have no option right now.

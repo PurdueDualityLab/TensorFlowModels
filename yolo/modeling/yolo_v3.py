@@ -33,9 +33,9 @@ class DarkNet53(ks.Model):
         ])
         if load_backbone_weights:
             if config_file is None:
-                config_file = download('yolov3', 'cfg')
+                config_file = download('yolov3.cfg')
             if weights_file is None:
-                weights_file = download('yolov3', 'weights')
+                weights_file = download('yolov3.weights')
             self._load_backbone_weights(config_file, weights_file)
         return
 
