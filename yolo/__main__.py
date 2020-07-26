@@ -6,10 +6,17 @@ python3 -m yolo dnnum yolov3.cfg
 To see a full list of these commands, see
 python3 -m yolo -h
 """
-from absl import app, flags
-from absl.flags import argparse_flags
+
 import importlib
 import sys
+
+try:
+    from absl import app, flags
+    from absl.flags import argparse_flags
+except ImportError as e:
+    raise ImportError("Some requirements were not installed. See the README to see how to install the packages.") from e
+
+
 from .utils import scripts
 
 
@@ -35,6 +42,7 @@ def main(argv):
 
     args = parser.parse_args(argv[1:])
     util = args._util
+
     module = importlib.import_module('yolo.utils.scripts.' + util)
     module.main(argv, args=args)
 

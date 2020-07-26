@@ -19,6 +19,7 @@ except ImportError:
 try:
     from importlib import resources as importlib_resources
 except:
+    # Shim for Python 3.6 and older
     import importlib_resources
 
 import tensorflow as tf
@@ -67,8 +68,6 @@ class DarkNetYAMLLoaderBase:
         filename = self.construct_scalar(node) + ".yml"
         with importlib_resources.open_text(configs, filename) as f:
             return yaml.load(f, self.__class__)
-    def construct_python_tuple(self, node):
-        return tuple(self.construct_sequence(node))
 
 
 if yaml is None:
@@ -79,15 +78,16 @@ else:
         pass
 
     class DarkNetSafeYAMLLoader(yaml.SafeLoader, DarkNetYAMLLoaderBase):
-        pass
+        def construct_python_tuple(self, node):
+            return tuple(self.construct_sequence(node))
 
     # Add functionality to use python/tuple, even in safe mode.
-    DarkNetSafeYAMLLoader.add_constructor('tag:yaml.org,2002:python/tuple', DarkNetYAMLLoader.construct_python_tuple)
-    DarkNetSafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetYAMLLoader.repeat_constructor)
-    DarkNetSafeYAMLLoader.add_constructor('!darknet', DarkNetYAMLLoader.darknet)
+    DarkNetSafeYAMLLoader.add_constructor('tag:yaml.org,2002:python/tuple', DarkNetSafeYAMLLoader.construct_python_tuple)
+    DarkNetSafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetSafeYAMLLoader.repeat_constructor)
+    DarkNetSafeYAMLLoader.add_constructor('!darknet', DarkNetSafeYAMLLoader.darknet)
 
-    DarkNetUnsafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetYAMLLoader.repeat_constructor)
-    DarkNetUnsafeYAMLLoader.add_constructor('!darknet', DarkNetYAMLLoader.darknet)
+    DarkNetUnsafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetUnsafeYAMLLoader.repeat_constructor)
+    DarkNetUnsafeYAMLLoader.add_constructor('!darknet', DarkNetUnsafeYAMLLoader.darknet)
 
 
 def load_darknet_from_yaml(yaml_string, custom_objects:dict=None, loader:type=DarkNetSafeYAMLLoader) -> tf.keras.Model:
