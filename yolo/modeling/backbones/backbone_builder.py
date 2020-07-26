@@ -31,6 +31,9 @@ class Backbone_Builder(ks.Model):
         if name == "darknet53":
             from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
             return build_block_specs(darknet53_config)
+        elif name == "darknet_tiny":
+            from yolo.modeling.backbones.configs.darknet_tiny import darknet_tiny_config
+            return build_block_specs(darknet_tiny_config)
         elif name == "yolov3_tiny":
             from yolo.modeling.backbones.configs.yolov3_tiny import yolov3_tiny_config
             return build_block_specs(yolov3_tiny_config)
@@ -66,6 +69,11 @@ class Backbone_Builder(ks.Model):
                     strides=config.strides,
                     padding=config.padding,
                     name = f"{name}_{i}")(x)
+            elif config.name == "darkyolotiny":
+                x = nn_blocks.darkyolotiny(
+                    filters=config.filters,
+                    strides = config.strides,
+                    name = f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]
                 x = layer(
@@ -74,8 +82,8 @@ class Backbone_Builder(ks.Model):
                     name = f"{name}_{i}")(x)
         return x
 
-# model = Backbone_Builder("darknet53")
-# config = model.to_json()
+model = Backbone_Builder("darknet_tiny")
+model.summary()
 # print(config)
 # with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
 #     data = tf.keras.models.model_from_json(config)

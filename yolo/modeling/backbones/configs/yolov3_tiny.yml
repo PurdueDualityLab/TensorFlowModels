@@ -28,18 +28,22 @@ config:
       - class_name: yolo>darkyolotiny
         config:
           filters: 32
+          strides: 2
 
       - class_name: yolo>darkyolotiny
         config:
           filters: 64
+          strides: 2
 
       - class_name: yolo>darkyolotiny
         config:
           filters: 128
+          strides: 2
 
       - class_name: yolo>darkyolotiny
         config:
           filters: 256
+          strides: 2
     inbound_nodes:
     - - ['input', 0, 0, {}]
     name: route1
@@ -51,10 +55,12 @@ config:
       - class_name: yolo>darkyolotiny
         config:
           filters: 512
+          strides: 2
 
       - class_name: yolo>darkyolotiny
         config:
           filters: 1024
+          strides: 2
     inbound_nodes:
     - - ['route1', 0, 0, {}]
     name: route2
