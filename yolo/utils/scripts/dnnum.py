@@ -5,11 +5,19 @@ from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
 
+
 def makeParser(parser):
-    parser.add_argument('filename', default=None, help='name of the config file. Defaults to YOLOv3', nargs='?', type=argparse.FileType('r'))
+    parser.add_argument(
+        'filename',
+        default=None,
+        help='name of the config file. Defaults to YOLOv3',
+        nargs='?',
+        type=argparse.FileType('r'))
+
 
 parser = argparse_flags.ArgumentParser()
 makeParser(parser)
+
 
 def numberConfig(file):
     i = 0
@@ -19,6 +27,7 @@ def numberConfig(file):
             i += 1
         else:
             print(f"    |{line}", end='')
+
 
 def main(argv, args=None):
     if args is None:

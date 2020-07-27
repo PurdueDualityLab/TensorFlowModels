@@ -5,14 +5,15 @@ from yolo.modeling.backbones import configs
 
 try:
     from importlib import resources as importlib_resources
-except:
+except BaseException:
     # Shim for Python 3.6 and older
     import importlib_resources
 
 from ..dn_yaml import *
 
 
-test_params = [(config, config) for config in importlib_resources.contents(configs) if config.endswith('.yml')]
+test_params = [(config, config) for config in importlib_resources.contents(
+    configs) if config.endswith('.yml')]
 
 
 class dn_yaml_test(tf.test.TestCase, parameterized.TestCase):

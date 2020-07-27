@@ -12,6 +12,7 @@ from typing import Union
 from .config_classes import *
 from ..dn2dicts import convertConfigFile
 
+
 def get_size(path):
     """calculate image size changes"""
     data = os.stat(path)
@@ -117,7 +118,8 @@ def get_darknet53_tf_format(net, only_weights=True):
     return new_net, weights
 
 
-def load_weights(config_file: Union[str, pathlib.Path], weights_file: Union[str, pathlib.Path]):
+def load_weights(
+        config_file: Union[str, pathlib.Path], weights_file: Union[str, pathlib.Path]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.

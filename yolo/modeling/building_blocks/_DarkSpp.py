@@ -8,15 +8,19 @@ class DarkSpp(ks.layers.Layer):
     def __init__(self, sizes, **kwargs):
         self._sizes = sizes
         if len(sizes) == 0:
-            raise ValueError("More than one maxpool should be specified in SSP block")
+            raise ValueError(
+                "More than one maxpool should be specified in SSP block")
         super().__init__(**kwargs)
         return
 
     def build(self, input_shape):
         maxpools = []
         for size in self._sizes:
-            maxpools.append(tf.keras.layers.MaxPool2D(
-                pool_size=(size, size), strides=(1, 1), padding='same', data_format=None))
+            maxpools.append(
+                tf.keras.layers.MaxPool2D(
+                    pool_size=(
+                        size, size), strides=(
+                        1, 1), padding='same', data_format=None))
         self._maxpools = maxpools
         super().build(input_shape)
         return

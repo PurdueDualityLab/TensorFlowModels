@@ -4,9 +4,10 @@ import tensorflow.keras as ks
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
-    def __init__(self, name, config = None, **kwargs):
+    def __init__(self, name, config=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -23,7 +24,7 @@ class Backbone_Builder(ks.Model):
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
-        super().__init__(inputs=inputs, outputs=output, name = self._model_name)
+        super().__init__(inputs=inputs, outputs=output, name=self._model_name)
         return
 
     def _get_model_config(self, name):
@@ -46,7 +47,7 @@ class Backbone_Builder(ks.Model):
             x = self._build_block(config, x, f"{config.name}_{i}")
             if config.output:
                 endpoints[int(config.filters)] = x
-        
+
         #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
 
@@ -59,24 +60,24 @@ class Backbone_Builder(ks.Model):
                     kernel_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
             elif config.name == "darkyolotiny":
                 x = nn_blocks.DarkTiny(
                     filters=config.filters,
-                    strides = config.strides,
-                    name = f"{name}_{i}")(x)
+                    strides=config.strides,
+                    name=f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(
                     pool_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]
                 x = layer(
                     filters=config.filters,
                     downsample=config.downsample,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
         return x
 
 # model = Backbone_Builder("darknet_tiny")

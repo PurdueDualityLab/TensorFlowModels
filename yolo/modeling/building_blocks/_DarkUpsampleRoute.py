@@ -61,11 +61,10 @@ class DarkUpsampleRoute(ks.layers.Layer):
         super().build(input_shape)
 
     def call(self, inputToConvolve, inputRouted):
-        #= inputs
+        # = inputs
         x = self._conv(inputToConvolve)
         x = self._upsample(x)
         x = ks.layers.concatenate([x, inputRouted])
-
         return x
 
     def get_config(self):

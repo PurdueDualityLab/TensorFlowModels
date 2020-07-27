@@ -1,34 +1,47 @@
 import tensorflow as tf
-import tensorflow.keras as ks 
+import tensorflow.keras as ks
 from absl.testing import parameterized
 
 from yolo.modeling.building_blocks import DarkConv
 
+
 class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
-    @parameterized.named_parameters(("valid", (3,3), "valid", (1,1)), 
-                                    ("same", (3,3), "same", (1,1)),
-                                    ("downsample", (3,3), "same", (2,2)))
+    @parameterized.named_parameters(("valid", (3, 3), "valid", (1, 1)),
+                                    ("same", (3, 3), "same", (1, 1)),
+                                    ("downsample", (3, 3), "same", (2, 2)))
     def test_pass_through(self, kernel_size, padding, strides):
         if padding == "same":
             pad_const = 1
         else:
             pad_const = 0
-        x = ks.Input(shape = (224, 224, 3))
-        test_layer = DarkConv(filters = 64, kernel_size = kernel_size, padding = padding, strides=strides)
+        x = ks.Input(shape=(224, 224, 3))
+        test_layer = DarkConv(
+            filters=64,
+            kernel_size=kernel_size,
+            padding=padding,
+            strides=strides)
         outx = test_layer(x)
         print(outx.shape.as_list())
-        self.assertAllEqual(outx.shape.as_list(), [None, int((224-kernel_size[0]+(2*pad_const))/strides[0]+1), int((224-kernel_size[1]+(2*pad_const))/strides[1]+1), 64])
+        self.assertAllEqual(outx.shape.as_list(),
+                            [None,
+                             int((
+                                 224 - kernel_size[0] + (2 * pad_const)) / strides[0] + 1),
+                             int((
+                                 224 - kernel_size[1] + (2 * pad_const)) / strides[1] + 1),
+                             64])
         return
 
     @parameterized.named_parameters(("filters", 3))
     def test_gradient_pass_though(self, filters):
         loss = ks.losses.MeanSquaredError()
         optimizer = ks.optimizers.SGD()
-        test_layer = DarkConv(filters, kernel_size=(3,3), padding = "same")
+        test_layer = DarkConv(filters, kernel_size=(3, 3), padding="same")
 
         init = tf.random_normal_initializer()
-        x = tf.Variable(initial_value = init(shape = (1, 224, 224, 3), dtype = tf.float32))
-        y = tf.Variable(initial_value = init(shape = (1, 224, 224, filters), dtype = tf.float32))
+        x = tf.Variable(initial_value=init(
+            shape=(1, 224, 224, 3), dtype=tf.float32))
+        y = tf.Variable(initial_value=init(
+            shape=(1, 224, 224, filters), dtype=tf.float32))
 
         with tf.GradientTape() as tape:
             x_hat = test_layer(x)

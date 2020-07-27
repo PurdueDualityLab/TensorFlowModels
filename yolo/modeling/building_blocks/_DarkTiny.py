@@ -9,7 +9,7 @@ class DarkTiny(ks.layers.Layer):
     def __init__(self,
                  filters=1,
                  use_bias=True,
-                 strides = 2,
+                 strides=2,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  use_bn=True,
@@ -74,7 +74,7 @@ class DarkTiny(ks.layers.Layer):
         layer_config = {
             "filters": self._filters,
             "use_bias": self._use_bias,
-            "strides":  self._strides,
+            "strides": self._strides,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
             "use_bn": self._use_bn,

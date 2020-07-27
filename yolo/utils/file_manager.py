@@ -9,9 +9,16 @@ import tensorflow.keras as ks
 import os
 
 urls = {
-    'yolov3.cfg': ('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg', 'cfg', '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
-    'yolov3.weights': ('https://pjreddie.com/media/files/yolov3.weights', 'weights', '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
+    'yolov3.cfg': (
+        'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
+        'cfg',
+        '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
+    'yolov3.weights': (
+        'https://pjreddie.com/media/files/yolov3.weights',
+        'weights',
+        '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
 }
+
 
 def download(name: str) -> str:
     """
@@ -38,7 +45,13 @@ def download(name: str) -> str:
     """
     url, type, hash = urls[name]
     try:
-        return ks.utils.get_file(name, url, cache_dir='cache', cache_subdir=type, file_hash=hash, hash_algorithm='sha256')
+        return ks.utils.get_file(
+            name,
+            url,
+            cache_dir='cache',
+            cache_subdir=type,
+            file_hash=hash,
+            hash_algorithm='sha256')
     except Exception as e:
         if 'URL fetch failure on' in str(e):
             raise HTTPException(str(e)) from e
