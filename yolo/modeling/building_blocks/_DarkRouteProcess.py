@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.building_blocks import DarkConv #, DarkSpp
 
 
 class DarkRouteProcess(ks.layers.Layer):
@@ -123,6 +123,7 @@ class DarkRouteProcess(ks.layers.Layer):
             activation=self._activation,
             leaky_alpha=self._leaky_alpha)
         # repalce with spp
+        # x2 = DarkSpp(sizes = [5, 9, 13])
         x2 = DarkConv(
             filters=filters,
             kernel_size=(

@@ -9,13 +9,10 @@ from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 
 class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("simple", "darknet53", (1, 224, 224, 3)),
-                                    ("darknet_tiny", "darknet_tiny",
-                                     (1, 224, 224, 3)),
-                                    ("odd_shape_tiny", "darknet_tiny",
-                                     (1, 224, 128, 3)),
+                                    ("darknet_tiny", "darknet_tiny",(1, 224, 224, 3)),
+                                    ("odd_shape_tiny", "darknet_tiny",(1, 224, 128, 3)),
                                     ("odd_shape_reg", "darknet53", (1, 224, 128, 3)),
-                                    ("odd_shape_rev_tiny",
-                                     "darknet_tiny", (1, 128, 224, 3)),
+                                    ("odd_shape_rev_tiny", "darknet_tiny", (1, 128, 224, 3)),
                                     ("odd_shape_rev_reg", "darknet53", (1, 128, 224, 3)),)
     def test_pass_through(self, model, input_shape):
         if model == "darknet53":
@@ -133,11 +130,8 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
                 losses += grad_loss
 
         grad_p = tape.gradient(losses, pred.trainable_variables)
-        optimizer.apply_gradients(zip(grad, pred.trainable_variables))
-
-        grad_h = tape.gradient(losses, pred.trainable_variables)
-        optimizer.apply_gradients(zip(grad, pred.trainable_variables))
-        self.assertNotIn(None, grad)
+        optimizer.apply_gradients(zip(grad_p, pred.trainable_variables))
+        self.assertNotIn(None, grad_p)
         return
 
 
