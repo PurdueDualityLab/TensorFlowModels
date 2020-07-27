@@ -80,25 +80,25 @@ class Yolov3Head(tf.keras.Model):
         return outputs
 
 
-model = Backbone_Builder("darknet53")
-head = Yolov3Head("regular")
-model.summary()
-head.summary()
+# model = Backbone_Builder("darknet53")
+# head = Yolov3Head("regular")
+# model.summary()
+# head.summary()
 
-model.build(input_shape = None)
-head.build(input_shape = None)
+# model.build(input_shape = None)
+# head.build(input_shape = None)
 
-x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
+# x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
 
-import time
-start = time.time()
-y = model(x)
-z = head(y)
-end = time.time() - start
-print((end * 60), end)
+# import time
+# start = time.time()
+# y = model(x)
+# z = head(y)
+# end = time.time() - start
+# print((end * 60), end)
 
-print({key:value.shape for key, value in y.items()})
-print({key:value.shape for key, value in z.items()})
+# print({key:value.shape for key, value in y.items()})
+# print({key:value.shape for key, value in z.items()})
 # import time
 # inputs = [tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32) for i in range(60)]
 
@@ -112,5 +112,5 @@ print({key:value.shape for key, value in z.items()})
 #     print(z[key].shape)
 
 
-tf.keras.utils.plot_model(model, to_file='backbone.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
-tf.keras.utils.plot_model(head, to_file='head.png', show_shapes=True, show_layer_names=False, expand_nested=True, dpi=96)
+# tf.keras.utils.plot_model(model, to_file='backbone.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
+# tf.keras.utils.plot_model(head, to_file='head.png', show_shapes=True, show_layer_names=False, expand_nested=True, dpi=96)
