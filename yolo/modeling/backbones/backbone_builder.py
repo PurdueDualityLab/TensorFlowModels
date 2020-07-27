@@ -23,7 +23,6 @@ class Backbone_Builder(ks.Model):
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
-        print(kwargs)
         super().__init__(inputs=inputs, outputs=output, name = self._model_name)
         return
 
@@ -47,6 +46,8 @@ class Backbone_Builder(ks.Model):
             x = self._build_block(config, x, f"{config.name}_{i}")
             if config.output:
                 endpoints[int(config.filters)] = x
+        
+        #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
 
     def _build_block(self, config, inputs, name):
