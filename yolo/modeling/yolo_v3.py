@@ -86,9 +86,29 @@ class Yolov3(ks.Model):
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
+    
+    def _load_backbone_weights(self, config, weights):
+        from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
+        encoder, decoder, outputs = load_weights(config, weights)
+        print(encoder, decoder, outputs)
+        encoder, weight_list = get_darknet53_tf_format(encoder[:])
+        print(
+            f"\nno. layers: {len(self._backbone.layers)}, no. weights: {len(weight_list)}")
+        for i, (layer, weights) in enumerate(
+                zip(self._backbone.layers, weight_list)):
+            print(
+                f"loaded weights for layer: {i}  -> name: {layer.name}",
+                sep='      ',
+                end="\r")
+            layer.set_weights(weights)
+        self._backbone.trainable = False
+        print(
+            f"\nsetting backbone.trainable to: {self._backbone.trainable}\n")
+        print(f"...training will only affect classification head...")
+        return
 
 
-class Yolov3_tiny():
+class Yolov3_tiny(ks.Model):
     def __init__(self, input_shape = [None, None, None, 3], **kwargs):
         super().__init__(**kwargs)
 
@@ -102,7 +122,7 @@ class Yolov3_tiny():
         super().__init__(inputs = inputs, outputs = predictions)
 
 
-class Yolov3_spp():
+class Yolov3_spp(ks.Model):
     def __init__(self, input_shape = [None, None, None, 3], **kwargs):
         super().__init__(**kwargs)
 
@@ -116,10 +136,8 @@ class Yolov3_spp():
         super().__init__(inputs = inputs, outputs = predictions)
 
 
-model = Yolov3()
+model = Yolov3_tiny()
 model.build(input_shape = None)
-model.summary()
+print(model.get_config())
 
-model.save("yolo")
-
-tf.keras.utils.plot_model(model, to_file='Yolo.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
+tf.keras.utils.plot_model(model, to_file='Yolo_tiny.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
