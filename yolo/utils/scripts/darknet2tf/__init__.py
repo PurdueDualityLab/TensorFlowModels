@@ -16,11 +16,13 @@ def makeParser(parser):
         'cfg',
         default=None,
         help='name of the config file. Defaults to YOLOv3',
+        type=argparse.FileType('r'),
         nargs='?')
     parser.add_argument(
         'weights',
         default=None,
         help='name of the weights file. Defaults to YOLOv3',
+        type=argparse.FileType('rb'),
         nargs='?')
     parser.add_argument(
         'output', help='name of the location to save the generated model')

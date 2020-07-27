@@ -1,6 +1,7 @@
 from absl.testing import parameterized
 import tensorflow as tf
 
+from yolo.modeling import building_blocks
 from yolo.modeling.backbones import configs
 
 try:
