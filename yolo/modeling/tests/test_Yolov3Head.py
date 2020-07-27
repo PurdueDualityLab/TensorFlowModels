@@ -134,6 +134,5 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
         self.assertNotIn(None, grad_p)
         return
 
-
 if __name__ == "__main__":
     tf.test.main()

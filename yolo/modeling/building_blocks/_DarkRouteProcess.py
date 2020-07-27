@@ -76,12 +76,8 @@ class DarkRouteProcess(ks.layers.Layer):
     def _block(self, filters):
         x1 = DarkConv(
             filters=filters // 2,
-            kernel_size=(
-                1,
-                1),
-            strides=(
-                1,
-                1),
+            kernel_size=(1,1),
+            strides=(1,1),
             padding="same",
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
@@ -91,12 +87,8 @@ class DarkRouteProcess(ks.layers.Layer):
             leaky_alpha=self._leaky_alpha)
         x2 = DarkConv(
             filters=filters,
-            kernel_size=(
-                3,
-                3),
-            strides=(
-                1,
-                1),
+            kernel_size=(3,3),
+            strides=(1,1),
             padding="same",
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
@@ -109,12 +101,8 @@ class DarkRouteProcess(ks.layers.Layer):
     def _spp(self, filters):
         x1 = DarkConv(
             filters=filters // 2,
-            kernel_size=(
-                1,
-                1),
-            strides=(
-                1,
-                1),
+            kernel_size=(1,1),
+            strides=(1,1),
             padding="same",
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
@@ -126,12 +114,8 @@ class DarkRouteProcess(ks.layers.Layer):
         # x2 = DarkSpp(sizes = [5, 9, 13])
         x2 = DarkConv(
             filters=filters,
-            kernel_size=(
-                3,
-                3),
-            strides=(
-                1,
-                1),
+            kernel_size=(3,3),
+            strides=(1,1),
             padding="same",
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,

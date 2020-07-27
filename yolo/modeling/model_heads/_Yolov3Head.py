@@ -94,7 +94,7 @@ class Yolov3Head(tf.keras.Model):
             x_prev, x = routes[self._filters[i]](layer_in)
             if i + 1 < len(self._filters):
                 x_next = inputs[self._filters[i + 1]]
-                layer_in = upsamples[self._filters[i]](x_prev, x_next)
+                layer_in = upsamples[self._filters[i]]([x_prev, x_next])
             outputs[self._filters[i]] = prediction_heads[self._filters[i]](x)
         return outputs
 

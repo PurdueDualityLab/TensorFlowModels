@@ -68,22 +68,21 @@ class Yolov3Head(tf.keras.layers.Layer):
                 # print(x_next.shape)
                 layer_in = self.upsamples[self.filters[i]](x_prev, x_next)
                 # print(layer_in.shape)
-            outputs[self.filters[i]
-                    ] = self.prediction_heads[self.filters[i]](x)
+            outputs[self.filters[i]] = self.prediction_heads[self.filters[i]](x)
         return outputs
 
 
-model = Backbone_Builder("darknet53")
-model.summary()
-head = Yolov3Head("regular")
+# model = Backbone_Builder("darknet53")
+# model.summary()
+# head = Yolov3Head("regular")
 
-inputs = [tf.ones(shape=[1, 416, 416, 3], dtype=tf.float32) for i in range(60)]
+# inputs = [tf.ones(shape=[1, 416, 416, 3], dtype=tf.float32) for i in range(60)]
 
-start = time.time()
-for x in inputs:
-    y = model(x)
-    z = head(y)
-print(time.time() - start)
+# start = time.time()
+# for x in inputs:
+#     y = model(x)
+#     z = head(y)
+# print(time.time() - start)
 
 # for key in z.keys():
 #     print(z[key].shape)

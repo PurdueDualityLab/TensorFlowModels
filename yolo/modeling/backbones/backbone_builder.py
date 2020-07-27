@@ -80,7 +80,7 @@ class Backbone_Builder(ks.Model):
                     name=f"{name}_{i}")(x)
         return x
 
-# model = Backbone_Builder("darknet_tiny")
+# model = Backbone_Builder("darknet53")
 # model.summary()
 # print(config)
 # with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
