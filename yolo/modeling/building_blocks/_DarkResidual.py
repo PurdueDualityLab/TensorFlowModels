@@ -144,3 +144,6 @@ class DarkResidual(ks.layers.Layer):
         }
         layer_config.update(super().get_config())
         return layer_config
+
+    
+

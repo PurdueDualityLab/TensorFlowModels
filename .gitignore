@@ -141,3 +141,4 @@ cython_debug/
 
 cache
 yolov3_416.weights
+*.weights
