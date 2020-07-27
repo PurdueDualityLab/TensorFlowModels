@@ -5,7 +5,7 @@ from yolo.modeling.building_blocks import DarkConv
 
 
 @ks.utils.register_keras_serializable(package='yolo')
-class darkyolotiny(ks.layers.Layer):
+class DarkTiny(ks.layers.Layer):
     def __init__(self,
                  filters=1,
                  use_bias=True,

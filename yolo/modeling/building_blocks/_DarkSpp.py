@@ -4,7 +4,7 @@ import tensorflow.keras as ks
 
 
 @ks.utils.register_keras_serializable(package='yolo')
-class darkyolospp(ks.layers.Layer):
+class DarkSpp(ks.layers.Layer):
     def __init__(self, sizes, **kwargs):
         self._sizes = sizes
         if len(sizes) == 0:

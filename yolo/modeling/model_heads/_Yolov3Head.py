@@ -45,9 +45,9 @@ class _Yolov3Head(tf.keras.Model):
             
             self.prediction_heads[key] = DarkConv(filters = 255, kernel_size = (1,1), strides = (1,1), padding = "same", activation=None)
 
-        print(self.routes)
-        print(self.upsamples)
-        print(self.prediction_heads)
+        #print(self.routes)
+        #print(self.upsamples)
+        #print(self.prediction_heads)
         return
 
     def call(self, inputs):
@@ -55,22 +55,27 @@ class _Yolov3Head(tf.keras.Model):
         outputs = dict()
         for i in range(len(self.filters)):
             x_prev, x = self.routes[self.filters[i]](layer_in)
-            print(x_prev.shape)
+            #print(x_prev.shape)
             if i + 1 < len(self.filters):
                 x_next = inputs[self.filters[i + 1]]
-                print(x_next.shape)
+                #print(x_next.shape)
                 layer_in = self.upsamples[self.filters[i]](x_prev, x_next)  
-                print(layer_in.shape)
+                #print(layer_in.shape)
             outputs[self.filters[i]] = self.prediction_heads[self.filters[i]](x)
         return outputs
 
-x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
-model = Backbone_Builder("darknet_tiny")
-y = model(x)
-print(y.values())
-
+model = Backbone_Builder("yolov3_tiny")
+model.summary()
 head = _Yolov3Head("tiny")
-z = head(y)
 
-for key in z.keys():
-    print(z[key].shape)
+import time
+inputs = [tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32) for i in range(40)]
+
+start = time.time()
+for x in inputs:
+    y = model(x)
+    z = head(y)
+print(time.time() - start)
+
+# for key in z.keys():
+#     print(z[key].shape)

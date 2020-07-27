@@ -60,19 +60,15 @@ class Backbone_Builder(ks.Model):
                     padding=config.padding,
                     name = f"{name}_{i}")(x)
             elif config.name == "darkyolotiny":
-                x = nn_blocks.darkyolotiny(
+                x = nn_blocks.DarkTiny(
                     filters=config.filters,
+                    strides = config.strides,
                     name = f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(
                     pool_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
-                    name = f"{name}_{i}")(x)
-            elif config.name == "darkyolotiny":
-                x = nn_blocks.darkyolotiny(
-                    filters=config.filters,
-                    strides = config.strides,
                     name = f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]
@@ -82,8 +78,8 @@ class Backbone_Builder(ks.Model):
                     name = f"{name}_{i}")(x)
         return x
 
-model = Backbone_Builder("darknet_tiny")
-model.summary()
+# model = Backbone_Builder("darknet_tiny")
+# model.summary()
 # print(config)
 # with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
 #     data = tf.keras.models.model_from_json(config)

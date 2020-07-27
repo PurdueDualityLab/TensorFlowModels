@@ -33,7 +33,7 @@ class DarkRouteProcess(ks.layers.Layer):
         self._insert_spp = insert_spp
 
         self.layer_list = self._get_layer_list()
-        print(self.layer_list)
+        #print(self.layer_list)
         super().__init__(**kwargs)
         return
     
