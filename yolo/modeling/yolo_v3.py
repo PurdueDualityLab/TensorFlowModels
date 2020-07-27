@@ -120,6 +120,6 @@ model = Yolov3()
 model.build(input_shape = None)
 model.summary()
 
-print(model.layers[-1].layers)
+model.save("yolo")
 
 tf.keras.utils.plot_model(model, to_file='Yolo.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)

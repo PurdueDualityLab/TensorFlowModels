@@ -59,14 +59,11 @@ class DarkUpsampleRoute(ks.layers.Layer):
                               leaky_alpha=self._leaky_alpha)
         self._upsample = ks.layers.UpSampling2D(size=self._upsampling_size)
         self._concat = tf.keras.layers.Concatenate()
-        print(input_shape)
         super().build(input_shape)
 
     def call(self, inputs):
         # done this way to prevent confusion in the auto graph
         inputToConvolve, inputRouted = inputs
-        tf.print(inputToConvolve.shape)
-        tf.print(inputRouted.shape)
         x = self._conv(inputToConvolve)
         x = self._upsample(x)
         x = self._concat([x, inputRouted])
