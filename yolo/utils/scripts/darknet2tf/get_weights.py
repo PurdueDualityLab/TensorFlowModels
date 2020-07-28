@@ -43,16 +43,22 @@ def get_size(path: Union[str, pathlib.Path, io.IOBase]) -> int:
         return os.path.getsize(path)
 
 
-def build_layer(layer_dict, file, prevlayer):
+def build_layer(layer_dict, file, prevlayer, net):
     """consturct layer and load weights from file"""
     layer = layer_builder[layer_dict['_type']].from_dict(prevlayer, layer_dict)
+
+    # temprary use for management of routing layers
+    if layer._type == "route" and type(layer_dict['layers ']) == tuple:
+        route = layer_dict['layers '][1]
+        layer.c += net[route + 1].filters
+    elif layer._type == "route":
+        layer.c //= 2
+
     if file is not None:
         bytes_read = layer.load_weights(file)
     else:
         bytes_read = 0
 
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
     return layer, bytes_read
 
 
@@ -84,7 +90,7 @@ def read_file(config, weights):
     outputs = [None]
     for layer_dict in config:
         if layer_dict["_type"] != "decoder_encoder_split":
-            layer, num_read = build_layer(layer_dict, weights, net[-1])
+            layer, num_read = build_layer(layer_dict, weights, net[-1], encoder)
             if layer_dict["_type"] != 'yolo' and layer.shape[-1] != 255:
                 net.append(layer)
             else:
@@ -104,6 +110,8 @@ def read_file(config, weights):
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""
+    if len(block) == 0:
+        return []
     weights_temp = []
     for layer in block:
         weights = layer.get_weights()

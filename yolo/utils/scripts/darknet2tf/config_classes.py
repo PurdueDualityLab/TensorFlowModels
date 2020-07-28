@@ -193,8 +193,9 @@ class convCFG(Config):
 
     @classmethod
     def from_dict(clz, prevlayer, layer_dict):
-        layer_dict.update(
-            {"w": prevlayer.shape[0], "h": prevlayer.shape[1], "c": prevlayer.shape[2]})
+        if "w" not in layer_dict.keys():
+            layer_dict.update(
+                {"w": prevlayer.shape[0], "h": prevlayer.shape[1], "c": prevlayer.shape[2]})
         return clz(**layer_dict)
 
 
