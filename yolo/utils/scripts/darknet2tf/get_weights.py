@@ -59,8 +59,6 @@ def build_layer(layer_dict, file, prevlayer, net):
     else:
         bytes_read = 0
 
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
     return layer, bytes_read
 
 

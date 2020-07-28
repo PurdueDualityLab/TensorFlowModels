@@ -82,6 +82,44 @@ class Yolov3(ks.Model):
                  config_file = None, 
                  weights_file = None, 
                  **kwargs):
+        
+        """
+        load the entire Yolov3 Model for tensorflow
+
+        example:
+            load yolo with darknet wieghts for backbone
+            model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+
+        to be implemented
+        example: 
+            load custom back bone weigths
+        
+        example: 
+            load custom head weigths
+        
+        example: 
+            load back bone weigths from tensorflow (our training)
+        
+        example: 
+            load head weigths from tensorflow (our training)
+
+        Args:
+            input_shape: list or tuple for image input shape, default is [None, None, None, 3] for variable size images
+            classes: int for the number of available classes 
+            boxes: total number of boxes that are predicted by detection head
+            
+            dn2tf_backbone: bool, if true it will load backbone weights for yolo v3 from darknet .weights file
+            dn2tf_head: bool, if true it will load head weights for yolo v3 from darknet .weights file
+            config_file: str path for the location of the configuration file to use when decoding darknet weights
+            weights_file: str path with the file containing the dark net weights
+
+        Return:
+            initialized callable yolo model
+        
+        Raises:
+            Exception: if config file is not provided and dn2tf_backbone or dn2tf_head is true
+            Exception: if weights file is not provided and dn2tf_backbone or dn2tf_head is true
+        """
         super().__init__(**kwargs)
 
         self._input_shape = input_shape
@@ -139,9 +177,11 @@ class Yolov3(ks.Model):
 
     def get_decoder_weights(self, decoder, head):
         from yolo.utils.scripts.darknet2tf.get_weights import interleve_weights
+
         layers = [[]]
         block = []
         weights = []
+
         # get decoder weights and group them together
         for layer in decoder:
             if layer._type == "route":
@@ -192,10 +232,11 @@ class Yolov3_spp(ks.Model):
         super().__init__(inputs = inputs, outputs = predictions)
 
 
-model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file='yolov3_416.weights')
-model.build(input_shape = None)
+# init = tf.random_normal_initializer()
+# x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
+model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+model.build(input_shape = (1, 416, 416, 3))
 model.summary()
-
 
 
 

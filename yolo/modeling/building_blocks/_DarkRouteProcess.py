@@ -1,10 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as ks
-<<<<<<< HEAD
 from yolo.modeling.building_blocks import DarkConv, DarkSpp
-=======
-from yolo.modeling.building_blocks import DarkConv #, DarkSpp
->>>>>>> 61e54103eaf3ca7a49a4cf9dba27ef04741bba9f
 
 
 class DarkRouteProcess(ks.layers.Layer):
@@ -119,23 +115,7 @@ class DarkRouteProcess(ks.layers.Layer):
             activation=self._activation,
             leaky_alpha=self._leaky_alpha)
         # repalce with spp
-<<<<<<< HEAD
         x2 = DarkSpp([5, 9, 13])
-=======
-        # x2 = DarkSpp(sizes = [5, 9, 13])
-        x2 = DarkConv(
-            filters=filters,
-            kernel_size=(3,3),
-            strides=(1,1),
-            padding="same",
-            use_bn= True,
-            kernel_initializer=self._kernel_initializer,
-            bias_initializer=self._bias_initializer,
-            norm_moment=self._norm_moment,
-            norm_epsilon=self._norm_epsilon,
-            activation=self._activation,
-            leaky_alpha=self._leaky_alpha)
->>>>>>> 61e54103eaf3ca7a49a4cf9dba27ef04741bba9f
         return [x1, x2]
 
     def build(self, input_shape):
