@@ -27,7 +27,7 @@ class DarkRouteProcess(ks.layers.Layer):
         Args:
             filters: the number of filters to be used in all subsequent layers
                      filters should be the depth of the tensor input into this layer, as no downsampling can be done within this layer object
-            repititions: number of times to repeat the processign nodes
+            repetitions: number of times to repeat the processign nodes
                          for tiny: 1 repition, no spp allowed
                          for spp: insert_spp = True, and allow for 3+ repetitions
                          for regular: insert_spp = False, and allow for 3+ repetitions
