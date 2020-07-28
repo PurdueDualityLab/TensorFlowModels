@@ -82,9 +82,12 @@ class Yolov3Head(tf.keras.Model):
                 self.mod = 1
 
             prediction_heads[filters] = DarkConv(
-                filters=self.pred_depth, kernel_size=(
-                    1, 1), strides=(
-                    1, 1), padding="same", activation=None)
+                filters=self.pred_depth, 
+                kernel_size=(1, 1), 
+                strides=(1, 1), 
+                padding="same", 
+                use_bn=False, 
+                activation=None)
         return routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
@@ -98,38 +101,3 @@ class Yolov3Head(tf.keras.Model):
             outputs[self._filters[i]] = prediction_heads[self._filters[i]](x)
         return outputs
 
-
-# model = Backbone_Builder("darknet53")
-# head = Yolov3Head("regular")
-# model.summary()
-# head.summary()
-
-# model.build(input_shape = None)
-# head.build(input_shape = None)
-
-# x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
-
-# import time
-# start = time.time()
-# y = model(x)
-# z = head(y)
-# end = time.time() - start
-# print((end * 60), end)
-
-# print({key:value.shape for key, value in y.items()})
-# print({key:value.shape for key, value in z.items()})
-# import time
-# inputs = [tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32) for i in range(60)]
-
-# start = time.time()
-# for x in inputs:
-#     y = model.predict(x)
-#     z = head.predict(y)
-# print(time.time() - start)
-
-# for key in z.keys():
-#     print(z[key].shape)
-
-
-# tf.keras.utils.plot_model(model, to_file='backbone.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
-# tf.keras.utils.plot_model(head, to_file='head.png', show_shapes=True, show_layer_names=False, expand_nested=True, dpi=96)
