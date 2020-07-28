@@ -11,87 +11,6 @@ import time
 # Global Variable to introduce randomness among each element of a batch
 RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))
 
-# MAIN FUNCTION TO USE FOR PREPROCESSING
-# SAMPLE USE CASES CAN BE FOUND IN THE benchmark_preprocessing.py
-def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, num_of_batches):
-    """Preprocesses (normalization and data augmentation) and batches the dataset.
-
-    Args:
-        dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
-        data_augmentation_split (int): The percentage of the dataset that is data
-            augmented.
-        preprocessing_type (str): The type of preprocessing should be conducted
-            and is dependent on the type of training.
-        size (int): The size of the dataset being passed into preprocessing.
-        num_of_batches (int): The number of batches you would like the return
-            dataset to be split into.
-
-    Returns:
-        dataset (tfds.data.Dataset): A shuffled dataset that includes images that
-            have been data augmented
-
-    Raises:
-        SyntaxError:
-            - Preprocessing type not found.
-            - The given batch number for detection preprocessing is more than 1.
-            - Number of batches cannot be less than 1.
-            - Data augmentation split cannot be greater than 100.
-        TypeError:
-            - Dataset is not a tensorflow dataset.
-            - Data augmentation split must be an integer.
-            - Preprocessing type must be an string.
-            - Size must be an integer.
-            - Number of batches must be an integer.
-    """
-    if isinstance(dataset, tf.python.data.ops.dataset_ops.DatasetV1Adapter) == False:
-        raise TypeError("Dataset is not a tensorflow dataset.")
-    if type(data_augmentation_split) is not int:
-        raise TypeError("Data augmentation split must be an integer.")
-    if type(preprocessing_type) is not str:
-        raise TypeError("Preprocessing type must be an string.")
-    if type(size) is not int:
-        raise TypeError("Size must be an integer.")
-    if type(num_of_batches) is not int:
-        raise TypeError("Number of batches must be an integer.")
-
-    if preprocessing_type.lower() != "detection" and preprocessing_type.lower() != "classification" and preprocessing_type.lower() != "priming":
-        raise SyntaxError("Preprocessing type not found.")
-    if num_of_batches != 1 and preprocessing_type.lower() == "detection":
-        raise SyntaxError("For detection preprocessing, number of batches must be 1.")
-    if num_of_batches < 1:
-        raise SyntaxError("Number of batches cannot be less than 1.")
-    if data_augmentation_split > 100:
-        raise SyntaxError("Data augmentation split cannot be greater than 100.")
-
-    # Spliting the dataset based off of user defined split
-    data_augmentation_split = int((data_augmentation_split/100)*size)
-    non_preprocessed_split = size - data_augmentation_split
-    data_augmentation_dataset = dataset.take(data_augmentation_split)
-    remaining = dataset.skip(data_augmentation_split)
-    non_preprocessed_split = remaining.take(non_preprocessed_split)
-
-    # Data Augmentation
-    preprocessing_function = _preprocessing_selection(preprocessing_type)
-    data_augmentation_dataset = data_augmentation_dataset.map(preprocessing_function, num_parallel_calls= tf.data.experimental.AUTOTUNE)
-
-    # Normalization
-    if preprocessing_type.lower() == "detection":
-        non_preprocessed_split = non_preprocessed_split.map(_detection_normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
-
-    elif preprocessing_type.lower() == "classification":
-        normalize = _normalize_selection(224, 224)
-        non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
-
-    elif preprocessing_type.lower() == "priming":
-        normalize = _normalize_selection(448, 448)
-        non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
-
-    # Preparing the return dataset through concatentaion and shuffling
-    dataset= data_augmentation_dataset.concatenate(non_preprocessed_split)
-    dataset = dataset.shuffle(size)
-    dataset = dataset.batch(int(size/num_of_batches)).prefetch(tf.data.experimental.AUTOTUNE)
-    return dataset
-
 def _angles_to_projective_transforms(angle, image_w, image_h):
     """Generate projective transform matrix for tfa.image.transform.
 
@@ -341,3 +260,84 @@ def _detection_normalize(datapoint):
         return image, datapoint['object']
     else:
         return image, datapoint['label']
+
+# MAIN FUNCTION TO USE FOR PREPROCESSING
+# SAMPLE USE CASES CAN BE FOUND IN THE benchmark_preprocessing.py
+def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, num_of_batches):
+    """Preprocesses (normalization and data augmentation) and batches the dataset.
+
+    Args:
+        dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
+        data_augmentation_split (int): The percentage of the dataset that is data
+            augmented.
+        preprocessing_type (str): The type of preprocessing should be conducted
+            and is dependent on the type of training.
+        size (int): The size of the dataset being passed into preprocessing.
+        num_of_batches (int): The number of batches you would like the return
+            dataset to be split into.
+
+    Returns:
+        dataset (tfds.data.Dataset): A shuffled dataset that includes images that
+            have been data augmented
+
+    Raises:
+        SyntaxError:
+            - Preprocessing type not found.
+            - The given batch number for detection preprocessing is more than 1.
+            - Number of batches cannot be less than 1.
+            - Data augmentation split cannot be greater than 100.
+        TypeError:
+            - Dataset is not a tensorflow dataset.
+            - Data augmentation split must be an integer.
+            - Preprocessing type must be an string.
+            - Size must be an integer.
+            - Number of batches must be an integer.
+    """
+    if isinstance(dataset, tf.python.data.ops.dataset_ops.DatasetV1Adapter) == False:
+        raise TypeError("Dataset is not a tensorflow dataset.")
+    if type(data_augmentation_split) is not int:
+        raise TypeError("Data augmentation split must be an integer.")
+    if type(preprocessing_type) is not str:
+        raise TypeError("Preprocessing type must be an string.")
+    if type(size) is not int:
+        raise TypeError("Size must be an integer.")
+    if type(num_of_batches) is not int:
+        raise TypeError("Number of batches must be an integer.")
+
+    if preprocessing_type.lower() != "detection" and preprocessing_type.lower() != "classification" and preprocessing_type.lower() != "priming":
+        raise SyntaxError("Preprocessing type not found.")
+    if num_of_batches != 1 and preprocessing_type.lower() == "detection":
+        raise SyntaxError("For detection preprocessing, number of batches must be 1.")
+    if num_of_batches < 1:
+        raise SyntaxError("Number of batches cannot be less than 1.")
+    if data_augmentation_split > 100:
+        raise SyntaxError("Data augmentation split cannot be greater than 100.")
+
+    # Spliting the dataset based off of user defined split
+    data_augmentation_split = int((data_augmentation_split/100)*size)
+    non_preprocessed_split = size - data_augmentation_split
+    data_augmentation_dataset = dataset.take(data_augmentation_split)
+    remaining = dataset.skip(data_augmentation_split)
+    non_preprocessed_split = remaining.take(non_preprocessed_split)
+
+    # Data Augmentation
+    preprocessing_function = _preprocessing_selection(preprocessing_type)
+    data_augmentation_dataset = data_augmentation_dataset.map(preprocessing_function, num_parallel_calls= tf.data.experimental.AUTOTUNE)
+
+    # Normalization
+    if preprocessing_type.lower() == "detection":
+        non_preprocessed_split = non_preprocessed_split.map(_detection_normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
+
+    elif preprocessing_type.lower() == "classification":
+        normalize = _normalize_selection(224, 224)
+        non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
+
+    elif preprocessing_type.lower() == "priming":
+        normalize = _normalize_selection(448, 448)
+        non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
+
+    # Preparing the return dataset through concatentaion and shuffling
+    dataset= data_augmentation_dataset.concatenate(non_preprocessed_split)
+    dataset = dataset.shuffle(size)
+    dataset = dataset.batch(int(size/num_of_batches)).prefetch(tf.data.experimental.AUTOTUNE)
+    return dataset
