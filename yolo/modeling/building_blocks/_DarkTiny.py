@@ -19,7 +19,6 @@ class DarkTiny(ks.layers.Layer):
                  conv_activation='leaky',
                  leaky_alpha=0.1,
                  sc_activation='linear',
-                 downsample=False,
                  **kwargs):
 
         # darkconv params
