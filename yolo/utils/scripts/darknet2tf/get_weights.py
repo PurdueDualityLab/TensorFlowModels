@@ -2,6 +2,7 @@
 This file contains the code to parse DarkNet weight files.
 """
 
+import io
 import numpy as np
 import os
 import itertools
@@ -13,10 +14,33 @@ from .config_classes import *
 from ..dn2dicts import convertConfigFile
 
 
-def get_size(path):
-    """calculate image size changes"""
-    data = os.stat(path)
-    return data.st_size
+def get_size(path: Union[str, pathlib.Path, io.IOBase]) -> int:
+    """
+    A unified method to find the size of a file, either by its path or an open
+    file object.
+
+    Arguments:
+        path: a path (as a str or a Path object) or an open file (which must be
+              seekable)
+
+    Return:
+        size of the file
+
+    Raises:
+        ValueError: the IO object given as path is not open or it not seekable
+        FileNotFoundError: the given path is invalid
+    """
+    if isinstance(path, io.IOBase):
+        if path.seekable():
+            currentPos = path.tell()
+            path.seek(-1, io.SEEK_END)
+            size = path.tell()
+            path.seek(currentPos)
+            return size
+        else:
+            raise ValueError("IO object must be seekable in order to find the size.")
+    else:
+        return os.path.getsize(path)
 
 
 def build_layer(layer_dict, file, prevlayer, net):
@@ -128,8 +152,15 @@ def get_darknet53_tf_format(net, only_weights=True):
     return new_net, weights
 
 
+def open_if_not_open(file, *args, **kwargs):
+    """Takes an input and opens it as a file if it is not already and open file"""
+    if isinstance(file, io.IOBase):
+        return file
+    return open(file, *args, **kwargs)
+
+
 def load_weights(
-        config_file: Union[str, pathlib.Path], weights_file: Union[str, pathlib.Path]):
+        config_file: Union[str, pathlib.Path, io.IOBase], weights_file: Union[str, pathlib.Path, io.IOBase]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
@@ -144,10 +175,10 @@ def load_weights(
             decoder: the decoder as a list of layer Config objects
             outputs: the outputs as a list of layer Config objects
     """
-    with open(config_file) as config:
+    with open_if_not_open(config_file) as config:
         config = convertConfigFile(config)
     size = get_size(weights_file)
-    with open(weights_file, "rb") as weights:
+    with open_if_not_open(weights_file, "rb") as weights:
         encoder, decoder, outputs, bytes_read = read_file(config, weights)
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")

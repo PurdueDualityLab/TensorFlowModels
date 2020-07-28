@@ -12,8 +12,6 @@ class Yolov3Head(tf.keras.Model):
     def __init__(self, model="regular", classes=80, boxes=9,
                  repetitions=None, filters=None, mod=1, **kwargs):
 
-        super().__init__(**kwargs)
-
         self.type_dict = {
             "regular": {
                 "filters": [
@@ -23,7 +21,7 @@ class Yolov3Head(tf.keras.Model):
                         "filters": [
                             1024, 256], "repetitions": 1, "mod": 2}}
         self._model_name = model
-        self._input_shape = dict()
+        input_shape = dict()
 
         if model in self.type_dict.keys():
             self._filters = self.type_dict[model]["filters"]
@@ -53,12 +51,13 @@ class Yolov3Head(tf.keras.Model):
                 raise Exception(
                     "2 filters have the same depth, this is not allowed")
             inputs[count] = ks.layers.Input(shape=[None, None, count])
-            self._input_shape[count] = tf.TensorSpec([None, None, None, count])
+            input_shape[count] = tf.TensorSpec([None, None, None, count])
 
         routes, upsamples, prediction_heads = self._get_layers()
         outputs = self._connect_layers(
             routes, upsamples, prediction_heads, inputs)
         super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
+        self._input_shape = input_shape
         return
 
     def _get_layers(self):

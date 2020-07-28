@@ -129,9 +129,10 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
                 grad_loss = loss(x_hat[key], y[key])
                 losses += grad_loss
 
-        grad_p = tape.gradient(losses, pred.trainable_variables)
-        optimizer.apply_gradients(zip(grad_p, pred.trainable_variables))
-        self.assertNotIn(None, grad_p)
+        grad = tape.gradient(losses, pred.trainable_variables)
+        optimizer.apply_gradients(zip(grad, pred.trainable_variables))
+
+        self.assertNotIn(None, grad)
         return
 
 if __name__ == "__main__":

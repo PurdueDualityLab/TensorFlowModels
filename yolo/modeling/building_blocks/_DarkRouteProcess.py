@@ -1,6 +1,10 @@
 import tensorflow as tf
 import tensorflow.keras as ks
+<<<<<<< HEAD
+from yolo.modeling.building_blocks import DarkConv, DarkSpp
+=======
 from yolo.modeling.building_blocks import DarkConv #, DarkSpp
+>>>>>>> 61e54103eaf3ca7a49a4cf9dba27ef04741bba9f
 
 
 class DarkRouteProcess(ks.layers.Layer):
@@ -17,6 +21,7 @@ class DarkRouteProcess(ks.layers.Layer):
                  **kwargs):
         """
         process darknet outputs and connect back bone to head more generalizably
+        Abstracts repetition of DarkConv objects that is common in YOLO.
 
         It is used like the following:
 
@@ -30,7 +35,7 @@ class DarkRouteProcess(ks.layers.Layer):
                          for tiny: 1 repition, no spp allowed
                          for spp: insert_spp = True, and allow for 3+ repetitions
                          for regular: insert_spp = False, and allow for 3+ repetitions
-            insert_spp: bool if true add the spacial pyrmid pooling layer
+            insert_spp: bool if true add the spatial pyramid pooling layer
             kernel_initializer: method to use to initializa kernel weights
             bias_initializer: method to use to initialize the bias of the conv layers
             norm_moment: batch norm parameter see Tensorflow documentation
@@ -114,6 +119,9 @@ class DarkRouteProcess(ks.layers.Layer):
             activation=self._activation,
             leaky_alpha=self._leaky_alpha)
         # repalce with spp
+<<<<<<< HEAD
+        x2 = DarkSpp([5, 9, 13])
+=======
         # x2 = DarkSpp(sizes = [5, 9, 13])
         x2 = DarkConv(
             filters=filters,
@@ -127,6 +135,7 @@ class DarkRouteProcess(ks.layers.Layer):
             norm_epsilon=self._norm_epsilon,
             activation=self._activation,
             leaky_alpha=self._leaky_alpha)
+>>>>>>> 61e54103eaf3ca7a49a4cf9dba27ef04741bba9f
         return [x1, x2]
 
     def build(self, input_shape):
