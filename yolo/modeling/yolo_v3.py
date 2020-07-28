@@ -86,7 +86,7 @@ class Yolov3(ks.Model):
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
-    
+
     def _load_backbone_weights(self, config, weights):
         from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
         encoder, decoder, outputs = load_weights(config, weights)
@@ -115,7 +115,7 @@ class Yolov3_tiny(ks.Model):
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet_tiny")
         self._head = Yolov3Head("tiny")
-        
+
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
@@ -129,15 +129,16 @@ class Yolov3_spp(ks.Model):
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet53")
         self._head = Yolov3Head("spp")
-        
+
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
 
 
-model = Yolov3_tiny()
-model.build(input_shape = None)
-print(model.get_config())
+if __name__ == '__main__':
+    model = Yolov3_tiny()
+    model.build(input_shape = None)
+    print(model.get_config())
 
-tf.keras.utils.plot_model(model, to_file='Yolo_tiny.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
+    tf.keras.utils.plot_model(model, to_file='Yolo_tiny.png', show_shapes=True, show_layer_names= False, expand_nested=True, dpi=96)
