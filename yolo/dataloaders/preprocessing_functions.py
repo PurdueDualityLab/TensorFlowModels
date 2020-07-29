@@ -46,8 +46,8 @@ def _rotate(image, angle):
         image = tf.convert_to_tensor(image)
         img = img_utils.to_4D_image(image)
         ndim = image.get_shape().ndims
-        image_h = tf.cast(img.shape[1], tf.dtypes.float32)
-        image_w = tf.cast(img.shape[2], tf.dtypes.float32)
+        image_h = tf.cast(img.shape[0], tf.dtypes.float32)
+        image_w = tf.cast(img.shape[1], tf.dtypes.float32)
         rotation_key = _angles_to_projective_transforms(angle, image_w, image_h)
         output = tfa.image.transform(img, rotation_key, interpolation="NEAREST")
     return img_utils.from_4D_image(output, ndim)
@@ -68,25 +68,28 @@ def _rand_number(low, high):
     global RANDOM_SEED
     return RANDOM_SEED.uniform(minval= low, maxval= high, shape = (), dtype=tf.float32)
 
-def _preprocessing_selection(choice):
-    """Returns the requested data augmentation function required for the training
+def _preprocessing_selection(choice, num_of_classes, input_h_w):
+    """Returns the requested data augmentation function required for the training 
         specfied.
 
     Args:
         choice(str): The type of training the user would like to use.
+        num_of_classes (int): The number of classes found within the dataset.
+        input_h_w (int): This is the height and width of the input image.
+            ex. 300 x 300 x 3 -> input_h_w = 300
 
     Returns:
         function: A function for data augmentation for the specfic training specified.
     """
 
     def classification(datapoint):
-        """Augments image by performing Random Zoom, Resize with Pad, Random Rotate,
-        Random Brightness Distortion, Random Saturation Distortion, Random Hue Distortion
+        """Augments image by performing Random Zoom, Resize with Pad, Random Rotate, 
+        Random Brightness Distortion, Random Saturation Distortion, Random Hue Distortion 
         and finally normalizing the image.
 
         Args:
-            datapoint (dict): A Dictionaty that holds the image as well as other relevant
-                information.
+            datapoint (dict): A Dictionaty that holds the image as well as other relevant 
+            information.
 
         Returns:
             Either Image and Label or Image and Object.
@@ -95,8 +98,9 @@ def _preprocessing_selection(choice):
         # Generates Random Variables that will be used within the Data Augmentation Function.
         image = datapoint['image']
         image = tf.cast(image, tf.float32)
-        w = tf.cast(image.shape[1], tf.float32)
-        h = tf.cast(image.shape[2], tf.int32)
+        image = tf.image.resize(image, size = (input_h_w, input_h_w))
+        w = tf.cast(image.shape[0], tf.float32)
+        h = tf.cast(image.shape[1], tf.int32)
         low = tf.cast(128, tf.dtypes.float32)[None]
         high = tf.cast(448, tf.dtypes.float32)[None]
         scale = tf.py_function(_rand_number, [low, high], [tf.float32])
@@ -122,14 +126,14 @@ def _preprocessing_selection(choice):
         if "object" in datapoint:
             return image, datapoint['object']
         else:
-            return image, datapoint['label']
+            return image, tf.one_hot(datapoint['label'],num_of_classes)
 
     def priming(datapoint):
         """Augments image by performing Random Zoom, Resize with Pad, and
             finally normalizing the image.
 
         Args:
-            datapoint (dict): A Dictionaty that holds the image as well as other relevant
+            datapoint (dict): A Dictionaty that holds the image as well as other relevant 
                 information.
 
         Returns:
@@ -139,8 +143,9 @@ def _preprocessing_selection(choice):
         # Generates Random Variables that will be used within the Data Augmentation Function.
         image = datapoint['image']
         image = tf.cast(image, tf.float32)
-        w = tf.cast(image.shape[1], tf.float32)
-        h = tf.cast(image.shape[2], tf.int32)
+        image = tf.image.resize(image, size = (input_h_w, input_h_w))
+        w = tf.cast(image.shape[0], tf.float32)
+        h = tf.cast(image.shape[1], tf.int32)
         low = tf.cast(448, tf.dtypes.float32)[None]
         high = tf.cast(512, tf.dtypes.float32)[None]
         scale = tf.py_function(_rand_number, [low, high], [tf.float32])
@@ -155,14 +160,14 @@ def _preprocessing_selection(choice):
         if "object" in datapoint:
             return image, datapoint['object']
         else:
-            return image, datapoint['label']
+            return image, tf.one_hot(datapoint['label'],num_of_classes)
 
     def detection(datapoint):
-        """Augments image by performing Random Resize with Pad, Random Brightness Distortion,
-        Random Saturation Distortion, Random Hue Distortion and finally normalizing the image.
+        """Augments image by performing Random Resize with Pad, Random Brightness Distortion, 
+        Random Saturation Distortion, Random Hue Distortion and finally normalizing the image.  
 
         Args:
-            datapoint (dict): A Dictionaty that holds the image as well as other relevant
+            datapoint (dict): A Dictionaty that holds the image as well as other relevant 
                 information.
 
         Returns:
@@ -197,13 +202,14 @@ def _preprocessing_selection(choice):
     elif choice.lower() == "priming":
         return priming
 
-def _normalize_selection(h, w):
-    """Returns the requested normalization function required for the width and height
+def _normalize_selection(h, w, num_of_classes):
+    """Returns the requested normalization function required for the width and height 
         specified
 
     Args:
         h (int): Height of desired output image.
         w (int): Width of desired output image.
+        num_of_classes (int): The number of classes found within the dataset.
 
     Returns:
         function: A function for normalize for the specfic training specified.
@@ -212,7 +218,7 @@ def _normalize_selection(h, w):
         """Normalizes the image by resizing it to the desired output shape
 
         Args:
-            datapoint (dict): A Dictionaty that holds the image as well as other relevant
+            datapoint (dict): A Dictionaty that holds the image as well as other relevant 
                 information.
 
         Returns:
@@ -229,8 +235,7 @@ def _normalize_selection(h, w):
         if "object" in datapoint:
             return image, datapoint['object']
         else:
-            return image, datapoint['label']
-
+            return image, tf.one_hot(datapoint['label'],num_of_classes)
     return normalize
 
 def _detection_normalize(datapoint):
@@ -261,9 +266,8 @@ def _detection_normalize(datapoint):
     else:
         return image, datapoint['label']
 
-# MAIN FUNCTION TO USE FOR PREPROCESSING
-# SAMPLE USE CASES CAN BE FOUND IN THE benchmark_preprocessing.py
-def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, num_of_batches):
+#param train, top%, bottom%, type Splits before preprocessing_type
+def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, num_of_batches, num_of_classes, input_h_w):
     """Preprocesses (normalization and data augmentation) and batches the dataset.
 
     Args:
@@ -275,6 +279,9 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, nu
         size (int): The size of the dataset being passed into preprocessing.
         num_of_batches (int): The number of batches you would like the return
             dataset to be split into.
+        num_of_classes (int): The number of classes found within the dataset.
+        input_h_w (int): This is the height and width of the input image.
+            ex. 300 x 300 x 3 -> input_h_w = 300
 
     Returns:
         dataset (tfds.data.Dataset): A shuffled dataset that includes images that
@@ -287,14 +294,17 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, nu
             - Number of batches cannot be less than 1.
             - Data augmentation split cannot be greater than 100.
         TypeError:
-            - Dataset is not a tensorflow dataset.
             - Data augmentation split must be an integer.
             - Preprocessing type must be an string.
             - Size must be an integer.
             - Number of batches must be an integer.
+        WARNING:
+            - Dataset is not a tensorflow dataset.
+
+    Note: Shuffling is commented within this function. Uncomment for training.
     """
     if isinstance(dataset, tf.python.data.ops.dataset_ops.DatasetV1Adapter) == False:
-        raise TypeError("Dataset is not a tensorflow dataset.")
+        print("WARNING: Dataset may not a tensorflow dataset.")
     if type(data_augmentation_split) is not int:
         raise TypeError("Data augmentation split must be an integer.")
     if type(preprocessing_type) is not str:
@@ -321,7 +331,7 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, nu
     non_preprocessed_split = remaining.take(non_preprocessed_split)
 
     # Data Augmentation
-    preprocessing_function = _preprocessing_selection(preprocessing_type)
+    preprocessing_function = _preprocessing_selection(preprocessing_type, num_of_classes, input_h_w)
     data_augmentation_dataset = data_augmentation_dataset.map(preprocessing_function, num_parallel_calls= tf.data.experimental.AUTOTUNE)
 
     # Normalization
@@ -329,15 +339,15 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, nu
         non_preprocessed_split = non_preprocessed_split.map(_detection_normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
 
     elif preprocessing_type.lower() == "classification":
-        normalize = _normalize_selection(224, 224)
+        normalize = _normalize_selection(224, 224, num_of_classes)
         non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
 
     elif preprocessing_type.lower() == "priming":
-        normalize = _normalize_selection(448, 448)
+        normalize = _normalize_selection(448, 448, num_of_classes)
         non_preprocessed_split = non_preprocessed_split.map(normalize, num_parallel_calls = tf.data.experimental.AUTOTUNE)
 
     # Preparing the return dataset through concatentaion and shuffling
     dataset= data_augmentation_dataset.concatenate(non_preprocessed_split)
-    dataset = dataset.shuffle(size)
+    # dataset = dataset.shuffle(size) PLEASE UNCOMMENT WHEN ACTUALLY TRAINING
     dataset = dataset.batch(int(size/num_of_batches)).prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
