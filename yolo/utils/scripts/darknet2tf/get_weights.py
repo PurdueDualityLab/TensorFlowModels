@@ -2,11 +2,12 @@
 This file contains the code to parse DarkNet weight files.
 """
 
+from __future__ import annotations
+
 import io
 import numpy as np
 import os
 import itertools
-import pathlib
 
 from typing import Union
 
@@ -14,7 +15,16 @@ from .config_classes import *
 from ..dn2dicts import convertConfigFile
 
 
-def get_size(path: Union[str, pathlib.Path, io.IOBase]) -> int:
+# define PathABC type
+try:
+    PathABC = Union[bytes, str, os.PathLike]
+except AttributeError:
+    # not Python 3.6+
+    import pathlib
+    PathABC = Union[bytes, str, pathlib.Path]
+
+
+def get_size(path: Union[PathABC, io.IOBase]) -> int:
     """
     A unified method to find the size of a file, either by its path or an open
     file object.
@@ -157,8 +167,8 @@ def open_if_not_open(file, *args, **kwargs):
     return open(file, *args, **kwargs)
 
 
-def load_weights(
-        config_file: Union[str, pathlib.Path, io.IOBase], weights_file: Union[str, pathlib.Path, io.IOBase]):
+def load_weights(config_file: Union[PathABC, io.TextIOBase],
+                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
