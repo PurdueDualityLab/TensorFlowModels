@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import time
+#** Below I am importing the preprocessing functions.
 import preprocessing_functions
 
 #** Below this is how you import a custom dataset, here is an example of importing imagenet. **
