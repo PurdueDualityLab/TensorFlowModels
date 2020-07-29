@@ -1,4 +1,4 @@
-# WILL BE DELETED WHEN RELEASING PUBLICALLY
+# WILL BE DELETED WHEN RELEASING PUBLICLY
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
