@@ -2,32 +2,73 @@
 This file contains the code to parse DarkNet weight files.
 """
 
+from __future__ import annotations
+
+import io
 import numpy as np
 import os
 import itertools
-import pathlib
 
 from typing import Union
 
 from .config_classes import *
 from ..dn2dicts import convertConfigFile
 
-def get_size(path):
-    """calculate image size changes"""
-    data = os.stat(path)
-    return data.st_size
+
+# define PathABC type
+try:
+    PathABC = Union[bytes, str, os.PathLike]
+except AttributeError:
+    # not Python 3.6+
+    import pathlib
+    PathABC = Union[bytes, str, pathlib.Path]
 
 
-def build_layer(layer_dict, file, prevlayer):
+def get_size(path: Union[PathABC, io.IOBase]) -> int:
+    """
+    A unified method to find the size of a file, either by its path or an open
+    file object.
+
+    Arguments:
+        path: a path (as a str or a Path object) or an open file (which must be
+              seekable)
+
+    Return:
+        size of the file
+
+    Raises:
+        ValueError: the IO object given as path is not open or it not seekable
+        FileNotFoundError: the given path is invalid
+    """
+    if isinstance(path, io.IOBase):
+        if path.seekable():
+            currentPos = path.tell()
+            path.seek(-1, io.SEEK_END)
+            size = path.tell()
+            path.seek(currentPos)
+            return size
+        else:
+            raise ValueError("IO object must be seekable in order to find the size.")
+    else:
+        return os.path.getsize(path)
+
+
+def build_layer(layer_dict, file, prevlayer, net):
     """consturct layer and load weights from file"""
     layer = layer_builder[layer_dict['_type']].from_dict(prevlayer, layer_dict)
+
+    # temprary use for management of routing layers
+    if layer._type == "route" and type(layer_dict['layers ']) == tuple:
+        route = layer_dict['layers '][1]
+        layer.c += net[route + 1].filters
+    elif layer._type == "route":
+        layer.c //= 2
+
     if file is not None:
         bytes_read = layer.load_weights(file)
     else:
         bytes_read = 0
 
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
-    #print(f"reading: {layer_dict['_type']}          ", sep='      ', end = "\r", flush = True)
     return layer, bytes_read
 
 
@@ -59,7 +100,7 @@ def read_file(config, weights):
     outputs = [None]
     for layer_dict in config:
         if layer_dict["_type"] != "decoder_encoder_split":
-            layer, num_read = build_layer(layer_dict, weights, net[-1])
+            layer, num_read = build_layer(layer_dict, weights, net[-1], encoder)
             if layer_dict["_type"] != 'yolo' and layer.shape[-1] != 255:
                 net.append(layer)
             else:
@@ -77,6 +118,8 @@ def read_file(config, weights):
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""
+    if len(block) == 0:
+        return []
     weights_temp = []
     for layer in block:
         weights = layer.get_weights()
@@ -115,7 +158,15 @@ def get_darknet53_tf_format(net, only_weights=True):
     return new_net, weights
 
 
-def load_weights(config_file: Union[str, pathlib.Path], weights_file: Union[str, pathlib.Path]):
+def open_if_not_open(file, *args, **kwargs):
+    """Takes an input and opens it as a file if it is not already and open file"""
+    if isinstance(file, io.IOBase):
+        return file
+    return open(file, *args, **kwargs)
+
+
+def load_weights(config_file: Union[PathABC, io.TextIOBase],
+                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.

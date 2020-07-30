@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
+from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from ..utils.file_manager import download
 
 
@@ -222,8 +223,20 @@ class Yolov3_spp(ks.Model):
     def __init__(self, input_shape = [None, None, None, 3], **kwargs):
         super().__init__(**kwargs)
 
+        self._input_shape = input_shape
+        self._backbone = Backbone_Builder("darknet53")
+        self._head = Yolov3Head("spp")
 
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
+
+
+if __name__ == '__main__':
+    # init = tf.random_normal_initializer()
+    # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
+    with tf.device("/GPU:0"):
+        model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+        model.build(input_shape = (1, 416, 416, 3))
+        model.summary()

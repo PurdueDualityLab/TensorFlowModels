@@ -18,7 +18,7 @@ except ImportError:
 
 try:
     from importlib import resources as importlib_resources
-except:
+except BaseException:
     # Shim for Python 3.6 and older
     import importlib_resources
 
@@ -42,7 +42,8 @@ class DarkNetYAMLLoaderBase:
             times = int(times_)
         else:
             times = int(tag_suffix)
-            name = "yaml_repeat_" + str(tf.keras.backend.get_uid("yaml_repeat"))
+            name = "yaml_repeat_" + \
+                str(tf.keras.backend.get_uid("yaml_repeat"))
         oneLayer = self.construct_mapping(node, deep=True)
 
         def myCopyWithName(d: dict, i: int):
@@ -63,6 +64,7 @@ class DarkNetYAMLLoaderBase:
         }
 
         return allLayers
+
     def darknet(self, node):
         # https://stackoverflow.com/a/9577670
         filename = self.construct_scalar(node) + ".yml"
@@ -82,15 +84,24 @@ else:
             return tuple(self.construct_sequence(node))
 
     # Add functionality to use python/tuple, even in safe mode.
-    DarkNetSafeYAMLLoader.add_constructor('tag:yaml.org,2002:python/tuple', DarkNetSafeYAMLLoader.construct_python_tuple)
-    DarkNetSafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetSafeYAMLLoader.repeat_constructor)
-    DarkNetSafeYAMLLoader.add_constructor('!darknet', DarkNetSafeYAMLLoader.darknet)
+    DarkNetSafeYAMLLoader.add_constructor(
+        'tag:yaml.org,2002:python/tuple',
+        DarkNetSafeYAMLLoader.construct_python_tuple)
+    DarkNetSafeYAMLLoader.add_multi_constructor(
+        '!repeat:', DarkNetSafeYAMLLoader.repeat_constructor)
+    DarkNetSafeYAMLLoader.add_constructor(
+        '!darknet', DarkNetSafeYAMLLoader.darknet)
 
-    DarkNetUnsafeYAMLLoader.add_multi_constructor('!repeat:', DarkNetUnsafeYAMLLoader.repeat_constructor)
-    DarkNetUnsafeYAMLLoader.add_constructor('!darknet', DarkNetUnsafeYAMLLoader.darknet)
+    DarkNetUnsafeYAMLLoader.add_multi_constructor(
+        '!repeat:', DarkNetUnsafeYAMLLoader.repeat_constructor)
+    DarkNetUnsafeYAMLLoader.add_constructor(
+        '!darknet', DarkNetUnsafeYAMLLoader.darknet)
 
 
-def load_darknet_from_yaml(yaml_string, custom_objects:dict=None, loader:type=DarkNetSafeYAMLLoader) -> tf.keras.Model:
+def load_darknet_from_yaml(
+        yaml_string,
+        custom_objects: dict = None,
+        loader: type = DarkNetSafeYAMLLoader) -> tf.keras.Model:
     """
     Parses a yaml model configuration file and returns a model instance. This
     function works the same way as model_from_yaml in the tf.keras.models
@@ -120,12 +131,14 @@ def load_darknet_from_yaml(yaml_string, custom_objects:dict=None, loader:type=Da
         A deserialized Keras model specified by the yaml_string
     """
     if yaml is None:
-        raise ImportError('Requires yaml module installed (`pip install pyyaml`).')
+        raise ImportError(
+            'Requires yaml module installed (`pip install pyyaml`).')
 
     configDict = yaml.load(yaml_string, loader)
     #import pprint
-    #pprint.pprint(configDict)
-    return tf.keras.layers.deserialize(configDict, custom_objects=custom_objects)
+    # pprint.pprint(configDict)
+    return tf.keras.layers.deserialize(
+        configDict, custom_objects=custom_objects)
 
 
 if __name__ == '__main__':

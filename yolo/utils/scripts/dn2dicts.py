@@ -10,8 +10,19 @@ import sys
 
 
 def makeParser(parser):
-    parser.add_argument('config', default=None, help='name of the config file. Defaults to YOLOv3', nargs='?', type=argparse.FileType('r'))
-    parser.add_argument('dictsfile', default=sys.stdout, nargs='?', help='name of the Python literal file', type=argparse.FileType('w'))
+    parser.add_argument(
+        'config',
+        default=None,
+        help='name of the config file. Defaults to YOLOv3',
+        nargs='?',
+        type=argparse.FileType('r'))
+    parser.add_argument(
+        'dictsfile',
+        default=sys.stdout,
+        nargs='?',
+        help='name of the Python literal file',
+        type=argparse.FileType('w'))
+
 
 parser = argparse_flags.ArgumentParser()
 makeParser(parser)
@@ -85,6 +96,7 @@ def main(argv, args=None):
         output = list(convertConfigFile(config))
 
     pprint(output, dictsfile)
+
 
 if __name__ == '__main__':
     app.run(main)

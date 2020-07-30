@@ -25,22 +25,22 @@ config:
           filters: 16
           kernel_size: !!python/tuple [3, 3]
 
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 32
           strides: 2
 
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 64
           strides: 2
 
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 128
           strides: 2
 
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 256
           strides: 2
@@ -52,12 +52,12 @@ config:
     config:
       name: route2
       layers:
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 512
           strides: 2
 
-      - class_name: yolo>darkyolotiny
+      - class_name: yolo>DarkTiny
         config:
           filters: 1024
           strides: 2

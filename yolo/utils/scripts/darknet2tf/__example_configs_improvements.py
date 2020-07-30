@@ -8,8 +8,10 @@ import warnings
 
 negInfInt = -1000000000
 
+
 class Context:
     pass
+
 
 class CFG(ABC):
     @abstractmethod
@@ -31,12 +33,15 @@ class CFG(ABC):
                 if not isinstance(value, field.type):
                     section2[name] = field.type(value)
         return clz(_context=context, **section2)
+
     @classmethod
     def _tfconfig_from_section(clz, context: Context, section: dict) -> dict:
         return clz._from_section(context, section).to_tfconfig()
+
     @classmethod
     def _code_from_section(clz, context: Context, section: dict) -> str:
-        ... # TODO
+        ...  # TODO
+
 
 @dataclass
 class ConvCFG(CFG):
@@ -50,7 +55,7 @@ class ConvCFG(CFG):
     antialiasing: int = 0
     pad: int = 0
     padding: int = 0
-    activation: str = "logistic" #change?
+    activation: str = "logistic"  # change?
     assisted_excitation: float = 0
     share_index: InitVar[int] = negInfInt
     batch_normalize: int = 0
@@ -68,7 +73,6 @@ class ConvCFG(CFG):
     grad_centr: int = 0
     reverse: float = 0
 
-
     _context: InitVar[Context] = None
     _layer_class: ClassVar[type] = None
 
@@ -82,7 +86,8 @@ class ConvCFG(CFG):
             if self.stride_y < 1:
                 self.stride_y = stride
         else:
-            warnings.warn('stride definition overwriten by stride_x and stride_y')
+            warnings.warn(
+                'stride definition overwriten by stride_x and stride_y')
 
         # if size is 1, dilation is 1
         if self.size == 1:
@@ -100,9 +105,12 @@ class ConvCFG(CFG):
             warnings.warn('batch_normalize definition overwriten by cbn')
 
         if self.sway + self.rotate + self.stretch + self.stretch_sway > 1:
-            raise AssertionError("Error: should be used only 1 param: sway=1, rotate=1 or stretch=1 in the [convolutional] layer")
-        if any((self.sway, self.rotate, self.stretch, self.stretch_sway)) and self.size == 1:
-            raise AssertionError("Error: params (sway=1, rotate=1 or stretch=1) should be used only with size >=3 in the [convolutional] layer")
+            raise AssertionError(
+                "Error: should be used only 1 param: sway=1, rotate=1 or stretch=1 in the [convolutional] layer")
+        if any((self.sway, self.rotate, self.stretch,
+                self.stretch_sway)) and self.size == 1:
+            raise AssertionError(
+                "Error: params (sway=1, rotate=1 or stretch=1) should be used only with size >=3 in the [convolutional] layer")
 
     def to_tfconfig(self) -> dict:
         return None

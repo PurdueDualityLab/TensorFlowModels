@@ -4,12 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+coverage = "*"
 
 [packages]
 tensorflow = "==2.*"
+tensorflow-datasets = "*"
 absl-py = ">=0.7.0"
 numpy = "*"
 importlib-resources = {version = "*", markers="python_version < '3.7'"}
 
 # Optional packages
-# yaml = "*"        # for serialization and deserialization of models from YAML
+# pyyaml = "*"        # for serialization and deserialization of models from YAML

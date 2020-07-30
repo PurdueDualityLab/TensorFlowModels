@@ -4,73 +4,99 @@ from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkUpsampleRoute
 # for testing
-from yolo.modeling.backbones.backbone_builder import Backbone_Builder 
+from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 
 
-# @ks.utils.register_keras_serializable(package='yolo')
-class _Yolov3Head(tf.keras.Model):
-    def __init__(self, model_type, repetitions_override=None, **kwargs):
-        self.type_dict = {"spp" : 3, "tiny" : 1, "regular" : 3}
-        self._model_type = model_type
+@ks.utils.register_keras_serializable(package='yolo')
+class Yolov3Head(tf.keras.Model):
+    def __init__(self, model="regular", classes=80, boxes=9,
+                 repetitions=None, filters=None, mod=1, **kwargs):
 
-        if repetitions_override != None:
-            self._repetitions = repetitions_override
+        self.type_dict = {
+            "regular": {
+                "filters": [
+                    1024, 512, 256], "repetitions": 3, "mod": 1}, "spp": {
+                "filters": [
+                    1024, 512, 256], "repetitions": 3, "mod": 1}, "tiny": {
+                        "filters": [
+                            1024, 256], "repetitions": 1, "mod": 2}}
+        self._model_name = model
+        input_shape = dict()
+
+        if model in self.type_dict.keys():
+            self._filters = self.type_dict[model]["filters"]
+            self._repetitions = self.type_dict[model]["repetitions"]
+            self._mod = self.type_dict[model]["mod"]
+        elif model is None:
+            if filters is None or len(filters) == 0:
+                raise Exception("unsupported model name")
+            if repititions is None or repititions == 0:
+                raise Exception("repititions cannot be None")
+            self._filters = filters
+            self._repetitions = repetitions
+            self._mod = mod
         else:
-            self._repetitions = self.type_dict[model_type]
+            raise Exception("unsupported model name")
 
-        super().__init__(**kwargs)
+        self._classes = classes
+        self._boxes = boxes
+        self._boxes_per_layer = boxes // len(self._filters)
+
+        self.pred_depth = (self._boxes_per_layer *
+                           self._classes) + (self._boxes_per_layer * 5)
+
+        inputs = dict()
+        for count in self._filters:
+            if count in inputs:
+                raise Exception(
+                    "2 filters have the same depth, this is not allowed")
+            inputs[count] = ks.layers.Input(shape=[None, None, count])
+            input_shape[count] = tf.TensorSpec([None, None, None, count])
+
+        routes, upsamples, prediction_heads = self._get_layers()
+        outputs = self._connect_layers(
+            routes, upsamples, prediction_heads, inputs)
+        super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
+        self._input_shape = input_shape
         return
 
-    def build(self, input_shape):
-        self.routes = dict()
-        self.upsamples = dict()
-        self.prediction_heads = dict()
+    def _get_layers(self):
+        routes = dict()
+        upsamples = dict()
+        prediction_heads = dict()
 
-        self.filters = list(reversed(list(input_shape.keys())))
-
-        if self._model_type == "tiny":
-            filter_mod = 2
-        else:
-            filter_mod = 1
-
-        for i, key in enumerate(self.filters):
-            if i == 0 and self._model_type == "spp":
-                self.routes[key] = DarkRouteProcess(filters= key, repetitions= self._repetitions + 1, insert_spp=True)
+        for i, filters in enumerate(self._filters):
+            if i == 0 and self._model_name == "spp":
+                routes[filters] = DarkRouteProcess(
+                    filters=filters, repetitions=self._repetitions + 1, insert_spp=True)
             else:
-                self.routes[key] = DarkRouteProcess(filters= key//filter_mod, repetitions= self._repetitions, insert_spp=False)
-            
-            if i != len(self.filters) - 1:
-                self.upsamples[key] = DarkUpsampleRoute(filters=key//(4 * filter_mod))
-                filter_mod = 1
-            
-            self.prediction_heads[key] = DarkConv(filters = 255, kernel_size = (1,1), strides = (1,1), padding = "same", activation=None)
+                routes[filters] = DarkRouteProcess(
+                    filters=filters // self._mod,
+                    repetitions=self._repetitions,
+                    insert_spp=False)
 
-        print(self.routes)
-        print(self.upsamples)
-        print(self.prediction_heads)
-        return
+            if i != len(self._filters) - 1:
+                upsamples[filters] = DarkUpsampleRoute(
+                    filters=filters // (4 * self._mod))
+                self.mod = 1
 
-    def call(self, inputs):
-        layer_in = inputs[self.filters[0]]
+            prediction_heads[filters] = DarkConv(
+                filters=self.pred_depth, 
+                kernel_size=(1, 1), 
+                strides=(1, 1), 
+                padding="same", 
+                use_bn=False, 
+                activation=None)
+        return routes, upsamples, prediction_heads
+
+    def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         outputs = dict()
-        for i in range(len(self.filters)):
-            x_prev, x = self.routes[self.filters[i]](layer_in)
-            print(x_prev.shape)
-            if i + 1 < len(self.filters):
-                x_next = inputs[self.filters[i + 1]]
-                print(x_next.shape)
-                layer_in = self.upsamples[self.filters[i]](x_prev, x_next)  
-                print(layer_in.shape)
-            outputs[self.filters[i]] = self.prediction_heads[self.filters[i]](x)
+        layer_in = inputs[self._filters[0]]
+        for i in range(len(self._filters)):
+            x_prev, x = routes[self._filters[i]](layer_in)
+            if i + 1 < len(self._filters):
+                x_next = inputs[self._filters[i + 1]]
+                layer_in = upsamples[self._filters[i]]([x_prev, x_next])
+            outputs[self._filters[i]] = prediction_heads[self._filters[i]](x)
         return outputs
 
-x = tf.ones(shape=[1, 416, 416, 3], dtype = tf.float32)
-model = Backbone_Builder("darknet_tiny")
-y = model(x)
-print(y.values())
-
-head = _Yolov3Head("tiny")
-z = head(y)
-
-for key in z.keys():
-    print(z[key].shape)
