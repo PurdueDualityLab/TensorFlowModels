@@ -82,7 +82,6 @@ class Yolov3(ks.Model):
                  config_file = None, 
                  weights_file = None, 
                  **kwargs):
-        
         """
         load the entire Yolov3 Model for tensorflow
 
@@ -234,8 +233,8 @@ class Yolov3_spp(ks.Model):
 
 # init = tf.random_normal_initializer()
 # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
+
 model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
-model.build(input_shape = (1, 416, 416, 3))
 model.summary()
 
 
