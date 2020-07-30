@@ -249,6 +249,31 @@ class upsampleCFG(Config):
         return clz(**l)
 
 
+@layer_builder.register('maxpool')
+@dataclass
+class maxpoolCFG(Config):
+    _type: str = None
+    w: int = field(init=True, default=0)
+    h: int = field(init=True, default=0)
+    c: int = field(init=True, default=0)
+
+    stride: int = field(init=True, default=2)
+    size: int = field(init=True, default=2)
+
+    @property
+    def shape(self):
+        return ((self.w - self.size) // self.stride + 1, (self.h - self.size) // self.stride + 1, self.c)
+
+    @classmethod
+    def from_dict(clz, prevlayer, layer_dict):
+        l = {
+            "w": prevlayer.shape[0],
+            "h": prevlayer.shape[1],
+            "c": prevlayer.shape[2],
+            "stride": layer_dict["stride"]}
+        return clz(**l)
+
+
 def len_width(n, f, p, s):
     '''
     n: height or width

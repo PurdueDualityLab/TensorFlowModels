@@ -79,10 +79,18 @@ urls = {
         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
         'cfg',
         '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
+    'yolov3-spp.cfg': (
+        'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-spp.cfg',
+        'cfg',
+        '7a4ec2d7427340fb12059f2b0ef76d6fcfcac132cc287cbbf0be5e3abaa856fd'),
     'yolov3.weights': (
         'https://pjreddie.com/media/files/yolov3.weights',
         'weights',
         '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
+    'yolov3-spp.weights': (
+        'https://pjreddie.com/media/files/yolov3-spp.weights',
+        'weights',
+        '87a1e8c85c763316f34e428f2295e1db9ed4abcec59dd9544f8052f50de327b4'),
 }
 
 

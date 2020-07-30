@@ -164,12 +164,32 @@ class Yolov3_tiny(ks.Model):
 
 
 class Yolov3_spp(ks.Model):
-    def __init__(self, input_shape = [None, None, None, 3], **kwargs):
+    def __init__(self, input_shape = [None, None, None, 3],
+            classes = 20,
+            boxes = 9,
+            dn2tf_backbone = False,
+            dn2tf_head  = False,
+            config_file = None,
+            weights_file = None, **kwargs):
         super().__init__(**kwargs)
 
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet53")
         self._head = Yolov3Head("spp")
+
+        if dn2tf_backbone or dn2tf_head:
+            if config_file == None:
+                raise Exception("config file cannot be none")
+            if weights_file == None:
+                raise Exception("weights file cannot be none")
+            from yolo.utils.scripts.darknet2tf.get_weights import load_weights
+            encoder, decoder, outputs = load_weights(config_file, weights_file)
+
+        if dn2tf_backbone:
+            _load_weights_dnBackbone(self._backbone, encoder)
+
+        if dn2tf_head:
+            _load_weights_dnHead(self._head, decoder, outputs)
 
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
