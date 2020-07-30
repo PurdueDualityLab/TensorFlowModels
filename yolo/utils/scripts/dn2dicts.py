@@ -51,14 +51,6 @@ def parseValue(v):
                 return v
 
 
-def dict_check(dictionary, key, check_val):
-    try:
-        return prev_layer['filters'] == check_val
-    except BaseException:
-        return False
-    return False
-
-
 def convertConfigFile(configfile, break_script="######################"):
     """
     Convert an opened config file to a list of dictinaries.

@@ -44,7 +44,7 @@ else:
             kwargs['cellvars'],
         )
 
-def with_origin(e, filename, lineno, kwargs_new=None, cause=None):
+def with_origin(e: Exception, filename, lineno, kwargs_new=None, cause=None):
     """
     Create a fake Python code object to simulate a Python error coming from
     non-Python code.
@@ -70,7 +70,7 @@ def with_origin(e, filename, lineno, kwargs_new=None, cause=None):
         context = {'e': e} if cause is None else {'e': e, 'cause': cause}
         return functools.partial(exec, code, context)
     else:
-        e_with_info = Exception(f"An issue occurred in {filename}:{lineno}.")
+        e_with_info = Exception(f"An issue occurred in {filename} [line {lineno}].")
         if cause is None:
             raise e from e_with_info
         else:
@@ -78,3 +78,9 @@ def with_origin(e, filename, lineno, kwargs_new=None, cause=None):
                 raise e_with_info from cause
             except Exception as e_with_info:
                 raise e from e_with_info
+
+def with_origin_config(cause: Exception):
+    """
+    Used for configparser exceptions.
+    """
+    return with_origin(Exception("Parsing error"), cause.filename, cause.lineno, kwargs_new=None, cause=cause)
