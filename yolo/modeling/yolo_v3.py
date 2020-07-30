@@ -77,6 +77,8 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     def __init__(self,
                  input_shape = [None, None, None, 3],
+                 classes = 20, 
+                 boxes = 9, 
                  dn2tf_backbone = False,
                  dn2tf_head  = False,
                  config_file = None,
@@ -124,7 +126,7 @@ class Yolov3(ks.Model):
 
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("regular")
+        self._head = Yolov3Head("regular",  classes=classes, boxes=boxes)
 
         if dn2tf_backbone or dn2tf_head:
             if config_file == None:
@@ -235,6 +237,7 @@ class Yolov3_spp(ks.Model):
 if __name__ == '__main__':
     # init = tf.random_normal_initializer()
     # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
-    model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
-    model.build(input_shape = (1, 416, 416, 3))
-    model.summary()
+    with tf.device("/GPU:0"):
+        model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+        model.build(input_shape = (1, 416, 416, 3))
+        model.summary()
