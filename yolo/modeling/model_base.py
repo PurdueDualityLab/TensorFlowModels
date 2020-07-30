@@ -8,5 +8,3 @@ class model(object):
 
     def train(self):
         return
-
-    def

@@ -3,8 +3,12 @@ import tensorflow.keras as ks
 import numpy as np
 from absl.testing import parameterized
 
+import os
+import unittest
+
 from yolo.modeling.backbones import backbone_builder as builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
+from yolo.modeling import yolo_v3
 
 
 class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
@@ -134,6 +138,18 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
 
         self.assertNotIn(None, grad)
         return
+
+    @parameterized.named_parameters(("darknet53", "darknet53"),
+                                    ("Yolov3", "Yolov3"),
+                                    ("Yolov3_tiny", "Yolov3_tiny"),
+                                    ("Yolov3_spp", "Yolov3_spp"),)
+    @unittest.skip('Not yet supported')
+    def test_save(self, model):
+        modelClass = yolo_v3.__dict__[model]
+        modelObj = modelClass()
+        modelObj.build(input_shape = None)
+        with self.assertRaises(NotADirectoryError):
+            modelObj.save(os.devnull)
 
 if __name__ == "__main__":
     tf.test.main()

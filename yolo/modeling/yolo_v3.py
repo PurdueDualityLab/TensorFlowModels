@@ -75,13 +75,19 @@ class DarkNet53(ks.Model):
 
 
 class Yolov3(ks.Model):
-    def __init__(self, 
-                 input_shape = [None, None, None, 3], 
-                 dn2tf_backbone = False, 
-                 dn2tf_head  = False, 
-                 config_file = None, 
-                 weights_file = None, 
+    def __init__(self,
+                 input_shape = [None, None, None, 3],
+                 classes = 20, 
+                 boxes = 9, 
+                 dn2tf_backbone = False,
+                 dn2tf_head  = False,
+                 config_file = None,
+                 weights_file = None,
                  **kwargs):
+<<<<<<< HEAD
+=======
+
+>>>>>>> ee64643dccd75d6ccb6cb833de5aa183578e1651
         """
         load the entire Yolov3 Model for tensorflow
 
@@ -90,23 +96,23 @@ class Yolov3(ks.Model):
             model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file='yolov3_416.weights')
 
         to be implemented
-        example: 
+        example:
             load custom back bone weigths
-        
-        example: 
+
+        example:
             load custom head weigths
-        
-        example: 
+
+        example:
             load back bone weigths from tensorflow (our training)
-        
-        example: 
+
+        example:
             load head weigths from tensorflow (our training)
 
         Args:
             input_shape: list or tuple for image input shape, default is [None, None, None, 3] for variable size images
-            classes: int for the number of available classes 
+            classes: int for the number of available classes
             boxes: total number of boxes that are predicted by detection head
-            
+
             dn2tf_backbone: bool, if true it will load backbone weights for yolo v3 from darknet .weights file
             dn2tf_head: bool, if true it will load head weights for yolo v3 from darknet .weights file
             config_file: str path for the location of the configuration file to use when decoding darknet weights
@@ -114,7 +120,7 @@ class Yolov3(ks.Model):
 
         Return:
             initialized callable yolo model
-        
+
         Raises:
             Exception: if config file is not provided and dn2tf_backbone or dn2tf_head is true
             Exception: if weights file is not provided and dn2tf_backbone or dn2tf_head is true
@@ -123,7 +129,7 @@ class Yolov3(ks.Model):
 
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("regular")
+        self._head = Yolov3Head("regular",  classes=classes, boxes=boxes)
 
         if dn2tf_backbone or dn2tf_head:
             if config_file == None:
@@ -135,7 +141,7 @@ class Yolov3(ks.Model):
 
         if dn2tf_backbone:
             self._load_weights_dnBackbone(encoder)
-        
+
         if dn2tf_head:
             self._load_weights_dnHead(decoder, outputs)
 
@@ -143,7 +149,7 @@ class Yolov3(ks.Model):
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
-    
+
     def _load_weights_dnBackbone(self, encoder):
         from yolo.utils.scripts.darknet2tf.get_weights import get_darknet53_tf_format
         # get weights for backbone
@@ -155,18 +161,18 @@ class Yolov3(ks.Model):
 
         print(f"\nsetting backbone.trainable to: {self._backbone.trainable}\n")
         return
-    
+
     def _load_weights_dnHead(self, decoder, outputs):
         # get weights for head
         decoder, weights_decoder = self.get_decoder_weights(decoder, outputs)
-        
+
         # set detection head weights
         print(f"\nno. layers: {len(self._head.layers)}, no. weights: {len(weights_decoder)}")
         self._set_darknet_weights(self._head, weights_decoder)
 
         print(f"\nsetting head.trainable to: {self._head.trainable}\n")
         return
-    
+
     def _set_darknet_weights(self, model, weights_list):
         for i, (layer, weights) in enumerate(zip(model.layers, weights_list)):
             print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
@@ -195,12 +201,12 @@ class Yolov3(ks.Model):
         # interleve weights for blocked layers
         for layer in layers:
             weights.append(interleve_weights(layer))
-        
+
         # get weights for output detection heads
         for layer in reversed(head):
             if layer != None and layer._type == "convolutional":
                 weights.append(layer.get_weights())
-        
+
         return layers, weights
 
 class Yolov3_tiny(ks.Model):
@@ -210,7 +216,7 @@ class Yolov3_tiny(ks.Model):
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet_tiny")
         self._head = Yolov3Head("tiny")
-        
+
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
@@ -224,13 +230,14 @@ class Yolov3_spp(ks.Model):
         self._input_shape = input_shape
         self._backbone = Backbone_Builder("darknet53")
         self._head = Yolov3Head("spp")
-        
+
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
         super().__init__(inputs = inputs, outputs = predictions)
 
 
+<<<<<<< HEAD
 # init = tf.random_normal_initializer()
 # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
 
@@ -239,3 +246,12 @@ model.summary()
 
 
 
+=======
+if __name__ == '__main__':
+    # init = tf.random_normal_initializer()
+    # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
+    with tf.device("/GPU:0"):
+        model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+        model.build(input_shape = (1, 416, 416, 3))
+        model.summary()
+>>>>>>> ee64643dccd75d6ccb6cb833de5aa183578e1651
