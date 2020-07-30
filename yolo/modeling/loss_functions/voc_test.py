@@ -149,6 +149,7 @@ def build_grided_gt(y_true, mask, size):
                     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                     
                 if tf.math.equal(used, 1):
+                    tf.print("skipping")
                     continue
                 depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
                 #end code for tie breaker
@@ -191,7 +192,7 @@ def build_grided_gt(y_true, mask, size):
     #tf.print(K.sum(full))
     return full
 
-def load_dataset(skip = 0, batch_size = 1):
+def load_dataset(skip = 0, batch_size = 10):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
     #dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
@@ -207,13 +208,13 @@ if __name__ == "__main__":
     import time
     start = time.time()
     for image, label in dataset:
-        # for key in label.keys():
-        #     # for k in label[key]:
-        #     #     for j in k:
-        #     #         for i in j:
-        #     #             if K.sum(i) > 0:
-        #     #                 print(i.numpy().tolist(), end = "\n")
-        #     print(label[key].shape)
+        for key in label.keys():
+            # for k in label[key]:
+            #     for j in k:
+            #         for i in j:
+            #             if K.sum(i) > 0:
+            #                 print(i.numpy().tolist(), end = "\n")
+            print(label[key].shape)
         count = 0
     end = time.time() - start
     print(end)
