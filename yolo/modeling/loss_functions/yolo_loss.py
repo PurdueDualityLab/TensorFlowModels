@@ -39,40 +39,29 @@ class Yolo_Loss(ks.losses.Loss):
     def _split_truth_box(self, box):
         return tuple(tf.split(box, [1,1,1,1], axis = -1))
 
+    #@tf.function
     def _get_centers(self, lwidth, lheight, batch_size):
-        x_left = K.expand_dims(tf.linspace(start = 0.0, stop = (lwidth - 1)/lwidth, num = lwidth))
-        y_left = K.expand_dims(tf.linspace(start = 0.0, stop = (lheight - 1)/lheight, num = lheight))
+        x_left = K.expand_dims(tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth))
+        y_left = K.expand_dims(tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight))
         x_left = K.concatenate([x_left] * lheight)
         y_left = K.transpose(K.concatenate([y_left] * lwidth))
         x_left = K.expand_dims(x_left)
         y_left = K.expand_dims(y_left)
         x_left = K.stack([x_left]*batch_size, axis = 0)
         y_left = K.stack([y_left]*batch_size, axis = 0)
-        return K.constant(x_left, dtype=tf.float32), K.constant(y_left, dtype=tf.float32)
-    
-    #errors
-    def _generate_truth(self, y_true, batch_size, width, height):
-        gt = y_true.to_list()
-        box_list = [[[[] for j in range(height)] for i in range(width)] for _ in range(len(gt))]
-
-        # gt = y_true.to_list()
-        for i in range(len(gt)):
-            for j in range(len(gt[i])):
-                x = tf.cast(y_true[i, j, -4] * width, dtype=tf.int32)
-                y = tf.cast(y_true[i, j, -3] * height, dtype=tf.int32)
-                box_list[i][x][y].extend(gt[i][j])
-        concat = tf.ragged.constant(box_list).to_tensor()
-        return concat
-
+        return K.constant(K.cast(x_left, dtype=tf.float32)), K.constant(K.cast(y_left, dtype=tf.float32))
 
     def call(self, y_pred, y_true):
-        width = y_pred.shape[1]
-        height = y_pred.shape[2]
-        batch_size = y_pred.shape[0] if self._batch_size == None else self._batch_size 
+        width = tf.shape(y_pred)[1]
+        height = tf.shape(y_pred)[2]
+        batch_size = tf.shape(y_pred)[0]
+
         print(batch_size, width, height)
         #y_true = self._generate_truth(y_true, batch_size, width, height)
         #print(len(y_true))
-        #grid_points = self._get_centers(width, height, batch_size)
+        grid_points = self._get_centers(width, height, batch_size)
+        tf.print(tf.shape(grid_points[0]))
+        # tf.print(tf.shape(y_true))
         #print(y_true.shape)
         # temp_out = y_true - y_pred
         # y_true = self._get_splits(y_true)
@@ -87,12 +76,6 @@ class Yolo_Loss(ks.losses.Loss):
 
     def get_config(self):
         pass
-
-
-def load_dataset(skip = 0, batch_size = 100):
-    dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=False)
-    dataset = dataset.skip(skip).take(batch_size)
-    return dataset.map(preprocess).batch(batch_size)
 
 def load_model():
     model = Yolov3(dn2tf_backbone = True, 
@@ -141,8 +124,8 @@ def load_loss(batch_size, n = 3, classes = 20):
     return loss_dict
 
 def main():
-    physical_devices = tf.config.list_physical_devices('GPU')
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    # physical_devices = tf.config.list_physical_devices('GPU')
+    # tf.config.experimental.set_memory_growth(physical_devices[0], True)
     batch = 20
     dataset = load_dataset(batch_size=batch)
     model = load_model()
@@ -151,20 +134,20 @@ def main():
     print(dataset)
     print(loss_fns)
     import time
-    with tf.device("/GPU:0"):
-    #     with tf.GradientTape() as tape:
-    #         for image, label in dataset:
-    #             y_pred = model(image)      
-    #             total_loss = 0 
+    with tf.device("/CPU:0"):
+        with tf.GradientTape() as tape:
+            for image, label in dataset:
+                y_pred = model(image)      
+                total_loss = 0 
     # with tf.device("/CPU:0"):
-    #     start = time.time()
-    #     for key in y_pred.keys():
-    #         print(f"{key}:{y_pred[key].shape}")
-    #         loss = loss_fns[key](y_pred[key], label)
-    #         total_loss += loss
-    #     end = time.time() - start
-        model.compile(loss=loss_fns)
-        model.fit(dataset)
+                start = time.time()
+                for key in y_pred.keys():
+                    print(f"{key}:{y_pred[key].shape}")
+                    loss = loss_fns[key](y_pred[key], label[key])
+                    total_loss += loss
+                end = time.time() - start
+        # model.compile(loss=loss_fns)
+        # model.fit(dataset)
     # print(end)  
         
     return
