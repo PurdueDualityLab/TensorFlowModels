@@ -137,10 +137,10 @@ def build_grided_gt(y_true, mask, size):
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
-                used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                 uid = 1
 
                 # start code for tie breaker, temp check performance
+                used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                 count = 0
                 while tf.math.equal(used, 1) and tf.math.less(count, 3):
                     uid = 2
@@ -150,12 +150,12 @@ def build_grided_gt(y_true, mask, size):
                     
                 if tf.math.equal(used, 1):
                     continue
+                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
                 #end code for tie breaker
 
                 update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
                 test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
                 update = update.write(i, test)
-                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
                 i += 1
 
             """
@@ -178,6 +178,8 @@ def build_grided_gt(y_true, mask, size):
 
             W tensorflow/core/grappler/optimizers/loop_optimizer.cc:906] Skipping loop optimization for Merge node with control input: cond/branch_executed/_11
             idk should look into this
+
+            18 seconds for 2000 images 
             """
 
     if tf.math.greater(update_index.size(), 0):
@@ -189,7 +191,7 @@ def build_grided_gt(y_true, mask, size):
     #tf.print(K.sum(full))
     return full
 
-def load_dataset(skip = 0, batch_size = 10):
+def load_dataset(skip = 0, batch_size = 1):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
     #dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
@@ -199,8 +201,8 @@ def load_dataset(skip = 0, batch_size = 10):
 
 if __name__ == "__main__":
     print("")
-    with tf.device("/CPU:0"):
-        dataset = load_dataset()
+    #with tf.device("/CPU:0"):
+    dataset = load_dataset()
 
     import time
     start = time.time()
