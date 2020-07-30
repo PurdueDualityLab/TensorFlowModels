@@ -69,9 +69,7 @@ def read_file(config, weights):
             decoder.append(encoder[-1])
 
         bytes_read += num_read
-        print(f"bytes_read: {bytes_read}          ",
-              sep='      ', end="\r", flush=True)
-    #print(f"bytes_read: {bytes_read}          ")
+
     del encoder[0]
     del decoder[0]
     return encoder, decoder, outputs, bytes_read
@@ -132,10 +130,10 @@ def load_weights(config_file: Union[str, pathlib.Path], weights_file: Union[str,
             decoder: the decoder as a list of layer Config objects
             outputs: the outputs as a list of layer Config objects
     """
-    with open(config_file) as config:
-        config = convertConfigFile(config)
     size = get_size(weights_file)
-    with open(weights_file, "rb") as weights:
+    with open_if_not_open(config_file) as config, \
+         open_if_not_open(weights_file, "rb") as weights:
+        config = convertConfigFile(config)
         encoder, decoder, outputs, bytes_read = read_file(config, weights)
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")

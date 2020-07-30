@@ -52,23 +52,22 @@ def convertConfigFile(configfile, break_script="######################"):
     """
     Convert an opened config file to a list of dictinaries.
     """
-    output = []
     mydict = None
 
     for line in configfile:
         if break_script is not None and line == f"{break_script}\n":
+            yield mydict
             mydict = {"_type": "decoder_encoder_split"}
-            output.append(mydict)
         elif line.startswith('['):
+            if mydict is not None:
+                yield mydict
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
-            output.append(mydict)
         else:
             line, *_ = line.strip().split('#', 1)
             if line.strip() != '':
                 k, v = line.strip().split('=', 1)
                 mydict[k] = parseValue(v)
-    return output
 
 
 def main(argv, args=None):
@@ -81,9 +80,9 @@ def main(argv, args=None):
     if config is None:
         from ..file_manager import download
         with open(download('yolov3.cfg')) as config:
-            output = convertConfigFile(config)
+            output = list(convertConfigFile(config))
     else:
-        output = convertConfigFile(config)
+        output = list(convertConfigFile(config))
 
     pprint(output, dictsfile)
 
