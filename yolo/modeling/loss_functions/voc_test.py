@@ -137,9 +137,9 @@ def build_grided_gt(y_true, mask, size):
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
-                uid = 1
-
+                
                 # start code for tie breaker, temp check performance
+                uid = 1
                 used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                 count = 0
                 while tf.math.equal(used, 1) and tf.math.less(count, 3):
