@@ -13,44 +13,7 @@ from typing import Union
 
 from .config_classes import *
 from ..dn2dicts import convertConfigFile
-
-
-# define PathABC type
-try:
-    PathABC = Union[bytes, str, os.PathLike]
-except AttributeError:
-    # not Python 3.6+
-    import pathlib
-    PathABC = Union[bytes, str, pathlib.Path]
-
-
-def get_size(path: Union[PathABC, io.IOBase]) -> int:
-    """
-    A unified method to find the size of a file, either by its path or an open
-    file object.
-
-    Arguments:
-        path: a path (as a str or a Path object) or an open file (which must be
-              seekable)
-
-    Return:
-        size of the file
-
-    Raises:
-        ValueError: the IO object given as path is not open or it not seekable
-        FileNotFoundError: the given path is invalid
-    """
-    if isinstance(path, io.IOBase):
-        if path.seekable():
-            currentPos = path.tell()
-            path.seek(-1, io.SEEK_END)
-            size = path.tell()
-            path.seek(currentPos)
-            return size
-        else:
-            raise ValueError("IO object must be seekable in order to find the size.")
-    else:
-        return os.path.getsize(path)
+from ...file_manager import PathABC, get_size, open_if_not_open
 
 
 def build_layer(layer_dict, file, prevlayer, net):
@@ -58,11 +21,13 @@ def build_layer(layer_dict, file, prevlayer, net):
     layer = layer_builder[layer_dict['_type']].from_dict(prevlayer, layer_dict)
 
     # temprary use for management of routing layers
-    if layer._type == "route" and type(layer_dict['layers ']) == tuple:
-        route = layer_dict['layers '][1]
-        layer.c += net[route + 1].filters
-    elif layer._type == "route":
-        layer.c //= 2
+    if layer._type == "route":
+        layers = layer_dict['layers']
+        if type(layers) is tuple:
+            route = layers[1]
+            layer.c += net[route + 1].filters
+        else:
+            layer.c //= 2
 
     if file is not None:
         bytes_read = layer.load_weights(file)
@@ -156,13 +121,6 @@ def get_darknet53_tf_format(net, only_weights=True):
                 weights.append(interleve_weights(block))
     print("converted/interleved weights for tensorflow format")
     return new_net, weights
-
-
-def open_if_not_open(file, *args, **kwargs):
-    """Takes an input and opens it as a file if it is not already and open file"""
-    if isinstance(file, io.IOBase):
-        return file
-    return open(file, *args, **kwargs)
 
 
 def load_weights(config_file: Union[PathABC, io.TextIOBase],

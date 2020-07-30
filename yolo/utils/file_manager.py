@@ -6,8 +6,74 @@ from __future__ import annotations
 
 from http.client import HTTPException
 import tensorflow.keras as ks
+import io
 import os
 
+from typing import Union
+
+# define PathABC type
+try:
+    PathABC = Union[bytes, str, os.PathLike]
+except AttributeError:
+    # not Python 3.6+
+    import pathlib
+    PathABC = Union[bytes, str, pathlib.Path]
+
+
+def get_size(path: Union[PathABC, io.IOBase]) -> int:
+    """
+    A unified method to find the size of a file, either by its path or an open
+    file object.
+
+    Arguments:
+        path: a path (as a str or a Path object) or an open file (which must be
+              seekable)
+
+    Return:
+        size of the file
+
+    Raises:
+        ValueError: the IO object given as path is not open or it not seekable
+        FileNotFoundError: the given path is invalid
+    """
+    if isinstance(path, io.IOBase):
+        if path.seekable():
+            currentPos = path.tell()
+            path.seek(-1, io.SEEK_END)
+            size = path.tell()
+            path.seek(currentPos)
+            return size
+        else:
+            raise ValueError("IO object must be seekable in order to find the size.")
+    else:
+        return os.path.getsize(path)
+
+
+def open_if_not_open(file: Union[PathABC, io.IOBase], *args, **kwargs) -> io.IOBase:
+    """
+    Takes an input that can either be a file or a path. If the input is given as
+    a file, it is returned without modification. If it is a path, it is opened
+    as a file.
+
+    Arguments:
+        file: a path or file that is being opened if it already isn't
+        *args, **kwargs: to see the potential additional arguments or keywords
+                         that can be based into this function, consult the open
+                         builtin function.
+
+    Returns:
+        opened file
+
+    Raises:
+        IOError: consult the open builtin function for the potential IO errors
+                 that can be raised when opening the file
+    """
+    if isinstance(file, io.IOBase):
+        return file
+    return open(file, *args, **kwargs)
+
+
+# URL names that can be accessed using the download function
 urls = {
     'yolov3.cfg': (
         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',

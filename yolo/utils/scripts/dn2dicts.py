@@ -75,10 +75,10 @@ def convertConfigFile(configfile, break_script="######################"):
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
         else:
-            line, *_ = line.strip().split('#', 1)
+            line, *_ = line.split('#', 1)
             if line.strip() != '':
-                k, v = line.strip().split('=', 1)
-                mydict[k] = parseValue(v)
+                k, v = line.split('=', 1)
+                mydict[k.strip()] = parseValue(v)
 
 
 def main(argv, args=None):
