@@ -73,7 +73,7 @@ def preprocess(data, anchors, width, height):
     label = build_gt(label, anchors, width)
     
     #idk if this works
-    #label = tf.random.shuffle(label, seed=None)
+    label = tf.random.shuffle(label, seed=None)
 
     return image, label
 
@@ -145,7 +145,7 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 #tf.print(x[batch, box_id], y[batch, box_id])
                 update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)])
-                update = update.write(i, y_true[batch, box_id])
+                update = update.write(i, [y_true[batch, box_id, 0], y_true[batch, box_id, 1], y_true[batch, box_id, 2], y_true[batch, box_id, 3], 1, y_true[batch, box_id, 4]])
                 i += 1
 
 
@@ -154,7 +154,7 @@ def build_grided_gt(y_true, mask, size):
     return full#tf.RaggedTensor.from_tensor(full)
 
 def load_dataset(skip = 0, batch_size = 10):
-    dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=False)
+    dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
     dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]))
@@ -163,9 +163,16 @@ def load_dataset(skip = 0, batch_size = 10):
 
 if __name__ == "__main__":
     print("")
-    with tf.device("/GPU:0"):
+    with tf.device("/CPU:0"):
         dataset = load_dataset()
 
     for image, label in dataset:
         for key in label.keys():
+        #     for k in label[key]:
+        #         k = tf.transpose(k, perm = [2, 1, 0, 3])
+        #         for a in k:
+        #             for x in a:
+        #                 for y in x:
+        #                     if K.sum(y) != 0:
+        #                         print(y)
             print(label[key].shape)
