@@ -138,20 +138,47 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
                 used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                uid = 1
 
-                # temp check performance
+                # start code for tie breaker, temp check performance
                 count = 0
                 while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                    #tf.print(p, used)
+                    uid = 2
                     count += 1
                     p = (p + 1)%3
                     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                
+                    
+                if tf.math.equal(used, 1):
+                    continue
+                #end code for tie breaker
+
                 update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
                 test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
                 update = update.write(i, test)
-                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [1])
+                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
                 i += 1
+
+            """
+            used can be:
+                0 not used
+                1 used with the correct anchor
+                2 used with offset anchor
+            
+            if used is 0 or 2: 
+                do not enter tie breaker (count = 0)
+                edit box index with the most recent box
+
+            if tie breaker was used:
+                set used to 2
+            else:
+                set used to 1
+
+            E tensorflow/core/grappler/optimizers/dependency_optimizer.cc:741] Iteration = 0, topological sort failed with message: The graph couldn't be sorted in topological order.
+            raised likely due to a memory issue? reduced batch size to 2 and it solved the problem? odd
+
+            W tensorflow/core/grappler/optimizers/loop_optimizer.cc:906] Skipping loop optimization for Merge node with control input: cond/branch_executed/_11
+            idk should look into this
+            """
 
     if tf.math.greater(update_index.size(), 0):
         update_index = update_index.stack()
@@ -164,7 +191,7 @@ def build_grided_gt(y_true, mask, size):
 
 def load_dataset(skip = 0, batch_size = 10):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
-    # dataset = dataset.skip(skip).take(batch_size * 30)
+    #dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]))
     return dataset
@@ -185,6 +212,6 @@ if __name__ == "__main__":
         #     #             if K.sum(i) > 0:
         #     #                 print(i.numpy().tolist(), end = "\n")
         #     print(label[key].shape)
-        end = time.time() - start
-        # print(end)
+        count = 0
+    end = time.time() - start
     print(end)
