@@ -89,19 +89,31 @@ def get_random(image, label, masks):
     # image steps
     tf.print(randscale * 32)
     # bounding boxs
-    index = 1024
-    loss_dict = []
-    for i in range(tf.shape(masks)[0]):
-        value = tf.RaggedTensor.from_tensor(build_grided_gt(label, masks[i], randscale))
-        loss_dict.append(value)
-        randscale *= 2
-        index //= 2
     
-    # vals = []
-    # for i in range(loss_dict.size()):
-    #     vals.append(loss_dict.read(i))
-    tf.print(loss_dict)
-    return image
+    if tf.math.equal(tf.shape(masks)[0], 3):
+        value1 = build_grided_gt(label, masks[0], randscale)
+        value2 = build_grided_gt(label, masks[1], randscale * 2)
+        value3 = build_grided_gt(label, masks[2], randscale * 4)
+        ret_dict = {1024: value1, 512: value2, 256: value3}
+    elif tf.math.equal(tf.shape(masks)[0], 2):
+        value1 = build_grided_gt(label, masks[0], randscale)
+        value2 = build_grided_gt(label, masks[1], randscale * 4)
+        ret_dict = {1024: value1, 512: value2, 256: value2}
+    else:
+        value1 = build_grided_gt(label, masks[0], randscale)
+        value2 = build_grided_gt(label, masks[1], randscale * 2)
+        value3 = build_grided_gt(label, masks[2], randscale * 4)
+        ret_dict = {1024: value1, 512: value2, 256: value3}
+
+    # we need to get this to work!!!!
+    # loss_dict = []
+    # index = 1024
+    # for i in range(tf.shape(masks)[0]):
+    #     loss_dict.append(build_grided_gt(label, masks[i], randscale))
+    #     randscale *= 2
+    #     index //= 2
+    #tf.print(ret_dict)
+    return image, ret_dict
 
 @tf.function
 def build_grided_gt(y_true, mask, size):
@@ -136,11 +148,14 @@ def build_grided_gt(y_true, mask, size):
                 update = update.write(i, y_true[batch, box_id])
                 i += 1
 
-    return tf.tensor_scatter_nd_update(full, update_index.stack(), update.stack())
+
+    full = tf.tensor_scatter_nd_update(full, update_index.stack(), update.stack())
+    tf.print(K.sum(full))
+    return full#tf.RaggedTensor.from_tensor(full)
 
 def load_dataset(skip = 0, batch_size = 10):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=False)
-    dataset = dataset.skip(skip).take(batch_size * 2)
+    dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]))
     return dataset
@@ -148,8 +163,9 @@ def load_dataset(skip = 0, batch_size = 10):
 
 if __name__ == "__main__":
     print("")
-    with tf.device("/CPU:0"):
+    with tf.device("/GPU:0"):
         dataset = load_dataset()
 
-    for image in dataset:
-        print()
+    for image, label in dataset:
+        for key in label.keys():
+            print(label[key].shape)
