@@ -5,9 +5,6 @@ import sys
 import numpy as np
 from yolo.modeling.loss_functions.iou import *
 
-
-RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))
-
 @tf.function
 def convert_to_yolo(box):
     with tf.name_scope("convert_box"):
@@ -87,9 +84,7 @@ def get_random(image, label, masks):
     # bounding boxs
     if tf.math.equal(tf.shape(masks)[0], 3):
         value1 = build_grided_gt(label, masks[0], randscale)
-        #tf.print()
         value2 = build_grided_gt(label, masks[1], randscale * 2)
-        #tf.print()
         value3 = build_grided_gt(label, masks[2], randscale * 4)
         ret_dict = {1024: value1, 512: value2, 256: value3}
     elif tf.math.equal(tf.shape(masks)[0], 2):
@@ -196,7 +191,7 @@ def load_dataset(skip = 0, batch_size = 10):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
     #dataset = dataset.skip(skip).take(batch_size * 100)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416)).padded_batch(batch_size)
-    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]))
+    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]])).prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
 
@@ -214,7 +209,7 @@ if __name__ == "__main__":
             #         for i in j:
             #             if K.sum(i) > 0:
             #                 print(i.numpy().tolist(), end = "\n")
-            print(label[key].shape)
+            print(label[key].shape, end= "\r")
         count = 0
     end = time.time() - start
     print(end)
