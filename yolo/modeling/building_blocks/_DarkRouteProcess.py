@@ -125,7 +125,6 @@ class DarkRouteProcess(ks.layers.Layer):
                 self.layers.extend(self._block(self._filters))
             else:
                 self.layers.extend(self._spp(self._filters))
-
         self.outputs = [False] * self._repetitions * 2
         self.outputs[-2] = True
         self.outputs[-1] = True

@@ -85,7 +85,8 @@ class Yolov3Head(tf.keras.Model):
                 kernel_size=(1, 1), 
                 strides=(1, 1), 
                 padding="same", 
-                use_bn=False)#, activation=None)
+                use_bn=False,
+                activation=None)
         return routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):

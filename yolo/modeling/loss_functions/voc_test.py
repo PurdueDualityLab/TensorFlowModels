@@ -41,11 +41,12 @@ def build_gt(y_true, anchors, size):
     truth_comp = tf.tile(tf.expand_dims(y_true[..., 0:4], axis = -1), [1,1, tf.shape(anchors)[0]])
     truth_comp = tf.transpose(truth_comp, perm = [2, 0, 1])
 
-    box = tf.split(truth_comp, num_or_size_splits=4, axis = -1)
-    anchor_box = tf.split(anchors, num_or_size_splits=4, axis = -1)    
+    #box = tf.split(truth_comp, num_or_size_splits=4, axis = -1)
+    #anchor_box = tf.split(anchors, num_or_size_splits=4, axis = -1)    
 
-    iou_anchors = tf.cast(K.argmax(iou(box, anchor_box), axis = 0), dtype = tf.float32)
-    y_true = K.concatenate([y_true, iou_anchors], axis = -1)
+    iou_anchors = tf.cast(K.argmax(box_iou(truth_comp, anchors), axis = 0), dtype = tf.float32)
+    tf.print(iou_anchors)
+    y_true = K.concatenate([y_true, K.expand_dims(iou_anchors, axis = -1)], axis = -1)
     return y_true
 
 def preprocess(data, anchors, width, height):
@@ -134,21 +135,21 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
                 
-                # # start code for tie breaker, temp check performance
-                # uid = 1
-                # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                # count = 0
-                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                #     uid = 2
-                #     count += 1
-                #     p = (p + 1)%3
-                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                # start code for tie breaker, temp check performance
+                uid = 1
+                used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                count = 0
+                while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                    uid = 2
+                    count += 1
+                    p = (p + 1)%3
+                    used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                     
-                # if tf.math.equal(used, 1):
-                #     tf.print("skipping")
-                #     continue
-                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
-                # #end code for tie breaker
+                if tf.math.equal(used, 1):
+                    tf.print("skipping")
+                    continue
+                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
+                #end code for tie breaker
 
                 update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
                 test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
@@ -183,9 +184,10 @@ def build_grided_gt(y_true, mask, size):
         update_index = update_index.stack()
         update = update.stack()
         full = tf.tensor_scatter_nd_add(full, update_index, update)
-    #tf.print(K.sum(full))
+    tf.print(tf.shape(full))
+    # for some reason in graph it needs this line to work
     full = tf.reshape(full, finshape)
-    #tf.print(K.sum(full))
+    tf.print(K.sum(full), "test")
     return full
 
 def load_dataset(skip = 0, batch_size = 10):
