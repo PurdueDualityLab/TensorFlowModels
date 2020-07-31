@@ -1,6 +1,6 @@
 tensorflow
 tensorflow_datasets
-tensorflow_addons==0.10.0
+tensorflow_addons >= 0.10.0
 tensorflow_probability
 matplotlib.pyplot
 numpy
