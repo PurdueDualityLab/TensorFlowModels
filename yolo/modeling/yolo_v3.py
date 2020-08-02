@@ -2,7 +2,9 @@ import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
-from ..utils.file_manager import download
+from yolo.utils.file_manager import download
+from yolo.utils.scripts.darknet2tf import read_weights
+from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
 class DarkNet53(ks.Model):
@@ -37,33 +39,14 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            self._load_backbone_weights(config_file, weights_file)
+            encoder, decoder, outputs = read_weights(config_file, weights_file)
+            _load_weights_dnBackbone(self.backbone, encoder)
         return
 
     def call(self, inputs):
         out_dict = self.backbone(inputs)
         x = out_dict[list(out_dict.keys())[-1]]
         return self.head(x)
-
-    def _load_backbone_weights(self, config, weights):
-        from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
-        encoder, decoder, outputs = load_weights(config, weights)
-        print(encoder, decoder, outputs)
-        encoder, weight_list = get_darknet53_tf_format(encoder[:])
-        print(
-            f"\nno. layers: {len(self.backbone.layers)}, no. weights: {len(weight_list)}")
-        for i, (layer, weights) in enumerate(
-                zip(self.backbone.layers, weight_list)):
-            print(
-                f"loaded weights for layer: {i}  -> name: {layer.name}",
-                sep='      ',
-                end="\r")
-            layer.set_weights(weights)
-        self.backbone.trainable = False
-        print(
-            f"\nsetting backbone.trainable to: {self.backbone.trainable}\n")
-        print(f"...training will only affect classification head...")
-        return
 
     def get_summary(self):
         self.backbone.summary()
@@ -74,24 +57,48 @@ class DarkNet53(ks.Model):
         return
 
 
-from yolo.utils.scripts.darknet2tf.load_weights import _load_weights_dnBackbone, _load_weights_dnHead
-
 class Yolov3(ks.Model):
     def __init__(self,
-                 input_shape = [None, None, None, 3],
                  classes = 20,
                  boxes = 9,
-                 dn2tf_backbone = False,
-                 dn2tf_head  = False,
-                 config_file = None,
-                 weights_file = None,
+                 backbone = "darknet53",
+                 head = "regular",
                  **kwargs):
+        """
+        Args:
+            classes: int for the number of available classes
+            boxes: total number of boxes that are predicted by detection head
+        """
+        super().__init__(**kwargs)
+        self._classes = classes
+        self._boxes = boxes
+        self._backbone_name = backbone
+        self._head_name = head
+
+    def build(self, input_shape=[None, None, None, 3]):
+        self._inputs = ks.layers.Input(shape = input_shape[1:])
+        self._backbone = Backbone_Builder(self._backbone_name)
+        self._head = Yolov3Head(self._head_name, classes=self._classes, boxes=self._boxes)
+        super().build(input_shape)
+
+    def call(self, inputs):
+        feature_maps = self._backbone(inputs)
+        predictions = self._head(feature_maps)
+        return predictions
+
+    def load_weights_from_dn(self,
+                             dn2tf_backbone,
+                             dn2tf_head,
+                             config_file=None,
+                             weights_file=None):
         """
         load the entire Yolov3 Model for tensorflow
 
         example:
             load yolo with darknet wieghts for backbone
-            model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+            model = Yolov3()
+            model.build(input_shape = (1, 416, 416, 3))
+            model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
 
         to be implemented
         example:
@@ -107,35 +114,17 @@ class Yolov3(ks.Model):
             load head weigths from tensorflow (our training)
 
         Args:
-            input_shape: list or tuple for image input shape, default is [None, None, None, 3] for variable size images
-            classes: int for the number of available classes
-            boxes: total number of boxes that are predicted by detection head
-
             dn2tf_backbone: bool, if true it will load backbone weights for yolo v3 from darknet .weights file
             dn2tf_head: bool, if true it will load head weights for yolo v3 from darknet .weights file
             config_file: str path for the location of the configuration file to use when decoding darknet weights
             weights_file: str path with the file containing the dark net weights
-
-        Return:
-            initialized callable yolo model
-
-        Raises:
-            Exception: if config file is not provided and dn2tf_backbone or dn2tf_head is true
-            Exception: if weights file is not provided and dn2tf_backbone or dn2tf_head is true
         """
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("regular",  classes=classes, boxes=boxes)
-
         if dn2tf_backbone or dn2tf_head:
-            if config_file == None:
-                raise Exception("config file cannot be none")
-            if weights_file == None:
-                raise Exception("weights file cannot be none")
-            from yolo.utils.scripts.darknet2tf.get_weights import load_weights
-            encoder, decoder, outputs = load_weights(config_file, weights_file)
+            if config_file is None:
+                config_file = download('yolov3.cfg')
+            if weights_file is None:
+                weights_file = download('yolov3.weights')
+            encoder, decoder, outputs = read_weights(config_file, weights_file)
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)
@@ -143,10 +132,6 @@ class Yolov3(ks.Model):
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder, outputs)
 
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
 
 
 class Yolov3_tiny(ks.Model):
@@ -168,8 +153,7 @@ class Yolov3_tiny(ks.Model):
                 raise Exception("config file cannot be none")
             if weights_file == None:
                 raise Exception("weights file cannot be none")
-            from yolo.utils.scripts.darknet2tf.get_weights import load_weights
-            encoder, decoder, outputs = load_weights(config_file, weights_file)
+            encoder, decoder, outputs = read_weights(config_file, weights_file)
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)
@@ -202,8 +186,7 @@ class Yolov3_spp(ks.Model):
                 raise Exception("config file cannot be none")
             if weights_file == None:
                 raise Exception("weights file cannot be none")
-            from yolo.utils.scripts.darknet2tf.get_weights import load_weights
-            encoder, decoder, outputs = load_weights(config_file, weights_file)
+            encoder, decoder, outputs = read_weights(config_file, weights_file)
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)

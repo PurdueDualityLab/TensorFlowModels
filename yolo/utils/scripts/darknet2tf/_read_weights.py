@@ -124,7 +124,7 @@ def get_darknet53_tf_format(net, only_weights=True):
     return new_net, weights
 
 
-def load_weights(config_file: Union[PathABC, io.TextIOBase],
+def read_weights(config_file: Union[PathABC, io.TextIOBase],
                  weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,

@@ -5,6 +5,8 @@ from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
 
+from ._read_weights import read_weights
+
 flags.DEFINE_boolean('weights_only', False,
                      'Save only the weights and not the entire model.')
 flags.DEFINE_integer('input_image_size', 224,

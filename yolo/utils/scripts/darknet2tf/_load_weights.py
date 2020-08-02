@@ -1,5 +1,5 @@
 
-from yolo.utils.scripts.darknet2tf.get_weights import get_darknet53_tf_format, interleve_weights
+from ._read_weights import get_darknet53_tf_format, interleve_weights
 
 def _load_weights_dnBackbone(backbone, encoder):
     # get weights for backbone
