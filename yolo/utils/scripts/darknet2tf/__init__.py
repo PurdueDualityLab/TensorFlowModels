@@ -11,7 +11,7 @@ flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
 
 
-def makeParser(parser):
+def _makeParser(parser):
     parser.add_argument(
         'cfg',
         default=None,
@@ -28,14 +28,14 @@ def makeParser(parser):
         'output', help='name of the location to save the generated model')
 
 
-parser = argparse_flags.ArgumentParser()
-makeParser(parser)
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
 
 
 def main(argv, args=None):
     from ...file_manager import download
     if args is None:
-        args = parser.parse_args(argv[1:])
+        args = _parser.parse_args(argv[1:])
 
     cfg = args.cfg
     weights = args.weights

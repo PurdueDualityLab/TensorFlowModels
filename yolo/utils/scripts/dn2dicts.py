@@ -9,7 +9,7 @@ from pprint import pprint
 import sys
 
 
-def makeParser(parser):
+def _makeParser(parser):
     """
     Make a parser for the Abseil utility script. This is not the Darknet parser.
     """
@@ -27,8 +27,8 @@ def makeParser(parser):
         type=argparse.FileType('w'))
 
 
-parser = argparse_flags.ArgumentParser()
-makeParser(parser)
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
 
 
 def parseValue(v):
@@ -78,7 +78,7 @@ def convertConfigFile(configfile, break_script="######################"):
 
 def main(argv, args=None):
     if args is None:
-        args = parser.parse_args(argv[1:])
+        args = _parser.parse_args(argv[1:])
 
     config = args.config
     dictsfile = args.dictsfile

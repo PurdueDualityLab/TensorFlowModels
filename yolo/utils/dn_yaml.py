@@ -135,8 +135,6 @@ def load_darknet_from_yaml(
             'Requires yaml module installed (`pip install pyyaml`).')
 
     configDict = yaml.load(yaml_string, loader)
-    #import pprint
-    # pprint.pprint(configDict)
     return tf.keras.layers.deserialize(
         configDict, custom_objects=custom_objects)
 

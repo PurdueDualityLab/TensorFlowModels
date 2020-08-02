@@ -27,9 +27,9 @@ def makeParser(parser):
     subparsers.required = True
     for util in scripts.__all__:
         module = importlib.import_module('yolo.utils.scripts.' + util)
-        if hasattr(module, 'makeParser'):
+        if hasattr(module, '_makeParser'):
             sub = subparsers.add_parser(util, help=module.__doc__)
-            module.makeParser(sub)
+            module._makeParser(sub)
 
 
 parser = argparse_flags.ArgumentParser(prog=f'{sys.executable} -m yolo')

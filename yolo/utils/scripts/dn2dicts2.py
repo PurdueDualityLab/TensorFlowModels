@@ -25,7 +25,7 @@ if sys.version_info < (3, 10):
 
 
 
-def _parseValue(self, key, val):
+def _parseValue(key, val):
     """
     Parse non-string literals found in darknet config files
     """
@@ -117,7 +117,7 @@ def convertConfigFile(configfile):
 # ABSEIL SCRIPT BELOW
 
 
-def makeParser(parser):
+def _makeParser(parser):
     """
     Make a parser for the Abseil utility script. This is not the Darknet parser.
     """
@@ -135,12 +135,12 @@ def makeParser(parser):
         type=argparse.FileType('w'))
 
 
-parser = argparse_flags.ArgumentParser()
-makeParser(parser)
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
 
 def main(argv, args=None):
     if args is None:
-        args = parser.parse_args(argv[1:])
+        args = _parser.parse_args(argv[1:])
 
     config = args.config
     dictsfile = args.dictsfile
