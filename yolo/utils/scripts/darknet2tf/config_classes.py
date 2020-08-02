@@ -260,9 +260,18 @@ class maxpoolCFG(Config):
     stride: int = field(init=True, default=2)
     size: int = field(init=True, default=2)
 
+    """
     @property
     def shape(self):
-        return ((self.w - self.size) // self.stride + 1, (self.h - self.size) // self.stride + 1, self.c)
+        return ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+"""
+
+    @property
+    def shape(self):
+        self.pad = 0
+        w = len_width(self.w, self.size, self.pad, self.stride)
+        h = len_width(self.h, self.size, self.pad, self.stride)
+        return (w, h, self.c)
 
     @classmethod
     def from_dict(clz, prevlayer, layer_dict):

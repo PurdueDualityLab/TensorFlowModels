@@ -25,7 +25,8 @@ def build_layer(layer_dict, file, prevlayer, net):
         layers = layer_dict['layers']
         if type(layers) is tuple:
             route = layers[1]
-            layer.c += net[route + 1].filters
+            prevlayer = net[route + 1]
+            layer.c += prevlayer.shape[-1]
         else:
             layer.c //= 2
 
@@ -144,6 +145,12 @@ def load_weights(config_file: Union[PathABC, io.TextIOBase],
          open_if_not_open(weights_file, "rb") as weights:
         config = convertConfigFile(config)
         encoder, decoder, outputs, bytes_read = read_file(config, weights)
+        print('encoder')
+        for e in encoder:
+            print(f"{e.w} {e.h} {e.c}\t{e}")
+        print('decoder')
+        for e in decoder:
+            print(f"{e.w} {e.h} {e.c}\t{e}")
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
     if (bytes_read != size):

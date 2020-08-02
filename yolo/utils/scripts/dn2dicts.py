@@ -10,6 +10,9 @@ import sys
 
 
 def makeParser(parser):
+    """
+    Make a parser for the Abseil utility script. This is not the Darknet parser.
+    """
     parser.add_argument(
         'config',
         default=None,
