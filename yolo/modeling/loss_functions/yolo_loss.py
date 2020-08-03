@@ -6,12 +6,12 @@ from yolo.modeling.yolo_v3 import Yolov3
 from yolo.modeling.loss_functions.voc_test import *
 
 class Yolo_Loss(ks.losses.Loss):
-    def __init__(self, mask, anchors, classes, num, ignore_thresh, truth_thresh, random, fixed_dims, batch_size = None, reduction = tf.keras.losses.Reduction.AUTO, name=None, **kwargs):
+    def __init__(self, mask, anchors, classes, num, ignore_thresh, truth_thresh, random, fixed_dims, reduction = tf.keras.losses.Reduction.AUTO, name=None, **kwargs):
         self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= tf.float32), axis = 0)/416
         self._classes = tf.cast(classes, dtype = tf.int32)
         self._num = tf.cast(len(mask), dtype = tf.int32)
-        self._ignore_thresh = ignore_thresh
-        self._truth_thresh = truth_thresh
+        self._ignore_thresh = tf.cast(ignore_thresh, dtype = tf.float32)
+        # self._truth_thresh = truth_thresh
         self._iou_thresh = 1 # recomended use = 0.213 in [yolo]
         self._random = 0 if random == None else random
         self._net_fixed_dims = fixed_dims
@@ -39,42 +39,42 @@ class Yolo_Loss(ks.losses.Loss):
         return anchors
 
     def call(self, y_true, y_pred):
+        #1. generate and store constants and format output
         width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
         batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
-
         grid_points = self._get_centers(width, height, batch_size)  
         anchor_grid = self._get_anchor_grid(width, height, batch_size)
-
+        
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, (self._classes + 5)])
-        y_true = tf.reshape(y_true, [batch_size, width, height, self._num, (self._classes + 5)])
+        #y_true = tf.reshape(y_true, [batch_size, width, height, self._num, (self._classes + 5)])
 
         fwidth = tf.cast(width, dtype = tf.float32)
         fheight = tf.cast(height, dtype = tf.float32)
 
-        # # loss 
+        #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2])
         pred_wh = y_pred[..., 2:4]
         pred_conf = tf.math.sigmoid(y_pred[..., 4])
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
 
-        temp = K.concatenate([K.expand_dims(pred_xy[..., 0]/fwidth, axis = -1), K.expand_dims(pred_xy[..., 1]/fheight, axis = -1)], axis = -1) + grid_points
-        pred_box = K.concatenate([temp, tf.math.exp(pred_wh) * anchor_grid], axis = -1)
-        
+        #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = (y_true[..., 0:2] - grid_points)
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
         true_wh = tf.where(tf.math.is_nan(true_wh), 0.0, true_wh)
         true_wh = tf.where(tf.math.is_inf(true_wh), 0.0, true_wh)
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
-
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * true_conf * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * true_conf * fheight, axis = -1)], axis = -1)
-        true_box = y_true[..., 0:4]
 
+        #4. use iou to calculate the mask of where the network belived there to be an object -> used to penelaize the network for wrong predictions
+        temp = K.concatenate([K.expand_dims(pred_xy[..., 0]/fwidth, axis = -1), K.expand_dims(pred_xy[..., 1]/fheight, axis = -1)], axis = -1) + grid_points
+        pred_box = K.concatenate([temp, tf.math.exp(pred_wh) * anchor_grid], axis = -1)        
+        true_box = y_true[..., 0:4]
         mask_iou = box_iou(true_box, pred_box) 
         mask_iou = tf.cast(mask_iou < self._ignore_thresh, dtype = tf.float32)
 
-        # # # conf_loss 
+        #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         if self._loss_type == "mse":
             #yolo_layer.c: scale = (2-truth.w*truth.h)
             scale = (2 - true_box[...,2] * true_box[...,3])
@@ -84,16 +84,19 @@ class Yolo_Loss(ks.losses.Loss):
         else:
             loss_box = (1 - giou(true_box, pred_box)) * self._iou_normalizer * true_conf
 
-        # # # class_loss = ks.losses.categorical_crossentropy(pred_class, true_class)
+        #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         class_loss = tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
+        
+        #7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
         conf_loss = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis = -1), K.expand_dims(pred_conf, axis = -1))
         conf_loss = true_conf * (conf_loss) + (1 - true_conf) * conf_loss * mask_iou
         
+        #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
         loss_box = tf.reduce_sum(loss_box, axis=(1, 2, 3))
         conf_loss = tf.reduce_sum(conf_loss*conf_loss, axis=(1, 2, 3))
         class_loss = tf.reduce_sum(class_loss, axis=(1, 2, 3))
 
-        #tf.print("box: ", K.sum(loss_box), "conf_loss: ", K.sum(conf_loss), "class_loss: ", K.sum(class_loss))
+        #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
         return (class_loss + conf_loss + loss_box)
 
     def get_config(self):
@@ -101,7 +104,7 @@ class Yolo_Loss(ks.losses.Loss):
 
 def load_model():
     model = Yolov3(dn2tf_backbone = True, 
-                   dn2tf_head = False,
+                   dn2tf_head = True,
                    input_shape= (None, None, None, 3), 
                    config_file="yolov3.cfg", 
                    weights_file='yolov3_416.weights', 
@@ -121,8 +124,7 @@ def load_loss(batch_size, n = 3, classes = 80):
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
                 random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
+                fixed_dims = 416)
     outmid = Yolo_Loss(mask = [3, 4, 5], 
                 anchors = anchors, 
                 classes = classes, 
@@ -130,8 +132,7 @@ def load_loss(batch_size, n = 3, classes = 80):
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
                 random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
+                fixed_dims = 416)
     outbot = Yolo_Loss(mask = [0, 1, 2], 
                 anchors = anchors, 
                 classes = classes, 
@@ -139,8 +140,7 @@ def load_loss(batch_size, n = 3, classes = 80):
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
                 random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
+                fixed_dims = 416)
     loss_dict = {256: outtop, 512: outmid, 1024: outbot}
     return loss_dict
 
@@ -153,7 +153,7 @@ def main():
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
     #strategy = tf.distribute.MirroredStrategy()
-    batch = 20
+    batch = 10
     dataset = load_dataset(skip = 0, batch_size=batch)
     optimizer = ks.optimizers.SGD(learning_rate=0.001)
     model = load_model()
@@ -163,25 +163,8 @@ def main():
     # print(loss_fns)
     import time
     with tf.device("/GPU:0"):
-        # for image, label in dataset:
-        #     with tf.GradientTape() as tape:
-        #         y_pred = model(image)
-        #         #print_out(y_pred)
-        #         #print_out(label)      
-        #         total_loss = 0 
-        #         start = time.time()
-        #         for key in y_pred.keys():
-        #             print(f"{key}:{y_pred[key].shape}")
-        #             print(y_pred[key][0,12,5,(85 * 2):(85 * 2 + 4)])
-        #             loss = loss_fns[key](label[key], y_pred[key])
-        #             #tf.print(loss)
-        #             total_loss += loss
-        #         end = time.time() - start
-        #         grad = tape.gradient(loss, model.trainable_variables)
         model.compile(loss=loss_fns, optimizer=optimizer)
         model.fit(dataset)
-    # # print(end)  
-        
     return
     
 
