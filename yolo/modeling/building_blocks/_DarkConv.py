@@ -124,7 +124,8 @@ class DarkConv(ks.layers.Layer):
         x = self.conv(input)
         if self._use_bn:
             x = self.bn(x)
-        x = self._activation_fn(x)
+        if self._activation != "linear":
+            x = self._activation_fn(x)
         return x
 
     def get_config(self):

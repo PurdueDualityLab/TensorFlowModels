@@ -141,6 +141,7 @@ class Yolov3(ks.Model):
         if dn2tf_head:
             self._load_weights_dnHead(decoder, outputs)
 
+
         inputs = ks.layers.Input(shape = self._input_shape[1:])
         feature_maps = self._backbone(inputs)
         predictions = self._head(feature_maps)
@@ -173,6 +174,7 @@ class Yolov3(ks.Model):
         for i, (layer, weights) in enumerate(zip(model.layers, weights_list)):
             print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
             layer.set_weights(weights)
+
         model.trainable = False
         return
 

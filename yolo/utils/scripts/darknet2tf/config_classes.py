@@ -141,7 +141,7 @@ class convCFG(Config):
     batch_normalize: int = field(init=True, repr=False, default=0)
 
     nweights: int = field(repr=False, default=0)
-    biases: np.array = field(repr=False, default=None)
+    biases: np.array = field(repr=False, default=None) #
     weights: np.array = field(repr=False, default=None)
     scales: np.array = field(repr=False, default=None)
     rolling_mean: np.array = field(repr=False, default=None)
@@ -182,10 +182,16 @@ class convCFG(Config):
         if printing:
             print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
         if self.batch_normalize:
+            # return [
+            #     self.weights,
+            #     self.biases,
+            #     self.scales,
+            #     self.rolling_mean,
+            #     self.rolling_variance]
             return [
                 self.weights,
-                self.biases,
-                self.scales,
+                self.scales, # gamma
+                self.biases, # beta
                 self.rolling_mean,
                 self.rolling_variance]
         else:

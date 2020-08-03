@@ -45,7 +45,7 @@ def build_gt(y_true, anchors, size):
     #anchor_box = tf.split(anchors, num_or_size_splits=4, axis = -1)    
 
     iou_anchors = tf.cast(K.argmax(box_iou(truth_comp, anchors), axis = 0), dtype = tf.float32)
-    tf.print(iou_anchors)
+    #tf.print(iou_anchors)
     y_true = K.concatenate([y_true, K.expand_dims(iou_anchors, axis = -1)], axis = -1)
     return y_true
 
@@ -59,7 +59,7 @@ def preprocess(data, anchors, width, height):
     # box, variable to get shape
     boxes = data["objects"]["bbox"]
     boxes = build_yolo_box(image, boxes)
-    classes = tf.one_hot(data["objects"]["label"], depth = 20)
+    classes = tf.one_hot(data["objects"]["label"], depth = 80)
     # classes = tf.cast(tf.expand_dims(data["objects"]["label"], axis = -1), dtype = tf.float32)
     label = tf.concat([boxes, classes], axis = -1)
 
@@ -80,7 +80,9 @@ def py_func_rand():
 def get_random(image, label, masks):
     masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
+    randscale = 13
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32))
+    image = image/255
     
     # bounding boxs
     if tf.math.equal(tf.shape(masks)[0], 3):
@@ -118,8 +120,8 @@ def build_grided_gt(y_true, mask, size):
     full = tf.zeros([batches, size, size, len_masks, tf.shape(y_true)[-1]])
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(y_true[..., 0] * tf.cast(size, dtype = tf.float32), dtype = tf.int32)
-    y = tf.cast(y_true[..., 1] * tf.cast(size, dtype = tf.float32), dtype = tf.int32)
+    x = tf.cast(tf.math.floor(y_true[..., 0] * tf.cast(size, dtype = tf.float32)), dtype = tf.int32)
+    y = tf.cast(tf.math.floor(y_true[..., 1] * tf.cast(size, dtype = tf.float32)), dtype = tf.int32)
 
     anchors = tf.repeat(tf.expand_dims(y_true[..., -1], axis = -1), len_masks, axis = -1)
 
@@ -135,26 +137,27 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
                 
-                # start code for tie breaker, temp check performance
-                uid = 1
-                used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                count = 0
-                while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                    uid = 2
-                    count += 1
-                    p = (p + 1)%3
-                    used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                # # start code for tie breaker, temp check performance
+                # uid = 1
+                # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                # count = 0
+                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                #     uid = 2
+                #     count += 1
+                #     p = (p + 1)%3
+                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                     
-                if tf.math.equal(used, 1):
-                    tf.print("skipping")
-                    continue
-                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
-                #end code for tie breaker
-
-                update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
-                test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
-                update = update.write(i, test)
-                i += 1
+                # if tf.math.equal(used, 1):
+                #     tf.print("skipping")
+                #     continue
+                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
+                # #end code for tie breaker
+                if x[batch, box_id] < size and y[batch, box_id] < size:
+                    update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
+                    test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
+                    update = update.write(i, test)
+                    i += 1
+                    #tf.print(x[batch, box_id], y[batch, box_id], y_true[batch, box_id, 0:2])
 
             """
             used can be:
@@ -183,18 +186,18 @@ def build_grided_gt(y_true, mask, size):
     if tf.math.greater(update_index.size(), 0):
         update_index = update_index.stack()
         update = update.stack()
-        full = tf.tensor_scatter_nd_add(full, update_index, update)
-    tf.print(tf.shape(full))
+        full = tf.tensor_scatter_nd_update(full, update_index, update)
+    #tf.print(tf.shape(full))
     # for some reason in graph it needs this line to work
     full = tf.reshape(full, finshape)
-    tf.print(K.sum(full), "test")
+    # tf.print(K.sum(full), "test")
     return full
 
 def load_dataset(skip = 0, batch_size = 10):
-    dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
-    dataset = dataset.skip(skip).take(batch_size * 1)
+    dataset,info = tfds.load('coco', split='train', with_info=True, shuffle_files=True)
+    #dataset = dataset.skip(skip).take(batch_size * 1)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(batch_size)
-    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]), num_parallel_calls = tf.data.experimental.AUTOTUNE).prefetch(tf.data.experimental.AUTOTUNE)
+    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
 
