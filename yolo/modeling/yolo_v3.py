@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.utils.file_manager import download
-from yolo.utils.scripts.darknet2tf import read_weights
+from yolo.utils.scripts.darknet2tf import read_weights, split_list
 from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
@@ -61,8 +63,6 @@ class Yolov3(ks.Model):
     def __init__(self,
                  classes = 20,
                  boxes = 9,
-                 backbone = "darknet53",
-                 head = "regular",
                  **kwargs):
         """
         Args:
@@ -72,11 +72,28 @@ class Yolov3(ks.Model):
         super().__init__(**kwargs)
         self._classes = classes
         self._boxes = boxes
-        self._backbone_name = backbone
-        self._head_name = head
+        self._backbone_name = "darknet53"
+        self._head_name = "regular"
+        self._model_name = 'yolov3'
+        self._encoder_decoder_split_location = 76
+
+    @classmethod
+    def spp(clz, **kwargs):
+        self = clz(**kwargs)
+        self._head_name = "spp"
+        self._model_name = 'yolov3-spp'
+        return self
+
+    @classmethod
+    def tiny(clz, **kwargs):
+        self = clz(**kwargs)
+        self._backbone_name = "darknet_tiny"
+        self._head_name = "tiny"
+        self._model_name = 'yolov3-tiny'
+        self._encoder_decoder_split_location = 76
+        return self
 
     def build(self, input_shape=[None, None, None, 3]):
-        self._inputs = ks.layers.Input(shape = input_shape[1:])
         self._backbone = Backbone_Builder(self._backbone_name)
         self._head = Yolov3Head(self._head_name, classes=self._classes, boxes=self._boxes)
         super().build(input_shape)
@@ -121,10 +138,11 @@ class Yolov3(ks.Model):
         """
         if dn2tf_backbone or dn2tf_head:
             if config_file is None:
-                config_file = download('yolov3.cfg')
+                config_file = download(self._model_name + '.cfg')
             if weights_file is None:
-                weights_file = download('yolov3.weights')
+                weights_file = download(self._model_name + '.weights')
             encoder, decoder, outputs = read_weights(config_file, weights_file)
+            encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)

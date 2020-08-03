@@ -5,7 +5,6 @@ Manage the downloading of external files that are used in YOLO networks.
 from __future__ import annotations
 
 from http.client import HTTPException
-import tensorflow.keras as ks
 import io
 import os
 
@@ -125,6 +124,7 @@ def download(name: str) -> str:
         Exception:      Any other undocumented error that ks.utils.get_file may
                         have thrown to indicate that the file was inaccessible.
     """
+    import tensorflow.keras as ks
     url, type, hash = urls[name]
     try:
         return ks.utils.get_file(

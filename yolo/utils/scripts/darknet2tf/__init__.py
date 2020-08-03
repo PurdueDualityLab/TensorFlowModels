@@ -13,6 +13,10 @@ flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
 
 
+def split_list(lst, i):
+    return lst[:i], lst[i:]
+
+
 def _makeParser(parser):
     parser.add_argument(
         'cfg',

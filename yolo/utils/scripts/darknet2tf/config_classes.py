@@ -184,8 +184,8 @@ class convCFG(Config):
         if self.batch_normalize:
             return [
                 self.weights,
-                self.biases,
                 self.scales,
+                self.biases,
                 self.rolling_mean,
                 self.rolling_variance]
         else:
