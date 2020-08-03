@@ -15,6 +15,13 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
+def _shift(n):
+    """Shifts a Python index 1 to the left to ignore [net] section"""
+    if n < 0:
+        return n
+    return n + 1
+
+
 class Config(ABC):
     """
     The base class for all layers that are used by the parser. Each subclass
@@ -69,12 +76,13 @@ class Config(ABC):
         return []
 
     @classmethod
-    def from_dict(clz, prevlayer, layer_dict):
+    def from_dict(clz, net, layer_dict):
         '''
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
         '''
+        prevlayer = net[-1]
         l = {
             "_type": layer_dict["_type"],
             "w": prevlayer.shape[0],
@@ -192,14 +200,15 @@ class convCFG(Config):
             return [self.weights, self.biases]
 
     @classmethod
-    def from_dict(clz, prevlayer, layer_dict):
+    def from_dict(clz, net, layer_dict):
+        prevlayer = net[-1]
         if "w" not in layer_dict.keys():
             layer_dict.update(
                 {"w": prevlayer.shape[0], "h": prevlayer.shape[1], "c": prevlayer.shape[2]})
         return clz(**layer_dict)
 
 
-@layer_builder.register('shortcut', 'route', 'yolo')
+@layer_builder.register('shortcut', 'yolo')
 @dataclass
 class placeCFG(Config):
     _type: str = None
@@ -212,11 +221,46 @@ class placeCFG(Config):
         return (self.w, self.h, self.c)
 
 
+@layer_builder.register('route')
+@dataclass
+class routeCFG(Config):
+    _type: str = None
+    w: int = field(init=True, default=0)
+    h: int = field(init=True, default=0)
+    c: int = field(init=True, default=0)
+
+    @property
+    def shape(self):
+        return (self.w, self.h, self.c)
+
+    @classmethod
+    def from_dict(clz, net, layer_dict):
+        # Calculate shape of the route
+        layers = layer_dict['layers']
+        if type(layers) is tuple:
+            w, h, c = net[_shift(layers[0])].shape
+            for l in layers[1:]:
+                lw, lh, lc = net[_shift(l)].shape
+                if (lw, lh) != (w, h):
+                    raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
+                c += lc
+        else:
+            w, h, c = net[_shift(layers)].shape
+
+        # Create layer
+        l = {
+            "_type": layer_dict["_type"],
+            "w": w,
+            "h": h,
+            "c": c}
+        return clz(**l)
+
+
 @layer_builder.register('net')
 @dataclass
 class netCFG(placeCFG):
     @classmethod
-    def from_dict(clz, prevlayer, layer_dict):
+    def from_dict(clz, net, layer_dict):
         l = {
             "_type": layer_dict["_type"],
             "w": layer_dict["width"],
@@ -240,7 +284,8 @@ class upsampleCFG(Config):
         return (self.stride * self.w, self.stride * self.h, self.c)
 
     @classmethod
-    def from_dict(clz, prevlayer, layer_dict):
+    def from_dict(clz, net, layer_dict):
+        prevlayer = net[-1]
         l = {
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
@@ -260,21 +305,13 @@ class maxpoolCFG(Config):
     stride: int = field(init=True, default=2)
     size: int = field(init=True, default=2)
 
-    """
     @property
     def shape(self):
         return ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
-"""
-
-    @property
-    def shape(self):
-        self.pad = 0
-        w = len_width(self.w, self.size, self.pad, self.stride)
-        h = len_width(self.h, self.size, self.pad, self.stride)
-        return (w, h, self.c)
 
     @classmethod
-    def from_dict(clz, prevlayer, layer_dict):
+    def from_dict(clz, net, layer_dict):
+        prevlayer = net[-1]
         l = {
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],

@@ -14,33 +14,10 @@ from .config_classes import *
 from ..dn2dicts import convertConfigFile
 from ...file_manager import PathABC, get_size, open_if_not_open
 
-import more_itertools
 
-
-def _shift(n):
-    """Shifts a Python index 1 to the left to ignore [net] section"""
-    if n < 0:
-        return n
-    return n + 1
-
-def build_layer(layer_dict, file, prevlayer, net):
+def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
-    net = more_itertools.SequenceView(net)
-
-    layer = layer_builder[layer_dict['_type']].from_dict(prevlayer, layer_dict)
-
-    # temprary use for management of routing layers
-    if layer._type == "route":
-        layers = layer_dict['layers']
-        print(f"{layer} {layers}")
-        if type(layers) is tuple:
-            layer.c = 0
-            for l in layers:
-                lshape = net[_shift(l)].shape
-                layer.c += lshape[-1]
-        else:
-            lshape = net[_shift(layers)].shape
-            layer.c = lshape[-1]
+    layer = layer_builder[layer_dict['_type']].from_dict(net, layer_dict)
 
     if file is not None:
         bytes_read = layer.load_weights(file)
@@ -76,9 +53,11 @@ def read_file(config, weights):
     decoder = []
     net = encoder
     outputs = [None]
+    full_net = None
     for layer_dict in config:
         if layer_dict["_type"] != "decoder_encoder_split":
-            layer, num_read = build_layer(layer_dict, weights, net[-1], encoder + decoder)
+            full_net = encoder + decoder
+            layer, num_read = build_layer(layer_dict, weights, full_net)
             if layer_dict["_type"] != 'yolo' and layer.shape[-1] != 255:
                 net.append(layer)
             else:
