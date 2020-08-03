@@ -53,7 +53,7 @@ class Config(ABC):
         Load the weights for the current layer from a file.
 
         Arguments:
-            files: Name of the DarkNet weights file
+            files: Open IO object for the DarkNet weights file
 
         Returns:
             the number of bytes read.

@@ -65,9 +65,9 @@ def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
     return
 
 
-def _load_weights_dnHead(head, decoder, outputs):
+def _load_weights_dnHead(head, decoder):
     # get weights for head
-    decoder, weights_decoder = get_decoder_weights(decoder, outputs)
+    decoder, weights_decoder = get_decoder_weights(decoder)
 
     # set detection head weights
     print(f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}")
@@ -91,11 +91,23 @@ def _set_darknet_weights(model, weights_list):
     model.trainable = False
     return
 
+def split_decoder(lst):
+    decoder = []
+    outputs = []
+    for layer in lst:
+        if layer._type == 'yolo':
+            outputs.append(decoder.pop())
+            outputs.append(layer)
+        else:
+            decoder.append(layer)
+    return decoder, outputs
 
-def get_decoder_weights(decoder, head):
+def get_decoder_weights(decoder):
     layers = [[]]
     block = []
     weights = []
+
+    decoder, head = split_decoder(decoder)
 
     # get decoder weights and group them together
     for i, layer in enumerate(decoder):

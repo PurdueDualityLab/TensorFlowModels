@@ -44,7 +44,7 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
+            encoder, decoder = read_weights(config_file, weights_file)
             #encoder, _ = split_list(encoder, 76)
             _load_weights_dnBackbone(self.backbone, encoder)
         return
@@ -157,7 +157,7 @@ class Yolov3(ks.Model):
                 config_file = download(self._model_name + '.cfg')
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
+            encoder, decoder = read_weights(config_file, weights_file)
             #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
 
         if not self.built:
@@ -168,7 +168,7 @@ class Yolov3(ks.Model):
             _load_weights_dnBackbone(self._backbone, encoder)
 
         if dn2tf_head:
-            _load_weights_dnHead(self._head, decoder, outputs)
+            _load_weights_dnHead(self._head, decoder)
 
     def get_config(self):
         # used to store/share parameters to reconsturct the model
