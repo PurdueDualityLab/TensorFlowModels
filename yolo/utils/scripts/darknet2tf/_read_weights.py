@@ -58,7 +58,10 @@ def read_file(config, weights):
     split_index = -1
     for i, layer_dict in enumerate(config):
         if layer_dict["_type"] != "decoder_encoder_split":
-            layer, num_read = build_layer(layer_dict, weights, full_net)
+            try:
+                layer, num_read = build_layer(layer_dict, weights, full_net)
+            except Exception as e:
+                raise ValueError(f"Cannot read weights for layer [#{i}]") from e
             if layer_dict["_type"] != 'yolo' and layer.shape[-1] != 255:
                 full_net.append(layer)
             else:
