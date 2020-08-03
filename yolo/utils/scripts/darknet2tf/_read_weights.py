@@ -99,8 +99,12 @@ def read_weights(config_file: Union[PathABC, io.TextIOBase],
         print('decoder')
         for e in decoder:
             print(f"{e.w} {e.h} {e.c}\t{e}")
+        print("outputs")
+        for e in outputs:
+            if e != None:
+                print(f"{e.w} {e.h} {e.c}\t{e}")
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
     if (bytes_read != size):
-        raise IOError('could not read the entire weights file')
+        raise IOError('error reading weights file')
     return encoder, decoder, outputs

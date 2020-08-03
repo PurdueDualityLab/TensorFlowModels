@@ -111,20 +111,6 @@ class _LayerBuilder(dict):
 layer_builder = _LayerBuilder()
 
 
-class Building_Blocks(ABC):
-    @property
-    @abstractmethod
-    def shape(self):
-        return
-
-    @abstractmethod
-    def interleave_weights(self):
-        return
-
-    def get_weights(self):
-        return []
-
-
 @layer_builder.register('conv', 'convolutional')
 @dataclass
 class convCFG(Config):
@@ -185,8 +171,8 @@ class convCFG(Config):
         if self.batch_normalize:
             return [
                 self.weights,
-                self.scales,
-                self.biases,
+                self.scales, #gamma
+                self.biases, #beta
                 self.rolling_mean,
                 self.rolling_variance]
         else:
@@ -301,7 +287,9 @@ class maxpoolCFG(Config):
 
     @property
     def shape(self):
-        return ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+        pad = 0 if self.stride == 1 else 1
+        print((self.w//self.stride, self.h//self.stride, self.c))
+        return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
     @classmethod
     def from_dict(clz, net, layer_dict):

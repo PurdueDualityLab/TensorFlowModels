@@ -104,8 +104,8 @@ class Yolov3(ks.Model):
         return predictions
 
     def load_weights_from_dn(self,
-                             dn2tf_backbone,
-                             dn2tf_head,
+                             dn2tf_backbone = True,
+                             dn2tf_head = False,
                              config_file=None,
                              weights_file=None):
         """
@@ -142,86 +142,21 @@ class Yolov3(ks.Model):
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             encoder, decoder, outputs = read_weights(config_file, weights_file)
-            encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
+            #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)
 
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder, outputs)
-
-
-
-class Yolov3_tiny(ks.Model):
-    def __init__(self, input_shape = [None, None, None, 3],
-            classes = 20,
-            boxes = 9,
-            dn2tf_backbone = False,
-            dn2tf_head  = False,
-            config_file = None,
-            weights_file = None, **kwargs):
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet_tiny")
-        self._head = Yolov3Head("tiny")
-
-        if dn2tf_backbone or dn2tf_head:
-            if config_file == None:
-                raise Exception("config file cannot be none")
-            if weights_file == None:
-                raise Exception("weights file cannot be none")
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
-
-        if dn2tf_backbone:
-            _load_weights_dnBackbone(self._backbone, encoder)
-
-        if dn2tf_head:
-            _load_weights_dnHead(self._head, decoder, outputs)
-
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
-
-
-class Yolov3_spp(ks.Model):
-    def __init__(self, input_shape = [None, None, None, 3],
-            classes = 20,
-            boxes = 9,
-            dn2tf_backbone = False,
-            dn2tf_head  = False,
-            config_file = None,
-            weights_file = None, **kwargs):
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("spp")
-
-        if dn2tf_backbone or dn2tf_head:
-            if config_file == None:
-                raise Exception("config file cannot be none")
-            if weights_file == None:
-                raise Exception("weights file cannot be none")
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
-
-        if dn2tf_backbone:
-            _load_weights_dnBackbone(self._backbone, encoder)
-
-        if dn2tf_head:
-            _load_weights_dnHead(self._head, decoder, outputs)
-
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
-
 
 if __name__ == '__main__':
     # init = tf.random_normal_initializer()
     # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
-    with tf.device("/GPU:0"):
-        model = Yolov3(dn2tf_backbone = True, classes=80, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file=download("yolov3.cfg"), weights_file=download('yolov3.weights'))
-        model.build(input_shape = (1, 416, 416, 3))
-        model.summary()
+    #with tf.device("/GPU:0"):
+    model = Yolov3.tiny(classes=80)
+    #model = Yolov3(classes=80)
+    model.build(input_shape = (None, None, None, 3))
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
+    #model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
+    model.summary()

@@ -47,10 +47,15 @@ def get_darknet53_tf_format(net, only_weights=True):
     print("converted/interleved weights for tensorflow format")
     return new_net, weights
 
+def get_tiny_weights(backbone, encoder, layers):
+    return
 
-def _load_weights_dnBackbone(backbone, encoder):
+def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
     # get weights for backbone
-    encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
+    if mtype == "darknet53":
+        encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
+    elif mtype == "darknet53":
+        encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
     # set backbone weights
     print(f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}")
@@ -71,10 +76,17 @@ def _load_weights_dnHead(head, decoder, outputs):
     print(f"\nsetting head.trainable to: {head.trainable}\n")
     return
 
+# DEBUGGING
+def print_layer_shape(layer):
+    weights = layer.get_weights()
+    for item in weights:
+        print(item.shape)
+    return
 
 def _set_darknet_weights(model, weights_list):
     for i, (layer, weights) in enumerate(zip(model.layers, weights_list)):
         print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
+        #print_layer_shape(layer)
         layer.set_weights(weights)
     model.trainable = False
     return
@@ -86,18 +98,22 @@ def get_decoder_weights(decoder, head):
     weights = []
 
     # get decoder weights and group them together
-    for layer in decoder:
-        if layer._type == "route":
+    for i, layer in enumerate(decoder):
+        if layer._type == "route" and decoder[i - 1]._type != 'maxpool':
             layers.append(block)
             block = []
+        elif (layer._type == "route" and decoder[i - 1]._type == "maxpool") or layer._type == "maxpool":
+            continue
         elif layer._type == "convolutional":
             block.append(layer)
         else:
             layers.append([])
-    layers.append(block)
+    if len(block) > 0:
+        layers.append(block)
 
     # interleve weights for blocked layers
     for layer in layers:
+        print(layer)
         weights.append(interleve_weights(layer))
 
     # get weights for output detection heads
