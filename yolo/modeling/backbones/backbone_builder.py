@@ -3,10 +3,12 @@ import tensorflow.keras as ks
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
+from yolo.utils import tf_shims
 
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
+    _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self, name, config=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,

@@ -231,8 +231,7 @@ class routeCFG(Config):
             for l in layers[1:]:
                 lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
-                    #raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
-                    pass
+                    raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
                 c += lc
         else:
             w, h, c = net[layers].shape

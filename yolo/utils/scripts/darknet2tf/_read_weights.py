@@ -18,6 +18,15 @@ from ...file_manager import PathABC, get_size, open_if_not_open
 def split_list(lst, i):
     return lst[:i], lst[i:]
 
+def split_decoder(lst):
+    decoder = []
+    outputs = []
+    for layer in lst:
+        if layer._type != 'yolo' and layer.shape[-1] != 255:
+            outputs.append(layer)
+        else:
+            decoder.append(layer)
+    return decoder, outputs
 
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
