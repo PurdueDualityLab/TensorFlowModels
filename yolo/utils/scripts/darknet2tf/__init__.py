@@ -5,16 +5,12 @@ from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
 
-from ._read_weights import read_weights
+from ._read_weights import read_weights, split_list
 
 flags.DEFINE_boolean('weights_only', False,
                      'Save only the weights and not the entire model.')
 flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
-
-
-def split_list(lst, i):
-    return lst[:i], lst[i:]
 
 
 def _makeParser(parser):

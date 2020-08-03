@@ -54,14 +54,14 @@ def parseValue(v):
                 return v
 
 
-def convertConfigFile(configfile, break_script="######################"):
+def convertConfigFile(configfile, break_script="###########"):
     """
     Convert an opened config file to a list of dictinaries.
     """
     mydict = None
 
     for line in configfile:
-        if break_script is not None and line == f"{break_script}\n":
+        if break_script is not None and line.startswith(break_script):
             yield mydict
             mydict = {"_type": "decoder_encoder_split"}
         elif line.startswith('['):

@@ -15,13 +15,6 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
-def _shift(n):
-    """Shifts a Python index 1 to the left to ignore [net] section"""
-    if n < 0:
-        return n
-    return n + 1
-
-
 class Config(ABC):
     """
     The base class for all layers that are used by the parser. Each subclass
@@ -238,14 +231,14 @@ class routeCFG(Config):
         # Calculate shape of the route
         layers = layer_dict['layers']
         if type(layers) is tuple:
-            w, h, c = net[_shift(layers[0])].shape
+            w, h, c = net[layers[0]].shape
             for l in layers[1:]:
-                lw, lh, lc = net[_shift(l)].shape
+                lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
                     raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
                 c += lc
         else:
-            w, h, c = net[_shift(layers)].shape
+            w, h, c = net[layers].shape
 
         # Create layer
         l = {
@@ -287,6 +280,7 @@ class upsampleCFG(Config):
     def from_dict(clz, net, layer_dict):
         prevlayer = net[-1]
         l = {
+            "_type": layer_dict["_type"],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
             "c": prevlayer.shape[2],
@@ -313,6 +307,7 @@ class maxpoolCFG(Config):
     def from_dict(clz, net, layer_dict):
         prevlayer = net[-1]
         l = {
+            "_type": layer_dict["_type"],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
             "c": prevlayer.shape[2],

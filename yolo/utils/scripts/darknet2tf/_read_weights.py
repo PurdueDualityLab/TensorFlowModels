@@ -15,6 +15,10 @@ from ..dn2dicts import convertConfigFile
 from ...file_manager import PathABC, get_size, open_if_not_open
 
 
+def split_list(lst, i):
+    return lst[:i], lst[i:]
+
+
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
     layer = layer_builder[layer_dict['_type']].from_dict(net, layer_dict)
@@ -49,28 +53,22 @@ def read_file(config, weights):
         print(f"revision: {revision}")
         print(f"iseen: {iseen}")
 
-    encoder = [None]
-    decoder = []
-    net = encoder
+    full_net = []
     outputs = [None]
-    full_net = None
-    for layer_dict in config:
+    split_index = -1
+    for i, layer_dict in enumerate(config):
         if layer_dict["_type"] != "decoder_encoder_split":
-            full_net = encoder + decoder
             layer, num_read = build_layer(layer_dict, weights, full_net)
             if layer_dict["_type"] != 'yolo' and layer.shape[-1] != 255:
-                net.append(layer)
+                full_net.append(layer)
             else:
                 outputs.append(layer)
         else:
-            net = decoder
-            decoder.append(encoder[-1])
+            split_index = i
 
         bytes_read += num_read
 
-    del encoder[0]
-    del decoder[0]
-    return encoder, decoder, outputs, bytes_read
+    return full_net, split_index, outputs, bytes_read
 
 
 def read_weights(config_file: Union[PathABC, io.TextIOBase],
@@ -93,7 +91,8 @@ def read_weights(config_file: Union[PathABC, io.TextIOBase],
     with open_if_not_open(config_file) as config, \
          open_if_not_open(weights_file, "rb") as weights:
         config = convertConfigFile(config)
-        encoder, decoder, outputs, bytes_read = read_file(config, weights)
+        full_net, split_index, outputs, bytes_read = read_file(config, weights)
+        encoder, decoder = split_list(full_net, split_index)
         print('encoder')
         for e in encoder:
             print(f"{e.w} {e.h} {e.c}\t{e}")
