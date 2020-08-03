@@ -160,6 +160,10 @@ class Yolov3(ks.Model):
             encoder, decoder, outputs = read_weights(config_file, weights_file)
             #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
 
+        if not self.built:
+            net = encoder[0]
+            self.build(input_shape = (1, *net.shape))
+
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)
 
@@ -169,8 +173,17 @@ class Yolov3(ks.Model):
     def get_config(self):
         # used to store/share parameters to reconsturct the model
         return {
-            "type": self._type
+            "classes": self._classes,
+            "boxes": self._boxes,
+            "type": self._type,
+            "layers": []
         }
+
+    @classmethod
+    def from_config(clz, config):
+        config = config.copy()
+        del config['layers']
+        return clz(**config)
 
 
 if __name__ == '__main__':
