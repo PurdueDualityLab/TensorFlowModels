@@ -1,12 +1,12 @@
-# YOLO -> You Only LOOK Once
+# Yolo Object Detectors, You Only Look Once
 
-## Model Purpose
-The yolo models were introduced in 2015 as a show case for a fast Neural Network whose main goal is to identify objects and their locations in an image using a single forward pass or a single conputation. Over the years, the YOLO team has identified model bottle necks and updated the model to get better perfomance in more visual scenarios.
+[![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
 
-## Our Goal
-With this library, our goal as an independent team is to provide the research community with Tensorflow native implmentations that have been trained and benchmarked to ensure equivalent performance to the darknet orignal implementation, while allowing for the versitility of using a more approchable Deep learning Library, specifically Tensorflow 2.x. We also hope to provide Documentation and explanations of the networks functionality to allow the YOLO model to feel less like a black box.
+This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
 
-## What you will find in this repo
+* YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
+
+## Models in the library
 
 | Object Detectors | Classifiers      |
 | :--------------: | :--------------: |
@@ -16,44 +16,116 @@ With this library, our goal as an independent team is to provide the research co
 | Yolo-v4          |
 | Yolo-v4 tiny     |
 
-In addition to the native implementations, we are providing a Darknet Native Config to Tensorflow converter. This tool will take a custom config from Darknet (for any convolutional Model), and re-constuct the model in Tensorflow 2.x. If a weights file Is provided, the tool will also load the Darknet weights into the constructed tensorflow model directly. This was done to allow better future proofing with minor alterations, and to provide simple Backwards compatibility for older models like Yolo v1 and Yolo v2.
+* For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
-**We will try to provide loss functions for models built from Config files, but if we are not able to find one, or have not yet implemented it, you will find the warning:
+## Description
 
-``` WARNING: Model from Config, loss function not found, for custom training, please construct, or find the loss function for this model, if the model is used as an industry standard, please post an issure request, and we will try to implement the loss function as soon as possible.```
+> :memo: Provide description of the model.  
+>  
+> * Provide brief information of the algorithms used.  
+> * Provide links for demos, blog posts, etc.  
 
-## Install Instructions
 
-The recommended way to install dependencies is from pipenv. The requirements.txt file used by pip is automatically generated and can quickly become out of date.
 
-pipenv
-```pipenv install --skip-lock```
+## History
 
-pip
-```pip install -r requirements.txt```
+> :memo: Provide a changelog.
 
-## Usage Instructions
+## Authors or Maintainers
 
-```user interfaceing not yet implemented```
+> :memo: Provide maintainer information.  
 
-## Custom Training Instructions
+* Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
+* Full name ([@GitHub username](https://github.com/username))
 
-```user interfaceing not yet implemented```
+## Table of Contents
 
-## Tests and Benchmark Statistics
+> :memo: Provide a table of contents to help readers navigate a lengthy README document.
 
-coverage + unittest
+## Requirements
+
+[![TensorFlow 2.2](https://img.shields.io/badge/TensorFlow-2.2-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.2.0)
+[![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-380/)
+
+> :memo: Provide details of the software required.  
+>  
+> * Add a `requirements.txt` file to the root directory for installing the necessary dependencies.  
+>   * Describe how to install requirements using pip.  
+> * Alternatively, create INSTALL.md.  
+
+To install requirements:
+
+```setup
+pip install -r requirements.txt
 ```
-coverage run --source=yolo -m unittest
-coverage html
+
+## Results
+
+[![TensorFlow Hub](https://img.shields.io/badge/TF%20Hub-Models-FF6F00?logo=tensorflow)](https://tfhub.dev/...)
+
+> :memo: Provide a table with results. (e.g., accuracy, latency)  
+>  
+> * Provide links to the pre-trained models (checkpoint, SavedModel files).  
+>   * Publish TensorFlow SavedModel files on TensorFlow Hub (tfhub.dev) if possible.  
+> * Add links to [TensorBoard.dev](https://tensorboard.dev/) for visualizing metrics.  
+>  
+> An example table for image classification results  
+>  
+> ### Image Classification  
+>  
+> | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
+> |------------|----------|----------------|----------------|  
+> | Model name | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | xx% | xx% |  
+
+## Dataset
+
+> :memo: Provide information of the dataset used.  
+
+## Training
+
+> :memo: Provide training information.  
+>  
+> * Provide details for preprocessing, hyperparameters, random seeds, and environment.  
+> * Provide a command line example for training.  
+
+Please run this command line for training.
+
+```shell
+python3 ...
 ```
 
-```more descriptions of testing can be given here```
+## Evaluation
 
-## Community guidelines
+> :memo: Provide an evaluation script with details of how to reproduce results.  
+>  
+> * Describe data preprocessing / postprocessing steps.  
+> * Provide a command line example for evaluation.  
 
-```not yet implemented```
+Please run this command line for evaluation.
 
-## Citations
+```shell
+python3 ...
+```
 
-```will get to it```
+## References
+
+> :memo: Provide links to references.  
+
+## License
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+> :memo: Place your license text in a file named LICENSE in the root of the repository.  
+>  
+> * Include information about your license.  
+> * Reference: [Adding a license to a repository](https://help.github.com/en/github/building-a-strong-community/adding-a-license-to-a-repository)  
+
+This project is licensed under the terms of the **Apache License 2.0**.
+
+## Citation
+
+> :memo: Make your repository citable.  
+>  
+> * Reference: [Making Your Code Citable](https://guides.github.com/activities/citable-code/)  
+
+If you want to cite this repository in your research paper, please use the following information.
