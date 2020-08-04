@@ -103,18 +103,13 @@ class Yolo_Loss(ks.losses.Loss):
         pass
 
 def load_model():
-    model = Yolov3(dn2tf_backbone = True, 
-                   dn2tf_head = True,
-                   input_shape= (None, None, None, 3), 
-                   config_file="yolov3.cfg", 
-                   weights_file='yolov3_416.weights', 
-                   classes = 80, 
-                   boxes = 9)
+    model = Yolov3(classes = 20, boxes = 9)
     model.build(input_shape = (None, None, None, 3))
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = False, config_file=None, weights_file="yolov3_416.weights")
     model.summary()
     return model
 
-def load_loss(batch_size, n = 3, classes = 80):
+def load_loss(batch_size, n = 3, classes = 20):
     depth = n * (classes + 5)
     anchors = [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)]
     outtop = Yolo_Loss(mask = [6, 7, 8], 
@@ -150,8 +145,8 @@ def print_out(tensor):
     return
 
 def main():
-    physical_devices = tf.config.list_physical_devices('GPU')
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    # physical_devices = tf.config.list_physical_devices('GPU')
+    # tf.config.experimental.set_memory_growth(physical_devices[0], True)
     #strategy = tf.distribute.MirroredStrategy()
     batch = 10
     dataset = load_dataset(skip = 0, batch_size=batch)

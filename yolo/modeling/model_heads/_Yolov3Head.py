@@ -7,15 +7,13 @@ from yolo.modeling.building_blocks import DarkUpsampleRoute
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 
 
-
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
     def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, **kwargs):
         self._cfg_dict = cfg_dict
         self._classes = classes
         self._boxes = boxes 
-        self._layer_dict = {"routeproc": DarkRouteProcess, 
-                            "upsampleroute": DarkUpsampleRoute}
+        self._model_name = model
 
         self.load_dict_cfg(model)
         self._layer_keys = list(self._cfg_dict.keys())
@@ -79,5 +77,11 @@ class Yolov3Head(tf.keras.Model):
             else: 
                 outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x)
         return outputs
-
-layer = Yolov3Head()
+    
+    def get_config():
+        layer_config = {"cfg_dict": self._cfg_dict, 
+                        "classes": self._classes, 
+                        "boxes": self._boxes, 
+                        "model": self._model_name}
+        layer_config.update(super().get_config())
+        return layer_config

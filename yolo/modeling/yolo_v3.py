@@ -193,6 +193,5 @@ class Yolov3(ks.Model):
 if __name__ == '__main__':
     model = Yolov3(type = 'spp', classes=80)
     model.build(input_shape = (None, None, None, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
-    # model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
     model.summary()

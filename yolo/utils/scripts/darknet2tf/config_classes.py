@@ -165,7 +165,6 @@ class convCFG(Config):
         self.weights = weights.reshape(
             self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
-        print(f"weights shape: {self.weights.shape}")
         return bytes_read * 4
 
     def get_weights(self, printing=False):
@@ -180,13 +179,8 @@ class convCFG(Config):
             #     self.rolling_variance]
             return [
                 self.weights,
-<<<<<<< HEAD
-                self.scales, # gamma
-                self.biases, # beta
-=======
                 self.scales, #gamma
                 self.biases, #beta
->>>>>>> 627dbbbcf0fba70032af1ab39b505e48242449fb
                 self.rolling_mean,
                 self.rolling_variance]
         else:
