@@ -7,95 +7,79 @@ from yolo.modeling.building_blocks import DarkUpsampleRoute
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+
+#@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
-    def __init__(self, model="regular", classes=80, boxes=9,
-                 repetitions=None, filters=None, mod=1, **kwargs):
-
-        self.type_dict = {
-            "regular": {
-                "filters": [
-                    1024, 512, 256], "repetitions": 3, "mod": 1}, "spp": {
-                "filters": [
-                    1024, 512, 256], "repetitions": 3, "mod": 1}, "tiny": {
-                "filters": [1024, 256], "repetitions": 1, "mod": 2}}
-        self._model_name = model
-        input_shape = dict()
-
-        if model in self.type_dict.keys():
-            self._filters = self.type_dict[model]["filters"]
-            self._repetitions = self.type_dict[model]["repetitions"]
-            self._mod = self.type_dict[model]["mod"]
-        elif model is None:
-            if filters is None or len(filters) == 0:
-                raise Exception("unsupported model name")
-            if repititions is None or repititions == 0:
-                raise Exception("repititions cannot be None")
-            self._filters = filters
-            self._repetitions = repetitions
-            self._mod = mod
-        else:
-            raise Exception("unsupported model name")
-
+    def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, **kwargs):
+        self._cfg_dict = cfg_dict
         self._classes = classes
-        self._boxes = boxes
-        self._boxes_per_layer = boxes // len(self._filters)
+        self._boxes = boxes 
+        self._layer_dict = {"routeproc": DarkRouteProcess, 
+                            "upsampleroute": DarkUpsampleRoute}
 
-        self.pred_depth = (self._boxes_per_layer *
-                           self._classes) + (self._boxes_per_layer * 5)
+        self.load_dict_cfg(model)
+        self._layer_keys = list(self._cfg_dict.keys())
+        self._conv_depth = boxes//len(self._layer_keys) * (classes + 5)
 
-        inputs = dict()
-        for count in self._filters:
-            if count in inputs:
-                raise Exception(
-                    "2 filters have the same depth, this is not allowed")
-            inputs[count] = ks.layers.Input(shape=[None, None, count])
-            input_shape[count] = tf.TensorSpec([None, None, None, count])
-
-        routes, upsamples, prediction_heads = self._get_layers()
-        outputs = self._connect_layers(
-            routes, upsamples, prediction_heads, inputs)
-        super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
-        self._input_shape = input_shape
+        inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes()
+        outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
+        print(len(self._layer_keys), self._conv_depth, inputs)
+        super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
+        self._input_shape = input_shapes
+        return
+    
+    def load_dict_cfg(self, model):
+        if self._cfg_dict != None:
+            return 
+        if model == "regular":
+            from yolo.modeling.model_heads.configs.yolov3_head import head
+        elif model == "spp":
+            from yolo.modeling.model_heads.configs.yolov3_spp import head
+        elif model == "tiny":
+            from yolo.modeling.model_heads.configs.yolov3_tiny import head
+        self._cfg_dict = head
         return
 
-    def _get_layers(self):
+    def _get_attributes(self):
+        inputs = dict()
+        input_shapes = dict()
         routes = dict()
         upsamples = dict()
         prediction_heads = dict()
 
-        for i, filters in enumerate(self._filters):
-            if i == 0 and self._model_name == "spp":
-                routes[filters] = DarkRouteProcess(
-                    filters=filters, repetitions=self._repetitions + 1, insert_spp=True)
-            else:
-                routes[filters] = DarkRouteProcess(
-                    filters=filters // self._mod,
-                    repetitions=self._repetitions,
-                    insert_spp=False)
+        for key in self._layer_keys:
+            path_keys = self._cfg_dict[key]
 
-            if i != len(self._filters) - 1:
-                upsamples[filters] = DarkUpsampleRoute(
-                    filters=filters // (4 * self._mod))
-                self.mod = 1
+            inputs[key] = ks.layers.Input(shape=[None, None, path_keys["depth"]])
+            input_shapes[key] = tf.TensorSpec([None, None, None, path_keys["depth"]])
 
-            prediction_heads[filters] = DarkConv(
-                filters=self.pred_depth, 
-                kernel_size=(1, 1), 
-                strides=(1, 1), 
-                padding="same", 
-                use_bn=False, 
-                activation=None)
-        return routes, upsamples, prediction_heads
+            if type(path_keys["upsample"]) != type(None):
+                args = path_keys["upsample_conditions"]
+                layer = path_keys["upsample"]
+                upsamples[key] = layer(**args)
+            
+            args = path_keys["processor_conditions"]
+            layer = path_keys["processor"]
+            routes[key] = layer(**args)
+            
+            args = path_keys["output_conditions"]
+            prediction_heads[key] = DarkConv(filters=self._conv_depth + path_keys["output-extras"],**args)
+        return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         outputs = dict()
-        layer_in = inputs[self._filters[0]]
-        for i in range(len(self._filters)):
-            x_prev, x = routes[self._filters[i]](layer_in)
-            if i + 1 < len(self._filters):
-                x_next = inputs[self._filters[i + 1]]
-                layer_in = upsamples[self._filters[i]]([x_prev, x_next])
-            outputs[self._filters[i]] = prediction_heads[self._filters[i]](x)
+        layer_in = inputs[self._layer_keys[0]]
+        print(layer_in)
+        for i in range(len(self._layer_keys)):
+            x = routes[self._layer_keys[i]](layer_in)
+            if i + 1 < len(self._layer_keys):
+                x_next = inputs[self._layer_keys[i + 1]]
+                layer_in = upsamples[self._layer_keys[i + 1]]([x[0], x_next])
+
+            if type(x) == list or type(x) == tuple:
+                outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x[1])
+            else: 
+                outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x)
         return outputs
 
+layer = Yolov3Head()

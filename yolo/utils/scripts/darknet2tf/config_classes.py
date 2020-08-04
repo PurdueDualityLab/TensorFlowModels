@@ -34,7 +34,7 @@ class Config(ABC):
     (w, h, c) will correspond to the different input dimensions of a DarkNet
     layer: the width, height, and number of channels.
     """
-
+    
     @property
     @abstractmethod
     def shape(self):
@@ -229,11 +229,15 @@ class routeCFG(Config):
         if type(layers) is tuple:
             w, h, c = net[layers[0]].shape
             for l in layers[1:]:
+                if l > 0:
+                    l += 1
                 lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
                     raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
                 c += lc
         else:
+            if layers > 0:
+                layers += 1
             w, h, c = net[layers].shape
 
         # Create layer

@@ -10,7 +10,7 @@ from yolo.utils.scripts.darknet2tf import read_weights, split_list
 from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+#@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
     _updated_config = tf_shims.ks_Model___updated_config
@@ -63,7 +63,7 @@ class DarkNet53(ks.Model):
         return
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+#@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
@@ -98,6 +98,8 @@ class Yolov3(ks.Model):
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
             self._encoder_decoder_split_location = 76
+            self._boxes = self._boxes//3 * 2
+            print(self._boxes)
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
@@ -111,7 +113,7 @@ class Yolov3(ks.Model):
 
     def build(self, input_shape=[None, None, None, 3]):
         self._backbone = Backbone_Builder(self._backbone_name)
-        self._head = Yolov3Head(self._head_name, classes=self._classes, boxes=self._boxes)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
         super().build(input_shape)
 
     def call(self, inputs):
@@ -165,7 +167,7 @@ class Yolov3(ks.Model):
             self.build(input_shape = (1, *net.shape))
 
         if dn2tf_backbone:
-            _load_weights_dnBackbone(self._backbone, encoder)
+            _load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
 
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder)
@@ -187,12 +189,8 @@ class Yolov3(ks.Model):
 
 
 if __name__ == '__main__':
-    # init = tf.random_normal_initializer()
-    # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
-    #with tf.device("/GPU:0"):
-    model = Yolov3.tiny(classes=80)
-    #model = Yolov3(classes=80)
+    model = Yolov3(type = 'spp', classes=80)
     model.build(input_shape = (None, None, None, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
-    #model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
+    # model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
     model.summary()

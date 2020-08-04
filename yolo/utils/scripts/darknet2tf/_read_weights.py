@@ -65,10 +65,7 @@ def read_file(config, weights):
         else:
             num_read = 0
             split_index = i
-
         bytes_read += num_read
-        print(bytes_read, layer_dict)
-
     return full_net, split_index, bytes_read
 
 
@@ -90,7 +87,7 @@ def read_weights(config_file: Union[PathABC, io.TextIOBase],
     """
     size = get_size(weights_file)
     with open_if_not_open(config_file) as config, \
-         open_if_not_open(weights_file, "rb") as weights:
+        open_if_not_open(weights_file, "rb") as weights:
         config = convertConfigFile(config)
         full_net, split_index, bytes_read = read_file(config, weights)
         encoder, decoder = split_list(full_net, split_index)

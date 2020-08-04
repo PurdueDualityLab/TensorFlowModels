@@ -45,14 +45,18 @@ def get_darknet53_tf_format(net, only_weights=True):
     print("converted/interleved weights for tensorflow format")
     return new_net, weights
 
-def get_tiny_weights(backbone, encoder, layers):
-    return
+def get_tiny_tf_format(encoder):
+    weights = []
+    for layer in encoder:
+        if layer._type != "maxpool":
+            weights.append(layer.get_weights())
+    return encoder, weights
 
 def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
     # get weights for backbone
     if mtype == "darknet53":
         encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
-    elif mtype == "darknet53":
+    elif mtype == "darknet_tiny":
         encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
     # set backbone weights
@@ -123,7 +127,6 @@ def get_decoder_weights(decoder):
 
     # interleve weights for blocked layers
     for layer in layers:
-        print(layer)
         weights.append(interleve_weights(layer))
 
     # get weights for output detection heads
