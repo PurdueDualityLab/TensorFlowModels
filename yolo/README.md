@@ -13,6 +13,10 @@ This repository is the unofficial implementation of the following paper. However
 > * Provide brief information of the algorithms used.  
 > * Provide links for demos, blog posts, etc.  
 
+Yolo v1 the original implementation was released in 2015 providing a ground breaking algorithem that would quickly process images, and locate objects in a single pass through the detector. The orignal implementation based used a backbone derived from state of the art object classifier of the time, like [GoogLeNet](https://arxiv.org/abs/1409.4842) and [VGG](https://arxiv.org/abs/1409.1556). More Attention was given to the novel Yolo Detection head that allowed for classification with a single pass of an image. Though limited, the network could predict up to 90 bounding boxes per image, and was tested for about 80 classes per box. Also, the model could only make prediction at one scale. These attributes caused yolo v1 to be more limited, and less verisitle, so as the year passed, the Developers continued to update and develop this model. 
+
+
+
 ## History
 
 > :memo: Provide a changelog.
