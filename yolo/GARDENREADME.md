@@ -34,7 +34,7 @@ This repository is the unofficial implementation of the following paper. However
 
 > :memo: Provide maintainer information.  
 
-* Vishnu Samardh Banna ([@GitHub username](https://github.com/vishnubanna))
+* Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
 * Full name ([@GitHub username](https://github.com/username))
 
 ## Table of Contents
