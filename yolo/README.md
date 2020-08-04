@@ -6,26 +6,12 @@ This repository is the unofficial implementation of the following paper. However
 
 * YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
 
-## Models in the library
-
-| Object Detectors | Classifiers      |
-| :--------------: | :--------------: |
-| Yolo-v3          | Darknet53        |
-| Yolo-v3 tiny     | CSPDarknet53     |
-| Yolo-v3 spp      |
-| Yolo-v4          |
-| Yolo-v4 tiny     |
-
-* For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
-
 ## Description
 
 > :memo: Provide description of the model.  
 >  
 > * Provide brief information of the algorithms used.  
 > * Provide links for demos, blog posts, etc.  
-
-
 
 ## History
 
@@ -37,6 +23,18 @@ This repository is the unofficial implementation of the following paper. However
 
 * Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
 * Full name ([@GitHub username](https://github.com/username))
+
+## Models in the library
+
+| Object Detectors | Classifiers      |
+| :--------------: | :--------------: |
+| Yolo-v3          | Darknet53        |
+| Yolo-v3 tiny     | CSPDarknet53     |
+| Yolo-v3 spp      |
+| Yolo-v4          |
+| Yolo-v4 tiny     |
+
+* For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
 ## Table of Contents
 
