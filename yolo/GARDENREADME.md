@@ -1,10 +1,23 @@
-# Yolo v3, You Only Look Once
+# Yolo Object Detectors, You Only Look Once
 
 [![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
 
 This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
 
 * YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
+
+## Models in the library
+
+| Object Detectors | Classifiers      |
+| :--------------: | :--------------: |
+| Yolo-v3          | Darknet53        |
+| Yolo-v3 tiny     | CSPDarknet53     |
+| Yolo-v3 spp      |
+| Yolo-v4          |
+| Yolo-v4 tiny     |
+
+* For all Standard implementations, we provided scripts to load the weights into the Yolo from the original darknet
+  implementation 
 
 ## Description
 
