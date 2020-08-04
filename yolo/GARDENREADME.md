@@ -6,7 +6,7 @@
 
 This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
 
-* Paper title: [Paper Title](https://arxiv.org/abs/1804.02767)
+* YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
 
 ## Description
 
