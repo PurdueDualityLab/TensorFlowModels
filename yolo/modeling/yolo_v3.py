@@ -10,7 +10,7 @@ from yolo.utils.scripts.darknet2tf import read_weights, split_list
 from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+#@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
     _updated_config = tf_shims.ks_Model___updated_config
@@ -63,7 +63,7 @@ class DarkNet53(ks.Model):
         return
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+#ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
