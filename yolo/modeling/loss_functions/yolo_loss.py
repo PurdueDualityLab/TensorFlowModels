@@ -6,33 +6,62 @@ from yolo.modeling.yolo_v3 import Yolov3
 from yolo.modeling.loss_functions.voc_test import *
 
 class Yolo_Loss(ks.losses.Loss):
-    def __init__(self, mask, anchors, classes, num, ignore_thresh, truth_thresh, random, fixed_dims, reduction = tf.keras.losses.Reduction.AUTO, name=None, **kwargs):
-        self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= tf.float32), axis = 0)/416
+    def __init__(self, 
+                mask, 
+                anchors, 
+                classes,
+                random = 1, 
+                ignore_thresh = 0.7, 
+                truth_thresh = 1, 
+                loss_type = "mse", 
+                iou_normalizer = 1.0,
+                cls_normalizer = 1.0, 
+                scale_x_y = 1.0,
+                nms_kind = "greedynms",
+                beta_nms = 0.6,
+                reduction = tf.keras.losses.Reduction.AUTO, 
+                name=None, 
+                **kwargs):
+
+        self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= tf.float32), axis = 0)/416 #<- division done for testing
         self._classes = tf.cast(classes, dtype = tf.int32)
         self._num = tf.cast(len(mask), dtype = tf.int32)
+        self._truth_thresh = tf.cast(truth_thresh, dtype = tf.float32) 
         self._ignore_thresh = tf.cast(ignore_thresh, dtype = tf.float32)
-        # self._truth_thresh = truth_thresh
-        self._iou_thresh = 1 # recomended use = 0.213 in [yolo]
         self._random = 0 if random == None else random
-        self._net_fixed_dims = fixed_dims
-        super(Yolo_Loss, self).__init__(reduction = reduction, name = name)
 
-        self._loss_type = "mse"
-        self._iou_normalizer= tf.cast(0.5, dtype = tf.float32)
+        # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
+        # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
+        # if iou > self._iou_thresh then the network check the other anchors, so basically 
+        # checking anchor box 1 on prediction for anchor box 2
+        self._iou_thresh = tf.cast(0.213, dtype = tf.float32) # recomended use = 0.213 in [yolo]
+        
+        self._loss_type = loss_type
+        self._iou_normalizer= tf.cast(iou_normalizer, dtype = tf.float32)
+        self._cls_normalizer = tf.cast(cls_normalizer, dtype = tf.float32)
+        self._scale_x_y = tf.cast(scale_x_y, dtype = tf.float32)
+
+        #used in detection filtering
+        self._beta_nms = tf.cast(beta_nms, dtype = tf.float32)
+        self._nms_kind = nms_kind
+        super(Yolo_Loss, self).__init__(reduction = reduction, name = name)
         return
 
     @tf.function
     def _get_centers(self, lwidth, lheight, batch_size):
+        """ generate a grid that is used to detemine the relative centers of the bounding boxs """
         x_left = tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth)
         y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
-
         x_left, y_left = tf.meshgrid(x_left, y_left)
+
         x_y = tf.transpose(K.stack([x_left, y_left], axis = -1), perm = [1, 0, 2])
         x_y = tf.repeat(K.expand_dims(tf.repeat(K.expand_dims(x_y, axis = -2), self._num, axis = -2), axis = 0), batch_size, axis = 0)
         return x_y
     
     @tf.function
     def _get_anchor_grid(self, width, height, batch_size):
+        """ get the transformed anchor boxes for each dimention """
+        # need to make sure this is correct
         anchors = tf.repeat(self._anchors, width*height, axis = 0)
         anchors = K.expand_dims(tf.reshape(anchors, [width, height, self._num, -1]), axis = 0)
         anchors = tf.repeat(anchors, batch_size, axis = 0)
@@ -47,25 +76,25 @@ class Yolo_Loss(ks.losses.Loss):
         anchor_grid = self._get_anchor_grid(width, height, batch_size)
         
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, (self._classes + 5)])
-        #y_true = tf.reshape(y_true, [batch_size, width, height, self._num, (self._classes + 5)])
 
         fwidth = tf.cast(width, dtype = tf.float32)
         fheight = tf.cast(height, dtype = tf.float32)
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-        pred_xy = tf.math.sigmoid(y_pred[..., 0:2])
+        pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
         pred_conf = tf.math.sigmoid(y_pred[..., 4])
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = (y_true[..., 0:2] - grid_points)
+        true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
         true_wh = tf.where(tf.math.is_nan(true_wh), 0.0, true_wh)
         true_wh = tf.where(tf.math.is_inf(true_wh), 0.0, true_wh)
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
-        true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * true_conf * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * true_conf * fheight, axis = -1)], axis = -1)
+        #true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * true_conf * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * true_conf * fheight, axis = -1)], axis = -1)
 
         #4. use iou to calculate the mask of where the network belived there to be an object -> used to penelaize the network for wrong predictions
         temp = K.concatenate([K.expand_dims(pred_xy[..., 0]/fwidth, axis = -1), K.expand_dims(pred_xy[..., 1]/fheight, axis = -1)], axis = -1) + grid_points
@@ -80,12 +109,12 @@ class Yolo_Loss(ks.losses.Loss):
             scale = (2 - true_box[...,2] * true_box[...,3])
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis = -1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis = -1)
-            loss_box = (loss_wh + loss_xy) * true_conf * scale
+            loss_box = (loss_wh + loss_xy) * true_conf * scale * self._iou_normalizer 
         else:
             loss_box = (1 - giou(true_box, pred_box)) * self._iou_normalizer * true_conf
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
-        class_loss = tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
+        class_loss = self._cls_normalizer * tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
         
         #7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
         conf_loss = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis = -1), K.expand_dims(pred_conf, axis = -1))
@@ -100,6 +129,22 @@ class Yolo_Loss(ks.losses.Loss):
         return (class_loss + conf_loss + loss_box)
 
     def get_config(self):
+        """save all loss attributes"""
+        layer_config = {
+                "anchors": self._anchors, 
+                "classes": self._classes,
+                "random": self._random, 
+                "ignore_thresh": self._ignore_thresh, 
+                "truth_thresh": self._truth_thresh, 
+                "iou_thresh": self._iou_thresh, 
+                "loss_type": self._loss_type, 
+                "iou_normalizer": self._iou_normalizer,
+                "cls_normalizer": self._cls_normalizer, 
+                "scale_x_y": self._scale_x_y, 
+        }
+        layer_config.update(super().get_config())
+        return layer_config
+
         pass
 
 def load_model():
@@ -115,27 +160,21 @@ def load_loss(batch_size, n = 3, classes = 20):
     outtop = Yolo_Loss(mask = [6, 7, 8], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416)
+                random = 1)
     outmid = Yolo_Loss(mask = [3, 4, 5], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416)
+                random = 1)
     outbot = Yolo_Loss(mask = [0, 1, 2], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416)
+                random = 1)
     loss_dict = {256: outtop, 512: outmid, 1024: outbot}
     return loss_dict
 
@@ -145,9 +184,6 @@ def print_out(tensor):
     return
 
 def main():
-    # physical_devices = tf.config.list_physical_devices('GPU')
-    # tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    #strategy = tf.distribute.MirroredStrategy()
     batch = 10
     dataset = load_dataset(skip = 0, batch_size=batch)
     optimizer = ks.optimizers.SGD(learning_rate=0.001)
@@ -155,7 +191,6 @@ def main():
     loss_fns = load_loss(batch)
 
     print(dataset)
-    # print(loss_fns)
     import time
     with tf.device("/GPU:0"):
         model.compile(loss=loss_fns, optimizer=optimizer)

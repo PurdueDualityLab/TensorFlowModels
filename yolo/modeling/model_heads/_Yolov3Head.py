@@ -13,6 +13,52 @@ import importlib
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
     def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, **kwargs):
+        """
+        construct a detection head for an arbitrary back bone following the Yolo style 
+
+        config format:
+            back bones can out put a head with many outputs that will be processed, 
+            for each backbone output yolo makes predictions for objects and N boxes 
+
+            back bone our pur should be a dictionary, that is what allow this config style to work
+
+            {<backbone_output_name>:{
+                                        "depth":<number of output channels>, 
+                                        "upsample":None or a layer takes in 2 tensors and returns 1,
+                                        "upsample_conditions":{dict conditions for layer above},
+                                        "processor": Layer that will process output with this key and return 2 tensors, 
+                                        "processor_conditions": {dict conditions for layer above},
+                                        "output_conditions": {dict conditions for detection or output layer},
+                                        "output-extras": integer for the number of things to predict in addiction to the 
+                                                         4 items for  the bounding box, so maybe you want to do pose estimation, 
+                                                         and need the head to output 10 addictional values, place that here and for 
+                                                         each bounding box, we will predict 10 more values, be sure to modify the loss 
+                                                         function template to handle this modification, and calculate a loss for the
+                                                         additional values. 
+                                    }
+                ...
+                <backbone_output_name>:{ ... }
+            }
+
+        Args:
+            model: to generate a standard yolo head, we have 3 string key words that can accomplish this
+                    regular -> corresponds to yolov3
+                    spp -> corresponds to yolov3-spp
+                    tiny -> corresponds to yolov3-tiny
+
+                if you construct a custom backbone config, name it as follows:
+                    yolov3_<name>.py and we will be able to find the model automaticially 
+                    in this case model corresponds to the value of <name>
+            
+            classes: integer for the number of classes in the prediction 
+            boxes: integer for the total number of anchor boxes, this will be devided by the number of paths 
+                   in the detection head config
+            cfg_dict: dict, suppose you do not have the model_head saved config file in the configs folder, 
+                      you can provide us with a dictionary that will be used to generate the model head, 
+                      be sure to follow the correct format. 
+
+            
+        """
         self._cfg_dict = cfg_dict
         self._classes = classes
         self._boxes = boxes 
@@ -28,8 +74,8 @@ class Yolov3Head(tf.keras.Model):
         self._input_shape = input_shapes
         return
 
-    @staticmethod
-    def load_dict_cfg(model):
+    def load_dict_cfg(self, model):
+        """ find the config file and load it for use"""
         if self._cfg_dict != None:
             return self._cfg_dict
         try:
@@ -41,6 +87,7 @@ class Yolov3Head(tf.keras.Model):
                 raise
 
     def _get_attributes(self):
+        """ use config dictionary to generate all important attributes for head construction """
         inputs = dict()
         input_shapes = dict()
         routes = dict()
@@ -67,6 +114,7 @@ class Yolov3Head(tf.keras.Model):
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
+        """ connect all attributes the yolo way, if you want a different method of construction use something else """
         outputs = dict()
         layer_in = inputs[self._layer_keys[0]]
         for i in range(len(self._layer_keys)):
