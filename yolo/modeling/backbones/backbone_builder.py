@@ -23,9 +23,10 @@ class Backbone_Builder(ks.Model):
         self._model_name = name
         self._input_shape = (None, None, None, 3)
 
-        layer_specs = self.get_model_config(name)
-        if layer_specs is None:
-            raise Exception("config file not found")
+        if config is None:
+            layer_specs = self.get_model_config(name)
+        else:
+            layer_specs = config
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
