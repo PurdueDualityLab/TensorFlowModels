@@ -6,6 +6,9 @@ from yolo.modeling.building_blocks import DarkUpsampleRoute
 # for testing
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 
+from . import configs
+
+import importlib
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
@@ -15,7 +18,7 @@ class Yolov3Head(tf.keras.Model):
         self._boxes = boxes 
         self._model_name = model
 
-        self.load_dict_cfg(model)
+        self._cfg_dict = self.load_dict_cfg(model)
         self._layer_keys = list(self._cfg_dict.keys())
         self._conv_depth = boxes//len(self._layer_keys) * (classes + 5)
 
@@ -24,18 +27,18 @@ class Yolov3Head(tf.keras.Model):
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
         self._input_shape = input_shapes
         return
-    
-    def load_dict_cfg(self, model):
+
+    @staticmethod
+    def load_dict_cfg(model):
         if self._cfg_dict != None:
-            return 
-        if model == "regular":
-            from yolo.modeling.model_heads.configs.yolov3_head import head
-        elif model == "spp":
-            from yolo.modeling.model_heads.configs.yolov3_spp import head
-        elif model == "tiny":
-            from yolo.modeling.model_heads.configs.yolov3_tiny import head
-        self._cfg_dict = head
-        return
+            return self._cfg_dict
+        try:
+            return importlib.import_module('.yolov3_' + model, package=configs.__package__).head
+        except ModuleNotFoundError as e:
+            if e.name == configs.__package__ + '.yolov3_' + model:
+                raise ValueError(f"Invlid head '{name}'") from e
+            else:
+                raise
 
     def _get_attributes(self):
         inputs = dict()
@@ -54,11 +57,11 @@ class Yolov3Head(tf.keras.Model):
                 args = path_keys["upsample_conditions"]
                 layer = path_keys["upsample"]
                 upsamples[key] = layer(**args)
-            
+
             args = path_keys["processor_conditions"]
             layer = path_keys["processor"]
             routes[key] = layer(**args)
-            
+
             args = path_keys["output_conditions"]
             prediction_heads[key] = DarkConv(filters=self._conv_depth + path_keys["output-extras"],**args)
         return inputs, input_shapes, routes, upsamples, prediction_heads
@@ -74,7 +77,7 @@ class Yolov3Head(tf.keras.Model):
 
             if type(x) == list or type(x) == tuple:
                 outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x[1])
-            else: 
+            else:
                 outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x)
         return outputs
     

@@ -3,6 +3,7 @@ This file contains the code to load parsed weights that are in the DarkNet
 format into TensorFlow layers
 """
 import itertools
+from tensorflow import keras as ks
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""
@@ -85,8 +86,15 @@ def print_layer_shape(layer):
         print(item.shape)
     return
 
+def flatten_model(model):
+    for layer in model.layers:
+        if isinstance(model, ks.Model):
+            yield from model.layers
+        else:
+            yield layer
+
 def _set_darknet_weights(model, weights_list):
-    for i, (layer, weights) in enumerate(zip(model.layers, weights_list)):
+    for i, (layer, weights) in enumerate(zip(flatten_model(model), weights_list)):
         print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
         #print_layer_shape(layer)
         layer.set_weights(weights)

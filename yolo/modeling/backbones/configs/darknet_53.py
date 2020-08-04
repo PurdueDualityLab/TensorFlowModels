@@ -1,5 +1,5 @@
 # (name, numberinblock, filters, kernal_size, padding, strides, downsample, output)
-darknet53_config = [
+backbone = [
     ("DarkConv", 1, 32, 3, 1, "same", False, False),  # 1
     ("DarkRes", 1, 64, None, None, None, True, False),  # 3
     ("DarkRes", 1, 128, None, None, None, True, False),  # 3

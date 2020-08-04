@@ -1,9 +1,12 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 
+import importlib
+
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
 from yolo.utils import tf_shims
+from . import configs
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -20,7 +23,7 @@ class Backbone_Builder(ks.Model):
         self._model_name = name
         self._input_shape = (None, None, None, 3)
 
-        layer_specs = self._get_model_config(name)
+        layer_specs = self.get_model_config(name)
         if layer_specs is None:
             raise Exception("config file not found")
 
@@ -29,18 +32,20 @@ class Backbone_Builder(ks.Model):
         super().__init__(inputs=inputs, outputs=output, name=self._model_name)
         return
 
-    def _get_model_config(self, name):
+    @staticmethod
+    def get_model_config(name):
         if name == "darknet53":
-            from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
-            return build_block_specs(darknet53_config)
-        elif name == "darknet_tiny":
-            from yolo.modeling.backbones.configs.darknet_tiny import darknet_tiny_config
-            return build_block_specs(darknet_tiny_config)
-        elif name == "yolov3_tiny":
-            from yolo.modeling.backbones.configs.yolov3_tiny import yolov3_tiny_config
-            return build_block_specs(yolov3_tiny_config)
-        else:
-            return None
+            name = "darknet_53"
+
+        try:
+            backbone = importlib.import_module('.' + name, package=configs.__package__).backbone
+        except ModuleNotFoundError as e:
+            if e.name == configs.__package__ + '.' + name:
+                raise ValueError(f"Invlid backbone '{name}'") from e
+            else:
+                raise
+
+        return build_block_specs(backbone)
 
     def _build_struct(self, net, inputs):
         endpoints = dict()
