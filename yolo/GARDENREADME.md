@@ -1,7 +1,5 @@
 # Yolo v3, You Only Look Once
 
-> :memo: Add a badge for the ArXiv identifier of your paper (arXiv:YYMM.NNNNN)
-
 [![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
 
 This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
@@ -23,7 +21,7 @@ This repository is the unofficial implementation of the following paper. However
 
 > :memo: Provide maintainer information.  
 
-* Full name ([@GitHub username](https://github.com/username))
+* Vishnu Samardh Banna ([@GitHub username](https://github.com/vishnubanna))
 * Full name ([@GitHub username](https://github.com/username))
 
 ## Table of Contents
@@ -32,8 +30,8 @@ This repository is the unofficial implementation of the following paper. However
 
 ## Requirements
 
-[![TensorFlow 2.1](https://img.shields.io/badge/TensorFlow-2.1-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.1.0)
-[![Python 3.6](https://img.shields.io/badge/Python-3.6-3776AB)](https://www.python.org/downloads/release/python-360/)
+[![TensorFlow 2.2](https://img.shields.io/badge/TensorFlow-2.2-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.2.0)
+[![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-380/)
 
 > :memo: Provide details of the software required.  
 >  
