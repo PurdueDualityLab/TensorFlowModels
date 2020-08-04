@@ -124,7 +124,7 @@ class convCFG(Config):
 
     size: int = field(init=True, repr=True, default=0)
     stride: int = field(init=True, repr=True, default=0)
-    pad: int = field(init=True, repr=False, default=0)
+    pad: int = field(init=True, repr=True, default=0)
     filters: int = field(init=True, repr=True, default=0)
     activation: str = field(init=True, repr=False, default='linear')
     groups: int = field(init=True, repr=False, default=1)
@@ -150,8 +150,8 @@ class convCFG(Config):
         return (w, h, self.filters)
 
     def load_weights(self, files):
-        bytes_read = self.filters
         self.biases = read_n_floats(self.filters, files)
+        bytes_read = self.filters
 
         if self.batch_normalize == 1:
             self.scales = read_n_floats(self.filters, files)
@@ -165,7 +165,7 @@ class convCFG(Config):
         self.weights = weights.reshape(
             self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
-        # print(f"weights shape: {self.weights.shape}")
+        print(f"weights shape: {self.weights.shape}")
         return bytes_read * 4
 
     def get_weights(self, printing=False):
@@ -319,7 +319,7 @@ class maxpoolCFG(Config):
     @property
     def shape(self):
         pad = 0 if self.stride == 1 else 1
-        print((self.w//self.stride, self.h//self.stride, self.c))
+        #print((self.w//self.stride, self.h//self.stride, self.c))
         return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
 
