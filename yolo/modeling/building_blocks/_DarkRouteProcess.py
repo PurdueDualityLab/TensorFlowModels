@@ -6,6 +6,7 @@ from yolo.modeling.building_blocks import DarkConv, DarkSpp
 class DarkRouteProcess(ks.layers.Layer):
     def __init__(self,
                  filters=2,
+                 mod = 1,
                  repetitions=2,
                  insert_spp=False,
                  kernel_initializer='glorot_uniform',
@@ -47,7 +48,7 @@ class DarkRouteProcess(ks.layers.Layer):
         """
 
         # darkconv params
-        self._filters = filters
+        self._filters = filters//mod
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
 
@@ -60,9 +61,9 @@ class DarkRouteProcess(ks.layers.Layer):
         self._leaky_alpha = leaky_alpha
 
         # layer configs
-        self._repetitions = repetitions
+        self._repetitions = repetitions 
         self._insert_spp = insert_spp
-
+        
         self.layer_list = self._get_layer_list()
         # print(self.layer_list)
         super().__init__(**kwargs)

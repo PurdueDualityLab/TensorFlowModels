@@ -1,12 +1,19 @@
+from __future__ import annotations
+
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
-from ..utils.file_manager import download
+from yolo.utils.file_manager import download
+from yolo.utils import tf_shims
+from yolo.utils.scripts.darknet2tf import read_weights, split_list
+from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
+#@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
+    _updated_config = tf_shims.ks_Model___updated_config
 
     def __init__(
             self,
@@ -37,33 +44,15 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            self._load_backbone_weights(config_file, weights_file)
+            encoder, decoder = read_weights(config_file, weights_file)
+            #encoder, _ = split_list(encoder, 76)
+            _load_weights_dnBackbone(self.backbone, encoder)
         return
 
     def call(self, inputs):
         out_dict = self.backbone(inputs)
         x = out_dict[list(out_dict.keys())[-1]]
         return self.head(x)
-
-    def _load_backbone_weights(self, config, weights):
-        from yolo.utils.scripts.darknet2tf.get_weights import load_weights, get_darknet53_tf_format
-        encoder, decoder, outputs = load_weights(config, weights)
-        print(encoder, decoder, outputs)
-        encoder, weight_list = get_darknet53_tf_format(encoder[:])
-        print(
-            f"\nno. layers: {len(self.backbone.layers)}, no. weights: {len(weight_list)}")
-        for i, (layer, weights) in enumerate(
-                zip(self.backbone.layers, weight_list)):
-            print(
-                f"loaded weights for layer: {i}  -> name: {layer.name}",
-                sep='      ',
-                end="\r")
-            layer.set_weights(weights)
-        self.backbone.trainable = False
-        print(
-            f"\nsetting backbone.trainable to: {self.backbone.trainable}\n")
-        print(f"...training will only affect classification head...")
-        return
 
     def get_summary(self):
         self.backbone.summary()
@@ -74,22 +63,77 @@ class DarkNet53(ks.Model):
         return
 
 
+#@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
+    _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
-                 input_shape = [None, None, None, 3],
-                 classes = 20, 
-                 boxes = 9, 
-                 dn2tf_backbone = False,
-                 dn2tf_head  = False,
-                 config_file = None,
-                 weights_file = None,
+                 classes = 20,
+                 boxes = 9,
+                 type = 'regular',
                  **kwargs):
+        """
+        Args:
+            classes: int for the number of available classes
+            boxes: total number of boxes that are predicted by detection head
+            type: the particular type of YOLOv3 model that is being constructed
+                  regular, spp, or tiny
+        """
+        super().__init__(**kwargs)
+        self._classes = classes
+        self._boxes = boxes
+        self._type = type
+
+        if type == 'regular':
+            self._backbone_name = "darknet53"
+            self._head_name = "regular"
+            self._model_name = 'yolov3'
+            self._encoder_decoder_split_location = 76
+        elif type == 'spp':
+            self._backbone_name = "darknet53"
+            self._head_name = "spp"
+            self._model_name = 'yolov3-spp'
+            self._encoder_decoder_split_location = 76
+        elif type == 'tiny':
+            self._backbone_name = "darknet_tiny"
+            self._head_name = "tiny"
+            self._model_name = 'yolov3-tiny'
+            self._encoder_decoder_split_location = 76
+            self._boxes = self._boxes//3 * 2
+            print(self._boxes)
+        else:
+            raise ValueError(f"Unknown YOLOv3 type '{type}'")
+
+    @classmethod
+    def spp(clz, **kwargs):
+        return clz(type='spp', **kwargs)
+
+    @classmethod
+    def tiny(clz, **kwargs):
+        return clz(type='tiny', **kwargs)
+
+    def build(self, input_shape=[None, None, None, 3]):
+        self._backbone = Backbone_Builder(self._backbone_name)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
+        super().build(input_shape)
+
+    def call(self, inputs):
+        feature_maps = self._backbone(inputs)
+        predictions = self._head(feature_maps)
+        return predictions
+
+    def load_weights_from_dn(self,
+                             dn2tf_backbone = True,
+                             dn2tf_head = False,
+                             config_file=None,
+                             weights_file=None):
         """
         load the entire Yolov3 Model for tensorflow
 
         example:
             load yolo with darknet wieghts for backbone
-            model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file='yolov3_416.weights')
+            model = Yolov3()
+            model.build(input_shape = (1, 416, 416, 3))
+            model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
 
         to be implemented
         example:
@@ -105,140 +149,50 @@ class Yolov3(ks.Model):
             load head weigths from tensorflow (our training)
 
         Args:
-            input_shape: list or tuple for image input shape, default is [None, None, None, 3] for variable size images
-            classes: int for the number of available classes
-            boxes: total number of boxes that are predicted by detection head
-
             dn2tf_backbone: bool, if true it will load backbone weights for yolo v3 from darknet .weights file
             dn2tf_head: bool, if true it will load head weights for yolo v3 from darknet .weights file
             config_file: str path for the location of the configuration file to use when decoding darknet weights
             weights_file: str path with the file containing the dark net weights
-
-        Return:
-            initialized callable yolo model
-
-        Raises:
-            Exception: if config file is not provided and dn2tf_backbone or dn2tf_head is true
-            Exception: if weights file is not provided and dn2tf_backbone or dn2tf_head is true
         """
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("regular",  classes=classes, boxes=boxes)
-
         if dn2tf_backbone or dn2tf_head:
-            if config_file == None:
-                raise Exception("config file cannot be none")
-            if weights_file == None:
-                raise Exception("weights file cannot be none")
-            from yolo.utils.scripts.darknet2tf.get_weights import load_weights
-            encoder, decoder, outputs = load_weights(config_file, weights_file)
+            if config_file is None:
+                config_file = download(self._model_name + '.cfg')
+            if weights_file is None:
+                weights_file = download(self._model_name + '.weights')
+            encoder, decoder = read_weights(config_file, weights_file)
+            #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
+
+        if not self.built:
+            net = encoder[0]
+            self.build(input_shape = (1, *net.shape))
 
         if dn2tf_backbone:
-            self._load_weights_dnBackbone(encoder)
+            _load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
 
         if dn2tf_head:
-            self._load_weights_dnHead(decoder, outputs)
-
-
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
-
-    def _load_weights_dnBackbone(self, encoder):
-        from yolo.utils.scripts.darknet2tf.get_weights import get_darknet53_tf_format
-        # get weights for backbone
-        encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
-
-        # set backbone weights
-        print(f"\nno. layers: {len(self._backbone.layers)}, no. weights: {len(weights_encoder)}")
-        self._set_darknet_weights(self._backbone, weights_encoder)
-
-        print(f"\nsetting backbone.trainable to: {self._backbone.trainable}\n")
+            _load_weights_dnHead(self._head, decoder)
+        
         return
 
-    def _load_weights_dnHead(self, decoder, outputs):
-        # get weights for head
-        decoder, weights_decoder = self.get_decoder_weights(decoder, outputs)
+    def get_config(self):
+        # used to store/share parameters to reconsturct the model
+        return {
+            "classes": self._classes,
+            "boxes": self._boxes,
+            "type": self._type,
+            "layers": []
+        }
 
-        # set detection head weights
-        print(f"\nno. layers: {len(self._head.layers)}, no. weights: {len(weights_decoder)}")
-        self._set_darknet_weights(self._head, weights_decoder)
-
-        print(f"\nsetting head.trainable to: {self._head.trainable}\n")
-        return
-
-    def _set_darknet_weights(self, model, weights_list):
-        for i, (layer, weights) in enumerate(zip(model.layers, weights_list)):
-            print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
-            layer.set_weights(weights)
-
-        model.trainable = False
-        return
-
-    def get_decoder_weights(self, decoder, head):
-        from yolo.utils.scripts.darknet2tf.get_weights import interleve_weights
-
-        layers = [[]]
-        block = []
-        weights = []
-
-        # get decoder weights and group them together
-        for layer in decoder:
-            if layer._type == "route":
-                layers.append(block)
-                block = []
-            elif layer._type == "convolutional":
-                block.append(layer)
-            else:
-                layers.append([])
-        layers.append(block)
-
-        # interleve weights for blocked layers
-        for layer in layers:
-            weights.append(interleve_weights(layer))
-
-        # get weights for output detection heads
-        for layer in reversed(head):
-            if layer != None and layer._type == "convolutional":
-                weights.append(layer.get_weights())
-
-        return layers, weights
-
-class Yolov3_tiny(ks.Model):
-    def __init__(self, input_shape = [None, None, None, 3], **kwargs):
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet_tiny")
-        self._head = Yolov3Head("tiny")
-
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
-
-
-class Yolov3_spp(ks.Model):
-    def __init__(self, input_shape = [None, None, None, 3], **kwargs):
-        super().__init__(**kwargs)
-
-        self._input_shape = input_shape
-        self._backbone = Backbone_Builder("darknet53")
-        self._head = Yolov3Head("spp")
-
-        inputs = ks.layers.Input(shape = self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions)
+    @classmethod
+    def from_config(clz, config):
+        config = config.copy()
+        del config['layers']
+        return clz(**config)
 
 
 if __name__ == '__main__':
-    # init = tf.random_normal_initializer()
-    # x = tf.Variable(initial_value=init(shape=(1, 416, 416, 3), dtype=tf.float32))
-    with tf.device("/GPU:0"):
-        model = Yolov3(dn2tf_backbone = True, dn2tf_head = True, input_shape= (None, 416, 416, 3), config_file="yolov3.cfg", weights_file='yolov3_416.weights')
-        model.build(input_shape = (1, 416, 416, 3))
-        model.summary()
+    model = Yolov3(type = 'spp', classes=80)
+    model.build(input_shape = (None, None, None, 3))
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
+    # model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
+    model.summary()

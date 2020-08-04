@@ -11,7 +11,7 @@ from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.modeling import yolo_v3
 
 
-class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
+class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("simple", "darknet53", (1, 224, 224, 3)),
                                     ("darknet_tiny", "darknet_tiny",(1, 224, 224, 3)),
                                     ("odd_shape_tiny", "darknet_tiny",(1, 224, 128, 3)),

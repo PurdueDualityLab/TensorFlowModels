@@ -6,7 +6,7 @@ from absl.flags import argparse_flags
 import argparse
 
 
-def makeParser(parser):
+def _makeParser(parser):
     parser.add_argument(
         'filename',
         default=None,
@@ -15,14 +15,14 @@ def makeParser(parser):
         type=argparse.FileType('r'))
 
 
-parser = argparse_flags.ArgumentParser()
-makeParser(parser)
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
 
 
 def numberConfig(file):
     i = 0
     for line in file:
-        if line.startswith('[') and line != '[net]\n':
+        if line.startswith('['):
             print(f"{i:4d}|{line}", end='')
             i += 1
         else:
@@ -31,7 +31,7 @@ def numberConfig(file):
 
 def main(argv, args=None):
     if args is None:
-        args = parser.parse_args(argv[1:])
+        args = _parser.parse_args(argv[1:])
 
     filename = args.filename
     if filename is None:
