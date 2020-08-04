@@ -5,12 +5,15 @@ import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.utils.file_manager import download
+from yolo.utils import tf_shims
 from yolo.utils.scripts.darknet2tf import read_weights, split_list
 from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
+@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
+    _updated_config = tf_shims.ks_Model___updated_config
 
     def __init__(
             self,
@@ -41,7 +44,8 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
+            encoder, decoder = read_weights(config_file, weights_file)
+            #encoder, _ = split_list(encoder, 76)
             _load_weights_dnBackbone(self.backbone, encoder)
         return
 
@@ -59,39 +63,51 @@ class DarkNet53(ks.Model):
         return
 
 
+@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
+    _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
                  classes = 20,
                  boxes = 9,
+                 type = 'regular',
                  **kwargs):
         """
         Args:
             classes: int for the number of available classes
             boxes: total number of boxes that are predicted by detection head
+            type: the particular type of YOLOv3 model that is being constructed
+                  regular, spp, or tiny
         """
         super().__init__(**kwargs)
         self._classes = classes
         self._boxes = boxes
-        self._backbone_name = "darknet53"
-        self._head_name = "regular"
-        self._model_name = 'yolov3'
-        self._encoder_decoder_split_location = 76
+        self._type = type
+
+        if type == 'regular':
+            self._backbone_name = "darknet53"
+            self._head_name = "regular"
+            self._model_name = 'yolov3'
+            self._encoder_decoder_split_location = 76
+        elif type == 'spp':
+            self._backbone_name = "darknet53"
+            self._head_name = "spp"
+            self._model_name = 'yolov3-spp'
+            self._encoder_decoder_split_location = 76
+        elif type == 'tiny':
+            self._backbone_name = "darknet_tiny"
+            self._head_name = "tiny"
+            self._model_name = 'yolov3-tiny'
+            self._encoder_decoder_split_location = 76
+        else:
+            raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
     @classmethod
     def spp(clz, **kwargs):
-        self = clz(**kwargs)
-        self._head_name = "spp"
-        self._model_name = 'yolov3-spp'
-        return self
+        return clz(type='spp', **kwargs)
 
     @classmethod
     def tiny(clz, **kwargs):
-        self = clz(**kwargs)
-        self._backbone_name = "darknet_tiny"
-        self._head_name = "tiny"
-        self._model_name = 'yolov3-tiny'
-        self._encoder_decoder_split_location = 76
-        return self
+        return clz(type='tiny', **kwargs)
 
     def build(self, input_shape=[None, None, None, 3]):
         self._backbone = Backbone_Builder(self._backbone_name)
@@ -141,14 +157,34 @@ class Yolov3(ks.Model):
                 config_file = download(self._model_name + '.cfg')
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
-            encoder, decoder, outputs = read_weights(config_file, weights_file)
+            encoder, decoder = read_weights(config_file, weights_file)
             #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
+
+        if not self.built:
+            net = encoder[0]
+            self.build(input_shape = (1, *net.shape))
 
         if dn2tf_backbone:
             _load_weights_dnBackbone(self._backbone, encoder)
 
         if dn2tf_head:
-            _load_weights_dnHead(self._head, decoder, outputs)
+            _load_weights_dnHead(self._head, decoder)
+
+    def get_config(self):
+        # used to store/share parameters to reconsturct the model
+        return {
+            "classes": self._classes,
+            "boxes": self._boxes,
+            "type": self._type,
+            "layers": []
+        }
+
+    @classmethod
+    def from_config(clz, config):
+        config = config.copy()
+        del config['layers']
+        return clz(**config)
+
 
 if __name__ == '__main__':
     # init = tf.random_normal_initializer()

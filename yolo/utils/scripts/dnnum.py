@@ -22,7 +22,7 @@ _makeParser(_parser)
 def numberConfig(file):
     i = 0
     for line in file:
-        if line.startswith('[') and line != '[net]\n':
+        if line.startswith('['):
             print(f"{i:4d}|{line}", end='')
             i += 1
         else:

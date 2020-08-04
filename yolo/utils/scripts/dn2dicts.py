@@ -75,6 +75,9 @@ def convertConfigFile(configfile, break_script="###########"):
                 k, v = line.split('=', 1)
                 mydict[k.strip()] = parseValue(v)
 
+    if mydict is not None:
+        yield mydict
+
 
 def main(argv, args=None):
     if args is None:

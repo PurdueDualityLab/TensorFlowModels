@@ -53,7 +53,7 @@ class Config(ABC):
         Load the weights for the current layer from a file.
 
         Arguments:
-            files: Name of the DarkNet weights file
+            files: Open IO object for the DarkNet weights file
 
         Returns:
             the number of bytes read.
@@ -75,12 +75,15 @@ class Config(ABC):
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
         '''
-        prevlayer = net[-1]
-        l = {
-            "_type": layer_dict["_type"],
-            "w": prevlayer.shape[0],
-            "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2]}
+        if 'w' not in layer_dict:
+            prevlayer = net[-1]
+            l = {
+                "w": prevlayer.shape[0],
+                "h": prevlayer.shape[1],
+                "c": prevlayer.shape[2],
+                **layer_dict}
+        else:
+            l = layer_dict
         return clz(**l)
 
 
@@ -178,18 +181,10 @@ class convCFG(Config):
         else:
             return [self.weights, self.biases]
 
-    @classmethod
-    def from_dict(clz, net, layer_dict):
-        prevlayer = net[-1]
-        if "w" not in layer_dict.keys():
-            layer_dict.update(
-                {"w": prevlayer.shape[0], "h": prevlayer.shape[1], "c": prevlayer.shape[2]})
-        return clz(**layer_dict)
 
-
-@layer_builder.register('shortcut', 'yolo')
+@layer_builder.register('shortcut')
 @dataclass
-class placeCFG(Config):
+class shortcutCFG(Config):
     _type: str = None
     w: int = field(init=True, default=0)
     h: int = field(init=True, default=0)
@@ -198,6 +193,21 @@ class placeCFG(Config):
     @property
     def shape(self):
         return (self.w, self.h, self.c)
+
+    @classmethod
+    def from_dict(clz, net, layer_dict):
+        '''
+        Create a layer instance from the previous layer and a dictionary
+        containing all of the parameters for the DarkNet layer. This is how
+        linking is done by the parser.
+        '''
+        prevlayer = net[-1]
+        l = {
+            "_type": layer_dict['_type'],
+            "w": prevlayer.shape[0],
+            "h": prevlayer.shape[1],
+            "c": prevlayer.shape[2]}
+        return clz(**l)
 
 
 @layer_builder.register('route')
@@ -237,7 +247,16 @@ class routeCFG(Config):
 
 @layer_builder.register('net')
 @dataclass
-class netCFG(placeCFG):
+class netCFG(Config):
+    _type: str = None
+    w: int = field(init=True, default=0)
+    h: int = field(init=True, default=0)
+    c: int = field(init=True, default=0)
+
+    @property
+    def shape(self):
+        return (self.w, self.h, self.c)
+
     @classmethod
     def from_dict(clz, net, layer_dict):
         l = {
@@ -245,6 +264,29 @@ class netCFG(placeCFG):
             "w": layer_dict["width"],
             "h": layer_dict["height"],
             "c": layer_dict["channels"]}
+        return clz(**l)
+
+
+@layer_builder.register('yolo')
+@dataclass
+class yoloCFG(Config):
+    _type: str = None
+    w: int = field(init=True, default=0)
+    h: int = field(init=True, default=0)
+    c: int = field(init=True, default=0)
+
+    @property
+    def shape(self):
+        return (self.w, self.h, self.c)
+
+    @classmethod
+    def from_dict(clz, net, layer_dict):
+        prevlayer = net[-1]
+        l = {
+            "_type": layer_dict['_type'],
+            "w": prevlayer.shape[0],
+            "h": prevlayer.shape[1],
+            "c": prevlayer.shape[2]}
         return clz(**l)
 
 
@@ -261,17 +303,6 @@ class upsampleCFG(Config):
     @property
     def shape(self):
         return (self.stride * self.w, self.stride * self.h, self.c)
-
-    @classmethod
-    def from_dict(clz, net, layer_dict):
-        prevlayer = net[-1]
-        l = {
-            "_type": layer_dict["_type"],
-            "w": prevlayer.shape[0],
-            "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2],
-            "stride": layer_dict["stride"]}
-        return clz(**l)
 
 
 @layer_builder.register('maxpool')
@@ -290,17 +321,6 @@ class maxpoolCFG(Config):
         pad = 0 if self.stride == 1 else 1
         #print((self.w//self.stride, self.h//self.stride, self.c))
         return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
-
-    @classmethod
-    def from_dict(clz, net, layer_dict):
-        prevlayer = net[-1]
-        l = {
-            "_type": layer_dict["_type"],
-            "w": prevlayer.shape[0],
-            "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2],
-            "stride": layer_dict["stride"]}
-        return clz(**l)
 
 
 def len_width(n, f, p, s):
