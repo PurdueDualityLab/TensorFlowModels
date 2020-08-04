@@ -23,7 +23,6 @@ class Yolov3Head(tf.keras.Model):
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes()
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
-        print(len(self._layer_keys), self._conv_depth, inputs)
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
         self._input_shape = input_shapes
         return
@@ -69,7 +68,6 @@ class Yolov3Head(tf.keras.Model):
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         outputs = dict()
         layer_in = inputs[self._layer_keys[0]]
-        print(layer_in)
         for i in range(len(self._layer_keys)):
             x = routes[self._layer_keys[i]](layer_in)
             if i + 1 < len(self._layer_keys):
