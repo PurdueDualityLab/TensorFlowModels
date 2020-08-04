@@ -5,7 +5,7 @@ import tensorflow.keras as ks
 @ks.utils.register_keras_serializable(package='yolo')
 class Identity(ks.layers.Layer):
     def __init__(self,**kwargs):
-        super(DarkConv, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         return
 
     def call(self, input):
