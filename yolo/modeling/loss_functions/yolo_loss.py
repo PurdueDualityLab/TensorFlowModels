@@ -7,28 +7,51 @@ from yolo.modeling.loss_functions.voc_test import *
 
 class Yolo_Loss(ks.losses.Loss):
     def __init__(self, 
-                mask, 
-                anchors, 
-                classes,
-                random = 1, 
-                ignore_thresh = 0.7, 
-                truth_thresh = 1, 
-                loss_type = "mse", 
-                iou_normalizer = 1.0,
-                cls_normalizer = 1.0, 
-                scale_x_y = 1.0,
-                nms_kind = "greedynms",
-                beta_nms = 0.6,
-                reduction = tf.keras.losses.Reduction.AUTO, 
-                name=None, 
-                **kwargs):
+                 mask, 
+                 anchors, 
+                 classes,
+                 num_extras = 0, 
+                 ignore_thresh = 0.7, 
+                 truth_thresh = 1, 
+                 loss_type = "mse", 
+                 iou_normalizer = 1.0,
+                 cls_normalizer = 1.0, 
+                 scale_x_y = 1.0,
+                 nms_kind = "greedynms",
+                 beta_nms = 0.6,
+                 reduction = tf.keras.losses.Reduction.AUTO, 
+                 name=None, 
+                 **kwargs):
+
+        """
+        parameters for the loss functions used at each detection head output
+
+        Args: 
+            mask: list of indexes for which anchors in the anchors list should be used in prediction
+            anchors: list of tuples (w, h) representing the anchor boxes to be used in prediction 
+            classes: the number of classes that can be predicted 
+            num_extras: number of indexes predicted in addition to 4 for the box and N + 1 for classes 
+            ignore_thresh: float for the threshold for if iou > threshold the network has made a prediction, 
+                           and should not be penealized for p(object) prediction if an object exists at this location
+            truth_thresh: float thresholding the groud truth to get the true mask 
+            loss_type: string for the key of the loss to use, 
+                       options -> mse, giou, ciou
+            iou_normalizer: float used for appropriatly scaling the iou or the loss used for the box prediction error 
+            cls_normalizer: float used for appropriatly scaling the classification error
+            scale_x_y: float used to scale the predictied x and y outputs
+            nms_kind: string used for filtering the output and ensuring each object ahs only one prediction
+            beta_nms: float for the thresholding value to apply in non max supression(nms) -> not yet implemented
+
+        call Return: 
+            float: for the average loss 
+        """
 
         self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= tf.float32), axis = 0)/416 #<- division done for testing
         self._classes = tf.cast(classes, dtype = tf.int32)
         self._num = tf.cast(len(mask), dtype = tf.int32)
+        self._num_extras = tf.cast(num_extras, dtype = tf.float32)
         self._truth_thresh = tf.cast(truth_thresh, dtype = tf.float32) 
         self._ignore_thresh = tf.cast(ignore_thresh, dtype = tf.float32)
-        self._random = 0 if random == None else random
 
         # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
         # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
@@ -133,7 +156,6 @@ class Yolo_Loss(ks.losses.Loss):
         layer_config = {
                 "anchors": self._anchors, 
                 "classes": self._classes,
-                "random": self._random, 
                 "ignore_thresh": self._ignore_thresh, 
                 "truth_thresh": self._truth_thresh, 
                 "iou_thresh": self._iou_thresh, 
