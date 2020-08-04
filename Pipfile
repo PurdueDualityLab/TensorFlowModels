@@ -11,7 +11,7 @@ tensorflow = "==2.*"
 tensorflow-datasets = "*"
 absl-py = ">=0.7.0"
 numpy = "*"
-#more_itertools = ">=8.3"
+more_itertools = ">=8.3"
 importlib-resources = {version = "*", markers="python_version < '3.7'"}
 
 # Optional packages
@@ -19,4 +19,4 @@ importlib-resources = {version = "*", markers="python_version < '3.7'"}
 
 # This conflict was resolved by taking the more restrictive of the two versions
 # more_itertools = {version = ">=8.3", markers="python_version < '3.10'"}
-# more_itertools = ">=4.1"
+# more_itertools = ">=2.5"
