@@ -2,9 +2,7 @@
 This file contains the code to load parsed weights that are in the DarkNet
 format into TensorFlow layers
 """
-
 import itertools
-
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""

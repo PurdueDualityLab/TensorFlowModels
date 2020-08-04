@@ -21,12 +21,12 @@ def split_list(lst, i):
 
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
+    
     layer = layer_builder[layer_dict['_type']].from_dict(net, layer_dict)
-
+    
+    bytes_read = 0
     if file is not None:
         bytes_read = layer.load_weights(file)
-    else:
-        bytes_read = 0
 
     return layer, bytes_read
 
@@ -64,9 +64,11 @@ def read_file(config, weights):
             else:
                 outputs.append(layer)
         else:
+            num_read = 0
             split_index = i
 
         bytes_read += num_read
+        print(bytes_read, layer_dict)
 
     return full_net, split_index, outputs, bytes_read
 

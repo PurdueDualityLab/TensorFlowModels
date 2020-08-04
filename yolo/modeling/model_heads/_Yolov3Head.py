@@ -18,8 +18,7 @@ class Yolov3Head(tf.keras.Model):
                     1024, 512, 256], "repetitions": 3, "mod": 1}, "spp": {
                 "filters": [
                     1024, 512, 256], "repetitions": 3, "mod": 1}, "tiny": {
-                        "filters": [
-                            1024, 256], "repetitions": 1, "mod": 2}}
+                "filters": [1024, 256], "repetitions": 1, "mod": 2}}
         self._model_name = model
         input_shape = dict()
 
