@@ -9,12 +9,26 @@ from pprint import pprint
 import sys
 
 
-def makeParser(parser):
-    parser.add_argument('config', default=None, help='name of the config file. Defaults to YOLOv3', nargs='?', type=argparse.FileType('r'))
-    parser.add_argument('dictsfile', default=sys.stdout, nargs='?', help='name of the Python literal file', type=argparse.FileType('w'))
+def _makeParser(parser):
+    """
+    Make a parser for the Abseil utility script. This is not the Darknet parser.
+    """
+    parser.add_argument(
+        'config',
+        default=None,
+        help='name of the config file. Defaults to YOLOv3',
+        nargs='?',
+        type=argparse.FileType('r'))
+    parser.add_argument(
+        'dictsfile',
+        default=sys.stdout,
+        nargs='?',
+        help='name of the Python literal file',
+        type=argparse.FileType('w'))
 
-parser = argparse_flags.ArgumentParser()
-makeParser(parser)
+
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
 
 
 def parseValue(v):
@@ -40,52 +54,47 @@ def parseValue(v):
                 return v
 
 
-def dict_check(dictionary, key, check_val):
-    try:
-        return prev_layer['filters'] == check_val
-    except BaseException:
-        return False
-    return False
-
-
-def convertConfigFile(configfile, break_script="######################"):
+def convertConfigFile(configfile, break_script="###########"):
     """
     Convert an opened config file to a list of dictinaries.
     """
-    output = []
     mydict = None
 
     for line in configfile:
-        if break_script is not None and line == f"{break_script}\n":
+        if break_script is not None and line.startswith(break_script):
+            yield mydict
             mydict = {"_type": "decoder_encoder_split"}
-            output.append(mydict)
         elif line.startswith('['):
+            if mydict is not None:
+                yield mydict
             mydict = {}
             mydict['_type'] = line.strip('[] \n')
-            output.append(mydict)
         else:
-            line, *_ = line.strip().split('#', 1)
+            line, *_ = line.split('#', 1)
             if line.strip() != '':
-                k, v = line.strip().split('=', 1)
-                mydict[k] = parseValue(v)
-    return output
+                k, v = line.split('=', 1)
+                mydict[k.strip()] = parseValue(v)
+
+    if mydict is not None:
+        yield mydict
 
 
 def main(argv, args=None):
     if args is None:
-        args = parser.parse_args(argv[1:])
+        args = _parser.parse_args(argv[1:])
 
     config = args.config
     dictsfile = args.dictsfile
 
     if config is None:
         from ..file_manager import download
-        with open(download('yolov3', 'cfg')) as config:
-            output = convertConfigFile(config)
+        with open(download('yolov3.cfg')) as config:
+            output = list(convertConfigFile(config))
     else:
-        output = convertConfigFile(config)
+        output = list(convertConfigFile(config))
 
     pprint(output, dictsfile)
+
 
 if __name__ == '__main__':
     app.run(main)

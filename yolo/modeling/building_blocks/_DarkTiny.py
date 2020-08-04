@@ -5,10 +5,11 @@ from yolo.modeling.building_blocks import DarkConv
 
 
 @ks.utils.register_keras_serializable(package='yolo')
-class darkyolotiny(ks.layers.Layer):
+class DarkTiny(ks.layers.Layer):
     def __init__(self,
                  filters=1,
                  use_bias=True,
+                 strides=2,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  use_bn=True,
@@ -18,7 +19,6 @@ class darkyolotiny(ks.layers.Layer):
                  conv_activation='leaky',
                  leaky_alpha=0.1,
                  sc_activation='linear',
-                 downsample=False,
                  **kwargs):
 
         # darkconv params
@@ -28,6 +28,7 @@ class darkyolotiny(ks.layers.Layer):
         self._bias_initializer = bias_initializer
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
+        self._strides = strides
 
         # normal params
         self._norm_moment = norm_moment
@@ -43,7 +44,7 @@ class darkyolotiny(ks.layers.Layer):
 
     def build(self, input_shape):
         self.maxpool = tf.keras.layers.MaxPool2D(
-            pool_size=2, strides=2, padding='valid', data_format=None)
+            pool_size=2, strides=self._strides, padding='same', data_format=None)
 
         self.convlayer = DarkConv(filters=self._filters,
                                   kernel_size=(3, 3),
@@ -72,6 +73,7 @@ class darkyolotiny(ks.layers.Layer):
         layer_config = {
             "filters": self._filters,
             "use_bias": self._use_bias,
+            "strides": self._strides,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
             "use_bn": self._use_bn,

@@ -3,11 +3,13 @@ import tensorflow.keras as ks
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
-import yaml
+from yolo.utils import tf_shims
+
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
-    def __init__(self, name, config = None, **kwargs):
+    _updated_config = tf_shims.ks_Model___updated_config
+    def __init__(self, name, config=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -17,33 +19,38 @@ class Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._model_name = name
         self._input_shape = (None, None, None, 3)
-    
+
         layer_specs = self._get_model_config(name)
         if layer_specs is None:
             raise Exception("config file not found")
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
-        print(kwargs)
-        super().__init__(inputs=inputs, outputs=output, name = self._model_name)
-        return 
+        super().__init__(inputs=inputs, outputs=output, name=self._model_name)
+        return
 
     def _get_model_config(self, name):
         if name == "darknet53":
             from yolo.modeling.backbones.configs.darknet_53 import darknet53_config
             return build_block_specs(darknet53_config)
+        elif name == "darknet_tiny":
+            from yolo.modeling.backbones.configs.darknet_tiny import darknet_tiny_config
+            return build_block_specs(darknet_tiny_config)
+        elif name == "yolov3_tiny":
+            from yolo.modeling.backbones.configs.yolov3_tiny import yolov3_tiny_config
+            return build_block_specs(yolov3_tiny_config)
         else:
             return None
 
     def _build_struct(self, net, inputs):
         endpoints = dict()
-        count = 0
         x = inputs
         for i, config in enumerate(net):
             x = self._build_block(config, x, f"{config.name}_{i}")
             if config.output:
-                endpoints[f"route{count}"] = x
-                count += 1
+                endpoints[int(config.filters)] = x
+
+        #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
 
     def _build_block(self, config, inputs, name):
@@ -55,23 +62,28 @@ class Backbone_Builder(ks.Model):
                     kernel_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
+            elif config.name == "darkyolotiny":
+                x = nn_blocks.DarkTiny(
+                    filters=config.filters,
+                    strides=config.strides,
+                    name=f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(
                     pool_size=config.kernel_size,
                     strides=config.strides,
                     padding=config.padding,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]
                 x = layer(
                     filters=config.filters,
                     downsample=config.downsample,
-                    name = f"{name}_{i}")(x)
+                    name=f"{name}_{i}")(x)
         return x
 
 # model = Backbone_Builder("darknet53")
-# config = model.to_json()
+# model.summary()
 # print(config)
 # with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
 #     data = tf.keras.models.model_from_json(config)
