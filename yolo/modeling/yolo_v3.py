@@ -97,7 +97,7 @@ class Yolov3(ks.Model):
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
-            self._encoder_decoder_split_location = 76
+            self._encoder_decoder_split_location = 12
             self._boxes = self._boxes//3 * 2
             print(self._boxes)
         else:
@@ -159,8 +159,9 @@ class Yolov3(ks.Model):
                 config_file = download(self._model_name + '.cfg')
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
-            encoder, decoder = read_weights(config_file, weights_file)
-            #encoder, _ = split_list(encoder, self._encoder_decoder_split_location)
+            list_encdec = read_weights(config_file, weights_file)
+            
+            encoder, decoder = split_list(list_encdec, self._encoder_decoder_split_location)
 
         if not self.built:
             net = encoder[0]
