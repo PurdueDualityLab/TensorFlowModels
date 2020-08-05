@@ -28,6 +28,16 @@ Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo net
 
 > :memo: Provide a table of contents to help readers navigate a lengthy README document.
 * [Our Goal](#our-goal)
+* [Models in the library](#models-in-the-library)
+* [Requirements](#requirements)
+* [Results](#results)
+* [Dataset](#dataset)
+* [Training](#training)
+* [Evaluation](#evaluation)
+* [Change Log](#change-log)
+* [References](#references)
+* [License](#license)
+* [Citation](#citation)
 
 ## Our Goal
 Our goal with this model conversion is to provide highly versitile implementations of the Backbone and Yolo Head. We have tried to build the model in such a way that the Yolo head could easily be connected to a new, more powerful backbone of a person chose to. 
