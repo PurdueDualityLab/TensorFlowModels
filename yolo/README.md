@@ -17,11 +17,6 @@ Yolo v1 the original implementation was released in 2015 providing a ground brea
 
 Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo network group. These model uses a custom backbone called Darknet53 that uses knowledge gained from the ResNet paper to improve its predictions. The new backbone also allows for objects to be detected at multiple scales. As for the new detection head, the model now predicts the bounding boxes using a set of anchor box priors (Anchor Boxes) as suggestions. The multiscale predictions in combination with the Anchor boxes allows for the network to make up to 1000 object predictions on a single image. Finally, the new loss function forces the network to make better prediction by using Intersection Over Union (IOU) to inform the models confidence rather than relying on the mean squared error for the entire output. 
 
-
-## History
-
-> :memo: Provide a changelog.
-
 ## Authors or Maintainers
 
 > :memo: Provide maintainer information.  
@@ -109,6 +104,10 @@ Please run this command line for evaluation.
 ```shell
 python3 ...
 ```
+
+## Change Log
+
+> :memo: Provide a changelog.
 
 ## References
 
