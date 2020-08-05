@@ -1,4 +1,4 @@
-# Yolo Object Detectors, You Only Look Once
+# YOLO Object Detectors, You Only Look Once
 
 [![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
 

@@ -59,7 +59,7 @@ def preprocess(data, anchors, width, height):
     # box, variable to get shape
     boxes = data["objects"]["bbox"]
     boxes = build_yolo_box(image, boxes)
-    classes = tf.one_hot(data["objects"]["label"], depth = 20)
+    classes = tf.one_hot(data["objects"]["label"], depth = 80)
     # classes = tf.cast(tf.expand_dims(data["objects"]["label"], axis = -1), dtype = tf.float32)
     label = tf.concat([boxes, classes], axis = -1)
 
@@ -192,7 +192,7 @@ def build_grided_gt(y_true, mask, size):
 
 def load_dataset(skip = 0, batch_size = 10):
     dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
-    dataset = dataset.skip(skip).take(batch_size * 20)
+    dataset = dataset.skip(skip).take(batch_size * 1)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
