@@ -26,12 +26,12 @@ Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo net
 
 ## Table of Contents
 
-> :memo: Provide a table of contents to help readers navigate a lengthy README document.
 * [Our Goal](#our-goal)
 * [Models in the library](#models-in-the-library)
 * [Requirements](#requirements)
 * [Results](#results)
 * [Dataset](#dataset)
+* [Build Instructions](#build-instructions)
 * [Training](#training)
 * [Evaluation](#evaluation)
 * [Change Log](#change-log)
