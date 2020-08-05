@@ -24,6 +24,10 @@ Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo net
 * Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
 * Full name ([@GitHub username](https://github.com/username))
 
+## Table of Contents
+
+> :memo: Provide a table of contents to help readers navigate a lengthy README document.
+* [Our Goal](#our-goal)
 
 ## Our Goal
 Our goal with this model conversion is to provide highly versitile implementations of the Backbone and Yolo Head. We have tried to build the model in such a way that the Yolo head could easily be connected to a new, more powerful backbone of a person chose to. 
@@ -39,10 +43,6 @@ Our goal with this model conversion is to provide highly versitile implementatio
 | Yolo-v4 tiny     |
 
 For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation from the original darknet implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
-
-## Table of Contents
-
-> :memo: Provide a table of contents to help readers navigate a lengthy README document.
 
 ## Requirements
 
