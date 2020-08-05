@@ -80,7 +80,7 @@ def py_func_rand():
 def get_random(image, label, masks):
     masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
-    # randscale = 13
+    randscale = 13
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32))
     image = image/255
     
@@ -191,10 +191,10 @@ def build_grided_gt(y_true, mask, size):
     return full
 
 def load_dataset(skip = 0, batch_size = 10):
-    dataset,info = tfds.load('voc', split='train', with_info=True, shuffle_files=True)
+    dataset,info = tfds.load('coco', split='train', with_info=True, shuffle_files=True)
     dataset = dataset.skip(skip).take(batch_size * 1)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(batch_size)
-    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[0, 1, 2],[3, 4, 5],[6, 7, 8]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
+    dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
 

@@ -77,7 +77,9 @@ class Yolo_Loss(ks.losses.Loss):
         y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
         x_left, y_left = tf.meshgrid(x_left, y_left)
 
-        x_y = tf.transpose(K.stack([x_left, y_left], axis = -1), perm = [1, 0, 2])
+        x_y = K.stack([x_left, y_left], axis = -1)
+
+        #x_y = tf.transpose(K.stack([x_left, y_left], axis = -1), perm = [1, 0, 2])
         x_y = tf.repeat(K.expand_dims(tf.repeat(K.expand_dims(x_y, axis = -2), self._num, axis = -2), axis = 0), batch_size, axis = 0)
         return x_y
     
