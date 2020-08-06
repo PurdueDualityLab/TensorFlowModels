@@ -13,10 +13,11 @@ def ks_Model___updated_config(self):
     are in their own namespace.
 
     Example:
-    @ks.utils.register_keras_serializable(package='yolo')
-    class DarkNet53(ks.Model):
-        """The Darknet Image Classification Network Using Darknet53 Backbone"""
-        _updated_config = tf_shims.ks_Model___updated_config
+
+        @ks.utils.register_keras_serializable(package='yolo')
+        class DarkNet53(ks.Model):
+            """The Darknet Image Classification Network Using Darknet53 Backbone"""
+            _updated_config = tf_shims.ks_Model___updated_config
 
     Applies to: all versions of TensorFlow
     '''
@@ -31,9 +32,10 @@ def ks_utils__register_keras_serializable(**kwargs):
     defined in __main__. This is needed for some Python libraries.
 
     Example:
-    @tf_shims.ks_utils__register_keras_serializable(package='yolo')
-    class DarkNet53(ks.Model):
-        """The Darknet Image Classification Network Using Darknet53 Backbone"""
+
+        @tf_shims.ks_utils__register_keras_serializable(package='yolo')
+        class DarkNet53(ks.Model):
+            """The Darknet Image Classification Network Using Darknet53 Backbone"""
 
     Applies to: all versions of TensorFlow
     '''

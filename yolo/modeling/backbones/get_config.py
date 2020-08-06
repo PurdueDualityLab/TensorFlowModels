@@ -1,4 +1,18 @@
-class BlockConfig(object):
+from __future__ import annotations
+
+from typing import List
+
+try:
+    from typing import final as _final
+except ImportError:
+    # For Python 3.7 and older
+    def _final(f):
+        return f
+
+RawConfig = tuple
+
+@_final
+class BlockConfig:
     def __init__(
             self,
             layer,
@@ -33,9 +47,21 @@ class BlockConfig(object):
     def __repr__(self):
         return f"layer: {self.name}, repititions: {self.repititions}, filters: {self.filters}, padding: {self.padding}, strides: {self.strides}, kernel size: {self.kernel_size}, downsample: {self.downsample}, route/output: {self.output}\n"
 
+    @staticmethod
+    def from_dicts(config: List[RawConfig]) -> List['BlockConfig']:
+        """
+        Convert SpineNet style configurations into `BlockConfig` objects.
 
-def build_block_specs(config):
-    specs = []
-    for layer in config:
-        specs.append(BlockConfig(*layer))
-    return specs
+        Arguments:
+            config: A list containing the arguments for each of the blocks in the model
+
+        Returns:
+            A list of `BlockConfig` objects corresponding to each tuple in config
+        """
+        specs = []
+        for layer in config:
+            specs.append(BlockConfig(*layer))
+        return specs
+
+
+build_block_specs = BlockConfig.from_dicts

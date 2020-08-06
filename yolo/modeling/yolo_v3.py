@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
-from yolo.utils.file_manager import download
+from yolo.utils.file_manager import PathABC, download
 from yolo.utils import tf_shims
 from yolo.utils.scripts.darknet2tf import read_weights, split_list
 from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
@@ -103,11 +103,25 @@ class Yolov3(ks.Model):
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
     @classmethod
-    def spp(clz, **kwargs):
+    def spp(clz, **kwargs) -> 'Yolov3':
+        """
+        Convenience function for creating the YOLOv3 SPP model. The following
+        two lines are equivalent.
+
+        >>> Yolov3.spp(classes=80)
+        >>> Yolov3(classes=80, type="spp")
+        """
         return clz(type='spp', **kwargs)
 
     @classmethod
-    def tiny(clz, **kwargs):
+    def tiny(clz, **kwargs) -> 'Yolov3':
+        """
+        Convenience function for creating the YOLOv3 Tiny model. The following
+        two lines are equivalent.
+
+        >>> Yolov3.tiny(classes=80)
+        >>> Yolov3(classes=80, type="tiny")
+        """
         return clz(type='tiny', **kwargs)
 
     def build(self, input_shape=[None, None, None, 3]):
@@ -121,31 +135,43 @@ class Yolov3(ks.Model):
         return predictions
 
     def load_weights_from_dn(self,
-                             dn2tf_backbone = True,
-                             dn2tf_head = False,
-                             config_file=None,
-                             weights_file=None):
+                             dn2tf_backbone: bool = True,
+                             dn2tf_head: bool = False,
+                             config_file: PathABC = None,
+                             weights_file: PathABC = None):
         """
         load the entire Yolov3 Model for tensorflow
 
         example:
             load yolo with darknet wieghts for backbone
-            model = Yolov3()
-            model.build(input_shape = (1, 416, 416, 3))
-            model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
 
-        to be implemented
+            >>> model = Yolov3()
+            >>> model.build(input_shape = (1, 416, 416, 3))
+            >>> model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
+
         example:
             load custom back bone weigths
+
+            >>> model = Yolov3()
+            >>> # leaving out the build line will implicitly build the model using
+            >>> # the shape of the original YOLOv3 model from the config files
+            >>> model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = False)
 
         example:
             load custom head weigths
 
+            >>> model = Yolov3()
+            >>> model.load_weights_from_dn(dn2tf_backbone = False, dn2tf_head = True)
+
         example:
             load back bone weigths from tensorflow (our training)
 
+            TODO: Fill this out
+
         example:
             load head weigths from tensorflow (our training)
+
+            TODO: Fill this out
 
         Args:
             dn2tf_backbone: bool, if true it will load backbone weights for yolo v3 from darknet .weights file
@@ -159,7 +185,7 @@ class Yolov3(ks.Model):
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             list_encdec = read_weights(config_file, weights_file)
-            
+
             encoder, decoder = split_list(list_encdec, self._encoder_decoder_split_location)
 
         if not self.built:
@@ -172,7 +198,7 @@ class Yolov3(ks.Model):
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder)
 
-    def get_config(self):
+    def get_config(self) -> dict:
         # used to store/share parameters to reconsturct the model
         return {
             "classes": self._classes,
@@ -182,7 +208,7 @@ class Yolov3(ks.Model):
         }
 
     @classmethod
-    def from_config(clz, config):
+    def from_config(clz, config: dict) -> 'Yolov3':
         config = config.copy()
         del config['layers']
         return clz(**config)

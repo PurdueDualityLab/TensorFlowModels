@@ -120,7 +120,8 @@ def download(name: str) -> str:
         ValueError:     Name or URL stored in the `urls` variable is invalid.
         OSError:        There was a problem saving the file when it was being
                         downloaded.
-        HTTPException:  The file was not able to be downloaded.
+        http.client.HTTPException:
+                        The file was not able to be downloaded.
         Exception:      Any other undocumented error that ks.utils.get_file may
                         have thrown to indicate that the file was inaccessible.
     """

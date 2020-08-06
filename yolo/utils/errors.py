@@ -50,17 +50,15 @@ def with_origin(e: Exception, filename, lineno, kwargs_new=None, cause=None):
     non-Python code.
 
     Usage:
-    ```
-    from yolo.utils import errors
-    errors.with_origin(SyntaxError('Unknown attribute: policy'), 'yolov3.cfg', 21, {'name': '[net] #1'})()
-    ```
+
+    >>> from yolo.utils import errors
+    >>> errors.with_origin(SyntaxError('Unknown attribute: policy'), 'yolov3.cfg', 21, {'name': '[net] #1'})()
 
     Note:
     If you want to raise a warning, use the warnings package instead:
-    ```
-    import warnings
-    warnings.showwarning('Unknown attribute: policy', SyntaxWarning, 'yolov3.cfg', 21)
-    ```
+
+    >>> import warnings
+    >>> warnings.showwarning('Unknown attribute: policy', SyntaxWarning, 'yolov3.cfg', 21)
     """
     if ALLOW_NONPYTHON_ERROR_ORIGINS:
         fake_source = "\n" * (lineno - 1) + ("raise e" if cause is None else "raise e from cause")
@@ -78,9 +76,3 @@ def with_origin(e: Exception, filename, lineno, kwargs_new=None, cause=None):
                 raise e_with_info from cause
             except Exception as e_with_info:
                 raise e from e_with_info
-
-def with_origin_config(cause: Exception):
-    """
-    Used for configparser exceptions.
-    """
-    return with_origin(Exception("Parsing error"), cause.filename, cause.lineno, kwargs_new=None, cause=cause)

@@ -1,18 +1,31 @@
+from __future__ import annotations
+
 import tensorflow as tf
 import tensorflow.keras as ks
 
 import importlib
 
 import yolo.modeling.building_blocks as nn_blocks
-from yolo.modeling.backbones.get_config import build_block_specs
+from yolo.modeling.backbones import get_config
 from yolo.utils import tf_shims
 from . import configs
+
+from typing import List
 
 
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
+    """
+    The backbone builder handles the construction of the backbones of YOLO
+    models. The current backbone types are listed below:
+
+     - Darknet53 (`darknet53`, `darknet_53`): backbone used for the YOLOv3 model
+     - YOLOv3-tiny (`yolov3_tiny`, `darknet_tiny`): backbone used for the YOLOv3 tiny model
+
+    The YOLOv3-tiny is NOT the same as the Tiny Darknet model found here: https://pjreddie.com/darknet/tiny-darknet/.
+    """
     _updated_config = tf_shims.ks_Model___updated_config
-    def __init__(self, name, config=None, **kwargs):
+    def __init__(self, name: str, config:dict=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -33,7 +46,17 @@ class Backbone_Builder(ks.Model):
         return
 
     @staticmethod
-    def get_model_config(name):
+    def get_model_config(name: str) -> List[get_config.RawConfig]:
+        """
+        Read the Spinenet style configuration dictionary for a backbone with a
+        given name.
+
+        Arguments:
+            name: name of the backbone
+
+        Returns:
+            dictionary c
+        """
         if name == "darknet53":
             name = "darknet_53"
 
@@ -45,7 +68,7 @@ class Backbone_Builder(ks.Model):
             else:
                 raise
 
-        return build_block_specs(backbone)
+        return get_config.build_block_specs(backbone)
 
     def _build_struct(self, net, inputs):
         endpoints = dict()
