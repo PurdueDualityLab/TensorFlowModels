@@ -61,7 +61,8 @@ class Backbone_Builder(ks.Model):
 
     def _build_block(self, config, inputs, name):
         x = inputs
-        for i in range(config.repititions):
+        i = 0
+        while i < config.repititions:
             if config.name == "DarkConv":
                 x = nn_blocks.DarkConv(
                     filters=config.filters,
@@ -86,6 +87,7 @@ class Backbone_Builder(ks.Model):
                     filters=config.filters,
                     downsample=config.downsample,
                     name=f"{name}_{i}")(x)
+            i += 1
         return x
 
 # model = Backbone_Builder("darknet53")

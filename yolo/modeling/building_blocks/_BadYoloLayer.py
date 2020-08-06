@@ -64,23 +64,25 @@ class YoloLayer(ks.layers.Layer):
         box = tf.reshape(box, [tf.shape(box)[0], -1, 4])
         scaled = tf.where(scaled > self._thresh, scaled, 0.0)
         scaled = tf.reshape(scaled, [tf.shape(scaled)[0], -1, tf.shape(scaled)[-1]])
+
+        temp = box > 0
+        mask = tf.reduce_any(temp, axis= -1)
+        mask = tf.reduce_any(mask, axis= 0)
+        box = tf.boolean_mask(box, mask, axis = 1)[:, :200, :]
+        scaled = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
         return (box, scaled)
 
     def call(self, inputs):
         boxes, classes = self._filter_output(inputs[self._keys[0]], self._masks[self._keys[0]])
-        for i in range(1, self._len_keys):
-            b, c = self._filter_output(inputs[self._keys[0]], self._masks[self._keys[0]])
+        i = 1
+        while i < self._len_keys:
+            b, c = self._filter_output(inputs[self._keys[i]], self._masks[self._keys[i]])
             boxes = K.concatenate([boxes, b], axis = 1)
             classes = K.concatenate([classes, c], axis = 1)
-
-        temp = boxes > 0
-        mask = tf.reduce_any(temp, axis= -1)
-        mask = tf.reduce_any(mask, axis= 0)
-        boxes = tf.boolean_mask(boxes, mask, axis = 1)
-        classes = tf.boolean_mask(classes, mask, axis = 1)
+            i += 1
 
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classes, 100, 100, 0.0)
-        return (nms.nmsed_boxes,  nms.nmsed_classes,  nms.nmsed_scores)
+        return (nms.nmsed_boxes,  nms.nmsed_classes,  nms.nmsed_scores) #(boxes, classes)
     
     def build(self, input_shape):
         super().build(input_shape)
@@ -127,7 +129,7 @@ if __name__ == "__main__":
             # Memory growth must be set before GPUs have been initialized
             print(e)
     
-    size = 1000
+    size = 90
     bsize = 1
     with tf.device("/CPU:0"): 
         value = load_testset(0, bsize, size//bsize)
@@ -139,20 +141,31 @@ if __name__ == "__main__":
     outputs = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
                         anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
                         thresh = 0.5)(outputs)
-    
+    # outputs = YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
+    #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
+    #                     thresh = 0.5)(outputs)
     run = ks.Model(inputs = [inputs], outputs = [outputs])
-    run.build(input_shape = (None, None, None, 3))
+    run.build(input_shape = (1, None, None, 3))
     run.summary()
 
     import time   
-    start = time.time()   
-    for image, boxe in value:       
-        with tf.device("/GPU:0"): 
+    t = 0
+    i = 0
+    with tf.device("/GPU:0"): 
+        for image, _ in value:       
+            start = time.time() 
             outputs = run.predict(image)
-            # boxes = outputs[0][0][0]
-            # dis_image(image[0], boxes)
-    end = time.time() - start
-    print("fps: ", size/end)
+            #outputs = run(image)
+            #boxes = outputs[0][0][0]
+            #dis_image(image[0], boxes)
+            end = time.time() - start
+            print(f"{end},\t\t frame:{i}", end = "\r")
+            if i != 0:
+                t += end
+            i += 1 
+    print("\nfps: ", (size - 1)/t)
+    print("end: ", t)
+    print("average per frame: ", t/(i - 1))
 
 
 

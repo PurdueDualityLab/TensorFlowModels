@@ -117,16 +117,31 @@ class Yolov3Head(tf.keras.Model):
         outputs = dict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
-        for past, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
-            x = routes[past](layer_in)
-            if next is not None:
-                x_next = inputs[next]
-                layer_in = upsamples[next]([x[0], x_next])
+        # for past, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
+        #     x = routes[past](layer_in)
+        #     if next is not None:
+        #         x_next = inputs[next]
+        #         layer_in = upsamples[next]([x[0], x_next])
 
-            if type(x) == list or type(x) == tuple:
-                outputs[past] = prediction_heads[past](x[1])
+        #     if type(x) == list or type(x) == tuple:
+        #         outputs[past] = prediction_heads[past](x[1])
+        #     else:
+        #         outputs[past] = prediction_heads[past](x)
+
+        #using this loop is faster for some reason
+        i = 0 
+        while i < len(layer_keys):
+            x = routes[layer_keys[i]](layer_in)
+            if i + 1 < len(layer_keys):
+                x_next = inputs[layer_keys[i + 1]]
+                layer_in = upsamples[layer_keys[i + 1]]([x[0], x_next])
+            
+            #tf.print(tf.shape(x))
+            if type(x) == tuple or type(x) == list:
+                outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x[1])
             else:
-                outputs[past] = prediction_heads[past](x)
+                outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
+            i += 1
         return outputs
 
     def get_config():

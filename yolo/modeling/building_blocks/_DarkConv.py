@@ -128,7 +128,6 @@ class DarkConv(ks.layers.Layer):
         x = self.conv(input)
         #if self._use_bn:
         x = self.bn(x)
-  
         x = self._activation_fn(x)
         return x
 

@@ -62,6 +62,7 @@ class DarkRouteProcess(ks.layers.Layer):
 
         # layer configs
         self._repetitions = repetitions 
+        self._lim = repetitions * 2
         self._insert_spp = insert_spp
         
         self.layer_list = self._get_layer_list()
@@ -126,22 +127,20 @@ class DarkRouteProcess(ks.layers.Layer):
                 self.layers.extend(self._block(self._filters))
             else:
                 self.layers.extend(self._spp(self._filters))
-        self.outputs = [False] * self._repetitions * 2
-        self.outputs[-2] = True
-        self.outputs[-1] = True
-        self.layers = list(zip(self.outputs, self.layers))
         super().build(input_shape)
         return
 
     def call(self, inputs):
         # check efficiency
         x = inputs
-        outputs = []
-        for out, layer in self.layers:
+        x_prev = x
+        i = 0
+        while i < self._lim:
+            layer = self.layers[i]
+            x_prev = x
             x = layer(x)
-            if out:
-                outputs.append(x)
-        return outputs
+            i += 1
+        return x_prev, x
 
     def get_config(self):
         # used to store/share parameters to reconsturct the model
