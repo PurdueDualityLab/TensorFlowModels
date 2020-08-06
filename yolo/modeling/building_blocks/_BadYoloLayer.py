@@ -151,7 +151,7 @@ if __name__ == "__main__":
     import time   
     t = 0
     i = 0
-    with tf.device("/CPU:0"): 
+    with tf.device("/GPU:0"): 
         for image, _ in value:       
             start = time.time() 
             #image = tf.image.resize(image, size = (320, 320))
