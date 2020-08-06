@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 "Number the blocks in a DarkNet config file"
 
+from __future__ import annotations
+
 from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
+
+from typing import Iterable, Iterator, Union
 
 
 def _makeParser(parser):
@@ -19,7 +23,14 @@ _parser = argparse_flags.ArgumentParser()
 _makeParser(_parser)
 
 
-def numberConfig(file):
+def numberConfig(file: Union[Iterable, Iterator]) -> None:
+    """
+    Number all of the lines in a file and print the result to the screen.
+
+    Arguments:
+        file: an iterable/iterator that contains all of the contents of a file
+              Can be a text file itself, but not the path.
+    """
     i = 0
     for line in file:
         if line.startswith('['):

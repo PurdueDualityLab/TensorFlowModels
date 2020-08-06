@@ -7,11 +7,15 @@ import argparse
 
 from ._read_weights import read_weights, split_list
 
+__all__ = ['read_weights', 'split_list']
+
 flags.DEFINE_boolean('weights_only', False,
                      'Save only the weights and not the entire model.')
 flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
 
+
+__all__ = ['read_weights', 'split_list', 'main']
 
 def _makeParser(parser):
     parser.add_argument(

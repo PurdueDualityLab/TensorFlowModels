@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, NewType, Tuple
 
 try:
     from typing import final as _final
 except ImportError:
-    # For Python 3.7 and older
+    # Weak shim for Python 3.7 and older
     def _final(f):
         return f
 
-RawConfig = tuple
+#RawConfig = NewType('RawConfig', Tuple[str, int, int, int, int, str, bool, bool])
+#RawConfig.__doc__ = "(name, numberinblock, filters, kernal_size, padding, strides, downsample, output)"
+RawConfig = Tuple[str, int, int, int, int, str, bool, bool]
 
 @_final
 class BlockConfig:

@@ -4,11 +4,10 @@ This file contains the code to parse DarkNet weight files.
 
 from __future__ import annotations
 
-import io
 import numpy as np
 import os
 
-from typing import Union
+from typing import Tuple, Union, BinaryIO, TextIO
 
 from .config_classes import *
 from ..dn2dicts import convertConfigFile
@@ -16,14 +15,24 @@ from ...file_manager import PathABC, get_size, open_if_not_open
 from ...errors import with_origin
 
 
-def split_list(lst, i):
+def split_list(lst: list, i: int) -> Tuple[list, list]:
+    """
+    Split a list into two at a specific index.
+
+    Arguments:
+        lst: the list that will be split
+        i: the index at which the split will occour
+
+    Return:
+        The sublists that occour after the split
+    """
     return lst[:i], lst[i:]
 
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
-    
+
     layer = layer_builder[layer_dict['_type']].from_dict(net, layer_dict)
-    
+
     bytes_read = 0
     if file is not None:
         bytes_read = layer.load_weights(file)
@@ -64,15 +73,15 @@ def read_file(config, weights):
     return full_net, bytes_read
 
 
-def read_weights(config_file: Union[PathABC, io.TextIOBase],
-                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase]):
+def read_weights(config_file: Union[PathABC, TextIO],
+                 weights_file: Union[PathABC, BinaryIO]):
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
 
     Args:
-        config_file: str, path to yolo config file from Darknet
-        weights_file: str, path to yolo weights file from Darknet
+        config_file: str, path, or readable file object to yolo config file from Darknet
+        weights_file: str, path, or readable binary file object to yolo weights file from Darknet
 
     Returns:
         A tuple containing the following components:

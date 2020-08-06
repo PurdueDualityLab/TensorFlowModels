@@ -55,7 +55,8 @@ class Backbone_Builder(ks.Model):
             name: name of the backbone
 
         Returns:
-            dictionary c
+            list of dictionaries containing the configuration associated with
+            the name provided
         """
         if name == "darknet53":
             name = "darknet_53"
@@ -68,7 +69,7 @@ class Backbone_Builder(ks.Model):
             else:
                 raise
 
-        return get_config.build_block_specs(backbone)
+        return get_config.BlockConfig.from_dicts(backbone)
 
     def _build_struct(self, net, inputs):
         endpoints = dict()

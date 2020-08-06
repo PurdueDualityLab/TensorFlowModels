@@ -12,10 +12,9 @@ from __future__ import annotations # Comment to work with Sphinx
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-import io
 import numpy as np
 
-from typing import Dict, List
+from typing import Dict, List, Tuple, BinaryIO
 
 
 class Config(ABC):
@@ -41,7 +40,7 @@ class Config(ABC):
 
     @property
     @abstractmethod
-    def shape(self):
+    def shape(self) -> Tuple[int, int, int]:
         '''
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
@@ -52,12 +51,16 @@ class Config(ABC):
         '''
         return
 
-    def load_weights(self, files: io.IOBase) -> int:
+    @shape.setter
+    def _(self, val):
+        self.w, self.h, self.c = val
+
+    def load_weights(self, files: BinaryIO) -> int:
         '''
         Load the weights for the current layer from a file.
 
         Arguments:
-            files: Open IO object for the DarkNet weights file
+            files: Readable IO object for the DarkNet weights file
 
         Returns:
             the number of bytes read.
@@ -155,7 +158,7 @@ class convCFG(Config):
                             self.filters * self.size * self.size)
         return
 
-    @property
+    @Config.shape.getter
     def shape(self):
         w = len_width(self.w, self.size, self.pad, self.stride)
         h = len_width(self.h, self.size, self.pad, self.stride)
@@ -202,7 +205,7 @@ class shortcutCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
-    @property
+    @Config.shape.getter
     def shape(self):
         return (self.w, self.h, self.c)
 
@@ -230,7 +233,7 @@ class routeCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
-    @property
+    @Config.shape.getter
     def shape(self):
         return (self.w, self.h, self.c)
 
@@ -269,7 +272,7 @@ class netCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
-    @property
+    @Config.shape.getter
     def shape(self):
         return (self.w, self.h, self.c)
 
@@ -291,7 +294,7 @@ class yoloCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
-    @property
+    @Config.shape.getter
     def shape(self):
         return (self.w, self.h, self.c)
 
@@ -332,14 +335,14 @@ class maxpoolCFG(Config):
     stride: int = field(init=True, default=2)
     size: int = field(init=True, default=2)
 
-    @property
+    @Config.shape.getter
     def shape(self):
         pad = 0 if self.stride == 1 else 1
         #print((self.w//self.stride, self.h//self.stride, self.c))
         return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
 
-def len_width(n, f, p, s):
+def len_width(n: int, f: int, p: int, s: int) -> int:
     '''
     n: height or width
     f: kernels height or width
@@ -349,7 +352,7 @@ def len_width(n, f, p, s):
     return int(((n + 2 * p - f) / s) + 1)
 
 
-def len_width_up(n, f, p, s):
+def len_width_up(n: int, f: int, p: int, s: int) -> int:
     '''
     n: height or width
     f: kernels height or width

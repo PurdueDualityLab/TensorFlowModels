@@ -9,19 +9,20 @@ import collections
 import configparser
 from itertools import zip_longest
 from pprint import pprint
-import io
 import sys
 
-from typing import Dict, List
+from typing import Dict, List, TextIO
 
 if sys.version_info < (3, 10):
     # shim for Python 3.9 and older
     from more_itertools import zip_equal
-    def zip(*iterables, strict=False):
+    def _zip(*iterables, strict=False):
         if strict:
             return zip_equal(*iterables)
         else:
-            return __builtins__.zip(*iterables)
+            return zip(*iterables)
+else:
+    _zip = zip
 
 
 
@@ -35,7 +36,7 @@ def _parseValue(key, val):
         if key == 'anchors':
             # Group the anchors list into pairs
             # https://docs.python.org/3.10/library/functions.html#zip
-            raw_list = list(zip(*[iter(raw_list)]*2, strict=True))
+            raw_list = list(_zip(*[iter(raw_list)]*2, strict=True))
         return raw_list
     else:
         if '.' in val:
@@ -103,7 +104,7 @@ class DNConfigParser(configparser.RawConfigParser):
 
 def convertConfigFile(configfile):
     parser = DNConfigParser()
-    if isinstance(configfile, io.IOBase):
+    if isinstance(configfile, TextIO):
         if hasattr(configfile, 'name'):
             print(configfile.name)
             parser.read_file(configfile, source=configfile.name)
