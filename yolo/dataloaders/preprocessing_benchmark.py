@@ -1,15 +1,9 @@
 # WILL BE DELETED WHEN RELEASING PUBLICLY
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import tensorflow_addons as tfa
-from tensorflow_addons.image import utils as img_utils
-import tensorflow_probability as tfp
-import matplotlib.pyplot as plt
-import numpy as np
-import sys
 import time
 #** Below I am importing the preprocessing functions.
-import preprocessing_functions
+from . import preprocessing_functions
 
 #** Below this is how you import a custom dataset, here is an example of importing imagenet. **
 builder = tfds.ImageFolder('/local/b/cam2/data/ILSVRC2012_Classification/')

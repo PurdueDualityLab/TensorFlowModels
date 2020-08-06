@@ -2,11 +2,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 from tensorflow_addons.image import utils as img_utils
-import tensorflow_probability as tfp
-import matplotlib.pyplot as plt
 import numpy as np
-import sys
-import time
 
 # Global Variable to introduce randomness among each element of a batch
 RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))

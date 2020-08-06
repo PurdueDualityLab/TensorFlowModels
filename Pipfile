@@ -8,10 +8,11 @@ coverage = "*"
 
 [packages]
 tensorflow = "==2.*"
+tensorflow-addons = ">=0.5.0, <1"
 tensorflow-datasets = "*"
-absl-py = ">=0.7.0"
+absl-py = ">=0.7.0, <1"
 numpy = "*"
-#more_itertools = ">=8.3"
+more_itertools = ">=8.3"
 importlib-resources = {version = "*", markers="python_version < '3.7'"}
 
 # Optional packages

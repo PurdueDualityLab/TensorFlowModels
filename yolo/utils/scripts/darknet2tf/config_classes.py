@@ -8,33 +8,37 @@ Currently, the parser is incomplete and we can only guarantee that it works for
 models in the YOLO family (YOLOv3 and older).
 """
 
-from __future__ import annotations
+from __future__ import annotations # Comment to work with Sphinx
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import io
 import numpy as np
+
+from typing import Dict, List
 
 
 class Config(ABC):
     """
     The base class for all layers that are used by the parser. Each subclass
     defines a new layer type. Most nodes correspond to distinct layers that
-    appear in the final network. [net] corresponds to the input to the model.
+    appear in the final network. `[net]` corresponds to the input to the model.
 
-    Each subclass must be a @dataclass and must have the following fields:
-    ```{python}
-        _type: str = None
-        w: int = field(init=True, repr=True, default=0)
-        h: int = field(init=True, repr=True, default=0)
-        c: int = field(init=True, repr=True, default=0)
-    ```
+    Each subclass must be a `@dataclass` and must have the following fields:
+
+    .. code-block:: python
+
+       _type: str = None
+       w: int = field(init=True, repr=True, default=0)
+       h: int = field(init=True, repr=True, default=0)
+       c: int = field(init=True, repr=True, default=0)
 
     These fields are used when linking different layers together, but weren't
     included in the Config class due to limitations in the dataclasses package.
-    (w, h, c) will correspond to the different input dimensions of a DarkNet
+    `(w, h, c)` will correspond to the different input dimensions of a DarkNet
     layer: the width, height, and number of channels.
     """
-    
+
     @property
     @abstractmethod
     def shape(self):
@@ -48,7 +52,7 @@ class Config(ABC):
         '''
         return
 
-    def load_weights(self, files):
+    def load_weights(self, files: io.IOBase) -> int:
         '''
         Load the weights for the current layer from a file.
 
@@ -60,8 +64,11 @@ class Config(ABC):
         '''
         return 0
 
-    def get_weights(self):
+    def get_weights(self) -> List[np.ndarray]:
         '''
+        Return the weights of all of the parameters associated with the current
+        layer.
+
         Returns:
             a list of Numpy arrays consisting of all of the weights that
             were loaded from the weights file
@@ -69,11 +76,16 @@ class Config(ABC):
         return []
 
     @classmethod
-    def from_dict(clz, net, layer_dict):
+    def from_dict(clz, net: List[np.ndarray], layer_dict: Dict[str, str]) -> 'Config':
         '''
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
+
+        Arguments:
+            net: list of all previous layers in the network
+            layer_dict: dictionary containing all of the configurations for the
+                        current layer
         '''
         if 'w' not in layer_dict:
             prevlayer = net[-1]
@@ -131,11 +143,11 @@ class convCFG(Config):
     batch_normalize: int = field(init=True, repr=False, default=0)
 
     nweights: int = field(repr=False, default=0)
-    biases: np.array = field(repr=False, default=None)
-    weights: np.array = field(repr=False, default=None)
-    scales: np.array = field(repr=False, default=None)
-    rolling_mean: np.array = field(repr=False, default=None)
-    rolling_variance: np.array = field(repr=False, default=None)
+    biases: np.ndarray = field(repr=False, default=None)
+    weights: np.ndarray = field(repr=False, default=None)
+    scales: np.ndarray = field(repr=False, default=None)
+    rolling_mean: np.ndarray = field(repr=False, default=None)
+    rolling_variance: np.ndarray = field(repr=False, default=None)
 
     def __post_init__(self):
         self.pad = int(self.pad) if self.size != 1 else 0
@@ -347,18 +359,18 @@ def len_width_up(n, f, p, s):
     return int(((n - 1) * s - 2 * p + (f - 1)) + 1)
 
 
-def read_n_floats(n, bfile):
+def read_n_floats(n, bfile) -> np.ndarray:
     """c style read n float 32"""
     return np.fromfile(bfile, 'f4', n)
 
 
-def read_n_int(n, bfile, unsigned=False):
+def read_n_int(n, bfile, unsigned=False) -> np.ndarray:
     """c style read n int 32"""
     dtype = '<u4' if unsigned else '<i4'
     return np.fromfile(bfile, dtype, n)
 
 
-def read_n_long(n, bfile, unsigned=False):
+def read_n_long(n, bfile, unsigned=False) -> np.ndarray:
     """c style read n int 64"""
     dtype = '<u8' if unsigned else '<i8'
     return np.fromfile(bfile, dtype, n)

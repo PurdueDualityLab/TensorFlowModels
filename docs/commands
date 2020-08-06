@@ -1,0 +1,4 @@
+sphinx-quickstart
+sphinx-apidoc -f -o source/docs ../yolo ../yolo/modeling/tests/ ../yolo/utils/tests/ ../yolo/dataloaders/preprocessing_benchmark.py
+make htmlhelp
+python3 -m http.server --directory build/htmlhelp
