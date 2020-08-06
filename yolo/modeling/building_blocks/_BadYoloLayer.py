@@ -25,8 +25,12 @@ class YoloLayer(ks.layers.Layer):
 
     def _get_centers(self, lwidth, lheight, batch_size, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left = tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth)
-        y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
+        # x_left = tf.linspace(start = K.cast(tf.cast(0, dtype = tf.int32)/lwidth, dtype = tf.float32), stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lheight)
+        # y_left = tf.linspace(start = K.cast(tf.cast(0, dtype = tf.int32)/lheight, dtype = tf.float32), stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lwidth)
+        
+        # # idk why this works better
+        x_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lwidth, dtype = tf.float32), stop = K.cast((lwidth)/lwidth, dtype = tf.float32), num = lheight)
+        y_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lheight, dtype = tf.float32), stop = K.cast((lheight)/lheight, dtype = tf.float32), num = lwidth)
         x_left, y_left = tf.meshgrid(x_left, y_left)
 
         x_y = K.stack([x_left, y_left], axis = -1)
@@ -80,7 +84,7 @@ class YoloLayer(ks.layers.Layer):
         scaled = tf.reshape(scaled, [tf.shape(scaled)[0], -1, tf.shape(scaled)[-1]])
         scaled = tf.where(scaled > self._thresh, scaled, 0.0)
 
-        nms_boxes = tf.image.combined_non_max_suppression(tf.expand_dims(box, axis=2), scaled, 100, 100,  0.0) # yeah this just sorts the scores, its not real
+        nms_boxes = tf.image.combined_non_max_suppression(tf.expand_dims(box, axis=2), scaled, 200, 200, 0.0) # yeah this just sorts the scores, its not real
         return nms_boxes
 
 
@@ -97,24 +101,51 @@ class YoloLayer(ks.layers.Layer):
 
         box = tf.reshape(box, [tf.shape(box)[0], -1, 4])
         classes = tf.reshape(classes, [tf.shape(classes)[0], -1, tf.shape(classes)[-1]])
-        nms_boxes = tf.image.combined_non_max_suppression(tf.expand_dims(box, axis=2), classes, 100, 100,  0.5, 0.05)
+        nms_boxes = tf.image.combined_non_max_suppression(tf.expand_dims(box, axis=2), classes, 200, 200,  0.5, 0.05)
         return nms_boxes
+
+    def merge_detections(self, labels):
+        
+        total_boxes = []
+        total_classes = []
+        total_conf = []
+        for key in labels:
+            total_boxes.append(key.nmsed_boxes)
+            total_classes.append(key.nmsed_classes)
+            total_conf.append(key.nmsed_scores)
+
+
+        boxes = K.concatenate(total_boxes, axis = 1)
+        classes = K.concatenate(total_classes, axis = 1)
+        conf = K.concatenate(total_conf, axis = 1)
+        batch_size = tf.shape(boxes)[0]
+
+        temp = boxes > 0
+        mask = tf.reduce_any(temp, axis= -1)
+        mask = tf.reduce_any(mask, axis= 0)
+
+        boxes = tf.boolean_mask(boxes, mask, axis = 1)
+        classes = tf.boolean_mask(classes, mask,axis = 1)
+        conf = tf.boolean_mask(conf, mask, axis = 1)
+        #tf.print(boxes.shape, classes.shape, conf.shape, mask.shape)
+        return boxes, classes, conf
 
     def call(self, inputs, truth):
         keys = list(inputs.keys())
         batch_size = tf.shape(inputs[keys[0]])[0]
-        tf.print(tf.shape(inputs[keys[0]])[1],"\n")
+        #tf.print(tf.shape(inputs[keys[0]])[1],"\n")
         outputs = []
         tests = []
         for key in keys:
             prediction = inputs[key]
             truth_b = truth[key]
             outputs.append(self._filter_output(prediction, self._masks[key]))
-            tests.append(self._filter_truth(truth_b, self._masks[key]))
+            # tests.append(self._filter_truth(truth_b, self._masks[key]))
         
         # for value, true in zip(outputs, tests):
         #     for j in range(1):
-
+        outputs = self.merge_detections(outputs)
+        # tests = self.merge_detections(tests)
         return outputs, tests
 
 def dis_image(i, b, t = []):
@@ -123,12 +154,12 @@ def dis_image(i, b, t = []):
     for box in b:
         tx = box[1] * i.shape[0]
         ty = box[0] * i.shape[1]
-        rect = patches.Rectangle((tx, ty), box[3] * i.shape[1] - tx, box[2] * i.shape[0] - ty, linewidth=2,edgecolor='r',facecolor='none')
+        rect = patches.Rectangle((tx, ty), box[3] * i.shape[1] - tx, box[2] * i.shape[0] - ty, linewidth=2,edgecolor='g',facecolor='none')
         ax.add_patch(rect)
     for box in t:
         tx = box[1] * i.shape[0]
         ty = box[0] * i.shape[1]
-        rect = patches.Rectangle((tx, ty), box[3] * i.shape[1] - tx, box[2] * i.shape[0] - ty, linewidth=2,edgecolor='g',facecolor='none')
+        rect = patches.Rectangle((tx, ty), box[3] * i.shape[1] - tx, box[2] * i.shape[0] - ty, linewidth=2,edgecolor='r',facecolor='none')
         ax.add_patch(rect)
     plt.show()
 
@@ -147,7 +178,20 @@ if __name__ == "__main__":
     from yolo.modeling.yolo_v3 import Yolov3
     from yolo.modeling.loss_functions.voc_test import *
 
-    value = load_dataset(0, 5)
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+    
+    size = 10
+    value = load_dataset(0, 1, size)
     model = Yolov3(classes = 80, boxes = 9, type = "regular")
     model.build(input_shape = (None, None, None, 3))
     #model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
@@ -160,45 +204,22 @@ if __name__ == "__main__":
     #predictions look like they are off center by a tad
     filter_l = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
                          anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
-                         thresh = 0.25)
+                         thresh = 0.5)
 
-                         
-    for image, label in value:
-        with tf.device("/GPU:0"):
+    import time   
+    start = time.time()   
+    with tf.device("/GPU:0"):       
+        for image, label in value:       
             pred = model(image)
+            #very slow
             outputs, tests = filter_l(pred, label)
 
-        for j in range(5):
-            for value, true in zip(outputs, tests):
-                boxes = value.nmsed_boxes[j][:]
-                true_b = true.nmsed_boxes[j][:]
-                dis_image(image[j], boxes, true_b)
-
-                print("boxes", boxes)
-                print("true_b",true_b)
-            
-            
-            
-        #     classif = K.expand_dims(tf.convert_to_tensor(classif), axis = 0)
-        #     tf.print(tf.shape(box))
-        #     if tf.shape(box)[-1] != 0:
-        #         box_tf = yolo_to_tf(box)
-
-        #         t_box = tf.convert_to_tensor(t_box)
-        #         t_box_tf = yolo_to_tf(t_box)
-
-        #         print(tf.shape(box))
-        #         box_mask = tf.image.combined_non_max_suppression(tf.expand_dims(box_tf, axis=2), classif, 100, 100,  0.5, 0.05) # yeah this just sorts the scores, its not real
-        #         print(box_mask)
-        #         disp_box = box_mask.nmsed_boxes[0][:10]
-        #         print(disp_box)
-
-        #         #     print(i, len(box), len(classif), end = "\n")
-        #         dis_image(image[i], disp_box)
-        #         dis_image(image[i], t_box_tf)
-
-        #         tf.print(box, t_box)
-            
+        # for j in range(size):
+            boxes = outputs[0][0]
+        # #true_b = tests[0][0]
+            dis_image(image[0], boxes)#, true_b)
+    end = time.time() - start
+    print(end)
 
 
 

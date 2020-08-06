@@ -73,8 +73,11 @@ class Yolo_Loss(ks.losses.Loss):
     @tf.function
     def _get_centers(self, lwidth, lheight, batch_size):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left = tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth)
-        y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
+        #x_left = tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth)
+        #y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
+
+        x_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lwidth, dtype = tf.float32), stop = K.cast((lwidth)/lwidth, dtype = tf.float32), num = lheight)
+        y_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lheight, dtype = tf.float32), stop = K.cast((lheight)/lheight, dtype = tf.float32), num = lwidth)
         x_left, y_left = tf.meshgrid(x_left, y_left)
 
         x_y = K.stack([x_left, y_left], axis = -1)
