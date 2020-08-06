@@ -26,7 +26,7 @@ class YoloLayer(ks.layers.Layer):
 
     def _get_centers(self, lwidth, lheight, batch_size, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left, y_left = tf.meshgrid(tf.range(1, lheight + 1), tf.range(1, lwidth + 1))
+        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = tf.float32)
         x_y = tf.repeat(tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0), batch_size, axis = 0)
@@ -133,17 +133,17 @@ if __name__ == "__main__":
     bsize = 1
     with tf.device("/CPU:0"): 
         value = load_testset(0, bsize, size//bsize)
-    model = Yolov3(classes = 80, boxes = 9, type = "regular")
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
+    model = Yolov3(classes = 80, boxes = 9, type = "tiny")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
 
     inputs = ks.layers.Input(shape=[None, None, 3])
     outputs = model(inputs) 
-    outputs = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
-                        anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
-                        thresh = 0.5)(outputs)
-    # outputs = YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
-    #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
+    # outputs = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
+    #                     anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
     #                     thresh = 0.5)(outputs)
+    outputs = YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
+                        anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
+                        thresh = 0.5)(outputs)
     run = ks.Model(inputs = [inputs], outputs = [outputs])
     run.build(input_shape = (1, None, None, 3))
     run.summary()
@@ -151,13 +151,14 @@ if __name__ == "__main__":
     import time   
     t = 0
     i = 0
-    with tf.device("/GPU:0"): 
+    with tf.device("/CPU:0"): 
         for image, _ in value:       
             start = time.time() 
+            #image = tf.image.resize(image, size = (320, 320))
             outputs = run.predict(image)
             #outputs = run(image)
-            #boxes = outputs[0][0][0]
-            #dis_image(image[0], boxes)
+            # boxes = outputs[0][0][0]
+            # dis_image(image[0], boxes)
             end = time.time() - start
             print(f"{end},\t\t frame:{i}", end = "\r")
             if i != 0:
@@ -166,6 +167,7 @@ if __name__ == "__main__":
     print("\nfps: ", (size - 1)/t)
     print("end: ", t)
     print("average per frame: ", t/(i - 1))
+
 
 
 

@@ -210,7 +210,7 @@ def fast_pipe(data):
     return image, boxes
 
 def load_testset(skip = 0, batch_size = 1, multiplier = 1):
-    dataset,info = tfds.load('coco', split='test', with_info=True, shuffle_files=True)
+    dataset,info = tfds.load('voc', split='test', with_info=True, shuffle_files=True)
     dataset = dataset.skip(skip).take(batch_size * multiplier)
     dataset = dataset.map(fast_pipe, num_parallel_calls = tf.data.experimental.AUTOTUNE).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
