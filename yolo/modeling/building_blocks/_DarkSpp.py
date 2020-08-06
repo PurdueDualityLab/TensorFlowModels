@@ -4,6 +4,18 @@ import tensorflow.keras as ks
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkSpp(ks.layers.Layer):
+    """
+    Reimplementation of SPP from TensorFlow Addons in the format required by
+    YOLO. The difference between the two implementations is that TensorFlow
+    Addons uses adaptive average pooling while YOLO uses maximum pooling.
+    To see more details, go to the TensorFlow Addons documentation.
+
+    https://github.com/tensorflow/addons/blob/master/tensorflow_addons/layers/spatial_pyramid_pooling.py
+
+    Arguments:
+        sizes: The output dimensions of the pooling layers
+    """
+
     def __init__(self, sizes, **kwargs):
         self._sizes = sizes
         if len(sizes) == 0:

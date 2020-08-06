@@ -5,27 +5,27 @@ import tensorflow.keras as ks
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkShortcut(ks.layers.Layer):
+    '''
+    Modified DarkShortcut layer to match that of the DarkNet Library.
+    It adds input layers and passes the result through an activation
+    function.
+
+    It is used like the following:
+
+    x = bottleneck_shortcut = DarkConv(64, (3, 3), (1, 1))(x)
+    x = DarkConv(32, (1, 1), (1, 1))(x)
+    x = DarkConv(64, (3, 3), (1, 1))(x)
+    x = DarkShortcut('linear')([x, bottleneck_shortcut])
+
+    Args:
+        activation: string or None for activation function to use in layer,
+                    if None activation is replaced by linear
+        **kwargs: Keyword Arguments
+
+    '''
     def __init__(self,
                  activation='linear',
                  **kwargs):
-        '''
-        Modified DarkShortcut layer to match that of the DarkNet Library.
-        It adds input layers and passes the result through an activation
-        function.
-
-        It is used like the following:
-
-        x = bottleneck_shortcut = DarkConv(64, (3, 3), (1, 1))(x)
-        x = DarkConv(32, (1, 1), (1, 1))(x)
-        x = DarkConv(64, (3, 3), (1, 1))(x)
-        x = DarkShortcut('linear')([x, bottleneck_shortcut])
-
-        Args:
-            activation: string or None for activation function to use in layer,
-                        if None activation is replaced by linear
-            **kwargs: Keyword Arguments
-
-        '''
 
         # activation params
         if activation is None:

@@ -4,6 +4,36 @@ from yolo.modeling.building_blocks import DarkConv, DarkSpp
 
 
 class DarkRouteProcess(ks.layers.Layer):
+    """
+    process darknet outputs and connect back bone to head more generalizably
+    Abstracts repetition of DarkConv objects that is common in YOLO.
+
+    It is used like the following:
+
+    x = DarkConv(1024, (3, 3), (1, 1))(x)
+    proc = DarkRouteProcess(filters = 1024, repetitions = 3, insert_spp = False)(x)
+
+    Args:
+        filters: the number of filters to be used in all subsequent layers
+                 filters should be the depth of the tensor input into this layer, as no downsampling can be done within this layer object
+        repetitions: number of times to repeat the processign nodes
+                     for tiny: 1 repition, no spp allowed
+                     for spp: insert_spp = True, and allow for 3+ repetitions
+                     for regular: insert_spp = False, and allow for 3+ repetitions
+        insert_spp: bool if true add the spatial pyramid pooling layer
+        kernel_initializer: method to use to initializa kernel weights
+        bias_initializer: method to use to initialize the bias of the conv layers
+        norm_moment: batch norm parameter see Tensorflow documentation
+        norm_epsilon: batch norm parameter see Tensorflow documentation
+        activation: activation function to use in processing
+        leaky_alpha: if leaky acitivation function, the alpha to use in processing the relu input
+
+    Returns:
+        callable tensorflow layer
+
+    Raises:
+        None
+    """
     def __init__(self,
                  filters=2,
                  mod = 1,
@@ -16,36 +46,6 @@ class DarkRouteProcess(ks.layers.Layer):
                  activation='leaky',
                  leaky_alpha=0.1,
                  **kwargs):
-        """
-        process darknet outputs and connect back bone to head more generalizably
-        Abstracts repetition of DarkConv objects that is common in YOLO.
-
-        It is used like the following:
-
-        x = DarkConv(1024, (3, 3), (1, 1))(x)
-        proc = DarkRouteProcess(filters = 1024, repetitions = 3, insert_spp = False)(x)
-
-        Args:
-            filters: the number of filters to be used in all subsequent layers
-                     filters should be the depth of the tensor input into this layer, as no downsampling can be done within this layer object
-            repetitions: number of times to repeat the processign nodes
-                         for tiny: 1 repition, no spp allowed
-                         for spp: insert_spp = True, and allow for 3+ repetitions
-                         for regular: insert_spp = False, and allow for 3+ repetitions
-            insert_spp: bool if true add the spatial pyramid pooling layer
-            kernel_initializer: method to use to initializa kernel weights
-            bias_initializer: method to use to initialize the bias of the conv layers
-            norm_moment: batch norm parameter see Tensorflow documentation
-            norm_epsilon: batch norm parameter see Tensorflow documentation
-            activation: activation function to use in processing
-            leaky_alpha: if leaky acitivation function, the alpha to use in processing the relu input
-
-        Returns:
-            callable tensorflow layer
-
-        Raises:
-            None
-        """
 
         # darkconv params
         self._filters = filters//mod
@@ -61,9 +61,9 @@ class DarkRouteProcess(ks.layers.Layer):
         self._leaky_alpha = leaky_alpha
 
         # layer configs
-        self._repetitions = repetitions 
+        self._repetitions = repetitions
         self._insert_spp = insert_spp
-        
+
         self.layer_list = self._get_layer_list()
         # print(self.layer_list)
         super().__init__(**kwargs)

@@ -5,6 +5,31 @@ import tensorflow.keras as ks
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkConv(ks.layers.Layer):
+    '''
+    Modified Convolution layer to match that of the DarkNet Library
+
+    Args:
+        filters: integer for output depth, or the number of features to learn
+        kernel_size: integer or tuple for the shape of the weight matrix or kernel to learn
+        strides: integer of tuple how much to move the kernel after each kernel use
+        padding: string 'valid' or 'same', if same, then pad the image, else do not
+        dialtion_rate: tuple to indicate how much to modulate kernel weights and
+                        the how many pixels ina featur map to skip
+        use_bias: boolean to indicate wither to use bias in convolution layer
+        kernel_initializer: string to indicate which function to use to initialize weigths
+        bias_initializer: string to indicate which function to use to initialize bias
+        l2_regularization: float to use as a constant for weight regularization
+        use_bn: boolean for wether to use batchnormalization
+        use_sync_bn: boolean for wether sync batch normalization statistics
+                     of all batch norm layers to the models global statistics (across all input batches)
+        norm_moment: float for moment to use for batchnorm
+        norm_epsilon: float for batchnorm epsilon
+        activation: string or None for activation function to use in layer,
+                    if None activation is replaced by linear
+        leaky_alpha: float to use as alpha if activation function is leaky
+        **kwargs: Keyword Arguments
+
+    '''
     def __init__(self,
                  filters=1,
                  kernel_size=(1, 1),
@@ -23,31 +48,6 @@ class DarkConv(ks.layers.Layer):
                  activation='leaky',
                  leaky_alpha=0.1,
                  **kwargs):
-        '''
-        Modified Convolution layer to match that of the DarkNet Library
-
-        Args:
-            filters: integer for output depth, or the number of features to learn
-            kernel_size: integer or tuple for the shape of the weight matrix or kernel to learn
-            strides: integer of tuple how much to move the kernel after each kernel use
-            padding: string 'valid' or 'same', if same, then pad the image, else do not
-            dialtion_rate: tuple to indicate how much to modulate kernel weights and
-                            the how many pixels ina featur map to skip
-            use_bias: boolean to indicate wither to use bias in convolution layer
-            kernel_initializer: string to indicate which function to use to initialize weigths
-            bias_initializer: string to indicate which function to use to initialize bias
-            l2_regularization: float to use as a constant for weight regularization
-            use_bn: boolean for wether to use batchnormalization
-            use_sync_bn: boolean for wether sync batch normalization statistics
-                         of all batch norm layers to the models global statistics (across all input batches)
-            norm_moment: float for moment to use for batchnorm
-            norm_epsilon: float for batchnorm epsilon
-            activation: string or None for activation function to use in layer,
-                        if None activation is replaced by linear
-            leaky_alpha: float to use as alpha if activation function is leaky
-            **kwargs: Keyword Arguments
-
-        '''
 
         # convolution params
         self._filters = filters
