@@ -12,6 +12,22 @@ import importlib
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
+    """
+    The YOLOv3 head types are listed below:
+
+     - Regular (`regular`): backbone used for the YOLOv3 model
+     - SPP (`spp`): backbone used for the YOLOv3 SPP model
+     - Tiny (`tiny`): backbone used for the YOLOv3 Tiny model
+
+    The YOLOv3-tiny is NOT the same as the Tiny Darknet model found here: https://pjreddie.com/darknet/tiny-darknet/.
+
+    Arguments:
+        model: type of the head as listed above
+        classes: the number of classes that can be predicted by the head
+        boxes: the number of anchor boxes that will be used by the head
+        cfg_dict: the configuration dictionary that will be used to construct
+                  the head
+    """
     def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, **kwargs):
         self._cfg_dict = cfg_dict
         self._classes = classes
@@ -19,7 +35,11 @@ class Yolov3Head(tf.keras.Model):
         self._layer_dict = {"routeproc": DarkRouteProcess,
                             "upsampleroute": DarkUpsampleRoute}
 
-        self._cfg_dict = self.load_dict_cfg(model)
+        if cfg_dict is None:
+            self._cfg_dict = self.load_dict_cfg(model)
+        else:
+            self._cfg_dict = cfg_dict
+
         self._layer_keys = list(self._cfg_dict.keys())
         self._conv_depth = boxes//len(self._layer_keys) * (classes + 5)
 
@@ -31,11 +51,20 @@ class Yolov3Head(tf.keras.Model):
 
     @staticmethod
     def load_dict_cfg(model):
+        """
+        Read a configuration dictionary for a head with a given name.
+
+        Arguments:
+            model: name of the head
+
+        Returns:
+            dictionary describing the model
+        """
         try:
             return importlib.import_module('.yolov3_' + model, package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov3_' + model:
-                raise ValueError(f"Invlid backbone '{name}'") from e
+                raise ValueError(f"Invlid head '{name}'") from e
             else:
                 raise
 
@@ -80,4 +109,4 @@ class Yolov3Head(tf.keras.Model):
                 outputs[self._layer_keys[i]] = prediction_heads[self._layer_keys[i]](x)
         return outputs
 
-layer = Yolov3Head()
+# layer = Yolov3Head()

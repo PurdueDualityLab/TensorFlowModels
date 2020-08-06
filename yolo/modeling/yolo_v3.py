@@ -143,14 +143,14 @@ class Yolov3(ks.Model):
         load the entire Yolov3 Model for tensorflow
 
         example:
-            load yolo with darknet wieghts for backbone
+            load yolo with darknet weights for backbone
 
             >>> model = Yolov3()
             >>> model.build(input_shape = (1, 416, 416, 3))
             >>> model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
 
         example:
-            load custom back bone weigths
+            load custom back bone weights
 
             >>> model = Yolov3()
             >>> # leaving out the build line will implicitly build the model using
@@ -158,18 +158,18 @@ class Yolov3(ks.Model):
             >>> model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = False)
 
         example:
-            load custom head weigths
+            load custom head weights
 
             >>> model = Yolov3()
             >>> model.load_weights_from_dn(dn2tf_backbone = False, dn2tf_head = True)
 
         example:
-            load back bone weigths from tensorflow (our training)
+            load back bone weights from tensorflow (our training)
 
             TODO: Fill this out
 
         example:
-            load head weigths from tensorflow (our training)
+            load head weights from tensorflow (our training)
 
             TODO: Fill this out
 
