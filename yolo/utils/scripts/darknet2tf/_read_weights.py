@@ -54,19 +54,14 @@ def read_file(config, weights):
         print(f"iseen: {iseen}")
 
     full_net = []
-    split_index = -1
     for i, layer_dict in enumerate(config):
-        if layer_dict["_type"] != "decoder_encoder_split":
-            try:
-                layer, num_read = build_layer(layer_dict, weights, full_net)
-            except Exception as e:
-                raise ValueError(f"Cannot read weights for layer [#{i}]") from e
-            full_net.append(layer)
-        else:
-            num_read = 0
-            split_index = i
+        try:
+            layer, num_read = build_layer(layer_dict, weights, full_net)
+        except Exception as e:
+            raise ValueError(f"Cannot read weights for layer [#{i}]") from e
+        full_net.append(layer)
         bytes_read += num_read
-    return full_net, split_index, bytes_read
+    return full_net, bytes_read
 
 
 def read_weights(config_file: Union[PathABC, io.TextIOBase],
@@ -89,16 +84,12 @@ def read_weights(config_file: Union[PathABC, io.TextIOBase],
     with open_if_not_open(config_file) as config, \
         open_if_not_open(weights_file, "rb") as weights:
         config = convertConfigFile(config)
-        full_net, split_index, bytes_read = read_file(config, weights)
-        encoder, decoder = split_list(full_net, split_index)
-        print('encoder')
-        for e in encoder:
-            print(f"{e.w} {e.h} {e.c}\t{e}")
-        print('decoder')
-        for e in decoder:
+        full_net, bytes_read = read_file(config, weights)
+        print('full net: ')
+        for e in full_net:
             print(f"{e.w} {e.h} {e.c}\t{e}")
         print(
             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
     if (bytes_read != size):
         raise IOError('error reading weights file')
-    return encoder, decoder
+    return full_net
