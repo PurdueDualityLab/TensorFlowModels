@@ -3,7 +3,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import sys
 import numpy as np
-from yolo.modeling.loss_functions.iou import *
+from yolo.modeling.loss_functions._iou import iou
 
 
 RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))
@@ -45,7 +45,7 @@ def build_gt(y_true, anchors, size):
     truth_comp = tf.transpose(truth_comp, perm = [2, 0, 1])
 
     box = tf.split(truth_comp, num_or_size_splits=4, axis = -1)
-    anchor_box = tf.split(anchors, num_or_size_splits=4, axis = -1)    
+    anchor_box = tf.split(anchors, num_or_size_splits=4, axis = -1)
 
     iou_anchors = tf.cast(K.argmax(iou(box, anchor_box), axis = 0), dtype = tf.float32)
     y_true = K.concatenate([y_true, iou_anchors], axis = -1)
@@ -67,7 +67,7 @@ def preprocess(data, anchors, width, height):
 
     # constant
     label = build_gt(label, anchors, width)
-    
+
     #idk if this works
     label = tf.random.shuffle(label, seed=None)
 
@@ -75,7 +75,7 @@ def preprocess(data, anchors, width, height):
 
 def py_func_rand():
     jitter = np.random.uniform(low = -0.3, high = 0.3)
-    randscale = np.random.randint(low = 10, high = 19) 
+    randscale = np.random.randint(low = 10, high = 19)
     return jitter, randscale
 
 @tf.function
@@ -83,7 +83,7 @@ def get_random(image, label, masks):
     masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32))
-    
+
     # bounding boxs
     if tf.math.equal(tf.shape(masks)[0], 3):
         value1 = build_grided_gt(label, masks[0], randscale)
@@ -137,7 +137,7 @@ def build_grided_gt(y_true, mask, size):
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
-                
+
                 # start code for tie breaker, temp check performance
                 uid = 1
                 used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
@@ -147,7 +147,7 @@ def build_grided_gt(y_true, mask, size):
                     count += 1
                     p = (p + 1)%3
                     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                    
+
                 if tf.math.equal(used, 1):
                     tf.print("skipping")
                     continue
@@ -164,8 +164,8 @@ def build_grided_gt(y_true, mask, size):
                 0 not used
                 1 used with the correct anchor
                 2 used with offset anchor
-            
-            if used is 0 or 2: 
+
+            if used is 0 or 2:
                 do not enter tie breaker (count = 0)
                 edit box index with the most recent box
 
@@ -180,7 +180,7 @@ def build_grided_gt(y_true, mask, size):
             W tensorflow/core/grappler/optimizers/loop_optimizer.cc:906] Skipping loop optimization for Merge node with control input: cond/branch_executed/_11
             idk should look into this
 
-            18 seconds for 2000 images 
+            18 seconds for 2000 images
             """
 
     if tf.math.greater(update_index.size(), 0):

@@ -12,7 +12,15 @@ from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone
 
 @tf_shims.ks_utils__register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
-    """The Darknet Image Classification Network Using Darknet53 Backbone"""
+    """The Darknet Image Classification Network Using Darknet53 Backbone
+
+    Args:
+        classes: integer for how many classes can be predicted
+        load_backbone_weights: bool, if true we will auto load the original darnet weights to use in the model
+        config_file: str path for the location of the configuration file to use when decoding darknet weights
+        weights_file: str path with the file containing the dark net weights
+
+    """
 
     def __init__(
             self,
@@ -24,13 +32,6 @@ class DarkNet53(ks.Model):
         load the model and the sequential head so that the backbone can be applied for classification
 
         Model tested on ImageNet Tiny
-
-        Args:
-            classes: integer for how many classes can be predicted
-            load_backbone_weights: bool, if true we will auto load the original darnet weights to use in the model
-            config_file: str path for the location of the configuration file to use when decoding darknet weights
-            weights_file: str path with the file containing the dark net weights
-
         """
         super(DarkNet53, self).__init__()
         self.backbone = Backbone_Builder("darknet53")
@@ -64,19 +65,20 @@ class DarkNet53(ks.Model):
 
 @tf_shims.ks_utils__register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
+    """
+    Args:
+        classes: int for the number of available classes
+        boxes: total number of boxes that are predicted by detection head
+        type: the particular type of YOLOv3 model that is being constructed
+              regular, spp, or tiny
+    """
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
                  classes = 20,
                  boxes = 9,
                  type = 'regular',
                  **kwargs):
-        """
-        Args:
-            classes: int for the number of available classes
-            boxes: total number of boxes that are predicted by detection head
-            type: the particular type of YOLOv3 model that is being constructed
-                  regular, spp, or tiny
-        """
+
         super().__init__(**kwargs)
         self._classes = classes
         self._boxes = boxes

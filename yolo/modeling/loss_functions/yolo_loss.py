@@ -6,6 +6,20 @@ from yolo.modeling.yolo_v3 import Yolov3
 from yolo.modeling.loss_functions.voc_test import *
 
 class Yolo_Loss(ks.losses.Loss):
+    """
+    The loss function used by the YOLO models.
+
+    Arguments:
+        mask (List[int]): a mask that indicates which anchors from the list should be used by the loss function
+        anchors (List[Tuple[int, int]]): all anchor boxes used by the model implementation
+        classes (int): number of classes that can be predicted by the model
+        num (int): unused
+        ignore_thresh (float): confidence threshold to indicate that the bounding box is significant
+        truth_thresh (float): TODO
+        random (int): TODO
+        fixed_dims (int): TODO
+        batch_size (int): the number of images that are present in a batch
+    """
     def __init__(self, mask, anchors, classes, num, ignore_thresh, truth_thresh, random, fixed_dims, batch_size = None, reduction = tf.keras.losses.Reduction.AUTO, name=None, **kwargs):
         self._anchors = [anchors[i] for i in mask]
         self._classes = classes
@@ -66,7 +80,7 @@ class Yolo_Loss(ks.losses.Loss):
         # temp_out = y_true - y_pred
         # y_true = self._get_splits(y_true)
         #y_pred = self._get_splits(y_pred)
-        
+
         # for i, (truth, pred) in enumerate(zip(y_true, y_pred)):
         #     box_pred = self._get_yolo_box(pred[2], width, height, grid_points, self._anchors[i])
         #     box_truth = self._split_truth_box(truth[2])
@@ -78,47 +92,47 @@ class Yolo_Loss(ks.losses.Loss):
         pass
 
 def load_model():
-    model = Yolov3(dn2tf_backbone = True, 
+    model = Yolov3(dn2tf_backbone = True,
                    dn2tf_head = False,
-                   input_shape= (None, 416, 416, 3), 
-                   config_file="yolov3.cfg", 
-                   weights_file='yolov3_416.weights', 
-                   classes = 20, 
+                   input_shape= (None, 416, 416, 3),
+                   config_file="yolov3.cfg",
+                   weights_file='yolov3_416.weights',
+                   classes = 20,
                    boxes = 9)
     model.build(input_shape = (1, 416, 416, 3))
     model.summary()
-    
+
     return model
 
 def load_loss(batch_size, n = 3, classes = 20):
     depth = n * (classes + 5)
     anchors = [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)]
-    outtop = Yolo_Loss(mask = [6, 7, 8], 
-                anchors = anchors, 
-                classes = classes, 
-                num = 3, 
+    outtop = Yolo_Loss(mask = [6, 7, 8],
+                anchors = anchors,
+                classes = classes,
+                num = 3,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
+                truth_thresh = 1,
+                random = 1,
+                fixed_dims = 416,
                 batch_size = batch_size)
-    outmid = Yolo_Loss(mask = [3, 4, 5], 
-                anchors = anchors, 
-                classes = classes, 
-                num = 3, 
+    outmid = Yolo_Loss(mask = [3, 4, 5],
+                anchors = anchors,
+                classes = classes,
+                num = 3,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
+                truth_thresh = 1,
+                random = 1,
+                fixed_dims = 416,
                 batch_size = batch_size)
-    outbot = Yolo_Loss(mask = [1, 2, 3], 
-                anchors = anchors, 
-                classes = classes, 
-                num = 3, 
+    outbot = Yolo_Loss(mask = [1, 2, 3],
+                anchors = anchors,
+                classes = classes,
+                num = 3,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
+                truth_thresh = 1,
+                random = 1,
+                fixed_dims = 416,
                 batch_size = batch_size)
     loss_dict = {256: outtop, 512: outmid, 1024: outbot}
     return loss_dict
@@ -137,8 +151,8 @@ def main():
     with tf.device("/CPU:0"):
         with tf.GradientTape() as tape:
             for image, label in dataset:
-                y_pred = model(image)      
-                total_loss = 0 
+                y_pred = model(image)
+                total_loss = 0
     # with tf.device("/CPU:0"):
                 start = time.time()
                 for key in y_pred.keys():
@@ -148,11 +162,11 @@ def main():
                 end = time.time() - start
         # model.compile(loss=loss_fns)
         # model.fit(dataset)
-    # print(end)  
-        
+    # print(end)
+
     return
-    
+
 
 if __name__ == "__main__":
-    
+
     main()

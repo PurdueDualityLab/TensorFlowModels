@@ -65,3 +65,5 @@ intersphinx_mapping = {
         "https://github.com/mr-ubik/tensorflow-intersphinx/raw/master/tf2_py_objects.inv",
     ),
 }
+
+napoleon_use_param = False

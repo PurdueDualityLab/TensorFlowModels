@@ -12,10 +12,10 @@ class DarkShortcut(ks.layers.Layer):
 
     It is used like the following:
 
-    x = bottleneck_shortcut = DarkConv(64, (3, 3), (1, 1))(x)
-    x = DarkConv(32, (1, 1), (1, 1))(x)
-    x = DarkConv(64, (3, 3), (1, 1))(x)
-    x = DarkShortcut('linear')([x, bottleneck_shortcut])
+    >>> x = bottleneck_shortcut = DarkConv(64, (3, 3), (1, 1))(x)
+    >>> x = DarkConv(32, (1, 1), (1, 1))(x)
+    >>> x = DarkConv(64, (3, 3), (1, 1))(x)
+    >>> x = DarkShortcut('linear')([x, bottleneck_shortcut])
 
     Args:
         activation: string or None for activation function to use in layer,

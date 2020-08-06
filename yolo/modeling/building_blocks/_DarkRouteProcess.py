@@ -10,8 +10,8 @@ class DarkRouteProcess(ks.layers.Layer):
 
     It is used like the following:
 
-    x = DarkConv(1024, (3, 3), (1, 1))(x)
-    proc = DarkRouteProcess(filters = 1024, repetitions = 3, insert_spp = False)(x)
+    >>> x = DarkConv(1024, (3, 3), (1, 1))(x)
+    >>> proc = DarkRouteProcess(filters = 1024, repetitions = 3, insert_spp = False)(x)
 
     Args:
         filters: the number of filters to be used in all subsequent layers

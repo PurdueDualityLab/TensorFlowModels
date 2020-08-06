@@ -48,6 +48,13 @@ def overlap(x1, w1, x2, w2):
 
 @tf.function
 def intersection(box_pred, box_truth):
+    """
+    Arguments:
+        box_pred, box_truth: two boxes
+
+    Return:
+        Calculate the area of the intersection between two boxes.
+    """
     #box = [x, y, width, height]
     w = overlap(box_pred[0], box_pred[2], box_truth[0], box_truth[2])
     h = overlap(box_pred[1], box_pred[3], box_truth[1], box_truth[3])
@@ -61,9 +68,23 @@ def area(box):
 
 @tf.function
 def union(box_pred, box_truth):
+    """
+    Arguments:
+        box_pred, box_truth: two boxes
+
+    Return:
+        Calculate the area of the union between two boxes.
+    """
     inter = intersection(box_pred, box_truth)
     return area(box_pred) + area(box_truth) - inter
 
 @tf.function
 def iou(box_pred, box_truth):
+    """
+    Arguments:
+        box_pred, box_truth: two boxes
+
+    Return:
+        Calculate IOU metric between two boxes.
+    """
     return intersection(box_pred, box_truth) / union(box_pred, box_truth)
