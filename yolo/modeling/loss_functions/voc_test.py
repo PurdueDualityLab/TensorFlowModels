@@ -193,12 +193,27 @@ def build_grided_gt(y_true, mask, size):
     return full
 
 def load_dataset(skip = 0, batch_size = 1, multiplier = 1):
-    dataset,info = tfds.load('coco', split='test', with_info=True, shuffle_files=True)
+    dataset,info = tfds.load('coco', split='train', with_info=True, shuffle_files=True)
     dataset = dataset.skip(skip).take(batch_size * multiplier)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
+
+def fast_pipe(data):
+    image = tf.cast(data["image"], dtype=tf.float32)
+    image = image/255
+    x = 416#tf.cast(tf.math.ceil(tf.shape(image)[0]/32), dtype = tf.int32) * 32
+    y = 416#tf.cast(tf.math.ceil(tf.shape(image)[1]/32), dtype = tf.int32) * 32
+    image = tf.image.resize(image, size = (x, y))
+    boxes = data["objects"]["bbox"]
+    return image, boxes
+
+def load_testset(skip = 0, batch_size = 1, multiplier = 1):
+    dataset,info = tfds.load('coco', split='test', with_info=True, shuffle_files=True)
+    dataset = dataset.skip(skip).take(batch_size * multiplier)
+    dataset = dataset.map(fast_pipe, num_parallel_calls = tf.data.experimental.AUTOTUNE).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+    return dataset
 
 if __name__ == "__main__":
     print("")

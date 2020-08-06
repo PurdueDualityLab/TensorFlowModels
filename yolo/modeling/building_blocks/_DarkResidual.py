@@ -2,6 +2,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.building_blocks._Identity import Identity
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -80,6 +81,9 @@ class DarkResidual(ks.layers.Layer):
                                    norm_epsilon=self._norm_epsilon,
                                    activation=self._conv_activation,
                                    leaky_alpha=self._leaky_alpha)
+        else:
+            self._dconv = Identity()
+
 
         self._conv1 = DarkConv(filters=self._filters // 2,
                                kernel_size=(1, 1),
@@ -116,13 +120,11 @@ class DarkResidual(ks.layers.Layer):
         return
 
     def call(self, inputs):
-        shortcut = inputs
-        if self._downsample:
-            shortcut = self._dconv(inputs)
-
+        #shortcut = inputs
+        #if self._downsample:
+        shortcut = self._dconv(inputs)
         x = self._conv1(shortcut)
         x = self._conv2(x)
-
         x = self._shortcut([x, shortcut])
         return self._activation_fn(x)
 

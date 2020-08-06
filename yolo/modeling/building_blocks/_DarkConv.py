@@ -1,6 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
+from yolo.modeling.building_blocks._Identity import Identity
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -110,6 +111,9 @@ class DarkConv(ks.layers.Layer):
                     momentum=self._norm_moment,
                     epsilon=self._norm_epsilon,
                     axis=self._bn_axis)
+        else:
+            self.bn = Identity()
+        
 
         if self._activation != 'leaky':
             self._activation_fn = ks.layers.Activation(
@@ -122,10 +126,10 @@ class DarkConv(ks.layers.Layer):
 
     def call(self, input):
         x = self.conv(input)
-        if self._use_bn:
-            x = self.bn(x)
-        if self._activation != "linear":
-            x = self._activation_fn(x)
+        #if self._use_bn:
+        x = self.bn(x)
+  
+        x = self._activation_fn(x)
         return x
 
     def get_config(self):
