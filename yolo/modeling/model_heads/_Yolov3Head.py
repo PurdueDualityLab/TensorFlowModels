@@ -117,16 +117,16 @@ class Yolov3Head(tf.keras.Model):
         outputs = dict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
-        # for past, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
-        #     x = routes[past](layer_in)
+        # for curr, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
+        #     x = routes[curr](layer_in)
         #     if next is not None:
         #         x_next = inputs[next]
         #         layer_in = upsamples[next]([x[0], x_next])
-
-        #     if type(x) == list or type(x) == tuple:
-        #         outputs[past] = prediction_heads[past](x[1])
+        #
+        #     if isinstance(x, typing.Sequence):
+        #         outputs[curr] = prediction_heads[curr](x[1])
         #     else:
-        #         outputs[past] = prediction_heads[past](x)
+        #         outputs[curr] = prediction_heads[curr](x)
 
         #using this loop is faster for some reason
         i = 0 
