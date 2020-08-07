@@ -67,6 +67,7 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
+                 input_shape = [None, None, None, 3],
                  classes = 20,
                  boxes = 9,
                  type = 'regular',
@@ -82,6 +83,7 @@ class Yolov3(ks.Model):
         self._classes = classes
         self._boxes = boxes
         self._type = type
+        self._input_shape = input_shape
 
         if type == 'regular':
             self._backbone_name = "darknet53"
@@ -102,6 +104,17 @@ class Yolov3(ks.Model):
             print(self._boxes)
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
+        
+
+        
+        self._backbone = Backbone_Builder(self._backbone_name)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
+        
+        inputs = ks.layers.Input(shape=self._input_shape[1:])
+        feature_maps = self._backbone(inputs)
+        predictions = self._head(feature_maps)
+        super().__init__(inputs = inputs, outputs = predictions, name = self._model_name)
+        return
 
     @classmethod
     def spp(clz, **kwargs):
@@ -111,15 +124,15 @@ class Yolov3(ks.Model):
     def tiny(clz, **kwargs):
         return clz(type='tiny', **kwargs)
 
-    def build(self, input_shape=[None, None, None, 3]):
-        self._backbone = Backbone_Builder(self._backbone_name)
-        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
-        super().build(input_shape)
+    # def build(self, input_shape=[None, None, None, 3]):
+    #     self._backbone = Backbone_Builder(self._backbone_name)
+    #     self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
+    #     super().build(input_shape)
 
-    def call(self, inputs):
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        return predictions
+    # def call(self, inputs):
+    #     feature_maps = self._backbone(inputs)
+    #     predictions = self._head(feature_maps)
+    #     return predictions
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,

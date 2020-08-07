@@ -114,7 +114,7 @@ def yolo_to_tf(box):
     
 
 if __name__ == "__main__":
-    from yolo.modeling.yolo_v3 import Yolov3
+    from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
     from yolo.modeling.loss_functions.voc_test import *
 
     gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -132,9 +132,11 @@ if __name__ == "__main__":
     size = 90
     bsize = 1
     with tf.device("/CPU:0"): 
-        value = load_testset(0, bsize, size//bsize)
+        value = load_testset(0, size, bsize)
+    #model = DarkNet53(classes=1000, load_backbone_weights=True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
     model = Yolov3(classes = 80, boxes = 9, type = "regular")
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
+    model.summary()
 
     inputs = ks.layers.Input(shape=[None, None, 3])
     outputs = model(inputs) 
@@ -145,27 +147,47 @@ if __name__ == "__main__":
     #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
     #                     thresh = 0.5)(outputs)
     run = ks.Model(inputs = [inputs], outputs = [outputs])
-    run.build(input_shape = (1, None, None, 3))
+    run.build(input_shape = (None, None, 3))
     run.summary()
 
+    # DarkNet Backbone
+    # 0.04363393783569336,,            frame:89
+    # fps:  24.129909627832046
+    # end:  3.688368558883667
+    # average per frame:  0.04144234335824345
+
+    # Yolov3 Head + Darknet Backbone
+    # 0.04388999938964844,,            frame:89
+    # fps:  21.4014547870808
+    # end:  4.15859580039978
+    # average per frame:  0.04672579551010989
+
+    # Yolov3 Head + Darknet Backbone + decoder
+    # 0.04830646514892578,,            frame:89
+    # fps:  20.118925162673673
+    # end:  4.4236955642700195
+    # average per frame:  0.04970444454235977
+
     import time   
-    t = 0
+    t = 1e-16
     i = 0
     with tf.device("/GPU:0"): 
-        for image, _ in value:       
-            start = time.time() 
-            outputs = run.predict(image)
-            #outputs = run(image)
-            #boxes = outputs[0][0][0]
-            #dis_image(image[0], boxes)
-            end = time.time() - start
-            print(f"{end},\t\t frame:{i}", end = "\r")
-            if i != 0:
-                t += end
-            i += 1 
+        for image, _ in value: 
+            for j in range(size):     
+                point = K.expand_dims(image[j], axis = 0) 
+                start = time.time() 
+                outputs = run.predict(point)
+                #outputs = run(image)
+                #boxes = outputs[0][0][0]
+                #dis_image(image[0], boxes)
+                end = time.time() - start
+                print(f"{end},\t\t frame:{i}", end = "\r")
+                if i != 0:
+                    t += end
+                i += 1
     print("\nfps: ", (size - 1)/t)
     print("end: ", t)
-    print("average per frame: ", t/(i - 1))
+    print("average per frame: ", t/(i - 1 + 1e-16))
 
 
 
