@@ -12,9 +12,9 @@ import matplotlib.patches as patches
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.layers.Layer):
     def __init__(self,
-                 masks, 
+                 masks,
                  anchors,
-                 thresh, 
+                 thresh,
                  **kwargs):
         self._masks = masks
         self._anchors = tf.convert_to_tensor(anchors)/416
@@ -30,7 +30,7 @@ class YoloLayer(ks.layers.Layer):
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = tf.float32)
         x_y = tf.repeat(tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0), batch_size, axis = 0)
-        return x_y 
+        return x_y
 
     def _get_anchor_grid(self, width, height, batch_size, num, anchors):
         """ get the transformed anchor boxes for each dimention """
@@ -47,14 +47,14 @@ class YoloLayer(ks.layers.Layer):
         data = tf.reshape(data, [shape[0], shape[1], shape[2], len(mask), -1])
         anchors = self._get_anchor_grid(shape[1], shape[2], shape[0], len(mask), anchors)
         centers = self._get_centers(shape[1], shape[2], shape[0], len(mask))
-    
+
         box_xy = (tf.math.sigmoid(data[..., 0:2]) + centers)/tf.cast(shape[1], dtype = tf.float32)
         box_wh = tf.math.exp(data[..., 2:4])*anchors
         box = K.concatenate([box_xy, box_wh], axis = -1)
         box = yolo_to_tf(box)
 
         objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis = -1)
-        classes = tf.math.sigmoid(data[..., 5:]) 
+        classes = tf.math.sigmoid(data[..., 5:])
         scaled = classes * objectness #tf.repeat(objectness, tf.shape(classes)[-1], axis = -1)
         mask = tf.cast(objectness > self._thresh, tf.float32)
 
@@ -83,7 +83,7 @@ class YoloLayer(ks.layers.Layer):
 
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classes, 100, 100, 0.0)
         return (nms.nmsed_boxes,  nms.nmsed_classes,  nms.nmsed_scores) #(boxes, classes)
-    
+
     def build(self, input_shape):
         super().build(input_shape)
         return
@@ -111,7 +111,7 @@ def yolo_to_tf(box):
     #return K.concatenate([maxpoint, minpoint], axis = -1)
     return tf.reverse(K.concatenate([maxpoint, minpoint], axis = -1), axis = [-1])
 
-    
+
 
 if __name__ == "__main__":
     from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
@@ -128,29 +128,24 @@ if __name__ == "__main__":
         except RuntimeError as e:
             # Memory growth must be set before GPUs have been initialized
             print(e)
-    
+
     size = 90
     bsize = 1
-    with tf.device("/CPU:0"): 
-<<<<<<< HEAD
+    with tf.device("/CPU:0"):
         value = load_testset(0, size, bsize)
     #model = DarkNet53(classes=1000, load_backbone_weights=True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
     model = Yolov3(classes = 80, boxes = 9, type = "regular")
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
     model.summary()
-=======
-        value = load_testset(0, bsize, size//bsize)
-    model = Yolov3(classes = 80, boxes = 9, type = "tiny")
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=None)
->>>>>>> 1220d8e2dcca15523624e4d3ccc68d0950b4870f
+
 
     inputs = ks.layers.Input(shape=[None, None, 3])
-    outputs = model(inputs) 
-    # outputs = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
-    #                     anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
+    outputs = model(inputs)
+    # outputs = YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]},
+    #                     anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)],
     #                     thresh = 0.5)(outputs)
-    outputs = YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
-                        anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
+    outputs = YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]},
+                        anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)],
                         thresh = 0.5)(outputs)
     run = ks.Model(inputs = [inputs], outputs = [outputs])
     run.build(input_shape = (None, None, 3))
@@ -174,15 +169,14 @@ if __name__ == "__main__":
     # end:  4.4236955642700195
     # average per frame:  0.04970444454235977
 
-    import time   
+    import time
     t = 1e-16
     i = 0
-    with tf.device("/GPU:0"): 
-<<<<<<< HEAD
-        for image, _ in value: 
-            for j in range(size):     
-                point = K.expand_dims(image[j], axis = 0) 
-                start = time.time() 
+    with tf.device("/GPU:0"):
+        for image, _ in value:
+            for j in range(size):
+                point = K.expand_dims(image[j], axis = 0)
+                start = time.time()
                 outputs = run.predict(point)
                 #outputs = run(image)
                 #boxes = outputs[0][0][0]
@@ -192,26 +186,7 @@ if __name__ == "__main__":
                 if i != 0:
                     t += end
                 i += 1
-=======
-        for image, _ in value:       
-            start = time.time() 
-            #image = tf.image.resize(image, size = (320, 320))
-            outputs = run.predict(image)
-            #outputs = run(image)
-            # boxes = outputs[0][0][0]
-            # dis_image(image[0], boxes)
-            end = time.time() - start
-            print(f"{end},\t\t frame:{i}", end = "\r")
-            if i != 0:
-                t += end
-            i += 1 
->>>>>>> 1220d8e2dcca15523624e4d3ccc68d0950b4870f
+
     print("\nfps: ", (size - 1)/t)
     print("end: ", t)
     print("average per frame: ", t/(i - 1 + 1e-16))
-
-
-
-
-
-

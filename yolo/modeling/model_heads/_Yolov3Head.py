@@ -82,7 +82,7 @@ class Yolov3Head(tf.keras.Model):
             return importlib.import_module('.yolov3_' + model, package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov3_' + model:
-                raise ValueError(f"Invlid head '{name}'") from e
+                raise ValueError(f"Invlid head '{model}'") from e
             else:
                 raise
 
@@ -129,13 +129,13 @@ class Yolov3Head(tf.keras.Model):
         #         outputs[curr] = prediction_heads[curr](x)
 
         #using this loop is faster for some reason
-        i = 0 
+        i = 0
         while i < len(layer_keys):
             x = routes[layer_keys[i]](layer_in)
             if i + 1 < len(layer_keys):
                 x_next = inputs[layer_keys[i + 1]]
                 layer_in = upsamples[layer_keys[i + 1]]([x[0], x_next])
-            
+
             #tf.print(tf.shape(x))
             if type(x) == tuple or type(x) == list:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x[1])
@@ -144,7 +144,7 @@ class Yolov3Head(tf.keras.Model):
             i += 1
         return outputs
 
-    def get_config():
+    def get_config(self):
         layer_config = {"cfg_dict": self._cfg_dict,
                         "classes": self._classes,
                         "boxes": self._boxes,
