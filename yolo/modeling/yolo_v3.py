@@ -107,8 +107,8 @@ class Yolov3(ks.Model):
         
 
         
-        self._backbone = Backbone_Builder(self._backbone_name)
-        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
+        self._backbone = Backbone_Builder(self._backbone_name, input_shape= self._input_shape)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape= self._input_shape)
         
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         feature_maps = self._backbone(inputs)

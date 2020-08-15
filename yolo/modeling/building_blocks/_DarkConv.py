@@ -99,7 +99,8 @@ class DarkConv(ks.layers.Layer):
             bias_initializer=self._bias_initializer,
             kernel_regularizer=ks.regularizers.l2(self._l2_regularization),
             bias_regularizer=self._bias_regularizer)
-
+        
+        #self.conv =tf.nn.convolution(filters=self._filters, strides=self._strides, padding=self._padding
         if self._use_bn:
             if self._use_sync_bn:
                 self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
@@ -124,8 +125,8 @@ class DarkConv(ks.layers.Layer):
         super(DarkConv, self).build(input_shape)
         return
 
-    def call(self, input):
-        x = self.conv(input)
+    def call(self, inputs):
+        x = self.conv(inputs)
         #if self._use_bn:
         x = self.bn(x)
         x = self._activation_fn(x)

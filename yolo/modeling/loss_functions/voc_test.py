@@ -206,8 +206,7 @@ def fast_pipe(data):
     x = 416#tf.cast(tf.math.ceil(tf.shape(image)[0]/32), dtype = tf.int32) * 32
     y = 416#tf.cast(tf.math.ceil(tf.shape(image)[1]/32), dtype = tf.int32) * 32
     image = tf.image.resize(image, size = (x, y))
-    boxes = data["objects"]["bbox"]
-    return image, boxes
+    return image
 
 def load_testset(skip = 0, batch_size = 1, multiplier = 1):
     dataset,info = tfds.load('voc', split='test', with_info=True, shuffle_files=True)

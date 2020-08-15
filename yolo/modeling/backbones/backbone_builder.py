@@ -12,7 +12,7 @@ from . import configs
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
-    def __init__(self, name, config=None, **kwargs):
+    def __init__(self, name, input_shape = (None, None, None, 3), config=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
@@ -21,7 +21,7 @@ class Backbone_Builder(ks.Model):
         # parameters required for tensorflow to recognize ks.Model as not a
         # subclass of ks.Model
         self._model_name = name
-        self._input_shape = (None, None, None, 3)
+        self._input_shape = input_shape
 
         if config is None:
             layer_specs = self.get_model_config(name)
@@ -89,6 +89,34 @@ class Backbone_Builder(ks.Model):
                     name=f"{name}_{i}")(x)
             i += 1
         return x
+    
+    # def _bmod(self, inputs):
+    #     x = nn_blocks.DarkConv(filters=32, kernel_size=3, strides=1,padding="same")(inputs)
+    #     x = nn_blocks.DarkResidual(filters = 64, downsample = True)(x)
+    #     x = nn_blocks.DarkResidual(filters = 128, downsample = True)(x)
+    #     x = nn_blocks.DarkResidual(filters = 128, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = True)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = o1 = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = True)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = o2 = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = True)(x)
+    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
+    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
+    #     x = o3 = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
+    #     return {256:o1, 512:o2, 1024:o3}
+
 
 # model = Backbone_Builder("darknet53")
 # model.summary()

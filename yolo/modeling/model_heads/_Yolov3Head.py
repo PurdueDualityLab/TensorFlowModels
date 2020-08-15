@@ -13,7 +13,7 @@ import more_itertools
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
-    def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, **kwargs):
+    def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, input_shape = (None, None, None, 3), **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
 
@@ -68,7 +68,7 @@ class Yolov3Head(tf.keras.Model):
         self._cfg_dict = self.load_dict_cfg(model)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
-        inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes()
+        inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
         self._input_shape = input_shapes
@@ -86,7 +86,7 @@ class Yolov3Head(tf.keras.Model):
             else:
                 raise
 
-    def _get_attributes(self):
+    def _get_attributes(self, input_shape):
         """ use config dictionary to generate all important attributes for head construction """
         inputs = dict()
         input_shapes = dict()
@@ -94,10 +94,17 @@ class Yolov3Head(tf.keras.Model):
         upsamples = dict()
         prediction_heads = dict()
 
-        for key, path_keys in self._cfg_dict.items():
+        start_width = input_shape[1]
+        if input_shape[1] != None:
+            start_width = start_width//32
 
-            inputs[key] = ks.layers.Input(shape=[None, None, path_keys["depth"]])
-            input_shapes[key] = tf.TensorSpec([None, None, None, path_keys["depth"]])
+        start_height = input_shape[2]
+        if input_shape[2] != None:
+            start_height = start_height//32
+
+        for i, (key, path_keys) in enumerate(self._cfg_dict.items()):
+            inputs[key] = ks.layers.Input(shape=[start_width, start_height, path_keys["depth"]])
+            input_shapes[key] = tf.TensorSpec([None, start_width, start_height, path_keys["depth"]])
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"]
@@ -110,6 +117,13 @@ class Yolov3Head(tf.keras.Model):
 
             args = path_keys["output_conditions"]
             prediction_heads[key] = DarkConv(filters=self._conv_depth + path_keys["output-extras"],**args)
+
+            if start_width != None:
+                start_width *= 2
+            if start_height != None:
+                start_height *= 2
+
+            
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
