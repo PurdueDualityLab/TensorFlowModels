@@ -98,7 +98,7 @@ class _LayerBuilder(dict):
         try:
             return super().__getitem__(key)
         except KeyError as e:
-            raise KeyError(f"Unknown layer type: {layer_type}") from e
+            raise KeyError(f"Unknown layer type: {key}") from e
 
     def register(self, *layer_types: str):
         '''

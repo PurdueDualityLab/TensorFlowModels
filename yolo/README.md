@@ -55,22 +55,22 @@ Our goal with this model conversion is to provide highly versitile implementatio
 
 For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation from the original darknet implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
-## Requirements
+## Data Pipeline/Dataset Benchmarking
+The Data Pipeline is found within the dataloaders folder. The way to use our data pipeline is by typing "from yolo.dataloaders import preprocessing_functions.py as pf" at the top of your python file. Then loading in the tfds dataset by means of tfds.ImageFolder or tfds.load. Then use the following function as seen below:
 
-[![TensorFlow 2.2](https://img.shields.io/badge/TensorFlow-2.2-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.2.0)
-[![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-380/)
+    dataset = pf.preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag)
 
-> :memo: Provide details of the software required.  
->  
-> * Add a `requirements.txt` file to the root directory for installing the necessary dependencies.  
->   * Describe how to install requirements using pip.  
-> * Alternatively, create INSTALL.md.  
-
-To install requirements:
-
-```setup
-pip install -r requirements.txt
-```
+    ARGS:
+        dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
+        data_augmentation_split (int): The percentage of the dataset that is data
+            augmented.
+        preprocessing_type (str): The type of preprocessing should be conducted
+            and is dependent on the type of training.
+        size (int): The size of the dataset being passed into preprocessing.
+        batch_size (int): The size of the each batch.
+        num_of_classes (int): The number of classes found within the dataset.
+        shuffle_flag (bool): This is a Flag that determines whether to or not to shuffle
+            within the function.
 
 ## Results
 
@@ -90,9 +90,22 @@ pip install -r requirements.txt
 > |------------|----------|----------------|----------------|  
 > | Model name | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | xx% | xx% |  
 
-## Dataset
+## Requirements
 
-> :memo: Provide information of the dataset used.  
+[![TensorFlow 2.2](https://img.shields.io/badge/TensorFlow-2.2-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.2.0)
+[![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-380/)
+
+> :memo: Provide details of the software required.  
+>  
+> * Add a `requirements.txt` file to the root directory for installing the necessary dependencies.  
+>   * Describe how to install requirements using pip.  
+> * Alternatively, create INSTALL.md.  
+
+To install requirements:
+
+```setup
+pip install -r requirements.txt
+```
 
 ## Build Instructions
 
