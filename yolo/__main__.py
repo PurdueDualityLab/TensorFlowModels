@@ -19,6 +19,7 @@ except ImportError as e:
 
 
 from .utils import scripts
+from .modeling import yolo_v3
 
 
 def makeParser(parser):

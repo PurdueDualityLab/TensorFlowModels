@@ -43,8 +43,7 @@ class DarkTiny(ks.layers.Layer):
         return
 
     def build(self, input_shape):
-        self.maxpool = tf.keras.layers.MaxPool2D(
-            pool_size=2, strides=self._strides, padding='same', data_format=None)
+        #self.maxpool = tf.keras.layers.MaxPool2D(pool_size=2, strides=self._strides, padding='same', data_format=None)
 
         self.convlayer = DarkConv(filters=self._filters,
                                   kernel_size=(3, 3),
@@ -64,8 +63,8 @@ class DarkTiny(ks.layers.Layer):
         return
 
     def call(self, inputs):
-        output1 = self.maxpool(inputs)
-        output = self.convlayer(output1)
+        output = tf.nn.max_pool2d(inputs, 2, self._strides, "SAME")#self.maxpool(inputs)
+        output = self.convlayer(output)
         return output
 
     def get_config(self):

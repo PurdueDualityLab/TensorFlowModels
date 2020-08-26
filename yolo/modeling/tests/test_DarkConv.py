@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as ks
+import tensorflow_datasets as tfds
 from absl.testing import parameterized
 
 from yolo.modeling.building_blocks import DarkConv
@@ -19,7 +20,7 @@ class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
             filters=64,
             kernel_size=kernel_size,
             padding=padding,
-            strides=strides)
+            strides=strides, trainable = False)
         outx = test_layer(x)
         print(outx.shape.as_list())
         self.assertAllEqual(outx.shape.as_list(),
@@ -48,9 +49,21 @@ class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
             grad_loss = loss(x_hat, y)
         grad = tape.gradient(grad_loss, test_layer.trainable_variables)
         optimizer.apply_gradients(zip(grad, test_layer.trainable_variables))
-
         self.assertNotIn(None, grad)
         return
+    
+    # @parameterized.named_parameters(("filters", 3), ("filters", 20), ("filters", 512))
+    # def test_time(self, filters):
+    #     # finish the test for time
+    #     dataset = tfds.load("mnist") 
+    #     model = ks.Sequential([
+    #             DarkConv(7, kernel_size=(3,3), strides = (2,2), activation='relu'), 
+    #             DarkConv(10, kernel_size=(3,3), strides = (2,2), activation='relu'),
+    #             DarkConv(filters, kernel_size=(3,3), strides = (1,1), activation='relu'),
+    #             DarkConv(9, kernel_size=(3,3), strides = (2,2), activation='relu'),
+    #             ks.layers.GlobalAveragePooling2D(), 
+    #             ks.layers.Dense(10, activation='softmax')], name='test')
+    #     return
 
 
 if __name__ == "__main__":

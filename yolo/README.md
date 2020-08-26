@@ -1,12 +1,49 @@
-# YOLO -> You Only LOOK Once
+# YOLO Object Detectors, You Only Look Once
 
-## Model Purpose
-The yolo models were introduced in 2015 as a show case for a fast Neural Network whose main goal is to identify objects and their locations in an image using a single forward pass or a single conputation. Over the years, the YOLO team has identified model bottle necks and updated the model to get better perfomance in more visual scenarios.
+[![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
+
+This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
+
+* YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
+
+## Description
+
+> :memo: Provide description of the model.  
+>  
+> * Provide brief information of the algorithms used.  
+> * Provide links for demos, blog posts, etc.  
+
+Yolo v1 the original implementation was released in 2015 providing a ground breaking algorithem that would quickly process images, and locate objects in a single pass through the detector. The orignal implementation based used a backbone derived from state of the art object classifier of the time, like [GoogLeNet](https://arxiv.org/abs/1409.4842) and [VGG](https://arxiv.org/abs/1409.1556). More Attention was given to the novel Yolo Detection head that allowed for classification with a single pass of an image. Though limited, the network could predict up to 90 bounding boxes per image, and was tested for about 80 classes per box. Also, the model could only make prediction at one scale. These attributes caused yolo v1 to be more limited, and less verisitle, so as the year passed, the Developers continued to update and develop this model. 
+
+Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo network group. These model uses a custom backbone called Darknet53 that uses knowledge gained from the ResNet paper to improve its predictions. The new backbone also allows for objects to be detected at multiple scales. As for the new detection head, the model now predicts the bounding boxes using a set of anchor box priors (Anchor Boxes) as suggestions. The multiscale predictions in combination with the Anchor boxes allows for the network to make up to 1000 object predictions on a single image. Finally, the new loss function forces the network to make better prediction by using Intersection Over Union (IOU) to inform the models confidence rather than relying on the mean squared error for the entire output. 
+
+## Authors or Maintainers
+
+> :memo: Provide maintainer information.  
+
+* Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
+* Full name ([@GitHub username](https://github.com/username))
+
+## Table of Contents
+
+* [Our Goal](#our-goal)
+* [Models in the library](#models-in-the-library)
+* [Requirements](#requirements)
+* [Results](#results)
+* [Dataset](#dataset)
+* [Build Instructions](#build-instructions)
+* [Example Usage](#example-usage)
+* [Training](#training)
+* [Evaluation](#evaluation)
+* [Change Log](#change-log)
+* [References](#references)
+* [License](#license)
+* [Citation](#citation)
 
 ## Our Goal
-With this library, our goal as an independent team is to provide the research community with Tensorflow native implmentations that have been trained and benchmarked to ensure equivalent performance to the darknet orignal implementation, while allowing for the versitility of using a more approchable Deep learning Library, specifically Tensorflow 2.x. We also hope to provide Documentation and explanations of the networks functionality to allow the YOLO model to feel less like a black box.
+Our goal with this model conversion is to provide highly versitile implementations of the Backbone and Yolo Head. We have tried to build the model in such a way that the Yolo head could easily be connected to a new, more powerful backbone of a person chose to. 
 
-## What you will find in this repo
+## Models in the library
 
 | Object Detectors | Classifiers      |
 | :--------------: | :--------------: |
@@ -16,44 +53,117 @@ With this library, our goal as an independent team is to provide the research co
 | Yolo-v4          |
 | Yolo-v4 tiny     |
 
-In addition to the native implementations, we are providing a Darknet Native Config to Tensorflow converter. This tool will take a custom config from Darknet (for any convolutional Model), and re-constuct the model in Tensorflow 2.x. If a weights file Is provided, the tool will also load the Darknet weights into the constructed tensorflow model directly. This was done to allow better future proofing with minor alterations, and to provide simple Backwards compatibility for older models like Yolo v1 and Yolo v2.
+For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation from the original darknet implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
-**We will try to provide loss functions for models built from Config files, but if we are not able to find one, or have not yet implemented it, you will find the warning:
+## Data Pipeline/Dataset Benchmarking
+The Data Pipeline is found within the dataloaders folder. The way to use our data pipeline is by typing "from yolo.dataloaders import preprocessing_functions.py as pf" at the top of your python file. Then loading in the tfds dataset by means of tfds.ImageFolder or tfds.load. Then use the following function as seen below:
 
-``` WARNING: Model from Config, loss function not found, for custom training, please construct, or find the loss function for this model, if the model is used as an industry standard, please post an issure request, and we will try to implement the loss function as soon as possible.```
+    dataset = pf.preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag)
 
-## Install Instructions
+    ARGS:
+        dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
+        data_augmentation_split (int): The percentage of the dataset that is data
+            augmented.
+        preprocessing_type (str): The type of preprocessing should be conducted
+            and is dependent on the type of training.
+        size (int): The size of the dataset being passed into preprocessing.
+        batch_size (int): The size of the each batch.
+        num_of_classes (int): The number of classes found within the dataset.
+        shuffle_flag (bool): This is a Flag that determines whether to or not to shuffle
+            within the function.
 
-The recommended way to install dependencies is from pipenv. The requirements.txt file used by pip is automatically generated and can quickly become out of date.
+## Results
 
-pipenv
-```pipenv install --skip-lock```
+[![TensorFlow Hub](https://img.shields.io/badge/TF%20Hub-Models-FF6F00?logo=tensorflow)](https://tfhub.dev/...)
 
-pip
-```pip install -r requirements.txt```
+> :memo: Provide a table with results. (e.g., accuracy, latency)  
+>  
+> * Provide links to the pre-trained models (checkpoint, SavedModel files).  
+>   * Publish TensorFlow SavedModel files on TensorFlow Hub (tfhub.dev) if possible.  
+> * Add links to [TensorBoard.dev](https://tensorboard.dev/) for visualizing metrics.  
+>  
+> An example table for image classification results  
+>  
+> ### Image Classification  
+>  
+> | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
+> |------------|----------|----------------|----------------|  
+> | Model name | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | xx% | xx% |  
 
-## Usage Instructions
+## Requirements
 
-```user interfaceing not yet implemented```
+[![TensorFlow 2.2](https://img.shields.io/badge/TensorFlow-2.2-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.2.0)
+[![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-380/)
 
-## Custom Training Instructions
+> :memo: Provide details of the software required.  
+>  
+> * Add a `requirements.txt` file to the root directory for installing the necessary dependencies.  
+>   * Describe how to install requirements using pip.  
+> * Alternatively, create INSTALL.md.  
 
-```user interfaceing not yet implemented```
+To install requirements:
 
-## Tests and Benchmark Statistics
-
-coverage + unittest
+```setup
+pip install -r requirements.txt
 ```
-coverage run --source=yolo -m unittest
-coverage html
+
+## Build Instructions
+
+> :memo: Provide Building an using the model 
+
+## Example Usage
+
+> :memo: Examples for all supported models 
+
+## Training
+
+> :memo: Provide training information.  
+>  
+> * Provide details for preprocessing, hyperparameters, random seeds, and environment.  
+> * Provide a command line example for training.  
+
+Please run this command line for training.
+
+```shell
+python3 ...
 ```
 
-```more descriptions of testing can be given here```
+## Evaluation
 
-## Community guidelines
+> :memo: Provide an evaluation script with details of how to reproduce results.  
+>  
+> * Describe data preprocessing / postprocessing steps.  
+> * Provide a command line example for evaluation.  
 
-```not yet implemented```
+Please run this command line for evaluation.
 
-## Citations
+```shell
+python3 ...
+```
 
-```will get to it```
+## Change Log
+
+> :memo: Provide a changelog.
+
+## References
+
+> :memo: Provide links to references.  
+
+## License
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+> :memo: Place your license text in a file named LICENSE in the root of the repository.  
+>  
+> * Include information about your license.  
+> * Reference: [Adding a license to a repository](https://help.github.com/en/github/building-a-strong-community/adding-a-license-to-a-repository)  
+
+This project is licensed under the terms of the **Apache License 2.0**.
+
+## Citation
+
+> :memo: Make your repository citable.  
+>  
+> * Reference: [Making Your Code Citable](https://guides.github.com/activities/citable-code/)  
+
+If you want to cite this repository in your research paper, please use the following information.

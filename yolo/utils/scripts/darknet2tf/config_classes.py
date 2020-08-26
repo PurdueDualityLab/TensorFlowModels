@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
+
 class Config(ABC):
     """
     The base class for all layers that are used by the parser. Each subclass
@@ -98,7 +99,7 @@ class _LayerBuilder(dict):
         try:
             return super().__getitem__(key)
         except KeyError as e:
-            raise KeyError(f"Unknown layer type: {layer_type}") from e
+            raise KeyError(f"Unknown layer type: {key}") from e
 
     def register(self, *layer_types: str):
         '''
@@ -131,7 +132,7 @@ class convCFG(Config):
     batch_normalize: int = field(init=True, repr=False, default=0)
 
     nweights: int = field(repr=False, default=0)
-    biases: np.array = field(repr=False, default=None)
+    biases: np.array = field(repr=False, default=None) #
     weights: np.array = field(repr=False, default=None)
     scales: np.array = field(repr=False, default=None)
     rolling_mean: np.array = field(repr=False, default=None)
@@ -165,7 +166,6 @@ class convCFG(Config):
         self.weights = weights.reshape(
             self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
-        print(f"weights shape: {self.weights.shape}")
         return bytes_read * 4
 
     def get_weights(self, printing=False):

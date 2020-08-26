@@ -6,88 +6,179 @@ from yolo.modeling.yolo_v3 import Yolov3
 from yolo.modeling.loss_functions.voc_test import *
 
 class Yolo_Loss(ks.losses.Loss):
-    def __init__(self, mask, anchors, classes, num, ignore_thresh, truth_thresh, random, fixed_dims, batch_size = None, reduction = tf.keras.losses.Reduction.AUTO, name=None, **kwargs):
-        self._anchors = [anchors[i] for i in mask]
-        self._classes = classes
-        self._num = len(mask)
-        self._ignore_thresh = ignore_thresh
-        self._truth_thresh = truth_thresh
-        self._iou_thresh = 1 # recomended use = 0.213 in [yolo]
-        self._random = 0 if random == None else random
-        self._net_fixed_dims = fixed_dims
-        self._batch_size = batch_size
+    def __init__(self, 
+                 mask, 
+                 anchors, 
+                 classes,
+                 num_extras = 0, 
+                 ignore_thresh = 0.7, 
+                 truth_thresh = 1, 
+                 loss_type = "mse", 
+                 iou_normalizer = 1.0,
+                 cls_normalizer = 1.0, 
+                 scale_x_y = 1.0,
+                 nms_kind = "greedynms",
+                 beta_nms = 0.6,
+                 reduction = tf.keras.losses.Reduction.AUTO, 
+                 name=None, 
+                 **kwargs):
+
+        """
+        parameters for the loss functions used at each detection head output
+
+        Args: 
+            mask: list of indexes for which anchors in the anchors list should be used in prediction
+            anchors: list of tuples (w, h) representing the anchor boxes to be used in prediction 
+            classes: the number of classes that can be predicted 
+            num_extras: number of indexes predicted in addition to 4 for the box and N + 1 for classes 
+            ignore_thresh: float for the threshold for if iou > threshold the network has made a prediction, 
+                           and should not be penealized for p(object) prediction if an object exists at this location
+            truth_thresh: float thresholding the groud truth to get the true mask 
+            loss_type: string for the key of the loss to use, 
+                       options -> mse, giou, ciou
+            iou_normalizer: float used for appropriatly scaling the iou or the loss used for the box prediction error 
+            cls_normalizer: float used for appropriatly scaling the classification error
+            scale_x_y: float used to scale the predictied x and y outputs
+            nms_kind: string used for filtering the output and ensuring each object ahs only one prediction
+            beta_nms: float for the thresholding value to apply in non max supression(nms) -> not yet implemented
+
+        call Return: 
+            float: for the average loss 
+        """
+
+        self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= tf.float32), axis = 0)/416 #<- division done for testing
+        self._classes = tf.cast(classes, dtype = tf.int32)
+        self._num = tf.cast(len(mask), dtype = tf.int32)
+        self._num_extras = tf.cast(num_extras, dtype = tf.float32)
+        self._truth_thresh = tf.cast(truth_thresh, dtype = tf.float32) 
+        self._ignore_thresh = tf.cast(ignore_thresh, dtype = tf.float32)
+
+        # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
+        # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
+        # if iou > self._iou_thresh then the network check the other anchors, so basically 
+        # checking anchor box 1 on prediction for anchor box 2
+        self._iou_thresh = tf.cast(0.213, dtype = tf.float32) # recomended use = 0.213 in [yolo]
+        
+        self._loss_type = loss_type
+        self._iou_normalizer= tf.cast(iou_normalizer, dtype = tf.float32)
+        self._cls_normalizer = tf.cast(cls_normalizer, dtype = tf.float32)
+        self._scale_x_y = tf.cast(scale_x_y, dtype = tf.float32)
+
+        #used in detection filtering
+        self._beta_nms = tf.cast(beta_nms, dtype = tf.float32)
+        self._nms_kind = nms_kind
         super(Yolo_Loss, self).__init__(reduction = reduction, name = name)
         return
 
     @tf.function
-    def _get_splits(self, tensor):
-        splits = list(tf.split(tensor, [(self._classes + 5)] * self._num, axis = -1))
-        for i in range(len(splits)):
-            splits[i] = list(tf.split(splits[i], [self._classes, 1, 4], axis = -1))
-        return splits
-
-    @tf.function
-    def _get_yolo_box(self, box, width, height, grid_points, anchor_box):
-        box_split = tf.split(box, [1,1,1,1], axis = -1)
-        x = K.sigmoid(box_split[0]) + grid_points[0]
-        y = K.sigmoid(box_split[1]) + grid_points[1]
-        w = K.exp(box_split[2]) * anchor_box[0]/self._net_fixed_dims
-        h = K.exp(box_split[3]) * anchor_box[1]/self._net_fixed_dims
-        return (x, y, w, h)
-
-    @tf.function
-    def _split_truth_box(self, box):
-        return tuple(tf.split(box, [1,1,1,1], axis = -1))
-
-    #@tf.function
     def _get_centers(self, lwidth, lheight, batch_size):
-        x_left = K.expand_dims(tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth))
-        y_left = K.expand_dims(tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight))
-        x_left = K.concatenate([x_left] * lheight)
-        y_left = K.transpose(K.concatenate([y_left] * lwidth))
-        x_left = K.expand_dims(x_left)
-        y_left = K.expand_dims(y_left)
-        x_left = K.stack([x_left]*batch_size, axis = 0)
-        y_left = K.stack([y_left]*batch_size, axis = 0)
-        return K.constant(K.cast(x_left, dtype=tf.float32)), K.constant(K.cast(y_left, dtype=tf.float32))
+        """ generate a grid that is used to detemine the relative centers of the bounding boxs """
+        #x_left = tf.linspace(start = 0.0, stop = K.cast((lwidth - 1)/lwidth, dtype = tf.float32), num = lwidth)
+        #y_left = tf.linspace(start = 0.0, stop = K.cast((lheight - 1)/lheight, dtype = tf.float32), num = lheight)
 
-    def call(self, y_pred, y_true):
-        width = tf.shape(y_pred)[1]
-        height = tf.shape(y_pred)[2]
-        batch_size = tf.shape(y_pred)[0]
+        x_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lwidth, dtype = tf.float32), stop = K.cast((lwidth)/lwidth, dtype = tf.float32), num = lheight)
+        y_left = tf.linspace(start = K.cast(tf.cast(1, dtype = tf.int32)/lheight, dtype = tf.float32), stop = K.cast((lheight)/lheight, dtype = tf.float32), num = lwidth)
+        x_left, y_left = tf.meshgrid(x_left, y_left)
 
-        print(batch_size, width, height)
-        #y_true = self._generate_truth(y_true, batch_size, width, height)
-        #print(len(y_true))
-        grid_points = self._get_centers(width, height, batch_size)
-        tf.print(tf.shape(grid_points[0]))
-        # tf.print(tf.shape(y_true))
-        #print(y_true.shape)
-        # temp_out = y_true - y_pred
-        # y_true = self._get_splits(y_true)
-        #y_pred = self._get_splits(y_pred)
+        x_y = K.stack([x_left, y_left], axis = -1)
+
+        #x_y = tf.transpose(K.stack([x_left, y_left], axis = -1), perm = [1, 0, 2])
+        x_y = tf.repeat(K.expand_dims(tf.repeat(K.expand_dims(x_y, axis = -2), self._num, axis = -2), axis = 0), batch_size, axis = 0)
+        return x_y
+    
+    @tf.function
+    def _get_anchor_grid(self, width, height, batch_size):
+        """ get the transformed anchor boxes for each dimention """
+        # need to make sure this is correct
+        anchors = tf.repeat(self._anchors, width*height, axis = 0)
+        anchors = K.expand_dims(tf.reshape(anchors, [width, height, self._num, -1]), axis = 0)
+        anchors = tf.repeat(anchors, batch_size, axis = 0)
+        return anchors
+
+    def call(self, y_true, y_pred):
+        #1. generate and store constants and format output
+        width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
+        height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
+        batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
+        grid_points = self._get_centers(width, height, batch_size)  
+        anchor_grid = self._get_anchor_grid(width, height, batch_size)
         
-        # for i, (truth, pred) in enumerate(zip(y_true, y_pred)):
-        #     box_pred = self._get_yolo_box(pred[2], width, height, grid_points, self._anchors[i])
-        #     box_truth = self._split_truth_box(truth[2])
-        #     truth[1] = iou(box_pred, box_truth)
-        # print(len(y_true), len(y_pred))
-        return 10#K.sum(y_true - y_pred)
+        y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, (self._classes + 5)])
+
+        fwidth = tf.cast(width, dtype = tf.float32)
+        fheight = tf.cast(height, dtype = tf.float32)
+
+        #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
+        pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
+        pred_wh = y_pred[..., 2:4]
+        pred_conf = tf.math.sigmoid(y_pred[..., 4])
+        pred_class = tf.math.sigmoid(y_pred[..., 5:])
+
+        #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
+        true_xy = (y_true[..., 0:2] - grid_points)
+        true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
+        true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
+        true_wh = tf.where(tf.math.is_nan(true_wh), 0.0, true_wh)
+        true_wh = tf.where(tf.math.is_inf(true_wh), 0.0, true_wh)
+        true_conf = y_true[..., 4]
+        true_class = y_true[..., 5:]
+        #true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * true_conf * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * true_conf * fheight, axis = -1)], axis = -1)
+
+        #4. use iou to calculate the mask of where the network belived there to be an object -> used to penelaize the network for wrong predictions
+        temp = K.concatenate([K.expand_dims(pred_xy[..., 0]/fwidth, axis = -1), K.expand_dims(pred_xy[..., 1]/fheight, axis = -1)], axis = -1) + grid_points
+        pred_box = K.concatenate([temp, tf.math.exp(pred_wh) * anchor_grid], axis = -1)        
+        true_box = y_true[..., 0:4]
+        mask_iou = box_iou(true_box, pred_box) 
+        mask_iou = tf.cast(mask_iou < self._ignore_thresh, dtype = tf.float32)
+
+        #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
+        if self._loss_type == "mse":
+            #yolo_layer.c: scale = (2-truth.w*truth.h)
+            scale = (2 - true_box[...,2] * true_box[...,3])
+            loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis = -1)
+            loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis = -1)
+            loss_box = (loss_wh + loss_xy) * true_conf * scale * self._iou_normalizer 
+        else:
+            loss_box = (1 - giou(true_box, pred_box)) * self._iou_normalizer * true_conf
+
+        #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
+        class_loss = self._cls_normalizer * tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
+        
+        #7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+        conf_loss = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis = -1), K.expand_dims(pred_conf, axis = -1))
+        conf_loss = true_conf * (conf_loss) + (1 - true_conf) * conf_loss * mask_iou
+        
+        #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
+        loss_box = tf.reduce_sum(loss_box, axis=(1, 2, 3))
+        conf_loss = tf.reduce_sum(conf_loss*conf_loss, axis=(1, 2, 3))
+        class_loss = tf.reduce_sum(class_loss, axis=(1, 2, 3))
+
+        #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
+        return (class_loss + conf_loss + loss_box)
 
     def get_config(self):
+        """save all loss attributes"""
+        layer_config = {
+                "anchors": self._anchors, 
+                "classes": self._classes,
+                "ignore_thresh": self._ignore_thresh, 
+                "truth_thresh": self._truth_thresh, 
+                "iou_thresh": self._iou_thresh, 
+                "loss_type": self._loss_type, 
+                "iou_normalizer": self._iou_normalizer,
+                "cls_normalizer": self._cls_normalizer, 
+                "scale_x_y": self._scale_x_y, 
+        }
+        layer_config.update(super().get_config())
+        return layer_config
+
         pass
 
 def load_model():
-    model = Yolov3(dn2tf_backbone = True, 
-                   dn2tf_head = False,
-                   input_shape= (None, 416, 416, 3), 
-                   config_file="yolov3.cfg", 
-                   weights_file='yolov3_416.weights', 
-                   classes = 20, 
-                   boxes = 9)
-    model.build(input_shape = (1, 416, 416, 3))
+    model = Yolov3(classes = 20, boxes = 9)
+    model.build(input_shape = (None, None, None, 3))
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = False, config_file=None, weights_file="yolov3_416.weights")
     model.summary()
-    
     return model
 
 def load_loss(batch_size, n = 3, classes = 20):
@@ -96,63 +187,43 @@ def load_loss(batch_size, n = 3, classes = 20):
     outtop = Yolo_Loss(mask = [6, 7, 8], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
+                random = 1)
     outmid = Yolo_Loss(mask = [3, 4, 5], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
-    outbot = Yolo_Loss(mask = [1, 2, 3], 
+                random = 1)
+    outbot = Yolo_Loss(mask = [0, 1, 2], 
                 anchors = anchors, 
                 classes = classes, 
-                num = 3, 
                 ignore_thresh = 0.7,
                 truth_thresh = 1, 
-                random = 1, 
-                fixed_dims = 416, 
-                batch_size = batch_size)
+                random = 1)
     loss_dict = {256: outtop, 512: outmid, 1024: outbot}
     return loss_dict
 
+def print_out(tensor):
+    for key in tensor.keys():
+        print(f"{key}, {tf.shape(tensor[key])}")
+    return
+
 def main():
-    # physical_devices = tf.config.list_physical_devices('GPU')
-    # tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    batch = 20
-    dataset = load_dataset(batch_size=batch)
+    batch = 10
+    dataset = load_dataset(skip = 0, batch_size=batch)
+    optimizer = ks.optimizers.SGD(learning_rate=0.001)
     model = load_model()
     loss_fns = load_loss(batch)
 
     print(dataset)
-    print(loss_fns)
     import time
-    with tf.device("/CPU:0"):
-        with tf.GradientTape() as tape:
-            for image, label in dataset:
-                y_pred = model(image)      
-                total_loss = 0 
-    # with tf.device("/CPU:0"):
-                start = time.time()
-                for key in y_pred.keys():
-                    print(f"{key}:{y_pred[key].shape}")
-                    loss = loss_fns[key](y_pred[key], label[key])
-                    total_loss += loss
-                end = time.time() - start
-        # model.compile(loss=loss_fns)
-        # model.fit(dataset)
-    # print(end)  
-        
+    with tf.device("/GPU:0"):
+        model.compile(loss=loss_fns, optimizer=optimizer)
+        model.fit(dataset)
     return
     
 
 if __name__ == "__main__":
-    
     main()

@@ -16,7 +16,7 @@ class Yolov3Test(tf.test.TestCase, parameterized.TestCase):
     def test_yolov3(self, model_name):
         for device in ['/CPU:0', '/GPU:0']:
             with tf.device(device):
-                models = yolo_v3.Yolov3(classes=80, type=model_name)
+                model = yolo_v3.Yolov3(classes=80, type=model_name)
                 model.build(input_shape = (1, 416, 416, 3))
                 model.load_weights_from_dn(dn2tf_backbone=True, dn2tf_head=True)
                 model.summary()

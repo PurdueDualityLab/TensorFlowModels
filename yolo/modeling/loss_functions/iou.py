@@ -1,69 +1,76 @@
+import math
+import tensorflow.keras.backend as K
 import tensorflow as tf
-import tensorflow.keras as ks
-from tensorflow.keras import backend as K
-'''
-float delta_yolo_box(box truth, float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, float *delta, float scale, int stride)
-{
-    box pred = get_yolo_box(x, biases, n, index, i, j, lw, lh, w, h, stride);
-    float iou = box_iou(pred, truth);
 
-    float tx = (truth.x*lw - i);
-    float ty = (truth.y*lh - j);
-    float tw = log(truth.w*w / biases[2*n]);
-    float th = log(truth.h*h / biases[2*n + 1]);
 
-    delta[index + 0*stride] = scale * (tx - x[index + 0*stride]);
-    delta[index + 1*stride] = scale * (ty - x[index + 1*stride]);
-    delta[index + 2*stride] = scale * (tw - x[index + 2*stride]);
-    delta[index + 3*stride] = scale * (th - x[index + 3*stride]);
-    return iou;
-}
-lw, lh layer width, layer height
-w, h width, height
-biases
-'''
+def box_iou(box_1, box_2):
+    box1_xy = box_1[..., :2]
+    box1_wh = box_1[..., 2:4]
+    box1_mins = box1_xy - box1_wh / 2.
+    box1_maxes = box1_xy + box1_wh / 2.
 
-@tf.function
-def overlap(x1, w1, x2, w2):
-    l1 = x1 - w1 / 2
-    l2 = x2 - w2 / 2
-    left = K.maximum(l1, l2)
-    '''
-    if l1 < l2:
-        left = l2
-    else:
-        left = l1
-    right = 0
-    '''
-    r1 = x1 + w1 / 2
-    r2 = x2 + w2 / 2
-    '''
-    if r1 < r2:
-        right = r1
-    else:
-        right = r2
-    '''
-    right = K.minimum(r1, r2)
-    return right - left
+    box2_xy = box_2[..., :2]
+    box2_wh = box_2[..., 2:4]
+    box2_mins = box2_xy - box2_wh / 2.
+    box2_maxes = box2_xy + box2_wh / 2.
 
-@tf.function
-def intersection(box_pred, box_truth):
-    #box = [x, y, width, height]
-    w = overlap(box_pred[0], box_pred[2], box_truth[0], box_truth[2])
-    h = overlap(box_pred[1], box_pred[3], box_truth[1], box_truth[3])
-    w = K.relu(w)
-    h = K.relu(h)
-    return w * h
+    intersect_mins = K.maximum(box1_mins, box2_mins)
+    intersect_maxes = K.minimum(box1_maxes, box2_maxes)
+    intersect_wh = K.maximum(intersect_maxes - intersect_mins, K.zeros_like(intersect_mins))
+    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
+    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
+    iou = intersect_area/(box1_area + box2_area - intersect_area)
+    iou = tf.where(tf.math.is_nan(iou), 0.0, iou)
+    return iou
 
-@tf.function
-def area(box):
-    return box[2] * box[3]
 
-@tf.function
-def union(box_pred, box_truth):
-    inter = intersection(box_pred, box_truth)
-    return area(box_pred) + area(box_truth) - inter
+def giou(box_1, box_2):
+    box1_xy = box_1[..., :2]
+    box1_wh = box_1[..., 2:4]
+    box1_mins = box1_xy - box1_wh / 2.
+    box1_maxes = box1_xy + box1_wh / 2.
 
-@tf.function
-def iou(box_pred, box_truth):
-    return intersection(box_pred, box_truth) / union(box_pred, box_truth)
+    box2_xy = box_2[..., :2]
+    box2_wh = box_2[..., 2:4]
+    box2_mins = box2_xy - box2_wh / 2.
+    box2_maxes = box2_xy + box2_wh / 2.
+
+    intersect_mins = K.minimum(box1_mins, box2_mins)
+    intersect_maxes = K.maximum(box1_maxes, box2_maxes)
+    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
+    C = intersect_wh[..., 0] * intersect_wh[..., 1]
+    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
+    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
+    IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
+    giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
+
+    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
+    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
+    return giou
+
+
+def ciou(box_1, box_2):
+    ### NOT COMPLETED
+    box1_xy = box_1[..., :2]
+    box1_wh = box_1[..., 2:4]
+    box1_mins = box1_xy - box1_wh / 2.
+    box1_maxes = box1_xy + box1_wh / 2.
+
+    box2_xy = box_2[..., :2]
+    box2_wh = box_2[..., 2:4]
+    box2_mins = box2_xy - box2_wh / 2.
+    box2_maxes = box2_xy + box2_wh / 2.
+
+    intersect_mins = K.minimum(box1_mins, box2_mins)
+    intersect_maxes = K.maximum(box1_maxes, box2_maxes)
+    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
+    C = intersect_wh[..., 0] * intersect_wh[..., 1]
+    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
+    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
+    IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
+    giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
+
+    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
+    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
+    return giou
