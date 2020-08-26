@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
+
 class Config(ABC):
     """
     The base class for all layers that are used by the parser. Each subclass
@@ -171,12 +172,6 @@ class convCFG(Config):
         if printing:
             print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
         if self.batch_normalize:
-            # return [
-            #     self.weights,
-            #     self.biases,
-            #     self.scales,
-            #     self.rolling_mean,
-            #     self.rolling_variance]
             return [
                 self.weights,
                 self.scales, #gamma

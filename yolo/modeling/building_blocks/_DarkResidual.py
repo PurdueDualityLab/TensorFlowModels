@@ -147,5 +147,54 @@ class DarkResidual(ks.layers.Layer):
         layer_config.update(super().get_config())
         return layer_config
 
-    
 
+def DarkResFunc(filters=1,use_bias=True,downsample=False):
+    def call(inputs):
+        if self._downsample:
+            sample = DarkConv(filters=self._filters,
+                                   kernel_size=(3, 3),
+                                   strides=(2, 2),
+                                   padding='same',
+                                   use_bias=self._use_bias,
+                                   kernel_initializer=self._kernel_initializer,
+                                   bias_initializer=self._bias_initializer,
+                                   use_bn=self._use_bn,
+                                   use_sync_bn=self._use_sync_bn,
+                                   norm_moment=self._norm_moment,
+                                   norm_epsilon=self._norm_epsilon,
+                                   activation=self._conv_activation,
+                                   leaky_alpha=self._leaky_alpha)(inputs)
+        else:
+            sample = inputs
+
+
+        x = DarkConv(filters=self._filters // 2,
+                               kernel_size=(1, 1),
+                               strides=(1, 1),
+                               padding='same',
+                               use_bias=self._use_bias,
+                               kernel_initializer=self._kernel_initializer,
+                               bias_initializer=self._bias_initializer,
+                               use_bn=self._use_bn,
+                               use_sync_bn=self._use_sync_bn,
+                               norm_moment=self._norm_moment,
+                               norm_epsilon=self._norm_epsilon,
+                               activation=self._conv_activation,
+                               leaky_alpha=self._leaky_alpha)(sample)
+        x = DarkConv(filters=self._filters,
+                               kernel_size=(3, 3),
+                               strides=(1, 1),
+                               padding='same',
+                               use_bias=self._use_bias,
+                               kernel_initializer=self._kernel_initializer,
+                               bias_initializer=self._bias_initializer,
+                               use_bn=self._use_bn,
+                               use_sync_bn=self._use_sync_bn,
+                               norm_moment=self._norm_moment,
+                               norm_epsilon=self._norm_epsilon,
+                               activation=self._conv_activation,
+                               leaky_alpha=self._leaky_alpha)(x)
+
+        x = ks.layers.Add()([sample, x])
+        x = ks.layers.Activation(activation=self._sc_activation)(x)
+        return x

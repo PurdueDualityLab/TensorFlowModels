@@ -133,7 +133,7 @@ def build_model():
     outputs = model(inputs) 
     outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
                                  anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
-                                 thresh = 0.5)(outputs)
+                                 thresh = 0.5)(outputs) # -> 1 frame cost
     # outputs = nn_blocks.YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
     #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
     #                     thresh = 0.5)(outputs)
