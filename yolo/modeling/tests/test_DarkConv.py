@@ -20,8 +20,7 @@ class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
             filters=64,
             kernel_size=kernel_size,
             padding=padding,
-            strides=strides, 
-            trainable = False)
+            strides=strides, trainable = False)
         outx = test_layer(x)
         print(outx.shape.as_list())
         self.assertAllEqual(outx.shape.as_list(),

@@ -99,18 +99,6 @@ class DarkConv(ks.layers.Layer):
         if self._use_bias:
             self._bias = self.add_weight(shape = [self._filters], dtype = tf.float32, initializer=self._bias_initializer, regularizer=self._bias_regularizer, trainable=True)
         
-        # ks.layers.Conv2D(
-        #     filters=self._filters,
-        #     kernel_size=self._kernel_size,
-        #     strides=self._strides,
-        #     padding=self._padding,
-        #     dilation_rate=self._dilation_rate,
-        #     use_bias=self._use_bias,
-        #     kernel_initializer=self._kernel_initializer,
-        #     bias_initializer=self._bias_initializer,
-        #     kernel_regularizer=ks.regularizers.l2(self._l2_regularization),
-        #     bias_regularizer=self._bias_regularizer)
-        
         if self._use_bn:
             if self._use_sync_bn:
                 self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
@@ -122,15 +110,6 @@ class DarkConv(ks.layers.Layer):
                     momentum=self._norm_moment,
                     epsilon=self._norm_epsilon,
                     axis=self._bn_axis)
-
-            # # batch norm adjustments to move input batches closer to zero mean and unit variance
-            # self._gamma = self.add_weight(shape = [self._filters], dtype = tf.float32, initializer='zeros', regularizer= None, trainable=True) #scales
-            # self._beta= self.add_weight(shape = [self._filters], dtype = tf.float32, initializer='zeros', regularizer= None, trainable=True) #beta
-
-            # # batch norm target is target is zero mean and unit variance, so these will remain as constant, trainable = False
-            # self._rolling_mean = self.add_weight(shape = [self._filters], dtype = tf.float32, initializer = 'zeros', regularizer= None, trainable=False) 
-            # self._rolling_variance = self.add_weight(shape = [self._filters], dtype = tf.float32, initializer = 'ones', regularizer= None, trainable=False)
-        
 
         if self._activation != 'leaky':
             self._activation_fn = ks.layers.Activation(activation=self._activation)
