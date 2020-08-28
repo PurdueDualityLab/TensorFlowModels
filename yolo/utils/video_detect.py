@@ -9,12 +9,13 @@ import datetime
 import tensorflow.keras.backend as K
 import colorsys
 
-def draw_box(image, boxes, classes, colors):
+def draw_box(image, boxes, classes, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
-            continue
+            break
         box = boxes[i]
         cv2.rectangle(image, (box[0], box[3]), (box[1], box[2]), colors[classes[i]], 1)
+        cv2.putText(image, label_names[classes[i]], (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return
 
 def int_scale_boxes(boxes, classes, width, height):
@@ -28,6 +29,13 @@ def gen_colors(max_classes):
     for val in hue:
         colors.append(colorsys.hsv_to_rgb(val, 1.0, 1.0))
     return colors
+
+def get_coco_names(path = "/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/yolo/dataloaders/dataset_specs/coco.names"):
+    f = open(path, "r")
+    data = f.readlines()
+    for i in range(len(data)):
+        data[i] = data[i][:-1]
+    return data
 
 '''Video Buffer using cv2'''
 def video_processor(vidpath):
@@ -56,6 +64,8 @@ def video_processor(vidpath):
         model.make_predict_function()
     
     colors = gen_colors(80)
+    label_names = get_coco_names()
+    print(label_names)
 
     # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
     # may be batch by 2?
@@ -69,15 +79,14 @@ def video_processor(vidpath):
             image = tf.expand_dims(image, axis = 0)
             if t % 1 == 0:
                 a = datetime.datetime.now()
-                pimage = tf.image.resize(image, (416, 416))
-                pred = model.predict(pimage)
+                pred = model.predict(tf.image.resize(image, (416, 416)))
                 b = datetime.datetime.now()
 
             image = image[0].numpy()
             if pred != None:
                 c = datetime.datetime.now()
                 boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
-                draw_box(image, boxes[0].numpy(), classes[0].numpy(), colors)
+                draw_box(image, boxes[0].numpy(), classes[0].numpy(), colors, label_names)
                 d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
@@ -153,7 +162,7 @@ def build_model():
     b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5)(outputs[256])
     b = K.concatenate([b1, b2, b3], axis = 1)
     c = K.concatenate([c1, c2, c3], axis = 1)
-    nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.0)
+    nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.75)
     # outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
     #                              anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
     #                              thresh = 0.5)(outputs) # -> 1 frame cost
