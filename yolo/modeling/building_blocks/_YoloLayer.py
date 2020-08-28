@@ -98,13 +98,18 @@ class YoloFilterCell(ks.layers.Layer):
         mask = tf.reduce_any(objectness > self._thresh, axis= -1)
         mask = tf.reduce_any(mask, axis= 0)  
 
+        # class_mask = tf.reduce_any(scaled > self._thresh, axis= -1)
+        # class_mask = tf.reduce_any(class_mask, axis= 0)  
+        # # tf.print(tf.shape(class_mask),tf.shape(mask))
+
+        # mask = tf.math.logical_and(class_mask, mask)
+
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis = 1)[:, :200, :]
 
         # # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
 
-        
         #return (nms.nmsed_boxes,  nms.nmsed_classes)#,  nms.nmsed_scores)
         return box, classifications
 

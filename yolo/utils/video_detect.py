@@ -9,13 +9,13 @@ import datetime
 import tensorflow.keras.backend as K
 import colorsys
 
-def draw_box(image, boxes, classes, colors, label_names):
+def draw_box(image, boxes, classes, conf, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
             break
         box = boxes[i]
         cv2.rectangle(image, (box[0], box[3]), (box[1], box[2]), colors[classes[i]], 1)
-        cv2.putText(image, label_names[classes[i]], (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
+        cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return
 
 def int_scale_boxes(boxes, classes, width, height):
@@ -27,7 +27,7 @@ def gen_colors(max_classes):
     hue = np.linspace(start = 0, stop = 1, num = max_classes)
     colors = []
     for val in hue:
-        colors.append(colorsys.hsv_to_rgb(val, 1.0, 1.0))
+        colors.append(colorsys.hsv_to_rgb(val, 0.75, 1.0))
     return colors
 
 def get_coco_names(path = "/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/yolo/dataloaders/dataset_specs/coco.names"):
@@ -86,7 +86,7 @@ def video_processor(vidpath):
             if pred != None:
                 c = datetime.datetime.now()
                 boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
-                draw_box(image, boxes[0].numpy(), classes[0].numpy(), colors, label_names)
+                draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred[2][0], colors, label_names)
                 d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
@@ -162,7 +162,7 @@ def build_model():
     b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5)(outputs[256])
     b = K.concatenate([b1, b2, b3], axis = 1)
     c = K.concatenate([c1, c2, c3], axis = 1)
-    nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.75)
+    nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.5, 0.5)
     # outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
     #                              anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
     #                              thresh = 0.5)(outputs) # -> 1 frame cost
@@ -170,7 +170,7 @@ def build_model():
     #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
     #                     thresh = 0.5)(outputs)
     # run = ks.Model(inputs = [inputs], outputs = [outputs])
-    run = ks.Model(inputs = [inputs], outputs = [nms.nmsed_boxes,  nms.nmsed_classes])
+    run = ks.Model(inputs = [inputs], outputs = [nms.nmsed_boxes,  nms.nmsed_classes, nms.nmsed_scores])
     run.build(input_shape = (1, 416, 416, 3))
     run.summary()
     return run
