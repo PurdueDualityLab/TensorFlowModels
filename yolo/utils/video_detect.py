@@ -14,7 +14,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
         if boxes[i][3] == 0:
             break
         box = boxes[i]
-        cv2.rectangle(image, (box[0], box[3]), (box[1], box[2]), colors[classes[i]], 1)
+        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes[i]], 1)
         cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return
 
@@ -25,6 +25,7 @@ def int_scale_boxes(boxes, classes, width, height):
 
 def gen_colors(max_classes):
     hue = np.linspace(start = 0, stop = 1, num = max_classes)
+    np.random.shuffle(hue)
     colors = []
     for val in hue:
         colors.append(colorsys.hsv_to_rgb(val, 0.75, 1.0))
@@ -58,7 +59,7 @@ def video_processor(vidpath):
     t = 0
     start = time.time()
     tick = 0
-    a,b,c,d = 0,0,0,0
+    e,f,a,b,c,d = 0,0,0,0,0,0
     with tf.device("/GPU:0"): 
         model = build_model()
         model.make_predict_function()
@@ -74,9 +75,11 @@ def video_processor(vidpath):
         success, image = cap.read()
 
         with tf.device("/GPU:0"): 
+            e = datetime.datetime.now()
             image = tf.cast(image, dtype = tf.float32)
             image = image/255
             image = tf.expand_dims(image, axis = 0)
+            f = datetime.datetime.now()
             if t % 1 == 0:
                 a = datetime.datetime.now()
                 pred = model.predict(tf.image.resize(image, (416, 416)))
@@ -96,6 +99,7 @@ def video_processor(vidpath):
         if time.time() - start - tick >= 1:
             tick += 1
             print(i, end = "\n")
+            print(f"pred time: {(f - e) * 1000} ms")
             print(f"pred time: {(b - a) * 1000} ms")
             print(f"draw time: {(d - c) * 1000} ms")
             i = 0
@@ -151,17 +155,31 @@ def webcam():
 
 def build_model():
     #build backbone without loops
-    model = Yolov3(classes = 80, boxes = 9, type = "regular", input_shape=(1, 416, 416, 3))
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    # using mixed type policy give better performance than strictly float32
+    policy = mixed_precision.Policy('mixed_float16')
+    mixed_precision.set_policy(policy)
+    print('Compute dtype: %s' % policy.compute_dtype)
+    print('Variable dtype: %s' % policy.variable_dtype)
+    w = 416
+    h = 416
+
+    model = Yolov3(classes = 80, boxes = 9, type = "regular", input_shape=(1, w, h, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
     model.summary()
 
-    inputs = ks.layers.Input(shape=[416, 416, 3])
+    inputs = ks.layers.Input(shape=[w, h, 3])
     outputs = model(inputs) 
-    b1, c1 = nn_blocks.YoloFilterCell(anchors = [(116,90),  (156,198),  (373,326)], thresh = 0.5)(outputs[1024])
-    b2, c2 = nn_blocks.YoloFilterCell(anchors = [(30,61),  (62,45),  (59,119)], thresh = 0.5)(outputs[512])
-    b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5)(outputs[256])
+    b1, c1 = nn_blocks.YoloFilterCell(anchors = [(116,90),  (156,198),  (373,326)], thresh = 0.5, dtype=policy.compute_dtype)(outputs[1024])
+    b2, c2 = nn_blocks.YoloFilterCell(anchors = [(30,61),  (62,45),  (59,119)], thresh = 0.5, dtype=policy.compute_dtype)(outputs[512])
+    b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5, dtype=policy.compute_dtype)(outputs[256])
     b = K.concatenate([b1, b2, b3], axis = 1)
     c = K.concatenate([c1, c2, c3], axis = 1)
+
+    # b1, c1 = nn_blocks.YoloFilterCell(anchors = [(81,82),  (135,169),  (344,319)], thresh = 0.5, dtype=policy.compute_dtype)(outputs[1024])
+    # b2, c2 = nn_blocks.YoloFilterCell(anchors = [(10,14),  (23,27),  (37,58)], thresh = 0.5, dtype=policy.compute_dtype)(outputs[256])
+    # b = K.concatenate([b1, b2], axis = 1)
+    # c = K.concatenate([c1, c2], axis = 1)
     nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.5, 0.5)
     # outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
     #                              anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
@@ -171,7 +189,7 @@ def build_model():
     #                     thresh = 0.5)(outputs)
     # run = ks.Model(inputs = [inputs], outputs = [outputs])
     run = ks.Model(inputs = [inputs], outputs = [nms.nmsed_boxes,  nms.nmsed_classes, nms.nmsed_scores])
-    run.build(input_shape = (1, 416, 416, 3))
+    run.build(input_shape = (1, w, h, 3))
     run.summary()
     return run
 
