@@ -109,7 +109,6 @@ class Yolov3(ks.Model):
         
         super().__init__(**kwargs)
         self.build(self._input_shape)
-        print(self.built)
         return
 
     def build(self, input_shape=[None, None, None, 3]):

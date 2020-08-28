@@ -99,8 +99,8 @@ def flatten_model(model):
 def _set_darknet_weights(model, weights_list):
     for i, (layer, weights) in enumerate(zip(flatten_model(model), weights_list)):
         print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
-        print_layer_shape(layer)
-        print_layer_shape(weights)
+        #print_layer_shape(layer)
+        #print_layer_shape(weights)
         layer.set_weights(weights)
     model.trainable = False
     return

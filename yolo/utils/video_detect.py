@@ -6,6 +6,7 @@ import numpy as np
 from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
 import yolo.modeling.building_blocks as nn_blocks
 import datetime
+import tensorflow.keras.backend as K
 
 '''Video Buffer using cv2'''
 
@@ -41,7 +42,7 @@ def video_processor(vidpath):
         success, image = cap.read()
 
         with tf.device("/GPU:0"): 
-            if t % 3 == 0:
+            if t % 2 == 0:
                 image = tf.cast(image, dtype = tf.float32)
                 image = image/255
                 image = tf.expand_dims(image, axis = 0)
@@ -50,14 +51,14 @@ def video_processor(vidpath):
                 a = datetime.datetime.now()
                 pred = model.predict(pimage)
                 b = datetime.datetime.now()
-                image = tf.image.draw_bounding_boxes(image, pred[0][0], [[0.0, 0.0, 1.0]])
+                #image = tf.image.draw_bounding_boxes(image, pred[0], [[0.0, 0.0, 1.0]])
                 image = image[0]    
             else:
                 image = tf.cast(image, dtype = tf.float32)
                 image = image/255
                 if pred != None:
                     image = tf.expand_dims(image, axis = 0)
-                    image = tf.image.draw_bounding_boxes(image, pred[0][0], [[0.0, 0.0, 1.0]])
+                    #image = tf.image.draw_bounding_boxes(image, pred[0], [[0.0, 0.0, 1.0]])
                     image = image[0]
             image = tf.image.resize(image, (height, width))
 
@@ -124,21 +125,26 @@ def webcam():
 
 def build_model():
     #build backbone without loops
-    # model = DarkNet53(classes=1000, load_backbone_weights=True, config_file="yolov3.cfg", weights_file="yolov3_416.weights")
-    model = Yolov3(classes = 80, boxes = 9, type = "regular", input_shape=(None, None, None, 3))
+    model = Yolov3(classes = 80, boxes = 9, type = "regular", input_shape=(1, 416, 416, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
     model.summary()
 
-    inputs = ks.layers.Input(shape=[None, None, 3])
+    inputs = ks.layers.Input(shape=[416, 416, 3])
     outputs = model(inputs) 
-    outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
-                                 anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
-                                 thresh = 0.5)(outputs) # -> 1 frame cost
+    b1, c1 = nn_blocks.YoloFilterCell(anchors = [(116,90),  (156,198),  (373,326)], thresh = 0.5)(outputs[1024])
+    b2, c2 = nn_blocks.YoloFilterCell(anchors = [(30,61),  (62,45),  (59,119)], thresh = 0.5)(outputs[512])
+    b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5)(outputs[256])
+    b = K.concatenate([b1, b2, b3], axis = 1)
+    c = K.concatenate([c1, c2, c3], axis = 1)
+    # outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
+    #                              anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
+    #                              thresh = 0.5)(outputs) # -> 1 frame cost
     # outputs = nn_blocks.YoloLayer(masks = {1024:[3,4,5],256:[0,1,2]}, 
     #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
     #                     thresh = 0.5)(outputs)
-    run = ks.Model(inputs = [inputs], outputs = [outputs])
-    run.build(input_shape = (None, None, 3))
+    # run = ks.Model(inputs = [inputs], outputs = [outputs])
+    run = ks.Model(inputs = [inputs], outputs = [b,c])
+    run.build(input_shape = (1, 416, 416, 3))
     run.summary()
     return run
 

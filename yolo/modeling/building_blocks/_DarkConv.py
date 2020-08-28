@@ -129,7 +129,6 @@ class DarkConv(ks.layers.Layer):
 
         if self._use_bn:
             x = self.bn(x)
-
         return self._activation_fn(x)
 
 
