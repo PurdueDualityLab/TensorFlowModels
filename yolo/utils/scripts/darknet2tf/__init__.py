@@ -4,6 +4,7 @@
 from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
+import os
 
 from ._read_weights import read_weights, split_list
 
@@ -57,7 +58,8 @@ def main(argv, args=None):
     x = tf.ones(shape=[1, input_image_size,
                        input_image_size, 3], dtype=tf.float32)
     model.predict(x)
-    if flags.FLAGS.weights_only:
-        model.save_weights(output)
-    else:
-        model.save(output)
+    if output != os.devnull:
+        if flags.FLAGS.weights_only:
+            model.save_weights(output)
+        else:
+            model.save(output)
