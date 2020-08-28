@@ -7,10 +7,29 @@ from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
 import yolo.modeling.building_blocks as nn_blocks
 import datetime
 import tensorflow.keras.backend as K
+import colorsys
+
+def draw_box(image, boxes, classes, colors):
+    for i in range(boxes.shape[0]):
+        if boxes[i][3] == 0:
+            continue
+        box = boxes[i]
+        cv2.rectangle(image, (box[0], box[3]), (box[1], box[2]), colors[classes[i]], 1)
+    return
+
+def int_scale_boxes(boxes, classes, width, height):
+    boxes = K.stack([tf.cast(boxes[..., 1] * width, dtype = tf.int32),tf.cast(boxes[..., 3] * width, dtype = tf.int32), tf.cast(boxes[..., 0] * height, dtype = tf.int32), tf.cast(boxes[..., 2] * height, dtype = tf.int32)], axis = -1)
+    classes = tf.cast(classes, dtype = tf.int32)
+    return boxes, classes
+
+def gen_colors(max_classes):
+    hue = np.linspace(start = 0, stop = 1, num = max_classes)
+    colors = []
+    for val in hue:
+        colors.append(colorsys.hsv_to_rgb(val, 1.0, 1.0))
+    return colors
 
 '''Video Buffer using cv2'''
-
-
 def video_processor(vidpath):
     cap = cv2.VideoCapture(vidpath)
     assert cap.isOpened()
@@ -31,51 +50,49 @@ def video_processor(vidpath):
     t = 0
     start = time.time()
     tick = 0
+    a,b,c,d = 0,0,0,0
     with tf.device("/GPU:0"): 
         model = build_model()
         model.make_predict_function()
+    
+    colors = gen_colors(80)
 
-    #output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
+    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
     # may be batch by 2?
     pred = None
     while i <= frame_count:
         success, image = cap.read()
 
         with tf.device("/GPU:0"): 
-            if t % 2 == 0:
-                image = tf.cast(image, dtype = tf.float32)
-                image = image/255
-                image = tf.expand_dims(image, axis = 0)
-
-                pimage = tf.image.resize(image, (416, 416))
+            image = tf.cast(image, dtype = tf.float32)
+            image = image/255
+            image = tf.expand_dims(image, axis = 0)
+            if t % 1 == 0:
                 a = datetime.datetime.now()
+                pimage = tf.image.resize(image, (416, 416))
                 pred = model.predict(pimage)
                 b = datetime.datetime.now()
-                #image = tf.image.draw_bounding_boxes(image, pred[0], [[0.0, 0.0, 1.0]])
-                image = image[0]    
-            else:
-                image = tf.cast(image, dtype = tf.float32)
-                image = image/255
-                if pred != None:
-                    image = tf.expand_dims(image, axis = 0)
-                    #image = tf.image.draw_bounding_boxes(image, pred[0], [[0.0, 0.0, 1.0]])
-                    image = image[0]
-            image = tf.image.resize(image, (height, width))
 
-        cv2.imshow('frame', image.numpy())
+            image = image[0].numpy()
+            if pred != None:
+                c = datetime.datetime.now()
+                boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
+                draw_box(image, boxes[0].numpy(), classes[0].numpy(), colors)
+                d = datetime.datetime.now()
+
+        cv2.imshow('frame', image)
         i += 1   
         t += 1  
 
         if time.time() - start - tick >= 1:
             tick += 1
             print(i, end = "\n")
-            print(b - a)
+            print(f"pred time: {(b - a) * 1000} ms")
+            print(f"draw time: {(d - c) * 1000} ms")
             i = 0
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # for i in range(len(img_array)):
-    #     output_writer.write(img_array[i])
     cap.release()
     cv2.destroyAllWindows()
     return
@@ -136,6 +153,7 @@ def build_model():
     b3, c3 = nn_blocks.YoloFilterCell(anchors = [(10,13),  (16,30),  (33,23)], thresh = 0.5)(outputs[256])
     b = K.concatenate([b1, b2, b3], axis = 1)
     c = K.concatenate([c1, c2, c3], axis = 1)
+    nms = tf.image.combined_non_max_suppression(tf.expand_dims(b, axis=2), c, 100, 100, 0.0)
     # outputs = nn_blocks.YoloLayer(masks = {1024:[6, 7, 8], 512:[3,4,5] ,256:[0,1,2]}, 
     #                              anchors =[(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 
     #                              thresh = 0.5)(outputs) # -> 1 frame cost
@@ -143,7 +161,7 @@ def build_model():
     #                     anchors =[(10,14),  (23,27),  (37,58),  (81,82),  (135,169),  (344,319)], 
     #                     thresh = 0.5)(outputs)
     # run = ks.Model(inputs = [inputs], outputs = [outputs])
-    run = ks.Model(inputs = [inputs], outputs = [b,c])
+    run = ks.Model(inputs = [inputs], outputs = [nms.nmsed_boxes,  nms.nmsed_classes])
     run.build(input_shape = (1, 416, 416, 3))
     run.summary()
     return run

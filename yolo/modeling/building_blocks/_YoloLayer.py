@@ -104,8 +104,8 @@ class YoloFilterCell(ks.layers.Layer):
         # # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
 
-        # nms = tf.image.combined_non_max_suppression(tf.expand_dims(box, axis=2), classifications, 100, 100, 0.0)
-        # return (nms.nmsed_boxes,  nms.nmsed_classes)#,  nms.nmsed_scores)
+        
+        #return (nms.nmsed_boxes,  nms.nmsed_classes)#,  nms.nmsed_scores)
         return box, classifications
 
         
