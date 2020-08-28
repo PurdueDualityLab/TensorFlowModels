@@ -132,34 +132,6 @@ class DarkConv(ks.layers.Layer):
 
         return self._activation_fn(x)
 
-    # def _assign_moving_average(self, variable, value, momentum, inputs_size):
-    #     with K.name_scope('AssignMovingAvg') as scope:
-    #         decay = tf.convert_to_tensor(1.0 - momentum, name='decay')
-    #         if decay.dtype != variable.dtype.base_dtype:
-    #             decay = tf.cast(decay, variable.dtype.base_dtype)
-    #             update_delta = (variable - tf.cast(value, variable.dtype)) * decay
-    #         else:
-    #             update_delta = (variable - tf.cast(value, variable.dtype)) * decay
-    #         if inputs_size is not None:
-    #             update_delta = tf.where(inputs_size > 0, update_delta, K.zeros_like(update_delta))
-    #         return tf.compat.v1.assign_sub(variable, update_delta, name=scope)
-
-    # def _batch_norm(self, x):
-    #     input_size = tf.size(x)
-    #     #x, mean, variance = tf.compat.v1.nn.fused_batch_norm(x, self._gamma, self._beta, self._rolling_mean, self._rolling_variance,  self._norm_epsilon, is_training=True)
-    #     x = tf.nn.batch_normalization(x, self._rolling_mean, self._rolling_variance, self._gamma, self._beta, self._norm_epsilon)
-        
-    #     # if self.trainable:
-    #     #     def update_mean():
-    #     #         return self._assign_moving_average(self._rolling_mean, mean, self._norm_moment, input_size)
-
-    #     #     def update_var():
-    #     #         return self._assign_moving_average(self._rolling_variance, variance, self._norm_moment, input_size)
-
-    #     #     self.add_update(update_mean)
-    #     #     self.add_update(update_var)
-    #     return x
-
 
     def get_config(self):
         # used to store/share parameters to reconsturct the model

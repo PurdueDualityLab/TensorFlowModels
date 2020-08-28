@@ -17,7 +17,6 @@ class Backbone_Builder(ks.Model):
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None,
                             }
-
         # parameters required for tensorflow to recognize ks.Model as not a
         # subclass of ks.Model
         self._model_name = name
@@ -89,33 +88,6 @@ class Backbone_Builder(ks.Model):
                     name=f"{name}_{i}")(x)
             i += 1
         return x
-    
-    # def _bmod(self, inputs):
-    #     x = nn_blocks.DarkConv(filters=32, kernel_size=3, strides=1,padding="same")(inputs)
-    #     x = nn_blocks.DarkResidual(filters = 64, downsample = True)(x)
-    #     x = nn_blocks.DarkResidual(filters = 128, downsample = True)(x)
-    #     x = nn_blocks.DarkResidual(filters = 128, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = True)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = o1 = nn_blocks.DarkResidual(filters = 256, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = True)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = o2 = nn_blocks.DarkResidual(filters = 512, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = True)(x)
-    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
-    #     x = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
-    #     x = o3 = nn_blocks.DarkResidual(filters = 1024, downsample = False)(x)
-    #     return {256:o1, 512:o2, 1024:o3}
 
 
 # model = Backbone_Builder("darknet53")

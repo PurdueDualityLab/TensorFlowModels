@@ -41,7 +41,7 @@ def video_processor(vidpath):
         success, image = cap.read()
 
         with tf.device("/GPU:0"): 
-            if t % 2 == 0:
+            if t % 3 == 0:
                 image = tf.cast(image, dtype = tf.float32)
                 image = image/255
                 image = tf.expand_dims(image, axis = 0)

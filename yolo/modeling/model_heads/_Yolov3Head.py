@@ -69,9 +69,9 @@ class Yolov3Head(tf.keras.Model):
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
+        self._input_shape = input_shapes
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
-        self._input_shape = input_shapes
         return
 
     def load_dict_cfg(self, model):
@@ -131,16 +131,6 @@ class Yolov3Head(tf.keras.Model):
         outputs = dict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
-        # for curr, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
-        #     x = routes[curr](layer_in)
-        #     if next is not None:
-        #         x_next = inputs[next]
-        #         layer_in = upsamples[next]([x[0], x_next])
-        #
-        #     if isinstance(x, typing.Sequence):
-        #         outputs[curr] = prediction_heads[curr](x[1])
-        #     else:
-        #         outputs[curr] = prediction_heads[curr](x)
 
         #using this loop is faster for some reason
         i = 0
