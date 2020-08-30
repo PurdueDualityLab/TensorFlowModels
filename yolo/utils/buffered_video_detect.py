@@ -4,8 +4,10 @@ import colorsys
 import numpy as np
 import time
 
-# import multiprocessing as mp
-# from multiprocessing import Process, Queue, Manager, Lock
+import multiprocessing as mp
+from multiprocessing import Process
+
+
 import threading as t 
 from queue import Queue
 
@@ -124,15 +126,17 @@ class BufferVideo(object):
                     return 
             if not self._running:
                 return
+
             timeout = 0
             success, image = self._cap.read()
+
             with tf.device("/CPU:0"):
                 e = datetime.datetime.now()
                 image = tf.cast(image, dtype = tf.float32)
                 image = image/255
                 self._load_que.put(image)
                 f = datetime.datetime.now()
-            time.sleep(0.02)
+            time.sleep(0.01)
         return
 
     def display(self):
@@ -193,6 +197,12 @@ class BufferVideo(object):
                         break
                     value = self._load_que.get()
                     proc.append(value)
+                    # we can watch it catch up to real time
+                #     print(len(self._load_que.queue), end= " ")
+                # print("                           ", end="\r")
+                if len(proc) == 0:
+                    time.sleep(0.01)
+                    continue
                 
                 a = datetime.datetime.now()
                 with tf.device("/GPU:0"):
@@ -219,7 +229,23 @@ class BufferVideo(object):
             cv2.destroyAllWindows()
         return
 
+def rt_test():
+    cap = cv2.VideoCapture(0)
+    while (cap.isOpened()):
+        rt, frame = cap.read()
+        cv2.imshow("frame2", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    return
+
+
 if __name__ == "__main__":
-    cap = BufferVideo("nyc.mp4")
-    #cap = BufferVideo(0)
+    #cap = BufferVideo("test1.mp4")
+    # load = mp.Process(target=rt_test, args=())
+    # load.start()
+    
+    cap = BufferVideo(0)
     cap.run()
+    #rt_test()
+
+    # load.join()
