@@ -1,29 +1,17 @@
 import cv2
-import time 
-import tensorflow as tf
-import tensorflow.keras as ks
-import numpy as np
-from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
-import yolo.modeling.building_blocks as nn_blocks
 import datetime
-import tensorflow.keras.backend as K
 import colorsys
 
-class BufferVideo(object):
-    def __init__(self):
-        return
+import multiprocessing as mp
+from multiprocessing import Process, Queue, Manager, Lock
 
-    def read(self):
-        return
+import tensorflow as tf
+import tensorflow.keras as ks
+import tensorflow.keras.backend as K
 
-    def display(self):
-        return
+from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
+import yolo.modeling.building_blocks as nn_blocks
     
-    def process(self):
-        return
-
-
-
 def draw_box(image, boxes, classes, conf, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
@@ -62,3 +50,22 @@ def build_model(classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416):
     run.summary()
     return run
 
+class BufferVideo(object):
+    def __init__(self, file_name, set_fps = 60):
+        return
+
+    def read(self, q, cap):
+        return
+
+    def fulsh_que(self, que):
+        return
+        
+    def run(self):
+        return
+
+    def display(self, q):
+        return
+
+if __name__ == "__main__":
+    cap = BufferVideo("test.mp4")
+    cap.run()
