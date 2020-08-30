@@ -74,23 +74,26 @@ def video_processor(vidpath):
     while i <= frame_count:
         success, image = cap.read()
 
-        with tf.device("/GPU:0"): 
+        with tf.device("/CPU:0"): 
             e = datetime.datetime.now()
             image = tf.cast(image, dtype = tf.float32)
             image = image/255
-            image = tf.expand_dims(image, axis = 0)
             f = datetime.datetime.now()
-            if t % 1 == 0:
-                a = datetime.datetime.now()
-                pred = model.predict(tf.image.resize(image, (416, 416)))
-                b = datetime.datetime.now()
 
-            image = image[0].numpy()
-            if pred != None:
-                c = datetime.datetime.now()
-                boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
-                draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred[2][0], colors, label_names)
-                d = datetime.datetime.now()
+        if t % 1 == 0:
+            a = datetime.datetime.now()
+            with tf.device("/GPU:0"):
+                pimage = tf.expand_dims(image, axis = 0)
+                pimage = tf.image.resize(pimage, (416, 416))
+                pred = model.predict(pimage)
+            b = datetime.datetime.now()
+
+        image = image.numpy()
+        if pred != None:
+            c = datetime.datetime.now()
+            boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
+            draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred[2][0], colors, label_names)
+            d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
         i += 1   
@@ -165,7 +168,7 @@ def build_model():
     h = 416
 
     model = Yolov3(classes = 80, boxes = 9, type = "regular", input_shape=(1, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3_416.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file="yolov3-regular.weights")
     model.summary()
 
     inputs = ks.layers.Input(shape=[w, h, 3])
