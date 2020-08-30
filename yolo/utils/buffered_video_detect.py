@@ -19,7 +19,8 @@ class BufferVideo(object):
     def display(self):
         return
     
-    
+    def process(self):
+        return
 
 
 
