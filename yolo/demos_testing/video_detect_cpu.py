@@ -1,13 +1,12 @@
 import cv2
 import time 
+
+import numpy as np
+import datetime
+import colorsys
 import tensorflow as tf
 import tensorflow.keras as ks
-import numpy as np
-from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
-import yolo.modeling.building_blocks as nn_blocks
-import datetime
 import tensorflow.keras.backend as K
-import colorsys
 
 from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 
@@ -15,6 +14,7 @@ from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_
 def video_processor(vidpath):
     cap = cv2.VideoCapture(vidpath)
     assert cap.isOpened()
+
     width = 0
     height = 0
     frame_count = 0
@@ -26,19 +26,16 @@ def video_processor(vidpath):
     print('width, height, fps:', width, height, int(cap.get(5)))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    #cap.set(5, 30)
-
     i = 0
     t = 0
     start = time.time()
     tick = 0
     e,f,a,b,c,d = 0,0,0,0,0,0
     with tf.device("/CPU:0"): 
-        model = build_model(name = "tiny", use_mixed=False)
+        model = build_model(name = "regular", use_mixed=False)
         model.make_predict_function()
-    
     colors = gen_colors(80)
-    label_names = get_coco_names()
+    label_names = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
     print(label_names)
 
     # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
@@ -87,8 +84,9 @@ def print_opt(latency, fps):
     print("                                 \rfps: \033[1;34;40m%d\033[0m " % (fps), end = "\n")
     print("\033[F\033[F\033[F", end="\n")
     return
+
 def main():
-    prep_gpu()
+    # NOTE: on mac use the default terminal or the program will fail
     video_processor(0)
     return 0
 
