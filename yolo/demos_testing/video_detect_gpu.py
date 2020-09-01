@@ -18,17 +18,15 @@ class BufferVideo(object):
         self._file = file_name
         self._fps = 60
 
-        # one to one consistancy no batch processing
-        # self._batch_size = 1 # 22 fps absolute consistancy
-
         # fastest that maintains one to one 
-        # self._batch_size = 2 # 30 fps little to no in consistancy
+        self._batch_size = 2 # 30 fps little to no in consistancy
         
         # fast but as close to one 2 one as possible
-        self._batch_size = 5 # 40 fps more conistent frame to frame
-
-        # faster but more potential for delay from input to output
-        #self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+        if file_name == 0:
+            self._batch_size = 5 # 40 fps more conistent frame to frame
+        else:
+            # faster but more potential for delay from input to output
+            self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
 
         self._cap = cv2.VideoCapture(file_name)
         self._width = int(self._cap.get(3))
@@ -44,8 +42,9 @@ class BufferVideo(object):
 
         self._read_fps = 1
         self._display_fps = 1
-        self._latency = float('inf')
+        self._latency = None#float('inf')
         self._batch_proc = 1
+        self._frames = 0
         return
 
     def read(self, lock = None):
@@ -67,7 +66,6 @@ class BufferVideo(object):
 
             timeout = 0
             success, image = self._cap.read()
-
             with tf.device("/CPU:0"):
                 e = datetime.datetime.now()
                 image = tf.cast(image, dtype = tf.float32)
@@ -160,7 +158,17 @@ class BufferVideo(object):
                     boxes, classes = int_scale_boxes(pred[0], pred[1], self._width, self._height)
                 b = datetime.datetime.now()
 
-                self._latency = b - a
+                if self._frames >= 1000:
+                    self._frames = 0
+                    self._latency = None
+
+                if self._latency != None:
+                    self._latency += (b - a)
+                else:
+                    self._latency = (b - a)
+                
+                self._frames += image.shape[0]
+
                 self._batch_proc = image.shape[0]
                 timeout = 0
 
@@ -185,7 +193,7 @@ class BufferVideo(object):
         return
     
     def print_opt(self):
-        print(f"                                \rlatency:, \033[1;32;40m{self._latency * 1000} \033[0m ms", end = "\n")
+        print(f"                                \rlatency:, \033[1;32;40m{self._latency/self._frames * 1000} \033[0m ms", end = "\n")
         print("                                 \rread fps: \033[1;34;40m%d\033[0m " % (self._read_fps), end = "\n")
         print("                                 \rdisplay fps: \033[1;34;40m%d\033[0m" % (self._display_fps), end = "\n")
         print("                                 \rbatch processed: \033[1;37;40m%d\033[0m" % (self._batch_proc), end = "\n")
@@ -195,7 +203,7 @@ class BufferVideo(object):
 
 
 if __name__ == "__main__":
-    #cap = BufferVideo("test1.mp4")
-    cap = BufferVideo(0)
+    cap = BufferVideo("test.mp4")
+    #cap = BufferVideo(0)
     cap.run()
     #rt_test()

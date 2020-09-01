@@ -74,10 +74,7 @@ def video_processor(vidpath):
 
         if time.time() - start - tick >= 1:
             tick += 1
-            print(i, end = "\n")
-            print(f"pred time: {(f - e) * 1000} ms")
-            print(f"pred time: {(b - a) * 1000} ms")
-            print(f"draw time: {(d - c) * 1000} ms")
+            print_opt((((f - e) + (b - a) + (d - c))), i)
             i = 0
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -86,6 +83,11 @@ def video_processor(vidpath):
     cv2.destroyAllWindows()
     return
 
+def print_opt(latency, fps):
+    print(f"                                \rlatency:, \033[1;32;40m{latency * 1000} \033[0m ms", end = "\n")
+    print("                                 \rfps: \033[1;34;40m%d\033[0m " % (fps), end = "\n")
+    print("\033[F\033[F\033[F", end="\n")
+    return
 def main():
     prep_gpu()
     video_processor(0)
