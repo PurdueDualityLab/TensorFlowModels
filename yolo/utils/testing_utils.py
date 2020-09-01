@@ -8,6 +8,9 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
+import traceback
+
+
 def draw_box(image, boxes, classes, conf, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
@@ -89,7 +92,8 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = T
     return model
 
 def prep_gpu(distribution = None):
-    print("\n!--PREPPING GPU--! with stratagy {distribution}")
+    print(f"\n!--PREPPING GPU--! with stratagy {distribution}")
+    traceback.print_stack()
     if distribution == None:
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:

@@ -42,7 +42,6 @@ def video_processor(vidpath):
     print(label_names)
 
     # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
-    # may be batch by 2?
     pred = None
     while cap.isOpened():
         success, image = cap.read()
