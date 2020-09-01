@@ -3,7 +3,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import sys
 import numpy as np
-from yolo.modeling.loss_functions.iou import *
+from yolo.modeling.functions.iou import *
 
 @tf.function
 def convert_to_yolo(box):
@@ -71,7 +71,6 @@ def preprocess(data, anchors, width, height):
     
     #idk if this works
     label = tf.random.shuffle(label, seed=None)
-
     return image, label
 
 def py_func_rand():
@@ -83,7 +82,8 @@ def py_func_rand():
 def get_random(image, label, masks):
     masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
-    #image = tf.image.resize(image, size = (randscale * 32, randscale * 32))
+    #randscale = 13
+    image = tf.image.resize(image, size = (randscale * 32, randscale * 32))
     image = image/255
     
     # bounding boxs
@@ -139,21 +139,21 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
                 
-                # # start code for tie breaker, temp check performance
-                # uid = 1
-                # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                # count = 0
-                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                #     uid = 2
-                #     count += 1
-                #     p = (p + 1)%3
-                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                # start code for tie breaker, temp check performance
+                uid = 1
+                used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                count = 0
+                while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                    uid = 2
+                    count += 1
+                    p = (p + 1)%3
+                    used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
                     
-                # if tf.math.equal(used, 1):
-                #     tf.print("skipping")
-                #     continue
-                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
-                # #end code for tie breaker
+                if tf.math.equal(used, 1):
+                    tf.print("skipping")
+                    continue
+                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
+                #end code for tie breaker
                 if x[batch, box_id] < size and y[batch, box_id] < size:
                     update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
                     test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
@@ -190,11 +190,13 @@ def build_grided_gt(y_true, mask, size):
         update = update.stack()
         full = tf.tensor_scatter_nd_update(full, update_index, update)
     # full = tf.reshape(full, finshape)
+    # tf.print("gtsum 1", K.sum(y_true))
+    # tf.print("gtsum full",K.sum(full))
     return full
 
 def load_dataset(skip = 0, batch_size = 1, multiplier = 1):
-    dataset,info = tfds.load('coco', split='train', with_info=True, shuffle_files=True)
-    dataset = dataset.skip(skip).take(batch_size * multiplier)
+    dataset,info = tfds.load('coco', split='validation', with_info=True, shuffle_files=True)
+    #dataset = dataset.skip(skip).take(batch_size * multiplier)
     dataset = dataset.map(lambda x: preprocess(x, [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)], 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(batch_size)
     dataset = dataset.map(lambda x, y: get_random(x, y, masks = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
@@ -209,8 +211,8 @@ def fast_pipe(data):
     return image
 
 def load_testset(skip = 0, batch_size = 1, multiplier = 1):
-    dataset,info = tfds.load('voc', split='test', with_info=True, shuffle_files=True)
-    dataset = dataset.skip(skip).take(batch_size * multiplier)
+    dataset,info = tfds.load('coco', split='test', with_info=True, shuffle_files=True)
+    #dataset = dataset.skip(skip).take(batch_size * multiplier)
     dataset = dataset.map(fast_pipe, num_parallel_calls = tf.data.experimental.AUTOTUNE).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 

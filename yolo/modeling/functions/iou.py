@@ -3,7 +3,7 @@ import tensorflow.keras.backend as K
 import tensorflow as tf
 
 
-def box_iou(box_1, box_2):
+def box_iou(box_1, box_2, dtype = tf.float32):
     box1_xy = box_1[..., :2]
     box1_wh = box_1[..., 2:4]
     box1_mins = box1_xy - box1_wh / 2.
@@ -21,11 +21,11 @@ def box_iou(box_1, box_2):
     box1_area = box1_wh[..., 0] * box1_wh[..., 1]
     box2_area = box2_wh[..., 0] * box2_wh[..., 1]
     iou = intersect_area/(box1_area + box2_area - intersect_area)
-    iou = tf.where(tf.math.is_nan(iou), 0.0, iou)
+    iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
     return iou
 
 
-def giou(box_1, box_2):
+def giou(box_1, box_2, dtype = tf.float32):
     box1_xy = box_1[..., :2]
     box1_wh = box_1[..., 2:4]
     box1_mins = box1_xy - box1_wh / 2.

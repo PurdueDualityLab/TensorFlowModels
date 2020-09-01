@@ -1,0 +1,96 @@
+import cv2
+import time 
+import tensorflow as tf
+import tensorflow.keras as ks
+import numpy as np
+from yolo.modeling.yolo_v3 import Yolov3, DarkNet53
+import yolo.modeling.building_blocks as nn_blocks
+import datetime
+import tensorflow.keras.backend as K
+import colorsys
+
+from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
+
+'''Video Buffer using cv2'''
+def video_processor(vidpath):
+    cap = cv2.VideoCapture(vidpath)
+    assert cap.isOpened()
+    width = 0
+    height = 0
+    frame_count = 0
+    img_array = []
+
+
+    width = int(cap.get(3))
+    height = int(cap.get(4))
+    print('width, height, fps:', width, height, int(cap.get(5)))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    #cap.set(5, 30)
+
+    i = 0
+    t = 0
+    start = time.time()
+    tick = 0
+    e,f,a,b,c,d = 0,0,0,0,0,0
+    with tf.device("/CPU:0"): 
+        model = build_model(name = "tiny", use_mixed=False)
+        model.make_predict_function()
+    
+    colors = gen_colors(80)
+    label_names = get_coco_names()
+    print(label_names)
+
+    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
+    # may be batch by 2?
+    pred = None
+    while cap.isOpened():
+        success, image = cap.read()
+
+        with tf.device("/CPU:0"): 
+            e = datetime.datetime.now()
+            image = tf.cast(image, dtype = tf.float32)
+            image = image/255
+            f = datetime.datetime.now()
+
+        if t % 1 == 0:
+            a = datetime.datetime.now()
+            with tf.device("/CPU:0"):
+                pimage = tf.expand_dims(image, axis = 0)
+                pimage = tf.image.resize(pimage, (416, 416))
+                pred = model.predict(pimage)
+            b = datetime.datetime.now()
+
+        image = image.numpy()
+        if pred != None:
+            c = datetime.datetime.now()
+            boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
+            draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred[2][0], colors, label_names)
+            d = datetime.datetime.now()
+
+        cv2.imshow('frame', image)
+        i += 1   
+        t += 1  
+
+        if time.time() - start - tick >= 1:
+            tick += 1
+            print(i, end = "\n")
+            print(f"pred time: {(f - e) * 1000} ms")
+            print(f"pred time: {(b - a) * 1000} ms")
+            print(f"draw time: {(d - c) * 1000} ms")
+            i = 0
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return
+
+def main():
+    prep_gpu()
+    video_processor(0)
+    return 0
+
+
+if __name__ == "__main__":
+    main()

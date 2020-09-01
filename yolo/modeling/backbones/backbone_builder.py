@@ -15,8 +15,7 @@ class Backbone_Builder(ks.Model):
     def __init__(self, name, input_shape = (None, None, None, 3), config=None, **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
-                            "DarkBlock": None,
-                            }
+                            "DarkBlock": None}
         # parameters required for tensorflow to recognize ks.Model as not a
         # subclass of ks.Model
         self._model_name = name
