@@ -131,7 +131,7 @@ class YoloGT(ks.layers.Layer):
     
     def _get_centers(self, lwidth, lheight, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left, y_left = tf.meshgrid(tf.range(1, lheight + 1), tf.range(1, lwidth + 1))
+        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = self._dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)

@@ -48,11 +48,13 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     if name != "tiny":
         masks = {1024: [6,7,8], 512:[3,4,5], 256:[0,1,2]}
         anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+        thresh = 0.45
+        class_thresh = 0.45
     else:
         masks = {1024: [3,4,5], 256: [0,1,2]}
         anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
-    thresh = 0.5
-    class_thresh = 0.5
+        thresh = 0.45
+        class_thresh = 0.25
     max_boxes = 200
     
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))

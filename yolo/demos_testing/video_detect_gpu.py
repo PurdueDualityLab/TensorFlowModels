@@ -11,12 +11,12 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
+from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 
 class BufferVideo(object):
-    def __init__(self, file_name, set_fps = 60):
+    def __init__(self, file_name, model = "regular", process_width = 416, process_height = 416, classes = 80, labels = None):
         self._file = file_name
-        self._fps = 60
+        self._fps = 120
         
         # fast but as close to one 2 one as possible
         if file_name == 0:
@@ -28,9 +28,17 @@ class BufferVideo(object):
         self._cap = cv2.VideoCapture(file_name)
         self._width = int(self._cap.get(3))
         self._height = int(self._cap.get(4))
+        self._classes = classes
+        self._model = model
+        self._p_width = process_width
+        self._p_height = process_height
 
-        self._colors = gen_colors(80) #tf.cast(tf.convert_to_tensor(gen_colors(80)), dtype = tf.float32)
-        self._labels = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
+        self._colors = gen_colors(self._classes)
+        
+        if labels == None:
+            self._labels = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
+        else:
+            self._labels = labels
 
         self._load_que = Queue(self._batch_size * 5)
         self._display_que = Queue(10)
@@ -39,10 +47,29 @@ class BufferVideo(object):
 
         self._read_fps = 1
         self._display_fps = 1
-        self._latency = None#float('inf')
+        self._latency = None
         self._batch_proc = 1
         self._frames = 0
         return
+
+    def _load_model(self, model):
+        if (type(model) == type(None)):
+            prep_gpu()
+            with tf.device("/GPU:0"):
+                model = build_model(name = "regular", w = self._p_width, h = self._p_height) 
+            return model
+        default_set = {"regular", "tiny", "spp"} 
+        if (type(model) == str and model in default_set):
+            print(model)
+            prep_gpu()
+            with tf.device("/GPU:0"):
+                model = build_model(name = model, w = self._p_width, h = self._p_height) 
+            return model
+        elif (type(model) == str):
+            raise Exception("unsupported default model")
+        
+        # a model object passed in
+        return model
 
     def read(self, lock = None):
         start = time.time()
@@ -111,9 +138,12 @@ class BufferVideo(object):
         return
         
     def run(self):
-        prep_gpu()
-        with tf.device("/GPU:0"):
-            model = build_model(name = "regular")
+        #prep_gpu()
+        #with tf.device("/GPU:0"):
+        model = self._load_model(self._model) 
+        
+        print(f"capture (width, height): ({self._width},{self._height})")
+        print(f"Yolo Possible classes{self._classes}")
         
         if self._cap.isOpened():
             success, image = self._cap.read()
@@ -150,7 +180,7 @@ class BufferVideo(object):
                 a = datetime.datetime.now()
                 with tf.device("/GPU:0"):
                     image = tf.convert_to_tensor(proc)
-                    pimage = tf.image.resize(image, (416, 416))
+                    pimage = tf.image.resize(image, (self._p_width, self._p_height))
                     pred = model.predict(pimage)
                     boxes, classes = int_scale_boxes(pred[0], pred[1], self._width, self._height)
                 b = datetime.datetime.now()
@@ -201,7 +231,10 @@ class BufferVideo(object):
 
 if __name__ == "__main__":
     support_windows()
-    cap = BufferVideo(0)
+    # prep_gpu()
+    # with tf.device("/GPU:0"):
+    #     model = build_model(name = "tiny")
+    cap = BufferVideo("test.mp4", model = "tiny", process_width=416, process_height=416)
     #cap = BufferVideo(0)
     cap.run()
     #rt_test()

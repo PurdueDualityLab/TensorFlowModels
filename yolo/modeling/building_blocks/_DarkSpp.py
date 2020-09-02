@@ -5,7 +5,8 @@ import tensorflow.keras as ks
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkSpp(ks.layers.Layer):
     def __init__(self, sizes, **kwargs):
-        self._sizes = sizes
+        self._sizes = list(reversed(sizes))
+        print(self._sizes)
         if len(sizes) == 0:
             raise ValueError(
                 "More than one maxpool should be specified in SSP block")
@@ -25,9 +26,10 @@ class DarkSpp(ks.layers.Layer):
         return
 
     def call(self, inputs):
-        outputs = [inputs]
+        outputs = []
         for maxpool in self._maxpools:
             outputs.append(maxpool(inputs))
+        outputs.append(inputs)
         concat_output = ks.layers.concatenate(outputs)
         return concat_output
 
