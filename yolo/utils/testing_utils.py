@@ -10,7 +10,17 @@ import tensorflow.keras.backend as K
 
 import traceback
 
-
+def support_windows():
+    import platform
+    if platform.system().lower() == 'windows':
+        from ctypes import windll, c_int, byref
+        stdout_handle = windll.kernel32.GetStdHandle(c_int(-11))
+        mode = c_int(0)
+        windll.kernel32.GetConsoleMode(c_int(stdout_handle), byref(mode))
+        mode = c_int(mode.value | 4)
+        windll.kernel32.SetConsoleMode(c_int(stdout_handle), mode)
+    return
+    
 def draw_box(image, boxes, classes, conf, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:

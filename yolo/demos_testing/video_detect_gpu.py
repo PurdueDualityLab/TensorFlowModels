@@ -17,9 +17,6 @@ class BufferVideo(object):
     def __init__(self, file_name, set_fps = 60):
         self._file = file_name
         self._fps = 60
-
-        # fastest that maintains one to one 
-        self._batch_size = 2 # 30 fps little to no in consistancy
         
         # fast but as close to one 2 one as possible
         if file_name == 0:
@@ -203,6 +200,7 @@ class BufferVideo(object):
 
 
 if __name__ == "__main__":
+    support_windows()
     cap = BufferVideo(0)
     #cap = BufferVideo(0)
     cap.run()

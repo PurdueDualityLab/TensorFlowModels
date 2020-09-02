@@ -8,7 +8,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
+from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 
 '''Video Buffer using cv2'''
 def video_processor(vidpath):
@@ -87,6 +87,7 @@ def print_opt(latency, fps):
 
 def main():
     # NOTE: on mac use the default terminal or the program will fail
+    support_windows()
     video_processor(0)
     return 0
 
