@@ -1,9 +1,6 @@
 # WILL BE DELETED WHEN RELEASING PUBLICLY
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import tensorflow_addons as tfa
-from tensorflow_addons.image import utils as img_utils
-import tensorflow_probability as tfp
 import matplotlib.pyplot as plt
 import numpy as np
 import sys

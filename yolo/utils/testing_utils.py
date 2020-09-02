@@ -56,8 +56,8 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     max_boxes = 200
     
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=f"yolov3-{name}.weights")
-    
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
+
     inputs = ks.layers.Input(shape=[w, h, 3])
     outputs = model(inputs) 
     outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype)(outputs)
