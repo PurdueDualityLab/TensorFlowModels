@@ -148,7 +148,7 @@ def gen_colors(max_classes):
         colors.append(colorsys.hsv_to_rgb(val, 0.75, 1.0))
     return colors
 
-def get_coco_names(path = "/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/yolo/dataloaders/dataset_specs/coco.names"):
+def get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names"):
     f = open(path, "r")
     data = f.readlines()
     for i in range(len(data)):

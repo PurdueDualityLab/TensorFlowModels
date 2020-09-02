@@ -33,7 +33,7 @@ class BufferVideo(object):
         self._height = int(self._cap.get(4))
 
         self._colors = gen_colors(80) #tf.cast(tf.convert_to_tensor(gen_colors(80)), dtype = tf.float32)
-        self._labels = get_coco_names()
+        self._labels = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
 
         self._load_que = Queue(self._batch_size * 5)
         self._display_que = Queue(10)
@@ -203,7 +203,7 @@ class BufferVideo(object):
 
 
 if __name__ == "__main__":
-    cap = BufferVideo("test.mp4")
+    cap = BufferVideo(0)
     #cap = BufferVideo(0)
     cap.run()
     #rt_test()
