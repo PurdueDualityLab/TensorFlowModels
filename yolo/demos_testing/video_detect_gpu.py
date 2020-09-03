@@ -24,6 +24,9 @@ class BufferVideo(object):
         else:
             # faster but more potential for delay from input to output
             self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+        
+            if process_width > 416 or process_height > 416:
+                self._batch_size = 3
 
         self._cap = cv2.VideoCapture(file_name)
         self._width = int(self._cap.get(3))
@@ -50,6 +53,7 @@ class BufferVideo(object):
         self._latency = None
         self._batch_proc = 1
         self._frames = 0
+        self._obj_detected = 0
         return
 
     def _load_model(self, model):
@@ -124,7 +128,7 @@ class BufferVideo(object):
             image, boxes, classes, conf = self._display_que.get()
             #print(len(self._display_que.queue))
             for i in range(image.shape[0]):
-                draw_box(image[i], boxes[i], classes[i], conf[i], self._colors, self._labels)
+                self._obj_detected = draw_box(image[i], boxes[i], classes[i], conf[i], self._colors, self._labels)
                 cv2.imshow("frame", image[i])
                 time.sleep(self._wait_time)
                 l += 1
@@ -224,7 +228,8 @@ class BufferVideo(object):
         print("                                 \rread fps: \033[1;34;40m%d\033[0m " % (self._read_fps), end = "\n")
         print("                                 \rdisplay fps: \033[1;34;40m%d\033[0m" % (self._display_fps), end = "\n")
         print("                                 \rbatch processed: \033[1;37;40m%d\033[0m" % (self._batch_proc), end = "\n")
-        print("\033[F\033[F\033[F\033[F\033[F", end="\n")
+        print("                                 \robjects seen: \033[1;37;40m%d\033[0m" % (self._obj_detected), end = "\n")
+        print("\033[F\033[F\033[F\033[F\033[F\033[F", end="\n")
         return
 
 
@@ -234,7 +239,7 @@ if __name__ == "__main__":
     # prep_gpu()
     # with tf.device("/GPU:0"):
     #     model = build_model(name = "tiny")
-    cap = BufferVideo("test.mp4", model = "tiny", process_width=416, process_height=416)
+    cap = BufferVideo(0, model = "tiny", process_width=416, process_height=416)
     #cap = BufferVideo(0)
     cap.run()
     #rt_test()

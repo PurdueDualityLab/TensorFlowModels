@@ -28,7 +28,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
         box = boxes[i]
         cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes[i]], 1)
         cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
-    return
+    return i
 
 def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, batch_size = None):
     from yolo.modeling.yolo_v3 import Yolov3
@@ -50,11 +50,13 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
         anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
         thresh = 0.45
         class_thresh = 0.45
+        scale = 1
     else:
         masks = {1024: [3,4,5], 256: [0,1,2]}
         anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
-        thresh = 0.45
+        thresh = 0.05
         class_thresh = 0.25
+        scale = 1
     max_boxes = 200
     
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
@@ -62,7 +64,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
 
     inputs = ks.layers.Input(shape=[w, h, 3])
     outputs = model(inputs) 
-    outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype)(outputs)
+    outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=w, scale_mult=scale)(outputs)
     
     run = ks.Model(inputs = [inputs], outputs = outputs)
     run.build(input_shape = (batch_size, w, h, 3))

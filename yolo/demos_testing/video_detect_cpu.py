@@ -11,7 +11,7 @@ import tensorflow.keras.backend as K
 from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 
 '''Video Buffer using cv2'''
-def video_processor(vidpath):
+def video_processor(vidpath, device = "/CPU:0"):
     cap = cv2.VideoCapture(vidpath)
     assert cap.isOpened()
 
@@ -31,8 +31,8 @@ def video_processor(vidpath):
     start = time.time()
     tick = 0
     e,f,a,b,c,d = 0,0,0,0,0,0
-    with tf.device("/CPU:0"): 
-        model = build_model(name = "regular", use_mixed=False)
+    with tf.device(device): 
+        model = build_model(name = "tiny", use_mixed=False)
         model.make_predict_function()
     colors = gen_colors(80)
     label_names = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
@@ -43,7 +43,7 @@ def video_processor(vidpath):
     while cap.isOpened():
         success, image = cap.read()
 
-        with tf.device("/CPU:0"): 
+        with tf.device(device): 
             e = datetime.datetime.now()
             image = tf.cast(image, dtype = tf.float32)
             image = image/255
@@ -51,7 +51,7 @@ def video_processor(vidpath):
 
         if t % 1 == 0:
             a = datetime.datetime.now()
-            with tf.device("/CPU:0"):
+            with tf.device(device):
                 pimage = tf.expand_dims(image, axis = 0)
                 pimage = tf.image.resize(pimage, (416, 416))
                 pred = model.predict(pimage)
@@ -88,7 +88,8 @@ def print_opt(latency, fps):
 def main():
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
-    video_processor(0)
+    prep_gpu()
+    video_processor("test.mp4", device="/GPU:0")
     return 0
 
 

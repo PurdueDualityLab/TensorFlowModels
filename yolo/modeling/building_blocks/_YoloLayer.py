@@ -8,6 +8,7 @@ import matplotlib.patches as patches
 import sys
 
 #@ks.utils.register_keras_serializable(package='yolo')
+#something wrong with this
 class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
         self._mask_len = len(anchors)
@@ -23,12 +24,29 @@ class YoloFilterCell(ks.layers.Layer):
     def _reshape_batch(self, value, batch_size, axis = 0):
         return tf.repeat(value, batch_size, axis = axis)
     
+    #somehting is wrong with this
     def _get_centers(self, lwidth, lheight, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left, y_left = tf.meshgrid(tf.range(1, lheight + 1), tf.range(1, lwidth + 1))
+        #x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
+        #comp_w = tf.cast(lwidth, dtype = tf.float32)
+        #comp_h = tf.cast(lheight, dtype = tf.float32)
+        #x = tf.linspace(start=0/comp_w, stop= (comp_w-1)/comp_w, num = lwidth)
+        #y = tf.linspace(start=0/comp_h, stop= (comp_h-1)/comp_h, num = lheight)
+        #x_left, y_left = tf.meshgrid(y, x)
+        """
+        // ln - natural logarithm (base = e)
+        // x` = t.x * lw - i;   // x = ln(x`/(1-x`))   // x - output of previous conv-layer
+        // y` = t.y * lh - i;   // y = ln(y`/(1-y`))   // y - output of previous conv-layer
+                                // w = ln(t.w * net.w / anchors_w); // w - output of previous conv-layer
+                                // h = ln(t.h * net.h / anchors_h); // h - output of previous conv-layer
+        """
+        a = 1
+        x_left, y_left = tf.meshgrid(tf.range(0+a, lheight+a), tf.range(0+a, lwidth+a))
+        #tf.print(x_left, y_left)
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = self._dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
+        tf.print(tf.shape(x_y))
         return x_y
 
     def _get_anchor_grid(self, width, height, num, anchors):
@@ -83,7 +101,6 @@ class YoloFilterCell(ks.layers.Layer):
         # compute the true box output values
         box_xy = (tf.math.sigmoid(data[..., 0:2]) + centers)/tf.cast(shape[1], dtype = self._dtype)
         box_wh = tf.math.exp(data[..., 2:4])*anchors
-        #box = K.concatenate([box_xy, box_wh], axis = -1)
 
         # convert the box to Tensorflow Expected format
         minpoint = box_xy - box_wh/2
@@ -222,12 +239,13 @@ class YoloLayer(ks.Model):
                  cls_thresh,
                  max_boxes, 
                  dtype,
-                 scale_boxes = 416, 
+                 scale_boxes = 1, 
+                 scale_mult = 1,
                  **kwargs):
         super().__init__(**kwargs)
         self._masks = masks
-        self._anchors = anchors
-        self.scale_anchors(scale_boxes)
+        self._anchors = self.scale_anchors(anchors, scale_boxes)
+        self._scale_mult = scale_mult
         self._thresh = thresh
         self._cls_thresh = cls_thresh
         self._max_boxes = max_boxes
@@ -236,23 +254,22 @@ class YoloLayer(ks.Model):
         self._dtype = dtype
         return
     
-    def scale_anchors(self, scale):
+    def scale_anchors(self, anchors, scale):
         if scale == 0:
             raise Exception("zeros division error")
-        
-        self._anchors = list(self._anchors)
-        for i in range(len(self._anchors)):
-            self._anchors[i] = list(self._anchors[i])
-            for j in range(len(self._anchors[i])):
-                self._anchors[i][j] = self._anchors[i][j]/scale
-        return
+        anchors = list(anchors)
+        for i in range(len(anchors)):
+            anchors[i] = list(anchors[i])
+            for j in range(len(anchors[i])):
+                anchors[i][j] = anchors[i][j]/scale
+        return anchors
 
     def build(self, input_shape):
         if list(input_shape.keys()) != self._keys:
             raise Exception(f"input size does not match the layers initialization, {self._keys} != {list(input_shape.keys())}")
         
         self._filters = {}
-        for key in self._keys:
+        for i, key in enumerate(self._keys):
             anchors = [self._anchors[mask] for mask in self._masks[key]]
             self._filters[key] = YoloFilterCell(anchors = anchors, thresh = self._thresh, max_box = self._max_boxes, dtype = self._dtype)
         return
@@ -270,42 +287,6 @@ class YoloLayer(ks.Model):
         
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, self._max_boxes, self._max_boxes, self._thresh, self._cls_thresh)
         return nms.nmsed_boxes,  nms.nmsed_classes, nms.nmsed_scores
-
-def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, batch_size = None):
-    from yolo.modeling.yolo_v3 import Yolov3  
-    if use_mixed:
-        from tensorflow.keras.mixed_precision import experimental as mixed_precision
-        # using mixed type policy give better performance than strictly float32
-        policy = mixed_precision.Policy('mixed_float16')
-        mixed_precision.set_policy(policy)
-        print('Compute dtype: %s' % policy.compute_dtype)
-        print('Variable dtype: %s' % policy.variable_dtype)
-        dtype = policy.compute_dtype
-    else:
-        dtype = tf.float32
-    
-    if name != "tiny":
-        masks = {1024: [6,7,8], 512:[3,4,5], 256:[0,1,2]}
-        anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
-    else:
-        masks = {1024: [3,4,5], 256: [0,1,2]}
-        anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
-    thresh = 0.5
-    class_thresh = 0.5
-    max_boxes = 200
-    
-    model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=f"yolov3-{name}.weights")
-    
-    inputs = ks.layers.Input(shape=[w, h, 3])
-    outputs = model(inputs) 
-    filtered = YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype)(outputs)
-    
-    run = ks.Model(inputs = [inputs], outputs = filtered)
-    run.build(input_shape = (batch_size, w, h, 3))
-    run.summary()
-    run.make_predict_function()
-    return run
 
 
 if __name__ == "__main__":
