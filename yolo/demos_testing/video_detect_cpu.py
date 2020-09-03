@@ -1,5 +1,5 @@
 import cv2
-import time 
+import time
 
 import numpy as np
 import datetime
@@ -31,7 +31,7 @@ def video_processor(vidpath, device = "/CPU:0"):
     start = time.time()
     tick = 0
     e,f,a,b,c,d = 0,0,0,0,0,0
-    with tf.device(device): 
+    with tf.device(device):
         model = build_model(name = "tiny", use_mixed=False)
         model.make_predict_function()
     colors = gen_colors(80)
@@ -43,7 +43,7 @@ def video_processor(vidpath, device = "/CPU:0"):
     while cap.isOpened():
         success, image = cap.read()
 
-        with tf.device(device): 
+        with tf.device(device):
             e = datetime.datetime.now()
             image = tf.cast(image, dtype = tf.float32)
             image = image/255
@@ -65,8 +65,8 @@ def video_processor(vidpath, device = "/CPU:0"):
             d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
-        i += 1   
-        t += 1  
+        i += 1
+        t += 1
 
         if time.time() - start - tick >= 1:
             tick += 1

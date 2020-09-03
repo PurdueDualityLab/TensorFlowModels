@@ -20,7 +20,7 @@ def support_windows():
         mode = c_int(mode.value | 4)
         windll.kernel32.SetConsoleMode(c_int(stdout_handle), mode)
     return
-    
+
 def draw_box(image, boxes, classes, conf, colors, label_names):
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
@@ -44,7 +44,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
         dtype = policy.compute_dtype
     else:
         dtype = tf.float32
-    
+
     if name != "tiny":
         masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
         anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
@@ -58,15 +58,15 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
         class_thresh = 0.25
         scale = 1
     max_boxes = 200
-    
+
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)#, weights_file=f"yolov3-{name}.weights")
 
     inputs = ks.layers.Input(shape=[w, h, 3])
-    outputs = model(inputs) 
+    outputs = model(inputs)
     outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=w, scale_mult=scale)(outputs)
-    
+
     run = ks.Model(inputs = [inputs], outputs = outputs)
     run.build(input_shape = (batch_size, w, h, 3))
     run.summary()
@@ -80,7 +80,7 @@ def filter_partial(end = 255, dtype = tf.float32):
     o1 = ks.layers.Input(shape=[None, None, 3, end//3])
     o2 = ks.layers.Input(shape=[None, None, 3, end//3])
     o3 = ks.layers.Input(shape=[None, None, 3, end//3])
-    
+
     outputs = {1024: o1, 512: o2, 256: o3}
     b1, c1 = nn_blocks.YoloGT(anchors = [(116,90),  (156,198),  (373,326)], thresh = 0.5, reshape = False, dtype=dtype)(outputs[1024])
     b2, c2 = nn_blocks.YoloGT(anchors = [(30,61),  (62,45),  (59,119)], thresh = 0.5,  reshape = False, dtype=dtype)(outputs[512])
@@ -93,7 +93,13 @@ def filter_partial(end = 255, dtype = tf.float32):
 
 def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = None, h = None, batch_size = None):
     if use_mixed:
-        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        try:
+            from tensorflow.keras.mixed_precision import experimental as mixed_precision
+            if not hasattr(mixed_precision, 'Policy'):
+                from tensorflow.keras import mixed_precision
+        except ImportError:
+            from tensorflow.keras import mixed_precision
+
         # using mixed type policy give better performance than strictly float32
         policy = mixed_precision.Policy('mixed_float16')
         mixed_precision.set_policy(policy)
@@ -102,7 +108,7 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = T
         dtype = policy.compute_dtype
     else:
         dtype = tf.float32
-    
+
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=f"yolov3-{name}.weights")
     model.summary()
@@ -131,23 +137,23 @@ def load_loss(n = 3, classes = 80):
     from yolo.modeling.functions.yolo_loss import Yolo_Loss
     depth = n * (classes + 5)
     anchors = [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)]
-    outtop = Yolo_Loss(mask = [6, 7, 8], 
-                anchors = anchors, 
-                classes = classes, 
+    outtop = Yolo_Loss(mask = [6, 7, 8],
+                anchors = anchors,
+                classes = classes,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
+                truth_thresh = 1,
                 random = 1)
-    outmid = Yolo_Loss(mask = [3, 4, 5], 
-                anchors = anchors, 
-                classes = classes, 
+    outmid = Yolo_Loss(mask = [3, 4, 5],
+                anchors = anchors,
+                classes = classes,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
+                truth_thresh = 1,
                 random = 1)
-    outbot = Yolo_Loss(mask = [0, 1, 2], 
-                anchors = anchors, 
-                classes = classes, 
+    outbot = Yolo_Loss(mask = [0, 1, 2],
+                anchors = anchors,
+                classes = classes,
                 ignore_thresh = 0.7,
-                truth_thresh = 1, 
+                truth_thresh = 1,
                 random = 1)
     loss_dict = {256: outtop, 512: outmid, 1024: outbot}
     return loss_dict
@@ -169,7 +175,7 @@ def get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names"):
     f = open(path, "r")
     data = f.readlines()
     for i in range(len(data)):
-        data[i] = data[i][:-1]
+        data[i] = data[i].strip()
     return data
 
 def rt_test():
@@ -189,4 +195,3 @@ def rt_test():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     return
-

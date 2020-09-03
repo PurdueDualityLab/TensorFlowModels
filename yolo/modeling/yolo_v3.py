@@ -44,8 +44,8 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            encoder, decoder = read_weights(config_file, weights_file)
-            #encoder, _ = split_list(encoder, 76)
+            encoder = read_weights(config_file, weights_file)
+            encoder, _ = split_list(encoder, 76)
             _load_weights_dnBackbone(self.backbone, encoder)
         return
 
@@ -79,14 +79,14 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-        
+
         self._classes = classes
         self._boxes = boxes
         self._type = type
         self._input_shape = input_shape
         self.built = False
 
-        
+
         if type == 'regular':
             self._backbone_name = "darknet53"
             self._head_name = "regular"
@@ -106,7 +106,7 @@ class Yolov3(ks.Model):
             print(self._boxes)
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
-        
+
         super().__init__(**kwargs)
         self.build(self._input_shape)
         return
@@ -161,7 +161,7 @@ class Yolov3(ks.Model):
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             list_encdec = read_weights(config_file, weights_file)
-            
+
             encoder, decoder = split_list(list_encdec, self._encoder_decoder_split_location)
 
         if not self.built:
@@ -173,7 +173,7 @@ class Yolov3(ks.Model):
 
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder)
-        
+
         return
 
     def get_config(self):
