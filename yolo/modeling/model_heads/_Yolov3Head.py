@@ -10,6 +10,7 @@ from . import configs
 
 import importlib
 import more_itertools
+import collections
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
@@ -66,6 +67,7 @@ class Yolov3Head(tf.keras.Model):
         self._model_name = model
 
         self._cfg_dict = self.load_dict_cfg(model)
+        print(self._cfg_dict)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
@@ -88,11 +90,13 @@ class Yolov3Head(tf.keras.Model):
 
     def _get_attributes(self, input_shape):
         """ use config dictionary to generate all important attributes for head construction """
-        inputs = dict()
-        input_shapes = dict()
-        routes = dict()
-        upsamples = dict()
-        prediction_heads = dict()
+        inputs = collections.OrderedDict()#dict()
+        input_shapes = collections.OrderedDict()#dict()
+        routes = collections.OrderedDict()#dict()
+        upsamples = collections.OrderedDict()#dict()
+        prediction_heads = collections.OrderedDict()#dict()
+
+        
 
         start_width = input_shape[1]
         if input_shape[1] != None:
@@ -123,12 +127,12 @@ class Yolov3Head(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-            
+        print(inputs, input_shapes)
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = dict()
+        outputs = collections.OrderedDict()#dict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
 
@@ -146,6 +150,7 @@ class Yolov3Head(tf.keras.Model):
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
+        print(outputs)
         return outputs
 
     def get_config(self):

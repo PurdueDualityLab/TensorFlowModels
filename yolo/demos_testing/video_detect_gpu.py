@@ -236,10 +236,5 @@ class BufferVideo(object):
 
 if __name__ == "__main__":
     support_windows()
-    # prep_gpu()
-    # with tf.device("/GPU:0"):
-    #     model = build_model(name = "tiny")
-    cap = BufferVideo(0, model = "tiny", process_width=416, process_height=416)
-    #cap = BufferVideo(0)
+    cap = BufferVideo("test1.mp4", model = "tiny", process_width=416, process_height=416)
     cap.run()
-    #rt_test()

@@ -46,7 +46,6 @@ class YoloFilterCell(ks.layers.Layer):
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = self._dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
-        tf.print(tf.shape(x_y))
         return x_y
 
     def _get_anchor_grid(self, width, height, num, anchors):

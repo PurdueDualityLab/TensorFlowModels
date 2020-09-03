@@ -3,7 +3,7 @@ from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkUpsampleRoute
 
 head = {
-1024:{
+"1024":{
             "depth":1024, 
             "upsample": None,
             "upsample_conditions":None,
@@ -12,7 +12,7 @@ head = {
             "output_conditions":{"kernel_size":(1, 1), "strides":(1, 1), "padding":"same", "use_bn":False, "activation":None},
             "output-extras": 0, 
          }, 
-256:{
+"256":{
             "depth":256, 
             "upsample": DarkUpsampleRoute,
             "upsample_conditions":{"filters": 128},

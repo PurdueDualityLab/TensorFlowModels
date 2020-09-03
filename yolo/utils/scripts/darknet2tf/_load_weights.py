@@ -64,18 +64,24 @@ def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
     print(f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}")
     _set_darknet_weights(backbone, weights_encoder)
 
+    backbone.trainable = False
     print(f"\nsetting backbone.trainable to: {backbone.trainable}\n")
     return
 
 
 def _load_weights_dnHead(head, decoder):
     # get weights for head
-    decoder, weights_decoder = get_decoder_weights(decoder)
-
+    decoder, weights_decoder, head_layers, head_weights = get_decoder_weights(decoder)
     # set detection head weights
     print(f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}")
-    _set_darknet_weights(head, weights_decoder)
+    flat_full = list(flatten_model(head))
+    flat_main = flat_full[:-3]
+    flat_head = flat_full[-3:]
+    
+    _set_darknet_weights(head, weights_decoder, flat_model=flat_main)
+    _set_darknet_weights_head(flat_head, head_weights)
 
+    head.trainable = False
     print(f"\nsetting head.trainable to: {head.trainable}\n")
     return
 
@@ -96,13 +102,24 @@ def flatten_model(model):
         else:
             yield layer
 
-def _set_darknet_weights(model, weights_list):
-    for i, (layer, weights) in enumerate(zip(flatten_model(model), weights_list)):
+def _set_darknet_weights_head(flat_head, weights_head):
+    for layer in flat_head:
+        weights = layer.get_weights()
+        weight_depth = weights[0].shape[-2]
+        for weight in weights_head:
+            if weight[0].shape[-2] == weight_depth:
+                print(f"loaded weights for layer: head layer with depth {weight_depth}  -> name: {layer.name}",sep='      ',end="\r")
+                layer.set_weights(weight)
+    return
+
+def _set_darknet_weights(model, weights_list, flat_model = None):
+    if flat_model == None:
+        zip_fill = flatten_model(model)
+    else:
+        zip_fill = flat_model
+    for i, (layer, weights) in enumerate(zip(zip_fill, weights_list)):
         print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
-        #print_layer_shape(layer)
-        #print_layer_shape(weights)
         layer.set_weights(weights)
-    model.trainable = False
     return
 
 def split_decoder(lst):
@@ -142,8 +159,11 @@ def get_decoder_weights(decoder):
         weights.append(interleve_weights(layer))
 
     # get weights for output detection heads
-    for layer in reversed(head):
+    head_weights = []
+    head_layers = []
+    for layer in (head):
         if layer != None and layer._type == "convolutional":
-            weights.append(layer.get_weights())
-
-    return layers, weights
+            head_weights.append(layer.get_weights())
+            head_layers.append(layer)
+            
+    return layers, weights, head_layers, head_weights 

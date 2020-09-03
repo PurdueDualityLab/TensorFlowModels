@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 
 import importlib
+import collections
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
@@ -47,12 +48,12 @@ class Backbone_Builder(ks.Model):
         return build_block_specs(backbone)
 
     def _build_struct(self, net, inputs):
-        endpoints = dict()
+        endpoints = collections.OrderedDict()#dict()
         x = inputs
         for i, config in enumerate(net):
             x = self._build_block(config, x, f"{config.name}_{i}")
             if config.output:
-                endpoints[int(config.filters)] = x
+                endpoints[config.output_name] = x
 
         #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
