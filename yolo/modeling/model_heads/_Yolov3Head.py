@@ -10,6 +10,7 @@ from . import configs
 
 import importlib
 import more_itertools
+import collections
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3Head(tf.keras.Model):
@@ -25,9 +26,9 @@ class Yolov3Head(tf.keras.Model):
 
             {<backbone_output_name>:{
                                         "depth":<number of output channels>,
-                                        "upsample":None or a layer takes in 2 tensors and returns 1,
+                                        "upsample":None or the name of a layer takes in 2 tensors and returns 1,
                                         "upsample_conditions":{dict conditions for layer above},
-                                        "processor": Layer that will process output with this key and return 2 tensors,
+                                        "processor": Name of layer that will process output with this key and return 2 tensors,
                                         "processor_conditions": {dict conditions for layer above},
                                         "output_conditions": {dict conditions for detection or output layer},
                                         "output-extras": integer for the number of things to predict in addiction to the
@@ -65,19 +66,20 @@ class Yolov3Head(tf.keras.Model):
         self._boxes = boxes
         self._model_name = model
 
-        self._cfg_dict = self.load_dict_cfg(model)
+        if self._cfg_dict is None:
+            self._cfg_dict = self.load_dict_cfg(model)
+        print(self._cfg_dict)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
+        self._input_shape = input_shapes
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
-        self._input_shape = input_shapes
         return
 
-    def load_dict_cfg(self, model):
+    @classmethod
+    def load_dict_cfg(clz, model):
         """ find the config file and load it for use"""
-        if self._cfg_dict != None:
-            return self._cfg_dict
         try:
             return importlib.import_module('.yolov3_' + model, package=configs.__package__).head
         except ModuleNotFoundError as e:
@@ -88,11 +90,13 @@ class Yolov3Head(tf.keras.Model):
 
     def _get_attributes(self, input_shape):
         """ use config dictionary to generate all important attributes for head construction """
-        inputs = dict()
-        input_shapes = dict()
-        routes = dict()
-        upsamples = dict()
-        prediction_heads = dict()
+        inputs = collections.OrderedDict()#dict()
+        input_shapes = collections.OrderedDict()#dict()
+        routes = collections.OrderedDict()#dict()
+        upsamples = collections.OrderedDict()#dict()
+        prediction_heads = collections.OrderedDict()#dict()
+
+
 
         start_width = input_shape[1]
         if input_shape[1] != None:
@@ -108,11 +112,12 @@ class Yolov3Head(tf.keras.Model):
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"]
-                layer = path_keys["upsample"]
+                layer = ks.utils.get_registered_object(path_keys["upsample"])
                 upsamples[key] = layer(**args)
 
             args = path_keys["processor_conditions"]
-            layer = path_keys["processor"]
+            layer = ks.utils.get_registered_object(path_keys["processor"])
+            print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
@@ -123,24 +128,14 @@ class Yolov3Head(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-            
+        print(inputs, input_shapes)
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = dict()
+        outputs = collections.OrderedDict()#dict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
-        # for curr, next in more_itertools.stagger(layer_keys, offsets=(0, 1), longest=True):
-        #     x = routes[curr](layer_in)
-        #     if next is not None:
-        #         x_next = inputs[next]
-        #         layer_in = upsamples[next]([x[0], x_next])
-        #
-        #     if isinstance(x, typing.Sequence):
-        #         outputs[curr] = prediction_heads[curr](x[1])
-        #     else:
-        #         outputs[curr] = prediction_heads[curr](x)
 
         #using this loop is faster for some reason
         i = 0
@@ -156,6 +151,7 @@ class Yolov3Head(tf.keras.Model):
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
+        print(outputs)
         return outputs
 
     def get_config(self):

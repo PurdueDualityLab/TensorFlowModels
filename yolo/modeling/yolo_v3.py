@@ -79,11 +79,13 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-        super().__init__(**kwargs)
+
         self._classes = classes
         self._boxes = boxes
         self._type = type
         self._input_shape = input_shape
+        self.built = False
+
 
         if type == 'regular':
             self._backbone_name = "darknet53"
@@ -99,40 +101,26 @@ class Yolov3(ks.Model):
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
-            self._encoder_decoder_split_location = 12
+            self._encoder_decoder_split_location = 14
             self._boxes = self._boxes//3 * 2
             print(self._boxes)
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
-
-
-        self._backbone = Backbone_Builder(self._backbone_name, input_shape= self._input_shape)
-        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape= self._input_shape)
-
-        inputs = ks.layers.Input(shape=self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions, name = self._model_name)
+        super().__init__(**kwargs)
+        self.build(self._input_shape)
         return
 
-    @classmethod
-    def spp(clz, **kwargs):
-        return clz(type='spp', **kwargs)
+    def build(self, input_shape=[None, None, None, 3]):
+        self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape = input_shape)
+        self.built = True
+        super().build(input_shape)
 
-    @classmethod
-    def tiny(clz, **kwargs):
-        return clz(type='tiny', **kwargs)
-
-    # def build(self, input_shape=[None, None, None, 3]):
-    #     self._backbone = Backbone_Builder(self._backbone_name)
-    #     self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
-    #     super().build(input_shape)
-
-    # def call(self, inputs):
-    #     feature_maps = self._backbone(inputs)
-    #     predictions = self._head(feature_maps)
-    #     return predictions
+    def call(self, inputs):
+        feature_maps = self._backbone(inputs)
+        predictions = self._head(feature_maps)
+        return predictions
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,

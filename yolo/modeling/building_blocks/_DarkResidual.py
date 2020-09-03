@@ -159,7 +159,7 @@ def DarkResFunc(filters=1,use_bias=True,downsample=False, name = "ok"):
             sample = inputs
 
 
-        x = DarkConv(filters=filters,
+        x = DarkConv(filters=filters//2,
                      kernel_size=(1, 1),
                      strides=(1, 1),
                      padding='same')(sample)
