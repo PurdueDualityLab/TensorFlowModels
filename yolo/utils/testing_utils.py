@@ -72,7 +72,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     run.summary()
     run.make_predict_function()
 
-    model.save(f"yolov3-{name}")
+    #model.save(f"yolov3-{name}")
     return run
 
 def filter_partial(end = 255, dtype = tf.float32):
