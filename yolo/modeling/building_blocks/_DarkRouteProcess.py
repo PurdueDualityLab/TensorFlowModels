@@ -3,6 +3,7 @@ import tensorflow.keras as ks
 from yolo.modeling.building_blocks import DarkConv, DarkSpp
 
 
+@ks.utils.register_keras_serializable(package='yolo')
 class DarkRouteProcess(ks.layers.Layer):
     def __init__(self,
                  filters=2,
@@ -61,10 +62,10 @@ class DarkRouteProcess(ks.layers.Layer):
         self._leaky_alpha = leaky_alpha
 
         # layer configs
-        self._repetitions = repetitions 
+        self._repetitions = repetitions
         self._lim = repetitions * 2
         self._insert_spp = insert_spp
-        
+
         self.layer_list = self._get_layer_list()
         # print(self.layer_list)
         super().__init__(**kwargs)

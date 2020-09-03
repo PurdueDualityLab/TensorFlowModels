@@ -26,9 +26,9 @@ class Yolov3Head(tf.keras.Model):
 
             {<backbone_output_name>:{
                                         "depth":<number of output channels>,
-                                        "upsample":None or a layer takes in 2 tensors and returns 1,
+                                        "upsample":None or the name of a layer takes in 2 tensors and returns 1,
                                         "upsample_conditions":{dict conditions for layer above},
-                                        "processor": Layer that will process output with this key and return 2 tensors,
+                                        "processor": Name of layer that will process output with this key and return 2 tensors,
                                         "processor_conditions": {dict conditions for layer above},
                                         "output_conditions": {dict conditions for detection or output layer},
                                         "output-extras": integer for the number of things to predict in addiction to the
@@ -66,7 +66,8 @@ class Yolov3Head(tf.keras.Model):
         self._boxes = boxes
         self._model_name = model
 
-        self._cfg_dict = self.load_dict_cfg(model)
+        if self._cfg_dict is None:
+            self._cfg_dict = self.load_dict_cfg(model)
         print(self._cfg_dict)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
@@ -76,10 +77,9 @@ class Yolov3Head(tf.keras.Model):
         super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
         return
 
-    def load_dict_cfg(self, model):
+    @classmethod
+    def load_dict_cfg(clz, model):
         """ find the config file and load it for use"""
-        if self._cfg_dict != None:
-            return self._cfg_dict
         try:
             return importlib.import_module('.yolov3_' + model, package=configs.__package__).head
         except ModuleNotFoundError as e:
@@ -96,7 +96,7 @@ class Yolov3Head(tf.keras.Model):
         upsamples = collections.OrderedDict()#dict()
         prediction_heads = collections.OrderedDict()#dict()
 
-        
+
 
         start_width = input_shape[1]
         if input_shape[1] != None:
@@ -112,11 +112,12 @@ class Yolov3Head(tf.keras.Model):
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"]
-                layer = path_keys["upsample"]
+                layer = ks.utils.get_registered_object(path_keys["upsample"])
                 upsamples[key] = layer(**args)
 
             args = path_keys["processor_conditions"]
-            layer = path_keys["processor"]
+            layer = ks.utils.get_registered_object(path_keys["processor"])
+            print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
