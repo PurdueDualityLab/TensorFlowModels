@@ -2,9 +2,8 @@ from . import config_classes as _conf
 import collections
 
 class DarkNetModel(collections.UserList):
-    net_cfg : _conf.netCFG
-    def to_keras(self):
-        layers = []
+    def to_tf(self):
+        tensors = []
         for cfg in self:
-            layers.append(cfg._new_keras_layer(layers))
-        return layers[-1]
+            tensors.append(cfg.to_tf(tensors))
+        return tensors#[-1]

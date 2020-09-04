@@ -55,15 +55,7 @@ def read_file(config, weights):
         print(f"iseen: {iseen}")
 
     full_net = DarkNetModel()
-    cfg_iter = iter(config)
-    try:
-        layer, _ = build_layer(next(cfg_iter), weights, full_net)
-        assert isinstance(layer, netCFG), 'A [net] config must be the first configuation section.'
-        full_net.net_cfg = layer
-    except Exception as e:
-        raise ValueError(f"Cannot read network configuration") from e
-
-    for i, layer_dict in enumerate(cfg_iter):
+    for i, layer_dict in enumerate(config):
         try:
             layer, num_read = build_layer(layer_dict, weights, full_net)
         except Exception as e:

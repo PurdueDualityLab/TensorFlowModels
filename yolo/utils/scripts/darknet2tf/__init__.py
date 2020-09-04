@@ -68,4 +68,5 @@ def main(argv, args=None):
     """
 
     import tensorflow as tf
-    model = read_weights(cfg, weights).to_keras()
+    model = read_weights(cfg, weights).to_tf()
+    print(model)

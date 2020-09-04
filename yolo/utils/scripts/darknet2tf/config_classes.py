@@ -90,7 +90,7 @@ class Config(ABC):
         return clz(**l)
 
     @abstractmethod
-    def to_keras(self, layers):
+    def to_tf(self, tensors):
         return None
 
 class _LayerBuilder(dict):
@@ -186,6 +186,10 @@ class convCFG(Config):
         else:
             return [self.weights, self.biases]
 
+    def to_tf(self, tensors):
+        from yolo.modeling.building_blocks import DarkConv
+        return DarkConv() # TODO: Fill out
+
 
 @layer_builder.register('shortcut')
 @dataclass
@@ -213,6 +217,9 @@ class shortcutCFG(Config):
             "h": prevlayer.shape[1],
             "c": prevlayer.shape[2]}
         return clz(**l)
+
+    def to_tf(self, tensors):
+        return None # TODO: Fill out
 
 
 @layer_builder.register('route')
@@ -253,6 +260,9 @@ class routeCFG(Config):
             "c": c}
         return clz(**l)
 
+    def to_tf(self, tensors):
+        return None # TODO: Fill out
+
 
 @layer_builder.register('net', 'network')
 @dataclass
@@ -275,6 +285,10 @@ class netCFG(Config):
             "h": layer_dict["height"],
             "c": layer_dict["channels"]}
         return clz(**l)
+
+    def to_tf(self, tensors):
+        from tensorflow.keras import Input
+        return Input(shape = [self.w, self.h, self.c])
 
 
 @layer_builder.register('yolo')
@@ -299,6 +313,9 @@ class yoloCFG(Config):
             "c": prevlayer.shape[2]}
         return clz(**l)
 
+    def to_tf(self, tensors):
+        return None # TODO: Fill out
+
 
 @layer_builder.register('upsample')
 @dataclass
@@ -313,6 +330,10 @@ class upsampleCFG(Config):
     @property
     def shape(self):
         return (self.stride * self.w, self.stride * self.h, self.c)
+
+    def to_tf(self, tensors):
+        from tensorflow.keras.layers import UpSampling2D
+        return UpSampling2D(size=(self.stride, self.stride)) # TODO: Fill out
 
 
 @layer_builder.register('maxpool')
@@ -331,6 +352,11 @@ class maxpoolCFG(Config):
         pad = 0 if self.stride == 1 else 1
         #print((self.w//self.stride, self.h//self.stride, self.c))
         return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+
+    def to_tf(self, tensors):
+        #from tensorflow.nn import max_pool2d
+        from tensorflow.keras.layers import MaxPooling2D
+        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride)) # TODO: Fill out
 
 
 def len_width(n, f, p, s):
