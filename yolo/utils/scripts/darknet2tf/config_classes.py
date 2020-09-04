@@ -14,6 +14,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 
+from typing import Tuple, Sequence
+
 
 
 class Config(ABC):
@@ -35,10 +37,10 @@ class Config(ABC):
     (w, h, c) will correspond to the different input dimensions of a DarkNet
     layer: the width, height, and number of channels.
     """
-    
+
     @property
     @abstractmethod
-    def shape(self):
+    def shape(self) -> Tuple[int, int, int]:
         '''
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
@@ -49,7 +51,7 @@ class Config(ABC):
         '''
         return
 
-    def load_weights(self, files):
+    def load_weights(self, files) -> int:
         '''
         Load the weights for the current layer from a file.
 
@@ -61,7 +63,7 @@ class Config(ABC):
         '''
         return 0
 
-    def get_weights(self):
+    def get_weights(self) -> list:
         '''
         Returns:
             a list of Numpy arrays consisting of all of the weights that
@@ -70,7 +72,7 @@ class Config(ABC):
         return []
 
     @classmethod
-    def from_dict(clz, net, layer_dict):
+    def from_dict(clz, net, layer_dict) -> "Config":
         '''
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
@@ -87,6 +89,9 @@ class Config(ABC):
             l = layer_dict
         return clz(**l)
 
+    @abstractmethod
+    def to_keras(self, layers):
+        return None
 
 class _LayerBuilder(dict):
     """
@@ -249,7 +254,7 @@ class routeCFG(Config):
         return clz(**l)
 
 
-@layer_builder.register('net')
+@layer_builder.register('net', 'network')
 @dataclass
 class netCFG(Config):
     _type: str = None
@@ -263,6 +268,7 @@ class netCFG(Config):
 
     @classmethod
     def from_dict(clz, net, layer_dict):
+        assert len(net) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
         l = {
             "_type": layer_dict["_type"],
             "w": layer_dict["width"],

@@ -6,6 +6,7 @@ from absl.flags import argparse_flags
 import argparse
 import os
 
+from ._darknet_model import DarkNetModel
 from ._read_weights import read_weights, split_list
 
 flags.DEFINE_boolean('weights_only', False,
@@ -48,6 +49,7 @@ def main(argv, args=None):
     if weights is None:
         weights = download('yolov3.weights')
 
+    """
     # This is horrible design that makes it impossible to load any model except
     # YOLOv3, but I have no option right now.
     from yolo.modeling.yolo_v3 import Yolov3
@@ -63,3 +65,7 @@ def main(argv, args=None):
             model.save_weights(output)
         else:
             model.save(output)
+    """
+
+    import tensorflow as tf
+    model = read_weights(cfg, weights).to_keras()
