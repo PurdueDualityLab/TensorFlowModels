@@ -239,17 +239,14 @@ class routeCFG(Config):
         # Calculate shape of the route
         layers = layer_dict['layers']
         if type(layers) is tuple:
-            w, h, c = net[layers[0]].shape
-            for l in layers[1:]:
-                if l > 0:
-                    l += 1
+            layers_iter = iter(layers)
+            w, h, c = net[next(layers_iter)].shape
+            for l in layers_iter:
                 lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
                     raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
                 c += lc
         else:
-            if layers > 0:
-                layers += 1
             w, h, c = net[layers].shape
 
         # Create layer
@@ -278,7 +275,7 @@ class netCFG(Config):
 
     @classmethod
     def from_dict(clz, net, layer_dict):
-        assert len(net) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
+        assert len(net.data) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
         l = {
             "_type": layer_dict["_type"],
             "w": layer_dict["width"],
