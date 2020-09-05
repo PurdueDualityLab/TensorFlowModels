@@ -189,7 +189,7 @@ class convCFG(Config):
 
     def to_tf(self, tensors):
         from yolo.modeling.building_blocks import DarkConv
-        return DarkConv(
+        layer = DarkConv(
             filters=self.filters,
             kernel_size=(self.size, self.size),
             strides=(self.stride, self.stride),
@@ -197,7 +197,8 @@ class convCFG(Config):
             dilation_rate=(self.dilation, self.dilation),
             use_bn=bool(self.batch_normalize),
             activation=activation_function_dn_to_keras_name(self.activation),
-        )(tensors[-1]) # TODO: Where does groups go
+        ) # TODO: Where does groups go
+        return layer(tensors[-1]), layer
 
 
 @layer_builder.register('shortcut')

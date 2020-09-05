@@ -1,4 +1,5 @@
 from . import config_classes as _conf
+import collections
 import collections.abc
 
 
@@ -9,6 +10,10 @@ class _DarkNetSectionList(collections.abc.MutableSequence):
         self.data = []
         if initlist is not None:
             self.data = list(initlist)
+
+    @property
+    def net(self):
+        return self.data[0]
 
     # Overriding Python list operations
     def __len__(self):
@@ -52,24 +57,65 @@ class DarkNetModel(_DarkNetSectionList):
     property provided by this class.
     """
     def to_tf(self):
+        import tensorflow as tf
         from yolo.modeling.building_blocks import YoloLayer
+
         tensors = _DarkNetSectionList()
+        layers = _DarkNetSectionList()
         yolo_tensors = []
         for cfg in self.data:
             tensor = cfg.to_tf(tensors)
+
+            # Handle weighted layers
+            if type(tensor) is tuple:
+                tensor, layer = tensor
+            else:
+                layer = None
+
             assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
             if cfg._type == 'yolo':
                 yolo_tensors.append((cfg, tensor))
             tensors.append(tensor)
+            layers.append(layer)
 
+
+        model = tf.keras.Model(inputs=tensors.net, outputs=self._process_yolo_layer(yolo_tensors))
+        model.build(self.net.shape)
+
+        for cfg, layer in zip(self, layers):
+            if layer is not None:
+                layer.set_weights(cfg.get_weights())
+        return model
+
+    def _process_yolo_layer(self, yolo_tensors):
         masks = {}
         anchors = None
         thresh = None
         class_thresh = None
 
-        #yolo_layer = YoloLayer()
-        return yolo_tensors
+        """
+        for yolo_cfg, yolo_tensor in yolo_tensor:
+            masks[yolo_tensor.name] = yolo_cfg.masks
 
-    @property
-    def net(self):
-        return self.data[0]
+            if anchors is None:
+                anchors = yolo_cfg.anchors
+            elif anchors != yolo_cfg.anchors:
+                raise ValueError('Anchors inconsistent in [yolo] layers')
+
+            if thresh is None:
+                thresh = yolo_cfg.anchors
+            elif thresh != yolo_cfg.anchors:
+                raise ValueError('Anchors inconsistent in [yolo] layers')
+        #yolo_layer = YoloLayer()
+        """
+
+        outs = collections.OrderedDict()
+        if len(yolo_tensors) == 2:
+            outs["1024"] = yolo_tensors[0][1]
+            outs["256"]  = yolo_tensors[1][1]
+        else:
+            outs["1024"] = yolo_tensors[0][1]
+            outs["512"]  = yolo_tensors[1][1]
+            outs["256"]  = yolo_tensors[2][1]
+
+        return outs
