@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, List
 
 
 
@@ -135,6 +135,7 @@ class convCFG(Config):
     activation: str = field(init=True, repr=False, default='linear')
     groups: int = field(init=True, repr=False, default=1)
     batch_normalize: int = field(init=True, repr=False, default=0)
+    dilation: int = field(init=True, repr=False, default=1)
 
     nweights: int = field(repr=False, default=0)
     biases: np.array = field(repr=False, default=None) #
@@ -188,7 +189,15 @@ class convCFG(Config):
 
     def to_tf(self, tensors):
         from yolo.modeling.building_blocks import DarkConv
-        return DarkConv() # TODO: Fill out
+        return DarkConv(
+            filters=self.filters,
+            kernel_size=(self.size, self.size),
+            strides=(self.stride, self.stride),
+            padding='same', # TODO: THIS ONE
+            dilation_rate=(self.dilation, self.dilation),
+            use_bn=bool(self.batch_normalize),
+            activation=activation_function_dn_to_keras_name(self.activation),
+        )(tensors[-1]) # TODO: Where does groups go
 
 
 @layer_builder.register('shortcut')
@@ -198,6 +207,9 @@ class shortcutCFG(Config):
     w: int = field(init=True, default=0)
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
+
+    _from: List[int] = field(init=True, default_factory=list)
+    activation: str = field(init=True, default='linear')
 
     @property
     def shape(self):
@@ -210,16 +222,31 @@ class shortcutCFG(Config):
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
         '''
+        _from = layer_dict['from']
+        if type(_from) is not tuple:
+            _from = [_from]
+
         prevlayer = net[-1]
         l = {
             "_type": layer_dict['_type'],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2]}
+            "c": prevlayer.shape[2],
+            "_from": _from,
+            "activation": layer_dict['activation'],
+        }
         return clz(**l)
 
     def to_tf(self, tensors):
-        return None # TODO: Fill out
+        from tensorflow.keras.layers import add
+        from tensorflow.keras.activations import get
+        activation = get(activation_function_dn_to_keras_name(self.activation))
+
+        my_tensors = [tensors[-1]]
+        for i in self._from:
+            my_tensors.append(tensors[i])
+
+        return activation(add(my_tensors))
 
 
 @layer_builder.register('route')
@@ -229,6 +256,8 @@ class routeCFG(Config):
     w: int = field(init=True, default=0)
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
+
+    layers: List[int] = field(init=True, default_factory=list)
 
     @property
     def shape(self):
@@ -248,17 +277,24 @@ class routeCFG(Config):
                 c += lc
         else:
             w, h, c = net[layers].shape
+            layers = [layers]
 
         # Create layer
         l = {
             "_type": layer_dict["_type"],
             "w": w,
             "h": h,
-            "c": c}
+            "c": c,
+            "layers": layers,
+        }
         return clz(**l)
 
     def to_tf(self, tensors):
-        return None # TODO: Fill out
+        from tensorflow.keras.layers import concatenate
+        my_tensors = []
+        for i in self.layers:
+            my_tensors.append(tensors[i])
+        return concatenate(my_tensors) if len(my_tensors) > 1 else my_tensors[0]
 
 
 @layer_builder.register('net', 'network')
@@ -311,7 +347,7 @@ class yoloCFG(Config):
         return clz(**l)
 
     def to_tf(self, tensors):
-        return None # TODO: Fill out
+        return tensors[-1] # TODO: Fill out
 
 
 @layer_builder.register('upsample')
@@ -330,7 +366,7 @@ class upsampleCFG(Config):
 
     def to_tf(self, tensors):
         from tensorflow.keras.layers import UpSampling2D
-        return UpSampling2D(size=(self.stride, self.stride)) # TODO: Fill out
+        return UpSampling2D(size=(self.stride, self.stride))(tensors[-1])
 
 
 @layer_builder.register('maxpool')
@@ -353,7 +389,7 @@ class maxpoolCFG(Config):
     def to_tf(self, tensors):
         #from tensorflow.nn import max_pool2d
         from tensorflow.keras.layers import MaxPooling2D
-        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride)) # TODO: Fill out
+        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride))(tensors[-1])
 
 
 def len_width(n, f, p, s):
@@ -391,3 +427,7 @@ def read_n_long(n, bfile, unsigned=False):
     """c style read n int 64"""
     dtype = '<u8' if unsigned else '<i8'
     return np.fromfile(bfile, dtype, n)
+
+
+def activation_function_dn_to_keras_name(dn):
+    return dn

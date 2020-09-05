@@ -27,9 +27,13 @@ class DarkNetModel(collections.abc.MutableSequence):
 
     def to_tf(self):
         tensors = []
+        yolo_tensors = []
         for cfg in self.data:
-            tensors.append(cfg.to_tf(tensors))
-        return tensors#[-1]
+            tensor = cfg.to_tf(tensors)
+            if cfg._type == 'yolo':
+                yolo_tensors.append(tensor)
+            tensors.append(tensor)
+        return yolo_tensors
 
     @property
     def net(self):
