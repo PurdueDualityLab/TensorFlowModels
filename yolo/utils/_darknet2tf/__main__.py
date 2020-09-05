@@ -11,6 +11,8 @@ _flags.DEFINE_boolean('weights_only', False,
 _flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
 
+from . import DarkNetConverter
+
 
 def _makeParser(parser):
     parser.add_argument(
@@ -44,7 +46,7 @@ def main(argv, args=None):
     if weights is None:
         weights = download('yolov3.weights')
 
-    model = read_weights(cfg, weights).to_tf()
+    model = DarkNetConverter.read(cfg, weights).to_tf()
     if output != os.devnull:
         if flags.FLAGS.weights_only:
             model.save_weights(output)

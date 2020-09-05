@@ -10,14 +10,10 @@ import os
 
 from typing import Union
 
-from ._darknet_model import DarkNetModel
 from .config_classes import *
 from .dn2dicts import convertConfigFile
 from ..file_manager import PathABC, get_size, open_if_not_open
 
-
-def split_list(lst, i):
-    return lst[:i], lst[i:]
 
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
@@ -64,7 +60,7 @@ def read_file(full_net, config, weights=None):
     return bytes_read
 
 
-def _read_weights(full_net, config_file, weights_file):
+def read_weights(full_net, config_file, weights_file):
      if weights_file is None:
          with open_if_not_open(config_file) as config:
              config = convertConfigFile(config)
@@ -83,20 +79,3 @@ def _read_weights(full_net, config_file, weights_file):
              f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
      if (bytes_read != size):
          raise IOError('error reading weights file')
-
-def read_weights(config_file: Union[PathABC, io.TextIOBase],
-                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase] = None) -> DarkNetModel:
-    """
-    Parse the config and weights files and read the DarkNet layer's encoder,
-    decoder, and output layers. The number of bytes in the file is also returned.
-
-    Args:
-        config_file: str, path to yolo config file from Darknet
-        weights_file: str, path to yolo weights file from Darknet
-
-    Returns:
-        a DarkNetModel object
-    """
-    full_net = DarkNetModel()
-    _read_weights(full_net, config_file, weights_file)
-    return full_net

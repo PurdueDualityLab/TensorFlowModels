@@ -45,7 +45,7 @@ class _DarkNetSectionList(collections.abc.MutableSequence):
         self.data.insert(i, item)
 
 
-class DarkNetModel(_DarkNetSectionList):
+class DarkNetConverter(_DarkNetSectionList):
     """
     This is a special list-like object to handle the storage of layers in a
     model that is defined in the DarkNet format. Note that indexing layers in a
@@ -59,8 +59,8 @@ class DarkNetModel(_DarkNetSectionList):
     ones. Like the DarkNet implementation, our implementation numbers the first
     layer (after [net]) with a 0 and
 
-    To use conventional list operations on the DarkNetModel object, use the data
-    property provided by this class.
+    To use conventional list operations on the DarkNetConverter object, use the
+    data property provided by this class.
     """
 
     @classmethod
@@ -76,12 +76,12 @@ class DarkNetModel(_DarkNetSectionList):
             weights_file: str, path to yolo weights file from Darknet
 
         Returns:
-            a DarkNetModel object
+            a DarkNetConverter object
         """
-        from ._read_weights import _read_weights
+        from .read_weights import read_weights
 
         full_net = clz()
-        _read_weights(full_net, config_file, weights_file)
+        read_weights(full_net, config_file, weights_file)
         return full_net
 
     def to_tf(self):
