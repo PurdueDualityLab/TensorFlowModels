@@ -1,7 +1,14 @@
+#!/usr/bin/env python3
 "Convert a DarkNet config file into a Python literal file in a list of dictionaries format"
 
+from absl import app, flags
+from absl.flags import argparse_flags
+
+import argparse
 import collections
 import configparser
+from itertools import zip_longest
+from pprint import pprint
 import io
 import sys
 
@@ -105,3 +112,48 @@ def convertConfigFile(configfile):
     else:
         parser.read(configfile)
     return parser.as_list()
+
+
+# ABSEIL SCRIPT BELOW
+
+
+def _makeParser(parser):
+    """
+    Make a parser for the Abseil utility script. This is not the Darknet parser.
+    """
+    parser.add_argument(
+        'config',
+        default=None,
+        help='name of the config file. Defaults to YOLOv3',
+        nargs='?',
+        type=argparse.FileType('r'))
+    parser.add_argument(
+        'dictsfile',
+        default=sys.stdout,
+        nargs='?',
+        help='name of the Python literal file',
+        type=argparse.FileType('w'))
+
+
+_parser = argparse_flags.ArgumentParser()
+_makeParser(_parser)
+
+def main(argv, args=None):
+    if args is None:
+        args = _parser.parse_args(argv[1:])
+
+    config = args.config
+    dictsfile = args.dictsfile
+
+    if config is None:
+        from ..file_manager import download
+        with open(download('yolov3.cfg')) as config:
+            output = list(convertConfigFile(config))
+    else:
+        output = list(convertConfigFile(config))
+
+    pprint(output, dictsfile)
+
+
+if __name__ == '__main__':
+    app.run(main)

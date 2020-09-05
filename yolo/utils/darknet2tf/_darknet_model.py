@@ -1,7 +1,13 @@
-from . import config_classes as _conf
 import collections
 import collections.abc
+import io
 
+from ..file_manager import PathABC
+
+from typing import Union, Type, TypeVar
+
+
+T = TypeVar('T', bound='DarkNetModel')
 
 class _DarkNetSectionList(collections.abc.MutableSequence):
     __slots__ = ['data']
@@ -56,6 +62,28 @@ class DarkNetModel(_DarkNetSectionList):
     To use conventional list operations on the DarkNetModel object, use the data
     property provided by this class.
     """
+
+    @classmethod
+    def read(clz: Type[T],
+             config_file: Union[PathABC, io.TextIOBase],
+             weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase] = None) -> T:
+        """
+        Parse the config and weights files and read the DarkNet layer's encoder,
+        decoder, and output layers. The number of bytes in the file is also returned.
+
+        Args:
+            config_file: str, path to yolo config file from Darknet
+            weights_file: str, path to yolo weights file from Darknet
+
+        Returns:
+            a DarkNetModel object
+        """
+        from ._read_weights import _read_weights
+
+        full_net = clz()
+        _read_weights(full_net, config_file, weights_file)
+        return full_net
+
     def to_tf(self):
         import tensorflow as tf
         from yolo.modeling.building_blocks import YoloLayer

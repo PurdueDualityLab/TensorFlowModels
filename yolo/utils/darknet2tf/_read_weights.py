@@ -10,8 +10,8 @@ import os
 
 from typing import Union
 
-from .config_classes import *
 from ._darknet_model import DarkNetModel
+from .config_classes import *
 from .dn2dicts import convertConfigFile
 from ..file_manager import PathABC, get_size, open_if_not_open
 
@@ -31,7 +31,8 @@ def build_layer(layer_dict, file, net):
     return layer, bytes_read
 
 
-def read_file(config, weights):
+def read_file(full_net, config, weights=None):
+
     """read the file and construct weights net list"""
     bytes_read = 0
 
@@ -53,20 +54,38 @@ def read_file(config, weights):
         print(f"revision: {revision}")
         print(f"iseen: {iseen}")
 
-    full_net = DarkNetModel()
     for i, layer_dict in enumerate(config):
         try:
             layer, num_read = build_layer(layer_dict, weights, full_net)
         except Exception as e:
             raise ValueError(f"Cannot read weights for layer [#{i}]") from e
-        print(f"{weights.tell()} {layer}")
         full_net.append(layer)
         bytes_read += num_read
-    return full_net, bytes_read
+    return bytes_read
 
+
+def _read_weights(full_net, config_file, weights_file):
+     if weights_file is None:
+         with open_if_not_open(config_file) as config:
+             config = convertConfigFile(config)
+             read_file(full_net, config)
+         return full_net
+
+     size = get_size(weights_file)
+     with open_if_not_open(config_file) as config, \
+         open_if_not_open(weights_file, "rb") as weights:
+         config = convertConfigFile(config)
+         bytes_read = read_file(full_net, config, weights)
+         print('full net: ')
+         for e in full_net:
+             print(f"{e.w} {e.h} {e.c}\t{e}")
+         print(
+             f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
+     if (bytes_read != size):
+         raise IOError('error reading weights file')
 
 def read_weights(config_file: Union[PathABC, io.TextIOBase],
-                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase]) -> DarkNetModel:
+                 weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase] = None) -> DarkNetModel:
     """
     Parse the config and weights files and read the DarkNet layer's encoder,
     decoder, and output layers. The number of bytes in the file is also returned.
@@ -76,21 +95,8 @@ def read_weights(config_file: Union[PathABC, io.TextIOBase],
         weights_file: str, path to yolo weights file from Darknet
 
     Returns:
-        A tuple containing the following components:
-            encoder: the encoder as a list of layer Config objects
-            decoder: the decoder as a list of layer Config objects
-            outputs: the outputs as a list of layer Config objects
+        a DarkNetModel object
     """
-    size = get_size(weights_file)
-    with open_if_not_open(config_file) as config, \
-        open_if_not_open(weights_file, "rb") as weights:
-        config = convertConfigFile(config)
-        full_net, bytes_read = read_file(config, weights)
-        print('full net: ')
-        for e in full_net:
-            print(f"{e.w} {e.h} {e.c}\t{e}")
-        print(
-            f"bytes_read: {bytes_read}, original_size: {size}, final_position: {weights.tell()}")
-    if (bytes_read != size):
-        raise IOError('error reading weights file')
+    full_net = DarkNetModel()
+    _read_weights(full_net, config_file, weights_file)
     return full_net
