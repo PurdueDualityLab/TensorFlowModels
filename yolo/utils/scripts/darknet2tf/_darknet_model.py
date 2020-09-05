@@ -26,13 +26,22 @@ class DarkNetModel(collections.abc.MutableSequence):
             self.data = list(initlist)
 
     def to_tf(self):
+        from yolo.modeling.building_blocks import YoloLayer
         tensors = []
         yolo_tensors = []
         for cfg in self.data:
             tensor = cfg.to_tf(tensors)
+            assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
             if cfg._type == 'yolo':
-                yolo_tensors.append(tensor)
+                yolo_tensors.append((cfg, tensor))
             tensors.append(tensor)
+
+        masks = {}
+        anchors = None
+        thresh = None
+        class_thresh = None
+
+        #yolo_layer = YoloLayer()
         return yolo_tensors
 
     @property

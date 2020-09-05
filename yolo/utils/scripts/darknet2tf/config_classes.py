@@ -389,7 +389,7 @@ class maxpoolCFG(Config):
     def to_tf(self, tensors):
         #from tensorflow.nn import max_pool2d
         from tensorflow.keras.layers import MaxPooling2D
-        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride))(tensors[-1])
+        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride), padding='same')(tensors[-1])
 
 
 def len_width(n, f, p, s):
