@@ -1,52 +1,14 @@
 from . import config_classes as _conf
 import collections.abc
 
-class DarkNetModel(collections.abc.MutableSequence):
-    """
-    This is a special list-like object to handle the storage of layers in a
-    model that is defined in the DarkNet format. Note that indexing layers in a
-    DarkNet model can be unintuitive and doesn't follow the same conventions
-    as a Python list.
 
-    In DarkNet, a [net] section is at the top of every model definition. This
-    section defines the input and training parameters for the entire model.
-    As such, it is not a layer and cannot be referenced directly. For our
-    convenience, we allowed relative references to [net] but disallowed absolute
-    ones. Like the DarkNet implementation, our implementation numbers the first
-    layer (after [net]) with a 0 and
-
-    To use conventional list operations on the DarkNetModel object, use the data
-    property provided by this class.
-    """
+class _DarkNetSectionList(collections.abc.MutableSequence):
     __slots__ = ['data']
 
     def __init__(self, initlist=None):
         self.data = []
         if initlist is not None:
             self.data = list(initlist)
-
-    def to_tf(self):
-        from yolo.modeling.building_blocks import YoloLayer
-        tensors = []
-        yolo_tensors = []
-        for cfg in self.data:
-            tensor = cfg.to_tf(tensors)
-            assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
-            if cfg._type == 'yolo':
-                yolo_tensors.append((cfg, tensor))
-            tensors.append(tensor)
-
-        masks = {}
-        anchors = None
-        thresh = None
-        class_thresh = None
-
-        #yolo_layer = YoloLayer()
-        return yolo_tensors
-
-    @property
-    def net(self):
-        return self.data[0]
 
     # Overriding Python list operations
     def __len__(self):
@@ -70,3 +32,44 @@ class DarkNetModel(collections.abc.MutableSequence):
         if i >= 0:
             i += 1
         self.data.insert(i, item)
+
+
+class DarkNetModel(_DarkNetSectionList):
+    """
+    This is a special list-like object to handle the storage of layers in a
+    model that is defined in the DarkNet format. Note that indexing layers in a
+    DarkNet model can be unintuitive and doesn't follow the same conventions
+    as a Python list.
+
+    In DarkNet, a [net] section is at the top of every model definition. This
+    section defines the input and training parameters for the entire model.
+    As such, it is not a layer and cannot be referenced directly. For our
+    convenience, we allowed relative references to [net] but disallowed absolute
+    ones. Like the DarkNet implementation, our implementation numbers the first
+    layer (after [net]) with a 0 and
+
+    To use conventional list operations on the DarkNetModel object, use the data
+    property provided by this class.
+    """
+    def to_tf(self):
+        from yolo.modeling.building_blocks import YoloLayer
+        tensors = _DarkNetSectionList()
+        yolo_tensors = []
+        for cfg in self.data:
+            tensor = cfg.to_tf(tensors)
+            assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
+            if cfg._type == 'yolo':
+                yolo_tensors.append((cfg, tensor))
+            tensors.append(tensor)
+
+        masks = {}
+        anchors = None
+        thresh = None
+        class_thresh = None
+
+        #yolo_layer = YoloLayer()
+        return yolo_tensors
+
+    @property
+    def net(self):
+        return self.data[0]

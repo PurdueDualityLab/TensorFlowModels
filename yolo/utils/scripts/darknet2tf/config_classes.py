@@ -291,10 +291,14 @@ class routeCFG(Config):
 
     def to_tf(self, tensors):
         from tensorflow.keras.layers import concatenate
+
+        if len(self.layers) == 1:
+            return tensors[self.layers[0]]
+
         my_tensors = []
         for i in self.layers:
             my_tensors.append(tensors[i])
-        return concatenate(my_tensors) if len(my_tensors) > 1 else my_tensors[0]
+        return concatenate(my_tensors)
 
 
 @layer_builder.register('net', 'network')
