@@ -6,8 +6,8 @@ from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
-from yolo.utils.scripts.darknet2tf import read_weights, split_list
-from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
+from yolo.utils.darknet2tf import read_weights, split_list
+from yolo.utils.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
 
 
 #@ks.utils.register_keras_serializable(package='yolo')

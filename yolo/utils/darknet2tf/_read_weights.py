@@ -12,9 +12,8 @@ from typing import Union
 
 from .config_classes import *
 from ._darknet_model import DarkNetModel
-from ..dn2dicts import convertConfigFile
-from ...file_manager import PathABC, get_size, open_if_not_open
-from ...errors import with_origin
+from .dn2dicts import convertConfigFile
+from ..file_manager import PathABC, get_size, open_if_not_open
 
 
 def split_list(lst, i):
