@@ -1,17 +1,14 @@
-#!/usr/bin/env python3
-"Convert a DarkNet config file and weights into a TensorFlow model"
+from absl import flags as _flags
+from absl.flags import argparse_flags as _argparse_flags
 
-from absl import app, flags
-from absl.flags import argparse_flags
-import argparse
-import os
+import argparse as _argparse
 
 from ._darknet_model import DarkNetModel
 from ._read_weights import read_weights, split_list
 
-flags.DEFINE_boolean('weights_only', False,
+_flags.DEFINE_boolean('weights_only', False,
                      'Save only the weights and not the entire model.')
-flags.DEFINE_integer('input_image_size', 224,
+_flags.DEFINE_integer('input_image_size', 224,
                      'Size of the image to be used as an input.')
 
 
@@ -20,24 +17,22 @@ def _makeParser(parser):
         'cfg',
         default=None,
         help='name of the config file. Defaults to YOLOv3',
-        type=argparse.FileType('r'),
+        type=_argparse.FileType('r'),
         nargs='?')
     parser.add_argument(
         'weights',
         default=None,
         help='name of the weights file. Defaults to YOLOv3',
-        type=argparse.FileType('rb'),
+        type=_argparse.FileType('rb'),
         nargs='?')
     parser.add_argument(
         'output', help='name of the location to save the generated model')
 
 
-_parser = argparse_flags.ArgumentParser()
-_makeParser(_parser)
-
-
 def main(argv, args=None):
-    from ...file_manager import download
+    from ..file_manager import download
+    import os
+
     if args is None:
         args = _parser.parse_args(argv[1:])
 
@@ -55,3 +50,7 @@ def main(argv, args=None):
             model.save_weights(output)
         else:
             model.save(output)
+
+
+_parser = _argparse_flags.ArgumentParser()
+_makeParser(_parser)
