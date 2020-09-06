@@ -95,7 +95,7 @@ class FastVideo(object):
             self._labels = labels
 
         self._load_que = Queue(self._batch_size * 5)
-        self._display_que = Queue(10)
+        self._display_que = Queue(self._batch_size)
         self._running = True
         self._wait_time = 0.01
 
@@ -345,5 +345,5 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo(0, model = "spp", process_width=608, process_height=608, preprocess_with_gpu=False)
+    cap = FastVideo(0, model = "spp", process_width=416, process_height=416, preprocess_with_gpu=True)
     cap.run()
