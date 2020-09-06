@@ -1,7 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.building_blocks import DarkConv
+import yolo.modeling.building_blocks as nn_blocks #import DarkConv
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -43,9 +43,15 @@ class DarkTiny(ks.layers.Layer):
         return
 
     def build(self, input_shape):
-        #self.maxpool = tf.keras.layers.MaxPool2D(pool_size=2, strides=self._strides, padding='same', data_format=None)
+        # if self._strides == 2:
+        #     self._zeropad = ks.layers.ZeroPadding2D(((1,0), (1,0)))
+        #     padding = "valid"
+        # else:
+        #     self._zeropad = ks.layers.ZeroPadding2D(((0,1), (0,1)))#nn_blocks.Identity()#ks.layers.ZeroPadding2D(((1,0), (1,0)))
+        #     padding = "valid"
+        self._maxpool = tf.keras.layers.MaxPool2D(pool_size=2, strides=self._strides, padding="same", data_format=None)
 
-        self.convlayer = DarkConv(filters=self._filters,
+        self._convlayer = nn_blocks.DarkConv(filters=self._filters,
                                   kernel_size=(3, 3),
                                   strides=(1, 1),
                                   padding='same',
@@ -63,8 +69,8 @@ class DarkTiny(ks.layers.Layer):
         return
 
     def call(self, inputs):
-        output = tf.nn.max_pool2d(inputs, 2, self._strides, "SAME")#self.maxpool(inputs)
-        output = self.convlayer(output)
+        output = self._maxpool(inputs)
+        output = self._convlayer(output)
         return output
 
     def get_config(self):

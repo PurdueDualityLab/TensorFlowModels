@@ -11,14 +11,14 @@ import sys
 #something wrong with this
 class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
+        super().__init__(**kwargs)
         self._mask_len = len(anchors)
-        self._dtype = dtype
-        self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self._dtype)
-        self._thresh = tf.cast(thresh, dtype = self._dtype)
+        #self._dtype = dtype
+        self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
+        self._thresh = tf.cast(thresh, dtype = self.dtype)
 
         self._rebuild = True
         self._rebatch = True
-        super().__init__(**kwargs)
         return
 
     def _reshape_batch(self, value, batch_size, axis = 0):
@@ -40,17 +40,17 @@ class YoloFilterCell(ks.layers.Layer):
                                 // w = ln(t.w * net.w / anchors_w); // w - output of previous conv-layer
                                 // h = ln(t.h * net.h / anchors_h); // h - output of previous conv-layer
         """
-        a = 1
+        a = 0
         x_left, y_left = tf.meshgrid(tf.range(0+a, lheight+a), tf.range(0+a, lwidth+a))
         #tf.print(x_left, y_left)
         x_y = K.stack([x_left, y_left], axis = -1)
-        x_y = tf.cast(x_y, dtype = self._dtype)
+        x_y = tf.cast(x_y, dtype = self.dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
         return x_y
 
     def _get_anchor_grid(self, width, height, num, anchors):
         """ get the transformed anchor boxes for each dimention """
-        anchors = tf.cast(anchors, dtype = self._dtype)
+        anchors = tf.cast(anchors, dtype = self.dtype)
         anchors = tf.reshape(anchors, [1, -1])
         anchors = tf.repeat(anchors, width*height, axis = 0)
         anchors = tf.reshape(anchors, [1, width, height, num, -1])
@@ -83,7 +83,7 @@ class YoloFilterCell(ks.layers.Layer):
         #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
         data = tf.reshape(inputs, [shape[0], shape[1], shape[2], self._mask_len, -1])
 
-        data = tf.cast(data, self._dtype)
+        data = tf.cast(data, self.dtype)
         # detemine how much of the grid cell needs to be re consturcted
         if self._rebuild:
             #tf.print(self._input_shape)
@@ -98,7 +98,7 @@ class YoloFilterCell(ks.layers.Layer):
             centers = self._reshape_batch(centers, shape[0])
 
         # compute the true box output values
-        box_xy = (tf.math.sigmoid(data[..., 0:2]) + centers)/tf.cast(shape[1], dtype = self._dtype)
+        box_xy = (tf.math.sigmoid(data[..., 0:2]) + centers)/tf.cast(shape[1], dtype = self.dtype)
         box_wh = tf.math.exp(data[..., 2:4])*anchors
 
         # convert the box to Tensorflow Expected format
@@ -110,7 +110,7 @@ class YoloFilterCell(ks.layers.Layer):
         objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis = -1)
         scaled = tf.math.sigmoid(data[..., 5:]) * objectness
         
-        mask = tf.reduce_any(objectness > tf.cast(self._thresh, dtype = self._dtype), axis= -1)
+        mask = tf.reduce_any(objectness > tf.cast(self._thresh, dtype = self.dtype), axis= -1)
         mask = tf.reduce_any(mask, axis= 0) 
 
         # class_mask = tf.reduce_any(scaled > self._thresh, axis= -1)

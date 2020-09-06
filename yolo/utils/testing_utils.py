@@ -54,14 +54,14 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     else:
         masks = {"1024": [3,4,5], "256": [0,1,2]}
         anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
-        thresh = 0.05
-        class_thresh = 0.25
+        thresh = 0.45
+        class_thresh = 0.45
         scale = 1
     max_boxes = 200
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)#, weights_file=f"yolov3-{name}.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
 
     inputs = ks.layers.Input(shape=[w, h, 3])
     outputs = model(inputs)
@@ -72,7 +72,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     run.summary()
     run.make_predict_function()
 
-    #model.save(f"yolov3-{name}")
+    #run.save(f"yolov3-{name}")
     return run
 
 def filter_partial(end = 255, dtype = tf.float32):
@@ -110,7 +110,7 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = T
         dtype = tf.float32
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=f"yolov3-{name}.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None)
     model.summary()
     return model
 

@@ -61,30 +61,28 @@ def build_grided_gt(y_true, mask, size):
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
-                if  x[batch, box_id] < 0 or x[batch, box_id] > 1 or y[batch, box_id] < 0 or y[batch, box_id] > 1: 
-                    continue
+                if  (x[batch, box_id] >= 0 and x[batch, box_id] <= Size) and (y[batch, box_id] >= 0 and y[batch, box_id] <= 1): 
+                    p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
 
-                p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
+                    # # start code for tie breaker, temp check performance
+                    # uid = 1
+                    # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                    # count = 0
+                    # while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                    #     uid = 2
+                    #     count += 1
+                    #     p = (p + 1)%3
+                    #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                    # if tf.math.equal(used, 1):
+                    #     tf.print("skipping")
+                    #     continue
+                    # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
+                    # #end code for tie breaker
 
-                # # start code for tie breaker, temp check performance
-                # uid = 1
-                # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                # count = 0
-                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                #     uid = 2
-                #     count += 1
-                #     p = (p + 1)%3
-                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                # if tf.math.equal(used, 1):
-                #     tf.print("skipping")
-                #     continue
-                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
-                # #end code for tie breaker
-
-                update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
-                test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
-                update = update.write(i, test)
-                i += 1
+                    update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
+                    test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
+                    update = update.write(i, test)
+                    i += 1
 
             """
             used can be:

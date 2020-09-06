@@ -90,11 +90,18 @@ class DarkConv(ks.layers.Layer):
         return
 
     def build(self, input_shape):
+        tf.keras.backend.set_floatx(self.dtype)
+        kernel_size = self._kernel_size if type(self._kernel_size) == int else self._kernel_size[0]
+        if self._padding == "same" and kernel_size != 1:
+            self._zeropad = ks.layers.ZeroPadding2D(((1,1), (1,1))) # symetric padding
+        else:
+            self._zeropad = Identity()
+
         self.conv = ks.layers.Conv2D(
             filters=self._filters,
             kernel_size=self._kernel_size,
             strides=self._strides,
-            padding=self._padding,
+            padding="valid", #self._padding,
             dilation_rate=self._dilation_rate,
             use_bias=self._use_bias,
             kernel_initializer=self._kernel_initializer,
@@ -128,7 +135,10 @@ class DarkConv(ks.layers.Layer):
         return
 
     def call(self, inputs):
-        x = self.conv(inputs)
+        x = self._zeropad(inputs)
+        #tf.print(x.dtype, self.dtype)
+        x = self.conv(x)
+        #tf.print(tf.shape(x))
         #if self._use_bn:
         x = self.bn(x)
         x = self._activation_fn(x)

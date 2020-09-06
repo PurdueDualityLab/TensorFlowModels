@@ -176,6 +176,12 @@ class Yolov3(ks.Model):
 
         return
 
+    def generate_loss():
+        return
+    
+    def prediction_filter():
+        return
+
     def get_config(self):
         # used to store/share parameters to reconsturct the model
         return {
