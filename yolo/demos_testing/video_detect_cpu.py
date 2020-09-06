@@ -1,17 +1,68 @@
+#### ARGUMENT PARSER ####
+
+from absl import app, flags
+from absl.flags import argparse_flags
+import sys
+
+parser = argparse_flags.ArgumentParser()
+
+parser.add_argument(
+    'model',
+    metavar='model',
+    default='regular',
+    choices=('regular', 'spp', 'tiny'),
+    type=str,
+    help='Name of the model. Defaults to regular. The options are ("regular", "spp", "tiny")',
+    nargs='?'
+)
+
+parser.add_argument(
+    'vidpath',
+    default=None,
+    type=str,
+    help='Path of the video stream to process. Defaults to the webcam.',
+    nargs='?'
+)
+
+parser.add_argument(
+    '--device',
+    default="/CPU:0",
+    type=str,
+    help='TensorFlow device to use to run computations on the model. Defaults to "/CPU:0".',
+    nargs='?'
+)
+
+parser.add_argument(
+    '--webcam',
+    default=0,
+    type=int,
+    help='ID number of the webcam to process as a video stream. This is only used if vidpath is not specified. Defaults to 0.',
+    nargs='?'
+)
+
+if __name__ == '__main__':
+    if '-h' in sys.argv or '--help' in sys.argv:
+        parser.parse_args(sys.argv[1:])
+        exit()
+
+#### MAIN CODE ####
+
 import cv2
 import time
 
 import numpy as np
 import datetime
 import colorsys
+
 import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 
+
 '''Video Buffer using cv2'''
-def video_processor(vidpath, device = "/CPU:0"):
+def video_processor(model, vidpath, device = "/CPU:0"):
     cap = cv2.VideoCapture(vidpath)
     assert cap.isOpened()
 
@@ -32,7 +83,7 @@ def video_processor(vidpath, device = "/CPU:0"):
     tick = 0
     e,f,a,b,c,d = 0,0,0,0,0,0
     with tf.device(device):
-        model = build_model(name = "tiny", use_mixed=False)
+        model = build_model(name = model, use_mixed=False)
         model.make_predict_function()
     colors = gen_colors(80)
     label_names = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
@@ -85,13 +136,20 @@ def print_opt(latency, fps):
     print("\033[F\033[F\033[F", end="\n")
     return
 
-def main():
+def main(argv, args=None):
+    if args is None:
+        args = parser.parse_args(argv[1:])
+
+    model = args.model
+    vidpath = args.vidpath or args.webcam
+    device = args.device
+
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
     prep_gpu()
-    video_processor("test.mp4", device="/GPU:0")
+    video_processor(model, vidpath, device=device)
     return 0
 
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
