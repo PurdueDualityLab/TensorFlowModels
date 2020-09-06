@@ -231,13 +231,18 @@ class FastVideo(object):
         print(f"capture (width, height): ({self._width},{self._height})")
         print(f"Yolo Possible classes: {self._classes}")
         
+
+        if self._preprocess_function == None:
+            preprocess = self._preprocess
+        else:
+            preprocess = self._preprocess_function
+
         # get one frame and put it inthe process que to get the process started 
         if self._cap.isOpened():
             success, image = self._cap.read()
             with tf.device(self._pre_process_device):
                 e = datetime.datetime.now()
-                image = tf.cast(image, dtype = tf.float32)
-                image = image/255
+                image = preprocess(image)
                 self._load_que.put(image)
                 f = datetime.datetime.now()
         else:
@@ -340,5 +345,5 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo(0, model = "regular", process_width=416, process_height=416, preprocess_with_gpu=False)
+    cap = FastVideo(0, model = "spp", process_width=608, process_height=608, preprocess_with_gpu=False)
     cap.run()
