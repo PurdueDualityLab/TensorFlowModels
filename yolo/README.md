@@ -83,7 +83,14 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 > * Add links to [TensorBoard.dev](https://tensorboard.dev/) for visualizing metrics.  
 >  
 > An example table for image classification results  
->  
+### object 
+| Model name | latency  |FPS (GPU)  | mAP   |   
+|:------------:|:----------:|:-------------------:|:----------------:|  
+| Yolov3 416 | 35ms     | 40        | 59.7% |  
+| Yolov3-spp 608 | 40ms     | 30        | 61.7% |
+| Yolov3-tiny 416 | 20ms     | 60        | not tested yet |    
+
+
 > ### Image Classification  
 >  
 > | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
