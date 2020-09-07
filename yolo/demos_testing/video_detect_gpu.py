@@ -345,5 +345,5 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo(0, model = "spp", process_width=416, process_height=416, preprocess_with_gpu=True)
+    cap = FastVideo("test2.mp4", model = "regular", process_width=416, process_height=416, preprocess_with_gpu=True)
     cap.run()

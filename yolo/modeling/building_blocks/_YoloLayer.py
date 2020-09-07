@@ -13,7 +13,6 @@ class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
         super().__init__(**kwargs)
         self._mask_len = len(anchors)
-        #self._dtype = dtype
         self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
         self._thresh = tf.cast(thresh, dtype = self.dtype)
 
@@ -24,25 +23,9 @@ class YoloFilterCell(ks.layers.Layer):
     def _reshape_batch(self, value, batch_size, axis = 0):
         return tf.repeat(value, batch_size, axis = axis)
     
-    #somehting is wrong with this
     def _get_centers(self, lwidth, lheight, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        #x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
-        #comp_w = tf.cast(lwidth, dtype = tf.float32)
-        #comp_h = tf.cast(lheight, dtype = tf.float32)
-        #x = tf.linspace(start=0/comp_w, stop= (comp_w-1)/comp_w, num = lwidth)
-        #y = tf.linspace(start=0/comp_h, stop= (comp_h-1)/comp_h, num = lheight)
-        #x_left, y_left = tf.meshgrid(y, x)
-        """
-        // ln - natural logarithm (base = e)
-        // x` = t.x * lw - i;   // x = ln(x`/(1-x`))   // x - output of previous conv-layer
-        // y` = t.y * lh - i;   // y = ln(y`/(1-y`))   // y - output of previous conv-layer
-                                // w = ln(t.w * net.w / anchors_w); // w - output of previous conv-layer
-                                // h = ln(t.h * net.h / anchors_h); // h - output of previous conv-layer
-        """
-        a = 0
-        x_left, y_left = tf.meshgrid(tf.range(0+a, lheight+a), tf.range(0+a, lwidth+a))
-        #tf.print(x_left, y_left)
+        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis = -1)
         x_y = tf.cast(x_y, dtype = self.dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)

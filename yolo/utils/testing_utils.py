@@ -48,7 +48,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     if name != "tiny":
         masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
         anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
-        thresh = 0.45
+        thresh = 0.5
         class_thresh = 0.45
         scale = 1
     else:
@@ -63,9 +63,11 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
 
+    w_scale  = 416 if w == None else w
+
     inputs = ks.layers.Input(shape=[w, h, 3])
     outputs = model(inputs)
-    outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=w, scale_mult=scale)(outputs)
+    outputs = nn_blocks.YoloLayer(masks = masks, anchors= anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=w_scale, scale_mult=scale)(outputs)
 
     run = ks.Model(inputs = [inputs], outputs = outputs)
     run.build(input_shape = (batch_size, w, h, 3))
