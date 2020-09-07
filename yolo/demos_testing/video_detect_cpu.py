@@ -25,14 +25,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--device',
-    default="/CPU:0",
-    type=str,
-    help='TensorFlow device to use to run computations on the model. Defaults to "/CPU:0".',
-    nargs='?'
-)
-
-parser.add_argument(
     '--webcam',
     default=0,
     type=int,
@@ -142,7 +134,6 @@ def main(argv, args=None):
 
     model = args.model
     vidpath = args.vidpath or args.webcam
-    device = args.device
 
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
