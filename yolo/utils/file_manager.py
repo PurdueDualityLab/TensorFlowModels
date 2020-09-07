@@ -109,7 +109,7 @@ urls = {
 }
 
 
-def download(name: str) -> str:
+def download(name: str, trust: bool = False) -> str:
     """
     Download a predefined file named `name` from the original repository.
 
@@ -119,6 +119,9 @@ def download(name: str) -> str:
 
     Args:
         name: Name of the file that will be downloaded
+        trust: Trust the cache even if the file's hash is inconsistent
+               This option can speed the loading of the file at the expense of
+               security. Default value is False.
 
     Returns:
         The path of the downloaded file as a `str`
@@ -134,11 +137,17 @@ def download(name: str) -> str:
     """
     import tensorflow.keras as ks
     url, type, hash = urls[name]
+
+    cache_dir = os.path.abspath('cache')
+    full_path = os.path.join(cache_dir, type, name)
+    if trust and os.path.exists(full_path):
+        return full_path
+
     try:
         return ks.utils.get_file(
             name,
             url,
-            cache_dir='cache',
+            cache_dir=cache_dir,
             cache_subdir=type,
             file_hash=hash,
             hash_algorithm='sha256')

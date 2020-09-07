@@ -67,23 +67,21 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
-                 input_shape = [None, None, None, 3],
+                 input_shape = None,
                  classes = 20,
-                 boxes = 9,
+                 boxes = None,
                  type = 'regular',
                  **kwargs):
         """
         Args:
             classes: int for the number of available classes
-            boxes: total number of boxes that are predicted by detection head
+            boxes: initial sizes of the bounded boxes
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
 
         self._classes = classes
-        self._boxes = boxes
         self._type = type
-        self._input_shape = input_shape
         self.built = False
 
 
@@ -92,28 +90,35 @@ class Yolov3(ks.Model):
             self._head_name = "regular"
             self._model_name = 'yolov3'
             self._encoder_decoder_split_location = 76
+            self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+            if input_shape is None:
+                input_shape = [None, 608, 608, 3]
         elif type == 'spp':
             self._backbone_name = "darknet53"
             self._head_name = "spp"
             self._model_name = 'yolov3-spp'
             self._encoder_decoder_split_location = 76
+            self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+            if input_shape is None:
+                input_shape = [None, 608, 608, 3]
         elif type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
             self._encoder_decoder_split_location = 14
-            self._boxes = self._boxes//3 * 2
-            print(self._boxes)
+            self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
+            if input_shape is None:
+                input_shape = [None, 416, 416, 3]
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
         super().__init__(**kwargs)
-        self.build(self._input_shape)
+        self.build(input_shape)
         return
 
     def build(self, input_shape=[None, None, None, 3]):
         self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
-        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape = input_shape)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
         self.built = True
         super().build(input_shape)
 
@@ -178,7 +183,7 @@ class Yolov3(ks.Model):
 
     def generate_loss():
         return
-    
+
     def prediction_filter():
         return
 

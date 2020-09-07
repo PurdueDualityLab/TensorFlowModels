@@ -31,6 +31,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
     return i
 
 def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, batch_size = None):
+    # boxes unused
     from yolo.modeling.yolo_v3 import Yolov3
     import yolo.modeling.building_blocks as nn_blocks
 
@@ -59,7 +60,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
         scale = 1
     max_boxes = 200
 
-    model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
+    model = Yolov3(classes = classes, boxes = anchors, type = name, input_shape=(batch_size, w, h, 3))
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
 
@@ -160,9 +161,9 @@ def load_loss(masks, anchors, scale):
     for key in masks.keys():
         loss_dict[key] = Yolo_Loss(mask = masks[key],
                             anchors = anchors,
-                            scale_anchors = scale, 
+                            scale_anchors = scale,
                             ignore_thresh = 0.7,
-                            truth_thresh = 1, 
+                            truth_thresh = 1,
                             loss_type="giou")
     print(loss_dict)
     return loss_dict
