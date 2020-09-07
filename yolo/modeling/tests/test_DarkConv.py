@@ -9,7 +9,8 @@ from yolo.modeling.building_blocks import DarkConv
 class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("valid", (3, 3), "valid", (1, 1)),
                                     ("same", (3, 3), "same", (1, 1)),
-                                    ("downsample", (3, 3), "same", (2, 2)))
+                                    ("downsample", (3, 3), "same", (2, 2)), 
+                                    ("test", (1, 1), "valid", (1, 1)))
     def test_pass_through(self, kernel_size, padding, strides):
         if padding == "same":
             pad_const = 1
@@ -23,20 +24,22 @@ class DarkConvTest(tf.test.TestCase, parameterized.TestCase):
             strides=strides, trainable = False)
         outx = test_layer(x)
         print(outx.shape.as_list())
-        self.assertAllEqual(outx.shape.as_list(),
-                            [None,
-                             int((
-                                 224 - kernel_size[0] + (2 * pad_const)) / strides[0] + 1),
-                             int((
-                                 224 - kernel_size[1] + (2 * pad_const)) / strides[1] + 1),
-                             64])
+        test = [None,
+                int((
+                    224 - kernel_size[0] + (2 * pad_const)) / strides[0] + 1),
+                int((
+                    224 - kernel_size[1] + (2 * pad_const)) / strides[1] + 1),
+                64]
+        print(test)
+        self.assertAllEqual(outx.shape.as_list(), test)
         return
 
     @parameterized.named_parameters(("filters", 3))
     def test_gradient_pass_though(self, filters):
         loss = ks.losses.MeanSquaredError()
         optimizer = ks.optimizers.SGD()
-        test_layer = DarkConv(filters, kernel_size=(3, 3), padding="same")
+        with tf.device("/CPU:0"):
+            test_layer = DarkConv(filters, kernel_size=(3, 3), padding="same")
 
         init = tf.random_normal_initializer()
         x = tf.Variable(initial_value=init(

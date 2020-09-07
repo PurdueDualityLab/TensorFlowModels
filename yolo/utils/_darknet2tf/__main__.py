@@ -8,8 +8,6 @@ import argparse as _argparse
 
 _flags.DEFINE_boolean('weights_only', False,
                      'Save only the weights and not the entire model.')
-_flags.DEFINE_integer('input_image_size', 224,
-                     'Size of the image to be used as an input.')
 
 from . import DarkNetConverter
 
