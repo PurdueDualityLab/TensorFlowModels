@@ -74,6 +74,10 @@ def open_if_not_open(file: Union[PathABC, io.IOBase], *args, **kwargs) -> io.IOB
 
 # URL names that can be accessed using the download function
 urls = {
+    'yolov2.cfg': (
+        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov2.cfg',
+        'cfg',
+        '57d85d77262c840b56ad5418faae4950d9c7727e0192fb70618eeaac26a19817'),
     'yolov3.cfg': (
         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
         'cfg',
@@ -90,6 +94,10 @@ urls = {
         'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4.cfg',
         'cfg',
         'a6d0f8e5c62cc8378384f75a8159b95fa2964d4162e33351b00ac82e0fc46a34'),
+    'yolov2.weights': (
+        'https://pjreddie.com/media/files/yolov2.weights',
+        'weights',
+        'd9945162ed6f54ce1a901e3ec537bdba4d572ecae7873087bd730e5a7942df3f'),
     'yolov3.weights': (
         'https://pjreddie.com/media/files/yolov3.weights',
         'weights',
@@ -144,13 +152,20 @@ def download(name: str, trust: bool = False) -> str:
         return full_path
 
     try:
-        return ks.utils.get_file(
-            name,
-            url,
-            cache_dir=cache_dir,
-            cache_subdir=type,
-            file_hash=hash,
-            hash_algorithm='sha256')
+        if hash is None:
+            return ks.utils.get_file(
+                name,
+                url,
+                cache_dir=cache_dir,
+                cache_subdir=type)
+        else:
+            return ks.utils.get_file(
+                name,
+                url,
+                cache_dir=cache_dir,
+                cache_subdir=type,
+                file_hash=hash,
+                hash_algorithm='sha256')
     except Exception as e:
         if 'URL fetch failure on' in str(e):
             raise HTTPException(str(e)) from e
