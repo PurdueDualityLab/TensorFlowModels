@@ -226,8 +226,12 @@ class Yolov3(ks.Model):
             if size is None:
                 size = int(Info.splits[split].num_examples)
         if size is None:
-            from tensorflow.data.experimental import cardinality
-            size = cardinality(dataset)
+            try:
+                from tensorflow.data.experimental import cardinality
+            except ImportError:
+                size = dataset.cardinality()
+            else:
+                size = cardinality(dataset)
         if size < 0:
             raise ValueError("The dataset has unknown or infinite cardinality")
         return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
