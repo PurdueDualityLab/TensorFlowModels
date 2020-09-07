@@ -146,8 +146,7 @@ def main(argv, args=None):
 
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
-    prep_gpu()
-    video_processor(model, vidpath, device=device)
+    video_processor(model, vidpath)
     return 0
 
 
