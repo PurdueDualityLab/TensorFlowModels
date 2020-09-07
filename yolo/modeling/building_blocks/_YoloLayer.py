@@ -69,7 +69,6 @@ class YoloFilterCell(ks.layers.Layer):
         data = tf.cast(data, self.dtype)
         # detemine how much of the grid cell needs to be re consturcted
         if self._rebuild:
-            #tf.print(self._input_shape)
             anchors = self._get_anchor_grid(shape[1], shape[2], self._mask_len, self._anchors)
             centers = self._get_centers(shape[1], shape[2], self._mask_len)
         else:
@@ -93,20 +92,14 @@ class YoloFilterCell(ks.layers.Layer):
         objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis = -1)
         scaled = tf.math.sigmoid(data[..., 5:]) * objectness
         
+        #compute the mask of where objects have been located
         mask = tf.reduce_any(objectness > tf.cast(self._thresh, dtype = self.dtype), axis= -1)
         mask = tf.reduce_any(mask, axis= 0) 
 
-        # class_mask = tf.reduce_any(scaled > self._thresh, axis= -1)
-        # class_mask = tf.reduce_any(class_mask, axis= 0)  
-        # # tf.print(tf.shape(class_mask),tf.shape(mask))
-
-        # mask = tf.math.logical_and(class_mask, mask)
-
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis = 1)[:, :200, :]
-        # # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
+        # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
-
         return box, classifications
 
 
@@ -121,7 +114,6 @@ class YoloGT(ks.layers.Layer):
         self._rebatch = True
         self._reshape = reshape
 
-        #self.const_box = tf.ones()
         super().__init__(**kwargs)
         return
 
@@ -175,18 +167,6 @@ class YoloGT(ks.layers.Layer):
             data = inputs
 
         data = tf.cast(data, self._dtype)
-        # detemine how much of the grid cell needs to be re consturcted
-        if self._rebuild:
-            #tf.print(self._input_shape)
-            anchors = self._get_anchor_grid(shape[1], shape[2], self._mask_len, self._anchors)
-            centers = self._get_centers(shape[1], shape[2], self._mask_len)
-        else:
-            anchors = self._anchor_matrix
-            centers = self._grid_cells
-        
-        if self._rebatch:
-            anchors = self._reshape_batch(anchors, shape[0])
-            centers = self._reshape_batch(centers, shape[0])
 
         # compute the true box output values
         box_xy = data[..., 0:2]

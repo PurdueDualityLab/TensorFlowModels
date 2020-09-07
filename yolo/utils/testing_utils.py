@@ -93,15 +93,14 @@ def filter_partial(end = 255, dtype = tf.float32):
     run = ks.Model(inputs = [outputs], outputs = [b, c])
     return run
 
-def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = None, h = None, batch_size = None):
-    if use_mixed:
-        try:
-            from tensorflow.keras.mixed_precision import experimental as mixed_precision
-            if not hasattr(mixed_precision, 'Policy'):
-                from tensorflow.keras import mixed_precision
-        except ImportError:
-            from tensorflow.keras import mixed_precision
+def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, dataset_name = "coco", split = 'validation', batch_size = None):
+    from yolo.modeling.yolo_v3 import Yolov3
+    import yolo.modeling.building_blocks as nn_blocks
+    from yolo.dataloaders.preprocessing_functions import preprocessing
+    import tensorflow_datasets as tfds
 
+    if use_mixed:
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
         # using mixed type policy give better performance than strictly float32
         policy = mixed_precision.Policy('mixed_float16')
         mixed_precision.set_policy(policy)
@@ -111,10 +110,30 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = T
     else:
         dtype = tf.float32
 
+    if name != "tiny":
+        masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
+        anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+        thresh = 0.5
+        class_thresh = 0.45
+        scale = 1
+    else:
+        masks = {"1024": [3,4,5], "256": [0,1,2]}
+        anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
+        thresh = 0.45
+        class_thresh = 0.45
+        scale = 1
+    max_boxes = 200
+
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None)
-    model.summary()
-    return model
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+
+    w_scale  = 416 if w == None else w
+    loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale)
+
+    dataset, Info = tfds.load(dataset_name, split=split, with_info=True, shuffle_files=True, download=False)
+    size = int(Info.splits[split].num_examples)
+    dataset = preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors= anchors, masks= masks)
+    return model, loss_fns, dataset
 
 def prep_gpu(distribution = None):
     print(f"\n!--PREPPING GPU--! with stratagy {distribution}")
@@ -135,29 +154,17 @@ def prep_gpu(distribution = None):
         print()
     return
 
-def load_loss(n = 3, classes = 80):
+def load_loss(masks, anchors, scale):
     from yolo.modeling.functions.yolo_loss import Yolo_Loss
-    depth = n * (classes + 5)
-    anchors = [(10,13),  (16,30),  (33,23),  (30,61),  (62,45),  (59,119),  (116,90),  (156,198),  (373,326)]
-    outtop = Yolo_Loss(mask = [6, 7, 8],
-                anchors = anchors,
-                classes = classes,
-                ignore_thresh = 0.7,
-                truth_thresh = 1,
-                random = 1)
-    outmid = Yolo_Loss(mask = [3, 4, 5],
-                anchors = anchors,
-                classes = classes,
-                ignore_thresh = 0.7,
-                truth_thresh = 1,
-                random = 1)
-    outbot = Yolo_Loss(mask = [0, 1, 2],
-                anchors = anchors,
-                classes = classes,
-                ignore_thresh = 0.7,
-                truth_thresh = 1,
-                random = 1)
-    loss_dict = {256: outtop, 512: outmid, 1024: outbot}
+    loss_dict = {}
+    for key in masks.keys():
+        loss_dict[key] = Yolo_Loss(mask = masks[key],
+                            anchors = anchors,
+                            scale_anchors = scale, 
+                            ignore_thresh = 0.7,
+                            truth_thresh = 1, 
+                            loss_type="giou")
+    print(loss_dict)
     return loss_dict
 
 def int_scale_boxes(boxes, classes, width, height):
