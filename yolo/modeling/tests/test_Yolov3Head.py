@@ -3,6 +3,7 @@ import tensorflow.keras as ks
 import numpy as np
 from absl.testing import parameterized
 
+import functools
 import os
 import unittest
 
@@ -21,17 +22,17 @@ class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
     def test_pass_through(self, model, input_shape):
         if model == "darknet53":
             check = {
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
                     255],
-                512: [
+                '512': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     255],
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 8,
                     input_shape[2] // 8,
@@ -40,12 +41,12 @@ class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
             name = "spp"
         elif model == "darknet_tiny":
             check = {
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
                     340],
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
@@ -78,17 +79,17 @@ class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
     def test_gradient_pass_though(self, model, input_shape):
         if model == "darknet53":
             check = {
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
                     255],
-                512: [
+                '512': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     255],
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 8,
                     input_shape[2] // 8,
@@ -97,12 +98,12 @@ class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
             name = "spp"
         elif model == "darknet_tiny":
             check = {
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
                     340],
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
@@ -138,18 +139,6 @@ class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):
 
         self.assertNotIn(None, grad)
         return
-
-    @parameterized.named_parameters(("darknet53", "darknet53"),
-                                    ("Yolov3", "Yolov3"),
-                                    ("Yolov3_tiny", "Yolov3_tiny"),
-                                    ("Yolov3_spp", "Yolov3_spp"),)
-    @unittest.skip('Not yet supported')
-    def test_save(self, model):
-        modelClass = yolo_v3.__dict__[model]
-        modelObj = modelClass()
-        modelObj.build(input_shape = None)
-        with self.assertRaises(NotADirectoryError):
-            modelObj.save(os.devnull)
 
 if __name__ == "__main__":
     tf.test.main()

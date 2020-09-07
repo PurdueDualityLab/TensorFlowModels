@@ -8,6 +8,11 @@ import unittest
 
 from yolo.modeling import yolo_v3
 
+try:
+    from tensorflow.python.framework.errors_impl import FailedPreconditionError
+except ImportError:
+    FailedPreconditionError = None
+
 
 class Yolov3Test(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("yolov3", 'regular', "yolov3_416.weights"),
@@ -17,13 +22,20 @@ class Yolov3Test(tf.test.TestCase, parameterized.TestCase):
         for device in ['/CPU:0', '/GPU:0']:
             with tf.device(device):
                 model = yolo_v3.Yolov3(classes=80, type=model_name)
-                #model.build(input_shape = (1, 416, 416, 3))
-                model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=None, weights_file=weights_file)
+                model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
                 model.summary()
-                #model.load_weights_from_dn(dn2tf_backbone=True, dn2tf_head=True)
-                #model.summary()
+
+                if model_name == 'tiny':
+                    input_shape = [1, 416, 416, 3]
+                else:
+                    input_shape = [1, 608, 608, 3]
+                x = tf.ones(shape=input_shape, dtype=tf.float32)
+                model.predict(x)
+
+                with self.assertRaises(FailedPreconditionError or NotADirectoryError):
+                    model.save(os.devnull)
         return
-    
+
 
 
 if __name__ == "__main__":
