@@ -48,9 +48,9 @@ class Yolo_Loss(ks.losses.Loss):
         """
         super(Yolo_Loss, self).__init__(reduction = reduction, name = name, **kwargs)
         self.dtype = dtype
+        self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
-        tf.print(self.dtype)
-        self._anchors = K.expand_dims(tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype), axis = 0)/scale_anchors #<- division done for testing
+        tf.print(self._anchors.shape)
         self._num = tf.cast(len(mask), dtype = tf.int32)
         self._num_extras = tf.cast(num_extras, dtype = self.dtype)
         self._truth_thresh = tf.cast(truth_thresh, dtype = self.dtype) 
@@ -93,15 +93,14 @@ class Yolo_Loss(ks.losses.Loss):
 
     def call(self, y_true, y_pred):
         #1. generate and store constants and format output
+        batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
         width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
-        batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
+        grid_points = self._get_centers(width, height, batch_size)  
+        anchor_grid = self._get_anchor_grid(width, height, batch_size)
 
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
         y_pred = tf.cast(y_pred, dtype = self.dtype)
-
-        grid_points = self._get_centers(width, height, batch_size)  
-        anchor_grid = self._get_anchor_grid(width, height, batch_size)
 
         fwidth = tf.cast(width, self.dtype)
         fheight = tf.cast(height, self.dtype)
@@ -109,13 +108,11 @@ class Yolo_Loss(ks.losses.Loss):
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
-        pred_conf = tf.math.sigmoid(y_pred[..., 4])
+        pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
-        #tf.print("maxim gp: ", tf.reduce_max(grid_points) * fwidth)
-        #error values larger than 1 for some reason 
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
         #tf.print("maxim: ", tf.reduce_max(y_true[..., 0:2]), tf.reduce_max(y_true[..., 0:2] - grid_points))
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
@@ -126,40 +123,69 @@ class Yolo_Loss(ks.losses.Loss):
         #true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * true_conf * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * true_conf * fheight, axis = -1)], axis = -1)
 
         #4. use iou to calculate the mask of where the network belived there to be an object -> used to penelaize the network for wrong predictions
-        temp = K.concatenate([K.expand_dims(pred_xy[..., 0]/fwidth, axis = -1), K.expand_dims(pred_xy[..., 1]/fheight, axis = -1)], axis = -1) + grid_points
-        pred_box = K.concatenate([temp, tf.math.exp(pred_wh) * anchor_grid], axis = -1)        
+        box_xy = pred_xy[..., 0:2]/fwidth + grid_points
+        box_wh = tf.math.exp(pred_wh) * anchor_grid
+        pred_box = K.concatenate([box_xy, box_wh], axis = -1)        
         true_box = y_true[..., 0:4]
-        mask_iou = box_iou(true_box, pred_box, dtype = self.dtype) 
-        tf.print("maks_iou", K.sum(mask_iou))
-        mask_iou = tf.cast(mask_iou < self._ignore_thresh, dtype = self.dtype)
+        iou = box_iou(true_box, pred_box, dtype = self.dtype) 
+        iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = self.dtype), iou)
+        iou = tf.where(tf.math.is_inf(iou), tf.cast(0.0, dtype = self.dtype), iou)
+        mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         if self._loss_type == "mse":
             #yolo_layer.c: scale = (2-truth.w*truth.h)
-            scale = (2 - true_box[...,2] * true_box[...,3])
+            #error exists here
+            scale = (2 - true_box[...,2] * true_box[...,3]) * self._iou_normalizer 
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis = -1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis = -1)
-            loss_box = (loss_wh + loss_xy) * true_conf * scale * self._iou_normalizer 
+            loss_box = (loss_wh + loss_xy) * true_conf# * scale 
         else:
-            loss_box = (1 - giou(true_box, pred_box, dtype = self.dtype)) * self._iou_normalizer * true_conf
+            giou_loss = giou(true_box, pred_box, dtype = self.dtype)
+            giou_loss = tf.where(tf.math.is_nan(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
+            giou_loss = tf.where(tf.math.is_inf(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
+            loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         class_loss = self._cls_normalizer * tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
         
         #7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
-        conf_loss = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis = -1), K.expand_dims(pred_conf, axis = -1))
-        conf_loss = true_conf * (conf_loss) + (1 - true_conf) * conf_loss * mask_iou
+        # i thihink there is an error here
+        conf_loss = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis = -1), pred_conf)
+        conf_loss = true_conf * (conf_loss) + (1 - true_conf) * mask_iou * conf_loss
         
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
         loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype)
-        conf_loss = tf.cast(tf.reduce_sum(conf_loss*conf_loss, axis=(1, 2, 3)), dtype = self.dtype)
+        conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype)
         class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype)
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-        tf.print("box loss: ",tf.reduce_mean(loss_box))
-        tf.print("class loss: ",tf.reduce_mean(class_loss))
-        tf.print("conf loss: ",tf.reduce_mean(conf_loss))
-        return tf.reduce_mean(class_loss + conf_loss + loss_box)
+        loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+
+        #debug
+        #if loss > 100 and batch_size == 1:
+        mask = tf.reduce_any(K.expand_dims(true_conf, axis = -1) > tf.cast(0, dtype = self.dtype), axis= -1)
+        #mask = tf.reduce_any(pred_conf > tf.cast(0.5, dtype = self.dtype), axis= -1)
+        mask = tf.reduce_any(mask, axis= 0) 
+        tf.print("\npred: ", tf.boolean_mask(pred_box, mask, axis = 1)[:2, :1, :])
+        tf.print("true: ", tf.boolean_mask(true_box, mask, axis = 1)[:2, :1, :])
+        tf.print("pred objness: ", tf.boolean_mask(pred_conf , mask, axis = 1)[:2, :1, :])
+        tf.print("true objness: ", tf.boolean_mask(K.expand_dims(iou, axis = -1), mask, axis = 1)[:2, :1, :])
+        tf.print("x_y: ", tf.boolean_mask(grid_points * fwidth, mask, axis = 1)[:2, :1, :])
+
+        tf.print("recall75:, ", tf.reduce_sum(tf.cast(pred_conf > 0.75, dtype = self.dtype) * K.expand_dims(true_conf, axis = -1))/tf.reduce_sum(true_conf + 0.0000001))
+        tf.print("recall50:, ", tf.reduce_sum(tf.cast(pred_conf > 0.5, dtype = self.dtype) * K.expand_dims(true_conf, axis = -1))/tf.reduce_sum(true_conf + 0.0000001))
+        tf.print("iou recall75:, ", tf.reduce_sum(tf.cast(iou > 0.75, dtype = self.dtype) * K.expand_dims(true_conf, axis = -1))/tf.reduce_sum(true_conf + 0.0000001))
+        tf.print("iou recall50:, ", tf.reduce_sum(tf.cast(iou > 0.5, dtype = self.dtype) * K.expand_dims(true_conf, axis = -1))/tf.reduce_sum(true_conf + 0.0000001))
+        
+        # mask_best = tf.reduce_any(tf.math.sigmoid(y_pred[..., 4]) > tf.cast(0.7, dtype = self.dtype), axis= -1)
+        # mask_best = tf.reduce_any(mask_best, axis= 0) 
+        # tf.print(tf.shape(mask_best))
+        # tf.print("\npred high: ", tf.boolean_mask(pred_box, mask_best, axis = 1)[:1, :1, :])
+        # tf.print("pred objness high: ", tf.boolean_mask(pred_conf , mask_best, axis = 1)[:1, :1, :])
+        # tf.print("x_y high: ", tf.boolean_mask(grid_points * fwidth, mask_best, axis = 1)[:1, :1, :])
+
+        return loss #tf.reduce_mean(class_loss + conf_loss + loss_box)
 
     def get_config(self):
         """save all loss attributes"""

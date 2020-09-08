@@ -30,7 +30,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
         cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return i
 
-def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, batch_size = None):
+def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, batch_size = None, saved = False):
     from yolo.modeling.yolo_v3 import Yolov3
     import yolo.modeling.building_blocks as nn_blocks
 
@@ -61,7 +61,10 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+    if not saved: 
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+    else:
+        model.load_weights("weights/custom_train1_adam_test")
 
     w_scale  = 416 if w == None else w
 
@@ -73,8 +76,6 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     run.build(input_shape = (batch_size, w, h, 3))
     run.summary()
     run.make_predict_function()
-
-    #run.save(f"yolov3-{name}")
     return run
 
 def filter_partial(end = 255, dtype = tf.float32):
@@ -93,7 +94,7 @@ def filter_partial(end = 255, dtype = tf.float32):
     run = ks.Model(inputs = [outputs], outputs = [b, c])
     return run
 
-def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = True, w = 416, h = 416, dataset_name = "coco", split = 'validation', batch_size = None):
+def build_model_partial(name = "regular", classes = 80, boxes = 9, ltype = "giou", use_mixed = True, w = None, h = None, dataset_name = "coco", split = 'validation', batch_size = 1, load_head = True, fixed_size = False):
     from yolo.modeling.yolo_v3 import Yolov3
     import yolo.modeling.building_blocks as nn_blocks
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -125,15 +126,16 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, use_mixed = T
     max_boxes = 200
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head, weights_file=f"yolov3-{name}.weights")
 
     w_scale  = 416 if w == None else w
-    loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale)
+    loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale, ltype=ltype)
 
     dataset, Info = tfds.load(dataset_name, split=split, with_info=True, shuffle_files=True, download=False)
     size = int(Info.splits[split].num_examples)
-    dataset = preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors= anchors, masks= masks)
-    return model, loss_fns, dataset
+    dataset = preprocessing(dataset, 100, "detection", size, batch_size, 80, False, anchors= anchors, masks= masks, fixed=fixed_size)
+
+    return model, loss_fns, dataset, anchors, masks
 
 def prep_gpu(distribution = None):
     print(f"\n!--PREPPING GPU--! with stratagy {distribution}")
@@ -154,7 +156,7 @@ def prep_gpu(distribution = None):
         print()
     return
 
-def load_loss(masks, anchors, scale):
+def load_loss(masks, anchors, scale, ltype = "mse", dtype = tf.float32):
     from yolo.modeling.functions.yolo_loss import Yolo_Loss
     loss_dict = {}
     for key in masks.keys():
@@ -163,7 +165,8 @@ def load_loss(masks, anchors, scale):
                             scale_anchors = scale, 
                             ignore_thresh = 0.7,
                             truth_thresh = 1, 
-                            loss_type="giou")
+                            loss_type=ltype, 
+                            dtype=dtype)
     print(loss_dict)
     return loss_dict
 
