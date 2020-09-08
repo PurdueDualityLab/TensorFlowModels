@@ -6,6 +6,7 @@ import tensorflow.keras.backend as K
 
 import tensorflow_datasets as tfds
 from yolo.modeling.functions.iou import box_iou
+from yolo.modeling.functions.recall_metric import YoloMAP_recall,YoloMAP_recall75
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,20 +20,23 @@ from yolo.dataloaders.preprocessing_functions import preprocessing
 def loss_test(model_name = "regular"):
     #very large probelm, pre processing fails when you start batching
     model, loss_fn, dataset, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
-    model._head.trainable = True
+    #model._head.trainable = True
 
     optimizer = ks.optimizers.SGD(lr=1e-4)
-    model.compile(optimizer=optimizer, loss=loss_fn)
+    # optimizer = ks.optimizers.Adam()
+    map_50 = YoloMAP_recall(name = "recall")
+    # map_75 = YoloMAP_recall75(name = "recall75")
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
 
     model.save_weights("weights/weights_test")
     model.load_weights("weights/weights_test")
     try:
         history = model.fit(dataset, epochs=20)
     except KeyboardInterrupt:
-        model.save_weights("weights/custom_train2_adam_test")
-        print(history)
-        plt.plot(history)
-        plt.show()
+        model.save_weights("weights/custom_train1_adam_test")
+        print()
+        # plt.plot(history)
+        # plt.show()
     
     return
 

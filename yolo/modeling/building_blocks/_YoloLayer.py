@@ -14,7 +14,6 @@ class YoloFilterCell(ks.layers.Layer):
         super().__init__(**kwargs)
         self._mask_len = len(anchors)
         self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
-        tf.print(self._anchors.shape)
         self._thresh = tf.cast(thresh, dtype = self.dtype)
 
         self._rebuild = True

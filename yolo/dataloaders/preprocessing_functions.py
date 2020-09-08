@@ -68,7 +68,7 @@ def build_grided_gt(y_true, mask, size):
     i = 0
     for batch in range(batches):
         for box_id in range(num_boxes):
-            if tf.math.equal(y_true[batch, box_id, 3], 0): # VALUE ERROR is (None, 25)
+            if tf.math.equal(K.sum(y_true[batch, box_id, 0:4]), 0.0): # VALUE ERROR is (None, 25)
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
@@ -361,22 +361,22 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True):
     if fixed_size:
         randscale = 13
     
-    image_jitter = tf.concat([jitter, jitter], axis = 0)
-    image_jitter.set_shape([2])
-    image = tfa.image.translate(image, image_jitter)
-    # Bounding Box Jitter
-    #tf.print(tf.shape(label))
-    x = tf.math.add(label[..., 0], jitter)
-    x = tf.expand_dims(x, axis = -1)
-    #tf.print(tf.shape(x))
-    y = tf.math.add(label[..., 1], jitter)
-    y = tf.expand_dims(y, axis = -1)
-    #tf.print(tf.shape(y))
-    rest = label[..., 2:]
-    #tf.print(tf.shape(rest))
-    label = tf.concat([x,y,rest], axis = -1)
-    #tf.print(tf.shape(label))
-    # Other Data Augmentation
+    # image_jitter = tf.concat([jitter, jitter], axis = 0)
+    # image_jitter.set_shape([2])
+    # image = tfa.image.translate(image, image_jitter)
+    # # Bounding Box Jitter
+    # #tf.print(tf.shape(label))
+    # x = tf.math.add(label[..., 0], jitter)
+    # x = tf.expand_dims(x, axis = -1)
+    # #tf.print(tf.shape(x))
+    # y = tf.math.add(label[..., 1], jitter)
+    # y = tf.expand_dims(y, axis = -1)
+    # #tf.print(tf.shape(y))
+    # rest = label[..., 2:]
+    # #tf.print(tf.shape(rest))
+    # label = tf.concat([x,y,rest], axis = -1)
+    # #tf.print(tf.shape(label))
+    # # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
     image = tf.image.random_saturation(image=image, lower = 0.75, upper=1.25) # Saturation
