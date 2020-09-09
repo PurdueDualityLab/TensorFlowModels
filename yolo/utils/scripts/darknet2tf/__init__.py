@@ -4,6 +4,7 @@
 from absl import app, flags
 from absl.flags import argparse_flags
 import argparse
+import os
 
 from ._read_weights import read_weights, split_list
 
@@ -49,15 +50,16 @@ def main(argv, args=None):
 
     # This is horrible design that makes it impossible to load any model except
     # YOLOv3, but I have no option right now.
-    from yolo.modeling.yolo_v3 import DarkNet53
+    from yolo.modeling.yolo_v3 import Yolov3
     import tensorflow as tf
-    model = DarkNet53(classes=1000, load_backbone_weights=True,
-                      config_file=cfg, weights_file=weights)
+    model = Yolov3(classes=80)
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, config_file=cfg, weights_file=weights)
     input_image_size = flags.FLAGS.input_image_size
     x = tf.ones(shape=[1, input_image_size,
                        input_image_size, 3], dtype=tf.float32)
     model.predict(x)
-    if flags.FLAGS.weights_only:
-        model.save_weights(output)
-    else:
-        model.save(output)
+    if output != os.devnull:
+        if flags.FLAGS.weights_only:
+            model.save_weights(output)
+        else:
+            model.save(output)

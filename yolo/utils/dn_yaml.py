@@ -2,7 +2,7 @@
 Optional shortcuts for describing DarkNet models in YAML
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 import copy
 import os

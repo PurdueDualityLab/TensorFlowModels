@@ -2,7 +2,7 @@
 This file contains the code to parse DarkNet weight files.
 """
 
-from __future__ import annotations
+#from __future__ import annotations
 
 import io
 import numpy as np
@@ -21,9 +21,9 @@ def split_list(lst, i):
 
 def build_layer(layer_dict, file, net):
     """consturct layer and load weights from file"""
-    
+
     layer = layer_builder[layer_dict['_type']].from_dict(net, layer_dict)
-    
+
     bytes_read = 0
     if file is not None:
         bytes_read = layer.load_weights(file)
@@ -59,6 +59,7 @@ def read_file(config, weights):
             layer, num_read = build_layer(layer_dict, weights, full_net)
         except Exception as e:
             raise ValueError(f"Cannot read weights for layer [#{i}]") from e
+        print(f"{weights.tell()} {layer}")
         full_net.append(layer)
         bytes_read += num_read
     return full_net, bytes_read

@@ -2,7 +2,7 @@
 Manage the downloading of external files that are used in YOLO networks.
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from http.client import HTTPException
 import io
@@ -39,7 +39,7 @@ def get_size(path: Union[PathABC, io.IOBase]) -> int:
         if path.seekable():
             currentPos = path.tell()
             path.seek(-1, io.SEEK_END)
-            size = path.tell()
+            size = path.tell() + 1
             path.seek(currentPos)
             return size
         else:
@@ -86,6 +86,10 @@ urls = {
         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg',
         'cfg',
         '84eb7a675ef87c906019ff5a6e0effe275d175adb75100dcb47f0727917dc2c7'),
+    'yolov4.cfg': (
+        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4.cfg',
+        'cfg',
+        'a6d0f8e5c62cc8378384f75a8159b95fa2964d4162e33351b00ac82e0fc46a34'),
     'yolov3.weights': (
         'https://pjreddie.com/media/files/yolov3.weights',
         'weights',
@@ -98,6 +102,10 @@ urls = {
         'https://pjreddie.com/media/files/yolov3-tiny.weights',
         'weights',
         'dccea06f59b781ec1234ddf8d1e94b9519a97f4245748a7d4db75d5b7080a42c'),
+    'yolov4.weights': (
+        'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights',
+        'weights',
+        'e8a4f6c62188738d86dc6898d82724ec0964d0eb9d2ae0f0a9d53d65d108d562'),
 }
 
 

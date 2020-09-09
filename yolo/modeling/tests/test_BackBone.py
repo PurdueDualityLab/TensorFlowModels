@@ -21,17 +21,17 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
     def test_pass_through(self, model, input_shape):
         if model == "darknet53":
             check = {
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 8,
                     input_shape[2] // 8,
                     256],
-                512: [
+                '512': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     512],
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
@@ -39,12 +39,12 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
             }
         elif model == "darknet_tiny":
             check = {
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     256],
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
@@ -66,17 +66,17 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
     def test_gradient_pass_though(self, model, input_shape):
         if model == "darknet53":
             check = {
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 8,
                     input_shape[2] // 8,
                     256],
-                512: [
+                '512': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     512],
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,
@@ -84,12 +84,12 @@ class BackBoneTest(tf.test.TestCase, parameterized.TestCase):
             }
         elif model == "darknet_tiny":
             check = {
-                256: [
+                '256': [
                     input_shape[0],
                     input_shape[1] // 16,
                     input_shape[2] // 16,
                     256],
-                1024: [
+                '1024': [
                     input_shape[0],
                     input_shape[1] // 32,
                     input_shape[2] // 32,

@@ -1,4 +1,4 @@
-from __future__ import annotations
+#from __future__ import annotations
 
 import tensorflow as tf
 import tensorflow.keras as ks
@@ -44,8 +44,8 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            encoder, decoder = read_weights(config_file, weights_file)
-            #encoder, _ = split_list(encoder, 76)
+            full_model = read_weights(config_file, weights_file)
+            encoder, decoder = split_list(full_model, 76)
             _load_weights_dnBackbone(self.backbone, encoder)
         return
 
@@ -79,11 +79,13 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-        super().__init__(**kwargs)
+
         self._classes = classes
         self._boxes = boxes
         self._type = type
         self._input_shape = input_shape
+        self.built = False
+
 
         if type == 'regular':
             self._backbone_name = "darknet53"
@@ -99,40 +101,26 @@ class Yolov3(ks.Model):
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
-            self._encoder_decoder_split_location = 12
+            self._encoder_decoder_split_location = 14
             self._boxes = self._boxes//3 * 2
             print(self._boxes)
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
-        
 
-        
-        self._backbone = Backbone_Builder(self._backbone_name, input_shape= self._input_shape)
-        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape= self._input_shape)
-        
-        inputs = ks.layers.Input(shape=self._input_shape[1:])
-        feature_maps = self._backbone(inputs)
-        predictions = self._head(feature_maps)
-        super().__init__(inputs = inputs, outputs = predictions, name = self._model_name)
+        super().__init__(**kwargs)
+        self.build(self._input_shape)
         return
 
-    @classmethod
-    def spp(clz, **kwargs):
-        return clz(type='spp', **kwargs)
+    def build(self, input_shape=[None, None, None, 3]):
+        self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
+        self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes, input_shape = input_shape)
+        self.built = True
+        super().build(input_shape)
 
-    @classmethod
-    def tiny(clz, **kwargs):
-        return clz(type='tiny', **kwargs)
-
-    # def build(self, input_shape=[None, None, None, 3]):
-    #     self._backbone = Backbone_Builder(self._backbone_name)
-    #     self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=self._boxes)
-    #     super().build(input_shape)
-
-    # def call(self, inputs):
-    #     feature_maps = self._backbone(inputs)
-    #     predictions = self._head(feature_maps)
-    #     return predictions
+    def call(self, inputs):
+        feature_maps = self._backbone(inputs)
+        predictions = self._head(feature_maps)
+        return predictions
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,
@@ -173,7 +161,7 @@ class Yolov3(ks.Model):
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             list_encdec = read_weights(config_file, weights_file)
-            
+
             encoder, decoder = split_list(list_encdec, self._encoder_decoder_split_location)
 
         if not self.built:
@@ -185,7 +173,13 @@ class Yolov3(ks.Model):
 
         if dn2tf_head:
             _load_weights_dnHead(self._head, decoder)
-        
+
+        return
+
+    def generate_loss():
+        return
+    
+    def prediction_filter():
         return
 
     def get_config(self):

@@ -8,7 +8,8 @@ class BlockConfig(object):
             strides,
             padding,
             downsample,
-            output):
+            output,
+            name):
         '''
         get layer config to make code more readable
 
@@ -28,6 +29,7 @@ class BlockConfig(object):
         self.padding = padding
         self.downsample = downsample
         self.output = output
+        self.output_name = name
         return
 
     def __repr__(self):
