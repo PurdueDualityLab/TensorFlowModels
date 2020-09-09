@@ -70,6 +70,7 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
+        model.summary()
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
         model.save_weights("weights/train_test_helps_1")
