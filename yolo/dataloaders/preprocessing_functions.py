@@ -68,42 +68,44 @@ def build_grided_gt(y_true, mask, size):
     i = 0
     for batch in range(batches):
         for box_id in range(num_boxes):
-            if tf.math.equal(y_true[batch, box_id, 3], 0): # VALUE ERROR is (None, 25)
+            # if tf.math.equal(K.sum(y_true[batch, box_id, 0:4]), 0.0): # VALUE ERROR is (None, 25)
+            #     continue
+            if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)): # VALUE ERROR is (None, 25)
+                #tf.print("outer zero: ",y_true[batch, box_id, 0:2])
+                continue
+            if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater(y_true[batch, box_id, 0:2], 1.0)): 
+                #tf.print("outer vals: ",y_true[batch, box_id, 0:2])
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
-                # is x is with in the bounds of the image, add it to the ground truth grid
-                if  (True):#(x[batch, box_id] >= 0 and x[batch, box_id] <= size) and (y[batch, box_id] >= 0 and y[batch, box_id] <= size): 
-                    p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
-                    # # start code for tie breaker, temp check performance 
-                    # # find the index of the box
-                    # uid = 1
-                    # used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                    # count = 0
-                    # # check if the next anchor is used used == 1, if so find another box 
-                    # while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                    #     uid = 2
-                    #     count += 1
-                    #     p = (p + 1)%3
-                    #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                    # if tf.math.equal(used, 1):
-                    #     tf.print("skipping")
-                    #     continue
-                    # # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
-                    # # it will be prioritized over the current box.
-                    # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, x[batch, box_id], y[batch, box_id], p)], [uid])
-                    # #end code for tie breaker
+                p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
+                
+                # # start code for tie breaker, temp check performance 
+                # # find the index of the box
+                # uid = 1
+                # used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
+                # count = 0
+                # # check if the next anchor is used used == 1, if so find another box 
+                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                #     uid = 2
+                #     count += 1
+                #     p = (p + 1)%3
+                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                # if tf.math.equal(used, 1):
+                #     tf.print("skipping")
+                #     continue
+                # # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
+                # # it will be prioritized over the current box.
+                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
+                # #end code for tie breaker
 
-                    # write the box to the update list 
-                    # if don't think the boexes are in the right index
-
-                    # i think error is here. i idk if the boxes are getting placed correctly.
-                    # update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
-                    update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
-                    # tf.print("x: ", x[batch, box_id],"y: ", y[batch, box_id])
-                    test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
-                    update = update.write(i, test)
-                    i += 1
+                # write the box to the update list 
+                # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 
+                """peculiar"""
+                update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
+                update = update.write(i, value)
+                i += 1
 
             """
             used can be:
@@ -132,7 +134,7 @@ def build_grided_gt(y_true, mask, size):
     
     #debug
     #tf.print("gtsum: ", K.sum(y_true))
-    #tf.print("gtsum full",K.sum(full))
+    #tf.print("gtsum full",size, "  ", K.sum(full))
     return full
 
 @tf.function
@@ -145,6 +147,8 @@ def convert_to_yolo(box):
         y_center = (ymax + ymin)/2
         width = xmax - xmin
         height = ymax - ymin
+
+        #error may exist print shape
         box = tf.concat([x_center, y_center, width, height], axis = -1)
     return box
 
@@ -356,43 +360,23 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True):
     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
     if fixed_size:
         randscale = 13
-    # image_jitter = tf.concat([jitter, jitter], axis = 0)
-    # image_jitter.set_shape([2])
-    # image = tfa.image.translate(image, image_jitter)
-    # # Bounding Box Jitter
-    # tf.print(tf.shape(label))
-    # x = tf.math.add(label[..., 0], jitter)
-    # x = tf.expand_dims(x, axis = -1)
-    # tf.print(tf.shape(x))
-    # y = tf.math.add(label[..., 1], jitter)
-    # y = tf.expand_dims(y, axis = -1)
-    # tf.print(tf.shape(y))
-    # rest = label[..., 2:]
-    # tf.print(tf.shape(rest))
-    # label = tf.concat([x,y,rest], axis = -1)
-    # tf.print(tf.shape(label))
+    
+    image_jitter = tf.concat([jitter, jitter], axis = 0)
+    image_jitter.set_shape([2])
+    image = tfa.image.translate(image, image_jitter)
+    # Bounding Box Jitter
+    #tf.print(tf.shape(label))
+    x = tf.math.add(label[..., 0], jitter)
+    x = tf.expand_dims(x, axis = -1)
+    y = tf.math.add(label[..., 1], jitter)
+    y = tf.expand_dims(y, axis = -1)
+    rest = label[..., 2:]
+    label = tf.concat([x,y,rest], axis = -1)
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
     image = tf.image.random_saturation(image=image, lower = 0.75, upper=1.25) # Saturation
     image = tf.image.random_hue(image=image, max_delta=.1) # Hue
-    # building bounding boxs
-    #! SUBJECT TO CHANGE ***
-    #! -----------------
-    # if tf.math.equal(tf.shape(masks)[0], 3):
-    #     value1 = build_grided_gt(label, masks[0], randscale)
-    #     value2 = build_grided_gt(label, masks[1], randscale * 2)
-    #     value3 = build_grided_gt(label, masks[2], randscale * 4)
-    #     ret_dict = {1024: value1, 512: value2, 256: value3}
-    # elif tf.math.equal(tf.shape(masks)[0], 2):
-    #     value1 = build_grided_gt(label, masks[0], randscale)
-    #     value2 = build_grided_gt(label, masks[1], randscale * 4)
-    #     ret_dict = {1024: value1, 512: value2, 256: value2}
-    # else:
-    #     value1 = build_grided_gt(label, masks[0], randscale)
-    #     value2 = build_grided_gt(label, masks[1], randscale * 2)
-    #     value3 = build_grided_gt(label, masks[2], randscale * 4)
-    #     ret_dict = {1024: value1, 512: value2, 256: value3}
 
     for key in masks.keys():
         masks[key] = build_grided_gt(label, tf.convert_to_tensor(masks[key], dtype= tf.float32), randscale)
@@ -441,7 +425,7 @@ def _detection_normalize(data, anchors, width, height):
     image = image / 255 # Normalize
     return image, label
 
-def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag, anchors = None, masks = None):
+def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = False, anchors = None, masks = None, fixed = False):
     """Preprocesses (normalization and data augmentation) and batches the dataset.
     Args:
         dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
@@ -509,8 +493,8 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, ba
         dataset = data_augmentation_dataset.concatenate(non_preprocessed_split)
         if shuffle_flag == True:
             dataset = dataset.shuffle(size)
-        dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).batch(int(batch_size))
-        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks), num_parallel_calls = tf.data.experimental.AUTOTUNE).prefetch(tf.data.experimental.AUTOTUNE)
+        dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(int(batch_size))
+        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=False), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
     # Classification Preprocessing
     elif preprocessing_type.lower() == "classification":
         # Preprocessing functions applications.

@@ -2,7 +2,7 @@
 Manage the downloading of external files that are used in YOLO networks.
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from http.client import HTTPException
 import io
