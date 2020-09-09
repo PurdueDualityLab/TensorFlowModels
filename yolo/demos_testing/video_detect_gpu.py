@@ -118,7 +118,7 @@ class FastVideo(object):
             print(model)
             prep_gpu()
             with tf.device(self._gpu_device):
-                model = build_model(name = model, w = self._p_width, h = self._p_height, saved = True) 
+                model = build_model(name = model, w = self._p_width, h = self._p_height, saved = False) 
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")

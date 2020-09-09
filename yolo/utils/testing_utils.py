@@ -131,11 +131,7 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, ltype = "giou
     w_scale  = 416 if w == None else w
     loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale, ltype=ltype)
 
-    dataset, Info = tfds.load(dataset_name, split=split, with_info=True, shuffle_files=True, download=False)
-    size = int(Info.splits[split].num_examples)
-    dataset = preprocessing(dataset, 100, "detection", size, batch_size, 80, False, anchors= anchors, masks= masks, fixed=fixed_size)
-
-    return model, loss_fns, dataset, anchors, masks
+    return model, loss_fns, anchors, masks
 
 def prep_gpu(distribution = None):
     print(f"\n!--PREPPING GPU--! with stratagy {distribution}")

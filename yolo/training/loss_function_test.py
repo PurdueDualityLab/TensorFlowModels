@@ -11,6 +11,7 @@ from yolo.modeling.functions.recall_metric import YoloMAP_recall,YoloMAP_recall7
 import matplotlib.pyplot as plt
 import numpy as np
 from absl import app
+import time 
 
 from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
 prep_gpu()
@@ -38,6 +39,32 @@ def loss_test(model_name = "regular"):
         # plt.plot(history)
         # plt.show()
     
+    return
+
+def loss_test_eager(model_name = "regular"):
+    #very large probelm, pre processing fails when you start batching
+    #model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = True, fixed_size= True)
+    #model._head.trainable = True
+
+    masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
+    anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+
+    with tf.device("/CPU:0"):
+        dataset, Info = tfds.load("voc", split="train", with_info=True, shuffle_files=True, download=False)
+        size = int(Info.splits["train"].num_examples)
+        dataset = preprocessing(dataset, 100, "detection", size, 2, 80, anchors= anchors, masks= masks, fixed=True)
+
+        val, Info = tfds.load("voc", split="validation", with_info=True, shuffle_files=True, download=False)
+        size = int(Info.splits["validation"].num_examples)
+        val = preprocessing(val, 100, "detection", size, 2, 80, anchors= anchors, masks= masks, fixed=True)
+
+    # for image, label in dataset:
+    #     pred = model(image)
+    #     loss = 0
+    #     for key in pred.keys():
+    #         loss += loss_fn[key](label[key], pred[key])
+    #     tf.print(loss)
+    #     time.sleep(1)
     return
 
 def gt_test():
@@ -72,7 +99,7 @@ def gt_test():
     return
 
 def main(argv, args = None):
-    loss_test()
+    loss_test_eager()
     #gt_test()
     return
 
