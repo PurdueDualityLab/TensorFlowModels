@@ -138,6 +138,7 @@ def prep_gpu(distribution = None):
     traceback.print_stack()
     if distribution == None:
         gpus = tf.config.experimental.list_physical_devices('GPU')
+        print(gpus)
         if gpus:
             try:
                 # Currently, memory growth needs to be the same across GPUs
