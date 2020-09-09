@@ -61,8 +61,8 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
-    if not saved: 
-        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+    if not saved:
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
     else:
         model.load_weights("weights/custom_train1_adam_test")
 
@@ -126,7 +126,7 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, ltype = "giou
     max_boxes = 200
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head)#, weights_file=f"yolov3-{name}.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head)
 
     w_scale  = 416 if w == None else w
     loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale, ltype=ltype)
@@ -158,10 +158,10 @@ def load_loss(masks, anchors, scale, ltype = "mse", dtype = tf.float32):
     for key in masks.keys():
         loss_dict[key] = Yolo_Loss(mask = masks[key],
                             anchors = anchors,
-                            scale_anchors = scale, 
+                            scale_anchors = scale,
                             ignore_thresh = 0.7,
-                            truth_thresh = 1, 
-                            loss_type=ltype, 
+                            truth_thresh = 1,
+                            loss_type=ltype,
                             dtype=dtype)
     print(loss_dict)
     return loss_dict
