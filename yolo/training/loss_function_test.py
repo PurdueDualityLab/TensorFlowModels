@@ -14,9 +14,7 @@ from absl import app
 import time 
 
 from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
-prep_gpu()
 
-from yolo.dataloaders.preprocessing_functions import preprocessing
 def lr_schedule(epoch, lr):
     if epoch == 60 or epoch == 90:
         lr = lr/10
@@ -48,6 +46,7 @@ def loss_test(model_name = "regular"):
 def loss_test_eager(model_name = "regular", batch_size = 64):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
+    from yolo.dataloaders.preprocessing_functions import preprocessing
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
         model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
