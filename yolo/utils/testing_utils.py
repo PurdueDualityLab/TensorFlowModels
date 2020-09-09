@@ -104,8 +104,8 @@ def gen_colors(max_classes):
     return colors
 
 def get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names"):
-    f = open(path, "r")
-    data = f.readlines()
+    with open(path, "r") as f:
+        data = f.readlines()
     for i in range(len(data)):
         data[i] = data[i].strip()
     return data

@@ -14,6 +14,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 
+from typing import Tuple, Sequence, List
+
 
 
 class Config(ABC):
@@ -35,10 +37,10 @@ class Config(ABC):
     (w, h, c) will correspond to the different input dimensions of a DarkNet
     layer: the width, height, and number of channels.
     """
-    
+
     @property
     @abstractmethod
-    def shape(self):
+    def shape(self) -> Tuple[int, int, int]:
         '''
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
@@ -49,7 +51,7 @@ class Config(ABC):
         '''
         return
 
-    def load_weights(self, files):
+    def load_weights(self, files) -> int:
         '''
         Load the weights for the current layer from a file.
 
@@ -61,7 +63,7 @@ class Config(ABC):
         '''
         return 0
 
-    def get_weights(self):
+    def get_weights(self) -> list:
         '''
         Returns:
             a list of Numpy arrays consisting of all of the weights that
@@ -70,7 +72,7 @@ class Config(ABC):
         return []
 
     @classmethod
-    def from_dict(clz, net, layer_dict):
+    def from_dict(clz, net, layer_dict) -> "Config":
         '''
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
@@ -87,6 +89,18 @@ class Config(ABC):
             l = layer_dict
         return clz(**l)
 
+    @abstractmethod
+    def to_tf(self, tensors):
+        """
+        Convert the DarkNet configuration object to a tensor given the previous
+        tensors that occoured in the network. This function should also return
+        a Keras layer if it has weights.
+
+        Returns:
+            if weights: a tuple consisting of the output tensor and Keras layer
+            if no weights: the output tensor
+        """
+        return None
 
 class _LayerBuilder(dict):
     """
@@ -130,6 +144,7 @@ class convCFG(Config):
     activation: str = field(init=True, repr=False, default='linear')
     groups: int = field(init=True, repr=False, default=1)
     batch_normalize: int = field(init=True, repr=False, default=0)
+    dilation: int = field(init=True, repr=False, default=1)
 
     nweights: int = field(repr=False, default=0)
     biases: np.array = field(repr=False, default=None) #
@@ -181,6 +196,19 @@ class convCFG(Config):
         else:
             return [self.weights, self.biases]
 
+    def to_tf(self, tensors):
+        from yolo.modeling.building_blocks import DarkConv
+        layer = DarkConv(
+            filters=self.filters,
+            kernel_size=(self.size, self.size),
+            strides=(self.stride, self.stride),
+            padding='same', # TODO: THIS ONE
+            dilation_rate=(self.dilation, self.dilation),
+            use_bn=bool(self.batch_normalize),
+            activation=activation_function_dn_to_keras_name(self.activation),
+        ) # TODO: Where does groups go
+        return layer(tensors[-1]), layer
+
 
 @layer_builder.register('shortcut')
 @dataclass
@@ -189,6 +217,9 @@ class shortcutCFG(Config):
     w: int = field(init=True, default=0)
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
+
+    _from: List[int] = field(init=True, default_factory=list)
+    activation: str = field(init=True, default='linear')
 
     @property
     def shape(self):
@@ -201,13 +232,31 @@ class shortcutCFG(Config):
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
         '''
+        _from = layer_dict['from']
+        if type(_from) is not tuple:
+            _from = (_from,)
+
         prevlayer = net[-1]
         l = {
             "_type": layer_dict['_type'],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2]}
+            "c": prevlayer.shape[2],
+            "_from": _from,
+            "activation": layer_dict['activation'],
+        }
         return clz(**l)
+
+    def to_tf(self, tensors):
+        from tensorflow.keras.layers import add
+        from tensorflow.keras.activations import get
+        activation = get(activation_function_dn_to_keras_name(self.activation))
+
+        my_tensors = [tensors[-1]]
+        for i in self._from:
+            my_tensors.append(tensors[i])
+
+        return activation(add(my_tensors))
 
 
 @layer_builder.register('route')
@@ -218,6 +267,8 @@ class routeCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
+    layers: List[int] = field(init=True, default_factory=list)
+
     @property
     def shape(self):
         return (self.w, self.h, self.c)
@@ -227,29 +278,40 @@ class routeCFG(Config):
         # Calculate shape of the route
         layers = layer_dict['layers']
         if type(layers) is tuple:
-            w, h, c = net[layers[0]].shape
-            for l in layers[1:]:
-                if l > 0:
-                    l += 1
+            layers_iter = iter(layers)
+            w, h, c = net[next(layers_iter)].shape
+            for l in layers_iter:
                 lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
                     raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
                 c += lc
         else:
-            if layers > 0:
-                layers += 1
             w, h, c = net[layers].shape
+            layers = (layers,)
 
         # Create layer
         l = {
             "_type": layer_dict["_type"],
             "w": w,
             "h": h,
-            "c": c}
+            "c": c,
+            "layers": layers,
+        }
         return clz(**l)
 
+    def to_tf(self, tensors):
+        from tensorflow.keras.layers import concatenate
 
-@layer_builder.register('net')
+        if len(self.layers) == 1:
+            return tensors[self.layers[0]]
+
+        my_tensors = []
+        for i in self.layers:
+            my_tensors.append(tensors[i])
+        return concatenate(my_tensors)
+
+
+@layer_builder.register('net', 'network')
 @dataclass
 class netCFG(Config):
     _type: str = None
@@ -263,12 +325,17 @@ class netCFG(Config):
 
     @classmethod
     def from_dict(clz, net, layer_dict):
+        assert len(net.data) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
         l = {
             "_type": layer_dict["_type"],
             "w": layer_dict["width"],
             "h": layer_dict["height"],
             "c": layer_dict["channels"]}
         return clz(**l)
+
+    def to_tf(self, tensors):
+        from tensorflow.keras import Input
+        return Input(shape = [self.w, self.h, self.c])
 
 
 @layer_builder.register('yolo')
@@ -293,6 +360,9 @@ class yoloCFG(Config):
             "c": prevlayer.shape[2]}
         return clz(**l)
 
+    def to_tf(self, tensors):
+        return tensors[-1] # TODO: Fill out
+
 
 @layer_builder.register('upsample')
 @dataclass
@@ -307,6 +377,10 @@ class upsampleCFG(Config):
     @property
     def shape(self):
         return (self.stride * self.w, self.stride * self.h, self.c)
+
+    def to_tf(self, tensors):
+        from tensorflow.keras.layers import UpSampling2D
+        return UpSampling2D(size=(self.stride, self.stride))(tensors[-1])
 
 
 @layer_builder.register('maxpool')
@@ -325,6 +399,11 @@ class maxpoolCFG(Config):
         pad = 0 if self.stride == 1 else 1
         #print((self.w//self.stride, self.h//self.stride, self.c))
         return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+
+    def to_tf(self, tensors):
+        #from tensorflow.nn import max_pool2d
+        from tensorflow.keras.layers import MaxPooling2D
+        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride), padding='same')(tensors[-1])
 
 
 def len_width(n, f, p, s):
@@ -362,3 +441,7 @@ def read_n_long(n, bfile, unsigned=False):
     """c style read n int 64"""
     dtype = '<u8' if unsigned else '<i8'
     return np.fromfile(bfile, dtype, n)
+
+
+def activation_function_dn_to_keras_name(dn):
+    return dn

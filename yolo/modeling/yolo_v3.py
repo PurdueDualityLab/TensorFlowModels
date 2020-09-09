@@ -7,8 +7,8 @@ from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.modeling.building_blocks import YoloLayer
 from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
-from yolo.utils.scripts.darknet2tf import read_weights, split_list
-from yolo.utils.scripts.darknet2tf._load_weights import _load_weights_dnBackbone, _load_weights_dnHead
+from yolo.utils import DarkNetConverter
+from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 
 
 #@ks.utils.register_keras_serializable(package='yolo')
@@ -45,9 +45,9 @@ class DarkNet53(ks.Model):
                 config_file = download('yolov3.cfg')
             if weights_file is None:
                 weights_file = download('yolov3.weights')
-            full_model = read_weights(config_file, weights_file)
-            encoder, decoder = split_list(full_model, 76)
-            _load_weights_dnBackbone(self.backbone, encoder)
+            full_model = DarkNetConverter.read(config_file, weights_file)
+            encoder, decoder = split_converter(full_model, 76)
+            load_weights_dnBackbone(self.backbone, encoder)
         return
 
     def call(self, inputs):
@@ -174,19 +174,18 @@ class Yolov3(ks.Model):
                 config_file = download(self._model_name + '.cfg')
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
-            list_encdec = read_weights(config_file, weights_file)
-
-            encoder, decoder = split_list(list_encdec, self._encoder_decoder_split_location)
+            list_encdec = DarkNetConverter.read(config_file, weights_file)
+            encoder, decoder = split_converter(list_encdec, self._encoder_decoder_split_location)
 
         if not self.built:
             net = encoder[0]
             self.build(input_shape = (1, *net.shape))
 
         if dn2tf_backbone:
-            _load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
+            load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
 
         if dn2tf_head:
-            _load_weights_dnHead(self._head, decoder)
+            load_weights_dnHead(self._head, decoder)
 
         return
 

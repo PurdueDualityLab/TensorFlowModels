@@ -5,6 +5,9 @@ format into TensorFlow layers
 import itertools
 from tensorflow import keras as ks
 
+def split_converter(lst, i):
+    return lst.data[:i], lst.data[i:]
+
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""
     if len(block) == 0:
@@ -53,7 +56,7 @@ def get_tiny_tf_format(encoder):
             weights.append(layer.get_weights())
     return encoder, weights
 
-def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
+def load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
     # get weights for backbone
     if mtype == "darknet53":
         encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
@@ -62,14 +65,14 @@ def _load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
 
     # set backbone weights
     print(f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}")
-    _set_darknet_weights(backbone, weights_encoder)
+    set_darknet_weights(backbone, weights_encoder)
 
     backbone.trainable = False
     print(f"\nsetting backbone.trainable to: {backbone.trainable}\n")
     return
 
 
-def _load_weights_dnHead(head, decoder):
+def load_weights_dnHead(head, decoder):
     # get weights for head
     decoder, weights_decoder, head_layers, head_weights = get_decoder_weights(decoder)
     # set detection head weights
@@ -77,9 +80,9 @@ def _load_weights_dnHead(head, decoder):
     flat_full = list(flatten_model(head))
     flat_main = flat_full[:-3]
     flat_head = flat_full[-3:]
-    
-    _set_darknet_weights(head, weights_decoder, flat_model=flat_main)
-    _set_darknet_weights_head(flat_head, head_weights)
+
+    set_darknet_weights(head, weights_decoder, flat_model=flat_main)
+    set_darknet_weights_head(flat_head, head_weights)
 
     head.trainable = False
     print(f"\nsetting head.trainable to: {head.trainable}\n")
@@ -102,7 +105,7 @@ def flatten_model(model):
         else:
             yield layer
 
-def _set_darknet_weights_head(flat_head, weights_head):
+def set_darknet_weights_head(flat_head, weights_head):
     for layer in flat_head:
         weights = layer.get_weights()
         weight_depth = weights[0].shape[-2]
@@ -112,7 +115,7 @@ def _set_darknet_weights_head(flat_head, weights_head):
                 layer.set_weights(weight)
     return
 
-def _set_darknet_weights(model, weights_list, flat_model = None):
+def set_darknet_weights(model, weights_list, flat_model = None):
     if flat_model == None:
         zip_fill = flatten_model(model)
     else:
@@ -165,5 +168,5 @@ def get_decoder_weights(decoder):
         if layer != None and layer._type == "convolutional":
             head_weights.append(layer.get_weights())
             head_layers.append(layer)
-            
-    return layers, weights, head_layers, head_weights 
+
+    return layers, weights, head_layers, head_weights

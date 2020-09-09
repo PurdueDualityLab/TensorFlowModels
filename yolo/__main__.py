@@ -1,5 +1,5 @@
 """
-Run a script from the yolo utils package:
+Run a script from the yolo demos package:
 
 python3 -m yolo dnnum yolov3.cfg
 
@@ -18,18 +18,20 @@ except ImportError as e:
         "Some requirements were not installed. See the README to see how to install the packages.") from e
 
 
-from .utils import scripts
+from . import demos_testing
 
 
 def makeParser(parser):
     subparsers = parser.add_subparsers(
-        help='utility script to run', metavar='util', dest="_util")
+        help='demo script to run', metavar='util', dest="_util")
     subparsers.required = True
-    for util in scripts.__all__:
-        module = importlib.import_module('yolo.utils.scripts.' + util)
+    """
+    for util in demos_testing.__all__:
+        module = importlib.import_module('yolo.demos_testing.' + util)
         if hasattr(module, '_makeParser'):
             sub = subparsers.add_parser(util, help=module.__doc__)
             module._makeParser(sub)
+    """
 
 
 parser = argparse_flags.ArgumentParser(prog=f'{sys.executable} -m yolo')
@@ -46,7 +48,7 @@ def main(argv):
     args = parser.parse_args(argv[1:])
     util = args._util
 
-    module = importlib.import_module('yolo.utils.scripts.' + util)
+    module = importlib.import_module('yolo.demos_testing.' + util)
     module.main(argv, args=args)
 
 

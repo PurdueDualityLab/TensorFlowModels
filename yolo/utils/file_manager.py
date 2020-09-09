@@ -4,7 +4,6 @@ Manage the downloading of external files that are used in YOLO networks.
 
 # from __future__ import annotations
 
-from http.client import HTTPException
 import io
 import os
 
@@ -144,6 +143,8 @@ def download(name: str, trust: bool = False) -> str:
                         have thrown to indicate that the file was inaccessible.
     """
     import tensorflow.keras as ks
+    from http.client import HTTPException
+
     url, type, hash = urls[name]
 
     cache_dir = os.path.abspath('cache')
