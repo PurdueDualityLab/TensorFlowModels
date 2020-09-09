@@ -72,7 +72,11 @@ def loss_test_eager(model_name = "regular"):
     optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs")]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
-    model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
+    try:
+        model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
+    except KeyboardInterrupt:
+        model.save_weights("weights/train_test_1")
+        
     # for image, label in dataset:
     #     pred = model(image)
     #     loss = 0
