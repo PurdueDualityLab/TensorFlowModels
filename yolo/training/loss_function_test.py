@@ -13,7 +13,7 @@ import numpy as np
 from absl import app
 import time 
 
-from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
+from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
 prep_gpu()
 
 from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -45,17 +45,17 @@ def loss_test(model_name = "regular"):
     
     return
 
-def loss_test_eager(model_name = "regular"):
+def loss_test_eager(model_name = "regular", batch_size = 64):
     #very large probelm, pre processing fails when you start batching
+    prep_gpu_limited(gb = 8)
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = False, fixed_size= True)
+        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
         setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
         val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
         dataset.concatenate(val)
-        batch_size = 10
 
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
@@ -64,10 +64,8 @@ def loss_test_eager(model_name = "regular"):
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
-        #train = train.shuffle(1024)
 
         map_50 = YoloMAP_recall(name = "recall")
-        #map_75 = YoloMAP_recall75(name = "recall75")
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs")]
@@ -75,15 +73,8 @@ def loss_test_eager(model_name = "regular"):
     try:
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
     except KeyboardInterrupt:
-        model.save_weights("weights/train_test_1")
+        model.save_weights("weights/train_test_helps_1")
 
-    # for image, label in dataset:
-    #     pred = model(image)
-    #     loss = 0
-    #     for key in pred.keys():
-    #         loss += loss_fn[key](label[key], pred[key])
-    #     tf.print(loss)
-    #     time.sleep(1)
     return
 
 def gt_test():

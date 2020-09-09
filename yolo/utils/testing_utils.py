@@ -153,6 +153,26 @@ def prep_gpu(distribution = None):
         print()
     return
 
+def prep_gpu_limited(gb = 8):
+    print(f"\n!--PREPPING GPU--! with limit: {gb}")
+    traceback.print_stack()
+    if distribution == None:
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        print(gpus)
+        if gpus:
+            try:
+                # Currently, memory growth needs to be the same across GPUs
+                for gpu in gpus:
+                    tf.config.experimental.set_virtual_device_configuration(gpu, [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*gb)])
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+            except RuntimeError as e:
+                # Memory growth must be set before GPUs have been initialized
+                print(e)
+                raise
+        print()
+    return
+
 def load_loss(masks, anchors, scale, ltype = "mse", dtype = tf.float32):
     from yolo.modeling.functions.yolo_loss import Yolo_Loss
     loss_dict = {}
