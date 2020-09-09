@@ -170,21 +170,21 @@ class Yolo_Loss(ks.losses.Loss):
         # tf.print("iou recall75:, ", tf.reduce_sum(tf.cast(iou > 0.75, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
         # tf.print("iou recall50:, ", tf.reduce_sum(tf.cast(iou > 0.5, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
         
-        mask = tf.reduce_any(K.expand_dims(true_conf, axis = -1) > tf.cast(0, dtype = self.dtype), axis= -1)
-        #mask = tf.reduce_any(mask, axis= 0) 
-        mask_best = tf.reduce_any(K.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1) > tf.cast(0.5, dtype = self.dtype), axis= -1)
-        #mask_best = tf.reduce_any(mask_best, axis= 0) 
-        tf.print(tf.shape(mask_best))
-        bridge = 1
-        for batch in range(batch_size):
-            tf.print("\npred high: ", tf.boolean_mask(pred_box, mask_best[batch], axis = 1)[batch, :bridge, :])
-            tf.print("pred: ", tf.boolean_mask(pred_box, mask[batch], axis = 1)[batch, :bridge, :])
-            tf.print("true: ", tf.boolean_mask(true_box, mask[batch], axis = 1)[batch, :bridge, :])
-            tf.print("pred objness high: ", tf.boolean_mask(pred_conf , mask_best[batch], axis = 1)[batch, :bridge, :])
-            tf.print("pred objness: ", tf.boolean_mask(pred_conf , mask[batch], axis = 1)[batch, :bridge, :])
-            tf.print("x_y high: ", tf.boolean_mask(grid_points * fwidth, mask_best[batch], axis = 1)[batch, :bridge, :])
-            tf.print("x_y: ", tf.boolean_mask(grid_points * fwidth, mask[batch], axis = 1)[batch, :bridge, :])
-            tf.print("objness loss", conf_loss)
+        # mask = tf.reduce_any(K.expand_dims(true_conf, axis = -1) > tf.cast(0, dtype = self.dtype), axis= -1)
+        # #mask = tf.reduce_any(mask, axis= 0) 
+        # mask_best = tf.reduce_any(K.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1) > tf.cast(0.5, dtype = self.dtype), axis= -1)
+        # #mask_best = tf.reduce_any(mask_best, axis= 0) 
+        # tf.print(tf.shape(mask_best))
+        # bridge = 1
+        # for batch in range(batch_size):
+        #     tf.print("\npred high: ", tf.boolean_mask(pred_box, mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred: ", tf.boolean_mask(pred_box, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("true: ", tf.boolean_mask(true_box, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred objness high: ", tf.boolean_mask(pred_conf , mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred objness: ", tf.boolean_mask(pred_conf , mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("x_y high: ", tf.boolean_mask(grid_points * fwidth, mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("x_y: ", tf.boolean_mask(grid_points * fwidth, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("objness loss", conf_loss)
 
         return loss 
 

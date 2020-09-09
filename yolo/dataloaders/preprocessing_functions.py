@@ -78,7 +78,7 @@ def build_grided_gt(y_true, mask, size):
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
-                p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int8)), dtype = tf.int32)
+                p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
                 
                 # # start code for tie breaker, temp check performance 
                 # # find the index of the box
@@ -100,14 +100,11 @@ def build_grided_gt(y_true, mask, size):
                 # #end code for tie breaker
 
                 # write the box to the update list 
-                # if don't think the boexes are in the right index
-
                 # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 
                 """peculiar"""
-                # update_index = update_index.write(i, [batch, x[batch, box_id], y[batch, box_id], p])
                 update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
-                test = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
-                update = update.write(i, test)
+                value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
+                update = update.write(i, value)
                 i += 1
 
             """
@@ -371,14 +368,10 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True):
     #tf.print(tf.shape(label))
     x = tf.math.add(label[..., 0], jitter)
     x = tf.expand_dims(x, axis = -1)
-    #tf.print(tf.shape(x))
     y = tf.math.add(label[..., 1], jitter)
     y = tf.expand_dims(y, axis = -1)
-    #tf.print(tf.shape(y))
     rest = label[..., 2:]
-    #tf.print(tf.shape(rest))
     label = tf.concat([x,y,rest], axis = -1)
-    #tf.print(tf.shape(label))
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
@@ -432,7 +425,7 @@ def _detection_normalize(data, anchors, width, height):
     image = image / 255 # Normalize
     return image, label
 
-def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = True, anchors = None, masks = None, fixed = False):
+def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = False, anchors = None, masks = None, fixed = False):
     """Preprocesses (normalization and data augmentation) and batches the dataset.
     Args:
         dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
@@ -500,8 +493,8 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, ba
         dataset = data_augmentation_dataset.concatenate(non_preprocessed_split)
         if shuffle_flag == True:
             dataset = dataset.shuffle(size)
-        dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416)).padded_batch(int(batch_size))
-        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=False)).prefetch(tf.data.experimental.AUTOTUNE)
+        dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(int(batch_size))
+        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=False), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
     # Classification Preprocessing
     elif preprocessing_type.lower() == "classification":
         # Preprocessing functions applications.

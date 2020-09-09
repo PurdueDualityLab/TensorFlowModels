@@ -17,10 +17,14 @@ from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial,
 prep_gpu()
 
 from yolo.dataloaders.preprocessing_functions import preprocessing
+def lr_schedule(epoch, lr):
+    if epoch == 60 or epoch == 90:
+        lr = lr/10
+    return lr
 
 def loss_test(model_name = "regular"):
     #very large probelm, pre processing fails when you start batching
-    model, loss_fn, dataset, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
+    model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
     #model._head.trainable = True
 
     optimizer = ks.optimizers.SGD(lr=1e-4)
@@ -43,21 +47,32 @@ def loss_test(model_name = "regular"):
 
 def loss_test_eager(model_name = "regular"):
     #very large probelm, pre processing fails when you start batching
-    #model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = True, fixed_size= True)
-    #model._head.trainable = True
+    strat = tf.distribute.MirroredStrategy()
+    with strat.scope():
+        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = False, fixed_size= True)
 
-    masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-    anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+        setname = "coco"
+        dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=False)
+        val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=False)
+        dataset.concatenate(val)
+        batch_size = 10
 
-    with tf.device("/CPU:0"):
-        dataset, Info = tfds.load("voc", split="train", with_info=True, shuffle_files=True, download=False)
         size = int(Info.splits["train"].num_examples)
-        dataset = preprocessing(dataset, 100, "detection", size, 2, 80, anchors= anchors, masks= masks, fixed=True)
+        valsize = int(Info.splits["validation"].num_examples)
+        
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True)
 
-        val, Info = tfds.load("voc", split="validation", with_info=True, shuffle_files=True, download=False)
-        size = int(Info.splits["validation"].num_examples)
-        val = preprocessing(val, 100, "detection", size, 2, 80, anchors= anchors, masks= masks, fixed=True)
+        train = dataset.take(size//batch_size)
+        test = dataset.skip(size//batch_size)
+        #train = train.shuffle(1024)
 
+        map_50 = YoloMAP_recall(name = "recall")
+        #map_75 = YoloMAP_recall75(name = "recall75")
+    
+    optimizer = ks.optimizers.SGD(lr=1e-3)
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs")]
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
+    model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
     # for image, label in dataset:
     #     pred = model(image)
     #     loss = 0
