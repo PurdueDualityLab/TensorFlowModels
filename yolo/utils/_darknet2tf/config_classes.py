@@ -91,6 +91,15 @@ class Config(ABC):
 
     @abstractmethod
     def to_tf(self, tensors):
+        """
+        Convert the DarkNet configuration object to a tensor given the previous
+        tensors that occoured in the network. This function should also return
+        a Keras layer if it has weights.
+
+        Returns:
+            if weights: a tuple consisting of the output tensor and Keras layer
+            if no weights: the output tensor
+        """
         return None
 
 class _LayerBuilder(dict):
@@ -225,7 +234,7 @@ class shortcutCFG(Config):
         '''
         _from = layer_dict['from']
         if type(_from) is not tuple:
-            _from = [_from]
+            _from = (_from,)
 
         prevlayer = net[-1]
         l = {
@@ -278,7 +287,7 @@ class routeCFG(Config):
                 c += lc
         else:
             w, h, c = net[layers].shape
-            layers = [layers]
+            layers = (layers,)
 
         # Create layer
         l = {
