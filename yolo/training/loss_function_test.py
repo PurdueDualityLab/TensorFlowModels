@@ -72,8 +72,9 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
     try:
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
-    except KeyboardInterrupt:
         model.save_weights("weights/train_test_helps_1")
+    except:
+        model.save_weights("weights/train_test_helps_exit_early_1")
     return
 
 def gt_test():
