@@ -52,8 +52,8 @@ def loss_test_eager(model_name = "regular"):
         model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = False, fixed_size= True)
 
         setname = "coco"
-        dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=False)
-        val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=False)
+        dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
+        val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
         dataset.concatenate(val)
         batch_size = 10
 
@@ -76,7 +76,7 @@ def loss_test_eager(model_name = "regular"):
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
     except KeyboardInterrupt:
         model.save_weights("weights/train_test_1")
-        
+
     # for image, label in dataset:
     #     pred = model(image)
     #     loss = 0
