@@ -126,7 +126,7 @@ def build_model_partial(name = "regular", classes = 80, boxes = 9, ltype = "giou
     max_boxes = 200
 
     model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head, weights_file=f"yolov3-{name}.weights")
+    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head)#, weights_file=f"yolov3-{name}.weights")
 
     w_scale  = 416 if w == None else w
     loss_fns = load_loss(masks = masks, anchors = anchors, scale = w_scale, ltype=ltype)
