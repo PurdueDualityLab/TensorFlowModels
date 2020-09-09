@@ -43,7 +43,7 @@ def loss_test(model_name = "regular"):
     
     return
 
-def loss_test_eager(model_name = "regular", batch_size = 64):
+def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -70,8 +70,8 @@ def loss_test_eager(model_name = "regular", batch_size = 64):
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs")]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
-        print(size//batch_size)
-        model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = 160, update_freq = 200)
+        print(size//batch_size, epochs)
+        model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs, update_freq = 200)
     except KeyboardInterrupt:
         model.save_weights("weights/train_test_helps_1")
     return
