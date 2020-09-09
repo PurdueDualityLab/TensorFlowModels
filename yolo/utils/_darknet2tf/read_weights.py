@@ -2,7 +2,6 @@
 This file contains the code to parse DarkNet weight files.
 """
 
-from __future__ import annotations
 
 import io
 import numpy as np
