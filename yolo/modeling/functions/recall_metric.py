@@ -44,7 +44,7 @@ class YoloMAP(ks.metrics.Metric):
         true_conf = tf.expand_dims(y_true[..., 4], axis = -1)
 
         value = tf.reduce_sum(tf.cast(pred_conf > self._thresh, dtype = self.dtype) * true_conf, axis = -1)/tf.reduce_sum(true_conf + 1e-16)
-        self._value.assign_add(tf.reduce_sum(value)/tf.cast(tf.shape(y_pred)[0], dtype = tf.float32))
+        self._value.assign(tf.reduce_sum(value)/tf.cast(tf.shape(y_pred)[0], dtype = tf.float32))
         return
     
     def result(self):
