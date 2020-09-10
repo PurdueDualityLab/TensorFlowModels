@@ -21,8 +21,8 @@ class YoloMAP_recall(ks.metrics.Metric):
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1)
         true_conf = tf.expand_dims(y_true[..., 4], axis = -1)
 
-        value = tf.reduce_sum(tf.cast(pred_conf > self._thresh, dtype = self.dtype) * true_conf, axis = -1)/tf.reduce_sum(true_conf + 1e-16)
-        self._value.assign_add(tf.reduce_sum(value)/tf.cast(tf.shape(y_pred)[0], dtype = tf.float32))
+        value = tf.reduce_sum(tf.cast(pred_conf > self._thresh, dtype = self.dtype) * true_conf, axis = (1, 2, 3))/(tf.reduce_sum(true_conf, axis = (1, 2, 3)) + 1e-16)
+        self._value.assign_add(tf.reduce_mean(value))
         self._count.assign_add(tf.cast(1.0, dtype = tf.float32))
         return
     
@@ -43,8 +43,8 @@ class YoloMAP(ks.metrics.Metric):
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1)
         true_conf = tf.expand_dims(y_true[..., 4], axis = -1)
 
-        value = tf.reduce_sum(tf.cast(pred_conf > self._thresh, dtype = self.dtype) * true_conf, axis = -1)/tf.reduce_sum(true_conf + 1e-16)
-        self._value.assign(tf.reduce_sum(value)/tf.cast(tf.shape(y_pred)[0], dtype = tf.float32))
+        value = tf.reduce_sum(tf.cast(pred_conf > self._thresh, dtype = self.dtype) * true_conf)/(tf.reduce_sum(true_conf) + 1e-16)
+        self._value.assign(value)
         return
     
     def result(self):
