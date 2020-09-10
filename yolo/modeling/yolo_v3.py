@@ -9,6 +9,8 @@ from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 
+__all__ = ['DarkNet53', 'Yolov3']
+
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
