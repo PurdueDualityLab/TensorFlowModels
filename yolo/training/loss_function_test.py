@@ -65,10 +65,11 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         test = dataset.skip(size//batch_size)
 
         map_50 = YoloMAP_recall(name = "recall")
+        Detection_50 = YoloMAP(name = "Det")
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
-    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50, Detection_50])
     try:
         model.summary()
         print(size//batch_size, epochs)
