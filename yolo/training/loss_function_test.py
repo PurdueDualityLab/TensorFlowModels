@@ -16,7 +16,7 @@ import time
 from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
 
 def lr_schedule(epoch, lr):
-    if epoch == 60 or epoch == 90:
+    if epoch == 45 or epoch == 60:
         lr = lr/10
     return lr
 
@@ -43,7 +43,7 @@ def loss_test(model_name = "regular"):
     
     return
 
-def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
+def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
