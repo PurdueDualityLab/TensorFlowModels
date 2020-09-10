@@ -73,7 +73,7 @@ def build_grided_gt(y_true, mask, size):
             if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)): # VALUE ERROR is (None, 25)
                 #tf.print("outer zero: ",y_true[batch, box_id, 0:2])
                 continue
-            if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater(y_true[batch, box_id, 0:2], 1.0)): 
+            if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater_equal(y_true[batch, box_id, 0:2], 1.0)): 
                 #tf.print("outer vals: ",y_true[batch, box_id, 0:2])
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
