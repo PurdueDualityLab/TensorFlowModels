@@ -142,7 +142,7 @@ class DarkConv(ks.layers.Layer):
         x = self._zeropad(inputs)
         x = self.conv(x)
         x = self.bn(x)
-        x = self._activation_fn(x)#tf.nn.leaky_relu(x, alpha=self._leaky_alpha)
+        x = self._activation_fn(x)
         return x
 
     def get_config(self):

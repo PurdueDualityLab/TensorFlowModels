@@ -113,8 +113,7 @@ class DarkResidual(ks.layers.Layer):
                                leaky_alpha=self._leaky_alpha)
 
         self._shortcut = ks.layers.Add()
-        self._activation_fn = ks.layers.Activation(
-            activation=self._sc_activation)
+        self._activation_fn = ks.layers.Activation(activation=self._sc_activation)
 
         super().build(input_shape)
         return
