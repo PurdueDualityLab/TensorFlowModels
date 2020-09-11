@@ -109,7 +109,6 @@ class Yolo_Loss(ks.losses.Loss):
         fwidth = tf.cast(width, self.dtype)
         fheight = tf.cast(height, self.dtype)
 
-        tf.print(tf.shape(y_pred))
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
