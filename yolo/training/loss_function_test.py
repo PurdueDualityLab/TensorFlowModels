@@ -20,9 +20,9 @@ def lr_schedule(epoch, lr):
         lr = lr/10
     return lr
 
-def lr_schedule(epoch, lr):
-    if epoch == 2 or epoch == 3:
-        lr = lr/10
+def lr_schedule2(epoch, lr):
+    if epoch == 3 or epoch == 3:
+        lr = lr/15
     return lr
 
 def loss_test(model_name = "regular"):
@@ -84,7 +84,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         model.save_weights("weights/train_test_helps_exit_early_1")
     return
 
-def loss_test_fast(model_name = "regular", batch_size = 1, epochs = 3):
+def loss_test_fast(model_name = "regular", batch_size = 2, epochs = 6):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -109,7 +109,7 @@ def loss_test_fast(model_name = "regular", batch_size = 1, epochs = 3):
         Detection_50 = YoloMAP(name = "Det")
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
-    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50, Detection_50])
     try:
         model.summary()
@@ -152,8 +152,8 @@ def gt_test():
     return
 
 def main(argv, args = None):
-    #loss_test_fast()
-    loss_test_eager()
+    loss_test_fast(model_name = "spp")
+    #loss_test_eager()
     #gt_test()
     return
 
