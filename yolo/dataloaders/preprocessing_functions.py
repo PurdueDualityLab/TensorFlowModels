@@ -32,7 +32,7 @@ def py_func_rand():
         randscale(tensorflow.python.framework.ops.Tensor): A random integer between
             -10 and 19.
     """
-    jitter = np.random.uniform(low = -0.3, high = 0.3)
+    jitter = np.random.uniform(low = -0.1, high = 0.1)
     randscale = np.random.randint(low = 10, high = 19)
     return jitter, randscale
 
@@ -494,7 +494,7 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, ba
         if shuffle_flag == True:
             dataset = dataset.shuffle(size)
         dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(int(batch_size))
-        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=False), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
+        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=fixed), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
     # Classification Preprocessing
     elif preprocessing_type.lower() == "classification":
         # Preprocessing functions applications.
