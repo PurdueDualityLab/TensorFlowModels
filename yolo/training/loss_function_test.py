@@ -72,7 +72,7 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
+    optimizer = ks.optimizers.SGD(lr=1e-4)#, momentum=0.9)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
@@ -80,7 +80,7 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
         model.save_weights("weights/train_test_nojitter_helps_1")
-    except:
+    except KeyboardInterrupt:
         model.save_weights("weights/train_test_nojitter_helps_exit_early_1")
     return
 
@@ -116,7 +116,7 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
         model.save_weights("weights/train_test_desk_fast_1")
-    except:
+    except KeyboardInterrupt:
         model.save_weights("weights/train_test_desk_fast_exit_early_1")
     return
 
