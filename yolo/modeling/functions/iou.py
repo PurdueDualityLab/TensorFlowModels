@@ -21,7 +21,7 @@ def box_iou(box_1, box_2, dtype = tf.float32):
     box1_area = box1_wh[..., 0] * box1_wh[..., 1]
     box2_area = box2_wh[..., 0] * box2_wh[..., 1]
     iou = intersect_area/(box1_area + box2_area - intersect_area)
-    iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
+    #iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
     return iou
 
 
@@ -45,8 +45,8 @@ def giou(box_1, box_2, dtype = tf.float32):
     IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
     giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
 
-    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
-    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
+    #giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
+    #giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
     return giou
 
 
@@ -71,6 +71,6 @@ def ciou(box_1, box_2):
     IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
     giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
 
-    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
-    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
+    #giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
+    #giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
     return giou

@@ -16,12 +16,12 @@ import time
 from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
 
 def lr_schedule(epoch, lr):
-    if epoch == 45 or epoch == 60:
+    if epoch == 60 or epoch == 90:
         lr = lr/10
     return lr
 
 def lr_schedule2(epoch, lr):
-    if epoch == 3 or epoch == 5:
+    if epoch == 2 or epoch == 3:
         lr = lr/10
     return lr
 
@@ -48,7 +48,7 @@ def loss_test(model_name = "regular"):
     
     return
 
-def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
+def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -72,7 +72,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
@@ -84,12 +84,12 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         model.save_weights("weights/train_test_nojitter_helps_exit_early_1")
     return
 
-def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 8):
+def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
     #very large probelm, pre processing fails when you start batching
     prep_gpu()
     from yolo.dataloaders.preprocessing_functions import preprocessing
     strat = tf.distribute.MirroredStrategy()
-    with tf.device("/GPU:0"):
+    with strat.scope():
         model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
         setname = "coco"
@@ -108,7 +108,7 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 8):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-4)
+    optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 10)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])#, Detection_50])
     try:

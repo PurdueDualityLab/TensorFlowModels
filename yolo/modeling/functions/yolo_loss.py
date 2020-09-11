@@ -102,6 +102,7 @@ class Yolo_Loss(ks.losses.Loss):
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
         grid_points = self._get_centers(width, height, batch_size)
         anchor_grid = self._get_anchor_grid(width, height, batch_size)
+        zeros = anchor_grid - anchor_grid
 
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
         y_pred = tf.cast(y_pred, dtype = self.dtype)
@@ -121,8 +122,7 @@ class Yolo_Loss(ks.losses.Loss):
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing
-        true_wh = tf.where(tf.math.is_nan(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
-        true_wh = tf.where(tf.math.is_inf(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
+        true_wh = tf.where(tf.math.is_nan(true_wh), zeros, true_wh)
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
 
@@ -133,8 +133,8 @@ class Yolo_Loss(ks.losses.Loss):
         true_box = y_true[..., 0:4]
         iou = box_iou(true_box, pred_box, dtype = self.dtype) 
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
-        iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = self.dtype), iou)
-        iou = tf.where(tf.math.is_inf(iou), tf.cast(0.0, dtype = self.dtype), iou)
+        iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
+        iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
         mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
@@ -148,8 +148,8 @@ class Yolo_Loss(ks.losses.Loss):
         else:
             giou_loss = giou(true_box, pred_box, dtype = self.dtype)
             #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing, i think because of the loss being a tesnor and 0 being a value?
-            giou_loss = tf.where(tf.math.is_nan(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
-            giou_loss = tf.where(tf.math.is_inf(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
+            giou_loss = tf.where(tf.math.is_nan(giou_loss), zeros[..., 0], giou_loss)
+            giou_loss = tf.where(tf.math.is_inf(giou_loss), zeros[..., 0], giou_loss)
             loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
