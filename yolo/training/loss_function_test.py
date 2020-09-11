@@ -54,7 +54,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
     from yolo.dataloaders.preprocessing_functions import preprocessing
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True, jitter = False)
+        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
         setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
@@ -64,7 +64,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
         
-        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True)
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True, jitter = False)
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
