@@ -73,7 +73,7 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
         Detection_50 = YoloMAP(name = "Det")
     
     optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
-    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
         model.summary()
