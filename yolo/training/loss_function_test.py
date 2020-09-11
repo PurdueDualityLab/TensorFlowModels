@@ -108,7 +108,7 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-4)#, momentum=0.99)
+    optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.99)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 10)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])#, Detection_50])
     try:

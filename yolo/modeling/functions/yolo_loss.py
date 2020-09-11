@@ -119,7 +119,7 @@ class Yolo_Loss(ks.losses.Loss):
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
-        true_wh = tf.math.log(y_true[..., 2:4]/(anchor_grid + 1.0e-16))
+        true_wh = tf.math.log(tf.math.divide_no_nan(y_true[..., 2:4],(anchor_grid + 1.0e-16)))
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
