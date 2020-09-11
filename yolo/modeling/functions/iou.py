@@ -20,7 +20,7 @@ def box_iou(box_1, box_2, dtype = tf.float32):
     intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
     box1_area = box1_wh[..., 0] * box1_wh[..., 1]
     box2_area = box2_wh[..., 0] * box2_wh[..., 1]
-    iou = intersect_area,(box1_area + box2_area - intersect_area)
+    iou = intersect_area/(box1_area + box2_area - intersect_area)
     iou = tf.where(tf.math.is_nan(iou), 0.0, iou)
     iou = tf.where(tf.math.is_inf(iou), 0.0, iou)
     return iou
