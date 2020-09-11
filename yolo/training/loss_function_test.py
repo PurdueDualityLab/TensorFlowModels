@@ -21,7 +21,7 @@ def lr_schedule(epoch, lr):
     return lr
 
 def lr_schedule2(epoch, lr):
-    if epoch == 2 or epoch == 3:
+    if epoch == 3 or epoch == 5:
         lr = lr/10
     return lr
 
@@ -54,7 +54,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
     from yolo.dataloaders.preprocessing_functions import preprocessing
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
+        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True, jitter = False)
 
         setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
@@ -84,7 +84,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         model.save_weights("weights/train_test_helps_exit_early_1")
     return
 
-def loss_test_fast(model_name = "regular", batch_size = 1, epochs = 4):
+def loss_test_fast(model_name = "regular", batch_size = 2, epochs = 8):
     #very large probelm, pre processing fails when you start batching
     prep_gpu()
     from yolo.dataloaders.preprocessing_functions import preprocessing

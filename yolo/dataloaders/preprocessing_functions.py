@@ -32,7 +32,7 @@ def py_func_rand():
         randscale(tensorflow.python.framework.ops.Tensor): A random integer between
             -10 and 19.
     """
-    jitter = np.random.uniform(low = -0.1, high = 0.1)
+    jitter = np.random.uniform(low = -0.075, high = 0.075)
     randscale = np.random.randint(low = 10, high = 19)
     return jitter, randscale
 
@@ -336,7 +336,7 @@ def _priming_data_augmentation(datapoint, num_of_classes):
     else:
         return image, tf.one_hot(datapoint['label'],num_of_classes)
 
-def _detection_data_augmentation(image, label, masks, fixed_size = True):
+def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_im = False):
     """
     for each mask in masks, compute a output ground truth grid
     
@@ -361,17 +361,18 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True):
     if fixed_size:
         randscale = 13
     
-    image_jitter = tf.concat([jitter, jitter], axis = 0)
-    image_jitter.set_shape([2])
-    image = tfa.image.translate(image, image_jitter)
-    # Bounding Box Jitter
-    #tf.print(tf.shape(label))
-    x = tf.math.add(label[..., 0], jitter)
-    x = tf.expand_dims(x, axis = -1)
-    y = tf.math.add(label[..., 1], jitter)
-    y = tf.expand_dims(y, axis = -1)
-    rest = label[..., 2:]
-    label = tf.concat([x,y,rest], axis = -1)
+    if jitter_im == True:
+        image_jitter = tf.concat([jitter, jitter], axis = 0)
+        image_jitter.set_shape([2])
+        image = tfa.image.translate(image, image_jitter)
+        # Bounding Box Jitter
+        #tf.print(tf.shape(label))
+        x = tf.math.add(label[..., 0], jitter)
+        x = tf.expand_dims(x, axis = -1)
+        y = tf.math.add(label[..., 1], jitter)
+        y = tf.expand_dims(y, axis = -1)
+        rest = label[..., 2:]
+        label = tf.concat([x,y,rest], axis = -1)
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
@@ -425,7 +426,7 @@ def _detection_normalize(data, anchors, width, height):
     image = image / 255 # Normalize
     return image, label
 
-def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = False, anchors = None, masks = None, fixed = False):
+def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = False, anchors = None, masks = None, fixed = False, jitter = False):
     """Preprocesses (normalization and data augmentation) and batches the dataset.
     Args:
         dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
@@ -494,7 +495,7 @@ def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, ba
         if shuffle_flag == True:
             dataset = dataset.shuffle(size)
         dataset = dataset.map(lambda x: _detection_normalize(x, anchors, 416, 416), num_parallel_calls = tf.data.experimental.AUTOTUNE).padded_batch(int(batch_size))
-        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=fixed), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
+        dataset = dataset.map(lambda x, y: _detection_data_augmentation(x, y, masks = masks, fixed_size=fixed, jitter_im= jitter), num_parallel_calls = tf.data.experimental.AUTOTUNE)#.prefetch(10)
     # Classification Preprocessing
     elif preprocessing_type.lower() == "classification":
         # Preprocessing functions applications.

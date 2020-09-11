@@ -120,6 +120,7 @@ class Yolo_Loss(ks.losses.Loss):
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
+        #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing
         true_wh = tf.where(tf.math.is_nan(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
         true_wh = tf.where(tf.math.is_inf(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
         true_conf = y_true[..., 4]
@@ -131,6 +132,7 @@ class Yolo_Loss(ks.losses.Loss):
         pred_box = K.concatenate([box_xy, box_wh], axis = -1)        
         true_box = y_true[..., 0:4]
         iou = box_iou(true_box, pred_box, dtype = self.dtype) 
+        #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
         iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = self.dtype), iou)
         iou = tf.where(tf.math.is_inf(iou), tf.cast(0.0, dtype = self.dtype), iou)
         mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
@@ -145,6 +147,7 @@ class Yolo_Loss(ks.losses.Loss):
             loss_box = (loss_wh + loss_xy) * true_conf * scale 
         else:
             giou_loss = giou(true_box, pred_box, dtype = self.dtype)
+            #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing, i think because of the loss being a tesnor and 0 being a value?
             giou_loss = tf.where(tf.math.is_nan(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
             giou_loss = tf.where(tf.math.is_inf(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
             loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
@@ -159,11 +162,32 @@ class Yolo_Loss(ks.losses.Loss):
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
         loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype)
         conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype)
-        # conf_loss = tf.cast(tf.reduce_sum(conf_loss2, axis=(1, 2)), dtype = self.dtype)
         class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype)
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-        return class_loss + conf_loss + loss_box
+        loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+
+        #debug
+        # if loss > 100 and batch_size == 1:
+        # tf.print("iou recall75:, ", tf.reduce_sum(tf.cast(iou > 0.75, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
+        # tf.print("iou recall50:, ", tf.reduce_sum(tf.cast(iou > 0.5, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
+        
+        # mask = tf.reduce_any(K.expand_dims(true_conf, axis = -1) > tf.cast(0, dtype = self.dtype), axis= -1)
+        # #mask = tf.reduce_any(mask, axis= 0) 
+        # mask_best = tf.reduce_any(K.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1) > tf.cast(0.5, dtype = self.dtype), axis= -1)
+        # #mask_best = tf.reduce_any(mask_best, axis= 0) 
+        # tf.print(tf.shape(mask_best))
+        # bridge = 1
+        # for batch in range(batch_size):
+        #     tf.print("\npred high: ", tf.boolean_mask(pred_box, mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred: ", tf.boolean_mask(pred_box, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("true: ", tf.boolean_mask(true_box, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred objness high: ", tf.boolean_mask(pred_conf , mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("pred objness: ", tf.boolean_mask(pred_conf , mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("x_y high: ", tf.boolean_mask(grid_points * fwidth, mask_best[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("x_y: ", tf.boolean_mask(grid_points * fwidth, mask[batch], axis = 1)[batch, :bridge, :])
+        #     tf.print("objness loss", conf_loss)
+        return loss
 
     def get_config(self):
         """save all loss attributes"""
