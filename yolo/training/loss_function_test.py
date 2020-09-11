@@ -21,8 +21,8 @@ def lr_schedule(epoch, lr):
     return lr
 
 def lr_schedule2(epoch, lr):
-    if epoch == 3 or epoch == 3:
-        lr = lr/15
+    if epoch == 3 or epoch == 5:
+        lr = lr/10
     return lr
 
 def loss_test(model_name = "regular"):
