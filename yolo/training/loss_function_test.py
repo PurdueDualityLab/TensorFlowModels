@@ -20,6 +20,11 @@ def lr_schedule(epoch, lr):
         lr = lr/10
     return lr
 
+def lr_schedule(epoch, lr):
+    if epoch == 2 or epoch == 3:
+        lr = lr/10
+    return lr
+
 def loss_test(model_name = "regular"):
     #very large probelm, pre processing fails when you start batching
     model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
@@ -79,6 +84,42 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         model.save_weights("weights/train_test_helps_exit_early_1")
     return
 
+def loss_test_fast(model_name = "regular", batch_size = 1, epochs = 3):
+    #very large probelm, pre processing fails when you start batching
+    prep_gpu_limited(gb = 8)
+    from yolo.dataloaders.preprocessing_functions import preprocessing
+    strat = tf.distribute.MirroredStrategy()
+    with strat.scope():
+        model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
+
+        setname = "coco"
+        dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
+        val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
+        dataset.concatenate(val)
+
+        size = int(Info.splits["train"].num_examples)
+        valsize = int(Info.splits["validation"].num_examples)
+        
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True)
+
+        train = dataset.take(size//batch_size)
+        test = dataset.skip(size//batch_size)
+
+        map_50 = YoloMAP_recall(name = "recall")
+        Detection_50 = YoloMAP(name = "Det")
+    
+    optimizer = ks.optimizers.SGD(lr=1e-3)
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50, Detection_50])
+    try:
+        model.summary()
+        print(size//batch_size, epochs)
+        model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
+        model.save_weights("weights/train_test_helps_fast_1")
+    except:
+        model.save_weights("weights/train_test_helps_fast_exit_early_1")
+    return
+
 def gt_test():
     model, loss_fn, dataset, anchors, masks = build_model_partial(name="regular", use_mixed=False, split="validation", batch_size= 10)
     partial_model = filter_partial()
@@ -111,7 +152,8 @@ def gt_test():
     return
 
 def main(argv, args = None):
-    loss_test_eager()
+    loss_test_fast()
+    #loss_test_eager()
     #gt_test()
     return
 
