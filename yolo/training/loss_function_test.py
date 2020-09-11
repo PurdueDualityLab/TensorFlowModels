@@ -152,8 +152,8 @@ def gt_test():
     return
 
 def main(argv, args = None):
-    loss_test_fast(model_name = "regular")
-    #loss_test_eager()
+    #loss_test_fast(model_name = "regular")
+    loss_test_eager()
     #gt_test()
     return
 
