@@ -32,8 +32,9 @@ def py_func_rand():
         randscale(tensorflow.python.framework.ops.Tensor): A random integer between
             -10 and 19.
     """
-    jitter = np.random.uniform(low = -0.075, high = 0.075)
-    randscale = np.random.randint(low = 10, high = 19)
+    jitter = np.random.uniform(low = -0.025, high = 0.025)
+    #randscale = np.random.randint(low = 10, high = 19)
+    randscale = np.random.randint(low = 10, high = 15)
     return jitter, randscale
 
 @tf.function
@@ -80,24 +81,24 @@ def build_grided_gt(y_true, mask, size):
             if K.any(index):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
                 
-                # # start code for tie breaker, temp check performance 
-                # # find the index of the box
-                # uid = 1
-                # used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
-                # count = 0
-                # # check if the next anchor is used used == 1, if so find another box 
-                # while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                #     uid = 2
-                #     count += 1
-                #     p = (p + 1)%3
-                #     used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                # if tf.math.equal(used, 1):
-                #     tf.print("skipping")
-                #     continue
-                # # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
-                # # it will be prioritized over the current box.
-                # depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
-                # #end code for tie breaker
+                # start code for tie breaker, temp check performance 
+                # find the index of the box
+                uid = 1
+                used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
+                count = 0
+                # check if the next anchor is used used == 1, if so find another box 
+                while tf.math.equal(used, 1) and tf.math.less(count, 3):
+                    uid = 2
+                    count += 1
+                    p = (p + 1)%3
+                    used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
+                if tf.math.equal(used, 1):
+                    tf.print("skipping")
+                    continue
+                # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
+                # it will be prioritized over the current box.
+                depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
+                #end code for tie breaker
 
                 # write the box to the update list 
                 # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 

@@ -64,7 +64,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
         
-        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True, jitter = False)
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=False, jitter = False)
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
@@ -74,17 +74,17 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 80):
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
-    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50, Detection_50])
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     try:
         model.summary()
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
-        model.save_weights("weights/train_test_helps_1")
+        model.save_weights("weights/train_test_nojitter_helps_1")
     except:
-        model.save_weights("weights/train_test_helps_exit_early_1")
+        model.save_weights("weights/train_test_nojitter_helps_exit_early_1")
     return
 
-def loss_test_fast(model_name = "regular", batch_size = 2, epochs = 8):
+def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 8):
     #very large probelm, pre processing fails when you start batching
     prep_gpu()
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -100,7 +100,7 @@ def loss_test_fast(model_name = "regular", batch_size = 2, epochs = 8):
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
         
-        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True)
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True, jitter = False)
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
@@ -108,16 +108,16 @@ def loss_test_fast(model_name = "regular", batch_size = 2, epochs = 8):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-3)
-    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
-    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50, Detection_50])
+    optimizer = ks.optimizers.SGD(lr=1e-4)
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 10)]
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])#, Detection_50])
     try:
         model.summary()
         print(size//batch_size, epochs)
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
-        model.save_weights("weights/train_test_helps_fast_1")
+        model.save_weights("weights/train_test_desk_fast_1")
     except:
-        model.save_weights("weights/train_test_helps_fast_exit_early_1")
+        model.save_weights("weights/train_test_desk_fast_exit_early_1")
     return
 
 def gt_test():

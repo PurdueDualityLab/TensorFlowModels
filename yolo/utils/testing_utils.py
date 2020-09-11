@@ -64,7 +64,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     if not saved: 
         model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
     else:
-        model.load_weights("weights/custom_train1_adam_test")
+        model.load_weights("weights/train_test_desk_fast_exit_early_1")
 
     w_scale  = 416 if w == None else w
 
