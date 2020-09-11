@@ -102,7 +102,6 @@ class Yolo_Loss(ks.losses.Loss):
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
         grid_points = self._get_centers(width, height, batch_size)
         anchor_grid = self._get_anchor_grid(width, height, batch_size)
-        zeros = anchor_grid - anchor_grid
 
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
         y_pred = tf.cast(y_pred, dtype = self.dtype)
@@ -110,6 +109,7 @@ class Yolo_Loss(ks.losses.Loss):
         fwidth = tf.cast(width, self.dtype)
         fheight = tf.cast(height, self.dtype)
 
+        tf.print(tf.shape(y_pred))
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
@@ -132,8 +132,8 @@ class Yolo_Loss(ks.losses.Loss):
         true_box = y_true[..., 0:4]
         iou = box_iou(true_box, pred_box, dtype = self.dtype) 
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
-        iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
-        iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
+        # iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
+        # iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
         mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
