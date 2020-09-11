@@ -120,9 +120,8 @@ class Yolo_Loss(ks.losses.Loss):
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
-        true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
+        true_wh = tf.math.log(tf.math.divide_no_nan(y_true[..., 2:4],anchor_grid))
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing
-        true_wh = tf.where(tf.math.is_nan(true_wh), zeros, true_wh)
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
 
@@ -133,8 +132,8 @@ class Yolo_Loss(ks.losses.Loss):
         true_box = y_true[..., 0:4]
         iou = box_iou(true_box, pred_box, dtype = self.dtype) 
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
-        iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
-        iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
+        #iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
+        #iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
         mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
@@ -148,8 +147,8 @@ class Yolo_Loss(ks.losses.Loss):
         else:
             giou_loss = giou(true_box, pred_box, dtype = self.dtype)
             #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing, i think because of the loss being a tesnor and 0 being a value?
-            giou_loss = tf.where(tf.math.is_nan(giou_loss), zeros[..., 0], giou_loss)
-            giou_loss = tf.where(tf.math.is_inf(giou_loss), zeros[..., 0], giou_loss)
+            #giou_loss = tf.where(tf.math.is_nan(giou_loss), zeros[..., 0], giou_loss)
+            #giou_loss = tf.where(tf.math.is_inf(giou_loss), zeros[..., 0], giou_loss)
             loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 

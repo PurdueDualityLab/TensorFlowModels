@@ -32,10 +32,14 @@ def py_func_rand():
         randscale(tensorflow.python.framework.ops.Tensor): A random integer between
             -10 and 19.
     """
-    jitter = np.random.uniform(low = -0.025, high = 0.025)
-    #randscale = np.random.randint(low = 10, high = 19)
-    randscale = np.random.randint(low = 10, high = 15)
-    return jitter, randscale
+    randscale = np.random.randint(low = 10, high = 19)
+    jitter_x = np.random.uniform(low = -0.1, high = 0.1)
+    jitter_y = np.random.uniform(low = -0.1, high = 0.1)
+    jitter_cx = 0.0
+    jitter_cy = 0.0
+    jitter_bw = np.random.uniform(low = -.05, high = .05) + 1.0
+    jitter_bh = np.random.uniform(low = -.05, high = .05) + 1.0
+    return jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale 
 
 @tf.function
 def build_grided_gt(y_true, mask, size):
@@ -337,6 +341,7 @@ def _priming_data_augmentation(datapoint, num_of_classes):
     else:
         return image, tf.one_hot(datapoint['label'],num_of_classes)
 
+
 def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_im = False):
     """
     for each mask in masks, compute a output ground truth grid
@@ -358,33 +363,87 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
 
     #masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     # Image Jitter
-    jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
+    jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale = tf.py_function(py_func_rand, [], [tf.float32,  tf.float32,tf.float32,  tf.float32,tf.float32,  tf.float32, tf.int32,])
     if fixed_size:
         randscale = 13
     
     if jitter_im == True:
-        image_jitter = tf.concat([jitter, jitter], axis = 0)
+        image_jitter = tf.concat([jitter_x, jitter_y], axis = 0)
         image_jitter.set_shape([2])
-        image = tfa.image.translate(image, image_jitter)
+        image = tfa.image.translate(image, image_jitter * tf.cast(tf.shape(image)[1], tf.float32))
         # Bounding Box Jitter
         #tf.print(tf.shape(label))
-        x = tf.math.add(label[..., 0], jitter)
+        x = tf.math.add(label[..., 0], jitter_x + jitter_cx)
         x = tf.expand_dims(x, axis = -1)
-        y = tf.math.add(label[..., 1], jitter)
+        y = tf.math.add(label[..., 1], jitter_y + jitter_cy)
         y = tf.expand_dims(y, axis = -1)
-        rest = label[..., 2:]
-        label = tf.concat([x,y,rest], axis = -1)
+        w = label[..., 2] * jitter_bw
+        w = tf.expand_dims(w, axis = -1)
+        h = label[..., 3] * jitter_bh
+        h = tf.expand_dims(h, axis = -1)
+
+        rest = label[..., 4:]
+        label = tf.concat([x,y,w,h,rest], axis = -1)
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
     image = tf.image.random_saturation(image=image, lower = 0.75, upper=1.25) # Saturation
     image = tf.image.random_hue(image=image, max_delta=.1) # Hue
-
+    
     for key in masks.keys():
         masks[key] = build_grided_gt(label, tf.convert_to_tensor(masks[key], dtype= tf.float32), randscale)
         randscale *= 2
-
+        
     return image, masks
+
+# def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_im = False):
+#     """
+#     for each mask in masks, compute a output ground truth grid
+    
+#     Args: 
+#         image: tf.tensor image to manipulate 
+#         label: the ground truth of the boxes [batch, 4, 1, num_classes]
+#         masks: dictionary for the index of the anchor to use at each scale, the number of keys should be the 
+#                same as the number of prediction your yolo configuration will make. 
+             
+#                ex: yolo regular: -> change to this format
+#                 {256: [0,1,2], 512: [3,4,5], 1024: [6,7,8]}
+    
+#     return: 
+#         tf.Tensor: for the image with jitter computed 
+#         dict{tf.tensor}: output grids for proper yolo predictions
+    
+#     """
+
+#     #masks = tf.convert_to_tensor(masks, dtype= tf.float32)
+#     # Image Jitter
+#     jitter, randscale = tf.py_function(py_func_rand, [], [tf.float32, tf.int32])
+#     if fixed_size:
+#         randscale = 13
+    
+#     if jitter_im == True:
+#         image_jitter = tf.concat([jitter, jitter], axis = 0)
+#         image_jitter.set_shape([2])
+#         image = tfa.image.translate(image, image_jitter)
+#         # Bounding Box Jitter
+#         #tf.print(tf.shape(label))
+#         x = tf.math.add(label[..., 0], jitter)
+#         x = tf.expand_dims(x, axis = -1)
+#         y = tf.math.add(label[..., 1], jitter)
+#         y = tf.expand_dims(y, axis = -1)
+#         rest = label[..., 2:]
+#         label = tf.concat([x,y,rest], axis = -1)
+#     # Other Data Augmentation
+#     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
+#     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
+#     image = tf.image.random_saturation(image=image, lower = 0.75, upper=1.25) # Saturation
+#     image = tf.image.random_hue(image=image, max_delta=.1) # Hue
+
+#     for key in masks.keys():
+#         masks[key] = build_grided_gt(label, tf.convert_to_tensor(masks[key], dtype= tf.float32), randscale)
+#         randscale *= 2
+
+#     return image, masks
 
 def _normalize(datapoint, h, w, num_of_classes):
     """Normalizes the image by resizing it to the desired output shape

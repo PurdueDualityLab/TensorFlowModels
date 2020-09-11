@@ -64,7 +64,7 @@ def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
         
-        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=False, jitter = False)
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=False, jitter = True)
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
@@ -100,7 +100,7 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         size = int(Info.splits["train"].num_examples)
         valsize = int(Info.splits["validation"].num_examples)
         
-        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=True, jitter = False)
+        dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=False, jitter = True)
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
@@ -108,8 +108,8 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         map_50 = YoloMAP_recall(name = "recall")
         Detection_50 = YoloMAP(name = "Det")
     
-    optimizer = ks.optimizers.SGD(lr=1e-3)
-    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2), tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 10)]
+    optimizer = ks.optimizers.SGD(lr=1e-4)#, momentum=0.99)
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule2)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 10)]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])#, Detection_50])
     try:
         model.summary()
@@ -152,8 +152,8 @@ def gt_test():
     return
 
 def main(argv, args = None):
-    #loss_test_fast(model_name = "regular")
-    loss_test_eager()
+    loss_test_fast(model_name = "regular")
+    #loss_test_eager()
     #gt_test()
     return
 

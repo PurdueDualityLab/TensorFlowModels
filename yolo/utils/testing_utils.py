@@ -49,7 +49,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
         masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
         anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
         thresh = 0.5
-        class_thresh = 0.45
+        class_thresh = 0.5
         scale = 1
     else:
         masks = {"1024": [3,4,5], "256": [0,1,2]}
@@ -63,8 +63,7 @@ def build_model(name = "regular", classes = 80, boxes = 9, use_mixed = True, w =
     #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
     if not saved: 
         model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
-    else:
-        model.load_weights("weights/train_test_desk_fast_exit_early_1")
+
 
     w_scale  = 416 if w == None else w
 
