@@ -132,8 +132,8 @@ class Yolo_Loss(ks.losses.Loss):
         true_box = y_true[..., 0:4]
         iou = box_iou(true_box, pred_box, dtype = self.dtype) 
         #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
-        #iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
-        #iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
+        iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
+        iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
         mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
