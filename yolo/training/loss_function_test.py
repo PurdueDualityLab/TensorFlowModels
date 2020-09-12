@@ -48,7 +48,7 @@ def loss_test(model_name = "regular"):
     
     return
 
-def loss_test_eager(model_name = "regular", batch_size = 64, epochs = 160):
+def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
