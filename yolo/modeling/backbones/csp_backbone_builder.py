@@ -5,22 +5,34 @@ import importlib
 import collections
 
 import yolo.modeling.building_blocks as nn_blocks
-from yolo.modeling.backbones.get_config import build_block_specs
+from yolo.modeling.backbones.get_config import csp_build_block_specs
 from yolo.utils import tf_shims
 from . import configs
 
 
+# (name, stack, numberinblock, bottleneck, filters, kernal_size, strides, padding,  activation, route, output_name)
+BACKBONE = [
+    ("DarkConv", False, 1, False, 32, 3, 1, "same", "mish", -1, None),  # 1
+    ("DarkRes", True, 1, True, 64, None, None, None, "mish", -1, None),  # 3
+    ("DarkRes", True, 2, False, 128, None, None, None, "mish", -1, None),  # 2
+    # 14 route 61 last block
+    ("DarkRes", True, 8, False, 256, None, None, None, "mish", -1, "256"),
+    # 14 route 61 last block
+    ("DarkRes", True, 8, False, 512, None, None, None, "mish", -1, "512"),# 3
+    ("DarkRes", True, 4, False, 1024, None, None, None, "mish", -1, "1024"),  # 6  #route
+]  # 52 layers
+
 @ks.utils.register_keras_serializable(package='yolo')
-class Backbone_Builder(ks.Model):
+class CSP_Backbone_Builder(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self, name, input_shape = (None, None, None, 3), config=None, **kwargs):
-        self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
-                            "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
-                            "DarkBlock": None}
+        self._layer_dict = {"DarkRes": nn_blocks.DarkResidual}
         # parameters required for tensorflow to recognize ks.Model as not a
         # subclass of ks.Model
         self._model_name = name
         self._input_shape = input_shape
+
+        #layer_specs = csp_build_block_specs(config)
 
         if config is None:
             layer_specs = self.get_model_config(name)
@@ -32,29 +44,83 @@ class Backbone_Builder(ks.Model):
         super().__init__(inputs=inputs, outputs=output, name=self._model_name)
         return
 
+    def _build_struct(self, net, inputs):
+        endpoints = collections.OrderedDict()
+        stack_outputs = [inputs]
+        for i, config in enumerate(net):
+            if not config.stack: 
+                x = self._build_block(stack_outputs[config.route], config, name = f"{config.layer}_{i}")
+                stack_outputs.append(x)
+            else: 
+                x = self._csp_stack(stack_outputs[config.route], config, name = f"{config.layer}_{i}")
+                stack_outputs.append(x)
+            if config.output_name != None:
+                endpoints[config.output_name] = x
+        return endpoints
+    
+    def _build_block(self, inputs, config, name):
+            x = inputs
+            i = 0
+            while i < config.repetitions:
+                if config.layer == "DarkConv":
+                    x = nn_blocks.DarkConv(
+                        filters=config.filters,
+                        kernel_size=config.kernel_size,
+                        strides=config.strides,
+                        padding=config.padding,
+                        name=f"{name}_{i}")(x)
+                else:
+                    layer = self._layer_dict[config.name]
+                    x = layer(
+                        filters=config.filters,
+                        downsample=config.downsample,
+                        name=f"{name}_{i}")(x)
+                i += 1
+            return x
+
+    
+    def _csp_stack(self, inputs, config, name):
+        if config.bottleneck: 
+            csp_filter_reduce = 1
+            residual_filter_reduce = 2
+            scale_filters = 1
+        else: 
+            csp_filter_reduce = 2
+            residual_filter_reduce = 1
+            scale_filters = 2
+        x, x_route = nn_blocks.CSPDownSample(filters = config.filters, filter_reduce=csp_filter_reduce, activation=config.activation, name = f"{name}_csp_down")(inputs)
+        for i in range(config.repetitions):
+            x = self._layer_dict[config.layer](filters = config.filters//scale_filters, filter_scale=residual_filter_reduce, conv_activation=config.activation, name = f"{name}_{i}")(x)
+        output = nn_blocks.CSPConnect(filters = config.filters, filter_reduce=csp_filter_reduce, activation=config.activation, name = f"{name}_csp_connect")([x, x_route])
+        return output
+
     @staticmethod
     def get_model_config(name):
         if name == "darknet53":
             name = "darknet_53"
 
         try:
-            backbone = importlib.import_module('.' + name, package=configs.__package__).backbone
+            backbone = importlib.import_module('.csp_' + name, package=configs.__package__).backbone
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.' + name:
                 raise ValueError(f"Invlid backbone '{name}'") from e
             else:
                 raise
 
-        return build_block_specs(backbone)
+        return csp_build_block_specs(backbone)
 
-    def _build_struct(self, net, inputs):
-        endpoints = collections.OrderedDict()#dict()
-        x = inputs
-        for i, config in enumerate(net):
-            x = self._build_block(config, x, f"{config.name}_{i}")
-            if config.output:
-                endpoints[config.output_name] = x
-        return endpoints
-    
-    def _csp_block():
-        return 
+if __name__ == "__main__":
+    model = CSP_Backbone_Builder(name = "darknet53")
+    model.summary()
+    tf.keras.utils.plot_model(model, to_file='CSPDarknet53.png', show_shapes=False, show_layer_names=True,rankdir='TB', expand_nested=True, dpi=96)
+
+    def print_weights(weights):
+        shapes = []
+        for weight in weights:
+            shapes.append(weight.shape)
+        return shapes
+
+    for layer in model.layers:
+        weights = layer.get_weights()
+        print(f"{layer.name}: {print_weights(weights)}")
+        
