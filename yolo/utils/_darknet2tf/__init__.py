@@ -84,9 +84,12 @@ class DarkNetConverter(_DarkNetSectionList):
         read_weights(full_net, config_file, weights_file)
         return full_net
 
-    def to_tf(self):
+    def to_tf(self,
+            thresh = 0.45,
+            class_thresh = 0.45,
+            max_boxes = 200,
+            use_mixed = True):
         import tensorflow as tf
-        from yolo.modeling.building_blocks import YoloLayer
 
         tensors = _DarkNetSectionList()
         layers = _DarkNetSectionList()
@@ -107,7 +110,7 @@ class DarkNetConverter(_DarkNetSectionList):
             layers.append(layer)
 
 
-        model = tf.keras.Model(inputs=tensors.net, outputs=self._process_yolo_layer(yolo_tensors))
+        model = tf.keras.Model(inputs=tensors.net, outputs=self._process_yolo_layer(yolo_tensors, thresh=thresh, class_thresh=class_thresh, max_boxes=max_boxes, use_mixed=use_mixed))
         model.build(self.net.shape)
 
         for cfg, layer in zip(self, layers):
@@ -115,35 +118,42 @@ class DarkNetConverter(_DarkNetSectionList):
                 layer.set_weights(cfg.get_weights())
         return model
 
-    def _process_yolo_layer(self, yolo_tensors):
+    def _process_yolo_layer(self,
+            yolo_tensors,
+            thresh = 0.45,
+            class_thresh = 0.45,
+            max_boxes = 200,
+            use_mixed = True):
+        from yolo.modeling.building_blocks import YoloLayer
+
+        if use_mixed:
+            from tensorflow.keras.mixed_precision import experimental as mixed_precision
+            # using mixed type policy give better performance than strictly float32
+            policy = mixed_precision.Policy('mixed_float16')
+            mixed_precision.set_policy(policy)
+            dtype = policy.compute_dtype
+        else:
+            dtype = tf.float32
+
+        outs = collections.OrderedDict()
         masks = {}
         anchors = None
-        thresh = None
-        class_thresh = None
+        scale_x_y = 1
 
-        """
-        for yolo_cfg, yolo_tensor in yolo_tensor:
-            masks[yolo_tensor.name] = yolo_cfg.masks
+        for yolo_cfg, yolo_tensor in yolo_tensors:
+            masks[yolo_tensor.name] = yolo_cfg.mask
 
             if anchors is None:
                 anchors = yolo_cfg.anchors
             elif anchors != yolo_cfg.anchors:
                 raise ValueError('Anchors inconsistent in [yolo] layers')
 
-            if thresh is None:
-                thresh = yolo_cfg.anchors
-            elif thresh != yolo_cfg.anchors:
-                raise ValueError('Anchors inconsistent in [yolo] layers')
-        #yolo_layer = YoloLayer()
-        """
+            if scale_x_y is None:
+                scale_x_y = yolo_cfg.scale_x_y
+            elif scale_x_y != yolo_cfg.scale_x_y:
+                raise ValueError('Scale inconsistent in [yolo] layers')
 
-        outs = collections.OrderedDict()
-        if len(yolo_tensors) == 2:
-            outs["1024"] = yolo_tensors[0][1]
-            outs["256"]  = yolo_tensors[1][1]
-        else:
-            outs["1024"] = yolo_tensors[0][1]
-            outs["512"]  = yolo_tensors[1][1]
-            outs["256"]  = yolo_tensors[2][1]
+            outs[yolo_tensor.name] = yolo_tensor
 
-        return outs
+        yolo_layer = YoloLayer(masks = masks, anchors = anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=self.net.w, scale_mult=scale_x_y)
+        return yolo_layer(outs)

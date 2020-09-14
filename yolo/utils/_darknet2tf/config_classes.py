@@ -345,6 +345,10 @@ class yoloCFG(Config):
     h: int = field(init=True, default=0)
     c: int = field(init=True, default=0)
 
+    mask: List[int] = field(init=True, default_factory=list)
+    anchors: List[Tuple[int, int]] = field(init=True, default_factory=list)
+    scale_x_y: int = field(init=True, default=1)
+
     @property
     def shape(self):
         return (self.w, self.h, self.c)
@@ -354,6 +358,8 @@ class yoloCFG(Config):
         prevlayer = net[-1]
         l = {
             "_type": layer_dict['_type'],
+            "mask": layer_dict['mask'],
+            "anchors": layer_dict['anchors'],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
             "c": prevlayer.shape[2]}
