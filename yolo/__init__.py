@@ -10,31 +10,9 @@ _dict = {
 __all__ = list(_dict)
 
 if _sys.version_info < (3, 7):
-    # Work around to use the __getattr__ in a module
-    # https://stackoverflow.com/a/1463773
-    class _Sneaky(object):
-      def __init__(self):
-        self.download = None
-
-      @property
-      def DarkNet53(self):
-        from yolo.modeling.yolo_v3 import DarkNet53
-        return DarkNet53
-
-      @property
-      def Yolov3(self):
-        from yolo.modeling.yolo_v3 import Yolov3
-        return Yolov3
-
-      @property
-      def Yolov4(self):
-        from yolo.modeling.yolo_v4 import Yolov4
-        return Yolov4
-
-      def __getattr__(self, name):
-        return globals()[name]
-
-    _sys.modules[__name__] = _Sneaky()
+    from yolo.modeling.yolo_v3 import DarkNet53
+    from yolo.modeling.yolo_v3 import Yolov3
+    from yolo.modeling.yolo_v4 import Yolov4
 else:
     def __getattr__(name):
         module = _dict[name]
