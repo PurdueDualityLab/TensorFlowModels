@@ -19,6 +19,7 @@ class CSPDownSample(ks.layers.Layer):
                  norm_epsilon=0.001,
                  **kwargs):
         
+        super().__init__(**kwargs)
         #layer params
         self._filters = filters
         self._filter_reduce = filter_reduce
@@ -39,7 +40,7 @@ class CSPDownSample(ks.layers.Layer):
         self._conv1 = DarkConv(filters=self._filters, 
                                kernel_size = (3,3), 
                                strides=(2,2), 
-                               kernel_initializer=self._kernel_initializer
+                               kernel_initializer=self._kernel_initializer,
                                bias_initializer=self._bias_initializer, 
                                bias_regularizer=self._bias_regularizer,
                                l2_regularization=self._l2_regularization, 
@@ -51,7 +52,7 @@ class CSPDownSample(ks.layers.Layer):
         self._conv2 = DarkConv(filters=self._filters//self._filter_reduce, 
                                kernel_size = (1,1), 
                                strides=(1,1), 
-                               kernel_initializer=self._kernel_initializer
+                               kernel_initializer=self._kernel_initializer,
                                bias_initializer=self._bias_initializer, 
                                bias_regularizer=self._bias_regularizer,
                                l2_regularization=self._l2_regularization, 
@@ -64,7 +65,7 @@ class CSPDownSample(ks.layers.Layer):
         self._conv3 = DarkConv(filters=self._filters//self._filter_reduce, 
                                 kernel_size = (1,1), 
                                 strides=(1,1), 
-                                kernel_initializer=self._kernel_initializer
+                                kernel_initializer=self._kernel_initializer,
                                 bias_initializer=self._bias_initializer, 
                                 bias_regularizer=self._bias_regularizer,
                                 l2_regularization=self._l2_regularization, 
@@ -76,7 +77,7 @@ class CSPDownSample(ks.layers.Layer):
         return 
     
     def call(self, inputs):
-        x = self.conv1(inputs)
-        y = self.conv2(x)
-        x = self.conv3(x)
+        x = self._conv1(inputs)
+        y = self._conv2(x)
+        x = self._conv3(x)
         return (x, y)
