@@ -64,6 +64,10 @@ class DarkNet53(ks.Model):
         print(f"head trainable: {self.head.trainable}")
         return
 
+    @property
+    def input_image_size(self):
+        return self.backbone.input_shape[1:3]
+
 
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
@@ -281,6 +285,10 @@ class Yolov3(ks.Model):
                 thresh = 0.45
 
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
+
+    @property
+    def input_image_size(self):
+        return self._backbone.input_shape[1:3]
 
     def get_config(self):
         # used to store/share parameters to reconsturct the model

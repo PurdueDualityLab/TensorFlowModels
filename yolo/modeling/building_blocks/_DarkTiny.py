@@ -1,7 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
-import yolo.modeling.building_blocks as nn_blocks #import DarkConv
+from ._DarkConv import DarkConv
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -51,7 +51,7 @@ class DarkTiny(ks.layers.Layer):
         #     padding = "valid"
         self._maxpool = tf.keras.layers.MaxPool2D(pool_size=2, strides=self._strides, padding="same", data_format=None)
 
-        self._convlayer = nn_blocks.DarkConv(filters=self._filters,
+        self._convlayer = DarkConv(filters=self._filters,
                                   kernel_size=(3, 3),
                                   strides=(1, 1),
                                   padding='same',
