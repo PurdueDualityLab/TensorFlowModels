@@ -7,6 +7,8 @@ This repository is the unofficial implementation of the following paper. However
 
 * YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
 
+* YOLOv4: Optimal Speed and Accuracy of Object Detection: [YOLOv4: Optimal Speed and Accuracy of Object Detection](https://arxiv.org/abs/2004.10934)
+
 ## Description
 
 > :memo: Provide description of the model.  
