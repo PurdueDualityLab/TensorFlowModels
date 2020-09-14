@@ -118,11 +118,6 @@ class YoloGT(ks.layers.Layer):
 
     def call(self, inputs):
         shape = tf.shape(inputs)
-        #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
-        # if self._reshape:
-        #     data = tf.reshape(inputs, [shape[0], shape[1], shape[2], self._mask_len, -1])
-        # else:
-        #     data = inputs
         data = inputs
         data = tf.cast(data, self._dtype)
 
