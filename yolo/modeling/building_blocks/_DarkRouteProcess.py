@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.building_blocks import DarkConv, DarkSpp
+from ._DarkConv import DarkConv
+from ._DarkSpp import DarkSpp
 
 
 @ks.utils.register_keras_serializable(package='yolo')

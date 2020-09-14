@@ -1,10 +1,12 @@
 """Contains common building blocks for yolo neural networks."""
-import functools
+from functools import partial
 
 import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
-from yolo.modeling.building_blocks._Identity import Identity
+from ._Identity import Identity
+
+from yolo.modeling.functions.mish_activation import mish
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkConv(ks.layers.Layer):
@@ -124,22 +126,20 @@ class DarkConv(ks.layers.Layer):
         else:
             self.bn = Identity()
         
-
-        if self._activation != 'leaky':
-            self._activation_fn = ks.layers.Activation(
-                activation=self._activation)
+        if self._activation == 'leaky':
+            alpha = {"alpha":self._leaky_alpha}
+            self._activation_fn = partial(tf.nn.leaky_relu, **alpha)#ks.layers.LeakyReLU(alpha=self._leaky_alpha)#
+        elif self._activation == 'mish':
+            self._activation_fn = mish
         else:
-            self._activation_fn = ks.layers.LeakyReLU(alpha=self._leaky_alpha)
+            self._activation_fn = ks.layers.Activation(activation=self._activation)
 
         super(DarkConv, self).build(input_shape)
         return
 
     def call(self, inputs):
         x = self._zeropad(inputs)
-        #tf.print(x.dtype, self.dtype)
         x = self.conv(x)
-        #tf.print(tf.shape(x))
-        #if self._use_bn:
         x = self.bn(x)
         x = self._activation_fn(x)
         return x

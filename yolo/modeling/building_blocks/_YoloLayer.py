@@ -8,7 +8,6 @@ import matplotlib.patches as patches
 import sys
 
 #@ks.utils.register_keras_serializable(package='yolo')
-#something wrong with this
 class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
         super().__init__(**kwargs)
@@ -116,47 +115,6 @@ class YoloGT(ks.layers.Layer):
 
         super().__init__(**kwargs)
         return
-
-    # def _reshape_batch(self, value, batch_size, axis = 0):
-    #     return tf.repeat(value, batch_size, axis = axis)
-    
-    # def _get_centers(self, lwidth, lheight, num):
-    #     """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-    #     x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
-    #     x_y = K.stack([x_left, y_left], axis = -1)
-    #     x_y = tf.cast(x_y, dtype = self._dtype)
-    #     x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
-    #     return x_y
-
-    # def _get_anchor_grid(self, width, height, num, anchors):
-    #     """ get the transformed anchor boxes for each dimention """
-    #     anchors = tf.cast(anchors, dtype = self._dtype)
-    #     anchors = tf.reshape(anchors, [1, -1])
-    #     anchors = tf.repeat(anchors, width*height, axis = 0)
-    #     anchors = tf.reshape(anchors, [1, width, height, num, -1])
-    #     return anchors
-
-    # def build(self, input_shape):
-    #     self._input_shape = input_shape
-    #     #width or height is None 
-    #     if self._input_shape[1] != None and self._input_shape[2] != None:
-    #         self._rebuild = False 
-        
-    #     # if the batch size is not None
-    #     if not self._rebuild and self._input_shape[0] != None:
-    #         self._rebatch = False
-
-    #     if not self._rebuild: 
-    #         _, width, height, _ = input_shape
-    #         self._anchor_matrix = self._get_anchor_grid(width, height, len(self._anchors), self._anchors)
-    #         self._grid_cells = self._get_centers(width, height, len(self._anchors))
-
-    #     if not self._rebatch:
-    #         self._anchor_matrix = self._reshape_batch(self._anchor_matrix, input_shape[0])
-    #         self._grid_cells = self._reshape_batch(self._grid_cells, input_shape[0])
-
-    #     super().build(input_shape)
-    #     return 
 
     def call(self, inputs):
         shape = tf.shape(inputs)
