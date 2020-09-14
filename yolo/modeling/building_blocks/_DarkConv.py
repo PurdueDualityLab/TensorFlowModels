@@ -130,7 +130,7 @@ class DarkConv(ks.layers.Layer):
             alpha = {"alpha":self._leaky_alpha}
             self._activation_fn = partial(tf.nn.leaky_relu, **alpha)
         elif self._activation == 'mish':
-            self._activation_fn = mish
+            self._activation_fn = mish()
         else:
             self._activation_fn = ks.layers.Activation(activation=self._activation)
 

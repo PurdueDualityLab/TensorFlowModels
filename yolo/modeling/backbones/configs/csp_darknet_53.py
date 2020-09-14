@@ -1,3 +1,4 @@
+# (name, stack, numberinblock, bottleneck, filters, kernal_size, strides, padding,  activation, route, output_name)
 backbone = [
     ("DarkConv", False, 1, False, 32, 3, 1, "same", "mish", -1, None),  # 1
     ("DarkRes", True, 1, True, 64, None, None, None, "mish", -1, None),  # 3
