@@ -89,17 +89,21 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
+        #required_inputs
         super().__init__(**kwargs)
         self._classes = classes
         self._type = model
         self._built = False
         self._input_shape = input_shape
+
+        #setting the running policy
         if type(policy) != str:
             policy = policy.name
         self._og_policy = policy
         self._policy = tf.keras.mixed_precision.experimental.global_policy().name
         self.set_policy(policy=policy)
 
+        #init model params
         if self._type == 'regular':
             self._backbone_name = "darknet53"
             self._head_name = "regular"
