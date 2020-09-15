@@ -39,7 +39,7 @@ def build_model(name = "regular", classes = 80, use_mixed = False, w = 416, h = 
     from yolo.modeling.yolo_v3 import Yolov3
     model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
-    model.set_prediction_filter(use_mixed=True)
+    model.set_prediction_filter(use_mixed=use_mixed)
     return model
 
 def filter_partial(end = 255, dtype = tf.float32):
