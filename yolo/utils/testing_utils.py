@@ -42,6 +42,7 @@ def build_model(name = "regular", classes = 80, use_mixed = True, w = 416, h = 4
     model.set_prediction_filter(use_mixed=use_mixed)
     return model
 
+
 def filter_partial(end = 255, dtype = tf.float32):
     import yolo.modeling.building_blocks as nn_blocks
     o1 = ks.layers.Input(shape=[None, None, 3, end//3])
