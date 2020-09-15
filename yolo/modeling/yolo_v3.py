@@ -94,11 +94,11 @@ class Yolov3(ks.Model):
         self._type = model
         self._built = False
         self._input_shape = input_shape
-
         if type(policy) != str:
             policy = policy.name
         self._og_policy = policy
-        self._policy = policy
+        self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+        self.set_policy(policy=policy)
 
         if self._type == 'regular':
             self._backbone_name = "darknet53"
