@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import sys
 
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
         super().__init__(**kwargs)
@@ -101,7 +101,7 @@ class YoloFilterCell(ks.layers.Layer):
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
         return box, classifications
 
-
+@ks.utils.register_keras_serializable(package='yolo')
 class YoloGT(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, reshape = True, **kwargs):
         self._mask_len = len(anchors)
@@ -145,7 +145,7 @@ class YoloGT(ks.layers.Layer):
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
         return box, classifications
         
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
     def __init__(self,
                  masks,

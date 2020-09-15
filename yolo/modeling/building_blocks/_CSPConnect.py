@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as ks 
 from ._DarkConv import DarkConv
 
-#testing needed 
+@ks.utils.register_keras_serializable(package='yolo')
 class CSPConnect(ks.layers.Layer):
     def __init__(self, 
                  filters, 

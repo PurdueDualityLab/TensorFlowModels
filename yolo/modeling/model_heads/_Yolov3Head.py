@@ -96,8 +96,6 @@ class Yolov3Head(tf.keras.Model):
         upsamples = collections.OrderedDict()#dict()
         prediction_heads = collections.OrderedDict()#dict()
 
-
-
         start_width = input_shape[1]
         if input_shape[1] != None:
             start_width = start_width//32
@@ -133,11 +131,10 @@ class Yolov3Head(tf.keras.Model):
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = collections.OrderedDict()#dict()
+        outputs = collections.OrderedDict()
         layer_keys = list(self._cfg_dict.keys())
-        layer_in = inputs[layer_keys[0]] # layer input to the next layer
+        layer_in = inputs[layer_keys[0]]
 
-        #using this loop is faster for some reason
         i = 0
         while i < len(layer_keys):
             x = routes[layer_keys[i]](layer_in)
@@ -145,7 +142,6 @@ class Yolov3Head(tf.keras.Model):
                 x_next = inputs[layer_keys[i + 1]]
                 layer_in = upsamples[layer_keys[i + 1]]([x[0], x_next])
 
-            #tf.print(tf.shape(x))
             if type(x) == tuple or type(x) == list:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x[1])
             else:

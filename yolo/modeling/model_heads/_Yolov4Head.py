@@ -13,7 +13,7 @@ import importlib
 import more_itertools
 import collections
 
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class Yolov4Head(tf.keras.Model):
     def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, input_shape = (None, None, None, 3), **kwargs):
         """
@@ -91,13 +91,11 @@ class Yolov4Head(tf.keras.Model):
 
     def _get_attributes(self, input_shape):
         """ use config dictionary to generate all important attributes for head construction """
-        inputs = collections.OrderedDict()#dict()
-        input_shapes = collections.OrderedDict()#dict()
-        routes = collections.OrderedDict()#dict()
-        resamples = collections.OrderedDict()#dict()
-        prediction_heads = collections.OrderedDict()#dict()
-
-
+        inputs = collections.OrderedDict()
+        input_shapes = collections.OrderedDict()
+        routes = collections.OrderedDict()
+        resamples = collections.OrderedDict()
+        prediction_heads = collections.OrderedDict()
 
         start_width = input_shape[1]
         if input_shape[1] != None:
