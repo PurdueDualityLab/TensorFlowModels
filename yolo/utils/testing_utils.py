@@ -38,8 +38,10 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
 def build_model(name = "regular", classes = 80, use_mixed = False, w = 416, h = 416, batch_size = None, saved = False):
     from yolo.modeling.yolo_v3 import Yolov3
 
-    model = Yolov3(classes = classes, type = name, input_shape=(batch_size, w, h, 3))
+    model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
+    model.set_prediction_filter(use_mixed=True)
+    model.remove_prediction_filter()
     model.set_prediction_filter(use_mixed=True)
     tf.keras.utils.plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
 

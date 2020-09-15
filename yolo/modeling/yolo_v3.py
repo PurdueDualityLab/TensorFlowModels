@@ -75,10 +75,11 @@ class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
                  input_shape = [None, None, None, 3],
-                 type = 'regular',
+                 model = 'regular',
                  classes = 20,
                  masks = None,
                  boxes = None,
+                 policy = "float32",
                  **kwargs):
         """
         Args:
@@ -90,27 +91,30 @@ class Yolov3(ks.Model):
         """
         super().__init__(**kwargs)
         self._classes = classes
-        self._type = type
+        self._type = model
         self._built = False
         self._input_shape = input_shape
-        self._og_policy = "float32"
-        self._policy = "float32"
 
-        if type == 'regular':
+        if type(policy) != str:
+            policy = policy.name
+        self._og_policy = policy
+        self._policy = policy
+
+        if self._type == 'regular':
             self._backbone_name = "darknet53"
             self._head_name = "regular"
             self._model_name = 'yolov3'
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-        elif type == 'spp':
+        elif self._type == 'spp':
             self._backbone_name = "darknet53"
             self._head_name = "spp"
             self._model_name = 'yolov3-spp'
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-        elif type == 'tiny':
+        elif self._type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
@@ -118,7 +122,7 @@ class Yolov3(ks.Model):
             self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
         else:
-            raise ValueError(f"Unknown YOLOv3 type '{type}'")
+            raise ValueError(f"Unknown YOLOv3 type '{self._type}'")
 
         self._pred_filter = None
         return
