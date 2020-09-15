@@ -1,5 +1,4 @@
 #### ARGUMENT PARSER ####
-
 from absl import app, flags
 from absl.flags import argparse_flags
 import sys

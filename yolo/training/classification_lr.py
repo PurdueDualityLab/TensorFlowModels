@@ -27,7 +27,7 @@ config = {
 "power":4  
 }
 
-def poly_schedule(batch_num,lr):
+def poly_schedule(batch_num,lr, burn):
   if batch_num == 0:
     return lr
   batch_num = float(batch_num)

@@ -285,6 +285,7 @@ class Yolov3(ks.Model):
                 thresh = 0.45
 
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
+        return
 
     @property
     def input_image_size(self):

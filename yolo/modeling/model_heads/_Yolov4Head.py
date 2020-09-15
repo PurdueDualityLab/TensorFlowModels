@@ -99,11 +99,11 @@ class Yolov4Head(tf.keras.Model):
 
         start_width = input_shape[1]
         if input_shape[1] != None:
-            start_width = start_width//32
+            start_width = start_width//8
 
         start_height = input_shape[2]
         if input_shape[2] != None:
-            start_height = start_height//32
+            start_height = start_height//8
 
         for i, (key, path_keys) in enumerate(self._cfg_dict.items()):
             inputs[key] = ks.layers.Input(shape=[start_width, start_height, path_keys["depth"]])
@@ -123,9 +123,9 @@ class Yolov4Head(tf.keras.Model):
             prediction_heads[key] = DarkConv(filters=self._conv_depth + path_keys["output-extras"],**args)
 
             if start_width != None:
-                start_width *= 2
+                start_width //= 2
             if start_height != None:
-                start_height *= 2
+                start_height //= 2
 
         print(routes)
         print(resamples)
@@ -155,7 +155,7 @@ class Yolov4Head(tf.keras.Model):
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
-        print(outputs)
+        print({key:outputs[key].shape for key in outputs.keys()})
         return outputs
 
     def get_config(self):
@@ -168,6 +168,7 @@ class Yolov4Head(tf.keras.Model):
 
 
 if __name__ == "__main__":
+    #might be missing a layer?
     backbone = CSP_Backbone_Builder( input_shape = [1, 608, 608, 3])
     neck = Yolov4Neck(input_shape = [1, 608, 608, 3])
     head = Yolov4Head()

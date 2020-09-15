@@ -99,7 +99,7 @@ class CSP_Backbone_Builder(ks.Model):
 if __name__ == "__main__":
     model = CSP_Backbone_Builder(name = "darknet53")
     model.summary()
-    tf.keras.utils.plot_model(model, to_file='CSPDarknet53.png', show_shapes=False, show_layer_names=True,rankdir='TB', expand_nested=True, dpi=96)
+    tf.keras.utils.plot_model(model, to_file='CSPDarknet53.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=True, dpi=96)
 
     def print_weights(weights):
         shapes = []

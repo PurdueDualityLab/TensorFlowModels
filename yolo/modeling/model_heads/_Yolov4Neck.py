@@ -68,7 +68,7 @@ class Yolov4Neck(tf.keras.Model):
         inputs, input_shapes, routes, resamples, tails = self._get_attributes(input_shape)
         self._input_shape = input_shapes
         outputs = self._connect_layers(routes, resamples, tails, inputs)
-        super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
         return
 
     @classmethod
@@ -78,7 +78,7 @@ class Yolov4Neck(tf.keras.Model):
             return importlib.import_module('.yolov4_' + model, package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov4_' + model:
-                raise ValueError(f"Invlid head '{model}'") from e
+                raise ValueError(f"Invlid neck '{model}'") from e
             else:
                 raise
 

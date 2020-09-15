@@ -17,14 +17,10 @@ from yolo.training.callbacks import poly_schedule
 from yolo.dataloaders import preprocessing_functions
 from yolo.training.callbacks import config
 
-
-
 mirrored_strategy = tf.distribute.MirroredStrategy()
 
 EPOCHS = 160
 BATCH_SIZE = 128
-
-
 
 #---------------
 builder = tfds.ImageFolder('/home/data/ilsvrc/ILSVRC/ILSVRC2012_Classification')
