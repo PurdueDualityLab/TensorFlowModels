@@ -181,7 +181,7 @@ class Yolov3(ks.Model):
 
         if not self.built:
             net = encoder[0]
-            self.build(input_shape = (1, *net.shape))
+            self.build(input_shape = self._original_input_shape)
 
         if dn2tf_backbone:
             load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
