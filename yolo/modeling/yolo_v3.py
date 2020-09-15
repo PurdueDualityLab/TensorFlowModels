@@ -73,6 +73,7 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
+                 input_shape = [None, None, None, 3],
                  type = 'regular',
                  classes = 20,
                  masks = None,
@@ -99,7 +100,6 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            self._original_input_shape = [None, 608, 608, 3]
         elif type == 'spp':
             self._backbone_name = "darknet53"
             self._head_name = "spp"
@@ -107,7 +107,6 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            self._original_input_shape = [None, 608, 608, 3]
         elif type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
@@ -115,19 +114,21 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 14
             self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
-            self._original_input_shape = [None, 416, 416, 3]
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
-        super().__init__(**kwargs)
+        self._original_input_shape = input_shape
         self._pred_filter = None
+        super().__init__(**kwargs)
         return
 
-    def build(self, input_shape=[None, None, None, 3]):
+    def build(self, input_shape=None):
         self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
         self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
+
         self.built = True
-        self._original_input_shape = input_shape
+        if input_shape is not None and input_shape != self._original_input_shape:
+            self._original_input_shape = input_shape
         super().build(input_shape)
 
     def call(self, inputs):
@@ -275,7 +276,6 @@ class Yolov3(ks.Model):
                 thresh = 0.45
 
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
-        self.build()
 
     def remove_prediction_filter(self):
         from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -284,7 +284,6 @@ class Yolov3(ks.Model):
         dtype = policy.compute_dtype
 
         self._pred_filter = None
-        self.build()
 
     @property
     def input_image_size(self):
