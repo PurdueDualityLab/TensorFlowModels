@@ -35,7 +35,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
         cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return i
 
-def build_model(name = "regular", classes = 80, use_mixed = False, w = 416, h = 416, batch_size = None, saved = False):
+def build_model(name = "regular", classes = 80, use_mixed = True, w = 416, h = 416, batch_size = None, saved = False):
     from yolo.modeling.yolo_v3 import Yolov3
     model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3))
     model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)

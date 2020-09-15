@@ -13,7 +13,7 @@ import os
 __all__ = ['DarkNet53', 'Yolov3']
 
 
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
     _updated_config = tf_shims.ks_Model___updated_config
@@ -70,7 +70,7 @@ class DarkNet53(ks.Model):
         return self.backbone.input_shape[1:3]
 
 
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
@@ -302,10 +302,12 @@ class Yolov3(ks.Model):
                 thresh = 0.45
 
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
+        return
 
     def remove_prediction_filter(self):
         self.set_policy(policy=self._og_policy)
         self._pred_filter = None
+        return
 
     @property
     def input_image_size(self):
