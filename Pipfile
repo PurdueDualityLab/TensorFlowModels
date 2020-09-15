@@ -8,6 +8,7 @@ coverage = "*"
 
 [packages]
 tensorflow = "==2.*"
+tensorflow-addons = ">=0.10.0"
 tensorflow-datasets = "*"
 absl-py = ">=0.7.0"
 numpy = "*"
