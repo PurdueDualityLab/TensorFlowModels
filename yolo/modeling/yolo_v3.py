@@ -73,11 +73,10 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
-                 input_shape = None,
+                 type = 'regular',
                  classes = 20,
                  masks = None,
                  boxes = None,
-                 type = 'regular',
                  **kwargs):
         """
         Args:
@@ -100,8 +99,7 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 608, 608, 3]
+            self._original_input_shape = [None, 608, 608, 3]
         elif type == 'spp':
             self._backbone_name = "darknet53"
             self._head_name = "spp"
@@ -109,8 +107,7 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 608, 608, 3]
+            self._original_input_shape = [None, 608, 608, 3]
         elif type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
@@ -118,20 +115,19 @@ class Yolov3(ks.Model):
             self._encoder_decoder_split_location = 14
             self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 416, 416, 3]
+            self._original_input_shape = [None, 416, 416, 3]
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
         super().__init__(**kwargs)
-        self.build(input_shape)
+        self._pred_filter = None
         return
 
     def build(self, input_shape=[None, None, None, 3]):
         self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
         self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
-        self._pred_filter = None
         self.built = True
+        self._original_input_shape = input_shape
         super().build(input_shape)
 
     def call(self, inputs):
@@ -267,16 +263,10 @@ class Yolov3(ks.Model):
             scale_boxes:int = 416,
             scale_mult:float = 1.0
     ):
-        if use_mixed:
-            from tensorflow.keras.mixed_precision import experimental as mixed_precision
-            # using mixed type policy give better performance than strictly float32
-            policy = mixed_precision.Policy('mixed_float16')
-            mixed_precision.set_policy(policy)
-            print('Compute dtype: %s' % policy.compute_dtype)
-            print('Variable dtype: %s' % policy.variable_dtype)
-            dtype = policy.compute_dtype
-        else:
-            dtype = tf.float32
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        policy = mixed_precision.Policy('mixed_float16' if use_mixed else 'float32')
+        mixed_precision.set_policy(policy)
+        dtype = policy.compute_dtype
 
         if thresh is None:
             if self._head_name == 'tiny':
@@ -285,6 +275,16 @@ class Yolov3(ks.Model):
                 thresh = 0.45
 
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
+        self.build()
+
+    def remove_prediction_filter(self):
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        policy = mixed_precision.Policy('float32')
+        mixed_precision.set_policy(policy)
+        dtype = policy.compute_dtype
+
+        self._pred_filter = None
+        self.build()
 
     @property
     def input_image_size(self):
