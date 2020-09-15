@@ -179,7 +179,7 @@ class YoloLayer(ks.Model):
         return anchors
 
     def build(self, input_shape):
-        if list(input_shape.keys()) != self._keys:
+        if list(input_shape.keys()) != self._keys and list(reversed(input_shape.keys())) != self._keys:
             raise Exception(f"input size does not match the layers initialization, {self._keys} != {list(input_shape.keys())}")
         
         self._filters = {}

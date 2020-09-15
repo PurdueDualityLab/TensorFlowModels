@@ -12,6 +12,9 @@ from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
 from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
 from yolo.modeling import yolo_v3
 
+# from yolo.utils.testing_utils import prep_gpu
+# prep_gpu()
+
 
 class test_Yolov4Head(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("simple", "darknet53", (1, 608, 608, 3)),

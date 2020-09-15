@@ -63,7 +63,7 @@ class Yolov4Neck(tf.keras.Model):
 
         if self._cfg_dict is None:
             self._cfg_dict = self.load_dict_cfg(model)
-        print(self._cfg_dict)
+        # print(self._cfg_dict)
 
         inputs, input_shapes, routes, resamples, tails = self._get_attributes(input_shape)
         self._input_shape = input_shapes
@@ -135,9 +135,9 @@ class Yolov4Neck(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-        print(routes)
-        print(tails)
-        print({key:resamples[key]._filters for key in resamples.keys()})
+        # print(routes)
+        # print(tails)
+        # print({key:resamples[key]._filters for key in resamples.keys()})
         return inputs, input_shapes, routes, resamples, tails
 
     def _connect_layers(self, routes, resamples, tails, inputs):
@@ -151,7 +151,7 @@ class Yolov4Neck(tf.keras.Model):
         i = 0
         layer_in = inputs[layer_keys[0]]
         while i < len(layer_keys):
-            print(layer_keys[i],":", layer_in.shape)
+            # print(layer_keys[i],":", layer_in.shape)
             # generate FPN output
             _ , x = routes[layer_keys[i]](layer_in)
             x_route, x = tails[layer_keys[i]](x)

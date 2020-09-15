@@ -69,7 +69,7 @@ class Yolov4Head(tf.keras.Model):
 
         if self._cfg_dict is None:
             self._cfg_dict = self.load_dict_cfg(model)
-        print(self._cfg_dict)
+        # print(self._cfg_dict)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, resamples, prediction_heads = self._get_attributes(input_shape)
@@ -116,7 +116,7 @@ class Yolov4Head(tf.keras.Model):
 
             args = path_keys["processor_conditions"]
             layer = ks.utils.get_registered_object(path_keys["processor"])
-            print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
+            # print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
@@ -127,8 +127,8 @@ class Yolov4Head(tf.keras.Model):
             if start_height != None:
                 start_height //= 2
 
-        print(routes)
-        print(resamples)
+        # print(routes)
+        # print(resamples)
         return inputs, input_shapes, routes, resamples, prediction_heads
 
     def _connect_layers(self, routes, resamples, prediction_heads, inputs):
@@ -137,8 +137,8 @@ class Yolov4Head(tf.keras.Model):
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]] # layer input to the next layer
 
-        print({key:inputs[key].shape for key in inputs.keys()})
-        #using this loop is faster for some reason
+        # print({key:inputs[key].shape for key in inputs.keys()})
+        # using this loop is faster for some reason
         i = 0
         while i < len(layer_keys):
             x = routes[layer_keys[i]](layer_in)
@@ -155,7 +155,7 @@ class Yolov4Head(tf.keras.Model):
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
-        print({key:outputs[key].shape for key in outputs.keys()})
+        # print({key:outputs[key].shape for key in outputs.keys()})
         return outputs
 
     def get_config(self):

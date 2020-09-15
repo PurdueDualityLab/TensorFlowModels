@@ -256,7 +256,7 @@ class Yolov3(ks.Model):
         """
         from yolo.modeling.functions.yolo_loss import Yolo_Loss
         loss_dict = {}
-        for key in masks:
+        for key in self._masks.keys():
             loss_dict[key] = Yolo_Loss(mask = self._masks[key],
                                 anchors = self._boxes,
                                 scale_anchors = scale,
