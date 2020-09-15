@@ -62,16 +62,6 @@ class FastVideo(object):
         
         self._file = file_name
         self._fps = 120
-        
-        # fast but as close to one 2 one as possible
-        if file_name == 0:
-            self._batch_size = 5 # 40 fps more conistent frame to frame
-        else:
-            # faster but more potential for delay from input to output
-            self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
-        
-            if process_width > 416 or process_height > 416:
-                self._batch_size = 3
 
         self._gpu_device = gpu_device
         if preprocess_with_gpu:
@@ -83,9 +73,22 @@ class FastVideo(object):
         self._width = int(self._cap.get(3))
         self._height = int(self._cap.get(4))
         self._classes = classes
-        self._model = model
         self._p_width = process_width
         self._p_height = process_height
+        self._model = self._load_model(model) 
+
+        # fast but as close to one 2 one as possible
+        if file_name == 0:
+            self._batch_size = 5 # 40 fps more conistent frame to frame
+        else:
+            # faster but more potential for delay from input to output
+            if tf.keras.mixed_precision.experimental.global_policy().name == "mixed_float16":
+                self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+            else:
+                self._batch_size = 3
+                
+            if process_width > 416 or process_height > 416:
+                self._batch_size = 3
 
         self._colors = gen_colors(self._classes)
         
@@ -224,7 +227,7 @@ class FastVideo(object):
         
     def run(self):
         # init the model
-        model = self._load_model(self._model) 
+        model = self._model 
         gpu_device = self._gpu_device
         
         # print processing information
@@ -345,5 +348,5 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo(0, model = "regular", process_width=416, process_height=416, preprocess_with_gpu=True)
+    cap = FastVideo("test1.mp4", model = "regular", process_width=416, process_height=416, preprocess_with_gpu=False)
     cap.run()

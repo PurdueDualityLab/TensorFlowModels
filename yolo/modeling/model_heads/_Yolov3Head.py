@@ -68,7 +68,6 @@ class Yolov3Head(tf.keras.Model):
 
         if self._cfg_dict is None:
             self._cfg_dict = self.load_dict_cfg(model)
-        print(self._cfg_dict)
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
@@ -115,7 +114,6 @@ class Yolov3Head(tf.keras.Model):
 
             args = path_keys["processor_conditions"]
             layer = ks.utils.get_registered_object(path_keys["processor"])
-            print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
@@ -126,7 +124,6 @@ class Yolov3Head(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-        print(inputs, input_shapes)
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
@@ -147,7 +144,6 @@ class Yolov3Head(tf.keras.Model):
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
-        print(outputs)
         return outputs
 
     def get_config(self):

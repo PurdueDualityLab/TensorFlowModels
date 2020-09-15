@@ -8,6 +8,7 @@ from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
+import os
 
 __all__ = ['DarkNet53', 'Yolov3']
 
@@ -73,11 +74,12 @@ class DarkNet53(ks.Model):
 class Yolov3(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
     def __init__(self,
-                 input_shape = None,
+                 input_shape = [None, None, None, 3],
+                 model = 'regular',
                  classes = 20,
                  masks = None,
                  boxes = None,
-                 type = 'regular',
+                 policy = "float32",
                  **kwargs):
         """
         Args:
@@ -87,51 +89,55 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-
+        #required_inputs
+        super().__init__(**kwargs)
         self._classes = classes
-        self._type = type
-        self.built = False
+        self._type = model
+        self._built = False
+        self._input_shape = input_shape
 
+        #setting the running policy
+        if type(policy) != str:
+            policy = policy.name
+        self._og_policy = policy
+        self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+        self.set_policy(policy=policy)
 
-        if type == 'regular':
+        #init model params
+        if self._type == 'regular':
             self._backbone_name = "darknet53"
             self._head_name = "regular"
             self._model_name = 'yolov3'
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 608, 608, 3]
-        elif type == 'spp':
+        elif self._type == 'spp':
             self._backbone_name = "darknet53"
             self._head_name = "spp"
             self._model_name = 'yolov3-spp'
             self._encoder_decoder_split_location = 76
             self._boxes = boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 608, 608, 3]
-        elif type == 'tiny':
+        elif self._type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
             self._encoder_decoder_split_location = 14
             self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
-            if input_shape is None:
-                input_shape = [None, 416, 416, 3]
         else:
-            raise ValueError(f"Unknown YOLOv3 type '{type}'")
+            raise ValueError(f"Unknown YOLOv3 type '{self._type}'")
 
-        super().__init__(**kwargs)
-        self.build(input_shape)
+        self._pred_filter = None
         return
 
-    def build(self, input_shape=[None, None, None, 3]):
+    def build(self, input_shape=None):
         self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
         self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
-        self._pred_filter = None
-        self.built = True
+        self._built = True
+        
+        if input_shape is not None and input_shape != self._input_shape:
+            self._input_shape = input_shape
         super().build(input_shape)
 
     def call(self, inputs):
@@ -182,9 +188,9 @@ class Yolov3(ks.Model):
             list_encdec = DarkNetConverter.read(config_file, weights_file)
             encoder, decoder = split_converter(list_encdec, self._encoder_decoder_split_location)
 
-        if not self.built:
+        if not self._built:
             net = encoder[0]
-            self.build(input_shape = (1, *net.shape))
+            self.build(input_shape = self._input_shape)
 
         if dn2tf_backbone:
             load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
@@ -258,6 +264,26 @@ class Yolov3(ks.Model):
                                 truth_thresh = 1,
                                 loss_type="giou")
         return loss_dict
+    
+    def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):
+        print(f"setting policy: {policy}")
+        if self._policy == policy:
+            return
+        else:
+            self._policy = policy
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        policy = mixed_precision.Policy(self._policy)
+        mixed_precision.set_policy(policy)
+        dtype = policy.compute_dtype
+        tf.keras.backend.set_floatx(dtype)
+
+        # save weights and and rebuild model, then load the weights if the model is built
+        if self._built:
+            self.save_weights(save_weights_temp_name)
+            self.build(input_shape=self._input_shape)
+            self.load_weights(save_weights_temp_name)
+            os.system(f"rm {save_weights_temp_name}.*")
+        return 
 
     def set_prediction_filter(self,
             thresh:int = None,
@@ -265,27 +291,26 @@ class Yolov3(ks.Model):
             max_boxes:int = 200,
             use_mixed:bool = True,
             scale_boxes:int = 416,
-            scale_mult:float = 1.0
-    ):
+            scale_mult:float = 1.0):
         if use_mixed:
-            from tensorflow.keras.mixed_precision import experimental as mixed_precision
-            # using mixed type policy give better performance than strictly float32
-            policy = mixed_precision.Policy('mixed_float16')
-            mixed_precision.set_policy(policy)
-            print('Compute dtype: %s' % policy.compute_dtype)
-            print('Variable dtype: %s' % policy.variable_dtype)
-            dtype = policy.compute_dtype
-        else:
-            dtype = tf.float32
-
-        if thresh is None:
+            self.set_policy(policy='mixed_float16')
+        
+        if thresh is None:  
             if self._head_name == 'tiny':
                 thresh = 0.5
             else:
                 thresh = 0.45
 
+<<<<<<< HEAD
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
         return
+=======
+        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
+
+    def remove_prediction_filter(self):
+        self.set_policy(policy=self._og_policy)
+        self._pred_filter = None
+>>>>>>> e46f590ef71bdd7c6852e5b97681a9786b873586
 
     @property
     def input_image_size(self):
