@@ -301,16 +301,11 @@ class Yolov3(ks.Model):
             else:
                 thresh = 0.45
 
-<<<<<<< HEAD
-        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
-        return
-=======
         self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
 
     def remove_prediction_filter(self):
         self.set_policy(policy=self._og_policy)
         self._pred_filter = None
->>>>>>> e46f590ef71bdd7c6852e5b97681a9786b873586
 
     @property
     def input_image_size(self):
