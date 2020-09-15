@@ -39,7 +39,6 @@ Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo net
 * [Example Usage](#example-usage)
 * [Training](#training)
 * [Evaluation](#evaluation)
-* [Change Log](#change-log)
 * [References](#references)
 * [License](#license)
 * [Citation](#citation)
@@ -57,7 +56,7 @@ Our goal with this model conversion is to provide highly versatile implementatio
 | Yolo-v4          |
 | Yolo-v4 tiny     |
 
-For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation from the original darknet implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
+For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation directly from the original Darknet Implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
 ## Data Pipeline/Dataset Benchmarking
 The Data Pipeline is found within the dataloaders folder. The way to use our data pipeline is by typing "from yolo.dataloaders import preprocessing_functions.py as pf" at the top of your python file. Then loading in the tfds dataset by means of tfds.ImageFolder or tfds.load. Then use the following function as seen below:
@@ -88,11 +87,11 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 >  
 > An example table for image classification results  
 ### object
-| Model name | latency  |FPS (GPU)  | mAP   |   
-|:------------:|:----------:|:-------------------:|:----------------:|  
-| Yolov3 416 | 35ms     | 40        | 59.7% |  
-| Yolov3-spp 608 | 40ms     | 30        | 61.7% |
-| Yolov3-tiny 416 | 20ms     | 60        | not tested yet |    
+| Model Name | size | latency  |FPS (GPU)  | mAP   |   
+|:------------:|:------------:|:----------:|:-------------------:|:----------------:|  
+| Yolov3 | 416 |35ms     | 40        | 59.7% |  
+| Yolov3-spp | 608 |40ms     | 30        | 61.7% |
+| Yolov3-tiny | 416 |20ms     | 60        | not tested yet |    
 
 
 > ### Image Classification  
@@ -135,6 +134,9 @@ pip install -r requirements.txt
 
 Please run this command line for training.
 
+```python
+
+```
 ```shell
 python3 ...
 ```
