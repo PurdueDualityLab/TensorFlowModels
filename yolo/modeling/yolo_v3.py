@@ -8,6 +8,7 @@ from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
+import os
 
 __all__ = ['DarkNet53', 'Yolov3']
 
@@ -87,11 +88,13 @@ class Yolov3(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-
+        super().__init__(**kwargs)
         self._classes = classes
         self._type = type
-        self.built = False
-
+        self._built = False
+        self._input_shape = input_shape
+        self._og_policy = "float32"
+        self._policy = "float32"
 
         if type == 'regular':
             self._backbone_name = "darknet53"
@@ -117,18 +120,16 @@ class Yolov3(ks.Model):
         else:
             raise ValueError(f"Unknown YOLOv3 type '{type}'")
 
-        self._original_input_shape = input_shape
         self._pred_filter = None
-        super().__init__(**kwargs)
         return
 
     def build(self, input_shape=None):
         self._backbone = Backbone_Builder(self._backbone_name, input_shape = input_shape)
         self._head = Yolov3Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
-
-        self.built = True
-        if input_shape is not None and input_shape != self._original_input_shape:
-            self._original_input_shape = input_shape
+        self._built = True
+        
+        if input_shape is not None and input_shape != self._input_shape:
+            self._input_shape = input_shape
         super().build(input_shape)
 
     def call(self, inputs):
@@ -179,9 +180,9 @@ class Yolov3(ks.Model):
             list_encdec = DarkNetConverter.read(config_file, weights_file)
             encoder, decoder = split_converter(list_encdec, self._encoder_decoder_split_location)
 
-        if not self.built:
+        if not self._built:
             net = encoder[0]
-            self.build(input_shape = self._original_input_shape)
+            self.build(input_shape = self._input_shape)
 
         if dn2tf_backbone:
             load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
@@ -255,6 +256,26 @@ class Yolov3(ks.Model):
                                 truth_thresh = 1,
                                 loss_type="giou")
         return loss_dict
+    
+    def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):
+        print(f"setting policy: {policy}")
+        if self._policy == policy:
+            return
+        else:
+            self._policy = policy
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        policy = mixed_precision.Policy(self._policy)
+        mixed_precision.set_policy(policy)
+        dtype = policy.compute_dtype
+        tf.keras.backend.set_floatx(dtype)
+
+        # save weights and and rebuild model, then load the weights if the model is built
+        if self._built:
+            self.save_weights(save_weights_temp_name)
+            self.build(input_shape=self._input_shape)
+            self.load_weights(save_weights_temp_name)
+            os.system(f"rm {save_weights_temp_name}.*")
+        return 
 
     def set_prediction_filter(self,
             thresh:int = None,
@@ -262,27 +283,20 @@ class Yolov3(ks.Model):
             max_boxes:int = 200,
             use_mixed:bool = True,
             scale_boxes:int = 416,
-            scale_mult:float = 1.0
-    ):
-        from tensorflow.keras.mixed_precision import experimental as mixed_precision
-        policy = mixed_precision.Policy('mixed_float16' if use_mixed else 'float32')
-        mixed_precision.set_policy(policy)
-        dtype = policy.compute_dtype
-
-        if thresh is None:
+            scale_mult:float = 1.0):
+        if use_mixed:
+            self.set_policy(policy='mixed_float16')
+        
+        if thresh is None:  
             if self._head_name == 'tiny':
                 thresh = 0.5
             else:
                 thresh = 0.45
 
-        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=scale_boxes, scale_mult=scale_mult)
+        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
 
     def remove_prediction_filter(self):
-        from tensorflow.keras.mixed_precision import experimental as mixed_precision
-        policy = mixed_precision.Policy('float32')
-        mixed_precision.set_policy(policy)
-        dtype = policy.compute_dtype
-
+        self.set_policy(policy=self._og_policy)
         self._pred_filter = None
 
     @property

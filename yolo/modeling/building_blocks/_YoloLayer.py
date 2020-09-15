@@ -9,7 +9,7 @@ import sys
 
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloFilterCell(ks.layers.Layer):
-    def __init__(self, anchors, thresh, max_box = 200, dtype = tf.float32, **kwargs):
+    def __init__(self, anchors, thresh, max_box = 200, **kwargs):
         super().__init__(**kwargs)
         self._mask_len = len(anchors)
         self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
@@ -153,7 +153,6 @@ class YoloLayer(ks.Model):
                  thresh,
                  cls_thresh,
                  max_boxes, 
-                 dtype,
                  scale_boxes = 1, 
                  scale_mult = 1,
                  **kwargs):
@@ -166,7 +165,7 @@ class YoloLayer(ks.Model):
         self._max_boxes = max_boxes
         self._keys = list(masks.keys())
         self._len_keys = len(self._keys)
-        self._dtype = dtype
+        #self._dtype = dtype
         return
     
     def scale_anchors(self, anchors, scale):
@@ -186,7 +185,7 @@ class YoloLayer(ks.Model):
         self._filters = {}
         for i, key in enumerate(self._keys):
             anchors = [self._anchors[mask] for mask in self._masks[key]]
-            self._filters[key] = YoloFilterCell(anchors = anchors, thresh = self._thresh, max_box = self._max_boxes, dtype = self._dtype)
+            self._filters[key] = YoloFilterCell(anchors = anchors, thresh = self._thresh, max_box = self._max_boxes)
         return
     
     def call(self, inputs):
