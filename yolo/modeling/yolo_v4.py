@@ -50,7 +50,7 @@ class CSPDarkNet53(ks.Model):
             if weights_file is None:
                 weights_file = download('yolov4.weights')
             full_model = DarkNetConverter.read(config_file, weights_file)
-            encoder, decoder = split_converter(full_model, 76)
+            encoder, decoder = split_converter(full_model, 106)
             #load_weights_dnBackbone(self.backbone, encoder)
             load_weights_backbone(self.backbone, encoder)
         return
