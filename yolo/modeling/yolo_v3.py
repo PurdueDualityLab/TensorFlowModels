@@ -232,19 +232,87 @@ class Yolov3(ks.Model):
         from yolo.dataloaders.preprocessing_functions import preprocessing
         if instanceof(dataset, str):
             import tensorflow_datasets as tfds
-            dataset, Info = tfds.load(dataset, split=split, with_info=True, shuffle_files=True, download=False)
-            if size is None:
-                size = int(Info.splits[split].num_examples)
+            dataset, Info = tfds.load(dataset, split=split, with_info=True, shuffle_files=True, download=True)
+            size = int(Info.splits[split].num_examples)
+
         if size is None:
             try:
                 from tensorflow.data.experimental import cardinality
             except ImportError:
                 size = dataset.cardinality()
-            else:
-                size = cardinality(dataset)
+        else:
+            size = cardinality(dataset)
         if size < 0:
             raise ValueError("The dataset has unknown or infinite cardinality")
         return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
+
+    def preprocess_train_test(self, dataset:"Union[str, tfds.data.Dataset]", batch_size:int, train = "train", val='validation', jitter = True, fixed = False):
+        """
+        Preprocesses (normalization and data augmentation) and batches the dataset.
+        This is a convenience function that calls on
+        yolo.dataloaders.preprocessing_functions.preprocessing, replacing the
+        parameters with default values based on the anchor boxes and maskes
+        passed into __init__.
+
+        Args:
+            dataset (str, tfds.data.Dataset): The Dataset you would like to preprocess.
+                Can be replaced by the name of a dataset that is present in the
+                TensorFlow Dataset library.
+            size (int): Size of the dataset. If not specified, the cardinality
+                will be calculated and used if it is finite.
+            split: The type of split to make to create the dataset if dataset is
+                specified as a string.
+
+        Raises:
+            SyntaxError:
+                - Preprocessing type not found.
+                - The given batch number for detection preprocessing is more than 1.
+                - Number of batches cannot be less than 1.
+                - Data augmentation split cannot be greater than 100.
+            ValueError:
+                - The dataset has unknown or infinite cardinality.
+            WARNING:
+                - Dataset is not a tensorflow dataset.
+                - Detection Preprocessing may cause NotFoundError in Google Colab.
+        """
+        if train == None and val == None:
+            raise IOError("you must provide a split key for train or test")
+        if train == None:
+            return self.preprocess_dataset(dataset = dataset, split=val)
+        if val == None:
+            return self.preprocess_dataset(dataset = dataset, split=train)
+
+        from yolo.dataloaders.preprocessing_functions import preprocessing
+        import tensorflow_datasets as tfds
+        if instanceof(train, str):
+            train, Info = tfds.load(dataset, split=train, with_info=True, shuffle_files=True, download=True)
+            train_size = int(Info.splits[split].num_examples)
+        else:
+            try:
+                from tensorflow.data.experimental import cardinality
+                train_size = cardinality(train)
+            except ImportError:
+                train_size = train.cardinality()
+            if train_size < 0:
+                raise ValueError("The training set has unknown or infinite cardinality")
+                
+        if instanceof(val, str):
+            val, Info = tfds.load(dataset, split=val, with_info=True, shuffle_files=True, download=True)
+            val_size = int(Info.splits[split].num_examples)
+        else:
+            try:
+                from tensorflow.data.experimental import cardinality
+                val_size = cardinality(val)
+            except ImportError:
+                val_size = val.cardinality()
+            if val_size < 0:
+                raise ValueError("The validation set has unknown or infinite cardinality")
+        
+        dataset = train.concatnate(val)
+        dataset = preprocessing(dataset = dataset, self._classes, batch_size = batch_size, size = train_size + val_size, shuffle = False, anchors=self._boxes, masks=self._masks, jitter=jitter, fixed=fixed)
+        train = dataset.take(train_size//batch_size)
+        test = dataset.skip(train_size//batch_size)
+        return train, test
 
     def generate_loss(self, scale:float = 1.0) -> "Dict[Yolo_Loss]":
         """
