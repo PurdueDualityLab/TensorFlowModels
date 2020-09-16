@@ -101,6 +101,9 @@ class Config(ABC):
         """
         return None
 
+    def load_tf(self, varlist):
+        pass
+
 class _LayerBuilder(dict):
     """
     This class defines a registry for the layer builder in the DarkNet weight
@@ -208,6 +211,26 @@ class convCFG(Config):
         ) # TODO: Where does groups go
         return layer(tensors[-1]), layer
 
+    def load_tf(self, varlist):
+        if self.batch_normalize:
+            _, varz = varlist[-1]
+        else:
+            _, varz = varlist[-1]
+        for k, var in varz.items():
+            cid, name = get_primitive_tf_layer_name(var)
+            assert name == 'DarkConv', var.name
+            print("load "+k+" " +var.name)
+        print()
+        if self.batch_normalize:
+            self.weights = varz['kernel:0']
+            self.scales = varz['gamma:0'] #gamma
+            self.biases = varz['beta:0'] #beta
+            self.rolling_mean = varz['moving_mean:0']
+            self.rolling_variance = varz['moving_variance:0']
+        else:
+            self.biases = varz['beta:0']
+            self.weights = varz['kernel:0']
+        del varlist[-1]
 
 @layer_builder.register('shortcut')
 @dataclass
@@ -450,3 +473,27 @@ def read_n_long(n, bfile, unsigned=False):
 
 def activation_function_dn_to_keras_name(dn):
     return dn
+
+def get_primitive_tf_layer_name(var, piece=3):
+    name = var.name
+    parts = name.rsplit('/', piece)
+    if len(parts) < piece:
+        return None
+
+    token = parts[-piece]
+    cid = []
+    while True:
+        try:
+            name, count = token.rsplit('_', 1)
+        except:
+            break
+        try:
+            cid.append(int(count))
+        except:
+            break
+        else:
+            token = name
+
+    if token[0].upper() == token[0]:
+        return cid, token
+    return cid, ''.join([x.capitalize() for x in token.split('_')])

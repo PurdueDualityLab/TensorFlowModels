@@ -9,6 +9,7 @@ from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
+from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
 import os
 
 __all__ = ['CSPDarkNet53', 'Yolov4']
@@ -37,7 +38,7 @@ class CSPDarkNet53(ks.Model):
             weights_file: str path with the file containing the dark net weights
 
         """
-        super(DarkNet53, self).__init__()
+        super().__init__()
         self.backbone = CSP_Backbone_Builder("darknet53")
         self.head = ks.Sequential([
             ks.layers.GlobalAveragePooling2D(),
@@ -50,7 +51,8 @@ class CSPDarkNet53(ks.Model):
                 weights_file = download('yolov4.weights')
             full_model = DarkNetConverter.read(config_file, weights_file)
             encoder, decoder = split_converter(full_model, 76)
-            load_weights_dnBackbone(self.backbone, encoder)
+            #load_weights_dnBackbone(self.backbone, encoder)
+            load_weights_backbone(self.backbone, encoder)
         return
 
     def call(self, inputs):
@@ -81,7 +83,7 @@ class Yolov4(ks.Model):
                  masks = None,
                  boxes = None,
                  policy = "float32",
-                 scales = None, 
+                 scales = None,
                  **kwargs):
         """
         Args:
@@ -192,7 +194,8 @@ class Yolov4(ks.Model):
             self.build(input_shape = self._input_shape)
 
         if dn2tf_backbone:
-            load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
+            #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
+            load_weights_backbone(self._backbone, encoder)
 
         if dn2tf_head:
             load_weights_dnHead(self._head, decoder)
@@ -261,10 +264,10 @@ class Yolov4(ks.Model):
                                        scale_anchors = scale,
                                        ignore_thresh = 0.7,
                                        truth_thresh = 1,
-                                       loss_type="giou", 
+                                       loss_type="giou",
                                        scale_x_y=self._x_y_scales[key])
         return loss_dict
-    
+
     def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):
         print(f"setting policy: {policy}")
         if self._policy == policy:
@@ -283,7 +286,7 @@ class Yolov4(ks.Model):
             self.build(input_shape=self._input_shape)
             self.load_weights(save_weights_temp_name)
             os.system(f"rm {save_weights_temp_name}.*")
-        return 
+        return
 
     def set_prediction_filter(self,
             thresh:int = None,
@@ -294,8 +297,8 @@ class Yolov4(ks.Model):
             scale_mult:float = 1.0):
         if use_mixed:
             self.set_policy(policy='mixed_float16')
-        
-        if thresh is None:  
+
+        if thresh is None:
             if self._head_name == 'tiny':
                 thresh = 0.5
             else:
@@ -334,4 +337,3 @@ if __name__ == '__main__':
     model.build(input_shape = (None, None, None, 3))
     print(model.generate_loss())
     model.summary()
-
