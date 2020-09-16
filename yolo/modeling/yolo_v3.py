@@ -230,7 +230,7 @@ class Yolov3(ks.Model):
                 - Detection Preprocessing may cause NotFoundError in Google Colab.
         """
         from yolo.dataloaders.preprocessing_functions import preprocessing
-        if instanceof(dataset, str):
+        if isinstance(dataset, str):
             import tensorflow_datasets as tfds
             dataset, Info = tfds.load(dataset, split=split, with_info=True, shuffle_files=True, download=True)
             size = int(Info.splits[split].num_examples)
@@ -284,9 +284,9 @@ class Yolov3(ks.Model):
 
         from yolo.dataloaders.preprocessing_functions import preprocessing
         import tensorflow_datasets as tfds
-        if instanceof(train, str):
-            train, Info = tfds.load(dataset, split=train, with_info=True, shuffle_files=True, download=True)
-            train_size = int(Info.splits[split].num_examples)
+        if isinstance(train, str):
+            train_set, Info = tfds.load(dataset, split=train, with_info=True, shuffle_files=True, download=True)
+            train_size = int(Info.splits[train].num_examples)
         else:
             try:
                 from tensorflow.data.experimental import cardinality
@@ -296,9 +296,9 @@ class Yolov3(ks.Model):
             if train_size < 0:
                 raise ValueError("The training set has unknown or infinite cardinality")
                 
-        if instanceof(val, str):
-            val, Info = tfds.load(dataset, split=val, with_info=True, shuffle_files=True, download=True)
-            val_size = int(Info.splits[split].num_examples)
+        if isinstance(val, str):
+            val_set, Info = tfds.load(dataset, split=val, with_info=True, shuffle_files=True, download=True)
+            val_size = int(Info.splits[val].num_examples)
         else:
             try:
                 from tensorflow.data.experimental import cardinality
@@ -308,8 +308,8 @@ class Yolov3(ks.Model):
             if val_size < 0:
                 raise ValueError("The validation set has unknown or infinite cardinality")
         
-        dataset = train.concatnate(val)
-        dataset = preprocessing(dataset = dataset, self._classes, batch_size = batch_size, size = train_size + val_size, shuffle = False, anchors=self._boxes, masks=self._masks, jitter=jitter, fixed=fixed)
+        dataset = train_set.concatenate(val_set)
+        dataset = preprocessing(dataset = dataset, num_of_classes = self._classes, batch_size = batch_size, size = train_size + val_size, shuffle_flag = False, anchors=self._boxes, masks=self._masks, jitter=jitter, fixed=fixed)
         train = dataset.take(train_size//batch_size)
         test = dataset.skip(train_size//batch_size)
         return train, test

@@ -3,33 +3,33 @@ from absl import app, flags
 from absl.flags import argparse_flags
 import sys
 
-parser = argparse_flags.ArgumentParser()
+# parser = argparse_flags.ArgumentParser()
 
-parser.add_argument(
-    'model',
-    metavar='model',
-    default='regular',
-    choices=('regular', 'spp', 'tiny'),
-    type=str,
-    help='Name of the model. Defaults to regular. The options are ("regular", "spp", "tiny")',
-    nargs='?'
-)
+# parser.add_argument(
+#     'model',
+#     metavar='model',
+#     default='regular',
+#     choices=('regular', 'spp', 'tiny'),
+#     type=str,
+#     help='Name of the model. Defaults to regular. The options are ("regular", "spp", "tiny")',
+#     nargs='?'
+# )
 
-parser.add_argument(
-    'vidpath',
-    default=None,
-    type=str,
-    help='Path of the video stream to process. Defaults to the webcam.',
-    nargs='?'
-)
+# parser.add_argument(
+#     'vidpath',
+#     default=None,
+#     type=str,
+#     help='Path of the video stream to process. Defaults to the webcam.',
+#     nargs='?'
+# )
 
-parser.add_argument(
-    '--webcam',
-    default=0,
-    type=int,
-    help='ID number of the webcam to process as a video stream. This is only used if vidpath is not specified. Defaults to 0.',
-    nargs='?'
-)
+# parser.add_argument(
+#     '--webcam',
+#     default=0,
+#     type=int,
+#     help='ID number of the webcam to process as a video stream. This is only used if vidpath is not specified. Defaults to 0.',
+#     nargs='?'
+# )
 
 if __name__ == '__main__':
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -42,7 +42,7 @@ import tensorflow as tf
 from absl import app
 from typing import * 
 
-def configure_gpus(gpus:Union[List, str] = None, memory_limit:Union[int, str] = None):
+def configure_gpus(gpus:Union[List, str], memory_limit:Union[int, str]):
     """
     
     """
@@ -93,23 +93,23 @@ def _build_model(model_version, model_type, classes, anchors, masks, scales = No
         raise ImportError("unsupported model")
     return model
 
-def _train_yolo( model_version:str = "v3", 
-                 model_type:str = "regular", 
-                 classes:int = 80, 
-                 masks:Dict = None, 
-                 anchors:List = None,
-                 scales:Dict = None, 
-                 save_weight_directory:str = "weights", 
-                 gpus:Union[List, str] = None, 
-                 memory_limit:Union[int, str] = None, 
-                 dataset:Union[str, tf.data.Dataset] = "coco", 
-                 split_train: "train",
-                 split_val: "validation",
-                 epochs:int = 270, 
-                 batch_size:int = 32, 
-                 jitter:bool = True, 
-                 fixed_size:bool = False, 
-                 metrics_full:bool = True):
+def _train_yolo( model_version = "v3", 
+                 model_type = "regular", 
+                 classes = 80, 
+                 masks = None, 
+                 anchors = None,
+                 scales = None, 
+                 save_weight_directory = "weights", 
+                 gpus = None, 
+                 memory_limit = None, 
+                 dataset = "coco", 
+                 split_train = "train",
+                 split_val = "validation",
+                 epochs = 270, 
+                 batch_size= 32, 
+                 jitter= True, 
+                 fixed_size = False, 
+                 metrics_full = True):
     logical_gpus, gpus = configure_gpus(gpus=gpus, memory_limit=memory_limit)
     strategy = tf.distribute.MirroredStrategy(devices=logical_gpus)
 
@@ -122,16 +122,19 @@ def _train_yolo( model_version:str = "v3",
     if masks == None:
         masks = _get_masks()[model_version][model_type]
 
+    print(anchors)
+    print(masks)
+
     with strategy.scope():
         # build the given model
         model = _build_model(model_version, model_type, classes = classes, masks = masks, anchors = anchors, scales=scales)
         
         # generate the loss functions
-        model = model.generate_loss()
+        loss = model.generate_loss()
 
-        # load datasets 
-        train, test = model.preprocess_train_test(dataset = dataset, batch_size = batch_size, train = split_train, val = split_val, jitter = jitter, fixed = fixed_size)
-
+    # load datasets 
+    train, test = model.preprocess_train_test(dataset = dataset, batch_size = batch_size, train = split_train, val = split_val, jitter = jitter, fixed = fixed_size)
+    
         # generate the metrics 
 
         # generate the callbacks for learning rate
