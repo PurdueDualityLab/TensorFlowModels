@@ -54,9 +54,9 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
     from yolo.dataloaders.preprocessing_functions import preprocessing
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        model, loss_fn, anchors, masks = build_model_partial(name = model_name, classes = 80, ltype = "giou", use_mixed= False, split="train", load_head = True, fixed_size= True)
+        model, loss_fn, anchors, masks = build_model_partial(name = model_name, classes = 80, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
-        setname = "voc"
+        setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
         val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
         dataset.concatenate(val)
@@ -68,17 +68,15 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
 
         train = dataset.take(size//batch_size)
         test = dataset.skip(size//batch_size)
-        '''
-        iou_256 = YoloIOU_recall()
-        iou_512 = YoloIOU_recall(anchors = [(30,61),  (62,45),  (59,119)])
-        iou_1024 = YoloIOU_recall(anchors = [(116,90),  (156,198),  (373,326)])
-        '''
-        clsrecall = YoloClass_recall(name = "FUCK")
+        iou_256 = YoloIOU_recall(name = 'iou')
+        iou_512 = YoloIOU_recall(name = 'iou', anchors = [(30,61),  (62,45),  (59,119)])
+        iou_1024 = YoloIOU_recall(naem = 'iou', anchors = [(116,90),  (156,198),  (373,326)])
+        clsrecall = YoloClass_recall(name = "Class")
         #Detection_50 = YoloMAP(name = "Det")
     
     optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
-    model.compile(optimizer=optimizer, loss=loss_fn, metrics = [clsrecall])
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics = {'256': [iou_256, clsrecall], '512': [iou_512, clsrecall], '1024': [iou_1024, clsrecall]})
     try:
         model.summary()
         print(size//batch_size, epochs)
