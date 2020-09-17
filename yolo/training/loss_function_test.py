@@ -56,13 +56,14 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
     with strat.scope():
         model, loss_fn, anchors, masks = build_model_partial(name = model_name, classes = 80, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
-        setname = "coco"
-        dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
-        val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
+        builder = tfds.ImageFolder('/local/a/cam2/data/coco')
+        dataset = builder.as_dataset(split='train', shuffle_files=False)
+
+        val = builder.as_dataset(split='validation', shuffle_files=False)
         dataset.concatenate(val)
 
-        size = int(Info.splits["train"].num_examples)
-        valsize = int(Info.splits["validation"].num_examples)
+        size = int (builder.info.splits['train'].num_examples)
+        valsize = int(builder.Info.splits["validation"].num_examples)
         
         dataset = preprocessing(dataset, 100, "detection", size + valsize, batch_size, 80, anchors= anchors, masks= masks, fixed=False, jitter = True)
 
