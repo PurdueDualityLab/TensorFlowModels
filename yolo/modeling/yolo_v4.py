@@ -9,7 +9,7 @@ from yolo.utils.file_manager import download
 from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
-from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
+from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
 import os
 
 __all__ = ['CSPDarkNet53', 'Yolov4']
@@ -191,7 +191,6 @@ class Yolov4(ks.Model):
             encoder, neck, decoder = split_converter(list_encdec, self._encoder_decoder_split_location, 138)
 
         if not self._built:
-            net = encoder[0]
             self.build(input_shape = self._input_shape)
 
         if dn2tf_backbone:
@@ -202,8 +201,8 @@ class Yolov4(ks.Model):
             load_weights_backbone(self._neck, neck)
 
         if dn2tf_head:
-            load_weights_dnHead(self._head, decoder)
-            #load_weights_backbone(self._head, decoder)
+            #load_weights_dnHead(self._head, decoder)
+            load_weights_v4head(self._head, decoder)
 
         return
 
