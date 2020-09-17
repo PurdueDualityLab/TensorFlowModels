@@ -5,8 +5,10 @@ format into TensorFlow layers
 import itertools
 from tensorflow import keras as ks
 
-def split_converter(lst, i):
-    return lst.data[:i], lst.data[i:]
+def split_converter(lst, i, j=None):
+    if j is None:
+        return lst.data[:i], lst.data[i:]
+    return lst.data[:i], lst.data[i:j], lst.data[j:]
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""

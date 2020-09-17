@@ -113,7 +113,7 @@ class Yolov4(ks.Model):
             self._neck_name = "name"
             self._head_name = "regular"
             self._model_name = 'yolov4'
-            self._encoder_decoder_split_location = 76
+            self._encoder_decoder_split_location = 106
             self._boxes = boxes or [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
             self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
@@ -150,6 +150,7 @@ class Yolov4(ks.Model):
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,
+                             dn2tf_neck = True,
                              dn2tf_head = False,
                              config_file=None,
                              weights_file=None):
@@ -181,13 +182,13 @@ class Yolov4(ks.Model):
             config_file: str path for the location of the configuration file to use when decoding darknet weights
             weights_file: str path with the file containing the dark net weights
         """
-        if dn2tf_backbone or dn2tf_head:
+        if dn2tf_backbone or dn2tf_neck or dn2tf_head:
             if config_file is None:
                 config_file = download(self._model_name + '.cfg')
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             list_encdec = DarkNetConverter.read(config_file, weights_file)
-            encoder, decoder = split_converter(list_encdec, self._encoder_decoder_split_location)
+            encoder, neck, decoder = split_converter(list_encdec, self._encoder_decoder_split_location, 138)
 
         if not self._built:
             net = encoder[0]
@@ -197,8 +198,12 @@ class Yolov4(ks.Model):
             #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
             load_weights_backbone(self._backbone, encoder)
 
+        if dn2tf_neck:
+            load_weights_backbone(self._neck, neck)
+
         if dn2tf_head:
             load_weights_dnHead(self._head, decoder)
+            #load_weights_backbone(self._head, decoder)
 
         return
 
