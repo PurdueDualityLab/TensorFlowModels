@@ -348,5 +348,13 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo("test1.mp4", model = "spp", process_width=416, process_height=416, preprocess_with_gpu=False)
+    prep_gpu()
+    from yolo.modeling.yolo_v4 import Yolov4
+    model = Yolov4(classes = 80, model = 'regular')
+    model.load_weights_from_dn(True, True, True)
+    model.set_prediction_filter(use_mixed=True, scale_boxes=416)
+    model.make_predict_function()
+
+
+    cap = FastVideo(0, model = model, process_width=416, process_height=416, preprocess_with_gpu=False)
     cap.run()
