@@ -37,10 +37,12 @@ if __name__ == '__main__':
         exit()
 
 #### MAIN CODE ####
-
+import os
 import tensorflow as tf 
 from absl import app
 from typing import * 
+from .
+
 
 def configure_gpus(gpus:Union[List, str], memory_limit:Union[int, str]):
     """
@@ -109,7 +111,9 @@ def _train_yolo( model_version = "v3",
                  batch_size= 32, 
                  jitter= True, 
                  fixed_size = False, 
-                 metrics_full = True):
+                 metrics_full = True, 
+                 check_point_path = "/tmp/checkpoint/yolo_check_point",
+                 log_dir = "./logs"):
     logical_gpus, gpus = configure_gpus(gpus=gpus, memory_limit=memory_limit)
     strategy = tf.distribute.MirroredStrategy(devices=logical_gpus)
 
@@ -134,15 +138,35 @@ def _train_yolo( model_version = "v3",
 
     # load datasets 
     train, test = model.preprocess_train_test(dataset = dataset, batch_size = batch_size, train = split_train, val = split_val, jitter = jitter, fixed = fixed_size)
-    
+
+    with strategy.scope():
         # generate the metrics 
+
 
         # generate the callbacks for learning rate
 
-        # init early stop callback 
-
+        # treminate on NAN 
+        term_nan = tf.keras.callbacks.TerminateOnNaN()
         # init check points callback
+        check_points = tf.keras.callbacks.ModelCheckpoint(filepath = check_point_path, 
+                                                          monitor= "val_loss", 
+                                                          save_best_only=False, 
+                                                          save_weights_only=True, 
+                                                          save_freq="epoch")
         # init tensorboard callback
+        # solving cupit error
+        # /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) | grep libcupti
+        # export LD_LIBRARY_PATH="/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda-10.1/lib64:/usr/local/cuda-10.1/extras/CUPTI/lib64"
+        # modprobe nvidia NVreg_RestrictProfilingToAdminUsers=0 
+        # sudo vim /etc/modprobe.d/nvidia-kernel-common.conf 
+        # write options nvidia "NVreg_RestrictProfilingToAdminUsers=0"
+        tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
+                                                     histogram_freq=0, 
+                                                     write_graph=True, 
+                                                     update_freq=1000)
+
+        callbacks = [term_nan, check_points, tensorboard]
+        # model.fit(train, validation_data=test, shuffle= True, epochs=epochs, callbacks=callbacks)
     return
 
 def main(args, argv = None):
