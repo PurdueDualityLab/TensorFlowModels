@@ -8,7 +8,6 @@ Currently, the parser is incomplete and we can only guarantee that it works for
 models in the YOLO family (YOLOv3 and older).
 """
 
-from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
