@@ -21,7 +21,7 @@ class YoloFilterCell(ks.layers.Layer):
 
     def _reshape_batch(self, value, batch_size, axis = 0):
         return tf.repeat(value, batch_size, axis = axis)
-    
+
     def _get_centers(self, lwidth, lheight, num):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
         x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
@@ -40,15 +40,15 @@ class YoloFilterCell(ks.layers.Layer):
 
     def build(self, input_shape):
         self._input_shape = input_shape
-        #width or height is None 
+        #width or height is None
         if self._input_shape[1] != None and self._input_shape[2] != None:
-            self._rebuild = False 
-        
+            self._rebuild = False
+
         # if the batch size is not None
         if not self._rebuild and self._input_shape[0] != None:
             self._rebatch = False
 
-        if not self._rebuild: 
+        if not self._rebuild:
             _, width, height, _ = input_shape
             self._anchor_matrix = self._get_anchor_grid(width, height, len(self._anchors), self._anchors)
             self._grid_cells = self._get_centers(width, height, len(self._anchors))
@@ -58,7 +58,7 @@ class YoloFilterCell(ks.layers.Layer):
             self._grid_cells = self._reshape_batch(self._grid_cells, input_shape[0])
 
         super().build(input_shape)
-        return 
+        return
 
     def call(self, inputs):
         shape = tf.shape(inputs)
@@ -73,7 +73,7 @@ class YoloFilterCell(ks.layers.Layer):
         else:
             anchors = self._anchor_matrix
             centers = self._grid_cells
-        
+
         if self._rebatch:
             anchors = self._reshape_batch(anchors, shape[0])
             centers = self._reshape_batch(centers, shape[0])
@@ -90,10 +90,10 @@ class YoloFilterCell(ks.layers.Layer):
         # computer objectness and generate grid cell mask for where objects are located in the image
         objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis = -1)
         scaled = tf.math.sigmoid(data[..., 5:]) * objectness
-        
+
         #compute the mask of where objects have been located
         mask = tf.reduce_any(objectness > tf.cast(self._thresh, dtype = self.dtype), axis= -1)
-        mask = tf.reduce_any(mask, axis= 0) 
+        mask = tf.reduce_any(mask, axis= 0)
 
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis = 1)[:, :200, :]
@@ -134,17 +134,17 @@ class YoloGT(ks.layers.Layer):
         objectness = tf.expand_dims(data[..., 4], axis = -1)
         scaled = data[..., 5:]
         #scaled = classes * objectness
-        
+
         mask = tf.reduce_any(objectness > tf.cast(0.0, dtype = self._dtype), axis= -1)
-        mask = tf.reduce_any(mask, axis= 0)  
+        mask = tf.reduce_any(mask, axis= 0)
 
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis = 1)[:, :200, :]
-        
+
         # # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
         classifications = tf.boolean_mask(scaled, mask, axis = 1)[:, :200, :]
         return box, classifications
-        
+
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
     def __init__(self,
@@ -152,8 +152,8 @@ class YoloLayer(ks.Model):
                  anchors,
                  thresh,
                  cls_thresh,
-                 max_boxes, 
-                 scale_boxes = 1, 
+                 max_boxes,
+                 scale_boxes = 1,
                  scale_mult = 1,
                  **kwargs):
         super().__init__(**kwargs)
@@ -167,7 +167,7 @@ class YoloLayer(ks.Model):
         self._len_keys = len(self._keys)
         #self._dtype = dtype
         return
-    
+
     def scale_anchors(self, anchors, scale):
         if scale == 0:
             raise Exception("zeros division error")
@@ -181,13 +181,13 @@ class YoloLayer(ks.Model):
     def build(self, input_shape):
         if list(input_shape.keys()) != self._keys and list(reversed(input_shape.keys())) != self._keys:
             raise Exception(f"input size does not match the layers initialization, {self._keys} != {list(input_shape.keys())}")
-        
+
         self._filters = {}
         for i, key in enumerate(self._keys):
             anchors = [self._anchors[mask] for mask in self._masks[key]]
             self._filters[key] = YoloFilterCell(anchors = anchors, thresh = self._thresh, max_box = self._max_boxes)
         return
-    
+
     def call(self, inputs):
         boxes, classifs = self._filters[self._keys[0]](inputs[self._keys[0]])
 
@@ -197,10 +197,20 @@ class YoloLayer(ks.Model):
             b, c = self._filters[key](inputs[key])
             boxes = K.concatenate([boxes, b], axis = 1)
             classifs = K.concatenate([classifs, c], axis = 1)
-            i += 1 
-        
+            i += 1
+
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, self._max_boxes, self._max_boxes, self._thresh, self._cls_thresh)
         return nms.nmsed_boxes,  nms.nmsed_classes, nms.nmsed_scores
+
+    def get_config(self):
+        return {
+            "masks": dict(self._masks),
+            "anchors": [list(a) for a in self._anchors],
+            "thresh": self._thresh,
+            "cls_thresh": self._cls_thresh,
+            "max_boxes": self._max_boxes,
+            "scale_mult": self._scale_mult,
+        }
 
 
 if __name__ == "__main__":
@@ -208,4 +218,3 @@ if __name__ == "__main__":
     model = build_model()
     y = model(x)
     print(y)
-
