@@ -271,7 +271,7 @@ class routeCFG(Config):
 
     @property
     def shape(self):
-        return (self.w, self.h, self.c / self.groups)
+        return (self.w, self.h, self.c // self.groups)
 
     @classmethod
     def from_dict(clz, net, layer_dict):
@@ -288,17 +288,14 @@ class routeCFG(Config):
         else:
             w, h, c = net[layers].shape
             layers = (layers,)
+        assert c % layer_dict.get('groups', 1) == 0, "The number of channels must evenly divide among the groups."
 
         # Create layer
-        l = {
-            "_type": layer_dict["_type"],
-            "w": w,
-            "h": h,
-            "c": c,
-            "layers": layers,
-            "groups": groups,
-            "group_id": group_id,
-        }
+        l = layer_dict.copy()
+        l["w"] = w
+        l["h"] = h
+        l["c"] = c
+        l["layers"] = layers
         return clz(**l)
 
     def to_tf(self, tensors):
