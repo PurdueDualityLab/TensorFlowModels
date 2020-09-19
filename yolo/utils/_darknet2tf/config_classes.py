@@ -266,10 +266,12 @@ class routeCFG(Config):
     c: int = field(init=True, default=0)
 
     layers: List[int] = field(init=True, default_factory=list)
+    groups: int = field(repr=False, default=1)
+    group_id: int = field(repr=False, default=0)
 
     @property
     def shape(self):
-        return (self.w, self.h, self.c)
+        return (self.w, self.h, self.c / self.groups)
 
     @classmethod
     def from_dict(clz, net, layer_dict):
@@ -294,19 +296,27 @@ class routeCFG(Config):
             "h": h,
             "c": c,
             "layers": layers,
+            "groups": groups,
+            "group_id": group_id,
         }
         return clz(**l)
 
     def to_tf(self, tensors):
+        import tensorflow as tf
         from tensorflow.keras.layers import concatenate
 
         if len(self.layers) == 1:
-            return tensors[self.layers[0]]
+            stacked = tensors[self.layers[0]]
+        else:
+            my_tensors = []
+            for i in self.layers:
+                my_tensors.append(tensors[i])
+            stacked = concatenate(my_tensors)
 
-        my_tensors = []
-        for i in self.layers:
-            my_tensors.append(tensors[i])
-        return concatenate(my_tensors)
+        if self.groups == 1:
+            return stacked
+        else:
+            return tf.split(stacked, self.groups, axis=-1)[self.group_id]
 
 
 @layer_builder.register('net', 'network')
