@@ -41,7 +41,6 @@ import os
 import tensorflow as tf 
 from absl import app
 from typing import * 
-from .
 
 
 def configure_gpus(gpus:Union[List, str], memory_limit:Union[int, str]):

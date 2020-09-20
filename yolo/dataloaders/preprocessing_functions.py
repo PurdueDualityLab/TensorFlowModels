@@ -31,13 +31,17 @@ def py_func_rand():
         randscale(tensorflow.python.framework.ops.Tensor): A random integer between
             -10 and 19.
     """
-    randscale = np.random.randint(low = 10, high = 19)
+    scale_q = np.random.randint(low = 0, high = 2)
+    if scale_q == 0:
+        randscale = np.random.randint(low = 10, high = 19)
+    else:
+        randscale = 13
     jitter_x = np.random.uniform(low = -0.1, high = 0.1)
     jitter_y = np.random.uniform(low = -0.1, high = 0.1)
-    jitter_cx = 0.0
-    jitter_cy = 0.0
-    jitter_bw = np.random.uniform(low = -.05, high = .05) + 1.0
-    jitter_bh = np.random.uniform(low = -.05, high = .05) + 1.0
+    jitter_cx = 0.0 #np.random.uniform(low = -.005, high = .005)
+    jitter_cy = 0.0 #np.random.uniform(low = -.005, high = .005)
+    jitter_bw = np.random.uniform(low = -.005, high = .005) + 1.0
+    jitter_bh = np.random.uniform(low = -.005, high = .005) + 1.0
     return jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale 
 
 @tf.function
