@@ -54,9 +54,6 @@ from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, dra
 
 '''Video Buffer using cv2'''
 def video_processor(model, vidpath, device = "/CPU:0"):
-    cap = cv2.VideoCapture(vidpath)
-    assert cap.isOpened()
-
     width = 0
     height = 0
     frame_count = 0
@@ -82,6 +79,9 @@ def video_processor(model, vidpath, device = "/CPU:0"):
 
     # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
     pred = None
+    cap = cv2.VideoCapture(vidpath)
+    assert cap.isOpened()
+
     while cap.isOpened():
         success, image = cap.read()
 
