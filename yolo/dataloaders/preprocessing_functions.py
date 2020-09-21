@@ -9,41 +9,6 @@ import time
 import tensorflow.keras.backend as K
 
 
-# Global Variable to introduce randomness among each element of a batch
-RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))
-
-def image_scaler(image):
-    """Image Normalization.
-    Args:
-        image(tensorflow.python.framework.ops.Tensor): The image.
-    Returns:
-        A Normalized Function.
-    """
-    image = tf.convert_to_tensor(image)
-    image = image / 255
-    return image
-
-def py_func_rand():
-    """Image Normalization.
-    Returns:
-        jitter(tensorflow.python.framework.ops.Tensor): A random number generated
-            from a uniform distrubution between -0.3 and 0.3.
-        randscale(tensorflow.python.framework.ops.Tensor): A random integer between
-            -10 and 19.
-    """
-    scale_q = np.random.randint(low = 0, high = 2)
-    if scale_q == 0:
-        randscale = np.random.randint(low = 10, high = 19)
-    else:
-        randscale = 13
-    jitter_x = np.random.uniform(low = -0.1, high = 0.1)
-    jitter_y = np.random.uniform(low = -0.1, high = 0.1)
-    jitter_cx = 0.0 #np.random.uniform(low = -.005, high = .005)
-    jitter_cy = 0.0 #np.random.uniform(low = -.005, high = .005)
-    jitter_bw = np.random.uniform(low = -.005, high = .005) + 1.0
-    jitter_bh = np.random.uniform(low = -.005, high = .005) + 1.0
-    return jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale 
-
 @tf.function
 def build_grided_gt(y_true, mask, size):
     """
@@ -75,13 +40,9 @@ def build_grided_gt(y_true, mask, size):
     i = 0
     for batch in range(batches):
         for box_id in range(num_boxes):
-            # if tf.math.equal(K.sum(y_true[batch, box_id, 0:4]), 0.0): # VALUE ERROR is (None, 25)
-            #     continue
-            if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)): # VALUE ERROR is (None, 25)
-                #tf.print("outer zero: ",y_true[batch, box_id, 0:2])
+            if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)):
                 continue
             if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater_equal(y_true[batch, box_id, 0:2], 1.0)): 
-                #tf.print("outer vals: ",y_true[batch, box_id, 0:2])
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
@@ -138,142 +99,7 @@ def build_grided_gt(y_true, mask, size):
         update_index = update_index.stack()
         update = update.stack()
         full = tf.tensor_scatter_nd_add(full, update_index, update)
-    
-    #debug
-    #tf.print("gtsum: ", K.sum(y_true))
-    #tf.print("gtsum full",size, "  ", K.sum(full))
     return full
-
-@tf.function
-def convert_to_yolo(box):
-    """convert the box to the proper yolo format"""
-    with tf.name_scope("convert_box"):
-        ymin, xmin, ymax, xmax = tf.split(box, 4, axis = -1)
-        # add a dimention check
-        x_center = (xmax + xmin)/2
-        y_center = (ymax + ymin)/2
-        width = xmax - xmin
-        height = ymax - ymin
-
-        #error may exist print shape
-        box = tf.concat([x_center, y_center, width, height], axis = -1)
-    return box
-
-@tf.function
-def box_iou(box_1, box_2):
-    # K.expand_dims()
-    box1_xy = box_1[..., :2]
-    box1_wh = box_1[..., 2:4]
-    box1_mins = box1_xy - box1_wh / 2.
-    box1_maxes = box1_xy + box1_wh / 2.
-
-    box2_xy = box_2[..., :2]
-    box2_wh = box_2[..., 2:4]
-    box2_mins = box2_xy - box2_wh / 2.
-    box2_maxes = box2_xy + box2_wh / 2.
-
-    intersect_mins = K.maximum(box1_mins, box2_mins)
-    intersect_maxes = K.minimum(box1_maxes, box2_maxes)
-    intersect_wh = K.maximum(intersect_maxes - intersect_mins, K.zeros_like(intersect_mins))
-    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
-    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
-    iou = tf.math.divide_no_nan(intersect_area, (box1_area + box2_area - intersect_area))
-    return iou
-
-@tf.function
-def build_yolo_box(image, boxes):
-    # buidl the yolo boxes 
-    box_list = []
-    with tf.name_scope("yolo_box"):
-        image = tf.convert_to_tensor(image)
-        boxes = convert_to_yolo(boxes)
-    return boxes
-
-def build_gt(y_true, anchors, size):
-    """
-    get the correct anchor that is assoiciated with each box using IOU betwenn input anchors and gt
-    Args:
-        y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
-        anchors: list or tensor for the anchor boxes to be used in prediction found via Kmeans
-        size: size of the image that the bounding boxes were selected at 416 is the default for the original YOLO model
-    return:
-        tf.Tensor: y_true with the anchor associated with each ground truth box known
-    """
-    size = tf.cast(size, dtype = tf.float32)
-
-    anchor_xy = y_true[..., 0:2]
-    true_wh = y_true[..., 2:4]
-
-    # scale thhe boxes 
-    anchors = tf.convert_to_tensor(anchors, dtype=tf.float32)/size
-    
-    # build a matrix of anchor boxes
-    anchors = tf.transpose(anchors, perm=[1, 0])
-    anchor_xy = tf.tile(tf.expand_dims(anchor_xy, axis = -1), [1,1, tf.shape(anchors)[-1]])
-    anchors = tf.tile(tf.expand_dims(anchors, axis = 0), [tf.shape(anchor_xy)[0], 1, 1])
-    
-    # stack the xy so, each anchor is asscoaited once with each center from the ground truth input
-    anchors = K.concatenate([anchor_xy, anchors], axis = 1)
-    anchors = tf.transpose(anchors, perm = [2, 0, 1])
-
-    # copy the gt n times so that each anchor from above can be compared to input ground truth 
-    truth_comp = tf.tile(tf.expand_dims(y_true[..., 0:4], axis = -1), [1,1, tf.shape(anchors)[0]])
-    truth_comp = tf.transpose(truth_comp, perm = [2, 0, 1])
-
-    # compute intersection over union of the boxes, and take the argmax of comuted iou for each box. 
-    # thus each box is associated with the largest interection over union 
-    iou_anchors = tf.cast(K.argmax(box_iou(truth_comp, anchors), axis = 0), dtype = tf.float32)
-
-    #flatten the list from above and attach to the end of input y_true, then return it
-    y_true = K.concatenate([y_true, K.expand_dims(iou_anchors, axis = -1)], axis = -1)
-    return y_true
-
-def _angles_to_projective_transforms(angle, image_w, image_h):
-    """Generate projective transform matrix for tfa.image.transform.
-    Args:
-        angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
-        image_w(tensorflow.python.framework.ops.EagerTensor): The width of the image.
-        image_h(tensorflow.python.framework.ops.EagerTensor): The height of the image.
-    Returns:
-        projective transform matrix(tensorflow.python.framework.ops.EagerTensor)
-    """
-    with tf.name_scope("rotate_parent"):
-        angle_or_angles = tf.convert_to_tensor(angle, name="angles", dtype=tf.dtypes.float32)
-        angles = angle_or_angles[None]
-        x_offset = ((image_w - 1) - (tf.math.cos(angles) * (image_w - 1) - tf.math.sin(angles) * (image_h - 1))) / 2.0
-        y_offset = ((image_h - 1)- (tf.math.sin(angles) * (image_w - 1) + tf.math.cos(angles) * (image_h - 1))) / 2.0
-        num_angles = tf.shape(angles)[0]
-    return tf.concat([tf.math.cos(angles)[:, None],-tf.math.sin(angles)[:, None],x_offset[:, None],tf.math.sin(angles)[:, None],tf.math.cos(angles)[:, None],y_offset[:, None],tf.zeros((1, 2))],axis=1)
-
-def _rotate(image, angle):
-    """Generates a rotated image with the use of tfa.image.transform
-    Args:
-        image(tensorflow.python.framework.ops.Tensor): The image.
-        angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
-    Returns:
-        The rotated image.
-    """
-    with tf.name_scope("rotate"):
-        image = tf.convert_to_tensor(image)
-        img = img_utils.to_4D_image(image)
-        ndim = image.get_shape().ndims
-        image_h = tf.cast(img.shape[0], tf.dtypes.float32)
-        image_w = tf.cast(img.shape[1], tf.dtypes.float32)
-        rotation_key = _angles_to_projective_transforms(angle, image_w, image_h)
-        output = tfa.image.transform(img, rotation_key, interpolation="NEAREST")
-    return img_utils.from_4D_image(output, ndim)
-
-def _rand_number(low, high):
-    """Generates a random number along a uniform distrubution.
-    Args:
-        low(tensorflow.python.framework.ops.Tensor): Minimum Value of the Distrubution.
-        high(tensorflow.python.framework.ops.EagerTensor): Maximum Value of the Distrubution.
-    Returns:
-        A tensor of the specified shape filled with random uniform values.
-    """
-    global RANDOM_SEED # Global Variable defined at the beginning of the file.
-    return RANDOM_SEED.uniform(minval= low, maxval= high, shape = (), dtype=tf.float32)
 
 def _classification_data_augmentation(datapoint, num_of_classes):
     """Augments image by performing Random Zoom, Resize with Pad, Random Rotate,
@@ -360,8 +186,6 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
         dict{tf.tensor}: output grids for proper yolo predictions
     
     """
-
-    #masks = tf.convert_to_tensor(masks, dtype= tf.float32)
     # Image Jitter
     jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale = tf.py_function(py_func_rand, [], [tf.float32,  tf.float32,tf.float32,  tf.float32,tf.float32,  tf.float32, tf.int32,])
     if fixed_size:
@@ -372,7 +196,6 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
         image_jitter.set_shape([2])
         image = tfa.image.translate(image, image_jitter * tf.cast(tf.shape(image)[1], tf.float32))
         # Bounding Box Jitter
-        #tf.print(tf.shape(label))
         x = tf.math.add(label[..., 0], jitter_x + jitter_cx)
         x = tf.expand_dims(x, axis = -1)
         y = tf.math.add(label[..., 1], jitter_y + jitter_cy)
@@ -384,6 +207,7 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
 
         rest = label[..., 4:]
         label = tf.concat([x,y,w,h,rest], axis = -1)
+    
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
@@ -430,7 +254,7 @@ def _detection_normalize(data, anchors, width, height):
     image = tf.cast(data["image"], dtype=tf.float32)
     image = tf.image.resize(image, size = (608, 608))
     boxes = data["objects"]["bbox"]
-    boxes = build_yolo_box(image, boxes)
+    boxes = get_yolo_box(boxes)
     classes = tf.one_hot(data["objects"]["label"], depth = 80)
     label = tf.concat([boxes, classes], axis = -1)
     label = build_gt(label, anchors, width)

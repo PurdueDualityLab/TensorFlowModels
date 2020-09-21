@@ -3,8 +3,7 @@ import tensorflow.keras as ks
 from tensorflow.keras import backend as K
 import tensorflow_datasets as tfds
 from yolo.modeling.yolo_v3 import Yolov3
-from yolo.modeling.functions.iou import *
-
+from yolo.utils.iou_utils import *
 
 class Yolo_Loss(ks.losses.Loss):
     def __init__(self, 
