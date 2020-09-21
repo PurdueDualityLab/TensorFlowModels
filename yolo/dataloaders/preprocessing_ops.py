@@ -183,7 +183,6 @@ def _build_grided_gt(y_true, mask, size, use_tie_breaker):
                 p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
                 
                 if use_tie_breaker:
-                    # start code for tie breaker, temp check performance 
                     # find the index of the box
                     uid = 1
                     used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
@@ -200,7 +199,6 @@ def _build_grided_gt(y_true, mask, size, use_tie_breaker):
                     # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
                     # it will be prioritized over the current box.
                     depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
-                    #end code for tie breaker
 
                 # write the box to the update list 
                 # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 

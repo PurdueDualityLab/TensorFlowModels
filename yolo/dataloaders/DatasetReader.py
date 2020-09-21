@@ -1,62 +1,10 @@
 import tensorflow as tf 
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import * #Tuple, Sequence, List, Callable, Dict, Union
+from typing import * 
 
-import re
-
-
-def _yolo_coco_id_parser(value):
-    #im = value.split('/')[-1].split(".")[0].split("_")[-1]
-    value = tf.strings.split(input = tf.strings.split(input = tf.strings.split(input = value, sep="/")[-1], sep=".")[0], sep = "_")[-1]
-    return tf.strings.join([value, ".*"])
-
-def _yolo_coco_label_parser(id, paths):
-    #im = value.split('/')[-1].split(".")[0].split("_")[-1]
-    ret_dict = dict.fromkeys(["bbox", "labels"])
-    for path in paths:
-        path = tf.strings.join([path, "/" ,id])
-        ret_dict["bbox"] = path
-        ret_dict["labels"] = path        
-    return ret_dict
-
-@dataclass
-class Dataset():
-    dataset_type: str = field(init=True, repr=True, default="tfds")
-    dataset_name: str = field(init=True, repr=True, default="coco")
-    train_set_path: str = field(init=True, repr=True, default="train") # if custim it is a list of file paths 
-    val_set_path: str = field(init=True, repr=True, default="validation")
-
-    # custom datasets  path/to/labels/<image_id>.*
-    label_to_image:bool = field(init=True, repr=True, default=False)
-    train_labels_paths: List = field(init=True, repr=True, default=None) # add a key for each one
-    val_labels_paths: List = field(init=True, repr=True, default=None) # add a key for each one
-    id_parser: Callable = field(init=True, repr=True, default=_yolo_coco_id_parser) # function to get the id of the labels
-    label_parser: Union[Callable, Dict] = field(init=True, repr=True, default=_yolo_coco_label_parser) # function to get the id of the labels
-
-def _get_images(file_paths):
-    paths = []
-    for path_instance in file_paths:
-        path_instance = path_instance.strip().split(",")
-        for path in path_instance:
-            if "*" in path or "?" in path:
-                temp_paths = tf.io.gfile.glob(path)
-                if temp_paths == None:
-                    raise IOError("no matches found to dataset path")
-                paths.extend(temp_paths)
-            else:
-                paths.append(path)
-    return paths
-
-def _str_to_list(path):
-    if isinstance(path, Dict):
-        return paths
-    if isinstance(path, str):
-        paths = [path]
-    else:
-        paths = path
-    return paths
+from .DatasetConfigs import Dataset
+from .custom_dataset_ops import _get_images, _str_to_list
 
 class DatasetReader():
     def __init__(self, 

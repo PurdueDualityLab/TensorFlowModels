@@ -5,6 +5,7 @@ import copy
 
 from .preprocessing_ops import _scale_image, _get_yolo_box, _get_best_anchor, _jitter_boxes, _translate_image, _get_tf_box, _build_grided_gt
 from .random_ops import _box_scale_rand, _jitter_rand, _translate_rand
+
 class YoloParser():
     def __init__(self, 
                 image_w = 416,
@@ -43,8 +44,6 @@ class YoloParser():
         boxes = _get_yolo_box(data["objects"]["bbox"])
         classes = tf.one_hot(data["objects"]["label"], depth = self._num_classes)
         best_anchor = _get_best_anchor(boxes, self._anchors, self._image_w)
-        #label = tf.concat([], axis = -1)
-
         return {"image": image, "bbox": boxes, "label": classes, "best_anchor": best_anchor}
     
     def _batched_processing(self, data, is_training = True):
