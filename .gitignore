@@ -143,5 +143,5 @@ cache
 yolov3_416.weights
 *.weights
 *.mp4
-
+weights
 .vscode
