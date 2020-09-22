@@ -2,6 +2,23 @@ import math
 import tensorflow.keras.backend as K
 import tensorflow as tf
 
+def _distance(center_1, center_2):
+    sqr_pt = K.square(center_1 - center_2)
+    dist = tf.reduce_sum(sqr_pt, axis = -1)
+    return dist
+
+def _get_corners(box):
+    x, y, w, h = tf.split(box, 4, axis = -1)
+    x_min = x - w / 2
+    x_max = x + w / 2
+    y_min = y - h / 2
+    y_max = y + h / 2
+    return y_min, x_min, y_max, x_max
+
+def _aspect_ratio_consistancy(w_gt, h_gt, w, h):
+    arcterm = (tf.math.atan(w_gt/h_gt) - tf.math.atan(w/h)) ** 2
+    return 4 * arcterm / (math.pi)**2
+
 def box_iou(box_1, box_2, dtype = tf.float32):
     box1_xy = box_1[..., :2]
     box1_wh = box_1[..., 2:4]
@@ -73,3 +90,24 @@ def ciou(box_1, box_2):
     giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
     giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
     return giou
+
+def diou(output, target):
+    iou = box_iou(output, target)
+    dist = _distance(output[..., 0:2], target[..., 0:2])
+
+    ty_min, tx_min, ty_max, tx_max = _get_corners(target)
+    y_min, x_min, y_max, x_max = _get_corners(output)
+    xmin_diag = K.maximum(x_min, tx_min)
+    xmax_diag = K.maximum(x_max, tx_max)
+    ymin_diag = K.maximum(y_min, ty_min)
+    ymax_diag = K.maximum(y_max, ty_max)
+    diag_dist = ((xmax_diag - xmin_diag) ** 2) + ((ymax_diag - ymin_diag) ** 2) + 1e-16
+    regularization = dist/diag_dist  
+    return iou + regularization
+
+def ciou(output, target):
+    iou = box_iou(output, target)
+    iou_reg = diou(output, target) 
+    v = _aspect_ratio_consistancy(target[..., 3],target[..., 4], output [..., 3], output[..., 4])
+    a = v/((1 - iou) + v)
+    return iou_reg + v * a

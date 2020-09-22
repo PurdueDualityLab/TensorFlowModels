@@ -20,6 +20,7 @@ class Yolo_Loss(ks.losses.Loss):
                  nms_kind = "greedynms",
                  beta_nms = 0.6,
                  reduction = tf.keras.losses.Reduction.AUTO, 
+                 max_val = 5, 
                  name=None, 
                  dtype = tf.float32,
                  **kwargs):
@@ -64,6 +65,7 @@ class Yolo_Loss(ks.losses.Loss):
         self._iou_normalizer= tf.cast(iou_normalizer, dtype = self.dtype)
         self._cls_normalizer = tf.cast(cls_normalizer, dtype = self.dtype)
         self._scale_x_y = tf.cast(scale_x_y, dtype = self.dtype)
+        self._max_value = max_val
 
         #used in detection filtering
         self._beta_nms = tf.cast(beta_nms, dtype = self.dtype)
@@ -142,11 +144,18 @@ class Yolo_Loss(ks.losses.Loss):
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis = -1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis = -1)
             loss_box = (loss_wh + loss_xy) * true_conf * scale 
-        else:
+        elif self._loss_type == "giou":
             giou_loss = giou(true_box, pred_box, dtype = self.dtype)
             giou_loss = tf.where(tf.math.is_nan(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
             giou_loss = tf.where(tf.math.is_inf(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
             loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
+            loss_box = tf.clip_by_value(loss_box, clip_value_min = -math.inf, clip_value_max=self._max_value)
+        elif self._loss_type == "ciou":
+            ciou_loss = ciou(true_box, pred_box, dtype = self.dtype)
+            ciou_loss = tf.where(tf.math.is_nan(ciou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
+            giou_loss = tf.where(tf.math.is_inf(ciou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
+            loss_box = (1 - ciou_loss) * self._iou_normalizer * true_conf
+            loss_box = tf.clip_by_value(loss_box, clip_value_min = -math.inf, clip_value_max=self._max_value)
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         class_loss = self._cls_normalizer * tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf

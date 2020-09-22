@@ -38,7 +38,10 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
 def build_model(name = "regular", classes = 80, use_mixed = True, w = 416, h = 416, batch_size = None, saved = False):
     from yolo.modeling.yolo_v3 import Yolov3
     model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
+    if not saved:
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
+    else:
+        model.load_weights("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1")
     model.set_prediction_filter(use_mixed=use_mixed)
     return model
 

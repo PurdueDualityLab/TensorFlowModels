@@ -121,7 +121,7 @@ class FastVideo(object):
             print(model)
             prep_gpu()
             with tf.device(self._gpu_device):
-                model = build_model(name = model, w = self._p_width, h = self._p_height, saved = False) 
+                model = build_model(name = model, w = self._p_width, h = self._p_height, saved = True) 
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -348,13 +348,14 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    prep_gpu()
-    from yolo.modeling.yolo_v4 import Yolov4
-    model = Yolov4(classes = 80, model = 'regular')
-    model.load_weights_from_dn(True, True, True)
-    model.set_prediction_filter(use_mixed=True, scale_boxes=416)
-    model.make_predict_function()
+    # prep_gpu()
+    # from yolo.modeling.yolo_v4 import Yolov4
+    # model = Yolov4(classes = 80, model = 'regular')
+    # model.load_weights_from_dn(True, True, True)
+    # model.set_prediction_filter(use_mixed=True, scale_boxes=416)
+    # model.make_predict_function()
 
+    #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo(0, model = model, process_width=416, process_height=416, preprocess_with_gpu=False)
+    cap = FastVideo("test1.mp4", model = "regular", process_width=416, process_height=416, preprocess_with_gpu=False)
     cap.run()
