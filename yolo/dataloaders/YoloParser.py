@@ -1,11 +1,22 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
-import matplotlib.pyplot as plt
-import copy
 
-from .preprocessing_ops import _scale_image, _get_yolo_box, _get_best_anchor, _jitter_boxes, _translate_image, _get_tf_box, _build_grided_gt
-from .random_ops import _box_scale_rand, _jitter_rand, _translate_rand
 from .Parser import DatasetParser
+
+from .preprocessing_ops import _scale_image
+from .preprocessing_ops import _get_best_anchor
+from .preprocessing_ops import _jitter_boxes
+from .preprocessing_ops import _translate_image
+from .preprocessing_ops import _build_grided_gt
+
+from .random_ops import _box_scale_rand
+from .random_ops import _jitter_rand
+from .random_ops import _translate_rand
+
+from yolo.utils.box_utils import _xcycwh_to_xyxy 
+from yolo.utils.box_utils import _xcycwh_to_yxyx 
+from yolo.utils.box_utils import _yxyx_to_xcycwh 
+import matplotlib.pyplot as plt
 
 class YoloParser(DatasetParser):
     def __init__(self,
@@ -42,7 +53,7 @@ class YoloParser(DatasetParser):
 
     def _unbatched_processing(self, data):
         image = _scale_image(data["image"], square = True, square_w = self._max_process_size)
-        boxes = _get_yolo_box(data["objects"]["bbox"])
+        boxes = _yxyx_to_xcycwh(data["objects"]["bbox"])
         classes = tf.one_hot(data["objects"]["label"], depth = self._num_classes)
         best_anchor = _get_best_anchor(boxes, self._anchors, self._image_w)
         return {"image": image, "bbox": boxes, "label": classes, "best_anchor": best_anchor}
@@ -107,18 +118,18 @@ if __name__ == "__main__":
     import tensorflow_datasets as tfds
     coco, info = tfds.load('coco', split = 'train', with_info= True)
 
-    parser = YoloParser(use_tie_breaker=False, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
+    parser = YoloParser(image_h = 320, image_w = 320, fixed_size= True, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
     process_1 = parser.unbatched_process_fn(is_training = True)
-    process_2 = parser.batched_process_fn(is_training = False)
+    process_2 = parser.batched_process_fn(is_training = True)
     process_3 = parser.build_gt(is_training = True)
-    coco = coco.map(process_1).padded_batch(10)
+    coco = coco.map(process_1).padded_batch(1)
     coco = coco.map(process_2)
-    coco = coco.map(process_3)
+#    coco = coco.map(process_3)
 
     for k in coco.take(10):
-        print()
-        # boxes = _get_tf_box(k["label"][..., :4])
-        # image = tf.image.draw_bounding_boxes(k["image"], boxes, [[1.0, 0.0, 0.0]])
-        # tf.print(k["randscale"], k["label"][..., :4])
-        # plt.imshow(image.numpy()[0])
-        # plt.show()
+    
+        boxes = _xcycwh_to_yxyx(k["label"][..., :4])
+        image = tf.image.draw_bounding_boxes(k["image"], boxes, [[1.0, 0.0, 0.0]])
+        tf.print(k["randscale"], boxes)
+        plt.imshow(image.numpy()[0])
+        plt.show()

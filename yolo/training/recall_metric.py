@@ -5,7 +5,7 @@ from yolo.utils.iou_utils import *
 
 
 class YoloMAP_recall(ks.metrics.Metric):
-    def __init__(self, threshold = 0.5, num = 3, name = "recall", **kwargs):
+    def __init__(self, threshold = 0.45, num = 3, name = "recall", **kwargs):
         super().__init__(name=f"{name}", **kwargs)
         self._thresh = threshold
         

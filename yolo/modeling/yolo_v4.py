@@ -191,7 +191,7 @@ class Yolov4(ks.Model):
             encoder, neck, decoder = split_converter(list_encdec, self._encoder_decoder_split_location, 138)
 
         if not self._built:
-            self.build(input_shape = self._input_shape)
+            self.build(input_shape = (None, None, None, 3))
 
         if dn2tf_backbone:
             #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
@@ -252,7 +252,7 @@ class Yolov4(ks.Model):
             raise ValueError("The dataset has unknown or infinite cardinality")
         return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
 
-    def generate_loss(self, scale:float = 1.0) -> "Dict[Yolo_Loss]":
+    def generate_loss(self, scale:float = 1.0, loss_type = "giou") -> "Dict[Yolo_Loss]":
         """
         Create loss function instances for each of the detection heads.
 
@@ -268,7 +268,7 @@ class Yolov4(ks.Model):
                                        scale_anchors = scale,
                                        ignore_thresh = 0.7,
                                        truth_thresh = 1,
-                                       loss_type="giou",
+                                       loss_type=loss_type,
                                        scale_x_y=self._x_y_scales[key])
         return loss_dict
 

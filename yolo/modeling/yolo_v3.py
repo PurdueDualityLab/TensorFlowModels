@@ -314,7 +314,7 @@ class Yolov3(ks.Model):
         test = dataset.skip(train_size//batch_size)
         return train, test
 
-    def generate_loss(self, scale:float = 1.0) -> "Dict[Yolo_Loss]":
+    def generate_loss(self, scale:float = 1.0, loss_type = "ciou") -> "Dict[Yolo_Loss]":
         """
         Create loss function instances for each of the detection heads.
 
@@ -329,8 +329,8 @@ class Yolov3(ks.Model):
                                 anchors = self._boxes,
                                 scale_anchors = scale,
                                 ignore_thresh = 0.7,
-                                truth_thresh = 1,
-                                loss_type="giou")
+                                truth_thresh = 1, 
+                                loss_type=loss_type)
         return loss_dict
     
     def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):

@@ -31,18 +31,31 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
         if boxes[i][3] == 0:
             break
         box = boxes[i]
-        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes[i]], 1)
-        cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
+
+        if type(conf) == type(None):
+            cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors, 1)
+        else:
+            cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes[i]], 1)
+        
+        if type(conf) != type(None):
+            cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return i
 
-def build_model(name = "regular", classes = 80, use_mixed = True, w = 416, h = 416, batch_size = None, saved = False):
-    from yolo.modeling.yolo_v3 import Yolov3
-    model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3))
+def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed = True, w = None, h = None, batch_size = None, saved = False, policy = "float32", set_head = True):
+    if model_version == "v3":
+        from yolo.modeling.yolo_v3 import Yolov3
+        model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
+    else:
+        from yolo.modeling.yolo_v4 import Yolov4
+        model = Yolov4(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
+    
     if not saved:
         model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
     else:
         model.load_weights("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1")
-    model.set_prediction_filter(use_mixed=use_mixed)
+    
+    if set_head:
+        model.set_prediction_filter(use_mixed=use_mixed)
     return model
 
 

@@ -55,26 +55,6 @@ def _scale_image(image, square = False, square_w = None):
         image = image / 255
     return image
 
-def _get_yolo_box(box):
-    """convert the box to the proper yolo format"""
-    with tf.name_scope("yolo_box"):
-        ymin, xmin, ymax, xmax = tf.split(box, 4, axis = -1)
-        x_center = (xmax + xmin)/2
-        y_center = (ymax + ymin)/2
-        width = xmax - xmin
-        height = ymax - ymin
-        box = tf.concat([x_center, y_center, width, height], axis = -1)
-    return box
-
-def _get_tf_box(box):
-    with tf.name_scope("tf_box"):
-        x, y, w, h = tf.split(box, 4, axis = -1)
-        x_min = x - w/2
-        y_min = y - h/2
-        x_max = x + w/2
-        y_max = y + h/2
-        box = tf.concat([y_min, x_min, y_max, x_max], axis = -1)
-    return box
 def _jitter_boxes(box, translate_x, translate_y, j_cx, j_cy, j_w, j_h):
     with tf.name_scope("jitter_boxs"):
 
@@ -137,7 +117,7 @@ def _get_best_anchor(y_true, anchors, size):
 
         # compute intersection over union of the boxes, and take the argmax of comuted iou for each box. 
         # thus each box is associated with the largest interection over union 
-        iou_anchors = K.expand_dims(tf.cast(K.argmax(box_iou(truth_comp, anchors), axis = 0), dtype = tf.float32), axis = -1)
+        iou_anchors = K.expand_dims(tf.cast(K.argmax(compute_iou(truth_comp, anchors), axis = 0), dtype = tf.float32), axis = -1)
 
         #flatten the list from above and attach to the end of input y_true, then return it
         #y_true = K.concatenate([y_true, K.expand_dims(iou_anchors, axis = -1)], axis = -1)
@@ -232,4 +212,6 @@ def _build_grided_gt(y_true, mask, size, use_tie_breaker):
         update_index = update_index.stack()
         update = update.stack()
         full = tf.tensor_scatter_nd_add(full, update_index, update)
+    
+    #tf.print(K.sum(full), K.sum(y_true))
     return full

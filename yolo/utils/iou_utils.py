@@ -1,113 +1,76 @@
-import math
 import tensorflow.keras.backend as K
 import tensorflow as tf
+import math
 
-def _distance(center_1, center_2):
-    sqr_pt = K.square(center_1 - center_2)
-    dist = tf.reduce_sum(sqr_pt, axis = -1)
-    return dist
+from yolo.utils.box_utils import _xcycwh_to_xyxy 
+from yolo.utils.box_utils import _xcycwh_to_yxyx 
+from yolo.utils.box_utils import _yxyx_to_xcycwh 
+from yolo.utils.box_utils import _get_area 
+from yolo.utils.box_utils import _intersection_and_union
+from yolo.utils.box_utils import _aspect_ratio_consistancy 
+from yolo.utils.box_utils import _center_distance 
 
-def _get_corners(box):
-    x, y, w, h = tf.split(box, 4, axis = -1)
-    x_min = x - w / 2
-    x_max = x + w / 2
-    y_min = y - h / 2
-    y_max = y + h / 2
-    return y_min, x_min, y_max, x_max
-
-def _aspect_ratio_consistancy(w_gt, h_gt, w, h):
-    arcterm = (tf.math.atan(w_gt/h_gt) - tf.math.atan(w/h)) ** 2
-    return 4 * arcterm / (math.pi)**2
-
-def box_iou(box_1, box_2, dtype = tf.float32):
-    box1_xy = box_1[..., :2]
-    box1_wh = box_1[..., 2:4]
-    box1_mins = box1_xy - box1_wh / 2.
-    box1_maxes = box1_xy + box1_wh / 2.
-
-    box2_xy = box_2[..., :2]
-    box2_wh = box_2[..., 2:4]
-    box2_mins = box2_xy - box2_wh / 2.
-    box2_maxes = box2_xy + box2_wh / 2.
-
-    intersect_mins = K.maximum(box1_mins, box2_mins)
-    intersect_maxes = K.minimum(box1_maxes, box2_maxes)
-    intersect_wh = K.maximum(intersect_maxes - intersect_mins, K.zeros_like(intersect_mins))
-    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
-    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
-    iou = intersect_area/(box1_area + box2_area - intersect_area)
-    iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
+def compute_iou(box1, box2):
+    # get box corners 
+    box1 = _xcycwh_to_xyxy(box1)
+    box2 = _xcycwh_to_xyxy(box2)
+    intersection, union = _intersection_and_union(box1, box2)
+    
+    iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+    iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
+    #iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
     return iou
 
 
-def giou(box_1, box_2, dtype = tf.float32):
-    box1_xy = box_1[..., :2]
-    box1_wh = box_1[..., 2:4]
-    box1_mins = box1_xy - box1_wh / 2.
-    box1_maxes = box1_xy + box1_wh / 2.
+def compute_giou(box1, box2):
+    # get box corners 
+    box1 = _xcycwh_to_xyxy(box1)
+    box2 = _xcycwh_to_xyxy(box2)
+    
+    # compute IOU
+    intersection, union = _intersection_and_union(box1, box2)
+    iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+    iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
+    
+    # find the smallest box to encompase both box1 and box2
+    c_mins = K.minimum(box1[..., 0:2], box2[..., 0:2])
+    c_maxes = K.maximum(box1[..., 2:4], box2[..., 2:4])
+    c = _get_area((c_mins, c_maxes), use_tuple = True)
 
-    box2_xy = box_2[..., :2]
-    box2_wh = box_2[..., 2:4]
-    box2_mins = box2_xy - box2_wh / 2.
-    box2_maxes = box2_xy + box2_wh / 2.
+    # compute giou
+    giou = iou - tf.math.divide_no_nan((c - union), (c + 1e-16))
+    # giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
+    # giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
+    return iou, giou
 
-    intersect_mins = K.minimum(box1_mins, box2_mins)
-    intersect_maxes = K.maximum(box1_maxes, box2_maxes)
-    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
-    C = intersect_wh[..., 0] * intersect_wh[..., 1]
-    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
-    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
-    IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
-    giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
+def compute_diou(box1, box2):
+    # compute center distance
+    dist = _center_distance(box1[..., 0:2], box2[..., 0:2])
+    
+    # get box corners 
+    box1 = _xcycwh_to_xyxy(box1)
+    box2 = _xcycwh_to_xyxy(box2)
 
-    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
-    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
-    return giou
+    # compute IOU
+    intersection, union = _intersection_and_union(box1, box2)
+    iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+    iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
+    
+    # compute max diagnal of the smallest enclosing box
+    c_mins = K.minimum(box1[..., 0:2], box2[..., 0:2])
+    c_maxes = K.maximum(box1[..., 2:4], box2[..., 2:4])
+    diag_dist = _center_distance(c_mins, c_maxes)
+    
+    regularization = tf.math.divide_no_nan(dist,diag_dist + 1e-16)  
+    return iou, iou + regularization
 
-
-def ciou(box_1, box_2):
-    ### NOT COMPLETED
-    box1_xy = box_1[..., :2]
-    box1_wh = box_1[..., 2:4]
-    box1_mins = box1_xy - box1_wh / 2.
-    box1_maxes = box1_xy + box1_wh / 2.
-
-    box2_xy = box_2[..., :2]
-    box2_wh = box_2[..., 2:4]
-    box2_mins = box2_xy - box2_wh / 2.
-    box2_maxes = box2_xy + box2_wh / 2.
-
-    intersect_mins = K.minimum(box1_mins, box2_mins)
-    intersect_maxes = K.maximum(box1_maxes, box2_maxes)
-    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
-    C = intersect_wh[..., 0] * intersect_wh[..., 1]
-    box1_area = box1_wh[..., 0] * box1_wh[..., 1]
-    box2_area = box2_wh[..., 0] * box2_wh[..., 1]
-    IOU = tf.convert_to_tensor(box_iou(box_1, box_2))
-    giou = IOU - (C - (box1_area + box2_area) / (IOU + 1)) / C
-
-    giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
-    giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
-    return giou
-
-def diou(output, target):
-    iou = box_iou(output, target)
-    dist = _distance(output[..., 0:2], target[..., 0:2])
-
-    ty_min, tx_min, ty_max, tx_max = _get_corners(target)
-    y_min, x_min, y_max, x_max = _get_corners(output)
-    xmin_diag = K.maximum(x_min, tx_min)
-    xmax_diag = K.maximum(x_max, tx_max)
-    ymin_diag = K.maximum(y_min, ty_min)
-    ymax_diag = K.maximum(y_max, ty_max)
-    diag_dist = ((xmax_diag - xmin_diag) ** 2) + ((ymax_diag - ymin_diag) ** 2) + 1e-16
-    regularization = dist/diag_dist  
-    return iou + regularization
-
-def ciou(output, target):
-    iou = box_iou(output, target)
-    iou_reg = diou(output, target) 
-    v = _aspect_ratio_consistancy(target[..., 3],target[..., 4], output [..., 3], output[..., 4])
+def compute_ciou(box1, box2):
+    #compute DIOU
+    iou, diou = compute_diou(box1, box2)
+    
+    # computer aspect ratio consistency
+    v = _aspect_ratio_consistancy(box1[..., 2],box1[..., 3], box2[..., 2], box2[..., 3])
+    
+    # compute IOU regularization
     a = v/((1 - iou) + v)
-    return iou_reg + v * a
+    return iou, diou + v * a
