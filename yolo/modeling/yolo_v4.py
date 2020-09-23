@@ -139,7 +139,7 @@ class Yolov4(ks.Model):
             self._input_shape = input_shape
         super().build(input_shape)
 
-    def call(self, inputs):
+    def call(self, inputs, training):
         feature_maps = self._backbone(inputs)
         neck_maps = self._neck(feature_maps)
         predictions = self._head(neck_maps)

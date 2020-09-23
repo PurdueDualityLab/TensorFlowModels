@@ -286,7 +286,7 @@ class FastVideo(object):
                     image = tf.convert_to_tensor(proc)
                     pimage = tf.image.resize(image, (self._p_width, self._p_height))
                     pred = model.predict(pimage)
-                    boxes, classes = int_scale_boxes(pred[0], pred[1], self._width, self._height)
+                    boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], self._width, self._height)
                 b = datetime.datetime.now()
                 
                 # computation latency to see how much delay between input and output
@@ -310,7 +310,7 @@ class FastVideo(object):
                     time.sleep(self._wait_time)
 
                 # put processed frames on the display que
-                self._display_que.put((image.numpy(), boxes.numpy(), classes.numpy(), pred[2]))
+                self._display_que.put((image.numpy(), boxes.numpy(), classes.numpy(), pred["confidence"]))
 
                 #print everything
                 self.print_opt()

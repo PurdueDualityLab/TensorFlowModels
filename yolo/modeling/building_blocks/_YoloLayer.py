@@ -190,7 +190,6 @@ class YoloLayer(ks.Model):
 
     def call(self, inputs):
         boxes, classifs = self._filters[self._keys[0]](inputs[self._keys[0]])
-
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
@@ -198,9 +197,8 @@ class YoloLayer(ks.Model):
             boxes = K.concatenate([boxes, b], axis = 1)
             classifs = K.concatenate([classifs, c], axis = 1)
             i += 1
-
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, self._max_boxes, self._max_boxes, self._thresh, self._cls_thresh)
-        return nms.nmsed_boxes,  nms.nmsed_classes, nms.nmsed_scores
+        return {"bbox":nms.nmsed_boxes,  "classes":nms.nmsed_classes, "confidence":nms.nmsed_scores, "raw_output": inputs}
 
     def get_config(self):
         return {

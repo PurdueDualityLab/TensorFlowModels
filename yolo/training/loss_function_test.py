@@ -38,13 +38,13 @@ def gt_test():
     i = 0 
     for image, label in train:
         box, classif = partial_model(label)
-        boxes, classes, conf = pred_model(image)
+        pred = pred_model(image)
         item = model(image)
 
         #image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
         #image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
         image = image[0].numpy()
-        boxes, classes = int_scale_boxes(boxes, classes, 416, 416)
+        boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], 416, 416)
         box, classif = int_scale_boxes(box, classif, 416, 416)
         draw_box(image, boxes[0].numpy(), classes[0].numpy(), None, [0,1,0], coco_names)
         draw_box(image, box[0].numpy(), classif[0].numpy(), None, [1,0,0], coco_names)
@@ -53,7 +53,7 @@ def gt_test():
         plt.show()
 
         for key in item.keys():
-            print(key, loss_fn[key](label[key], item[key]), loss_fn[key]._mean_iou)
+            print(key, loss_fn[key](label[key], item[key]))
         if i == 10:
             break 
         i += 1
@@ -68,7 +68,7 @@ def get_dataset(batch_size = 10):
     test_size = tf.data.experimental.cardinality(test)
     print(train_size, test_size)
 
-    parser = YoloParser(image_w = 608, image_h = 608, use_tie_breaker=False, fixed_size= True, jitter_im= False, jitter_boxes= False, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
+    parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=False, fixed_size= True, jitter_im= False, jitter_boxes= False, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
     preprocess_train = parser.unbatched_process_fn(is_training = True)
     postprocess_train = parser.batched_process_fn(is_training = True)
 
@@ -136,7 +136,7 @@ def loss_test():
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
         train, test = get_dataset(batch_size=2)
-        model = build_model(model_version="v3", set_head=False) #, policy = "float32")
+        model = build_model(model_version="v4", set_head=False) #, policy = "float32")
         #model.remove_prediction_filter()
         loss_fn = model.generate_loss(loss_type="ciou")
         map_50 = YoloMAP_recall(name = "recall")
@@ -149,9 +149,9 @@ def loss_test():
 
 
 def main(argv, args = None):
-    loss_test()
+    #loss_test()
     #loss_test_eager()
-    #gt_test()
+    gt_test()
     return
 
 if __name__ == "__main__":
