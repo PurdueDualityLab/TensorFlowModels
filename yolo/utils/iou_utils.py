@@ -18,7 +18,6 @@ def compute_iou(box1, box2):
     
     iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
     iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
-    #iou = tf.where(tf.math.is_nan(iou), tf.cast(0.0, dtype = dtype), iou)
     return iou
 
 
@@ -39,8 +38,6 @@ def compute_giou(box1, box2):
 
     # compute giou
     giou = iou - tf.math.divide_no_nan((c - union), (c + 1e-16))
-    # giou = tf.where(tf.math.is_nan(giou), 0.0, giou)
-    # giou = tf.where(tf.math.is_inf(giou), 0.0, giou)
     return iou, giou
 
 def compute_diou(box1, box2):
