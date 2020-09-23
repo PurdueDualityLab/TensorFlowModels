@@ -16,7 +16,7 @@ def compute_iou(box1, box2):
     box2 = _xcycwh_to_xyxy(box2)
     intersection, union = _intersection_and_union(box1, box2)
     
-    iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+    iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
     return iou
 
@@ -28,7 +28,7 @@ def compute_giou(box1, box2):
     
     # compute IOU
     intersection, union = _intersection_and_union(box1, box2)
-    iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+    iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
     
     # find the smallest box to encompase both box1 and box2
@@ -37,7 +37,7 @@ def compute_giou(box1, box2):
     c = _get_area((c_mins, c_maxes), use_tuple = True)
 
     # compute giou
-    giou = iou - tf.math.divide_no_nan((c - union), (c + 1e-16))
+    giou = iou - tf.math.divide_no_nan((c - union), c)
     return iou, giou
 
 def compute_diou(box1, box2):
@@ -58,7 +58,7 @@ def compute_diou(box1, box2):
     c_maxes = K.maximum(box1[..., 2:4], box2[..., 2:4])
     diag_dist = _center_distance(c_mins, c_maxes)
     
-    regularization = tf.math.divide_no_nan(dist,diag_dist + 1e-16)  
+    regularization = tf.math.divide_no_nan(dist,diag_dist)  
     return iou, iou + regularization
 
 def compute_ciou(box1, box2):
