@@ -14,7 +14,7 @@ def _yxyx_to_xcycwh(box : tf.Tensor):
         box = tf.concat([x_center, y_center, width, height], axis = -1)
     return box
 
-def _xcycwh_to_yxyx(box : tf.Tensor, split_min_max = False):
+def _xcycwh_to_yxyx(box : tf.Tensor, split_min_max:bool  = False):
     with tf.name_scope("xcycwh_to_yxyx"):
         xy, wh = tf.split(box, 2, axis = -1)
         xy_min = xy - wh/2
@@ -24,7 +24,7 @@ def _xcycwh_to_yxyx(box : tf.Tensor, split_min_max = False):
             box = tf.concat(box, axis = -1)
     return box   
 
-def _xcycwh_to_xyxy(box : tf.Tensor, split_min_max = False):
+def _xcycwh_to_xyxy(box : tf.Tensor, split_min_max:bool  = False):
     with tf.name_scope("xcycwh_to_yxyx"):
         xy, wh = tf.split(box, 2, axis = -1)
         xy_min = xy - wh/2
@@ -46,7 +46,7 @@ def _intersection_and_union(box1: tf.Tensor, box2: tf.Tensor):
         union = box1_area + box2_area - intersection
     return intersection, union
 
-def _get_area(box: Union[tf.Tensor, Tuple] , xywh = False, use_tuple = False):
+def _get_area(box: Union[tf.Tensor, Tuple] , xywh:bool = False, use_tuple:bool  = False):
     with tf.name_scope("box_area"):
         if use_tuple:
             area = _get_area_tuple(box = box, xywh=xywh)
@@ -54,7 +54,7 @@ def _get_area(box: Union[tf.Tensor, Tuple] , xywh = False, use_tuple = False):
             area = _get_area_tensor(box = box, xywh=xywh)
     return area
 
-def _get_area_tensor(box: tf.Tensor , xywh = False):
+def _get_area_tensor(box: tf.Tensor , xywh:bool  = False):
     with tf.name_scope("tensor_area"):
         if xywh: 
             area = tf.reduce_prod(box[..., 2:4], axis = -1)
@@ -62,7 +62,7 @@ def _get_area_tensor(box: tf.Tensor , xywh = False):
             area = tf.math.abs(tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis = -1))
     return area
 
-def _get_area_tuple(box: Tuple, xywh = False):
+def _get_area_tuple(box: Tuple, xywh:bool = False):
     with tf.name_scope("tuple_area"):
         if xywh: 
             area = tf.reduce_prod(box[1], axis = -1)
@@ -70,11 +70,11 @@ def _get_area_tuple(box: Tuple, xywh = False):
             area = tf.math.abs(tf.reduce_prod(box[1] - box[0], axis = -1))
     return area
 
-def _center_distance(center_1, center_2):
+def _center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
     with tf.name_scope("center_distance"):
         dist = (center_1[..., 0] - center_2[..., 0]) ** 2 + (center_1[..., 1] - center_2[..., 1]) ** 2
     return dist
 
-def _aspect_ratio_consistancy(w_gt, h_gt, w, h):
+def _aspect_ratio_consistancy(w_gt: tf.Tensor, h_gt: tf.Tensor, w: tf.Tensor, h: tf.Tensor):
     arcterm = (tf.math.atan(tf.math.divide_no_nan(w_gt,h_gt)) - tf.math.atan(tf.math.divide_no_nan(w,h))) ** 2
     return 4 * arcterm / (math.pi)**2

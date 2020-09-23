@@ -14,7 +14,6 @@ import os
 
 __all__ = ['CSPDarkNet53', 'Yolov4']
 
-
 @ks.utils.register_keras_serializable(package='yolo')
 class CSPDarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
@@ -82,6 +81,11 @@ class Yolov4(ks.Model):
                  classes = 80,
                  masks = None,
                  boxes = None,
+                 thresh = 0.45,
+                 class_thresh = 0.45,
+                 max_boxes = 200,
+                 scale_boxes = 416,
+                 scale_mult = 1.0,
                  policy = "float32",
                  scales = None,
                  **kwargs):
@@ -93,21 +97,21 @@ class Yolov4(ks.Model):
             type: the particular type of YOLOv3 model that is being constructed
                   regular, spp, or tiny
         """
-        #required_inputs
+        # required_inputs
         super().__init__(**kwargs)
         self._classes = classes
         self._type = model
         self._built = False
         self._input_shape = input_shape
 
-        #setting the running policy
+        # setting the running policy
         if type(policy) != str:
             policy = policy.name
         self._og_policy = policy
         self._policy = tf.keras.mixed_precision.experimental.global_policy().name
         self.set_policy(policy=policy)
 
-        #init model params
+        # init model params
         if self._type == 'regular':
             self._backbone_name = "darknet53"
             self._neck_name = "name"
@@ -127,14 +131,37 @@ class Yolov4(ks.Model):
             self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
         else:
             raise ValueError(f"Unknown YOLOv3 type '{self._type}'")
-
-        self._pred_filter = None
+        
+        # prediction params
+        if thresh is None:  
+            if self._head_name == 'tiny':
+                thresh = 0.5
+            else:
+                thresh = 0.45
+        self._thresh = thresh
+        self._class_thesh = class_thresh
+        self._max_boxes = max_boxes
+        self._scale_boxes = scale_boxes
+        self._scale_mult = scale_mult
+        self._use_pred_filter = False
         return
 
     def build(self, input_shape=None):
-        self._backbone = CSP_Backbone_Builder(self._backbone_name, input_shape = input_shape)
-        self._neck = Yolov4Neck(name = self._neck_name, input_shape= input_shape)
-        self._head = Yolov4Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
+        self._backbone = CSP_Backbone_Builder(self._backbone_name, 
+                                              input_shape = input_shape)
+        self._neck = Yolov4Neck(name = self._neck_name, 
+                                input_shape= input_shape)
+        self._head = Yolov4Head(model = self._head_name, 
+                                classes=self._classes, 
+                                boxes=len(self._boxes), 
+                                input_shape = input_shape)
+        self._pred_filter = YoloLayer(masks = self._masks, 
+                                      anchors = self._boxes, 
+                                      thresh = self._thresh, 
+                                      cls_thresh = self._class_thresh, 
+                                      max_boxes = self._max_boxes, 
+                                      scale_boxes = self._scale_boxes, 
+                                      scale_mult = self._scale_mult)                  
         self._built = True
         if input_shape is not None and input_shape != self._input_shape:
             self._input_shape = input_shape
@@ -144,7 +171,7 @@ class Yolov4(ks.Model):
         feature_maps = self._backbone(inputs)
         neck_maps = self._neck(feature_maps)
         predictions = self._head(neck_maps)
-        if self._pred_filter is not None:
+        if self._use_pred_filter:
             predictions = self._pred_filter(predictions)
         return predictions
 
@@ -194,63 +221,14 @@ class Yolov4(ks.Model):
             self.build(input_shape = (None, None, None, 3))
 
         if dn2tf_backbone:
-            #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
             load_weights_backbone(self._backbone, encoder)
 
         if dn2tf_neck:
             load_weights_backbone(self._neck, neck)
 
         if dn2tf_head:
-            #load_weights_dnHead(self._head, decoder)
             load_weights_v4head(self._head, decoder)
-
         return
-
-    def preprocess_dataset(self, dataset:"Union[str, tfds.data.Dataset]", size:int=None, split='validation'):
-        """
-        Preprocesses (normalization and data augmentation) and batches the dataset.
-        This is a convenience function that calls on
-        yolo.dataloaders.preprocessing_functions.preprocessing, replacing the
-        parameters with default values based on the anchor boxes and maskes
-        passed into __init__.
-
-        Args:
-            dataset (str, tfds.data.Dataset): The Dataset you would like to preprocess.
-                Can be replaced by the name of a dataset that is present in the
-                TensorFlow Dataset library.
-            size (int): Size of the dataset. If not specified, the cardinality
-                will be calculated and used if it is finite.
-            split: The type of split to make to create the dataset if dataset is
-                specified as a string.
-
-        Raises:
-            SyntaxError:
-                - Preprocessing type not found.
-                - The given batch number for detection preprocessing is more than 1.
-                - Number of batches cannot be less than 1.
-                - Data augmentation split cannot be greater than 100.
-            ValueError:
-                - The dataset has unknown or infinite cardinality.
-            WARNING:
-                - Dataset is not a tensorflow dataset.
-                - Detection Preprocessing may cause NotFoundError in Google Colab.
-        """
-        from yolo.dataloaders.preprocessing_functions import preprocessing
-        if instanceof(dataset, str):
-            import tensorflow_datasets as tfds
-            dataset, Info = tfds.load(dataset, split=split, with_info=True, shuffle_files=True, download=False)
-            if size is None:
-                size = int(Info.splits[split].num_examples)
-        if size is None:
-            try:
-                from tensorflow.data.experimental import cardinality
-            except ImportError:
-                size = dataset.cardinality()
-            else:
-                size = cardinality(dataset)
-        if size < 0:
-            raise ValueError("The dataset has unknown or infinite cardinality")
-        return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
 
     def generate_loss(self, scale:float = 1.0, loss_type = "giou") -> "Dict[Yolo_Loss]":
         """
@@ -292,28 +270,12 @@ class Yolov4(ks.Model):
             os.system(f"rm {save_weights_temp_name}.*")
         return
 
-    def set_prediction_filter(self,
-            thresh:int = None,
-            class_thresh:int = 0.45,
-            max_boxes:int = 200,
-            use_mixed:bool = True,
-            scale_boxes:int = 416,
-            scale_mult:float = 1.0):
-        if use_mixed:
-            self.set_policy(policy='mixed_float16')
-
-        if thresh is None:
-            if self._head_name == 'tiny':
-                thresh = 0.5
-            else:
-                thresh = 0.45
-
-        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
+    def set_prediction_filter(self):
+        self._use_pred_filter = True
         return
 
     def remove_prediction_filter(self):
-        self.set_policy(policy=self._og_policy)
-        self._pred_filter = None
+        self._use_pred_filter = False
         return
 
     @property

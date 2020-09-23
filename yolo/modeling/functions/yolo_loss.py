@@ -71,9 +71,14 @@ class Yolo_Loss(ks.losses.Loss):
         self._beta_nms = tf.cast(beta_nms, dtype = self.dtype)
         self._nms_kind = nms_kind
 
-        self._mean_iou = 0
+        self._loss_box = 0.0
+        self._conf_loss = 0.0
+        self._class_loss = 0.0
+        self._iou = 0.0
+        self._avg_iou = 0.0
+        self._count = 0.0
         return
-    
+
     @tf.function
     def _get_centers(self, lwidth, lheight, batch_size):
         """ generate a grid that is used to detemine the relative centers of the bounding boxs """
@@ -138,8 +143,6 @@ class Yolo_Loss(ks.losses.Loss):
         if self._loss_type == "giou":
             iou, giou = compute_giou(true_box, pred_box)
             mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
-            # giou_loss = tf.where(tf.math.is_nan(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
-            # giou_loss = tf.where(tf.math.is_inf(giou_loss), tf.cast(0.0, dtype = self.dtype), giou_loss)
             loss_box = (1 - giou) * self._iou_normalizer * true_conf
             loss_box = tf.math.minimum(loss_box, self._max_value)
         elif self._loss_type == "ciou":
@@ -166,15 +169,34 @@ class Yolo_Loss(ks.losses.Loss):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-        loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype)
-        conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype)
-        class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype)
-
-        self._mean_iou = tf.reduce_mean(loss_box)
+        loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype))
+        conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype))
+        class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype))
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-        loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
-        return loss, self._mean_iou
+        loss = class_loss + conf_loss + loss_box
+
+        #10. store values for use in metrics
+        self._loss_box = loss_box
+        self._conf_loss = conf_loss
+        self._class_loss = class_loss
+        self._iou = iou
+        return loss
+
+    def get_avg_iou():
+        value = tf.reduce_sum(self._iou) / tf.cast(tf.math.count_nonzero(self._iou), dtype=self.dtype)
+        self._avg_iou += value
+        self._count += 1
+        return self._avg_iou/self._count
+    
+    def get_classification_loss():
+        return self._class_loss
+    
+    def get_box_loss():
+        return self._loss_box
+
+    def get_confidence_loss():
+        return self._conf_loss
 
     def get_config(self):
         """save all loss attributes"""
