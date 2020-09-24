@@ -2,6 +2,7 @@
 from absl import app, flags
 from absl.flags import argparse_flags
 import sys
+import os
 
 parser = argparse_flags.ArgumentParser()
 
@@ -17,7 +18,7 @@ parser.add_argument(
 
 parser.add_argument(
     'vidpath',
-    default="test1.mp4",
+    default="",
     type=str,
     help='Path of the video stream to process. Defaults to the webcam.',
     nargs='?'
@@ -54,21 +55,7 @@ from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, dra
 
 '''Video Buffer using cv2'''
 def video_processor(model, vidpath, device = "/CPU:0"):
-    width = 0
-    height = 0
-    frame_count = 0
     img_array = []
-
-    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
-    pred = None
-    cap = cv2.VideoCapture(vidpath)
-    assert cap.isOpened()
-
-
-    width = int(cap.get(3))
-    height = int(cap.get(4))
-    print('width, height, fps:', width, height, int(cap.get(5)))
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     i = 0
     t = 0
@@ -83,6 +70,15 @@ def video_processor(model, vidpath, device = "/CPU:0"):
     print(label_names)
 
 
+    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
+    pred = None
+    cap = cv2.VideoCapture(vidpath)
+    assert cap.isOpened()
+
+    width = int(cap.get(3))
+    height = int(cap.get(4))
+    print('width, height, fps:', width, height, int(cap.get(5)))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     while cap.isOpened():
         success, image = cap.read()
@@ -106,7 +102,7 @@ def video_processor(model, vidpath, device = "/CPU:0"):
             c = datetime.datetime.now()
             boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], width, height)
             draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred["confidence"][0], colors, label_names)
-            d = datetime.datetime.now() 
+            d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
         i += 1
@@ -134,7 +130,14 @@ def main(argv, args=None):
         args = parser.parse_args(argv[1:])
 
     model = args.model
-    vidpath = args.vidpath or args.webcam
+    if args.vidpath:
+        if os.path.exists(args.vidpath):
+            vidpath = args.vidpath
+        else:
+            print("Input video path doesn't exist.")
+            exit()
+    else:
+        vidpath = args.webcam
 
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
