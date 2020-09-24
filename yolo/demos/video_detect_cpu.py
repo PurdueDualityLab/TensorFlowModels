@@ -17,7 +17,7 @@ parser.add_argument(
 
 parser.add_argument(
     'vidpath',
-    default=None,
+    default="test1.mp4",
     type=str,
     help='Path of the video stream to process. Defaults to the webcam.',
     nargs='?'
@@ -59,6 +59,11 @@ def video_processor(model, vidpath, device = "/CPU:0"):
     frame_count = 0
     img_array = []
 
+    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
+    pred = None
+    cap = cv2.VideoCapture(vidpath)
+    assert cap.isOpened()
+
 
     width = int(cap.get(3))
     height = int(cap.get(4))
@@ -77,10 +82,7 @@ def video_processor(model, vidpath, device = "/CPU:0"):
     label_names = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
     print(label_names)
 
-    # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
-    pred = None
-    cap = cv2.VideoCapture(vidpath)
-    assert cap.isOpened()
+
 
     while cap.isOpened():
         success, image = cap.read()
