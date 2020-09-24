@@ -102,9 +102,9 @@ def video_processor(model, vidpath, device = "/CPU:0"):
         image = image.numpy()
         if pred != None:
             c = datetime.datetime.now()
-            boxes, classes = int_scale_boxes(pred[0], pred[1], width, height)
-            draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred[2][0], colors, label_names)
-            d = datetime.datetime.now()
+            boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], width, height)
+            draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred["confidence"][0], colors, label_names)
+            d = datetime.datetime.now() 
 
         cv2.imshow('frame', image)
         i += 1
