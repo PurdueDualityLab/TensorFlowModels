@@ -89,6 +89,7 @@ class YoloParser(DatasetParser):
         return {"image": image, "label": label, "randscale": randscale}
 
     def _label_format_gt(self, data):
+        # changes must be made to the build gt where it picks arg max iou, removes the term and then picks the next best, iou > 0.213:: 
         masks = self._masks
         randscale = data["randscale"]
         for key in masks.keys():

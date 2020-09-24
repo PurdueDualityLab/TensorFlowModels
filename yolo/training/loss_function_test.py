@@ -68,7 +68,7 @@ def get_dataset(batch_size = 10):
     test_size = tf.data.experimental.cardinality(test)
     print(train_size, test_size)
 
-    parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=False, fixed_size= False, jitter_im= False, jitter_boxes= False, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
+    parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=True, fixed_size= False, jitter_im= 0.1, jitter_boxes= 0.005, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
     preprocess_train = parser.unbatched_process_fn(is_training = True)
     postprocess_train = parser.batched_process_fn(is_training = True)
 
@@ -137,14 +137,14 @@ def loss_test():
     with strat.scope():
         train, test = get_dataset(batch_size=2)
         # trianing fails at mixed precisions
-        model = build_model(model_version="v3", set_head=False, policy = "float16")
+        model = build_model(model_version="v4", set_head=False, load_head = False, policy = "float32")
         #model.remove_prediction_filter()
         loss_fn = model.generate_loss(loss_type="ciou")
         map_50 = YoloMAP_recall(name = "recall")
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs")]
-    model.compile(optimizer=optimizer, loss=loss_fn)#, metrics=[map_50])
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     model.fit(train, validation_data=test, shuffle=False, callbacks=callbacks)
     return 
 

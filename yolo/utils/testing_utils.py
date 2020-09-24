@@ -41,15 +41,15 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
             cv2.putText(image, "%s, %0.3f"%(label_names[classes[i]], conf[i]), (box[0], box[2]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[classes[i]], 1)
     return i
 
-def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed = True, w = None, h = None, batch_size = None, saved = False, policy = "float32", set_head = True):
+def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed = True, w = None, h = None, batch_size = None, saved = False, load_head = True, policy = "float32", set_head = True):
     if model_version == "v3":
         from yolo.modeling.yolo_v3 import Yolov3
         model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
-        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file = f"yolov3-{name}.weights")
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = load_head, weights_file = f"yolov3-{name}.weights")
     else:
         from yolo.modeling.yolo_v4 import Yolov4
         model = Yolov4(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
-        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_neck = True, dn2tf_head = True)
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_neck = load_head, dn2tf_head = load_head)
 
     
     if set_head:
