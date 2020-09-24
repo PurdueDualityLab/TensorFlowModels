@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import sys
 
+from yolo.utils.loss_utils import GridGenerator
+
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloFilterCell(ks.layers.Layer):
     def __init__(self, anchors, thresh, max_box = 200, **kwargs):
@@ -15,50 +17,51 @@ class YoloFilterCell(ks.layers.Layer):
         self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
         self._thresh = tf.cast(thresh, dtype = self.dtype)
 
+        self._anchor_generator = GridGenerator(self._anchors)
         self._rebuild = True
         self._rebatch = True
         return
 
-    def _reshape_batch(self, value, batch_size, axis = 0):
-        return tf.repeat(value, batch_size, axis = axis)
+    # def _reshape_batch(self, value, batch_size, axis = 0):
+    #     return tf.repeat(value, batch_size, axis = axis)
 
-    def _get_centers(self, lwidth, lheight, num):
-        """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
-        x_y = K.stack([x_left, y_left], axis = -1)
-        x_y = tf.cast(x_y, dtype = self.dtype)
-        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
-        return x_y
+    # def _get_centers(self, lwidth, lheight, num):
+    #     """ generate a grid that is used to detemine the relative centers of the bounding boxs """
+    #     x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
+    #     x_y = K.stack([x_left, y_left], axis = -1)
+    #     x_y = tf.cast(x_y, dtype = self.dtype)
+    #     x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), num, axis = -2), axis = 0)
+    #     return x_y
 
-    def _get_anchor_grid(self, width, height, num, anchors):
-        """ get the transformed anchor boxes for each dimention """
-        anchors = tf.cast(anchors, dtype = self.dtype)
-        anchors = tf.reshape(anchors, [1, -1])
-        anchors = tf.repeat(anchors, width*height, axis = 0)
-        anchors = tf.reshape(anchors, [1, width, height, num, -1])
-        return anchors
+    # def _get_anchor_grid(self, width, height, num, anchors):
+    #     """ get the transformed anchor boxes for each dimention """
+    #     anchors = tf.cast(anchors, dtype = self.dtype)
+    #     anchors = tf.reshape(anchors, [1, -1])
+    #     anchors = tf.repeat(anchors, width*height, axis = 0)
+    #     anchors = tf.reshape(anchors, [1, width, height, num, -1])
+    #     return anchors
 
-    def build(self, input_shape):
-        self._input_shape = input_shape
-        #width or height is None
-        if self._input_shape[1] != None and self._input_shape[2] != None:
-            self._rebuild = False
+    # def build(self, input_shape):
+    #     self._input_shape = input_shape
+    #     #width or height is None
+    #     if self._input_shape[1] != None and self._input_shape[2] != None:
+    #         self._rebuild = False
 
-        # if the batch size is not None
-        if not self._rebuild and self._input_shape[0] != None:
-            self._rebatch = False
+    #     # if the batch size is not None
+    #     if not self._rebuild and self._input_shape[0] != None:
+    #         self._rebatch = False
 
-        if not self._rebuild:
-            _, width, height, _ = input_shape
-            self._anchor_matrix = self._get_anchor_grid(width, height, len(self._anchors), self._anchors)
-            self._grid_cells = self._get_centers(width, height, len(self._anchors))
+    #     if not self._rebuild:
+    #         _, width, height, _ = input_shape
+    #         self._anchor_matrix = self._get_anchor_grid(width, height, len(self._anchors), self._anchors)
+    #         self._grid_cells = self._get_centers(width, height, len(self._anchors))
 
-        if not self._rebatch:
-            self._anchor_matrix = self._reshape_batch(self._anchor_matrix, input_shape[0])
-            self._grid_cells = self._reshape_batch(self._grid_cells, input_shape[0])
+    #     if not self._rebatch:
+    #         self._anchor_matrix = self._reshape_batch(self._anchor_matrix, input_shape[0])
+    #         self._grid_cells = self._reshape_batch(self._grid_cells, input_shape[0])
 
-        super().build(input_shape)
-        return
+    #     super().build(input_shape)
+    #     return
 
     def call(self, inputs):
         shape = tf.shape(inputs)
@@ -67,17 +70,17 @@ class YoloFilterCell(ks.layers.Layer):
 
         data = tf.cast(data, self.dtype)
         # detemine how much of the grid cell needs to be re consturcted
-        if self._rebuild:
-            anchors = self._get_anchor_grid(shape[1], shape[2], self._mask_len, self._anchors)
-            centers = self._get_centers(shape[1], shape[2], self._mask_len)
-        else:
-            anchors = self._anchor_matrix
-            centers = self._grid_cells
+        # if self._rebuild:
+        #     anchors = self._get_anchor_grid(shape[1], shape[2], self._mask_len, self._anchors)
+        #     centers = self._get_centers(shape[1], shape[2], self._mask_len)
+        # else:
+        #     anchors = self._anchor_matrix
+        #     centers = self._grid_cells
 
-        if self._rebatch:
-            anchors = self._reshape_batch(anchors, shape[0])
-            centers = self._reshape_batch(centers, shape[0])
-
+        # if self._rebatch:
+        #     anchors = self._reshape_batch(anchors, shape[0])
+        #     centers = self._reshape_batch(centers, shape[0])
+        centers, anchors = self._anchor_generator.get_grids(shape[1], shape[2], shape[0])
         # compute the true box output values
         box_xy = (tf.math.sigmoid(data[..., 0:2]) + centers)/tf.cast(shape[1], dtype = self.dtype)
         box_wh = tf.math.exp(data[..., 2:4])*anchors

@@ -53,7 +53,7 @@ def compute_diou(box1, box2):
 
         # compute IOU
         intersection, union = _intersection_and_union(box1, box2)
-        iou = tf.math.divide_no_nan(intersection, (union + 1e-16))
+        iou = tf.math.divide_no_nan(intersection, union)
         iou = tf.clip_by_value(iou, clip_value_min = 0.0, clip_value_max = 1.0)
         
         # compute max diagnal of the smallest enclosing box

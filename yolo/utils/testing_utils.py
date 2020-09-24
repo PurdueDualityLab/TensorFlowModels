@@ -45,17 +45,17 @@ def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed 
     if model_version == "v3":
         from yolo.modeling.yolo_v3 import Yolov3
         model = Yolov3(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = False, weights_file = f"yolov3-{name}.weights")
     else:
         from yolo.modeling.yolo_v4 import Yolov4
         model = Yolov4(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
-    
-    if not saved:
-        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True)
-    else:
-        model.load_weights("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1")
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_neck = False, dn2tf_head = False)
+
     
     if set_head:
         model.set_prediction_filter(use_mixed=use_mixed)
+    else:
+        model.set_policy(policy)
     return model
 
 

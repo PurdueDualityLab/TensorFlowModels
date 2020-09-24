@@ -4,6 +4,8 @@ from tensorflow.keras import backend as K
 import tensorflow_datasets as tfds
 from yolo.modeling.yolo_v3 import Yolov3
 from yolo.utils.iou_utils import *
+from yolo.utils.loss_utils import GridGenerator
+
 
 class Yolo_Loss(ks.losses.Loss):
     def __init__(self, 
@@ -48,7 +50,7 @@ class Yolo_Loss(ks.losses.Loss):
         super(Yolo_Loss, self).__init__(reduction = reduction, name = name, **kwargs)
         # match dtype to back end
         self.dtype = tf.keras.backend.floatx()
-        self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
+        #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
         self._num = tf.cast(len(mask), dtype = tf.int32)
         self._num_extras = tf.cast(num_extras, dtype = self.dtype)
@@ -67,36 +69,21 @@ class Yolo_Loss(ks.losses.Loss):
         self._scale_x_y = tf.cast(scale_x_y, dtype = self.dtype)
         self._max_value = tf.cast(max_val, dtype = self.dtype)
 
-        #used in detection filtering
+        # used in detection filtering
         self._beta_nms = tf.cast(beta_nms, dtype = self.dtype)
         self._nms_kind = nms_kind
 
-        self._loss_box = 0.0
-        self._conf_loss = 0.0
-        self._class_loss = 0.0
-        self._iou = 0.0
-        self._avg_iou = 0.0
-        self._count = 0.0
-        return
+        # grid comp
+        self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = name)
 
-    @tf.function
-    def _get_centers(self, lwidth, lheight, batch_size):
-        """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
-        x_y = K.stack([x_left, y_left], axis = -1)
-        x_y = tf.cast(x_y, dtype = self.dtype)/tf.cast(lwidth, dtype = self.dtype)
-        x_y = tf.repeat(tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis = -2), self._num, axis = -2), axis = 0), batch_size, axis = 0)
-        return x_y
-    
-    @tf.function
-    def _get_anchor_grid(self, width, height, batch_size):
-        """ get the transformed anchor boxes for each dimention """
-        anchors = tf.cast(self._anchors, dtype = self.dtype)
-        anchors = tf.reshape(anchors, [1, -1])
-        anchors = tf.repeat(anchors, width*height, axis = 0)
-        anchors = tf.reshape(anchors, [1, width, height, self._num, -1])
-        anchors = tf.repeat(anchors, batch_size, axis = 0)
-        return anchors
+        # metric struff
+        # self._loss_box = 0.0
+        # self._conf_loss = 0.0
+        # self._class_loss = 0.0
+        # self._iou = 0.0
+        # self._avg_iou = 0.0
+        # self._count = 0.0
+        return
 
     @tf.function
     def print_error(self, pred_conf):
@@ -108,14 +95,12 @@ class Yolo_Loss(ks.losses.Loss):
         batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
         width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
-        grid_points = self._get_centers(width, height, batch_size)  
-        anchor_grid = self._get_anchor_grid(width, height, batch_size)
-
+        grid_points, anchor_grid = self._anchor_generator.get_grids(width, height, batch_size)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        y_pred = tf.cast(y_pred, dtype = self.dtype)
 
         fwidth = tf.cast(width, self.dtype)
         fheight = tf.cast(height, self.dtype)
+        y_true = tf.cast(y_true, dtype = self.dtype)
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
@@ -180,12 +165,13 @@ class Yolo_Loss(ks.losses.Loss):
         self._loss_box = loss_box
         self._conf_loss = conf_loss
         self._class_loss = class_loss
-        self._iou = iou
+        self._iou = tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+        del grid_points
+        del anchor_grid
+        del bce
         return loss
 
     def get_avg_iou():
-        value = tf.reduce_sum(self._iou) / tf.cast(tf.math.count_nonzero(self._iou), dtype=self.dtype)
-        self._avg_iou += value
         self._count += 1
         return self._avg_iou/self._count
     
@@ -213,4 +199,7 @@ class Yolo_Loss(ks.losses.Loss):
         }
         layer_config.update(super().get_config())
         return layer_config
+
+
+
 
