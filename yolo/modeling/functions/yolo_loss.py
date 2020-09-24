@@ -21,7 +21,7 @@ class Yolo_Loss(ks.losses.Loss):
                  scale_x_y = 1.0,
                  nms_kind = "greedynms",
                  beta_nms = 0.6,
-                 reduction = tf.keras.losses.Reduction.AUTO, 
+                 reduction = tf.keras.losses.Reduction.NONE, 
                  path_key = None,
                  max_val = 5, 
                  name=None, 
@@ -168,10 +168,16 @@ class Yolo_Loss(ks.losses.Loss):
         self._loss_box = loss_box
         self._conf_loss = conf_loss
         self._class_loss = class_loss
-        self._iou = tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+
+        # tf.print("\n", self._loss_box)
+        # tf.print(self._conf_loss)
+        # tf.print(self._class_loss)
+        # tf.print(loss)
+
+        # hits inf when all loss is neg or 0
+        #self._iou = tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
         del grid_points
         del anchor_grid
-        del bce
         return loss
 
     def get_avg_iou():
