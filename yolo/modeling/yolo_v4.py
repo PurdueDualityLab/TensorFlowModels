@@ -83,6 +83,7 @@ class Yolov4(ks.Model):
                  boxes = None,
                  policy = "float32",
                  scales = None,
+                 path_scale = None,
                  **kwargs):
         """
         Args:
@@ -116,6 +117,7 @@ class Yolov4(ks.Model):
             self._boxes = boxes or [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)]
             self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
             self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
+            self._path_scale = path_scale or {"1024": 32, "512": 16, "256": 8}
         elif self._type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
@@ -124,6 +126,7 @@ class Yolov4(ks.Model):
             self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
             self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
+            self._path_scale = path_scale or {"1024": 32, "256": 8}
         else:
             raise ValueError(f"Unknown YOLOv3 type '{self._type}'")
 
@@ -264,10 +267,11 @@ class Yolov4(ks.Model):
         for key in self._masks.keys():
             loss_dict[key] = Yolo_Loss(mask = self._masks[key],
                                        anchors = self._boxes,
-                                       scale_anchors = scale,
+                                       scale_anchors = self._path_scale[key],
                                        ignore_thresh = 0.7,
                                        truth_thresh = 1,
                                        loss_type=loss_type,
+                                       path_key = key,
                                        scale_x_y=self._x_y_scales[key])
         return loss_dict
 
@@ -307,7 +311,7 @@ class Yolov4(ks.Model):
             else:
                 thresh = 0.45
 
-        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult)
+        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult, path_scale = self._path_scale)
         return
 
     def remove_prediction_filter(self):

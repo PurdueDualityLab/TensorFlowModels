@@ -22,6 +22,7 @@ class Yolo_Loss(ks.losses.Loss):
                  nms_kind = "greedynms",
                  beta_nms = 0.6,
                  reduction = tf.keras.losses.Reduction.AUTO, 
+                 path_key = None,
                  max_val = 5, 
                  name=None, 
                  **kwargs):
@@ -74,7 +75,9 @@ class Yolo_Loss(ks.losses.Loss):
         self._nms_kind = nms_kind
 
         # grid comp
-        self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = name)
+        self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
+        if self._anchor_generator == None:
+            self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = path_key)
 
         # metric struff
         # self._loss_box = 0.0
@@ -87,7 +90,7 @@ class Yolo_Loss(ks.losses.Loss):
 
     @tf.function
     def print_error(self, pred_conf):
-        if tf.reduce_any(tf.math.is_nan(pred_conf)) == tf.convert_to_tensor([True]):
+        if tf.reduce_any(tf.math.is_nan(pred_conf)):
             tf.print("\nerror")
 
     def call(self, y_true, y_pred):
@@ -95,7 +98,7 @@ class Yolo_Loss(ks.losses.Loss):
         batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
         width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
-        grid_points, anchor_grid = self._anchor_generator.get_grids(width, height, batch_size)
+        grid_points, anchor_grid = self._anchor_generator(width, height, batch_size)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
 
         fwidth = tf.cast(width, self.dtype)

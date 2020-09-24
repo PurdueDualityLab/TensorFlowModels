@@ -29,7 +29,7 @@ def gt_test():
         train, test = get_dataset(batch_size=1)
         pred_model = build_model(model_version="v4", set_head=True)#policy = "float32
         model = build_model(model_version="v4", set_head=False)#policy = "float32
-        loss_fn = model.generate_loss(loss_type="ciou")
+        loss_fn = model.generate_loss(loss_type="ciou", scale= 416)
         #map_50 = YoloMAP_recall(name = "recall")
         partial_model = filter_partial()
 
@@ -44,8 +44,8 @@ def gt_test():
         #image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
         #image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
         image = image[0].numpy()
-        boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], 416, 416)
-        box, classif = int_scale_boxes(box, classif, 416, 416)
+        boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], image.shape[0], image.shape[1])
+        box, classif = int_scale_boxes(box, classif, image.shape[0], image.shape[1])
         draw_box(image, boxes[0].numpy(), classes[0].numpy(), None, [0,1,0], coco_names)
         draw_box(image, box[0].numpy(), classif[0].numpy(), None, [1,0,0], coco_names)
 
@@ -137,7 +137,7 @@ def loss_test():
     with strat.scope():
         train, test = get_dataset(batch_size=2)
         # trianing fails at mixed precisions
-        model = build_model(model_version="v3", set_head=False, policy = "float32")
+        model = build_model(model_version="v3", set_head=False, policy = "float16")
         #model.remove_prediction_filter()
         loss_fn = model.generate_loss(loss_type="ciou")
         map_50 = YoloMAP_recall(name = "recall")
