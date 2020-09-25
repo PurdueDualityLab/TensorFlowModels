@@ -34,6 +34,7 @@ class GridGenerator(object):
         if masks != None:
             anchors = [anchors[mask] for mask in masks]
 
+        self._lock = False
         self._scale_anchors = scale_anchors
         self._anchors = tf.cast(tf.convert_to_tensor(anchors), dtype = self.dtype)
 
@@ -55,6 +56,7 @@ class GridGenerator(object):
     
     @tf.function
     def _get_grids_high_memory(self, width, height, batch_size):
+        self._lock = True
         self.dtype = tf.keras.backend.floatx()
         if width != self._prev_width:
             del self._anchor_grid
@@ -68,11 +70,13 @@ class GridGenerator(object):
 
         grid_points = self._extend_batch(self._grid_points, batch_size)
         anchor_grid = self._extend_batch(self._anchor_grid, batch_size)
+        self._lock = False
         return grid_points, anchor_grid
     
     @tf.function
     def _get_grids_low_memory(self, width, height, batch_size):
-        self.dtype = tf.keras.backend.floatx()
+        if not self._lock:
+            self.dtype = tf.keras.backend.floatx()
         grid_points = _build_grid_points(width, height, self._num, self.dtype)
         anchor_grid = _build_anchor_grid(width, height, self._anchors/tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
         grid_points = self._extend_batch(grid_points, batch_size)
@@ -81,7 +85,7 @@ class GridGenerator(object):
     
     @tf.function
     def __call__(self, width, height, batch_size):
-        if self._low_memory:
+        if self._low_memory or self._lock:
             return self._get_grids_low_memory(width, height, batch_size)
         else:
             return self._get_grids_high_memory(width, height, batch_size)

@@ -137,7 +137,7 @@ def loss_test():
     with strat.scope():
         train, test = get_dataset(batch_size=2)
         # trianing fails at mixed precisions
-        model = build_model(model_version="v4", set_head=False, load_head = False, policy = "float32")
+        model = build_model(model_version="v3", set_head=False, load_head = True, policy = "float32")
         #model.remove_prediction_filter()
         loss_fn = model.generate_loss(loss_type="ciou")
         map_50 = YoloMAP_recall(name = "recall")

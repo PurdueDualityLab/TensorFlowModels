@@ -79,13 +79,13 @@ class Yolo_Loss(ks.losses.Loss):
         if self._anchor_generator == None:
             self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = path_key)
 
-        # metric struff
-        # self._loss_box = 0.0
-        # self._conf_loss = 0.0
-        # self._class_loss = 0.0
-        # self._iou = 0.0
-        # self._avg_iou = 0.0
-        # self._count = 0.0
+        metric struff
+        self._loss_box = 0.0
+        self._conf_loss = 0.0
+        self._class_loss = 0.0
+        self._iou = 0.0
+        self._avg_iou = 0.0
+        self._count = 0.0
         return
 
     @tf.function
@@ -169,13 +169,8 @@ class Yolo_Loss(ks.losses.Loss):
         self._conf_loss = conf_loss
         self._class_loss = class_loss
 
-        # tf.print("\n", self._loss_box)
-        # tf.print(self._conf_loss)
-        # tf.print(self._class_loss)
-        # tf.print(loss)
-
         # hits inf when all loss is neg or 0
-        #self._iou = tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+        self._avg_iou += tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
         del grid_points
         del anchor_grid
         return loss
