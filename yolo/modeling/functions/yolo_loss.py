@@ -170,7 +170,7 @@ class Yolo_Loss(ks.losses.Loss):
         self._class_loss = class_loss
 
         # hits inf when all loss is neg or 0
-        self._avg_iou += tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+        #self._avg_iou += tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
         del grid_points
         del anchor_grid
         return loss
