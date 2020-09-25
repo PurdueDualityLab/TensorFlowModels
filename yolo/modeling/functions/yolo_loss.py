@@ -83,9 +83,8 @@ class Yolo_Loss(ks.losses.Loss):
         self._loss_box = 0.0
         self._conf_loss = 0.0
         self._class_loss = 0.0
-        self._iou = 0.0
-        self._avg_iou = 0.0
-        self._count = 0.0
+        self._iou_count = 0.0
+        self._sum_iou = 0.0
         return
 
     @tf.function
@@ -110,7 +109,7 @@ class Yolo_Loss(ks.losses.Loss):
         pred_wh = y_pred[..., 2:4]
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
-        self.print_error(pred_conf)
+        # self.print_error(pred_conf)
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
@@ -170,14 +169,14 @@ class Yolo_Loss(ks.losses.Loss):
         self._class_loss = class_loss
 
         # hits inf when all loss is neg or 0
-        #self._avg_iou += tf.reduce_sum(iou) / tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+        self._sum_iou = tf.reduce_sum(iou) 
+        self._iou_count = tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
         del grid_points
         del anchor_grid
         return loss
 
     def get_avg_iou():
-        self._count += 1
-        return self._avg_iou/self._count
+        return self._sum_iou/self._iou_count
     
     def get_classification_loss():
         return self._class_loss
@@ -203,6 +202,9 @@ class Yolo_Loss(ks.losses.Loss):
         }
         layer_config.update(super().get_config())
         return layer_config
+
+
+# exploding grad change the lr at fp16
 
 
 
