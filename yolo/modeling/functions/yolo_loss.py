@@ -79,7 +79,7 @@ class Yolo_Loss(ks.losses.Loss):
         if self._anchor_generator == None:
             self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = path_key)
 
-        metric struff
+        # metric struff
         self._loss_box = 0.0
         self._conf_loss = 0.0
         self._class_loss = 0.0
