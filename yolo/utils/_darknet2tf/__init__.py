@@ -94,7 +94,7 @@ class DarkNetConverter(_DarkNetSectionList):
         tensors = _DarkNetSectionList()
         layers = _DarkNetSectionList()
         yolo_tensors = []
-        for cfg in self.data:
+        for i, cfg in enumerate(self.data):
             tensor = cfg.to_tf(tensors)
 
             # Handle weighted layers
@@ -105,7 +105,7 @@ class DarkNetConverter(_DarkNetSectionList):
 
             assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
             if cfg._type == 'yolo':
-                yolo_tensors.append((cfg, tensor))
+                yolo_tensors.append((i, cfg, tensor))
             tensors.append(tensor)
             layers.append(layer)
 
@@ -124,6 +124,7 @@ class DarkNetConverter(_DarkNetSectionList):
             class_thresh = 0.45,
             max_boxes = 200,
             use_mixed = True):
+        import tensorflow as tf
         from yolo.modeling.building_blocks import YoloLayer
 
         if use_mixed:
@@ -139,8 +140,9 @@ class DarkNetConverter(_DarkNetSectionList):
         masks = {}
         anchors = None
         scale_x_y = 1
+        path_scales = {}
 
-        for yolo_cfg, yolo_tensor in yolo_tensors:
+        for i, yolo_cfg, yolo_tensor in yolo_tensors:
             masks[yolo_tensor.name] = yolo_cfg.mask
 
             if anchors is None:
@@ -155,5 +157,7 @@ class DarkNetConverter(_DarkNetSectionList):
 
             outs[yolo_tensor.name] = yolo_tensor
 
-        yolo_layer = YoloLayer(masks = masks, anchors = anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=self.net.w, scale_mult=scale_x_y)
+            path_scales[yolo_tensor.name] = self.data[i-1].c >> 5
+
+        yolo_layer = YoloLayer(masks = masks, anchors = anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=self.net.w, scale_mult=scale_x_y, path_scale=path_scales)
         return yolo_layer(outs)
