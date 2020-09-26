@@ -370,7 +370,7 @@ class Yolov3(ks.Model):
         
         if thresh is None:  
             if self._head_name == 'tiny':
-                thresh = 0.5
+                thresh = 0.45
             else:
                 thresh = 0.45
 

@@ -84,7 +84,8 @@ class FastVideo(object):
         else:
             # faster but more potential for delay from input to output
             if tf.keras.mixed_precision.experimental.global_policy().name == "mixed_float16":
-                self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+                #self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+                self._batch_size = 5
             else:
                 self._batch_size = 3
                 
@@ -358,5 +359,5 @@ if __name__ == "__main__":
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo("test2.mp4", model = "regular", model_version = "v4", process_width=416, process_height=416, preprocess_with_gpu=True)
+    cap = FastVideo("test.mp4", model = "tiny", model_version = "v3", process_width=416, process_height=416, preprocess_with_gpu=True)
     cap.run()
