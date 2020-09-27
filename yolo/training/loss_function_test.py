@@ -61,6 +61,7 @@ def gt_test():
 
 def get_dataset(batch_size = 10):
     import tensorflow_datasets as tfds
+    from yolo.dataloaders.YoloParser import YoloParser
     train, info = tfds.load('coco', split = 'train', shuffle_files = False, with_info= True)
     test, info = tfds.load('coco', split = 'validation', shuffle_files = False, with_info= True) 
 

@@ -99,7 +99,7 @@ class FastVideo(object):
         else:
             self._labels = labels
 
-        self._load_que = Queue(self._batch_size * 5)
+        self._load_que = Queue(self._batch_size)
         self._display_que = Queue(self._batch_size)
         self._running = True
         self._wait_time = 0.01
@@ -123,7 +123,7 @@ class FastVideo(object):
             print(model)
             prep_gpu()
             with tf.device(self._gpu_device):
-                model = build_model(name = model, model_version = self._model_version , w = self._p_width, h = self._p_height, saved = False) 
+                model = build_model(name = model, model_version = self._model_version , w = self._p_width, h = self._p_height, saved = False, use_mixed=True) 
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -359,5 +359,5 @@ if __name__ == "__main__":
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo("test1.mp4", model = "tiny", model_version = "v3", process_width=416, process_height=416, preprocess_with_gpu=False)
+    cap = FastVideo("test1.mp4", model = "regular", model_version = "v4", process_width=416, process_height=416, preprocess_with_gpu=False)
     cap.run()

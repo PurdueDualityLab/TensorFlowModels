@@ -20,15 +20,16 @@ class YoloFilterCell(ks.layers.Layer):
 
         #self._anchor_generator = GridGenerator(self._anchors, low_memory=True)
         self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
+        #tf.print(path_key)
         if self._anchor_generator == None:
-            self._anchor_generator = GridGenerator(self._anchors, scale_anchors = path_scale, low_memory=True, name=path_key)
+            self._anchor_generator = GridGenerator(self._anchors, scale_anchors = path_scale, low_memory=False, name=path_key)
         return
 
     def call(self, inputs):
         shape = tf.shape(inputs)
         #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
         data = tf.reshape(inputs, [shape[0], shape[1], shape[2], self._mask_len, -1])
-        centers, anchors = self._anchor_generator(shape[1], shape[2], shape[0])
+        centers, anchors = self._anchor_generator(shape[1], shape[2], shape[0], dtype = data.dtype)
  
         # compute the true box output values
         box_xy = centers + (tf.math.sigmoid(data[..., 0:2]))/tf.cast(shape[1], dtype = data.dtype)

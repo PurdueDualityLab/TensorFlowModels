@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 class Yolo(tf.keras.Model, ABC):
     @abstractmethod
     def get_models():
-        ...
+        ... 
 
     @abstractmethod
     def get_summary():
@@ -15,17 +15,17 @@ class Yolo(tf.keras.Model, ABC):
     def load_weights_from_dn(self, dn2tf_backbone = True, dn2tf_head = False, config_file = None, weights_file = None):
         ...
     
-    # @abstractmethod
-    # def generate_loss_functions(self, scale:float = 1.0, loss_type = "ciou"):
-    #     ...
+    @abstractmethod
+    def generate_loss(self, scale:float = 1.0, loss_type = "ciou"):
+        ...
 
     # @abstractmethod
     # def get_datasets(self):
     #     ...
     
-    # @abstractmethod
-    # def train_step(self):
-    #     ...
+    @abstractmethod
+    def train_step(self, data):
+        ...
 
     # @abstractmethod
     # def test_step(self):

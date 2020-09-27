@@ -54,37 +54,38 @@ class Yolo_Loss(ks.losses.Loss):
         #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
         self._num = tf.cast(len(mask), dtype = tf.int32)
-        self._num_extras = tf.cast(num_extras, dtype = self.dtype)
-        self._truth_thresh = tf.cast(truth_thresh, dtype = self.dtype) 
-        self._ignore_thresh = tf.cast(ignore_thresh, dtype = self.dtype)
+        self._num_extras = num_extras
+        self._truth_thresh = truth_thresh
+        self._ignore_thresh = ignore_thresh
 
         # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
         # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
         # if iou > self._iou_thresh then the network check the other anchors, so basically 
         # checking anchor box 1 on prediction for anchor box 2
-        self._iou_thresh = tf.cast(0.213, dtype = self.dtype) # recomended use = 0.213 in [yolo]
+        self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
         
         self._loss_type = loss_type
-        self._iou_normalizer= tf.cast(iou_normalizer, dtype = self.dtype)
-        self._cls_normalizer = tf.cast(cls_normalizer, dtype = self.dtype)
-        self._scale_x_y = tf.cast(scale_x_y, dtype = self.dtype)
-        self._max_value = tf.cast(max_val, dtype = self.dtype)
+        self._iou_normalizer= iou_normalizer
+        self._cls_normalizer = cls_normalizer
+        self._scale_x_y = scale_x_y
+        self._max_value = max_val
 
         # used in detection filtering
-        self._beta_nms = tf.cast(beta_nms, dtype = self.dtype)
+        self._beta_nms = beta_nms
         self._nms_kind = nms_kind
-
+        
         # grid comp
         self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
         if self._anchor_generator == None:
-            self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = path_key)
-
+            self._anchor_generator = GridGenerator(masks = mask, anchors = anchors, scale_anchors=scale_anchors, name = path_key)#f"{path_key}_loss")
+        
         # metric struff
         self._loss_box = 0.0
         self._conf_loss = 0.0
         self._class_loss = 0.0
         self._iou_count = 0.0
         self._sum_iou = 0.0
+        self._path_key = path_key
         return
 
     @tf.function
@@ -97,12 +98,12 @@ class Yolo_Loss(ks.losses.Loss):
         batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
         width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
         height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
-        grid_points, anchor_grid = self._anchor_generator(width, height, batch_size)
+        grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype = y_pred.dtype)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
 
-        fwidth = tf.cast(width, self.dtype)
-        fheight = tf.cast(height, self.dtype)
-        y_true = tf.cast(y_true, dtype = self.dtype)
+        fwidth = tf.cast(width, y_pred.dtype)
+        fheight = tf.cast(height, y_pred.dtype)
+        y_true = tf.cast(y_true, dtype = y_pred.dtype)
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
@@ -115,8 +116,8 @@ class Yolo_Loss(ks.losses.Loss):
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
-        true_wh = tf.where(tf.math.is_nan(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
-        true_wh = tf.where(tf.math.is_inf(true_wh), tf.cast(0.0, dtype = self.dtype), true_wh)
+        true_wh = tf.where(tf.math.is_nan(true_wh), tf.cast(0.0, dtype = y_pred.dtype), true_wh)
+        true_wh = tf.where(tf.math.is_inf(true_wh), tf.cast(0.0, dtype = y_pred.dtype), true_wh)
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
 
@@ -129,18 +130,18 @@ class Yolo_Loss(ks.losses.Loss):
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         if self._loss_type == "giou":
             iou, giou = compute_giou(true_box, pred_box)
-            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
+            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = y_pred.dtype)
             loss_box = (1 - giou) * self._iou_normalizer * true_conf
             loss_box = tf.math.minimum(loss_box, self._max_value)
         elif self._loss_type == "ciou":
             iou, ciou = compute_ciou(true_box, pred_box)
-            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
+            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = y_pred.dtype)
             loss_box = (1 - ciou) * self._iou_normalizer * true_conf
             loss_box = tf.math.minimum(loss_box, self._max_value)
         else:
             # iou mask computation 
             iou = compute_iou(true_box, pred_box) 
-            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
+            mask_iou = tf.cast(iou < self._ignore_thresh, dtype = y_pred.dtype)
             
             # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
             scale = (2 - true_box[...,2] * true_box[...,3]) * self._iou_normalizer 
@@ -156,9 +157,9 @@ class Yolo_Loss(ks.losses.Loss):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-        loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype))
-        conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype))
-        class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype))
+        loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = y_pred.dtype))
+        conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = y_pred.dtype))
+        class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = y_pred.dtype))
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
         loss = class_loss + conf_loss + loss_box
@@ -170,21 +171,21 @@ class Yolo_Loss(ks.losses.Loss):
 
         # hits inf when all loss is neg or 0
         self._sum_iou = tf.reduce_sum(iou) 
-        self._iou_count = tf.cast(tf.math.count_nonzero(iou), dtype=self.dtype)
+        self._iou_count = tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)), dtype=y_pred.dtype)
         del grid_points
         del anchor_grid
         return loss
 
-    def get_avg_iou():
-        return self._sum_iou/self._iou_count
+    def get_avg_iou(self):
+        return self._sum_iou/(self._iou_count + 1e-7)
     
-    def get_classification_loss():
+    def get_classification_loss(self):
         return self._class_loss
     
-    def get_box_loss():
+    def get_box_loss(self):
         return self._loss_box
 
-    def get_confidence_loss():
+    def get_confidence_loss(self):
         return self._conf_loss
 
     def get_config(self):
