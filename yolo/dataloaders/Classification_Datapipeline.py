@@ -1,18 +1,9 @@
 """Classification parser."""
-import tensorflow as tf
-from yolo.dataloaders.preprocessing_ops import _rotate
 from yolo.dataloaders.random_ops import _rand_number
 from yolo.dataloaders.Parser import Parser
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
-from tensorflow_addons.image import utils as img_utils
-import matplotlib.pyplot as plt
-import numpy as np
-import sys
-import time
-import tensorflow.keras.backend as K
-
 class Classification_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
