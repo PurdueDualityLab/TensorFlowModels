@@ -3,6 +3,7 @@ import tensorflow.keras as ks
 
 import importlib
 import collections
+from typing import *
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
@@ -19,13 +20,13 @@ class Backbone_Builder(ks.Model):
                             "DarkBlock": None}
         # parameters required for tensorflow to recognize ks.Model as not a
         # subclass of ks.Model
-        self._model_name = name
         self._input_shape = input_shape
+        self._model_name = "custom_csp_backbone"
+        layer_specs = config
 
-        if config is None:
+        if not isinstance(config, Dict):
+            self._model_name = name
             layer_specs = self.get_model_config(name)
-        else:
-            layer_specs = config
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)

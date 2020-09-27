@@ -1,5 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
+from typing import *
+
 from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkUpsampleRoute
@@ -65,15 +67,18 @@ class Yolov3Head(tf.keras.Model):
         self._classes = classes
         self._boxes = boxes
         self._model_name = model
-
-        if self._cfg_dict is None:
+        
+        if not isinstance(self._cfg_dict, Dict):
+            self._model_name = model
             self._cfg_dict = self.load_dict_cfg(model)
+        else:
+            self._model_name = "custom_head"
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
         self._input_shape = input_shapes
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
-        super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
         return
 
     @classmethod

@@ -359,5 +359,5 @@ if __name__ == "__main__":
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo("test.mp4", model = "tiny", model_version = "v3", process_width=416, process_height=416, preprocess_with_gpu=True)
+    cap = FastVideo("test1.mp4", model = "tiny", model_version = "v3", process_width=416, process_height=416, preprocess_with_gpu=False)
     cap.run()

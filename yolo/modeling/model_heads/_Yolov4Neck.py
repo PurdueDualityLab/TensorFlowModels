@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as ks
+from typing import *
 from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkRoute
@@ -59,11 +60,12 @@ class Yolov4Neck(tf.keras.Model):
 
         """
         self._cfg_dict = cfg_dict
-        self._model_name = model
 
-        if self._cfg_dict is None:
+        if not isinstance(self._cfg_dict, Dict):
+            self._model_name = model
             self._cfg_dict = self.load_dict_cfg(model)
-        # print(self._cfg_dict)
+        else:
+            self._model_name = "custom_neck"
 
         inputs, input_shapes, routes, resamples, tails = self._get_attributes(input_shape)
         self._input_shape = input_shapes
