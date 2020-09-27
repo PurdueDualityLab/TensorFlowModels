@@ -43,3 +43,48 @@ class DatasetParser(abc.ABC):
         Returns: function to preprocess the data
         """
         ...
+
+class Parser(object):
+    """Parses data and produces tensors to be consumed by models."""
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _parse_train_data(self, decoded_tensors):
+        """Generates images and labels that are usable for model training.
+        Args:
+            decoded_tensors: a dict of Tensors produced by the decoder.
+        Returns:
+            images: the image tensor.
+            labels: a dict of Tensors that contains labels.
+        """
+        pass
+
+    @abc.abstractmethod
+    def _parse_eval_data(self, decoded_tensors):
+        """Generates images and labels that are usable for model evaluation.
+        Args:
+            decoded_tensors: a dict of Tensors produced by the decoder.
+        Returns:
+            images: the image tensor.
+            labels: a dict of Tensors that contains labels.
+        """
+        pass
+
+    def parse_fn(self, is_training):
+        """Returns a parse fn that reads and parses raw tensors from the decoder.
+        Args:
+            is_training: a `bool` to indicate whether it is in training mode.
+        Returns:
+            parse: a `callable` that takes the serialized examle and generate the
+                images, labels tuple where labels is a dict of Tensors that contains
+                labels.
+        """
+        def parse(decoded_tensors):
+            """Parses the serialized example data."""
+            if is_training:
+                return self._parse_train_data(decoded_tensors)
+            else:
+                return self._parse_eval_data(decoded_tensors)
+
+        return parse

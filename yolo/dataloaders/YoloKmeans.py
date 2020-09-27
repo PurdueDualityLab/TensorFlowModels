@@ -2,6 +2,9 @@ import numpy as np
 import pickle
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
+from yolo.utils.iou_utils import *
+from yolo.utils.box_utils import _yxyx_to_xcycwh
+import tensorflow as tf
  
 class YoloKmeans:
     """K-means for YOLO anchor box priors
@@ -29,37 +32,27 @@ class YoloKmeans:
 
         assert isinstance(k, int)
         assert isinstance(with_color, bool)
-        if boxes:
-            assert isinstance(boxes, np.ndarray)
-            assert boxes.shape[-1] == 2
 
         self._k = k
-        self._boxes = boxes if boxes else None
+        self._boxes = boxes
         self._with_color = with_color
 
     def iou(self, boxes, clusters):
         n = boxes.shape[0]
-        k = self._k
+        boxes = tf.repeat(boxes, self._k, axis = 0)
+        boxes = tf.reshape(boxes, (n, self._k, -1))
+        boxes = tf.cast(boxes, tf.float32)
 
-        box_area = boxes[:, 0] * boxes[:, 1]
-        box_area = box_area.repeat(k)
-        box_area = np.reshape(box_area, (n, k))
+        clusters = tf.tile(clusters, [n, 1])
+        clusters = tf.reshape(clusters, (n, self._k, -1))
+        clusters = tf.cast(clusters, tf.float32)
 
-        cluster_area = clusters[:, 0] * clusters[:, 1]
-        cluster_area = np.tile(cluster_area, [1, n])
-        cluster_area = np.reshape(cluster_area, (n, k))
+        zeros = tf.cast(tf.zeros(boxes.shape), dtype = tf.float32)
 
-        box_w = np.reshape(boxes[:, 0].repeat(k), (n, k))
-        cluster_w = np.reshape(np.tile(clusters[:, 0], [1, n]), (n, k))
-        min_w = np.minimum(box_w, cluster_w)
+        boxes = tf.concat([zeros, boxes], axis = -1)
+        clusters = tf.concat([zeros, clusters], axis = -1)
+        return compute_iou(boxes, clusters)
 
-        box_h = np.reshape(boxes[:, 1].repeat(k), (n, k))
-        cluster_h = np.reshape(np.tile(clusters[:, 1], [1, n]), (n, k))
-        min_h = np.minimum(box_h, cluster_h)
-
-        intersection = np.multiply(min_w, min_h) # element-wise
-
-        return intersection / (box_area + cluster_area - intersection)
     def get_box_from_file(self, filename):
         try:
             f = open(filename, 'rb')
@@ -74,7 +67,7 @@ class YoloKmeans:
         for ds in dataset:
             for el in ds:
                 for box in list(el['objects']['bbox']):
-                    box_ls.append(box.numpy()[2:])
+                    box_ls.append(_yxyx_to_xcycwh(box).numpy()[..., 2:])
         self._boxes = np.array(box_ls)
 
     def load_voc_boxes(self):
@@ -95,7 +88,7 @@ class YoloKmeans:
         dists = np.zeros((box_num, k))
         last = np.zeros((box_num,))
         np.random.seed()
-        clusters = self._boxes[np.random.choice(box_num, k, replace=False)]
+        clusters = self._boxes[np.random.choice(box_num, k, replace = False)]
         num_iters = 0
 
         while num_iters < max_iter:
@@ -104,18 +97,18 @@ class YoloKmeans:
             if (curr == last).all():
                 break
             for i in range(k):
-                clusters[i] = np.median(self._boxes[curr == i], axis=0)
+                clusters[i] = np.mean(self._boxes[curr == i], axis = 0)
             last = curr
             num_iters += 1
         print(f'num_iters = {num_iters}')
+        clusters = np.array(sorted(clusters, key = lambda x: x[0] * x[1]))
         if self._with_color:
             return clusters, last
         else:
             return clusters
 
 if __name__ == '__main__':
-    km = YoloKmeans(with_color= True)
-    km.load_voc_boxes()
+    km = YoloKmeans(boxes = np.random.rand(500, 2),with_color= True)
     centroids, cmap = km.run_kmeans()
     boxes = km.get_boxes()
     plt.scatter(boxes[:, 0], boxes[:, 1], c = cmap)
