@@ -144,7 +144,7 @@ class Yolov3(base_model.Yolo):
             loss = self.compiled_loss(label, y_pred["raw_output"])
         
         grads = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+        self.optimizer.apply_gradients(grads, self.trainable_variables)
 
         #custom metrics
         loss_metrics = dict()
@@ -154,7 +154,6 @@ class Yolov3(base_model.Yolo):
             loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
             loss_metrics[f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
 
-        #compiled metrics
         self.compiled_metrics.update_state(label, y_pred["raw_output"])
         metrics_dict = {m.name: m.result() for m in self.metrics}
         metrics_dict.update(loss_metrics)
@@ -162,7 +161,7 @@ class Yolov3(base_model.Yolo):
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,
-                             dn2tf_head = False,
+                             dn2tf_head = True,
                              config_file = None,
                              weights_file = None):
         """
@@ -261,7 +260,7 @@ def get_dataset(batch_size = 10):
     return train, test
 
 if __name__ == "__main__":
-    model = Yolov3(policy="float32")
+    model = Yolov3(policy="mixed_float16")
     loss_fn = model.generate_loss()
     model.load_weights_from_dn()
     train, test = get_dataset(batch_size=1)

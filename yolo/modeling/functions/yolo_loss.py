@@ -49,8 +49,6 @@ class Yolo_Loss(ks.losses.Loss):
             float: for the average loss 
         """
         super(Yolo_Loss, self).__init__(reduction = reduction, name = name, **kwargs)
-        # match dtype to back end
-        self.dtype = tf.keras.backend.floatx()
         #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
         self._num = tf.cast(len(mask), dtype = tf.int32)

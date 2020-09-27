@@ -18,7 +18,6 @@ class YoloFilterCell(ks.layers.Layer):
         self._thresh = thresh
         self._path_scale = path_scale
 
-        #self._anchor_generator = GridGenerator(self._anchors, low_memory=True)
         self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
         #tf.print(path_key)
         if self._anchor_generator == None:
