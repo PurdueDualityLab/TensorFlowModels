@@ -117,8 +117,30 @@ def _get_best_anchor(y_true, anchors, size):
 
         # compute intersection over union of the boxes, and take the argmax of comuted iou for each box. 
         # thus each box is associated with the largest interection over union 
-        iou_anchors = K.expand_dims(tf.cast(K.argmax(compute_iou(truth_comp, anchors), axis = 0), dtype = tf.float32), axis = -1)
+        iou_raw = compute_iou(truth_comp, anchors)
+        
+        gt_mask = tf.cast(iou_raw > 0.213 , dtype = iou_raw.dtype)
 
+        num_k = tf.reduce_max(tf.reduce_sum(tf.transpose(gt_mask, perm=[1, 0]), axis = 1))
+        if num_k <= 0:
+            num_k = 1.0
+
+        values, indexes = tf.math.top_k(tf.transpose(iou_raw, perm=[1, 0]), k = tf.cast(num_k, dtype = tf.int32), sorted = True)
+        ind_mask = tf.cast(values > 0.213 , dtype = indexes.dtype)
+        iou_index = tf.concat([K.expand_dims(indexes[..., 0], axis = -1), ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1], axis = -1)
+        
+
+        stack = tf.zeros([tf.shape(iou_index)[0], tf.cast(1, dtype = iou_index.dtype)], dtype = iou_index.dtype) - 1
+        #tf.print(tf.shape(iou_index))
+        while num_k < 5:
+            iou_index = tf.concat([iou_index, stack], axis = -1)
+            num_k += 1
+        iou_index = iou_index[..., :5]
+
+        values = tf.concat([K.expand_dims(values[..., 0], axis = -1), ((values[..., 1:]) * tf.cast(ind_mask[..., 1:], dtype = tf.float32))], axis = -1)
+        # iou_anchors = K.argmax(iou_raw, axis = 0)
+        # iou_anchors = K.expand_dims(tf.cast(iou_anchors, dtype = tf.float32), axis = -1)
+        # tf.print(iou_index, values)
         #flatten the list from above and attach to the end of input y_true, then return it
         #y_true = K.concatenate([y_true, K.expand_dims(iou_anchors, axis = -1)], axis = -1)
-    return iou_anchors
+    return tf.cast(iou_index, dtype = tf.float32)

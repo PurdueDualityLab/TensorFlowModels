@@ -14,6 +14,7 @@ from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dn
 from yolo.utils.testing_utils import prep_gpu
 prep_gpu()
 from yolo.dataloaders.YoloParser import YoloParser
+from yolo.training.recall_metric import YoloMAP_recall
 
 class Yolov3(base_model.Yolo):
     def __init__(self, 
@@ -32,6 +33,7 @@ class Yolov3(base_model.Yolo):
                  max_boxes:int = 200,
                  scale_boxes:int = 416,
                  scale_mult:float = 1.0,
+                 use_tie_breaker:bool = False,
                  policy = "float32", 
                  **kwargs):
         super().__init__(**kwargs)
@@ -64,6 +66,7 @@ class Yolov3(base_model.Yolo):
         self._boxes = boxes 
         self._masks = masks 
         self._path_scales = path_scales
+        self._use_tie_breaker = use_tie_breaker
 
         #init models
         self.model_name = model
@@ -74,8 +77,34 @@ class Yolov3(base_model.Yolo):
         self.head_filter = head_filter
     
         self.get_models()
+        self.parser = None
         return 
     
+    def process_datasets(self, train, test, batch_size = 1, image_w = 416, image_h = 416, fixed_size = False, jitter_im = 0.1, jitter_boxes = 0.005):
+        if self.parser == None:
+            parser = YoloParser(image_w = image_w, image_h = image_h, fixed_size= fixed_size, jitter_im= jitter_im, jitter_boxes= jitter_boxes, anchors=self._boxes)
+            self.parser = parser
+        else:
+            parser = self.parser
+            
+        preprocess_train = parser.unbatched_process_fn(is_training = True)
+        postprocess_train = parser.batched_process_fn(is_training = True)
+
+        preprocess_test = parser.unbatched_process_fn(is_training = False)
+        postprocess_test = parser.batched_process_fn(is_training = False)
+        
+        train = train.map(preprocess_train).padded_batch(batch_size)
+        train = train.map(postprocess_train)
+        test = test.map(preprocess_test).padded_batch(batch_size)
+        test = test.map(postprocess_test)
+
+        train_size = tf.data.experimental.cardinality(train)
+        test_size = tf.data.experimental.cardinality(test)
+        print(train_size, test_size)
+        
+        return train, test
+
+
     def get_models(self):
         default_dict = {"regular":{"backbone":"darknet53", "head":"regular", "name":"yolov3"}, 
                         "spp":{"backbone":"darknet53", "head":"spp", "name":"yolov3-spp"},
@@ -233,40 +262,17 @@ class Yolov3(base_model.Yolo):
             load_weights_dnHead(self.head, decoder)
         return
     
-
-def get_dataset(batch_size = 10):
+if __name__ == "__main__":
     import tensorflow_datasets as tfds
     train, info = tfds.load('coco', split = 'train', shuffle_files = False, with_info= True)
     test, info = tfds.load('coco', split = 'validation', shuffle_files = False, with_info= True) 
 
-    train_size = tf.data.experimental.cardinality(train)
-    test_size = tf.data.experimental.cardinality(test)
-
-    parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=True, fixed_size= False, jitter_im= 0.1, jitter_boxes= 0.005, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
-    preprocess_train = parser.unbatched_process_fn(is_training = True)
-    postprocess_train = parser.batched_process_fn(is_training = True)
-
-    preprocess_test = parser.unbatched_process_fn(is_training = False)
-    postprocess_test = parser.batched_process_fn(is_training = False)
-    
-    
-    train = train.map(preprocess_train).padded_batch(batch_size)
-    train = train.map(postprocess_train)
-    test = test.map(preprocess_test).padded_batch(batch_size)
-    test = test.map(postprocess_test)
-
-    train_size = tf.data.experimental.cardinality(train)
-    test_size = tf.data.experimental.cardinality(test)
-    print(train_size, test_size)
-    return train, test
-
-if __name__ == "__main__":
     model = Yolov3(policy="float32")
-    loss_fn = model.generate_loss()
     model.load_weights_from_dn()
-    train, test = get_dataset(batch_size=1)
+
+    train, test = model.process_datasets(train, test, batch_size=3)
+    loss_fn = model.generate_loss()
     
     optimizer = ks.optimizers.SGD(lr=1e-3)
     model.compile(optimizer=optimizer, loss=loss_fn)
-
-    model.evaluate(test)
+    model.evaluate(test)#fit(train, validation_data = test)

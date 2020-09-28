@@ -87,8 +87,7 @@ class Yolov4(ks.Model):
         feature_maps = self._backbone(inputs)
         neck_maps = self._neck(feature_maps)
         predictions = self._head(neck_maps)
-        if self._pred_filter is not None:
-            predictions = self._pred_filter(predictions)
+        predictions = self._pred_filter(predictions)
         return predictions
 
     def load_weights_from_dn(self,
@@ -194,7 +193,34 @@ class Yolov4(ks.Model):
         if size < 0:
             raise ValueError("The dataset has unknown or infinite cardinality")
         return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
+    
+    def train_step(self, data):
+        #get the data point
+        image = data["image"]
+        label = data["label"]
+        
+        # computer detivative and apply gradients
+        with tf.GradientTape() as tape: 
+            y_pred = self(image, training = True)
+            loss = self.compiled_loss(label, y_pred["raw_output"])
+        
+        grads = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
+        #custom metrics
+        loss_metrics = dict()
+        for loss in self.compiled_loss._losses:
+            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
+            loss_metrics[f"{loss._path_key}_classes"] = loss.get_classification_loss()
+            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            loss_metrics[f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
+
+        #compiled metrics
+        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        metrics_dict = {m.name: m.result() for m in self.metrics}
+        metrics_dict.update(loss_metrics)
+        return metrics_dict
+    
     def generate_loss(self, scale:float = 1.0, loss_type = "giou") -> "Dict[Yolo_Loss]":
         """
         Create loss function instances for each of the detection heads.

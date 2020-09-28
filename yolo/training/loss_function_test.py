@@ -82,11 +82,11 @@ def get_dataset(batch_size = 10):
     train = train.map(postprocess_train)
     test = test.map(preprocess_test).padded_batch(batch_size)
     test = test.map(postprocess_test)
-    dataset = train.concatenate(test)
+    # dataset = train.concatenate(test)
 
-    dataset = dataset.map(format_gt)
-    train = dataset.take(train_size//batch_size)
-    test = dataset.skip(train_size//batch_size)
+    # dataset = dataset.map(format_gt)
+    # train = dataset.take(train_size//batch_size)
+    # test = dataset.skip(train_size//batch_size)
     #train = train.map(format_gt)
     #test = test.map(format_gt)
     train_size = tf.data.experimental.cardinality(train)
@@ -100,6 +100,7 @@ def loss_test_(model_name = "regular"):
     with strat.scope():
         model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 2, load_head = False, fixed_size= True)
 
+        
         setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
         val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
@@ -138,12 +139,12 @@ def loss_test():
     with strat.scope():
         train, test = get_dataset(batch_size=2)
         # trianing fails at mixed precisions
-        model = build_model(model_version="v3", set_head=False, load_head = True, policy = "float32")
-        #model.remove_prediction_filter()
+        model = build_model(model_version="v4", set_head=False, load_head = True, policy = "float32")
+        model.set_prediction_filter()
         loss_fn = model.generate_loss(loss_type="ciou")
         map_50 = YoloMAP_recall(name = "recall")
     
-    optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.SGD(lr=1e-3) 
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs")]
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
     model.fit(train, validation_data=test, shuffle=False, callbacks=callbacks)

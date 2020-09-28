@@ -25,6 +25,7 @@ class Yolo_Loss(ks.losses.Loss):
                  reduction = tf.keras.losses.Reduction.NONE, 
                  path_key = None,
                  max_val = 5, 
+                 use_tie_breaker = True,
                  name=None, 
                  **kwargs):
 
@@ -62,7 +63,8 @@ class Yolo_Loss(ks.losses.Loss):
         # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
         # if iou > self._iou_thresh then the network check the other anchors, so basically 
         # checking anchor box 1 on prediction for anchor box 2
-        self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
+        #self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
+        self._use_tie_breaker = use_tie_breaker
         
         self._loss_type = loss_type
         self._iou_normalizer= iou_normalizer
@@ -98,9 +100,9 @@ class Yolo_Loss(ks.losses.Loss):
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
         grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype = y_pred.dtype)
-        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype= y_pred.dtype), width, True)
-        
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
+        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, tf.shape(y_pred), self._use_tie_breaker)
+        
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
        

@@ -110,7 +110,7 @@ class GridGenerator(object):
 
 
 @tf.function
-def build_grided_gt(y_true, mask, size, use_tie_breaker):
+def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
     """
     convert ground truth for use in loss functions
     Args: 
@@ -125,55 +125,63 @@ def build_grided_gt(y_true, mask, size, use_tie_breaker):
     num_boxes = tf.shape(y_true)[1]
     len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, tf.shape(y_true)[-1]])
+    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]])
     #if use_tie_breaker:
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
     x = tf.cast(y_true[..., 0] * tf.cast(size, dtype = tf.float32), dtype = tf.int32)
     y = tf.cast(y_true[..., 1] * tf.cast(size, dtype = tf.float32), dtype = tf.int32)
 
-    anchors = tf.repeat(tf.expand_dims(y_true[..., -1], axis = -1), len_masks, axis = -1)
+    anchors = tf.repeat(tf.expand_dims(y_true[..., -5:], axis = -1), len_masks, axis = -1)
 
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
     update = tf.TensorArray(tf.float32, size=0, dynamic_size=True)
 
     i = 0
+    anchor_id = 0
     for batch in range(batches):
         for box_id in range(num_boxes):
             if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)):
                 continue
             if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater_equal(y_true[batch, box_id, 0:2], 1.0)): 
                 continue
-            index = tf.math.equal(anchors[batch, box_id], mask)
-            if K.any(index):
-                p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
-                
-                if use_tie_breaker:
-                    # find the index of the box
-                    uid = 1
-                    used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
-                    count = 0
-                    # check if the next anchor is used used == 1, if so find another box 
-                    while tf.math.equal(used, 1) and tf.math.less(count, 3):
-                        uid = 2
-                        count += 1
-                        p = (p + 1)%3
-                        used = depth_track[batch, x[batch, box_id], y[batch, box_id], p]
-                    if tf.math.equal(used, 1):
-                        tf.print("skipping")
-                        continue
-                    # set the current index to used  = 2, to indicate that it is occupied by something that should not be there, so if another box fits that anchor
-                    # it will be prioritized over the current box.
-                    depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
 
-                # write the box to the update list 
-                # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 
-                """peculiar"""
-                update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
-                value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-1]])
-                update = update.write(i, value)
-                i += 1
+            if use_tie_breaker:
+                for anchor_id in range(tf.shape(anchors)[-1]):
+                    index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
+                    if K.any(index):
+                        #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
+                        p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
+                        uid = 1
 
+                        used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
+                        if anchor_id == 0:
+                            # write the box to the update list 
+                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 
+                            """peculiar"""
+                            update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-5]])
+                            update = update.write(i, value)
+                        elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
+                            uid = 2
+                            # write the box to the update list 
+                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why 
+                            """peculiar"""
+                            update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-5]])
+                            update = update.write(i, value)
+                        
+                        depth_track = tf.tensor_scatter_nd_update(depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)], [uid])
+                        i += 1
+            else:
+                index = tf.math.equal(anchors[batch, box_id, 0], mask)
+                if K.any(index):
+                    #tf.print(0, anchors[batch, box_id, 0])
+                    p = tf.cast(K.argmax(tf.cast(index, dtype = tf.int32)), dtype = tf.int32)
+                    update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                    value = K.concatenate([y_true[batch, box_id, 0:4], tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-5]])
+                    update = update.write(i, value)
+                    i += 1
             """
             used can be:
                 0 not used

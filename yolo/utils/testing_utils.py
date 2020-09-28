@@ -49,13 +49,10 @@ def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed 
     else:
         from yolo.modeling.yolo_v4 import Yolov4
         model = Yolov4(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
+        model.set_prediction_filter(use_mixed=False)
         model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_neck = load_head, dn2tf_head = load_head)
 
     
-    if set_head:
-        model.set_prediction_filter(use_mixed=use_mixed)
-    else:
-        model.set_policy(policy)
     return model
 
 

@@ -87,6 +87,7 @@ class YoloParser(DatasetParser):
         image = _translate_image(image , translate_x, translate_y)
         boxes = _jitter_boxes(data["bbox"], translate_x, translate_y, j_x, j_y, j_w, j_h)
         label = tf.concat([boxes, data["label"], data["best_anchor"]], axis = -1)
+        #tf.print(tf.shape(label), tf.shape(label[..., -5:]))
         return {"image": image, "label": label, "randscale": randscale}
 
     def _label_format_gt(self, data):

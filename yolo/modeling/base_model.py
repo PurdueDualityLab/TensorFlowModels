@@ -18,6 +18,14 @@ class Yolo(tf.keras.Model, ABC):
     @abstractmethod
     def train_step(self, data):
         ...
+    
+    @abstractmethod
+    def test_step(self):
+        ...
+
+    @abstractmethod
+    def process_datasets(self):
+        ...
 
     def generate_loss(self, scale:float = 1.0, loss_type = "ciou") -> "Dict[Yolo_Loss]":
         """
@@ -35,18 +43,11 @@ class Yolo(tf.keras.Model, ABC):
                                        scale_anchors = self._path_scales[key],
                                        ignore_thresh = 0.7,
                                        truth_thresh = 1,
-                                       loss_type=loss_type,
+                                       loss_type = loss_type,
                                        path_key = key,
-                                       scale_x_y=self._x_y_scales[key])
+                                       scale_x_y = self._x_y_scales[key],
+                                       use_tie_breaker = self._use_tie_breaker)
         return loss_dict
-
-    # @abstractmethod
-    # def get_datasets(self):
-    #     ...
-    
-    # @abstractmethod
-    # def test_step(self):
-    #     ...
 
     def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):
         print(f"setting policy: {policy}")
