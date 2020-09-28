@@ -26,6 +26,7 @@ class Yolov3(base_model.Yolo):
                  masks = None, 
                  boxes = None, 
                  path_scales = None, 
+                 x_y_scales = None, 
                  thresh:int = 0.45,
                  class_thresh:int = 0.45,
                  max_boxes:int = 200,
@@ -56,6 +57,7 @@ class Yolov3(base_model.Yolo):
         self._max_boxes = max_boxes
         self._scale_boxes = scale_boxes
         self._scale_mult = scale_mult
+        self._x_y_scales = x_y_scales
 
         #init base params
         self._encoder_decoder_split_location = None
@@ -84,11 +86,13 @@ class Yolov3(base_model.Yolo):
             self._boxes = self._boxes or [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
             self._masks = self._masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
             self._path_scales = self._path_scales or {"1024": 32, "512": 16, "256": 8}
+            self._x_y_scales = self._x_y_scales or {"1024": 1.0, "512": 1.0, "256": 1.0}
         elif self.model_name == "tiny":
             self._encoder_decoder_split_location = 14
             self._boxes = self._boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
             self._masks = self._masks or {"1024": [3,4,5], "256": [0,1,2]}
             self._path_scales = self._path_scales or {"1024": 32, "256": 8}
+            self._x_y_scales = self._x_y_scales or {"1024": 1.0, "256": 1.0}
 
         if self.backbone == None or isinstance(self.backbone, Dict): 
             self._backbone_name = default_dict[self.model_name]["backbone"]
@@ -131,12 +135,10 @@ class Yolov3(base_model.Yolo):
         predictions = self.head_filter(raw_head)
         return predictions
 
-    def _apply_loss():
-        return 
-
     def train_step(self, data):
         #get the data point
-        image, label = data
+        image = data["image"]
+        label = data["label"]
         
         # computer detivative and apply gradients
         with tf.GradientTape() as tape: 
@@ -159,10 +161,33 @@ class Yolov3(base_model.Yolo):
         metrics_dict = {m.name: m.result() for m in self.metrics}
         metrics_dict.update(loss_metrics)
         return metrics_dict
+    
+    def test_step(self, data):
+        #get the data point
+        image = data["image"]
+        label = data["label"]
+        
+        # computer detivative and apply gradients
+        y_pred = self(image, training = False)
+        loss = self.compiled_loss(label, y_pred["raw_output"])
+
+        #custom metrics
+        loss_metrics = dict()
+        for loss in self.compiled_loss._losses:
+            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
+            loss_metrics[f"{loss._path_key}_classes"] = loss.get_classification_loss()
+            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            loss_metrics[f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
+
+        #compiled metrics
+        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        metrics_dict = {m.name: m.result() for m in self.metrics}
+        metrics_dict.update(loss_metrics)
+        return metrics_dict
 
     def load_weights_from_dn(self,
                              dn2tf_backbone = True,
-                             dn2tf_head = False,
+                             dn2tf_head = True,
                              config_file = None,
                              weights_file = None):
         """
@@ -207,26 +232,7 @@ class Yolov3(base_model.Yolo):
         if dn2tf_head:
             load_weights_dnHead(self.head, decoder)
         return
-
-    def generate_loss(self, scale:float = 1.0, loss_type = "ciou") -> "Dict[Yolo_Loss]":
-        """
-        Create loss function instances for each of the detection heads.
-
-        Args:
-            scale: the amount by which to scale the anchor boxes that were
-                   provided in __init__
-        """
-        from yolo.modeling.functions.yolo_loss import Yolo_Loss
-        loss_dict = dict()
-        for key in self._masks.keys():
-            loss_dict[key] = Yolo_Loss(mask = self._masks[key],
-                                anchors = self._boxes,
-                                scale_anchors = self._path_scales[key],
-                                ignore_thresh = 0.7,
-                                truth_thresh = 1, 
-                                loss_type=loss_type,
-                                path_key = key)
-        return loss_dict
+    
 
 def get_dataset(batch_size = 10):
     import tensorflow_datasets as tfds
@@ -235,7 +241,6 @@ def get_dataset(batch_size = 10):
 
     train_size = tf.data.experimental.cardinality(train)
     test_size = tf.data.experimental.cardinality(test)
-    print(train_size, test_size)
 
     parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=True, fixed_size= False, jitter_im= 0.1, jitter_boxes= 0.005, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
     preprocess_train = parser.unbatched_process_fn(is_training = True)
@@ -244,17 +249,12 @@ def get_dataset(batch_size = 10):
     preprocess_test = parser.unbatched_process_fn(is_training = False)
     postprocess_test = parser.batched_process_fn(is_training = False)
     
-    format_gt = parser.build_gt(is_training = True)
     
     train = train.map(preprocess_train).padded_batch(batch_size)
     train = train.map(postprocess_train)
     test = test.map(preprocess_test).padded_batch(batch_size)
     test = test.map(postprocess_test)
-    dataset = train.concatenate(test)
 
-    dataset = dataset.map(format_gt)
-    train = dataset.take(train_size//batch_size)
-    test = dataset.skip(train_size//batch_size)
     train_size = tf.data.experimental.cardinality(train)
     test_size = tf.data.experimental.cardinality(test)
     print(train_size, test_size)
@@ -269,4 +269,4 @@ if __name__ == "__main__":
     optimizer = ks.optimizers.SGD(lr=1e-3)
     model.compile(optimizer=optimizer, loss=loss_fn)
 
-    model.fit(train)
+    model.evaluate(test)

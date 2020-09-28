@@ -7,7 +7,6 @@ from .preprocessing_ops import _scale_image
 from .preprocessing_ops import _get_best_anchor
 from .preprocessing_ops import _jitter_boxes
 from .preprocessing_ops import _translate_image
-from .preprocessing_ops import _build_grided_gt
 
 from .random_ops import _box_scale_rand
 from .random_ops import _jitter_rand
@@ -17,6 +16,8 @@ from yolo.utils.box_utils import _xcycwh_to_xyxy
 from yolo.utils.box_utils import _xcycwh_to_yxyx 
 from yolo.utils.box_utils import _yxyx_to_xcycwh 
 import matplotlib.pyplot as plt
+
+from yolo.utils.loss_utils import build_grided_gt
 
 class YoloParser(DatasetParser):
     def __init__(self,
@@ -93,7 +94,7 @@ class YoloParser(DatasetParser):
         masks = self._masks
         randscale = data["randscale"]
         for key in masks.keys():
-            masks[key] = _build_grided_gt(data["label"], tf.convert_to_tensor(self._masks[key], dtype= tf.float32), randscale, self._use_tie_breaker)
+            masks[key] = build_grided_gt(data["label"], tf.convert_to_tensor(self._masks[key], dtype= tf.float32), randscale, self._use_tie_breaker)
             if self._path_scales == None:
                 randscale *= 2
             else:

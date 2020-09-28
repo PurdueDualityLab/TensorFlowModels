@@ -6,6 +6,7 @@ from yolo.modeling.yolo_v3 import Yolov3
 from yolo.utils.iou_utils import *
 from yolo.utils.loss_utils import GridGenerator
 
+from yolo.utils.loss_utils import build_grided_gt
 
 class Yolo_Loss(ks.losses.Loss):
     def __init__(self, 
@@ -55,6 +56,7 @@ class Yolo_Loss(ks.losses.Loss):
         self._num_extras = num_extras
         self._truth_thresh = truth_thresh
         self._ignore_thresh = ignore_thresh
+        self._masks = mask
 
         # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
         # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
@@ -93,22 +95,21 @@ class Yolo_Loss(ks.losses.Loss):
 
     def call(self, y_true, y_pred):
         #1. generate and store constants and format output
-        batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
-        width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
-        height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
+        shape = tf.shape(y_pred)
+        batch_size, width, height = shape[0], shape[1], shape[2]
         grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype = y_pred.dtype)
+        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype= y_pred.dtype), width, True)
+        
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
-        y_true = tf.cast(y_true, dtype = y_pred.dtype)
-
+       
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
-        # self.print_error(pred_conf)
+        self.print_error(pred_conf)
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
