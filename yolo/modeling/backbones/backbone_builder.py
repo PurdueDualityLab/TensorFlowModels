@@ -18,8 +18,7 @@ class Backbone_Builder(ks.Model):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None}
-        # parameters required for tensorflow to recognize ks.Model as not a
-        # subclass of ks.Model
+
         self._input_shape = input_shape
         self._model_name = "custom_csp_backbone"
         layer_specs = config
@@ -56,7 +55,6 @@ class Backbone_Builder(ks.Model):
             if config.output:
                 endpoints[config.output_name] = x
 
-        #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
 
     def _build_block(self, config, inputs, name):
@@ -91,9 +89,3 @@ class Backbone_Builder(ks.Model):
         return x
 
 
-# model = Backbone_Builder("darknet53")
-# model.summary()
-# print(config)
-# with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
-#     data = tf.keras.models.model_from_json(config)
-#     print(data)
