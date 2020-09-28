@@ -14,7 +14,6 @@ from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dn
 from yolo.utils.testing_utils import prep_gpu
 prep_gpu()
 from yolo.dataloaders.YoloParser import YoloParser
-from yolo.training.recall_metric import YoloMAP_recall
 
 class Yolov3(base_model.Yolo):
     def __init__(self, 

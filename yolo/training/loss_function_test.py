@@ -124,14 +124,7 @@ def loss_test_(model_name = "regular"):
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks)
     except KeyboardInterrupt:
         model.save_weights("weights/train_test_1")
-
-    # for image, label in dataset:
-    #     pred = model(image)
-    #     loss = 0
-    #     for key in pred.keys():
-    #         loss += loss_fn[key](label[key], pred[key])
-    #     tf.print(loss)
-    #     time.sleep(1)
+        
     return
 
 def loss_test():
