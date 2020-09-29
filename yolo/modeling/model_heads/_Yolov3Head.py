@@ -1,5 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
+from typing import *
+
 from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkUpsampleRoute
@@ -65,16 +67,18 @@ class Yolov3Head(tf.keras.Model):
         self._classes = classes
         self._boxes = boxes
         self._model_name = model
-
-        if self._cfg_dict is None:
+        
+        if not isinstance(self._cfg_dict, Dict):
+            self._model_name = model
             self._cfg_dict = self.load_dict_cfg(model)
-        print(self._cfg_dict)
+        else:
+            self._model_name = "custom_head"
         self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(input_shape)
         self._input_shape = input_shapes
         outputs = self._connect_layers(routes, upsamples, prediction_heads, inputs)
-        super().__init__(inputs=inputs, outputs=outputs, name=model, **kwargs)
+        super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
         return
 
     @classmethod
@@ -96,8 +100,6 @@ class Yolov3Head(tf.keras.Model):
         upsamples = collections.OrderedDict()#dict()
         prediction_heads = collections.OrderedDict()#dict()
 
-
-
         start_width = input_shape[1]
         if input_shape[1] != None:
             start_width = start_width//32
@@ -117,7 +119,6 @@ class Yolov3Head(tf.keras.Model):
 
             args = path_keys["processor_conditions"]
             layer = ks.utils.get_registered_object(path_keys["processor"])
-            print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
@@ -128,16 +129,14 @@ class Yolov3Head(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-        print(inputs, input_shapes)
         return inputs, input_shapes, routes, upsamples, prediction_heads
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = collections.OrderedDict()#dict()
+        outputs = collections.OrderedDict()
         layer_keys = list(self._cfg_dict.keys())
-        layer_in = inputs[layer_keys[0]] # layer input to the next layer
+        layer_in = inputs[layer_keys[0]]
 
-        #using this loop is faster for some reason
         i = 0
         while i < len(layer_keys):
             x = routes[layer_keys[i]](layer_in)
@@ -145,13 +144,11 @@ class Yolov3Head(tf.keras.Model):
                 x_next = inputs[layer_keys[i + 1]]
                 layer_in = upsamples[layer_keys[i + 1]]([x[0], x_next])
 
-            #tf.print(tf.shape(x))
             if type(x) == tuple or type(x) == list:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x[1])
             else:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x)
             i += 1
-        print(outputs)
         return outputs
 
     def get_config(self):

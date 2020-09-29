@@ -1,11 +1,11 @@
 """Contains common building blocks for yolo neural networks."""
-import functools
 from functools import partial
 
 import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
-from yolo.modeling.building_blocks._Identity import Identity
+from ._Identity import Identity
+
 from yolo.modeling.functions.mish_activation import mish
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -92,7 +92,6 @@ class DarkConv(ks.layers.Layer):
         return
 
     def build(self, input_shape):
-        tf.keras.backend.set_floatx(self.dtype)
         kernel_size = self._kernel_size if type(self._kernel_size) == int else self._kernel_size[0]
         if self._padding == "same" and kernel_size != 1:
             self._zeropad = ks.layers.ZeroPadding2D(((1,1), (1,1))) # symetric padding
@@ -126,12 +125,11 @@ class DarkConv(ks.layers.Layer):
         else:
             self.bn = Identity()
         
-
         if self._activation == 'leaky':
             alpha = {"alpha":self._leaky_alpha}
-            self._activation_fn = partial(tf.nn.leaky_relu, **alpha)#ks.layers.LeakyReLU(alpha=self._leaky_alpha)#
+            self._activation_fn = partial(tf.nn.leaky_relu, **alpha)
         elif self._activation == 'mish':
-            self._activation_fn = mish
+            self._activation_fn = mish()
         else:
             self._activation_fn = ks.layers.Activation(activation=self._activation)
 

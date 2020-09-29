@@ -4,7 +4,6 @@ Manage the downloading of external files that are used in YOLO networks.
 
 # from __future__ import annotations
 
-from http.client import HTTPException
 import io
 import os
 
@@ -74,6 +73,10 @@ def open_if_not_open(file: Union[PathABC, io.IOBase], *args, **kwargs) -> io.IOB
 
 # URL names that can be accessed using the download function
 urls = {
+    'yolov2.cfg': (
+        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov2.cfg',
+        'cfg',
+        '57d85d77262c840b56ad5418faae4950d9c7727e0192fb70618eeaac26a19817'),
     'yolov3.cfg': (
         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
         'cfg',
@@ -90,6 +93,14 @@ urls = {
         'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4.cfg',
         'cfg',
         'a6d0f8e5c62cc8378384f75a8159b95fa2964d4162e33351b00ac82e0fc46a34'),
+    'yolov4-tiny.cfg': (
+        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tiny.cfg',
+        'cfg',
+        '6cbf5ece15235f66112e0bedebb324f37199b31aee385b7e18f0bbfb536b258e'),
+    'yolov2.weights': (
+        'https://pjreddie.com/media/files/yolov2.weights',
+        'weights',
+        'd9945162ed6f54ce1a901e3ec537bdba4d572ecae7873087bd730e5a7942df3f'),
     'yolov3.weights': (
         'https://pjreddie.com/media/files/yolov3.weights',
         'weights',
@@ -106,10 +117,14 @@ urls = {
         'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights',
         'weights',
         'e8a4f6c62188738d86dc6898d82724ec0964d0eb9d2ae0f0a9d53d65d108d562'),
+    'yolov4-tiny.weights': (
+        'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights',
+        'weights',
+        '037676f0d929c24e1bd9a0037fe30dc416fc26e0ca2a4491a44d024873316061'),
 }
 
 
-def download(name: str) -> str:
+def download(name: str, trust: bool = False) -> str:
     """
     Download a predefined file named `name` from the original repository.
 
@@ -119,6 +134,9 @@ def download(name: str) -> str:
 
     Args:
         name: Name of the file that will be downloaded
+        trust: Trust the cache even if the file's hash is inconsistent
+               This option can speed the loading of the file at the expense of
+               security. Default value is False.
 
     Returns:
         The path of the downloaded file as a `str`
@@ -133,15 +151,30 @@ def download(name: str) -> str:
                         have thrown to indicate that the file was inaccessible.
     """
     import tensorflow.keras as ks
+    from http.client import HTTPException
+
     url, type, hash = urls[name]
+
+    cache_dir = os.path.abspath('cache')
+    full_path = os.path.join(cache_dir, type, name)
+    if trust and os.path.exists(full_path):
+        return full_path
+
     try:
-        return ks.utils.get_file(
-            name,
-            url,
-            cache_dir='cache',
-            cache_subdir=type,
-            file_hash=hash,
-            hash_algorithm='sha256')
+        if hash is None:
+            return ks.utils.get_file(
+                name,
+                url,
+                cache_dir=cache_dir,
+                cache_subdir=type)
+        else:
+            return ks.utils.get_file(
+                name,
+                url,
+                cache_dir=cache_dir,
+                cache_subdir=type,
+                file_hash=hash,
+                hash_algorithm='sha256')
     except Exception as e:
         if 'URL fetch failure on' in str(e):
             raise HTTPException(str(e)) from e

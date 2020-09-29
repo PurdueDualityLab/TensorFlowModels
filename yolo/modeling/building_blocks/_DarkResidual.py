@@ -1,14 +1,15 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.building_blocks import DarkConv
-from yolo.modeling.building_blocks._Identity import Identity
+from ._DarkConv import DarkConv
+from ._Identity import Identity
 
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkResidual(ks.layers.Layer):
     def __init__(self,
                  filters=1,
+                 filter_scale = 2,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
@@ -48,6 +49,7 @@ class DarkResidual(ks.layers.Layer):
 
         # darkconv params
         self._filters = filters
+        self._filter_scale = filter_scale
         self._use_bias = use_bias
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
@@ -84,6 +86,9 @@ class DarkResidual(ks.layers.Layer):
         else:
             self._dconv = Identity()
 
+<<<<<<< HEAD
+        self._conv1 = DarkConv(filters=self._filters // self._filter_scale,
+=======
 
         self._conv1 = DarkConv(filters=self._filters // 2,
                                kernel_size=(1, 1),
@@ -254,6 +259,7 @@ class DarkResidualModel(ks.Model):
 
 
         self._conv1 = DarkConv(filters=self._filters // 2,
+>>>>>>> master
                                kernel_size=(1, 1),
                                strides=(1, 1),
                                padding='same',
@@ -288,8 +294,6 @@ class DarkResidualModel(ks.Model):
         return
 
     def call(self, inputs):
-        #shortcut = inputs
-        #if self._downsample:
         shortcut = self._dconv(inputs)
         x = self._conv1(shortcut)
         x = self._conv2(x)

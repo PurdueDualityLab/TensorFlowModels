@@ -6,7 +6,7 @@ import tensorflow.keras as ks
 class DarkSpp(ks.layers.Layer):
     def __init__(self, sizes, **kwargs):
         self._sizes = list(reversed(sizes))
-        print(self._sizes)
+        # print(self._sizes)
         if len(sizes) == 0:
             raise ValueError(
                 "More than one maxpool should be specified in SSP block")

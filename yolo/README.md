@@ -1,10 +1,13 @@
 # YOLO Object Detectors, You Only Look Once
 
 [![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
+[![Paper](http://img.shields.io/badge/Paper-arXiv.2004.10934-B3181B?logo=arXiv)](https://arxiv.org/abs/2004.10934)
 
-This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository. 
+This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository.
 
 * YOLOv3: An Incremental Improvement: [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
+
+* YOLOv4: Optimal Speed and Accuracy of Object Detection: [YOLOv4: Optimal Speed and Accuracy of Object Detection](https://arxiv.org/abs/2004.10934)
 
 ## Description
 
@@ -13,16 +16,17 @@ This repository is the unofficial implementation of the following paper. However
 > * Provide brief information of the algorithms used.  
 > * Provide links for demos, blog posts, etc.  
 
-Yolo v1 the original implementation was released in 2015 providing a ground breaking algorithem that would quickly process images, and locate objects in a single pass through the detector. The orignal implementation based used a backbone derived from state of the art object classifier of the time, like [GoogLeNet](https://arxiv.org/abs/1409.4842) and [VGG](https://arxiv.org/abs/1409.1556). More Attention was given to the novel Yolo Detection head that allowed for classification with a single pass of an image. Though limited, the network could predict up to 90 bounding boxes per image, and was tested for about 80 classes per box. Also, the model could only make prediction at one scale. These attributes caused yolo v1 to be more limited, and less verisitle, so as the year passed, the Developers continued to update and develop this model. 
+Yolo v1 the original implementation was released in 2015 providing a ground breaking algorithm that would quickly process images, and locate objects in a single pass through the detector. The original implementation based used a backbone derived from state of the art object classifier of the time, like [GoogLeNet](https://arxiv.org/abs/1409.4842) and [VGG](https://arxiv.org/abs/1409.1556). More attention was given to the novel Yolo Detection head that allowed for Object Detection with a single pass of an image. Though limited, the network could predict up to 90 bounding boxes per image, and was tested for about 80 classes per box. Also, the model could only make prediction at one scale. These attributes caused yolo v1 to be more limited, and less versatile, so as the year passed, the Developers continued to update and develop this model.
 
-Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo network group. These model uses a custom backbone called Darknet53 that uses knowledge gained from the ResNet paper to improve its predictions. The new backbone also allows for objects to be detected at multiple scales. As for the new detection head, the model now predicts the bounding boxes using a set of anchor box priors (Anchor Boxes) as suggestions. The multiscale predictions in combination with the Anchor boxes allows for the network to make up to 1000 object predictions on a single image. Finally, the new loss function forces the network to make better prediction by using Intersection Over Union (IOU) to inform the models confidence rather than relying on the mean squared error for the entire output. 
+Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo network group. These model uses a custom backbone called Darknet53 that uses knowledge gained from the ResNet paper to improve its predictions. The new backbone also allows for objects to be detected at multiple scales. As for the new detection head, the model now predicts the bounding boxes using a set of anchor box priors (Anchor Boxes) as suggestions. The multiscale predictions in combination with the Anchor boxes allows for the network to make up to 1000 object predictions on a single image. Finally, the new loss function forces the network to make better prediction by using Intersection Over Union (IOU) to inform the models confidence rather than relying on the mean squared error for the entire output.
 
-## Authors or Maintainers
-
-> :memo: Provide maintainer information.  
+## Authors
 
 * Vishnu Samardh Banna ([@GitHub vishnubanna](https://github.com/vishnubanna))
-* Full name ([@GitHub username](https://github.com/username))
+* Anirudh Vegesana ([@GitHub anivegesana](https://github.com/anivegesana))
+* Akhil Chinnakotla ([@GitHub The-Indian-Chinna](https://github.com/The-Indian-Chinna))
+* Tristan Yan ([@GitHub Tyan3001](https://github.com/Tyan3001))
+* Naveen Vivek ([@GitHub naveen-vivek](https://github.com/naveen-vivek))
 
 ## Table of Contents
 
@@ -35,13 +39,12 @@ Yolo v3 and v4 serve as the most up to date and capable versions of the Yolo net
 * [Example Usage](#example-usage)
 * [Training](#training)
 * [Evaluation](#evaluation)
-* [Change Log](#change-log)
 * [References](#references)
 * [License](#license)
 * [Citation](#citation)
 
 ## Our Goal
-Our goal with this model conversion is to provide highly versitile implementations of the Backbone and Yolo Head. We have tried to build the model in such a way that the Yolo head could easily be connected to a new, more powerful backbone of a person chose to. 
+Our goal with this model conversion is to provide highly versatile implementations of the Backbone and Yolo Head. We have tried to build the model in such a way that the Yolo head could easily be connected to a new, more powerful backbone if a person chose to.
 
 ## Models in the library
 
@@ -53,7 +56,7 @@ Our goal with this model conversion is to provide highly versitile implementatio
 | Yolo-v4          |
 | Yolo-v4 tiny     |
 
-For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation from the original darknet implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
+For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation directly from the original Darknet Implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
 ## Data Pipeline/Dataset Benchmarking
 The Data Pipeline is found within the dataloaders folder. The way to use our data pipeline is by typing "from yolo.dataloaders import preprocessing_functions.py as pf" at the top of your python file. Then loading in the tfds dataset by means of tfds.ImageFolder or tfds.load. Then use the following function as seen below:
@@ -83,12 +86,12 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 > * Add links to [TensorBoard.dev](https://tensorboard.dev/) for visualizing metrics.  
 >  
 > An example table for image classification results  
-### object 
-| Model name | latency  |FPS (GPU)  | mAP   |   
-|:------------:|:----------:|:-------------------:|:----------------:|  
-| Yolov3 416 | 35ms     | 40        | 59.7% |  
-| Yolov3-spp 608 | 40ms     | 30        | 61.7% |
-| Yolov3-tiny 416 | 20ms     | 60        | not tested yet |    
+### object
+| Model Name | Width | latency  |FPS (GPU)  | mAP   |   
+|:------------:|:------------:|:----------:|:-------------------:|:----------------:|  
+| Yolov3 | 416 |35ms     | 40        | 59.7% |  
+| Yolov3-spp | 608 |40ms     | 30        | 61.7% |
+| Yolov3-tiny | 416 |20ms     | 60        | not tested yet |    
 
 
 > ### Image Classification  
@@ -116,11 +119,11 @@ pip install -r requirements.txt
 
 ## Build Instructions
 
-> :memo: Provide Building an using the model 
+> :memo: Provide Building an using the model
 
 ## Example Usage
 
-> :memo: Examples for all supported models 
+> :memo: Examples for all supported models
 
 ## Training
 
@@ -131,6 +134,9 @@ pip install -r requirements.txt
 
 Please run this command line for training.
 
+```python
+
+```
 ```shell
 python3 ...
 ```

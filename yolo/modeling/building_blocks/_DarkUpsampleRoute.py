@@ -1,7 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
 import tensorflow.keras as ks
-from . import DarkConv
+from ._DarkConv import DarkConv
 
 
 @ks.utils.register_keras_serializable(package='yolo')

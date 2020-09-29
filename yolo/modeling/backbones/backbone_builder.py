@@ -3,6 +3,7 @@ import tensorflow.keras as ks
 
 import importlib
 import collections
+from typing import *
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import build_block_specs
@@ -17,15 +18,14 @@ class Backbone_Builder(ks.Model):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
                             "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
                             "DarkBlock": None}
-        # parameters required for tensorflow to recognize ks.Model as not a
-        # subclass of ks.Model
-        self._model_name = name
-        self._input_shape = input_shape
 
-        if config is None:
+        self._input_shape = input_shape
+        self._model_name = "custom_csp_backbone"
+        layer_specs = config
+
+        if not isinstance(config, Dict):
+            self._model_name = name
             layer_specs = self.get_model_config(name)
-        else:
-            layer_specs = config
 
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
@@ -55,7 +55,6 @@ class Backbone_Builder(ks.Model):
             if config.output:
                 endpoints[config.output_name] = x
 
-        #endpoints = {key:endpoints[key] for key in reversed(list(endpoints.keys()))}
         return endpoints
 
     def _build_block(self, config, inputs, name):
@@ -90,9 +89,3 @@ class Backbone_Builder(ks.Model):
         return x
 
 
-# model = Backbone_Builder("darknet53")
-# model.summary()
-# print(config)
-# with tf.keras.utils.CustomObjectScope({'Backbone_Builder': Backbone_Builder}):
-#     data = tf.keras.models.model_from_json(config)
-#     print(data)

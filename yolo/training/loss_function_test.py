@@ -5,50 +5,101 @@ import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 import tensorflow_datasets as tfds
+<<<<<<< HEAD
+from yolo.utils.iou_utils import compute_iou
+from .recall_metric import YoloMAP_recall
+=======
 from yolo.modeling.functions.iou import box_iou
 from yolo.modeling.functions.recall_metric import YoloMAP_recall,YoloMAP_recall75, YoloMAP
+>>>>>>> master
 
 import matplotlib.pyplot as plt
 import numpy as np
 from absl import app
 import time 
 
-from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
+from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names
+prep_gpu()
+
+from yolo.dataloaders.YoloParser import YoloParser
 
 def lr_schedule(epoch, lr):
     if epoch == 60 or epoch == 90:
         lr = lr/10
     return lr
 
-def lr_schedule2(epoch, lr):
-    if epoch == 2 or epoch == 3:
-        lr = lr/10
-    return lr
+def gt_test():
+    strat = tf.distribute.MirroredStrategy()
+    with strat.scope():
+        train, test = get_dataset(batch_size=1)
+        pred_model = build_model(model_version="v4", set_head=True)#policy = "float32
+        model = build_model(model_version="v4", set_head=False)#policy = "float32
+        loss_fn = model.generate_loss(loss_type="ciou", scale= 416)
+        #map_50 = YoloMAP_recall(name = "recall")
+        partial_model = filter_partial()
 
-def loss_test(model_name = "regular"):
-    #very large probelm, pre processing fails when you start batching
-    model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
-    #model._head.trainable = True
+    colors = gen_colors(80)
+    coco_names = get_coco_names()
+    i = 0 
+    for image, label in train:
+        box, classif = partial_model(label)
+        pred = pred_model(image)
+        item = model(image)
 
-    optimizer = ks.optimizers.SGD(lr=1e-4)
-    # optimizer = ks.optimizers.Adam()
-    map_50 = YoloMAP_recall(name = "recall")
-    # map_75 = YoloMAP_recall75(name = "recall75")
-    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
+        #image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
+        #image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
+        image = image[0].numpy()
+        boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], image.shape[0], image.shape[1])
+        box, classif = int_scale_boxes(box, classif, image.shape[0], image.shape[1])
+        draw_box(image, boxes[0].numpy(), classes[0].numpy(), None, [0,1,0], coco_names)
+        draw_box(image, box[0].numpy(), classif[0].numpy(), None, [1,0,0], coco_names)
 
-    model.save_weights("weights/weights_test")
-    model.load_weights("weights/weights_test")
-    try:
-        history = model.fit(dataset, epochs=20)
-    except KeyboardInterrupt:
-        model.save_weights("weights/custom_train1_adam_test")
-        print()
-        # plt.plot(history)
-        # plt.show()
-    
+        plt.imshow(image)
+        plt.show()
+
+        for key in item.keys():
+            print(key, loss_fn[key](label[key], item[key]))
+        if i == 10:
+            break 
+        i += 1
     return
 
-def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
+def get_dataset(batch_size = 10):
+    import tensorflow_datasets as tfds
+    from yolo.dataloaders.YoloParser import YoloParser
+    train, info = tfds.load('coco', split = 'train', shuffle_files = False, with_info= True)
+    test, info = tfds.load('coco', split = 'validation', shuffle_files = False, with_info= True) 
+
+    train_size = tf.data.experimental.cardinality(train)
+    test_size = tf.data.experimental.cardinality(test)
+    print(train_size, test_size)
+
+    parser = YoloParser(image_w = 416, image_h = 416, use_tie_breaker=True, fixed_size= False, jitter_im= 0.1, jitter_boxes= 0.005, anchors=[(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)])
+    preprocess_train = parser.unbatched_process_fn(is_training = True)
+    postprocess_train = parser.batched_process_fn(is_training = True)
+
+    preprocess_test = parser.unbatched_process_fn(is_training = False)
+    postprocess_test = parser.batched_process_fn(is_training = False)
+    
+    format_gt = parser.build_gt(is_training = True)
+    
+    train = train.map(preprocess_train).padded_batch(batch_size)
+    train = train.map(postprocess_train)
+    test = test.map(preprocess_test).padded_batch(batch_size)
+    test = test.map(postprocess_test)
+    # dataset = train.concatenate(test)
+
+    # dataset = dataset.map(format_gt)
+    # train = dataset.take(train_size//batch_size)
+    # test = dataset.skip(train_size//batch_size)
+    #train = train.map(format_gt)
+    #test = test.map(format_gt)
+    train_size = tf.data.experimental.cardinality(train)
+    test_size = tf.data.experimental.cardinality(test)
+    print(train_size, test_size)
+    return train, test
+
+def loss_test_(model_name = "regular"):
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -56,6 +107,7 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
     with strat.scope():
         model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", load_head = False, fixed_size= True)
 
+        
         setname = "coco"
         dataset, Info = tfds.load(setname, split="train", with_info=True, shuffle_files=True, download=True)
         val, InfoVal = tfds.load(setname, split="validation", with_info=True, shuffle_files=True, download=True)
@@ -70,7 +122,6 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
         test = dataset.skip(size//batch_size)
 
         map_50 = YoloMAP_recall(name = "recall")
-        Detection_50 = YoloMAP(name = "Det")
     
     optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
@@ -117,46 +168,32 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
         model.save_weights("weights/train_test_desk_fast_1")
     except KeyboardInterrupt:
-        model.save_weights("weights/train_test_desk_fast_exit_early_1")
+        model.save_weights("weights/train_test_1")
+        
     return
 
-def gt_test():
-    model, loss_fn, dataset, anchors, masks = build_model_partial(name="regular", use_mixed=False, split="validation", batch_size= 10)
-    partial_model = filter_partial()
-    pred_model = build_model()
+def loss_test():
+    strat = tf.distribute.MirroredStrategy()
+    with strat.scope():
+        train, test = get_dataset(batch_size=2)
+        # trianing fails at mixed precisions
+        model = build_model(model_version="v4", set_head=False, load_head = True, policy = "float32")
+        model.set_prediction_filter()
+        loss_fn = model.generate_loss(loss_type="ciou")
+        map_50 = YoloMAP_recall(name = "recall")
+    
+    optimizer = ks.optimizers.SGD(lr=1e-3) 
+    callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs")]
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=[map_50])
+    model.fit(train, validation_data=test, shuffle=False, callbacks=callbacks)
+    return 
 
-    i = 0 
-
-    for image, label in dataset:
-        box, classif = partial_model(label)
-        boxes, classes, conf = pred_model(image)
-        pred = model(image)
-
-        image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
-        image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
-        image = image[0].numpy()
-
-        loss = 0
-        sum_lab = 0
-        for key in pred.keys():
-            loss += loss_fn[key](label[key], pred[key])
-        tf.print("loss: ", loss)
-        print()
-        if loss > 100:
-            plt.imshow(image)
-            plt.show()
-        if i == 1000:
-            break 
-        i += 1
-
-    return
 
 def main(argv, args = None):
-    #loss_test_fast(model_name = "regular")
-    loss_test_eager()
+    loss_test()
+    #loss_test_eager()
     #gt_test()
     return
-
 
 if __name__ == "__main__":
     app.run(main)

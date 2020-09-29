@@ -101,6 +101,7 @@ class YoloKmeans:
             last = curr
             num_iters += 1
         print(f'num_iters = {num_iters}')
+        clusters = np.array(sorted(clusters, key = lambda x: x[0] * x[1]))
         if self._with_color:
             return clusters, last
         else:
