@@ -108,7 +108,8 @@ class YoloKmeans:
             return clusters
 
 if __name__ == '__main__':
-    km = YoloKmeans(boxes = np.random.rand(500, 2),with_color= True)
+    km = YoloKmeans(with_color= True)
+    km.load_coco_boxes()
     centroids, cmap = km.run_kmeans()
     boxes = km.get_boxes()
     plt.scatter(boxes[:, 0], boxes[:, 1], c = cmap)
