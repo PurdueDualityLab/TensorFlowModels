@@ -5,13 +5,8 @@ import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 import tensorflow_datasets as tfds
-<<<<<<< HEAD
 from yolo.utils.iou_utils import compute_iou
 from .recall_metric import YoloMAP_recall
-=======
-from yolo.modeling.functions.iou import box_iou
-from yolo.modeling.functions.recall_metric import YoloMAP_recall,YoloMAP_recall75, YoloMAP
->>>>>>> master
 
 import matplotlib.pyplot as plt
 import numpy as np
