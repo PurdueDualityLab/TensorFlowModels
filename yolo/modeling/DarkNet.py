@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.backbone_builder import Backbone_Builder
@@ -10,17 +9,17 @@ from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 import os
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
     _updated_config = tf_shims.ks_Model___updated_config
 
-    def __init__(
-            self,
-            classes=1000,
-            load_backbone_weights=False,
-            config_file=None,
-            weights_file=None):
+    def __init__(self,
+                 classes=1000,
+                 load_backbone_weights=False,
+                 config_file=None,
+                 weights_file=None):
         """
         load the model and the sequential head so that the backbone can be applied for classification
 

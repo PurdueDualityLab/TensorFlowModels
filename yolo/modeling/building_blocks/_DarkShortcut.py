@@ -2,11 +2,10 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkShortcut(ks.layers.Layer):
-    def __init__(self,
-                 activation='linear',
-                 **kwargs):
+    def __init__(self, activation='linear', **kwargs):
         '''
         Modified DarkShortcut layer to match that of the DarkNet Library.
         It adds input layers and passes the result through an activation
@@ -45,8 +44,6 @@ class DarkShortcut(ks.layers.Layer):
 
     def get_config(self):
         # used to store/share parameters to reconsturct the model
-        layer_config = {
-            "activation": self._activation
-        }
+        layer_config = {"activation": self._activation}
         layer_config.update(super().get_config())
         return layer_config

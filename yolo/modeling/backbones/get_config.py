@@ -1,15 +1,6 @@
 class BlockConfig(object):
-    def __init__(
-            self,
-            layer,
-            reps,
-            filters,
-            kernel_size,
-            strides,
-            padding,
-            downsample,
-            output,
-            name):
+    def __init__(self, layer, reps, filters, kernel_size, strides, padding,
+                 downsample, output, name):
         '''
         get layer config to make code more readable
 
@@ -35,20 +26,10 @@ class BlockConfig(object):
     def __repr__(self):
         return f"layer: {self.name}, repititions: {self.repititions}, filters: {self.filters}, padding: {self.padding}, strides: {self.strides}, kernel size: {self.kernel_size}, downsample: {self.downsample}, route/output: {self.output}\n"
 
+
 class CSPBlockConfig(object):
-    def __init__(
-            self,
-            layer, 
-            stack, 
-            reps, 
-            bottleneck, 
-            filters, 
-            kernel_size, 
-            strides, 
-            padding, 
-            activation, 
-            route,
-            output_name):
+    def __init__(self, layer, stack, reps, bottleneck, filters, kernel_size,
+                 strides, padding, activation, route, output_name):
         '''
         get layer config to make code more readable
 
@@ -76,11 +57,13 @@ class CSPBlockConfig(object):
     def __repr__(self):
         return f"layer: {self.layer}, stack: {self.stack}, repititions: {self.repetitions}, filters: {self.filters}, bottleneck: {self.bottleneck}, route: {self.route}, output: {self.output_name}\n"
 
+
 def build_block_specs(config):
     specs = []
     for layer in config:
         specs.append(BlockConfig(*layer))
     return specs
+
 
 def csp_build_block_specs(config):
     specs = []

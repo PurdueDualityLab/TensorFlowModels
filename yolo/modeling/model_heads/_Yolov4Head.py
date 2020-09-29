@@ -14,9 +14,16 @@ import importlib
 import more_itertools
 import collections
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class Yolov4Head(tf.keras.Model):
-    def __init__(self, model="regular", classes=80, boxes=9, cfg_dict = None, input_shape = (None, None, None, 3), **kwargs):
+    def __init__(self,
+                 model="regular",
+                 classes=80,
+                 boxes=9,
+                 cfg_dict=None,
+                 input_shape=(None, None, None, 3),
+                 **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
 
@@ -66,27 +73,32 @@ class Yolov4Head(tf.keras.Model):
         self._cfg_dict = cfg_dict
         self._classes = classes
         self._boxes = boxes
-        
 
         if not isinstance(self._cfg_dict, Dict):
             self._model_name = model
             self._cfg_dict = self.load_dict_cfg(model)
         else:
             self._model_name = "custom_head"
-        
-        self._conv_depth = boxes//len(self._cfg_dict) * (classes + 5)
 
-        inputs, input_shapes, routes, resamples, prediction_heads = self._get_attributes(input_shape)
+        self._conv_depth = boxes // len(self._cfg_dict) * (classes + 5)
+
+        inputs, input_shapes, routes, resamples, prediction_heads = self._get_attributes(
+            input_shape)
         self._input_shape = input_shapes
-        outputs = self._connect_layers(routes, resamples, prediction_heads, inputs)
-        super().__init__(inputs=inputs, outputs=outputs, name=self._model_name, **kwargs)
+        outputs = self._connect_layers(routes, resamples, prediction_heads,
+                                       inputs)
+        super().__init__(inputs=inputs,
+                         outputs=outputs,
+                         name=self._model_name,
+                         **kwargs)
         return
 
     @classmethod
     def load_dict_cfg(clz, model):
         """ find the config file and load it for use"""
         try:
-            return importlib.import_module('.yolov4_' + model, package=configs.__package__).head
+            return importlib.import_module('.yolov4_' + model,
+                                           package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov4_' + model:
                 raise ValueError(f"Invlid head '{model}'") from e
@@ -103,15 +115,17 @@ class Yolov4Head(tf.keras.Model):
 
         start_width = input_shape[1]
         if input_shape[1] != None:
-            start_width = start_width//8
+            start_width = start_width // 8
 
         start_height = input_shape[2]
         if input_shape[2] != None:
-            start_height = start_height//8
+            start_height = start_height // 8
 
         for i, (key, path_keys) in enumerate(self._cfg_dict.items()):
-            inputs[key] = ks.layers.Input(shape=[start_width, start_height, path_keys["depth"]])
-            input_shapes[key] = tf.TensorSpec([None, start_width, start_height, path_keys["depth"]])
+            inputs[key] = ks.layers.Input(
+                shape=[start_width, start_height, path_keys["depth"]])
+            input_shapes[key] = tf.TensorSpec(
+                [None, start_width, start_height, path_keys["depth"]])
 
             if type(path_keys["resample"]) != type(None):
                 args = path_keys["resample_conditions"]
@@ -124,7 +138,9 @@ class Yolov4Head(tf.keras.Model):
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
-            prediction_heads[key] = DarkConv(filters=self._conv_depth + path_keys["output-extras"],**args)
+            prediction_heads[key] = DarkConv(filters=self._conv_depth +
+                                             path_keys["output-extras"],
+                                             **args)
 
             if start_width != None:
                 start_width //= 2
@@ -137,9 +153,9 @@ class Yolov4Head(tf.keras.Model):
 
     def _connect_layers(self, routes, resamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = collections.OrderedDict()#dict()
+        outputs = collections.OrderedDict()  #dict()
         layer_keys = list(self._cfg_dict.keys())
-        layer_in = inputs[layer_keys[0]] # layer input to the next layer
+        layer_in = inputs[layer_keys[0]]  # layer input to the next layer
 
         # print({key:inputs[key].shape for key in inputs.keys()})
         # using this loop is faster for some reason
@@ -152,7 +168,6 @@ class Yolov4Head(tf.keras.Model):
                     layer_in = resamples[layer_keys[i + 1]]([x[0], x_next])
                 else:
                     layer_in = resamples[layer_keys[i + 1]]([layer_in, x_next])
-                    
 
             if type(x) == tuple or type(x) == list:
                 outputs[layer_keys[i]] = prediction_heads[layer_keys[i]](x[1])
@@ -163,18 +178,20 @@ class Yolov4Head(tf.keras.Model):
         return outputs
 
     def get_config(self):
-        layer_config = {"cfg_dict": self._cfg_dict,
-                        "classes": self._classes,
-                        "boxes": self._boxes,
-                        "model": self._model_name}
+        layer_config = {
+            "cfg_dict": self._cfg_dict,
+            "classes": self._classes,
+            "boxes": self._boxes,
+            "model": self._model_name
+        }
         layer_config.update(super().get_config())
         return layer_config
 
 
 if __name__ == "__main__":
     #might be missing a layer?
-    backbone = CSP_Backbone_Builder( input_shape = [1, 608, 608, 3])
-    neck = Yolov4Neck(input_shape = [1, 608, 608, 3])
+    backbone = CSP_Backbone_Builder(input_shape=[1, 608, 608, 3])
+    neck = Yolov4Neck(input_shape=[1, 608, 608, 3])
     head = Yolov4Head()
     inputs = tf.ones(shape=[1, 608, 608, 3], dtype=tf.float32)
 

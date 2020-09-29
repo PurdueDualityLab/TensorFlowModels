@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 import tensorflow.keras as ks
 from yolo.modeling.backbones.csp_backbone_builder import CSP_Backbone_Builder
@@ -16,15 +15,16 @@ import os
 @ks.utils.register_keras_serializable(package='yolo')
 class Yolov4(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
+
     def __init__(self,
-                 input_shape = [None, None, None, 3],
-                 model = 'regular',
-                 classes = 80,
-                 masks = None,
-                 boxes = None,
-                 policy = "float32",
-                 scales = None,
-                 path_scale = None,
+                 input_shape=[None, None, None, 3],
+                 model='regular',
+                 classes=80,
+                 masks=None,
+                 boxes=None,
+                 policy="float32",
+                 scales=None,
+                 path_scale=None,
                  **kwargs):
         """
         Args:
@@ -45,7 +45,8 @@ class Yolov4(ks.Model):
         if type(policy) != str:
             policy = policy.name
         self._og_policy = policy
-        self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+        self._policy = tf.keras.mixed_precision.experimental.global_policy(
+        ).name
         self.set_policy(policy=policy)
 
         #init model params
@@ -55,18 +56,25 @@ class Yolov4(ks.Model):
             self._head_name = "regular"
             self._model_name = 'yolov4'
             self._encoder_decoder_split_location = 106
-            self._boxes = boxes or [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)]
-            self._masks = masks or {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
-            self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
+            self._boxes = boxes or [(12, 16), (19, 36), (40, 28), (36, 75),
+                                    (76, 55), (72, 146), (142, 110),
+                                    (192, 243), (459, 401)]
+            self._masks = masks or {
+                "1024": [6, 7, 8],
+                "512": [3, 4, 5],
+                "256": [0, 1, 2]
+            }
+            self._x_y_scales = scales or {"1024": 1.05, "512": 1.1, "256": 1.2}
             self._path_scale = path_scale or {"1024": 32, "512": 16, "256": 8}
         elif self._type == 'tiny':
             self._backbone_name = "darknet_tiny"
             self._head_name = "tiny"
             self._model_name = 'yolov3-tiny'
             self._encoder_decoder_split_location = 14
-            self._boxes = boxes or [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
-            self._masks = masks or {"1024": [3,4,5], "256": [0,1,2]}
-            self._x_y_scales = scales or {"1024": 1.05, "512":1.1, "256":1.2}
+            self._boxes = boxes or [(10, 14), (23, 27), (37, 58), (81, 82),
+                                    (135, 169), (344, 319)]
+            self._masks = masks or {"1024": [3, 4, 5], "256": [0, 1, 2]}
+            self._x_y_scales = scales or {"1024": 1.05, "512": 1.1, "256": 1.2}
             self._path_scale = path_scale or {"1024": 32, "256": 8}
         else:
             raise ValueError(f"Unknown YOLOv3 type '{self._type}'")
@@ -75,9 +83,13 @@ class Yolov4(ks.Model):
         return
 
     def build(self, input_shape=None):
-        self._backbone = CSP_Backbone_Builder(self._backbone_name, input_shape = input_shape)
-        self._neck = Yolov4Neck(name = self._neck_name, input_shape= input_shape)
-        self._head = Yolov4Head(model = self._head_name, classes=self._classes, boxes=len(self._boxes), input_shape = input_shape)
+        self._backbone = CSP_Backbone_Builder(self._backbone_name,
+                                              input_shape=input_shape)
+        self._neck = Yolov4Neck(name=self._neck_name, input_shape=input_shape)
+        self._head = Yolov4Head(model=self._head_name,
+                                classes=self._classes,
+                                boxes=len(self._boxes),
+                                input_shape=input_shape)
         self._built = True
         if input_shape is not None and input_shape != self._input_shape:
             self._input_shape = input_shape
@@ -91,9 +103,9 @@ class Yolov4(ks.Model):
         return predictions
 
     def load_weights_from_dn(self,
-                             dn2tf_backbone = True,
-                             dn2tf_neck = True,
-                             dn2tf_head = False,
+                             dn2tf_backbone=True,
+                             dn2tf_neck=True,
+                             dn2tf_head=False,
                              config_file=None,
                              weights_file=None):
         """
@@ -130,10 +142,11 @@ class Yolov4(ks.Model):
             if weights_file is None:
                 weights_file = download(self._model_name + '.weights')
             list_encdec = DarkNetConverter.read(config_file, weights_file)
-            encoder, neck, decoder = split_converter(list_encdec, self._encoder_decoder_split_location, 138)
+            encoder, neck, decoder = split_converter(
+                list_encdec, self._encoder_decoder_split_location, 138)
 
         if not self._built:
-            self.build(input_shape = (None, None, None, 3))
+            self.build(input_shape=(None, None, None, 3))
 
         if dn2tf_backbone:
             #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
@@ -148,7 +161,10 @@ class Yolov4(ks.Model):
 
         return
 
-    def preprocess_dataset(self, dataset:"Union[str, tfds.data.Dataset]", size:int=None, split='validation'):
+    def preprocess_dataset(self,
+                           dataset: "Union[str, tfds.data.Dataset]",
+                           size: int = None,
+                           split='validation'):
         """
         Preprocesses (normalization and data augmentation) and batches the dataset.
         This is a convenience function that calls on
@@ -180,7 +196,11 @@ class Yolov4(ks.Model):
         from yolo.dataloaders.preprocessing_functions import preprocessing
         if instanceof(dataset, str):
             import tensorflow_datasets as tfds
-            dataset, Info = tfds.load(dataset, split=split, with_info=True, shuffle_files=True, download=False)
+            dataset, Info = tfds.load(dataset,
+                                      split=split,
+                                      with_info=True,
+                                      shuffle_files=True,
+                                      download=False)
             if size is None:
                 size = int(Info.splits[split].num_examples)
         if size is None:
@@ -192,18 +212,26 @@ class Yolov4(ks.Model):
                 size = cardinality(dataset)
         if size < 0:
             raise ValueError("The dataset has unknown or infinite cardinality")
-        return preprocessing(dataset, 100, "detection", size, 1, 80, False, anchors=self._boxes, masks=self._masks)
-    
+        return preprocessing(dataset,
+                             100,
+                             "detection",
+                             size,
+                             1,
+                             80,
+                             False,
+                             anchors=self._boxes,
+                             masks=self._masks)
+
     def train_step(self, data):
         #get the data point
         image = data["image"]
         label = data["label"]
-        
+
         # computer detivative and apply gradients
-        with tf.GradientTape() as tape: 
-            y_pred = self(image, training = True)
+        with tf.GradientTape() as tape:
+            y_pred = self(image, training=True)
             loss = self.compiled_loss(label, y_pred["raw_output"])
-        
+
         grads = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
@@ -211,17 +239,21 @@ class Yolov4(ks.Model):
         loss_metrics = dict()
         for loss in self.compiled_loss._losses:
             loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
-            loss_metrics[f"{loss._path_key}_classes"] = loss.get_classification_loss()
+            loss_metrics[
+                f"{loss._path_key}_classes"] = loss.get_classification_loss()
             loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
-            loss_metrics[f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
+            loss_metrics[
+                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
 
         #compiled metrics
         self.compiled_metrics.update_state(label, y_pred["raw_output"])
         metrics_dict = {m.name: m.result() for m in self.metrics}
         metrics_dict.update(loss_metrics)
         return metrics_dict
-    
-    def generate_loss(self, scale:float = 1.0, loss_type = "giou") -> "Dict[Yolo_Loss]":
+
+    def generate_loss(self,
+                      scale: float = 1.0,
+                      loss_type="giou") -> "Dict[Yolo_Loss]":
         """
         Create loss function instances for each of the detection heads.
 
@@ -232,17 +264,19 @@ class Yolov4(ks.Model):
         from yolo.modeling.functions.yolo_loss import Yolo_Loss
         loss_dict = {}
         for key in self._masks.keys():
-            loss_dict[key] = Yolo_Loss(mask = self._masks[key],
-                                       anchors = self._boxes,
-                                       scale_anchors = self._path_scale[key],
-                                       ignore_thresh = 0.7,
-                                       truth_thresh = 1,
+            loss_dict[key] = Yolo_Loss(mask=self._masks[key],
+                                       anchors=self._boxes,
+                                       scale_anchors=self._path_scale[key],
+                                       ignore_thresh=0.7,
+                                       truth_thresh=1,
                                        loss_type=loss_type,
-                                       path_key = key,
+                                       path_key=key,
                                        scale_x_y=self._x_y_scales[key])
         return loss_dict
 
-    def set_policy(self, policy = 'mixed_float16', save_weights_temp_name = "abn7lyjptnzuj918"):
+    def set_policy(self,
+                   policy='mixed_float16',
+                   save_weights_temp_name="abn7lyjptnzuj918"):
         print(f"setting policy: {policy}")
         if self._policy == policy:
             return
@@ -263,12 +297,12 @@ class Yolov4(ks.Model):
         return
 
     def set_prediction_filter(self,
-            thresh:int = None,
-            class_thresh:int = 0.45,
-            max_boxes:int = 200,
-            use_mixed:bool = True,
-            scale_boxes:int = 416,
-            scale_mult:float = 1.0):
+                              thresh: int = None,
+                              class_thresh: int = 0.45,
+                              max_boxes: int = 200,
+                              use_mixed: bool = True,
+                              scale_boxes: int = 416,
+                              scale_mult: float = 1.0):
         if use_mixed:
             self.set_policy(policy='mixed_float16')
 
@@ -278,7 +312,14 @@ class Yolov4(ks.Model):
             else:
                 thresh = 0.45
 
-        self._pred_filter = YoloLayer(masks = self._masks, anchors= self._boxes, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, scale_boxes=scale_boxes, scale_mult=scale_mult, path_scale = self._path_scale)
+        self._pred_filter = YoloLayer(masks=self._masks,
+                                      anchors=self._boxes,
+                                      thresh=thresh,
+                                      cls_thresh=class_thresh,
+                                      max_boxes=max_boxes,
+                                      scale_boxes=scale_boxes,
+                                      scale_mult=scale_mult,
+                                      path_scale=self._path_scale)
         return
 
     def remove_prediction_filter(self):
@@ -306,8 +347,9 @@ class Yolov4(ks.Model):
         del config['layers']
         return clz(**config)
 
+
 if __name__ == '__main__':
-    model = Yolov4(model = 'regular', classes=80)
-    model.build(input_shape = (None, None, None, 3))
+    model = Yolov4(model='regular', classes=80)
+    model.build(input_shape=(None, None, None, 3))
     print(model.generate_loss())
     model.summary()

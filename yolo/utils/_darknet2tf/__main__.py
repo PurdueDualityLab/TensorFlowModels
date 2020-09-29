@@ -7,24 +7,22 @@ from absl.flags import argparse_flags as _argparse_flags
 import argparse as _argparse
 
 _flags.DEFINE_boolean('weights_only', False,
-                     'Save only the weights and not the entire model.')
+                      'Save only the weights and not the entire model.')
 
 from . import DarkNetConverter
 
 
 def _makeParser(parser):
-    parser.add_argument(
-        'cfg',
-        default=None,
-        help='name of the config file. Defaults to YOLOv3',
-        type=_argparse.FileType('r'),
-        nargs='?')
-    parser.add_argument(
-        'weights',
-        default=None,
-        help='name of the weights file. Defaults to YOLOv3',
-        type=_argparse.FileType('rb'),
-        nargs='?')
+    parser.add_argument('cfg',
+                        default=None,
+                        help='name of the config file. Defaults to YOLOv3',
+                        type=_argparse.FileType('r'),
+                        nargs='?')
+    parser.add_argument('weights',
+                        default=None,
+                        help='name of the weights file. Defaults to YOLOv3',
+                        type=_argparse.FileType('rb'),
+                        nargs='?')
     parser.add_argument(
         'output', help='name of the location to save the generated model')
 
@@ -54,7 +52,6 @@ def main(argv, args=None):
 
 _parser = _argparse_flags.ArgumentParser()
 _makeParser(_parser)
-
 
 from absl import app
 import sys

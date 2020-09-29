@@ -8,7 +8,7 @@ from ._DarkSpp import DarkSpp
 class DarkRouteProcess(ks.layers.Layer):
     def __init__(self,
                  filters=2,
-                 mod = 1,
+                 mod=1,
                  repetitions=2,
                  insert_spp=False,
                  kernel_initializer='glorot_uniform',
@@ -50,7 +50,7 @@ class DarkRouteProcess(ks.layers.Layer):
         """
 
         # darkconv params
-        self._filters = filters//mod
+        self._filters = filters // mod
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
 
@@ -79,45 +79,42 @@ class DarkRouteProcess(ks.layers.Layer):
         return layer_config
 
     def _block(self, filters):
-        x1 = DarkConv(
-            filters=filters // 2,
-            kernel_size=(1,1),
-            strides=(1,1),
-            padding="same",
-            use_bn= True,
-            kernel_initializer=self._kernel_initializer,
-            bias_initializer=self._bias_initializer,
-            norm_moment=self._norm_moment,
-            norm_epsilon=self._norm_epsilon,
-            activation=self._activation,
-            leaky_alpha=self._leaky_alpha)
-        x2 = DarkConv(
-            filters=filters,
-            kernel_size=(3,3),
-            strides=(1,1),
-            padding="same",
-            use_bn= True,
-            kernel_initializer=self._kernel_initializer,
-            bias_initializer=self._bias_initializer,
-            norm_moment=self._norm_moment,
-            norm_epsilon=self._norm_epsilon,
-            activation=self._activation,
-            leaky_alpha=self._leaky_alpha)
+        x1 = DarkConv(filters=filters // 2,
+                      kernel_size=(1, 1),
+                      strides=(1, 1),
+                      padding="same",
+                      use_bn=True,
+                      kernel_initializer=self._kernel_initializer,
+                      bias_initializer=self._bias_initializer,
+                      norm_moment=self._norm_moment,
+                      norm_epsilon=self._norm_epsilon,
+                      activation=self._activation,
+                      leaky_alpha=self._leaky_alpha)
+        x2 = DarkConv(filters=filters,
+                      kernel_size=(3, 3),
+                      strides=(1, 1),
+                      padding="same",
+                      use_bn=True,
+                      kernel_initializer=self._kernel_initializer,
+                      bias_initializer=self._bias_initializer,
+                      norm_moment=self._norm_moment,
+                      norm_epsilon=self._norm_epsilon,
+                      activation=self._activation,
+                      leaky_alpha=self._leaky_alpha)
         return [x1, x2]
 
     def _spp(self, filters):
-        x1 = DarkConv(
-            filters=filters // 2,
-            kernel_size=(1,1),
-            strides=(1,1),
-            padding="same",
-            use_bn= True,
-            kernel_initializer=self._kernel_initializer,
-            bias_initializer=self._bias_initializer,
-            norm_moment=self._norm_moment,
-            norm_epsilon=self._norm_epsilon,
-            activation=self._activation,
-            leaky_alpha=self._leaky_alpha)
+        x1 = DarkConv(filters=filters // 2,
+                      kernel_size=(1, 1),
+                      strides=(1, 1),
+                      padding="same",
+                      use_bn=True,
+                      kernel_initializer=self._kernel_initializer,
+                      bias_initializer=self._bias_initializer,
+                      norm_moment=self._norm_moment,
+                      norm_epsilon=self._norm_epsilon,
+                      activation=self._activation,
+                      leaky_alpha=self._leaky_alpha)
         # repalce with spp
         x2 = DarkSpp([5, 9, 13])
         return [x1, x2]
@@ -155,11 +152,10 @@ class DarkRouteProcess(ks.layers.Layer):
             "norm_moment": self._norm_moment,
             "norm_epsilon": self._norm_epsilon,
             "leaky_alpha": self._leaky_alpha,
-            "activation":self._activation,
+            "activation": self._activation,
         }
         layer_config.update(super().get_config())
         return layer_config
-
 
 
 # x = tf.ones(shape = (1, 200, 200, 30))

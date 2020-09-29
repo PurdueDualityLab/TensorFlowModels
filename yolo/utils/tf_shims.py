@@ -5,6 +5,7 @@ of TensorFlow even on older versions.
 
 from tensorflow import keras as ks
 
+
 def ks_Model___updated_config(self):
     '''
     You can use this shim to update an internal TensorFlow function to fix their

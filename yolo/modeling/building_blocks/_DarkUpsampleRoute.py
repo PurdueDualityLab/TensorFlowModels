@@ -6,21 +6,22 @@ from ._DarkConv import DarkConv
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkUpsampleRoute(ks.layers.Layer):
-    def __init__(self,
-                 filters=1,
-                 use_bias=True,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 bias_regularizer=None,
-                 l2_regularization=5e-4,  # default find where is it is stated
-                 use_bn=True,
-                 use_sync_bn=False,
-                 norm_moment=0.99,
-                 norm_epsilon=0.001,
-                 conv_activation='leaky',
-                 leaky_alpha=0.1,
-                 upsampling_size=(2, 2),
-                 **kwargs):
+    def __init__(
+            self,
+            filters=1,
+            use_bias=True,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            bias_regularizer=None,
+            l2_regularization=5e-4,  # default find where is it is stated
+            use_bn=True,
+            use_sync_bn=False,
+            norm_moment=0.99,
+            norm_epsilon=0.001,
+            conv_activation='leaky',
+            leaky_alpha=0.1,
+            upsampling_size=(2, 2),
+            **kwargs):
 
         # darkconv params
         self._filters = filters
@@ -65,7 +66,7 @@ class DarkUpsampleRoute(ks.layers.Layer):
     def call(self, inputs):
         # done this way to prevent confusion in the auto graph
         inputToConvolve, inputRouted = inputs
-        
+
         x = self._conv(inputToConvolve)
         x = self._upsample(x)
         x = self._concat([x, inputRouted])

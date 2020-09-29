@@ -10,12 +10,12 @@ from typing import Dict, List
 if sys.version_info < (3, 10):
     # shim for Python 3.9 and older
     from more_itertools import zip_equal
+
     def zip(*iterables, strict=False):
         if strict:
             return zip_equal(*iterables)
         else:
             return __builtins__.zip(*iterables)
-
 
 
 def _parseValue(key, val):
@@ -28,7 +28,7 @@ def _parseValue(key, val):
         if key == 'anchors':
             # Group the anchors list into pairs
             # https://docs.python.org/3.10/library/functions.html#zip
-            raw_list = list(zip(*[iter(raw_list)]*2, strict=True))
+            raw_list = list(zip(*[iter(raw_list)] * 2, strict=True))
         return raw_list
     else:
         if '.' in val:
@@ -50,7 +50,7 @@ class multidict(collections.OrderedDict):
 
     From: https://stackoverflow.com/a/9888814
     """
-    _unique = 0   # class variable
+    _unique = 0  # class variable
 
     def __setitem__(self, key, val):
         if isinstance(val, dict):
@@ -65,7 +65,10 @@ class multidict(collections.OrderedDict):
 
 class DNConfigParser(configparser.RawConfigParser):
     def __init__(self, **kwargs):
-        super().__init__(defaults=None, dict_type=multidict, strict=False, **kwargs)
+        super().__init__(defaults=None,
+                         dict_type=multidict,
+                         strict=False,
+                         **kwargs)
 
     def as_list(self) -> List[Dict[str, str]]:
         """

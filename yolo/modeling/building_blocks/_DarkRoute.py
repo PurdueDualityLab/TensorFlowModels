@@ -6,21 +6,22 @@ from ._DarkConv import DarkConv
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkRoute(ks.layers.Layer):
-    def __init__(self,
-                 filters=1,
-                 use_bias=True,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 bias_regularizer=None,
-                 l2_regularization=5e-4,  # default find where is it is stated
-                 use_bn=True,
-                 use_sync_bn=False,
-                 norm_moment=0.99,
-                 norm_epsilon=0.001,
-                 conv_activation='leaky',
-                 leaky_alpha=0.1,
-                 downsample=False, 
-                 **kwargs):
+    def __init__(
+            self,
+            filters=1,
+            use_bias=True,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            bias_regularizer=None,
+            l2_regularization=5e-4,  # default find where is it is stated
+            use_bn=True,
+            use_sync_bn=False,
+            norm_moment=0.99,
+            norm_epsilon=0.001,
+            conv_activation='leaky',
+            leaky_alpha=0.1,
+            downsample=False,
+            **kwargs):
 
         # darkconv params
         self._filters = filters
@@ -46,32 +47,32 @@ class DarkRoute(ks.layers.Layer):
     def build(self, input_shape):
         if self._downsample:
             self._conv = DarkConv(filters=self._filters,
-                                kernel_size=(3, 3),
-                                strides=(2, 2),
-                                padding='same',
-                                use_bias=self._use_bias,
-                                kernel_initializer=self._kernel_initializer,
-                                bias_initializer=self._bias_initializer,
-                                use_bn=self._use_bn,
-                                use_sync_bn=self._use_sync_bn,
-                                norm_moment=self._norm_moment,
-                                norm_epsilon=self._norm_epsilon,
-                                activation=self._conv_activation,
-                                leaky_alpha=self._leaky_alpha)
+                                  kernel_size=(3, 3),
+                                  strides=(2, 2),
+                                  padding='same',
+                                  use_bias=self._use_bias,
+                                  kernel_initializer=self._kernel_initializer,
+                                  bias_initializer=self._bias_initializer,
+                                  use_bn=self._use_bn,
+                                  use_sync_bn=self._use_sync_bn,
+                                  norm_moment=self._norm_moment,
+                                  norm_epsilon=self._norm_epsilon,
+                                  activation=self._conv_activation,
+                                  leaky_alpha=self._leaky_alpha)
         else:
             self._conv = DarkConv(filters=self._filters,
-                                    kernel_size=(1, 1),
-                                    strides=(1, 1),
-                                    padding='same',
-                                    use_bias=self._use_bias,
-                                    kernel_initializer=self._kernel_initializer,
-                                    bias_initializer=self._bias_initializer,
-                                    use_bn=self._use_bn,
-                                    use_sync_bn=self._use_sync_bn,
-                                    norm_moment=self._norm_moment,
-                                    norm_epsilon=self._norm_epsilon,
-                                    activation=self._conv_activation,
-                                    leaky_alpha=self._leaky_alpha)
+                                  kernel_size=(1, 1),
+                                  strides=(1, 1),
+                                  padding='same',
+                                  use_bias=self._use_bias,
+                                  kernel_initializer=self._kernel_initializer,
+                                  bias_initializer=self._bias_initializer,
+                                  use_bn=self._use_bn,
+                                  use_sync_bn=self._use_sync_bn,
+                                  norm_moment=self._norm_moment,
+                                  norm_epsilon=self._norm_epsilon,
+                                  activation=self._conv_activation,
+                                  leaky_alpha=self._leaky_alpha)
         self._concat = tf.keras.layers.Concatenate()
         super().build(input_shape)
         return

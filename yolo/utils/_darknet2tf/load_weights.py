@@ -5,10 +5,12 @@ format into TensorFlow layers
 import itertools
 from tensorflow import keras as ks
 
+
 def split_converter(lst, i, j=None):
     if j is None:
         return lst.data[:i], lst.data[i:]
     return lst.data[:i], lst.data[i:j], lst.data[j:]
+
 
 def interleve_weights(block):
     """merge weights to fit the DarkResnet block style"""
@@ -51,6 +53,7 @@ def get_darknet53_tf_format(net, only_weights=True):
     print("converted/interleved weights for tensorflow format")
     return new_net, weights
 
+
 def get_tiny_tf_format(encoder):
     weights = []
     for layer in encoder:
@@ -58,7 +61,8 @@ def get_tiny_tf_format(encoder):
             weights.append(layer.get_weights())
     return encoder, weights
 
-def load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
+
+def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
     # get weights for backbone
     if mtype == "darknet53":
         encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
@@ -66,7 +70,9 @@ def load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
         encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
     # set backbone weights
-    print(f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}")
+    print(
+        f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}"
+    )
     set_darknet_weights(backbone, weights_encoder)
 
     backbone.trainable = False
@@ -76,9 +82,12 @@ def load_weights_dnBackbone(backbone, encoder, mtype = "darknet53"):
 
 def load_weights_dnHead(head, decoder):
     # get weights for head
-    decoder, weights_decoder, head_layers, head_weights = get_decoder_weights(decoder)
+    decoder, weights_decoder, head_layers, head_weights = get_decoder_weights(
+        decoder)
     # set detection head weights
-    print(f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}")
+    print(
+        f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}"
+    )
     flat_full = list(flatten_model(head))
     flat_main = flat_full[:-3]
     flat_head = flat_full[-3:]
@@ -90,6 +99,7 @@ def load_weights_dnHead(head, decoder):
     print(f"\nsetting head.trainable to: {head.trainable}\n")
     return
 
+
 # DEBUGGING
 def print_layer_shape(layer):
     try:
@@ -100,6 +110,7 @@ def print_layer_shape(layer):
         print(item.shape)
     return
 
+
 def flatten_model(model):
     for layer in model.layers:
         if isinstance(model, ks.Model):
@@ -107,25 +118,33 @@ def flatten_model(model):
         else:
             yield layer
 
+
 def set_darknet_weights_head(flat_head, weights_head):
     for layer in flat_head:
         weights = layer.get_weights()
         weight_depth = weights[0].shape[-2]
         for weight in weights_head:
             if weight[0].shape[-2] == weight_depth:
-                print(f"loaded weights for layer: head layer with depth {weight_depth}  -> name: {layer.name}",sep='      ',end="\r")
+                print(
+                    f"loaded weights for layer: head layer with depth {weight_depth}  -> name: {layer.name}",
+                    sep='      ',
+                    end="\r")
                 layer.set_weights(weight)
     return
 
-def set_darknet_weights(model, weights_list, flat_model = None):
+
+def set_darknet_weights(model, weights_list, flat_model=None):
     if flat_model == None:
         zip_fill = flatten_model(model)
     else:
         zip_fill = flat_model
     for i, (layer, weights) in enumerate(zip(zip_fill, weights_list)):
-        print(f"loaded weights for layer: {i}  -> name: {layer.name}",sep='      ',end="\r")
+        print(f"loaded weights for layer: {i}  -> name: {layer.name}",
+              sep='      ',
+              end="\r")
         layer.set_weights(weights)
     return
+
 
 def split_decoder(lst):
     decoder = []
@@ -137,6 +156,7 @@ def split_decoder(lst):
         else:
             decoder.append(layer)
     return decoder, outputs
+
 
 def get_decoder_weights(decoder):
     layers = [[]]
@@ -150,7 +170,8 @@ def get_decoder_weights(decoder):
         if layer._type == "route" and decoder[i - 1]._type != 'maxpool':
             layers.append(block)
             block = []
-        elif (layer._type == "route" and decoder[i - 1]._type == "maxpool") or layer._type == "maxpool":
+        elif (layer._type == "route" and decoder[i - 1]._type
+              == "maxpool") or layer._type == "maxpool":
             continue
         elif layer._type == "convolutional":
             block.append(layer)

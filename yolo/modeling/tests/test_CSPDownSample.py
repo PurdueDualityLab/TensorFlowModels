@@ -16,7 +16,11 @@ class CSPDownSample(tf.test.TestCase, parameterized.TestCase):
         outx, px = test_layer(x)
         print(outx)
         print(outx.shape.as_list())
-        self.assertAllEqual(outx.shape.as_list(), [None, np.ceil(width //2 ), np.ceil(height // 2), (filters/mod)])
+        self.assertAllEqual(
+            outx.shape.as_list(),
+            [None,
+             np.ceil(width // 2),
+             np.ceil(height // 2), (filters / mod)])
         return
 
     @parameterized.named_parameters(("same", 224, 224, 64, 1),
@@ -28,11 +32,10 @@ class CSPDownSample(tf.test.TestCase, parameterized.TestCase):
         path_layer = layer_companion(filters, filter_reduce=mod)
 
         init = tf.random_normal_initializer()
-        x = tf.Variable(initial_value=init(
-            shape=(1, width, height, filters), dtype=tf.float32))
-        y = tf.Variable(initial_value=init(shape=(1,
-                                                  int(np.ceil(width //2)),
-                                                  int(np.ceil(height //2)),
+        x = tf.Variable(initial_value=init(shape=(1, width, height, filters),
+                                           dtype=tf.float32))
+        y = tf.Variable(initial_value=init(shape=(1, int(np.ceil(width // 2)),
+                                                  int(np.ceil(height // 2)),
                                                   filters),
                                            dtype=tf.float32))
 

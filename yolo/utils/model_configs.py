@@ -1,2 +1,2 @@
-import tensorflow as tf 
-import dataclasses 
+import tensorflow as tf
+import dataclasses
