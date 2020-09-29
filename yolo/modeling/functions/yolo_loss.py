@@ -2,7 +2,6 @@ import tensorflow as tf
 import tensorflow.keras as ks
 from tensorflow.keras import backend as K
 import tensorflow_datasets as tfds
-from yolo.modeling.yolo_v3 import Yolov3
 from yolo.utils.iou_utils import *
 from yolo.utils.loss_utils import GridGenerator
 
