@@ -96,18 +96,9 @@ class Yolo_Loss(ks.losses.Loss):
 
     def call(self, y_true, y_pred):
         #1. generate and store constants and format output
-<<<<<<< HEAD
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
         grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype = y_pred.dtype)
-=======
-        batch_size = tf.cast(tf.shape(y_pred)[0], dtype = tf.int32)
-        width = tf.cast(tf.shape(y_pred)[1], dtype = tf.int32)
-        height = tf.cast(tf.shape(y_pred)[2], dtype = tf.int32)
-        grid_points = self._get_centers(width, height, batch_size)
-        anchor_grid = self._get_anchor_grid(width, height, batch_size)
-
->>>>>>> master
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
         y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, tf.shape(y_pred), self._use_tie_breaker)
         
@@ -124,14 +115,9 @@ class Yolo_Loss(ks.losses.Loss):
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
         true_xy = K.concatenate([K.expand_dims(true_xy[..., 0] * fwidth, axis = -1), K.expand_dims(true_xy[..., 1] * fheight, axis = -1)], axis = -1)
-<<<<<<< HEAD
         true_wh = tf.math.log(y_true[..., 2:4]/anchor_grid)
         true_wh = tf.where(tf.math.is_nan(true_wh), tf.cast(0.0, dtype = y_pred.dtype), true_wh)
         true_wh = tf.where(tf.math.is_inf(true_wh), tf.cast(0.0, dtype = y_pred.dtype), true_wh)
-=======
-        true_wh = tf.math.log(tf.math.divide_no_nan(y_true[..., 2:4],(anchor_grid + 1.0e-16)))
-        #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing
->>>>>>> master
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
 
@@ -140,14 +126,6 @@ class Yolo_Loss(ks.losses.Loss):
         box_wh = tf.math.exp(pred_wh) * anchor_grid
         pred_box = K.concatenate([box_xy, box_wh], axis = -1)        
         true_box = y_true[..., 0:4]
-<<<<<<< HEAD
-=======
-        iou = box_iou(true_box, pred_box, dtype = self.dtype) 
-        #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing  
-        #iou = tf.where(tf.math.is_nan(iou), zeros[..., 0], iou)
-        #iou = tf.where(tf.math.is_inf(iou), zeros[..., 0], iou)
-        mask_iou = tf.cast(iou < self._ignore_thresh, dtype = self.dtype)
->>>>>>> master
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         if self._loss_type == "giou":
@@ -170,15 +148,6 @@ class Yolo_Loss(ks.losses.Loss):
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis = -1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis = -1)
             loss_box = (loss_wh + loss_xy) * true_conf * scale 
-<<<<<<< HEAD
-=======
-        else:
-            giou_loss = giou(true_box, pred_box, dtype = self.dtype)
-            #graph profiler cant optimize these tf.where statments you get NHWCtoNCWH failed or some thing, i think because of the loss being a tesnor and 0 being a value?
-            #giou_loss = tf.where(tf.math.is_nan(giou_loss), zeros[..., 0], giou_loss)
-            #giou_loss = tf.where(tf.math.is_inf(giou_loss), zeros[..., 0], giou_loss)
-            loss_box = (1 - giou_loss) * self._iou_normalizer * true_conf
->>>>>>> master
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth 
         class_loss = self._cls_normalizer * tf.reduce_sum(ks.losses.binary_crossentropy(K.expand_dims(true_class, axis = -1), K.expand_dims(pred_class, axis = -1)), axis= -1) * true_conf
@@ -188,15 +157,9 @@ class Yolo_Loss(ks.losses.Loss):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-<<<<<<< HEAD
         loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = y_pred.dtype))
         conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = y_pred.dtype))
         class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = y_pred.dtype))
-=======
-        loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype = self.dtype)
-        conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype = self.dtype)
-        class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype = self.dtype)
->>>>>>> master
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
         loss = class_loss + conf_loss + loss_box
@@ -222,32 +185,8 @@ class Yolo_Loss(ks.losses.Loss):
     def get_box_loss(self):
         return self._loss_box
 
-<<<<<<< HEAD
     def get_confidence_loss(self):
         return self._conf_loss
-=======
-        #debug
-        # if loss > 100 and batch_size == 1:
-        # tf.print("iou recall75:, ", tf.reduce_sum(tf.cast(iou > 0.75, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
-        # tf.print("iou recall50:, ", tf.reduce_sum(tf.cast(iou > 0.5, dtype = self.dtype) * true_conf)/tf.reduce_sum(true_conf + 0.0000001))
-        
-        # mask = tf.reduce_any(K.expand_dims(true_conf, axis = -1) > tf.cast(0, dtype = self.dtype), axis= -1)
-        # #mask = tf.reduce_any(mask, axis= 0) 
-        # mask_best = tf.reduce_any(K.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis = -1) > tf.cast(0.5, dtype = self.dtype), axis= -1)
-        # #mask_best = tf.reduce_any(mask_best, axis= 0) 
-        # tf.print(tf.shape(mask_best))
-        # bridge = 1
-        # for batch in range(batch_size):
-        #     tf.print("\npred high: ", tf.boolean_mask(pred_box, mask_best[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("pred: ", tf.boolean_mask(pred_box, mask[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("true: ", tf.boolean_mask(true_box, mask[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("pred objness high: ", tf.boolean_mask(pred_conf , mask_best[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("pred objness: ", tf.boolean_mask(pred_conf , mask[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("x_y high: ", tf.boolean_mask(grid_points * fwidth, mask_best[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("x_y: ", tf.boolean_mask(grid_points * fwidth, mask[batch], axis = 1)[batch, :bridge, :])
-        #     tf.print("objness loss", conf_loss)
-        return loss
->>>>>>> master
 
     def get_config(self):
         """save all loss attributes"""

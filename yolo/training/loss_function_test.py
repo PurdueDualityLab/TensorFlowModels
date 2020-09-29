@@ -18,22 +18,16 @@ import numpy as np
 from absl import app
 import time 
 
-<<<<<<< HEAD
 from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names
 prep_gpu()
 
 from yolo.dataloaders.YoloParser import YoloParser
 
-=======
-from yolo.utils.testing_utils import prep_gpu, prep_gpu_limited, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names, load_loss
-
->>>>>>> master
 def lr_schedule(epoch, lr):
     if epoch == 60 or epoch == 90:
         lr = lr/10
     return lr
 
-<<<<<<< HEAD
 def gt_test():
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
@@ -51,17 +45,6 @@ def gt_test():
         box, classif = partial_model(label)
         pred = pred_model(image)
         item = model(image)
-=======
-def lr_schedule2(epoch, lr):
-    if epoch == 2 or epoch == 3:
-        lr = lr/10
-    return lr
-
-def loss_test(model_name = "regular"):
-    #very large probelm, pre processing fails when you start batching
-    model, loss_fn, anchors, masks = build_model_partial(name=model_name, ltype = "giou", use_mixed= False, split="train", batch_size= 1, load_head = False, fixed_size= True)
-    #model._head.trainable = True
->>>>>>> master
 
         #image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
         #image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
@@ -81,7 +64,6 @@ def loss_test(model_name = "regular"):
         i += 1
     return
 
-<<<<<<< HEAD
 def get_dataset(batch_size = 10):
     import tensorflow_datasets as tfds
     from yolo.dataloaders.YoloParser import YoloParser
@@ -118,9 +100,6 @@ def get_dataset(batch_size = 10):
     return train, test
 
 def loss_test_(model_name = "regular"):
-=======
-def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
->>>>>>> master
     #very large probelm, pre processing fails when you start batching
     prep_gpu_limited(gb = 8)
     from yolo.dataloaders.preprocessing_functions import preprocessing
@@ -143,10 +122,6 @@ def loss_test_eager(model_name = "regular", batch_size = 32, epochs = 270):
         test = dataset.skip(size//batch_size)
 
         map_50 = YoloMAP_recall(name = "recall")
-<<<<<<< HEAD
-=======
-        Detection_50 = YoloMAP(name = "Det")
->>>>>>> master
     
     optimizer = ks.optimizers.SGD(lr=1e-3, momentum=0.9)
     callbacks = [ks.callbacks.LearningRateScheduler(lr_schedule)]#, tf.keras.callbacks.TensorBoard(log_dir="./logs", update_freq = 200)]
@@ -193,12 +168,8 @@ def loss_test_fast(model_name = "regular", batch_size = 5, epochs = 3):
         model.fit(train, validation_data=test, shuffle=True, callbacks=callbacks, epochs = epochs)
         model.save_weights("weights/train_test_desk_fast_1")
     except KeyboardInterrupt:
-<<<<<<< HEAD
         model.save_weights("weights/train_test_1")
         
-=======
-        model.save_weights("weights/train_test_desk_fast_exit_early_1")
->>>>>>> master
     return
 
 def loss_test():
@@ -219,13 +190,8 @@ def loss_test():
 
 
 def main(argv, args = None):
-<<<<<<< HEAD
     loss_test()
     #loss_test_eager()
-=======
-    #loss_test_fast(model_name = "regular")
-    loss_test_eager()
->>>>>>> master
     #gt_test()
     return
 
