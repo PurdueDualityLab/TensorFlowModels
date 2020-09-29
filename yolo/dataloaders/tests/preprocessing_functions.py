@@ -9,8 +9,6 @@ import time
 import tensorflow.keras.backend as K
 
 
-<<<<<<< HEAD:yolo/dataloaders/tests/preprocessing_functions.py
-=======
 # Global Variable to introduce randomness among each element of a batch
 RANDOM_SEED = tf.random.Generator.from_seed(int(np.random.uniform(low=300, high=9000)))
 
@@ -43,7 +41,6 @@ def py_func_rand():
     jitter_bh = np.random.uniform(low = -.05, high = .05) + 1.0
     return jitter_x, jitter_y, jitter_cx, jitter_cy, jitter_bw, jitter_bh, randscale 
 
->>>>>>> master:yolo/dataloaders/preprocessing_functions.py
 @tf.function
 def build_grided_gt(y_true, mask, size):
     """
@@ -78,10 +75,7 @@ def build_grided_gt(y_true, mask, size):
             if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)):
                 continue
             if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(tf.math.greater_equal(y_true[batch, box_id, 0:2], 1.0)): 
-<<<<<<< HEAD:yolo/dataloaders/tests/preprocessing_functions.py
-=======
                 #tf.print("outer vals: ",y_true[batch, box_id, 0:2])
->>>>>>> master:yolo/dataloaders/preprocessing_functions.py
                 continue
             index = tf.math.equal(anchors[batch, box_id], mask)
             if K.any(index):
@@ -235,10 +229,7 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
         image_jitter.set_shape([2])
         image = tfa.image.translate(image, image_jitter * tf.cast(tf.shape(image)[1], tf.float32))
         # Bounding Box Jitter
-<<<<<<< HEAD:yolo/dataloaders/tests/preprocessing_functions.py
-=======
         #tf.print(tf.shape(label))
->>>>>>> master:yolo/dataloaders/preprocessing_functions.py
         x = tf.math.add(label[..., 0], jitter_x + jitter_cx)
         x = tf.expand_dims(x, axis = -1)
         y = tf.math.add(label[..., 1], jitter_y + jitter_cy)
@@ -250,10 +241,6 @@ def _detection_data_augmentation(image, label, masks, fixed_size = True, jitter_
 
         rest = label[..., 4:]
         label = tf.concat([x,y,w,h,rest], axis = -1)
-<<<<<<< HEAD:yolo/dataloaders/tests/preprocessing_functions.py
-    
-=======
->>>>>>> master:yolo/dataloaders/preprocessing_functions.py
     # Other Data Augmentation
     image = tf.image.resize(image, size = (randscale * 32, randscale * 32)) # Random Resize
     image = tf.image.random_brightness(image=image, max_delta=.1) # Brightness
@@ -356,11 +343,7 @@ def _detection_normalize(data, anchors, width, height):
     image = image / 255 # Normalize
     return image, label
 
-<<<<<<< HEAD:yolo/dataloaders/tests/preprocessing_functions.py
-def preprocessing(dataset, num_of_classes, batch_size, size, data_augmentation_split = 100, preprocessing_type = "detection", shuffle_flag = False, anchors = None, masks = None, fixed = False, jitter = False):
-=======
 def preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag = False, anchors = None, masks = None, fixed = False, jitter = False):
->>>>>>> master:yolo/dataloaders/preprocessing_functions.py
     """Preprocesses (normalization and data augmentation) and batches the dataset.
     Args:
         dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
