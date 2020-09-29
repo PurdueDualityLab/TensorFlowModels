@@ -32,6 +32,7 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
             break
         box = boxes[i]
 
+<<<<<<< HEAD
         if type(conf) == type(None):
             cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors, 1)
         else:
@@ -51,6 +52,38 @@ def build_model(name = "regular", model_version = "v3", classes = 80, use_mixed 
         model = Yolov4(classes = classes, model = name, input_shape=(batch_size, w, h, 3), policy=policy)
         model.set_prediction_filter(use_mixed=False)
         model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_neck = load_head, dn2tf_head = load_head)
+=======
+    if use_mixed:
+        from tensorflow.keras.mixed_precision import experimental as mixed_precision
+        # using mixed type policy give better performance than strictly float32
+        policy = mixed_precision.Policy('mixed_float16')
+        mixed_precision.set_policy(policy)
+        print('Compute dtype: %s' % policy.compute_dtype)
+        print('Variable dtype: %s' % policy.variable_dtype)
+        dtype = policy.compute_dtype
+    else:
+        dtype = tf.float32
+
+    if name != "tiny":
+        masks = {"1024": [6,7,8], "512":[3,4,5], "256":[0,1,2]}
+        anchors = [(10,13),  (16,30),  (33,23), (30,61),  (62,45),  (59,119), (116,90),  (156,198),  (373,326)]
+        thresh = 0.5
+        class_thresh = 0.5
+        scale = 1
+    else:
+        masks = {"1024": [3,4,5], "256": [0,1,2]}
+        anchors = [(10,14),  (23,27),  (37,58), (81,82),  (135,169),  (344,319)]
+        thresh = 0.45
+        class_thresh = 0.45
+        scale = 1
+    max_boxes = 200
+
+    model = Yolov3(classes = classes, boxes = boxes, type = name, input_shape=(batch_size, w, h, 3))
+    #tf.keras.utils.plot_model(model._head, to_file='model.png', show_shapes=True, show_layer_names=True,rankdir='TB', expand_nested=False, dpi=96)
+    if not saved: 
+        model.load_weights_from_dn(dn2tf_backbone = True, dn2tf_head = True, weights_file=f"yolov3-{name}.weights")
+
+>>>>>>> master
 
     
     return model
@@ -83,14 +116,24 @@ def prep_gpu(distribution = None):
     print(f"\n!--PREPPING GPU--! with stratagy {distribution}")
     traceback.print_stack()
     if distribution == None:
+<<<<<<< HEAD
         gpus = list_physical_devices('GPU')
+=======
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        print(gpus)
+>>>>>>> master
         if gpus:
             try:
                 # Currently, memory growth needs to be the same across GPUs
                 for gpu in gpus:
                     tf.config.experimental.set_memory_growth(gpu, True)
+<<<<<<< HEAD
                     logical_gpus = list_logical_devices('GPU')
                     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+=======
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+>>>>>>> master
             except RuntimeError as e:
                 # Memory growth must be set before GPUs have been initialized
                 print(e)
@@ -98,6 +141,42 @@ def prep_gpu(distribution = None):
         print()
     return
 
+<<<<<<< HEAD
+=======
+def prep_gpu_limited(gb = 8):
+    print(f"\n!--PREPPING GPU--! with limit: {gb}")
+    traceback.print_stack()
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    print(gpus)
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_virtual_device_configuration(gpu, [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*gb)])
+            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
+            raise
+    print()
+    return
+
+def load_loss(masks, anchors, scale, ltype = "mse", dtype = tf.float32):
+    from yolo.modeling.functions.yolo_loss import Yolo_Loss
+    loss_dict = {}
+    for key in masks.keys():
+        loss_dict[key] = Yolo_Loss(mask = masks[key],
+                            anchors = anchors,
+                            scale_anchors = scale, 
+                            ignore_thresh = 0.7,
+                            truth_thresh = 1, 
+                            loss_type=ltype, 
+                            dtype=dtype)
+    print(loss_dict)
+    return loss_dict
+
+>>>>>>> master
 def int_scale_boxes(boxes, classes, width, height):
     boxes = K.stack([tf.cast(boxes[..., 1] * width, dtype = tf.int32),tf.cast(boxes[..., 3] * width, dtype = tf.int32), tf.cast(boxes[..., 0] * height, dtype = tf.int32), tf.cast(boxes[..., 2] * height, dtype = tf.int32)], axis = -1)
     classes = tf.cast(classes, dtype = tf.int32)

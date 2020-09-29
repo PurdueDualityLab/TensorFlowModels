@@ -123,7 +123,11 @@ class FastVideo(object):
             print(model)
             prep_gpu()
             with tf.device(self._gpu_device):
+<<<<<<< HEAD:yolo/demos/video_detect_gpu.py
                 model = build_model(name = model, model_version = self._model_version , w = self._p_width, h = self._p_height, saved = False, use_mixed=True) 
+=======
+                model = build_model(name = model, w = self._p_width, h = self._p_height) 
+>>>>>>> master:yolo/demos_testing/video_detect_gpu.py
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -350,6 +354,7 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD:yolo/demos/video_detect_gpu.py
     # prep_gpu()
     # from yolo.modeling.yolo_v4 import Yolov4
     # model = Yolov4(classes = 80, model = 'regular')
@@ -360,4 +365,7 @@ if __name__ == "__main__":
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
     cap = FastVideo("test1.mp4", model = "regular", model_version = "v4", process_width=416, process_height=416, preprocess_with_gpu=False)
+=======
+    cap = FastVideo("test2.mp4", model = "regular", process_width=416, process_height=416, preprocess_with_gpu=False)
+>>>>>>> master:yolo/demos_testing/video_detect_gpu.py
     cap.run()
