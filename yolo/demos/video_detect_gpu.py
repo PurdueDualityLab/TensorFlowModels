@@ -11,7 +11,13 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
+from yolo.utils.testing_utils import support_windows 
+from yolo.utils.testing_utils import prep_gpu
+from yolo.utils.testing_utils import build_model 
+from yolo.utils.testing_utils import draw_box
+from yolo.utils.testing_utils import int_scale_boxes 
+from yolo.utils.testing_utils import gen_colors 
+from yolo.utils.testing_utils import get_coco_names
 
 
 class FastVideo(object):
@@ -62,6 +68,7 @@ class FastVideo(object):
                  process_height=416,
                  classes=80,
                  labels=None,
+                 max_batch = None, 
                  preprocess_with_gpu=False, 
                  policy = "float16",
                  gpu_device="/GPU:0",
@@ -93,20 +100,23 @@ class FastVideo(object):
         self._model = self._load_model(model)
 
         # fast but as close to one 2 one as possible
-        if file_name == 0:
-            self._batch_size = 5  # 40 fps more conistent frame to frame
-        else:
-            # faster but more potential for delay from input to output
-            if tf.keras.mixed_precision.experimental.global_policy(
-            ).name == "mixed_float16" or tf.keras.mixed_precision.experimental.global_policy(
-            ).name == "float16":
-                #self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
-                self._batch_size = 5
+        if max_batch == None:
+            if file_name == 0:
+                self._batch_size = 5  # 40 fps more conistent frame to frame
             else:
-                self._batch_size = 3
+                # faster but more potential for delay from input to output
+                if tf.keras.mixed_precision.experimental.global_policy(
+                ).name == "mixed_float16" or tf.keras.mixed_precision.experimental.global_policy(
+                ).name == "float16":
+                    #self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
+                    self._batch_size = 5
+                else:
+                    self._batch_size = 3
 
-            if process_width > 416 or process_height > 416:
-                self._batch_size = 3
+                if process_width > 416 or process_height > 416:
+                    self._batch_size = 3
+        else:
+            self._batch_size = max_batch
 
         self._colors = gen_colors(self._classes)
 
@@ -117,7 +127,7 @@ class FastVideo(object):
             self._labels = labels
 
         self._load_que = Queue(self._batch_size)
-        self._display_que = Queue(self._batch_size)
+        self._display_que = Queue(1)#self._batch_size)
         self._running = True
         self._wait_time = 0.01
 
@@ -384,7 +394,7 @@ class FastVideo(object):
             self.print_opt()
             print("\n\n\n\n\n::: Video File Complete :::")
             self._running = False
-            time.sleep(10)
+            time.sleep(5)
             
 
             # join the laoding thread and diplay thread
@@ -424,19 +434,19 @@ class FastVideo(object):
 
 if __name__ == "__main__":
     # prep_gpu()
-    # from yolo.modeling.yolo_v4 import Yolov4
+    # from yolo.modeling.Yolov4 import Yolov4
     # model = Yolov4(classes = 80, model = 'regular')
-    # model.load_weights_from_dn(True, True, True)
-    # model.set_prediction_filter(use_mixed=True, scale_boxes=416)
-    # model.make_predict_function()
+    # model.load_weights_from_dn()
+    
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo("test4.mp4",
-                    model="regular",
+    cap = FastVideo(0,
+                    model="spp",
                     model_version="v3",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
+                    max_batch = 5, 
                     policy="float16")
     cap.run()

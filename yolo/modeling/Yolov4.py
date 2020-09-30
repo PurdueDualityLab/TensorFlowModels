@@ -14,7 +14,7 @@ from yolo.utils._darknet2tf.load_weights import split_converter
 from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
 
 from yolo.utils.testing_utils import prep_gpu
-prep_gpu()
+# prep_gpu()
 from yolo.dataloaders.YoloParser import YoloParser
 
 
@@ -342,7 +342,7 @@ if __name__ == "__main__":
     model.build(model._input_shape)
     model.load_weights_from_dn()
 
-    train, test = model.process_datasets(train, test, batch_size=20)
+    train, test = model.process_datasets(train, test, batch_size=1)
     loss_fn = model.generate_loss(loss_type="ciou")
 
     optimizer = ks.optimizers.SGD(lr=1e-3)

@@ -7,6 +7,7 @@ from .preprocessing_ops import _scale_image
 from .preprocessing_ops import _get_best_anchor
 from .preprocessing_ops import _jitter_boxes
 from .preprocessing_ops import _translate_image
+from .preprocessing_ops import _translate_boxes
 
 from .random_ops import _box_scale_rand
 from .random_ops import _jitter_rand
@@ -107,8 +108,8 @@ class YoloParser(DatasetParser):
                                 size=(randscale * self._net_down_scale,
                                       randscale * self._net_down_scale))
         image = _translate_image(image, translate_x, translate_y)
-        boxes = _jitter_boxes(data["bbox"], translate_x, translate_y, j_x, j_y,
-                              j_w, j_h)
+        boxes = _jitter_boxes(data["bbox"],  j_x, j_y, j_w, j_h)
+        boxes = _translate_boxes(boxes, translate_x, translate_y)
         label = tf.concat([boxes, data["label"], data["best_anchor"]], axis=-1)
         return {"image": image, "label": label, "bbox": data["bbox"], "classes":data["classes"]}
 

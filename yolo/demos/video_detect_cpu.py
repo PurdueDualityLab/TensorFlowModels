@@ -17,6 +17,16 @@ parser.add_argument(
     nargs='?')
 
 parser.add_argument(
+    'version',
+    metavar='version',
+    default='v3',
+    choices=('v3','v4'),
+    type=str,
+    help=
+    'version of the model. Defaults to v3. The options are ("v3", "v4")',
+    nargs='?')
+
+parser.add_argument(
     'vidpath',
     default="",
     type=str,
@@ -53,7 +63,7 @@ from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, dra
 '''Video Buffer using cv2'''
 
 
-def video_processor(model, vidpath, device="/CPU:0"):
+def video_processor(model, version , vidpath, device="/CPU:0"):
     img_array = []
 
     i = 0
@@ -62,7 +72,7 @@ def video_processor(model, vidpath, device="/CPU:0"):
     tick = 0
     e, f, a, b, c, d = 0, 0, 0, 0, 0, 0
     with tf.device(device):
-        model = build_model(name=model, use_mixed=False)
+        model = build_model(name=model, model_version=version)
         model.make_predict_function()
     colors = gen_colors(80)
     label_names = get_coco_names(
@@ -145,10 +155,12 @@ def main(argv, args=None):
             exit()
     else:
         vidpath = args.webcam
+    
+    version = args.version
 
     # NOTE: on mac use the default terminal or the program will fail
     support_windows()
-    video_processor(model, vidpath)
+    video_processor(model, version, vidpath)
     return 0
 
 

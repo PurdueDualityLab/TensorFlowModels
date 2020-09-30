@@ -12,7 +12,7 @@ from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 
 from yolo.utils.testing_utils import prep_gpu
-prep_gpu()
+# prep_gpu()
 from yolo.dataloaders.YoloParser import YoloParser
 
 
@@ -340,11 +340,11 @@ if __name__ == "__main__":
                            shuffle_files=False,
                            with_info=True)
 
-    model = Yolov3(model = "tiny", policy="float32")
+    model = Yolov3(model = "regular", policy="float32")
     model.load_weights_from_dn()
 
-    train, test = model.process_datasets(train, test, batch_size=10)
-    loss_fn = model.generate_loss(loss_type="giou")
+    train, test = model.process_datasets(train, test, batch_size=2)
+    loss_fn = model.generate_loss(loss_type="ciou")
 
     optimizer = ks.optimizers.SGD(lr=1e-3)
     model.compile(optimizer=optimizer, loss=loss_fn)

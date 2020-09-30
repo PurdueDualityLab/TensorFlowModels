@@ -68,7 +68,7 @@ def build_model(name="regular",
     else:
         from yolo.modeling.Yolov4 import Yolov4
         model = Yolov4(classes=classes,
-                       model=name,
+                       model="regular",
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
     model.load_weights_from_dn(dn2tf_backbone=True,
