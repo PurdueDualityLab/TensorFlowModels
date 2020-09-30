@@ -51,7 +51,6 @@ def draw_box(image, boxes, classes, conf, colors, label_names):
 def build_model(name="regular",
                 model_version="v3",
                 classes=80,
-                use_mixed=True,
                 w=None,
                 h=None,
                 batch_size=None,
@@ -59,8 +58,6 @@ def build_model(name="regular",
                 load_head=True,
                 policy="float32",
                 set_head=True):
-    if use_mixed:
-        policy = "mixed_float16"
 
     if model_version == "v3":
         from yolo.modeling.Yolov3 import Yolov3
@@ -128,8 +125,8 @@ def build_model_partial(name="regular",
 
 
 def prep_gpu(distribution=None):
-    print(f"\n!--PREPPING GPU--! with stratagy {distribution}")
-    traceback.print_stack()
+    print(f"\n!--PREPPING GPU--! with stratagy ")
+    #traceback.print_stack()
     if distribution == None:
         gpus = list_physical_devices('GPU')
         if gpus:

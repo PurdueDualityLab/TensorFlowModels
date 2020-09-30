@@ -10,7 +10,7 @@ from yolo.modeling.building_blocks import YoloLayer
 
 from yolo.utils.file_manager import download
 from yolo.utils import DarkNetConverter
-from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
+from yolo.utils._darknet2tf.load_weights import split_converter
 from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
 
 from yolo.utils.testing_utils import prep_gpu

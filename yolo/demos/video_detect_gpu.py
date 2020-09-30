@@ -62,8 +62,8 @@ class FastVideo(object):
                  process_height=416,
                  classes=80,
                  labels=None,
-                 preprocess_with_gpu=False,
-                 use_mixed = False, 
+                 preprocess_with_gpu=False, 
+                 policy = "float16",
                  gpu_device="/GPU:0",
                  preprocess_gpu="/GPU:0"):
         self._cap = cv2.VideoCapture(file_name)
@@ -89,7 +89,7 @@ class FastVideo(object):
         self._p_width = process_width
         self._p_height = process_height
         self._model_version = model_version
-        self._use_mixed = use_mixed
+        self._policy = policy
         self._model = self._load_model(model)
 
         # fast but as close to one 2 one as possible
@@ -136,7 +136,7 @@ class FastVideo(object):
                 model = build_model(name="regular",
                                     w=self._p_width,
                                     h=self._p_height, 
-                                    use_mixed=self._use_mixed)
+                                    policy = self._policy)
             return model
         default_set = {"regular", "tiny", "spp"}
         if (type(model) == str and model in default_set):
@@ -148,7 +148,7 @@ class FastVideo(object):
                                     w=self._p_width,
                                     h=self._p_height,
                                     saved=False,
-                                    use_mixed=self._use_mixed)
+                                    policy = self._policy)
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -177,41 +177,45 @@ class FastVideo(object):
             preprocess = self._preprocess
         else:
             preprocess = self._preprocess_function
-
-        while (self._cap.isOpened() and self._running):
-            # wait for que to get some space, if waiting too long, error occured and return
-            while self._load_que.full() and self._running:
-                timeout += 1
-                time.sleep(self._wait_time * 5)
+        try:
+            while (self._cap.isOpened() and self._running):
+                # wait for que to get some space, if waiting too long, error occured and return
+                while self._load_que.full() and self._running:
+                    timeout += 1
+                    time.sleep(self._wait_time * 5)
+                    if not self._running:
+                        return
+                    if timeout >= self._fps:
+                        print(
+                            "[EXIT] an error has occured, frames are not being pulled from que"
+                        )
+                        return
                 if not self._running:
                     return
-                if timeout >= self._fps:
-                    print(
-                        "[EXIT] an error has occured, frames are not being pulled from que"
-                    )
-                    return
-            if not self._running:
-                return
 
-            # with the CPU load and process an image
-            timeout = 0
-            success, image = self._cap.read()
-            with tf.device(process_device):
-                e = datetime.datetime.now()
-                image = preprocess(image)
-                # then dump the image on the que
-                self._load_que.put(image)
-                f = datetime.datetime.now()
+                # with the CPU load and process an image
+                timeout = 0
+                success, image = self._cap.read()
+                with tf.device(process_device):
+                    e = datetime.datetime.now()
+                    image = preprocess(image)
+                    # then dump the image on the que
+                    self._load_que.put(image)
+                    f = datetime.datetime.now()
 
-            # compute the reading FPS
-            l += 1
-            if time.time() - start - tick >= 1:
-                tick += 1
-                #store the reading FPS so it can be printed clearly
-                self._read_fps = l
-                l = 0
-            # sleep for default 0.01 seconds, to allow other functions the time to catch up or keep pace
-            time.sleep(self._wait_time)
+                # compute the reading FPS
+                l += 1
+                if time.time() - start - tick >= 1:
+                    tick += 1
+                    #store the reading FPS so it can be printed clearly
+                    self._read_fps = l
+                    l = 0
+                # sleep for default 0.01 seconds, to allow other functions the time to catch up or keep pace
+                time.sleep(self._wait_time)
+        except:
+            self._running = False
+            return
+        self._running = False
         return
 
     def display(self):
@@ -220,40 +224,45 @@ class FastVideo(object):
         https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression
         """
         # init the starting variables to calculate FPS
-        start = time.time()
-        l = 0
-        tick = 0
-        while (self._cap.isOpened() and self._running):
-            # if the display que is empty, nothing has been processed, just wait for an image to arrive
-            # do not timeout ever as too long does not garuntee an error
-            while self._display_que.empty() and self._running:
-                time.sleep(self._wait_time)
+        try:
+            start = time.time()
+            l = 0
+            tick = 0
+            while (self._cap.isOpened() and self._running):
+                # if the display que is empty, nothing has been processed, just wait for an image to arrive
+                # do not timeout ever as too long does not garuntee an error
+                while self._display_que.empty() and self._running:
+                    time.sleep(self._wait_time)
+                    if not self._running:
+                        return
                 if not self._running:
                     return
-            if not self._running:
-                return
 
-            # get the images, the predictions placed on the que via the run function (the model)
-            image, boxes, classes, conf = self._display_que.get()
+                # get the images, the predictions placed on the que via the run function (the model)
+                image, boxes, classes, conf = self._display_que.get()
 
-            # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
-            for i in range(image.shape[0]):
-                self._obj_detected = draw_box(image[i], boxes[i], classes[i],
-                                              conf[i], self._colors,
-                                              self._labels)
-                #display the frame then wait in case something else needs to catch up
-                cv2.imshow("frame", image[i])
-                time.sleep(self._wait_time)
+                # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
+                for i in range(image.shape[0]):
+                    self._obj_detected = draw_box(image[i], boxes[i], classes[i],
+                                                conf[i], self._colors,
+                                                self._labels)
+                    #display the frame then wait in case something else needs to catch up
+                    cv2.imshow("frame", image[i])
+                    time.sleep(self._wait_time)
 
-                #compute the display fps
-                l += 1
-                if time.time() - start - tick >= 1:
-                    tick += 1
-                    # store the fps to diplayed to the user
-                    self._display_fps = l
-                    l = 0
-                if cv2.waitKey(1) & 0xFF == ord('q') or not self._running:
-                    break
+                    #compute the display fps
+                    l += 1
+                    if time.time() - start - tick >= 1:
+                        tick += 1
+                        # store the fps to diplayed to the user
+                        self._display_fps = l
+                        l = 0
+                    if cv2.waitKey(1) & 0xFF == ord('q') or not self._running:
+                        break
+        except:
+            self._running = False
+            return
+        self._running = False
         return
 
     def run(self):
@@ -347,6 +356,8 @@ class FastVideo(object):
 
                 #print everything
                 self.print_opt()
+                if not self._running:
+                    raise
 
             # join the laoding thread and diplay thread
             load_thread.join()
@@ -357,7 +368,8 @@ class FastVideo(object):
             cv2.destroyAllWindows()
         except KeyboardInterrupt:
             # arbitrary keyboard input
-            print("\n\n\n")
+            self.print_opt()
+            print("\n\n\n\n\n::: Video File Stopped -> KeyBoard Interrupt :::")
             self._running = False
 
             # join the laoding thread and diplay thread
@@ -367,6 +379,22 @@ class FastVideo(object):
             # close the video capture and destroy all open windows
             self._cap.release()
             cv2.destroyAllWindows()
+        except:
+            # arbitrary keyboard input
+            self.print_opt()
+            print("\n\n\n\n\n::: Video File Complete :::")
+            self._running = False
+            time.sleep(10)
+            
+
+            # join the laoding thread and diplay thread
+            load_thread.join()
+            display_thread.join()
+
+            # close the video capture and destroy all open windows
+            self._cap.release()
+            cv2.destroyAllWindows()
+
         return
 
     def print_opt(self):
@@ -404,11 +432,11 @@ if __name__ == "__main__":
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo(0,
-                    model="spp",
+    cap = FastVideo("test4.mp4",
+                    model="regular",
                     model_version="v3",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
-                    use_mixed=True)
+                    policy="float16")
     cap.run()
