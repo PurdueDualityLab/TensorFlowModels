@@ -13,11 +13,6 @@ from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter
 from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
 
-from yolo.utils.testing_utils import prep_gpu
-# prep_gpu()
-from yolo.dataloaders.YoloParser import YoloParser
-
-
 class Yolov4(base_model.Yolo):
     def __init__(
             self,
@@ -83,46 +78,7 @@ class Yolov4(base_model.Yolo):
         self.head_filter = head_filter
 
         self.get_models()
-        self.parser = None
         return
-
-    def process_datasets(self,
-                         train,
-                         test,
-                         batch_size=1,
-                         image_w=416,
-                         image_h=416,
-                         fixed_size=False,
-                         jitter_im=0.1,
-                         jitter_boxes=0.005):
-        if self.parser == None:
-            parser = YoloParser(image_w=image_w,
-                                image_h=image_h,
-                                fixed_size=fixed_size,
-                                jitter_im=jitter_im,
-                                jitter_boxes=jitter_boxes,
-                                masks=self._masks,
-                                anchors=self._boxes)
-            self.parser = parser
-        else:
-            parser = self.parser
-
-        preprocess_train = parser.unbatched_process_fn(is_training=True)
-        postprocess_train = parser.batched_process_fn(is_training=True)
-
-        preprocess_test = parser.unbatched_process_fn(is_training=False)
-        postprocess_test = parser.batched_process_fn(is_training=False)
-
-        train = train.map(preprocess_train).padded_batch(batch_size)
-        train = train.map(postprocess_train)
-        test = test.map(preprocess_test).padded_batch(batch_size)
-        test = test.map(postprocess_test)
-
-        train_size = tf.data.experimental.cardinality(train)
-        test_size = tf.data.experimental.cardinality(test)
-        print(train_size, test_size)
-
-        return train, test
 
     def get_models(self):
         default_dict = {
@@ -219,60 +175,6 @@ class Yolov4(base_model.Yolo):
         predictions = self.head_filter(raw_head)
         return predictions
 
-    def train_step(self, data):
-        #get the data point
-        image = data["image"]
-        label = data["label"]
-
-        # computer detivative and apply gradients
-        with tf.GradientTape() as tape:
-            y_pred = self(image, training=True)
-            loss = self.compiled_loss(label, y_pred["raw_output"])
-
-        grads = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
-
-        #custom metrics
-        loss_metrics = dict()
-        for loss in self.compiled_loss._losses:
-            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
-            loss_metrics[
-                f"{loss._path_key}_classes"] = loss.get_classification_loss()
-            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
-            loss_metrics[
-                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-
-        #compiled metrics
-        self.compiled_metrics.update_state(label, y_pred["raw_output"])
-        metrics_dict = {m.name: m.result() for m in self.metrics}
-        metrics_dict.update(loss_metrics)
-        return metrics_dict
-
-    def test_step(self, data):
-        #get the data point
-        image = data["image"]
-        label = data["label"]
-
-        # computer detivative and apply gradients
-        y_pred = self(image, training=False)
-        loss = self.compiled_loss(label, y_pred["raw_output"])
-
-        #custom metrics
-        loss_metrics = dict()
-        for loss in self.compiled_loss._losses:
-            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
-            loss_metrics[
-                f"{loss._path_key}_classes"] = loss.get_classification_loss()
-            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
-            loss_metrics[
-                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-
-        #compiled metrics
-        self.compiled_metrics.update_state(label, y_pred["raw_output"])
-        metrics_dict = {m.name: m.result() for m in self.metrics}
-        metrics_dict.update(loss_metrics)
-        return metrics_dict
-
     def load_weights_from_dn(self,
                              dn2tf_backbone=True,
                              dn2tf_head=True,
@@ -328,6 +230,8 @@ class Yolov4(base_model.Yolo):
 
 if __name__ == "__main__":
     import tensorflow_datasets as tfds
+    from yolo.utils.testing_utils import prep_gpu
+    prep_gpu() # must be called before loading a dataset
     train, info = tfds.load('coco',
                             split='train',
                             shuffle_files=False,
@@ -337,6 +241,7 @@ if __name__ == "__main__":
                            shuffle_files=False,
                            with_info=True)
 
+    
     model = Yolov4(model = "regular", policy="float16")
     model.get_summary()
     model.build(model._input_shape)

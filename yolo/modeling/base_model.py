@@ -2,7 +2,6 @@ import os
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
-
 class Yolo(tf.keras.Model, ABC):
     @abstractmethod
     def get_models():
@@ -20,17 +19,107 @@ class Yolo(tf.keras.Model, ABC):
                              weights_file=None):
         ...
 
-    @abstractmethod
+    # @abstractmethod
+    # def train_step(self, data):
+    #     ...
+
+    # @abstractmethod
+    # def test_step(self):
+    #     ...
+
+    # @abstractmethod
+    # def process_datasets(self):
+    #     ...
+
+    def process_datasets(self,
+                         train,
+                         test,
+                         batch_size=1,
+                         image_w=416,
+                         image_h=416,
+                         fixed_size=False,
+                         jitter_im=0.1,
+                         jitter_boxes=0.005):
+
+        from yolo.dataloaders.YoloParser import YoloParser
+        parser = YoloParser(image_w=image_w,
+                            image_h=image_h,
+                            fixed_size=fixed_size,
+                            jitter_im=jitter_im,
+                            jitter_boxes=jitter_boxes,
+                            masks=self._masks,
+                            anchors=self._boxes)
+
+        preprocess_train = parser.unbatched_process_fn(is_training=True)
+        postprocess_train = parser.batched_process_fn(is_training=True)
+
+        preprocess_test = parser.unbatched_process_fn(is_training=False)
+        postprocess_test = parser.batched_process_fn(is_training=False)
+
+        train = train.map(preprocess_train).padded_batch(batch_size)
+        train = train.map(postprocess_train)
+        test = test.map(preprocess_test).padded_batch(batch_size)
+        test = test.map(postprocess_test)
+
+        train_size = tf.data.experimental.cardinality(train)
+        test_size = tf.data.experimental.cardinality(test)
+        print(train_size, test_size)
+
+        return train, test
+
     def train_step(self, data):
-        ...
+        #get the data point
+        image = data["image"]
+        label = data["label"]
 
-    @abstractmethod
-    def test_step(self):
-        ...
+        # computer detivative and apply gradients
+        with tf.GradientTape() as tape:
+            y_pred = self(image, training=True)
+            loss = self.compiled_loss(label, y_pred["raw_output"])
 
-    @abstractmethod
-    def process_datasets(self):
-        ...
+        grads = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+
+        #custom metrics
+        loss_metrics = dict()
+        for loss in self.compiled_loss._losses:
+            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
+            loss_metrics[
+                f"{loss._path_key}_classes"] = loss.get_classification_loss()
+            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            loss_metrics[
+                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
+
+        #compiled metrics
+        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        metrics_dict = {m.name: m.result() for m in self.metrics}
+        metrics_dict.update(loss_metrics)
+        return metrics_dict
+
+    def test_step(self, data):
+        #get the data point
+        image = data["image"]
+        label = data["label"]
+
+        # computer detivative and apply gradients
+        y_pred = self(image, training=False)
+        loss = self.compiled_loss(label, y_pred["raw_output"])
+
+        #custom metrics
+        loss_metrics = dict()
+        for loss in self.compiled_loss._losses:
+            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
+            loss_metrics[
+                f"{loss._path_key}_classes"] = loss.get_classification_loss()
+            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            loss_metrics[
+                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
+
+        #compiled metrics
+        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        metrics_dict = {m.name: m.result() for m in self.metrics}
+        metrics_dict.update(loss_metrics)
+        return metrics_dict
 
     def generate_loss(self,
                       scale: float = 1.0,
