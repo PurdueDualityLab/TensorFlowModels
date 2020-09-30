@@ -1,6 +1,9 @@
 import os
 import tensorflow as tf
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
+
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 class Yolo(tf.keras.Model, ABC):
     @abstractmethod
@@ -68,16 +71,35 @@ class Yolo(tf.keras.Model, ABC):
         return train, test
 
     def train_step(self, data):
+        '''
+        for float16 training
+        opt = tf.keras.optimizers.SGD(0.25)
+        opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt, "dynamic")
+        '''
         #get the data point
         image = data["image"]
         label = data["label"]
 
         # computer detivative and apply gradients
+        num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
         with tf.GradientTape() as tape:
+            # compute a prediction
             y_pred = self(image, training=True)
             loss = self.compiled_loss(label, y_pred["raw_output"])
+            scaled_loss = loss/num_replicas
 
-        grads = tape.gradient(loss, self.trainable_variables)
+            # scale the loss for numerical stability
+            if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
+                scaled_loss = self.optimizer.get_scaled_loss(scaled_loss)
+
+        # compute the gradient
+        train_vars = self.trainable_variables
+        gradients = tape.gradient(scaled_loss, train_vars)
+
+        # get unscaled loss if the scaled_loss was used
+        if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
+            gradients = self.optimizer.get_unscaled_gradients(grads)
+
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
         #custom metrics
@@ -153,7 +175,6 @@ class Yolo(tf.keras.Model, ABC):
             return
         else:
             self._policy = policy
-        from tensorflow.keras.mixed_precision import experimental as mixed_precision
         policy = mixed_precision.Policy(self._policy)
         mixed_precision.set_policy(policy)
         dtype = policy.compute_dtype
