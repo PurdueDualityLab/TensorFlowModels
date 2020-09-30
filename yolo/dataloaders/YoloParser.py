@@ -33,7 +33,6 @@ class YoloParser(DatasetParser):
                  max_process_size=608,
                  min_process_size=320,
                  pct_rand=0.5,
-                 use_tie_breaker=True,
                  masks=None,
                  anchors=None):
 
@@ -48,7 +47,6 @@ class YoloParser(DatasetParser):
         self._min_process_size = min_process_size
         self._pct_rand = pct_rand
         self._path_scales = path_scales
-        self._use_tie_breaker = use_tie_breaker
         self._masks = {
             "1024": [6, 7, 8],
             "512": [3, 4, 5],
@@ -68,6 +66,7 @@ class YoloParser(DatasetParser):
             "image": image,
             "bbox": boxes,
             "label": classes,
+            "classes": data["objects"]["label"],
             "best_anchor": best_anchor
         }
 
@@ -111,23 +110,8 @@ class YoloParser(DatasetParser):
         boxes = _jitter_boxes(data["bbox"], translate_x, translate_y, j_x, j_y,
                               j_w, j_h)
         label = tf.concat([boxes, data["label"], data["best_anchor"]], axis=-1)
-        #tf.print(tf.shape(label), tf.shape(label[..., -5:]))
-        return {"image": image, "label": label, "randscale": randscale}
+        return {"image": image, "label": label, "bbox": data["bbox"], "classes":data["classes"]}
 
-    def _label_format_gt(self, data):
-        # changes must be made to the build gt where it picks arg max iou, removes the term and then picks the next best, iou > 0.213::
-        masks = self._masks
-        randscale = data["randscale"]
-        for key in masks.keys():
-            masks[key] = build_grided_gt(
-                data["label"],
-                tf.convert_to_tensor(self._masks[key], dtype=tf.float32),
-                randscale, self._use_tie_breaker)
-            if self._path_scales == None:
-                randscale *= 2
-            else:
-                randscale = randscale * self._path_scales[key]
-        return data["image"], masks
 
     def unbatched_process_fn(self, is_training):
         def parse(tensor_set):

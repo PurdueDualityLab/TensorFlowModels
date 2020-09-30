@@ -18,12 +18,12 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
     num_boxes = tf.shape(y_true)[1]
     len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]])
+    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype = y_true.dtype)
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(y_true[..., 0] * tf.cast(size, dtype=tf.float32),
+    x = tf.cast(y_true[..., 0] * tf.cast(size, dtype=y_true.dtype),
                 dtype=tf.int32)
-    y = tf.cast(y_true[..., 1] * tf.cast(size, dtype=tf.float32),
+    y = tf.cast(y_true[..., 1] * tf.cast(size, dtype=y_true.dtype),
                 dtype=tf.int32)
 
     anchors = tf.repeat(tf.expand_dims(y_true[..., -5:], axis=-1),
@@ -31,7 +31,8 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                         axis=-1)
 
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-    update = tf.TensorArray(tf.float32, size=0, dynamic_size=True)
+    update = tf.TensorArray(y_true.dtype, size=0, dynamic_size=True)
+    const = tf.cast(tf.convert_to_tensor([1.]), dtype=y_true.dtype)
 
     i = 0
     anchor_id = 0
@@ -64,7 +65,7 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                                 [batch, y[batch, box_id], x[batch, box_id], p])
                             value = K.concatenate([
                                 y_true[batch, box_id, 0:4],
-                                tf.convert_to_tensor([1.]),
+                                const,
                                 y_true[batch, box_id, 4:-5]
                             ])
                             update = update.write(i, value)
@@ -78,7 +79,7 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                                 [batch, y[batch, box_id], x[batch, box_id], p])
                             value = K.concatenate([
                                 y_true[batch, box_id, 0:4],
-                                tf.convert_to_tensor([1.]),
+                                const,
                                 y_true[batch, box_id, 4:-5]
                             ])
                             update = update.write(i, value)
@@ -98,7 +99,7 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                         i, [batch, y[batch, box_id], x[batch, box_id], p])
                     value = K.concatenate([
                         y_true[batch, box_id, 0:4],
-                        tf.convert_to_tensor([1.]), y_true[batch, box_id, 4:-5]
+                        const, y_true[batch, box_id, 4:-5]
                     ])
                     update = update.write(i, value)
                     i += 1
@@ -200,6 +201,9 @@ class GridGenerator(object):
                 tf.cast(self._scale_anchors * width, self.dtype), self._num,
                 self.dtype)
             self._prev_width = width
+        else:
+            self._grid_points = tf.cast(self._grid_points, self.dtype)
+            self._anchor_grid = tf.cast(self._anchor_grid, self.dtype)
 
         if self._grid_points.dtype != self.dtype:
             self._grid_points = tf.cast(self._grid_points, self.dtype)

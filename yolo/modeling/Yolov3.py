@@ -97,6 +97,7 @@ class Yolov3(base_model.Yolo):
                                 fixed_size=fixed_size,
                                 jitter_im=jitter_im,
                                 jitter_boxes=jitter_boxes,
+                                masks=self._masks,
                                 anchors=self._boxes)
             self.parser = parser
         else:
@@ -339,11 +340,11 @@ if __name__ == "__main__":
                            shuffle_files=False,
                            with_info=True)
 
-    model = Yolov3(policy="float32")
+    model = Yolov3(model = "tiny", policy="float32")
     model.load_weights_from_dn()
 
-    train, test = model.process_datasets(train, test, batch_size=3)
-    loss_fn = model.generate_loss()
+    train, test = model.process_datasets(train, test, batch_size=10)
+    loss_fn = model.generate_loss(loss_type="giou")
 
     optimizer = ks.optimizers.SGD(lr=1e-3)
     model.compile(optimizer=optimizer, loss=loss_fn)

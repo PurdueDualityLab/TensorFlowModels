@@ -63,6 +63,7 @@ class FastVideo(object):
                  classes=80,
                  labels=None,
                  preprocess_with_gpu=False,
+                 use_mixed = False, 
                  gpu_device="/GPU:0",
                  preprocess_gpu="/GPU:0"):
         self._cap = cv2.VideoCapture(file_name)
@@ -88,6 +89,7 @@ class FastVideo(object):
         self._p_width = process_width
         self._p_height = process_height
         self._model_version = model_version
+        self._use_mixed = use_mixed
         self._model = self._load_model(model)
 
         # fast but as close to one 2 one as possible
@@ -96,7 +98,8 @@ class FastVideo(object):
         else:
             # faster but more potential for delay from input to output
             if tf.keras.mixed_precision.experimental.global_policy(
-            ).name == "mixed_float16":
+            ).name == "mixed_float16" or tf.keras.mixed_precision.experimental.global_policy(
+            ).name == "float16":
                 #self._batch_size = 9 # 45 fps faster but less frame to frame consistent, it will remain consistant, but there is opertunity for more frames to be loaded than
                 self._batch_size = 5
             else:
@@ -132,7 +135,8 @@ class FastVideo(object):
             with tf.device(self._gpu_device):
                 model = build_model(name="regular",
                                     w=self._p_width,
-                                    h=self._p_height)
+                                    h=self._p_height, 
+                                    use_mixed=self._use_mixed)
             return model
         default_set = {"regular", "tiny", "spp"}
         if (type(model) == str and model in default_set):
@@ -144,7 +148,7 @@ class FastVideo(object):
                                     w=self._p_width,
                                     h=self._p_height,
                                     saved=False,
-                                    use_mixed=True)
+                                    use_mixed=self._use_mixed)
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -405,5 +409,6 @@ if __name__ == "__main__":
                     model_version="v4",
                     process_width=416,
                     process_height=416,
-                    preprocess_with_gpu=False)
+                    preprocess_with_gpu=True, 
+                    use_mixed=False)
     cap.run()

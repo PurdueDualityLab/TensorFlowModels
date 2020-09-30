@@ -52,7 +52,7 @@ def load_weights_v4head(model, net):
     for block in blocks:
         for layer in block:
             cfg = convs.pop(0)
-            print(cfg, layer.input_shape)
+            print(cfg)#, layer.input_shape)
             layer.set_weights(cfg.get_weights())
         print()
 

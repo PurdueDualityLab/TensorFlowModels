@@ -59,26 +59,23 @@ def build_model(name="regular",
                 load_head=True,
                 policy="float32",
                 set_head=True):
+    if use_mixed:
+        policy = "mixed_float16"
+
     if model_version == "v3":
-        from yolo.modeling.yolo_v3 import Yolov3
+        from yolo.modeling.Yolov3 import Yolov3
         model = Yolov3(classes=classes,
                        model=name,
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
-        model.load_weights_from_dn(dn2tf_backbone=True,
-                                   dn2tf_head=load_head,
-                                   weights_file=f"yolov3-{name}.weights")
     else:
-        from yolo.modeling.yolo_v4 import Yolov4
+        from yolo.modeling.Yolov4 import Yolov4
         model = Yolov4(classes=classes,
                        model=name,
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
-        model.set_prediction_filter(use_mixed=False)
-        model.load_weights_from_dn(dn2tf_backbone=True,
-                                   dn2tf_neck=load_head,
-                                   dn2tf_head=load_head)
-
+    model.load_weights_from_dn(dn2tf_backbone=True,
+                                dn2tf_head=load_head)
     return model
 
 

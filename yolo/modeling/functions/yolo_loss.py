@@ -109,9 +109,7 @@ class Yolo_Loss(ks.losses.Loss):
                                                           batch_size,
                                                           dtype=y_pred.dtype)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        y_true = build_grided_gt(
-            y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype),
-            width, tf.shape(y_pred), self._use_tie_breaker)
+        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, tf.shape(y_pred), self._use_tie_breaker)
 
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
