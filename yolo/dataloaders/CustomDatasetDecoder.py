@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from typing import *
 
 from .DatasetConfigs import Dataset
-from .custom_dataset_ops import _get_images, _str_to_list
-
+from .op.custom_dataset_ops import _get_images, _str_to_list
 
 class DatasetReader():
     def __init__(self, config: Dataset):
