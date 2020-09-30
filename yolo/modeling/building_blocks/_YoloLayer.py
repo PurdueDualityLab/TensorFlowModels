@@ -148,64 +148,6 @@ class YoloLayer(ks.Model):
             "scale_mult": self._scale_mult,
         }
 
-
-@ks.utils.register_keras_serializable(package='yolo')
-class YoloGT(ks.layers.Layer):
-    def __init__(self,
-                 anchors,
-                 thresh,
-                 max_box=200,
-                 dtype=tf.float32,
-                 reshape=True,
-                 **kwargs):
-        self._mask_len = len(anchors)
-        self._dtype = dtype
-        self._anchors = tf.cast(tf.convert_to_tensor(anchors),
-                                dtype=self._dtype) / 416
-        self._thresh = tf.cast(thresh, dtype=self._dtype)
-
-        self._rebuild = True
-        self._rebatch = True
-        self._reshape = reshape
-
-        super().__init__(**kwargs)
-        return
-
-    def call(self, inputs):
-        shape = tf.shape(inputs)
-        data = inputs
-        data = tf.cast(data, self._dtype)
-
-        # compute the true box output values
-        box_xy = data[..., 0:2]
-        box_wh = data[..., 2:4]
-
-        # convert the box to Tensorflow Expected format
-        minpoint = box_xy - box_wh / 2
-        maxpoint = box_xy + box_wh / 2
-        box = K.stack([
-            minpoint[..., 1], minpoint[..., 0], maxpoint[..., 1], maxpoint[...,
-                                                                           0]
-        ],
-                      axis=-1)
-
-        # computer objectness and generate grid cell mask for where objects are located in the image
-        objectness = tf.expand_dims(data[..., 4], axis=-1)
-        scaled = data[..., 5:]
-        #scaled = classes * objectness
-
-        mask = tf.reduce_any(objectness > tf.cast(0.0, dtype=self._dtype),
-                             axis=-1)
-        mask = tf.reduce_any(mask, axis=0)
-
-        # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
-        box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
-
-        # # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
-        classifications = tf.boolean_mask(scaled, mask, axis=1)[:, :200, :]
-        return box, classifications
-
-
 if __name__ == "__main__":
     x = tf.ones(shape=(1, 416, 416, 3))
     model = build_model()

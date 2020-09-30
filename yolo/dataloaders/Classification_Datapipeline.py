@@ -1,6 +1,6 @@
 """Classification parser."""
 from yolo.dataloaders.Parser import Parser
-from yolo.dataloaders.random_ops import _rand_number
+from yolo.dataloaders.ops.random_ops import _rand_number
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa

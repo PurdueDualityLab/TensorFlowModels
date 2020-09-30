@@ -5,7 +5,6 @@ from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
 from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
 from yolo.modeling.building_blocks import YoloLayer
 from yolo.utils.file_manager import download
-from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
@@ -15,8 +14,6 @@ import os
 @ks.utils.register_keras_serializable(package='yolo')
 class CSPDarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
-    _updated_config = tf_shims.ks_Model___updated_config
-
     def __init__(self,
                  classes=1000,
                  load_backbone_weights=False,

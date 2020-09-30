@@ -7,14 +7,11 @@ from typing import *
 
 import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import csp_build_block_specs
-from yolo.utils import tf_shims
 from . import configs
 
 
 @ks.utils.register_keras_serializable(package='yolo')
 class CSP_Backbone_Builder(ks.Model):
-    _updated_config = tf_shims.ks_Model___updated_config
-
     def __init__(self,
                  name="darknet53",
                  input_shape=(None, None, None, 3),

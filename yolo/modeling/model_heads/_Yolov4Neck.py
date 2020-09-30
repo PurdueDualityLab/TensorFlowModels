@@ -14,7 +14,7 @@ import more_itertools
 import collections
 
 
-#@ks.utils.register_keras_serializable(package='yolo')
+@ks.utils.register_keras_serializable(package='yolo')
 class Yolov4Neck(tf.keras.Model):
     def __init__(self,
                  model="neck",

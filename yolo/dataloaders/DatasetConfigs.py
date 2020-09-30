@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from .custom_dataset_ops import _yolo_coco_id_parser, _yolo_coco_label_parser
+from yolo.dataloaders.ops.custom_dataset_ops import _yolo_coco_id_parser, _yolo_coco_label_parser
 
 
 @dataclass

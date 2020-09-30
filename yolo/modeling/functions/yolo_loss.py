@@ -1,10 +1,9 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 from tensorflow.keras import backend as K
-import tensorflow_datasets as tfds
+
 from yolo.utils.iou_utils import *
 from yolo.utils.loss_utils import GridGenerator
-
 from yolo.utils.loss_utils import build_grided_gt
 
 

@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
-from yolo.utils.iou_utils import *
+from yolo.utils.iou_utils import compute_iou
 from yolo.utils.box_utils import _yxyx_to_xcycwh
 import tensorflow as tf
 

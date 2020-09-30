@@ -13,8 +13,6 @@ import os
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkNet53(ks.Model):
     """The Darknet Image Classification Network Using Darknet53 Backbone"""
-    _updated_config = tf_shims.ks_Model___updated_config
-
     def __init__(self,
                  classes=1000,
                  load_backbone_weights=False,

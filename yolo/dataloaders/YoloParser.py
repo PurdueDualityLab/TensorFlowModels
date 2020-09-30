@@ -1,23 +1,21 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
-from .Parser import DatasetParser
+from yolo.dataloaders.Parser import DatasetParser
 
-from .preprocessing_ops import _scale_image
-from .preprocessing_ops import _get_best_anchor
-from .preprocessing_ops import _jitter_boxes
-from .preprocessing_ops import _translate_image
-from .preprocessing_ops import _translate_boxes
+from yolo.dataloaders.ops.preprocessing_ops import _scale_image
+from yolo.dataloaders.ops.preprocessing_ops import _get_best_anchor
+from yolo.dataloaders.ops.preprocessing_ops import _jitter_boxes
+from yolo.dataloaders.ops.preprocessing_ops import _translate_image
+from yolo.dataloaders.ops.preprocessing_ops import _translate_boxes
 
-from .random_ops import _box_scale_rand
-from .random_ops import _jitter_rand
-from .random_ops import _translate_rand
+from yolo.dataloaders.ops.random_ops import _box_scale_rand
+from yolo.dataloaders.ops.random_ops import _jitter_rand
+from yolo.dataloaders.ops.random_ops import _translate_rand
 
 from yolo.utils.box_utils import _xcycwh_to_xyxy
 from yolo.utils.box_utils import _xcycwh_to_yxyx
 from yolo.utils.box_utils import _yxyx_to_xcycwh
-import matplotlib.pyplot as plt
-
 from yolo.utils.loss_utils import build_grided_gt
 
 
@@ -136,6 +134,7 @@ class YoloParser(DatasetParser):
 
 if __name__ == "__main__":
     import tensorflow_datasets as tfds
+    import matplotlib.pyplot as plt
     coco, info = tfds.load('coco', split='train', with_info=True)
 
     parser = YoloParser(image_h=320,

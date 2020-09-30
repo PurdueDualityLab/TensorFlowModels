@@ -1,3 +1,4 @@
+#all functions here are fir testing nothing to be included in final version. I am not garunteeing that any of this still works, if you need it make a brach and chnage it
 import cv2
 
 import tensorflow as tf
