@@ -297,6 +297,17 @@ class FastVideo(object):
                 image = preprocess(image)
                 self._load_que.put(image)
                 f = datetime.datetime.now()
+            with tf.device(self._gpu_device):
+                pimage = tf.image.resize(image,(self._p_width, self._p_height))
+                pimage = tf.expand_dims(pimage, axis = 0)
+                try:
+                    pred = model.predict(pimage)
+                    predfunc = model.predict
+                    print("using pred function")
+                except:
+                    pred = model(pimage)
+                    predfunc = model
+                    print("using call function")
         else:
             return
 
@@ -334,7 +345,7 @@ class FastVideo(object):
                     image = tf.convert_to_tensor(proc)
                     pimage = tf.image.resize(image,
                                              (self._p_width, self._p_height))
-                    pred = model.predict(pimage)
+                    pred = predfunc(pimage)
                     boxes, classes = int_scale_boxes(pred["bbox"],
                                                      pred["classes"],
                                                      self._width, self._height)
@@ -441,9 +452,9 @@ if __name__ == "__main__":
 
     #tf.train.Checkpoint.restore("/home/vishnu/Desktop/CAM2/TensorFlowModelGardeners/weights/weights/train_test_nojitter_helps_exit_early_1").expect_partial()
 
-    cap = FastVideo(0,
-                    model="spp",
-                    model_version="v3",
+    cap = FastVideo("test1.mp4",
+                    model="regular",
+                    model_version="v4",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
