@@ -9,7 +9,7 @@ from ._Identity import Identity
 class DarkResidual(ks.layers.Layer):
     def __init__(self,
                  filters=1,
-                 filter_scale = 2,
+                 filter_scale=2,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',

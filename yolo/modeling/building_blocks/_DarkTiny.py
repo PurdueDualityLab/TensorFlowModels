@@ -49,21 +49,24 @@ class DarkTiny(ks.layers.Layer):
         # else:
         #     self._zeropad = ks.layers.ZeroPadding2D(((0,1), (0,1)))#nn_blocks.Identity()#ks.layers.ZeroPadding2D(((1,0), (1,0)))
         #     padding = "valid"
-        self._maxpool = tf.keras.layers.MaxPool2D(pool_size=2, strides=self._strides, padding="same", data_format=None)
+        self._maxpool = tf.keras.layers.MaxPool2D(pool_size=2,
+                                                  strides=self._strides,
+                                                  padding="same",
+                                                  data_format=None)
 
         self._convlayer = DarkConv(filters=self._filters,
-                                  kernel_size=(3, 3),
-                                  strides=(1, 1),
-                                  padding='same',
-                                  use_bias=self._use_bias,
-                                  kernel_initializer=self._kernel_initializer,
-                                  bias_initializer=self._bias_initializer,
-                                  use_bn=self._use_bn,
-                                  use_sync_bn=self._use_sync_bn,
-                                  norm_moment=self._norm_moment,
-                                  norm_epsilon=self._norm_epsilon,
-                                  activation=self._conv_activation,
-                                  leaky_alpha=self._leaky_alpha)
+                                   kernel_size=(3, 3),
+                                   strides=(1, 1),
+                                   padding='same',
+                                   use_bias=self._use_bias,
+                                   kernel_initializer=self._kernel_initializer,
+                                   bias_initializer=self._bias_initializer,
+                                   use_bn=self._use_bn,
+                                   use_sync_bn=self._use_sync_bn,
+                                   norm_moment=self._norm_moment,
+                                   norm_epsilon=self._norm_epsilon,
+                                   activation=self._conv_activation,
+                                   leaky_alpha=self._leaky_alpha)
 
         super().build(input_shape)
         return

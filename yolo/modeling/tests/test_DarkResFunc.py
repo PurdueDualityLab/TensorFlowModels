@@ -6,7 +6,6 @@ from absl.testing import parameterized
 from yolo.modeling.building_blocks import DarkResFunc as layer
 
 
-
 class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("same", 224, 224, 64, False),
                                     ("downsample", 223, 223, 32, True),
@@ -16,16 +15,20 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
         if downsample:
             mod = 2
         init = tf.random_normal_initializer()
-        inp = tf.Variable(initial_value=init(shape=(1, width, height, filters), dtype=tf.float32))
+        inp = tf.Variable(initial_value=init(shape=(1, width, height, filters),
+                                             dtype=tf.float32))
 
         x = ks.Input(shape=(width, height, filters))
         test_layer = layer(filters=filters, downsample=downsample)(x)
-        model = ks.Model(inputs = x, outputs = test_layer)
-        model.build(input_shape = (None, width, height, filters))
-        
+        model = ks.Model(inputs=x, outputs=test_layer)
+        model.build(input_shape=(None, width, height, filters))
+
         outx = model(inp)
         print(inp.shape, outx.shape.as_list())
-        self.assertAllEqual(outx.shape.as_list(), [1, np.ceil(width / mod), np.ceil(height / mod), filters])
+        self.assertAllEqual(
+            outx.shape.as_list(),
+            [1, np.ceil(width / mod),
+             np.ceil(height / mod), filters])
         return
 
     @parameterized.named_parameters(("same", 64, 224, 224, False),
@@ -36,7 +39,7 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
         optimizer = ks.optimizers.SGD()
         p = ks.Input(shape=(width, height, filters))
         test_layer = layer(filters=filters, downsample=downsample)(p)
-        model = ks.Model(inputs = p, outputs = test_layer)
+        model = ks.Model(inputs=p, outputs=test_layer)
 
         if downsample:
             mod = 2
@@ -44,8 +47,12 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
             mod = 1
 
         init = tf.random_normal_initializer()
-        x = tf.Variable(initial_value=init(shape=(1, width, height, filters), dtype=tf.float32))
-        y = tf.Variable(initial_value=init(shape=(1,int(np.ceil(width / mod)),int(np.ceil(height / mod)),filters),dtype=tf.float32))
+        x = tf.Variable(initial_value=init(shape=(1, width, height, filters),
+                                           dtype=tf.float32))
+        y = tf.Variable(initial_value=init(shape=(1, int(np.ceil(width / mod)),
+                                                  int(np.ceil(height / mod)),
+                                                  filters),
+                                           dtype=tf.float32))
 
         with tf.GradientTape() as tape:
             x_hat = model(x)

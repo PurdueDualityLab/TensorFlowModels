@@ -6,7 +6,6 @@ from absl.testing import parameterized
 from yolo.modeling.building_blocks import DarkResidual as layer
 
 
-
 class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
     @parameterized.named_parameters(("same", 224, 224, 64, False),
                                     ("downsample", 223, 223, 32, True),
@@ -20,8 +19,10 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
         outx = test_layer(x)
         print(outx)
         print(outx.shape.as_list())
-        self.assertAllEqual(outx.shape.as_list(), [None, np.ceil(
-            width / mod), np.ceil(height / mod), filters])
+        self.assertAllEqual(
+            outx.shape.as_list(),
+            [None, np.ceil(width / mod),
+             np.ceil(height / mod), filters])
         return
 
     @parameterized.named_parameters(("same", 64, 224, 224, False),
@@ -38,10 +39,9 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
             mod = 1
 
         init = tf.random_normal_initializer()
-        x = tf.Variable(initial_value=init(
-            shape=(1, width, height, filters), dtype=tf.float32))
-        y = tf.Variable(initial_value=init(shape=(1,
-                                                  int(np.ceil(width / mod)),
+        x = tf.Variable(initial_value=init(shape=(1, width, height, filters),
+                                           dtype=tf.float32))
+        y = tf.Variable(initial_value=init(shape=(1, int(np.ceil(width / mod)),
                                                   int(np.ceil(height / mod)),
                                                   filters),
                                            dtype=tf.float32))

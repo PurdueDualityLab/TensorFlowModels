@@ -6,8 +6,8 @@ from ..file_manager import PathABC
 
 from typing import Union, Type, TypeVar
 
-
 T = TypeVar('T', bound='DarkNetModel')
+
 
 class _DarkNetSectionList(collections.abc.MutableSequence):
     __slots__ = ['data']
@@ -24,6 +24,7 @@ class _DarkNetSectionList(collections.abc.MutableSequence):
     # Overriding Python list operations
     def __len__(self):
         return max(0, len(self.data) - 1)
+
     def __getitem__(self, i):
         if i >= 0:
             i += 1
@@ -31,14 +32,17 @@ class _DarkNetSectionList(collections.abc.MutableSequence):
             return self.__class__(self.data[i])
         else:
             return self.data[i]
+
     def __setitem__(self, i, item):
         if i >= 0:
             i += 1
         self.data[i] = item
+
     def __delitem__(self, i):
         if i >= 0:
             i += 1
         del self.data[i]
+
     def insert(self, i, item):
         if i >= 0:
             i += 1
@@ -62,11 +66,12 @@ class DarkNetConverter(_DarkNetSectionList):
     To use conventional list operations on the DarkNetConverter object, use the
     data property provided by this class.
     """
-
     @classmethod
-    def read(clz: Type[T],
-             config_file: Union[PathABC, io.TextIOBase],
-             weights_file: Union[PathABC, io.RawIOBase, io.BufferedIOBase] = None) -> T:
+    def read(
+        clz: Type[T],
+        config_file: Union[PathABC, io.TextIOBase],
+        weights_file: Union[PathABC, io.RawIOBase,
+                            io.BufferedIOBase] = None) -> T:
         """
         Parse the config and weights files and read the DarkNet layer's encoder,
         decoder, and output layers. The number of bytes in the file is also returned.
@@ -85,10 +90,10 @@ class DarkNetConverter(_DarkNetSectionList):
         return full_net
 
     def to_tf(self,
-            thresh = 0.45,
-            class_thresh = 0.45,
-            max_boxes = 200,
-            use_mixed = True):
+              thresh=0.45,
+              class_thresh=0.45,
+              max_boxes=200,
+              use_mixed=True):
         import tensorflow as tf
 
         tensors = _DarkNetSectionList()
@@ -103,14 +108,21 @@ class DarkNetConverter(_DarkNetSectionList):
             else:
                 layer = None
 
-            assert tensor.shape[1:] == cfg.shape, str(cfg) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
+            assert tensor.shape[1:] == cfg.shape, str(
+                cfg
+            ) + f" shape inconsistent\n\tExpected: {cfg.shape}\n\tGot: {tensor.shape[1:]}"
             if cfg._type == 'yolo':
                 yolo_tensors.append((i, cfg, tensor))
             tensors.append(tensor)
             layers.append(layer)
 
-
-        model = tf.keras.Model(inputs=tensors.net, outputs=self._process_yolo_layer(yolo_tensors, thresh=thresh, class_thresh=class_thresh, max_boxes=max_boxes, use_mixed=use_mixed))
+        model = tf.keras.Model(inputs=tensors.net,
+                               outputs=self._process_yolo_layer(
+                                   yolo_tensors,
+                                   thresh=thresh,
+                                   class_thresh=class_thresh,
+                                   max_boxes=max_boxes,
+                                   use_mixed=use_mixed))
         model.build(self.net.shape)
 
         for cfg, layer in zip(self, layers):
@@ -119,11 +131,11 @@ class DarkNetConverter(_DarkNetSectionList):
         return model
 
     def _process_yolo_layer(self,
-            yolo_tensors,
-            thresh = 0.45,
-            class_thresh = 0.45,
-            max_boxes = 200,
-            use_mixed = True):
+                            yolo_tensors,
+                            thresh=0.45,
+                            class_thresh=0.45,
+                            max_boxes=200,
+                            use_mixed=True):
         import tensorflow as tf
         from yolo.modeling.building_blocks import YoloLayer
 
@@ -157,7 +169,15 @@ class DarkNetConverter(_DarkNetSectionList):
 
             outs[yolo_tensor.name] = yolo_tensor
 
-            path_scales[yolo_tensor.name] = self.data[i-1].c >> 5
+            path_scales[yolo_tensor.name] = self.data[i - 1].c >> 5
 
-        yolo_layer = YoloLayer(masks = masks, anchors = anchors, thresh = thresh, cls_thresh = class_thresh, max_boxes = max_boxes, dtype = dtype, scale_boxes=self.net.w, scale_mult=scale_x_y, path_scale=path_scales)
+        yolo_layer = YoloLayer(masks=masks,
+                               anchors=anchors,
+                               thresh=thresh,
+                               cls_thresh=class_thresh,
+                               max_boxes=max_boxes,
+                               dtype=dtype,
+                               scale_boxes=self.net.w,
+                               scale_mult=scale_x_y,
+                               path_scale=path_scales)
         return yolo_layer(outs)

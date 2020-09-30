@@ -14,10 +14,17 @@ from . import configs
 @ks.utils.register_keras_serializable(package='yolo')
 class Backbone_Builder(ks.Model):
     _updated_config = tf_shims.ks_Model___updated_config
-    def __init__(self, name, input_shape = (None, None, None, 3), config=None, **kwargs):
-        self._layer_dict = {"DarkRes": nn_blocks.DarkResidual,
-                            "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
-                            "DarkBlock": None}
+
+    def __init__(self,
+                 name,
+                 input_shape=(None, None, None, 3),
+                 config=None,
+                 **kwargs):
+        self._layer_dict = {
+            "DarkRes": nn_blocks.DarkResidual,
+            "DarkUpsampleRoute": nn_blocks.DarkUpsampleRoute,
+            "DarkBlock": None
+        }
 
         self._input_shape = input_shape
         self._model_name = "custom_csp_backbone"
@@ -38,7 +45,8 @@ class Backbone_Builder(ks.Model):
             name = "darknet_53"
 
         try:
-            backbone = importlib.import_module('.' + name, package=configs.__package__).backbone
+            backbone = importlib.import_module(
+                '.' + name, package=configs.__package__).backbone
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.' + name:
                 raise ValueError(f"Invlid backbone '{name}'") from e
@@ -48,7 +56,7 @@ class Backbone_Builder(ks.Model):
         return build_block_specs(backbone)
 
     def _build_struct(self, net, inputs):
-        endpoints = collections.OrderedDict()#dict()
+        endpoints = collections.OrderedDict()  #dict()
         x = inputs
         for i, config in enumerate(net):
             x = self._build_block(config, x, f"{config.name}_{i}")
@@ -62,30 +70,24 @@ class Backbone_Builder(ks.Model):
         i = 0
         while i < config.repititions:
             if config.name == "DarkConv":
-                x = nn_blocks.DarkConv(
-                    filters=config.filters,
-                    kernel_size=config.kernel_size,
-                    strides=config.strides,
-                    padding=config.padding,
-                    name=f"{name}_{i}")(x)
+                x = nn_blocks.DarkConv(filters=config.filters,
+                                       kernel_size=config.kernel_size,
+                                       strides=config.strides,
+                                       padding=config.padding,
+                                       name=f"{name}_{i}")(x)
             elif config.name == "darkyolotiny":
-                x = nn_blocks.DarkTiny(
-                    filters=config.filters,
-                    strides=config.strides,
-                    name=f"{name}_{i}")(x)
+                x = nn_blocks.DarkTiny(filters=config.filters,
+                                       strides=config.strides,
+                                       name=f"{name}_{i}")(x)
             elif config.name == "MaxPool":
-                x = ks.layers.MaxPool2D(
-                    pool_size=config.kernel_size,
-                    strides=config.strides,
-                    padding=config.padding,
-                    name=f"{name}_{i}")(x)
+                x = ks.layers.MaxPool2D(pool_size=config.kernel_size,
+                                        strides=config.strides,
+                                        padding=config.padding,
+                                        name=f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]
-                x = layer(
-                    filters=config.filters,
-                    downsample=config.downsample,
-                    name=f"{name}_{i}")(x)
+                x = layer(filters=config.filters,
+                          downsample=config.downsample,
+                          name=f"{name}_{i}")(x)
             i += 1
         return x
-
-

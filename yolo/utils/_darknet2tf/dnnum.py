@@ -7,12 +7,11 @@ import argparse
 
 
 def _makeParser(parser):
-    parser.add_argument(
-        'filename',
-        default=None,
-        help='name of the config file. Defaults to YOLOv3',
-        nargs='?',
-        type=argparse.FileType('r'))
+    parser.add_argument('filename',
+                        default=None,
+                        help='name of the config file. Defaults to YOLOv3',
+                        nargs='?',
+                        type=argparse.FileType('r'))
 
 
 _parser = argparse_flags.ArgumentParser()

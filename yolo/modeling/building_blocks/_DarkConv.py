@@ -8,26 +8,28 @@ from ._Identity import Identity
 
 from yolo.modeling.functions.mish_activation import mish
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkConv(ks.layers.Layer):
-    def __init__(self,
-                 filters=1,
-                 kernel_size=(1, 1),
-                 strides=(1, 1),
-                 padding='same',
-                 dilation_rate=(1, 1),
-                 use_bias=True,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 bias_regularizer=None,
-                 l2_regularization=5e-4,  # default find where is it is stated
-                 use_bn=True,
-                 use_sync_bn=False,
-                 norm_moment=0.99,
-                 norm_epsilon=0.001,
-                 activation='leaky',
-                 leaky_alpha=0.1,
-                 **kwargs):
+    def __init__(
+            self,
+            filters=1,
+            kernel_size=(1, 1),
+            strides=(1, 1),
+            padding='same',
+            dilation_rate=(1, 1),
+            use_bias=True,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            bias_regularizer=None,
+            l2_regularization=5e-4,  # default find where is it is stated
+            use_bn=True,
+            use_sync_bn=False,
+            norm_moment=0.99,
+            norm_epsilon=0.001,
+            activation='leaky',
+            leaky_alpha=0.1,
+            **kwargs):
         '''
         Modified Convolution layer to match that of the DarkNet Library
 
@@ -92,9 +94,11 @@ class DarkConv(ks.layers.Layer):
         return
 
     def build(self, input_shape):
-        kernel_size = self._kernel_size if type(self._kernel_size) == int else self._kernel_size[0]
+        kernel_size = self._kernel_size if type(
+            self._kernel_size) == int else self._kernel_size[0]
         if self._padding == "same" and kernel_size != 1:
-            self._zeropad = ks.layers.ZeroPadding2D(((1,1), (1,1))) # symetric padding
+            self._zeropad = ks.layers.ZeroPadding2D(
+                ((1, 1), (1, 1)))  # symetric padding
         else:
             self._zeropad = Identity()
 
@@ -102,14 +106,14 @@ class DarkConv(ks.layers.Layer):
             filters=self._filters,
             kernel_size=self._kernel_size,
             strides=self._strides,
-            padding="valid", #self._padding,
+            padding="valid",  #self._padding,
             dilation_rate=self._dilation_rate,
             use_bias=self._use_bias,
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
             kernel_regularizer=ks.regularizers.l2(self._l2_regularization),
             bias_regularizer=self._bias_regularizer)
-        
+
         #self.conv =tf.nn.convolution(filters=self._filters, strides=self._strides, padding=self._padding
         if self._use_bn:
             if self._use_sync_bn:
@@ -124,14 +128,15 @@ class DarkConv(ks.layers.Layer):
                     axis=self._bn_axis)
         else:
             self.bn = Identity()
-        
+
         if self._activation == 'leaky':
-            alpha = {"alpha":self._leaky_alpha}
+            alpha = {"alpha": self._leaky_alpha}
             self._activation_fn = partial(tf.nn.leaky_relu, **alpha)
         elif self._activation == 'mish':
             self._activation_fn = mish()
         else:
-            self._activation_fn = ks.layers.Activation(activation=self._activation)
+            self._activation_fn = ks.layers.Activation(
+                activation=self._activation)
 
         super(DarkConv, self).build(input_shape)
         return

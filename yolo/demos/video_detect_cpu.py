@@ -12,25 +12,24 @@ parser.add_argument(
     default='regular',
     choices=('regular', 'spp', 'tiny'),
     type=str,
-    help='Name of the model. Defaults to regular. The options are ("regular", "spp", "tiny")',
-    nargs='?'
-)
+    help=
+    'Name of the model. Defaults to regular. The options are ("regular", "spp", "tiny")',
+    nargs='?')
 
 parser.add_argument(
     'vidpath',
     default="",
     type=str,
     help='Path of the video stream to process. Defaults to the webcam.',
-    nargs='?'
-)
+    nargs='?')
 
 parser.add_argument(
     '--webcam',
     default=0,
     type=int,
-    help='ID number of the webcam to process as a video stream. This is only used if vidpath is not specified. Defaults to 0.',
-    nargs='?'
-)
+    help=
+    'ID number of the webcam to process as a video stream. This is only used if vidpath is not specified. Defaults to 0.',
+    nargs='?')
 
 if __name__ == '__main__':
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -51,24 +50,24 @@ import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
-
-
 '''Video Buffer using cv2'''
-def video_processor(model, vidpath, device = "/CPU:0"):
+
+
+def video_processor(model, vidpath, device="/CPU:0"):
     img_array = []
 
     i = 0
     t = 0
     start = time.time()
     tick = 0
-    e,f,a,b,c,d = 0,0,0,0,0,0
+    e, f, a, b, c, d = 0, 0, 0, 0, 0, 0
     with tf.device(device):
-        model = build_model(name = model, use_mixed=False)
+        model = build_model(name=model, use_mixed=False)
         model.make_predict_function()
     colors = gen_colors(80)
-    label_names = get_coco_names(path = "yolo/dataloaders/dataset_specs/coco.names")
+    label_names = get_coco_names(
+        path="yolo/dataloaders/dataset_specs/coco.names")
     print(label_names)
-
 
     # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
     pred = None
@@ -85,14 +84,14 @@ def video_processor(model, vidpath, device = "/CPU:0"):
 
         with tf.device(device):
             e = datetime.datetime.now()
-            image = tf.cast(image, dtype = tf.float32)
-            image = image/255
+            image = tf.cast(image, dtype=tf.float32)
+            image = image / 255
             f = datetime.datetime.now()
 
         if t % 1 == 0:
             a = datetime.datetime.now()
             with tf.device(device):
-                pimage = tf.expand_dims(image, axis = 0)
+                pimage = tf.expand_dims(image, axis=0)
                 pimage = tf.image.resize(pimage, (416, 416))
                 pred = model.predict(pimage)
             b = datetime.datetime.now()
@@ -100,8 +99,10 @@ def video_processor(model, vidpath, device = "/CPU:0"):
         image = image.numpy()
         if pred != None:
             c = datetime.datetime.now()
-            boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], width, height)
-            draw_box(image, boxes[0].numpy(), classes[0].numpy(), pred["confidence"][0], colors, label_names)
+            boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"],
+                                             width, height)
+            draw_box(image, boxes[0].numpy(), classes[0].numpy(),
+                     pred["confidence"][0], colors, label_names)
             d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
@@ -119,11 +120,17 @@ def video_processor(model, vidpath, device = "/CPU:0"):
     cv2.destroyAllWindows()
     return
 
+
 def print_opt(latency, fps):
-    print(f"                                \rlatency:, \033[1;32;40m{latency * 1000} \033[0m ms", end = "\n")
-    print("                                 \rfps: \033[1;34;40m%d\033[0m " % (fps), end = "\n")
+    print(
+        f"                                \rlatency:, \033[1;32;40m{latency * 1000} \033[0m ms",
+        end="\n")
+    print("                                 \rfps: \033[1;34;40m%d\033[0m " %
+          (fps),
+          end="\n")
     print("\033[F\033[F\033[F", end="\n")
     return
+
 
 def main(argv, args=None):
     if args is None:

@@ -42,12 +42,14 @@ def get_size(path: Union[PathABC, io.IOBase]) -> int:
             path.seek(currentPos)
             return size
         else:
-            raise ValueError("IO object must be seekable in order to find the size.")
+            raise ValueError(
+                "IO object must be seekable in order to find the size.")
     else:
         return os.path.getsize(path)
 
 
-def open_if_not_open(file: Union[PathABC, io.IOBase], *args, **kwargs) -> io.IOBase:
+def open_if_not_open(file: Union[PathABC, io.IOBase], *args,
+                     **kwargs) -> io.IOBase:
     """
     Takes an input that can either be a file or a path. If the input is given as
     a file, it is returned without modification. If it is a path, it is opened
@@ -73,54 +75,50 @@ def open_if_not_open(file: Union[PathABC, io.IOBase], *args, **kwargs) -> io.IOB
 
 # URL names that can be accessed using the download function
 urls = {
-    'yolov2.cfg': (
-        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov2.cfg',
-        'cfg',
-        '57d85d77262c840b56ad5418faae4950d9c7727e0192fb70618eeaac26a19817'),
-    'yolov3.cfg': (
-        'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
-        'cfg',
-        '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
-    'yolov3-spp.cfg': (
-        'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-spp.cfg',
-        'cfg',
-        '7a4ec2d7427340fb12059f2b0ef76d6fcfcac132cc287cbbf0be5e3abaa856fd'),
-    'yolov3-tiny.cfg': (
-        'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg',
-        'cfg',
-        '84eb7a675ef87c906019ff5a6e0effe275d175adb75100dcb47f0727917dc2c7'),
-    'yolov4.cfg': (
-        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4.cfg',
-        'cfg',
-        'a6d0f8e5c62cc8378384f75a8159b95fa2964d4162e33351b00ac82e0fc46a34'),
-    'yolov4-tiny.cfg': (
-        'https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tiny.cfg',
-        'cfg',
-        '6cbf5ece15235f66112e0bedebb324f37199b31aee385b7e18f0bbfb536b258e'),
-    'yolov2.weights': (
-        'https://pjreddie.com/media/files/yolov2.weights',
-        'weights',
-        'd9945162ed6f54ce1a901e3ec537bdba4d572ecae7873087bd730e5a7942df3f'),
-    'yolov3.weights': (
-        'https://pjreddie.com/media/files/yolov3.weights',
-        'weights',
-        '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
-    'yolov3-spp.weights': (
-        'https://pjreddie.com/media/files/yolov3-spp.weights',
-        'weights',
-        '87a1e8c85c763316f34e428f2295e1db9ed4abcec59dd9544f8052f50de327b4'),
-    'yolov3-tiny.weights': (
-        'https://pjreddie.com/media/files/yolov3-tiny.weights',
-        'weights',
-        'dccea06f59b781ec1234ddf8d1e94b9519a97f4245748a7d4db75d5b7080a42c'),
-    'yolov4.weights': (
-        'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights',
-        'weights',
-        'e8a4f6c62188738d86dc6898d82724ec0964d0eb9d2ae0f0a9d53d65d108d562'),
-    'yolov4-tiny.weights': (
-        'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights',
-        'weights',
-        '037676f0d929c24e1bd9a0037fe30dc416fc26e0ca2a4491a44d024873316061'),
+    'yolov2.cfg':
+    ('https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov2.cfg',
+     'cfg',
+     '57d85d77262c840b56ad5418faae4950d9c7727e0192fb70618eeaac26a19817'),
+    'yolov3.cfg':
+    ('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg',
+     'cfg',
+     '22489ea38575dfa36c67a90048e8759576416a79d32dc11e15d2217777b9a953'),
+    'yolov3-spp.cfg':
+    ('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-spp.cfg',
+     'cfg',
+     '7a4ec2d7427340fb12059f2b0ef76d6fcfcac132cc287cbbf0be5e3abaa856fd'),
+    'yolov3-tiny.cfg':
+    ('https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg',
+     'cfg',
+     '84eb7a675ef87c906019ff5a6e0effe275d175adb75100dcb47f0727917dc2c7'),
+    'yolov4.cfg':
+    ('https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4.cfg',
+     'cfg',
+     'a6d0f8e5c62cc8378384f75a8159b95fa2964d4162e33351b00ac82e0fc46a34'),
+    'yolov4-tiny.cfg':
+    ('https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tiny.cfg',
+     'cfg',
+     '6cbf5ece15235f66112e0bedebb324f37199b31aee385b7e18f0bbfb536b258e'),
+    'yolov2.weights':
+    ('https://pjreddie.com/media/files/yolov2.weights', 'weights',
+     'd9945162ed6f54ce1a901e3ec537bdba4d572ecae7873087bd730e5a7942df3f'),
+    'yolov3.weights':
+    ('https://pjreddie.com/media/files/yolov3.weights', 'weights',
+     '523e4e69e1d015393a1b0a441cef1d9c7659e3eb2d7e15f793f060a21b32f297'),
+    'yolov3-spp.weights':
+    ('https://pjreddie.com/media/files/yolov3-spp.weights', 'weights',
+     '87a1e8c85c763316f34e428f2295e1db9ed4abcec59dd9544f8052f50de327b4'),
+    'yolov3-tiny.weights':
+    ('https://pjreddie.com/media/files/yolov3-tiny.weights', 'weights',
+     'dccea06f59b781ec1234ddf8d1e94b9519a97f4245748a7d4db75d5b7080a42c'),
+    'yolov4.weights':
+    ('https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights',
+     'weights',
+     'e8a4f6c62188738d86dc6898d82724ec0964d0eb9d2ae0f0a9d53d65d108d562'),
+    'yolov4-tiny.weights':
+    ('https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights',
+     'weights',
+     '037676f0d929c24e1bd9a0037fe30dc416fc26e0ca2a4491a44d024873316061'),
 }
 
 
@@ -162,19 +160,17 @@ def download(name: str, trust: bool = False) -> str:
 
     try:
         if hash is None:
-            return ks.utils.get_file(
-                name,
-                url,
-                cache_dir=cache_dir,
-                cache_subdir=type)
+            return ks.utils.get_file(name,
+                                     url,
+                                     cache_dir=cache_dir,
+                                     cache_subdir=type)
         else:
-            return ks.utils.get_file(
-                name,
-                url,
-                cache_dir=cache_dir,
-                cache_subdir=type,
-                file_hash=hash,
-                hash_algorithm='sha256')
+            return ks.utils.get_file(name,
+                                     url,
+                                     cache_dir=cache_dir,
+                                     cache_subdir=type,
+                                     file_hash=hash,
+                                     hash_algorithm='sha256')
     except Exception as e:
         if 'URL fetch failure on' in str(e):
             raise HTTPException(str(e)) from e

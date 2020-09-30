@@ -6,10 +6,11 @@ import tensorflow.keras as ks
 # def mish(x):
 #     return x * tf.math.tanh(ks.activations.softplus(x))
 
+
 class mish(ks.layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        return 
-    
+        return
+
     def call(self, x):
         return x * tf.math.tanh(ks.activations.softplus(x))

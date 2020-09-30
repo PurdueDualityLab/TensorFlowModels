@@ -2,6 +2,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkSpp(ks.layers.Layer):
     def __init__(self, sizes, **kwargs):
@@ -17,10 +18,10 @@ class DarkSpp(ks.layers.Layer):
         maxpools = []
         for size in self._sizes:
             maxpools.append(
-                tf.keras.layers.MaxPool2D(
-                    pool_size=(
-                        size, size), strides=(
-                        1, 1), padding='same', data_format=None))
+                tf.keras.layers.MaxPool2D(pool_size=(size, size),
+                                          strides=(1, 1),
+                                          padding='same',
+                                          data_format=None))
         self._maxpools = maxpools
         super().build(input_shape)
         return
@@ -34,8 +35,6 @@ class DarkSpp(ks.layers.Layer):
         return concat_output
 
     def get_config(self):
-        layer_config = {
-            "sizes": self._sizes
-        }
+        layer_config = {"sizes": self._sizes}
         layer_config.update(super().get_config())
         return layer_config

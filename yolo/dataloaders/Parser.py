@@ -1,9 +1,11 @@
 import abc
 from typing import Callable
 
+
 class DatasetParser(abc.ABC):
     @abc.abstractmethod
-    def unbatched_process_fn(self, is_training: bool) -> Callable[[dict], dict]:
+    def unbatched_process_fn(self,
+                             is_training: bool) -> Callable[[dict], dict]:
         """
         Create a function that decodes the dataset and returns a function
         that returns the image, bouding box, label, and any other required
@@ -43,6 +45,7 @@ class DatasetParser(abc.ABC):
         Returns: function to preprocess the data
         """
         ...
+
 
 class Parser(object):
     """Parses data and produces tensors to be consumed by models."""

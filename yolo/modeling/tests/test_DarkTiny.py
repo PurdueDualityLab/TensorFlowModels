@@ -17,7 +17,9 @@ class DarkTinyTest(tf.test.TestCase, parameterized.TestCase):
         print(outx.shape.as_list())
         self.assertEqual(width % strides, 0, msg="width % strides != 0")
         self.assertEqual(height % strides, 0, msg="height % strides != 0")
-        self.assertAllEqual(outx.shape.as_list(), [None, width // strides, height // strides, filters])
+        self.assertAllEqual(
+            outx.shape.as_list(),
+            [None, width // strides, height // strides, filters])
         return
 
     @parameterized.named_parameters(("middle", 224, 224, 64, 2),
@@ -28,9 +30,10 @@ class DarkTinyTest(tf.test.TestCase, parameterized.TestCase):
         test_layer = DarkTiny(filters=filters, strides=strides)
 
         init = tf.random_normal_initializer()
-        x = tf.Variable(initial_value=init(
-            shape=(1, width, height, filters), dtype=tf.float32))
-        y = tf.Variable(initial_value=init(shape=(1, width // strides, height // strides, filters),
+        x = tf.Variable(initial_value=init(shape=(1, width, height, filters),
+                                           dtype=tf.float32))
+        y = tf.Variable(initial_value=init(shape=(1, width // strides,
+                                                  height // strides, filters),
                                            dtype=tf.float32))
 
         with tf.GradientTape() as tape:

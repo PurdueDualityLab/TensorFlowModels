@@ -13,9 +13,14 @@ import importlib
 import more_itertools
 import collections
 
+
 #@ks.utils.register_keras_serializable(package='yolo')
 class Yolov4Neck(tf.keras.Model):
-    def __init__(self, model="neck", cfg_dict = None, input_shape = (None, None, None, 3), **kwargs):
+    def __init__(self,
+                 model="neck",
+                 cfg_dict=None,
+                 input_shape=(None, None, None, 3),
+                 **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
 
@@ -67,7 +72,8 @@ class Yolov4Neck(tf.keras.Model):
         else:
             self._model_name = "custom_neck"
 
-        inputs, input_shapes, routes, resamples, tails = self._get_attributes(input_shape)
+        inputs, input_shapes, routes, resamples, tails = self._get_attributes(
+            input_shape)
         self._input_shape = input_shapes
         outputs = self._connect_layers(routes, resamples, tails, inputs)
         super().__init__(inputs=inputs, outputs=outputs, **kwargs)
@@ -77,7 +83,8 @@ class Yolov4Neck(tf.keras.Model):
     def load_dict_cfg(clz, model):
         """ find the config file and load it for use"""
         try:
-            return importlib.import_module('.yolov4_' + model, package=configs.__package__).head
+            return importlib.import_module('.yolov4_' + model,
+                                           package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov4_' + model:
                 raise ValueError(f"Invlid neck '{model}'") from e
@@ -86,16 +93,30 @@ class Yolov4Neck(tf.keras.Model):
 
     def _standard_block(self, filters):
         def block(inputs):
-            x_route = DarkConv(filters = filters//2, kernel_size=(1,1), strides=(1,1), padding="same", activation="leaky")(inputs)
-            x = DarkConv(filters = filters//4, kernel_size=(1,1), strides=(1,1), padding="same", activation="leaky")(x_route)
+            x_route = DarkConv(filters=filters // 2,
+                               kernel_size=(1, 1),
+                               strides=(1, 1),
+                               padding="same",
+                               activation="leaky")(inputs)
+            x = DarkConv(filters=filters // 4,
+                         kernel_size=(1, 1),
+                         strides=(1, 1),
+                         padding="same",
+                         activation="leaky")(x_route)
             x = ks.layers.UpSampling2D(size=2)(x)
             return x_route, x
+
         return block
-    
+
     def _half_standard_block(self, filters):
         def block(inputs):
-            x = DarkConv(filters = filters//2, kernel_size=(1,1), strides=(1,1), padding="same", activation="leaky")(inputs)
+            x = DarkConv(filters=filters // 2,
+                         kernel_size=(1, 1),
+                         strides=(1, 1),
+                         padding="same",
+                         activation="leaky")(inputs)
             return x, None
+
         return block
 
     def _get_attributes(self, input_shape):
@@ -108,15 +129,17 @@ class Yolov4Neck(tf.keras.Model):
 
         start_width = input_shape[1]
         if input_shape[1] != None:
-            start_width = start_width//32
+            start_width = start_width // 32
 
         start_height = input_shape[2]
         if input_shape[2] != None:
-            start_height = start_height//32
+            start_height = start_height // 32
 
         for i, (key, path_keys) in enumerate(self._cfg_dict.items()):
-            inputs[key] = ks.layers.Input(shape=[start_width, start_height, path_keys["depth"]])
-            input_shapes[key] = tf.TensorSpec([None, start_width, start_height, path_keys["depth"]])
+            inputs[key] = ks.layers.Input(
+                shape=[start_width, start_height, path_keys["depth"]])
+            input_shapes[key] = tf.TensorSpec(
+                [None, start_width, start_height, path_keys["depth"]])
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"]
@@ -144,9 +167,9 @@ class Yolov4Neck(tf.keras.Model):
 
     def _connect_layers(self, routes, resamples, tails, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = collections.OrderedDict()#dict()
+        outputs = collections.OrderedDict()  #dict()
         layer_keys = list(self._cfg_dict.keys())
-         # layer input to the next layer
+        # layer input to the next layer
 
         #print({key:inputs[key].shape for key in inputs.keys()})
         #using this loop is faster for some reason
@@ -155,7 +178,7 @@ class Yolov4Neck(tf.keras.Model):
         while i < len(layer_keys):
             # print(layer_keys[i],":", layer_in.shape)
             # generate FPN output
-            _ , x = routes[layer_keys[i]](layer_in)
+            _, x = routes[layer_keys[i]](layer_in)
             x_route, x = tails[layer_keys[i]](x)
             outputs[layer_keys[i]] = x_route
 
@@ -168,15 +191,18 @@ class Yolov4Neck(tf.keras.Model):
         return outputs
 
     def get_config(self):
-        layer_config = {"cfg_dict": self._cfg_dict,
-                        "boxes": self._boxes,
-                        "model": self._model_name}
+        layer_config = {
+            "cfg_dict": self._cfg_dict,
+            "boxes": self._boxes,
+            "model": self._model_name
+        }
         layer_config.update(super().get_config())
         return layer_config
 
+
 if __name__ == "__main__":
-    backbone = CSP_Backbone_Builder( input_shape = [1, 608, 608, 3])
-    model = Yolov4Neck(input_shape = [1, 608, 608, 3])
+    backbone = CSP_Backbone_Builder(input_shape=[1, 608, 608, 3])
+    model = Yolov4Neck(input_shape=[1, 608, 608, 3])
 
     inputs = tf.ones(shape=[1, 608, 608, 3], dtype=tf.float32)
 

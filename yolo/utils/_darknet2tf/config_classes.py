@@ -8,13 +8,11 @@ Currently, the parser is incomplete and we can only guarantee that it works for
 models in the YOLO family (YOLOv3 and older).
 """
 
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 
 from typing import Tuple, Sequence, List
-
 
 
 class Config(ABC):
@@ -36,7 +34,6 @@ class Config(ABC):
     (w, h, c) will correspond to the different input dimensions of a DarkNet
     layer: the width, height, and number of channels.
     """
-
     @property
     @abstractmethod
     def shape(self) -> Tuple[int, int, int]:
@@ -83,7 +80,8 @@ class Config(ABC):
                 "w": prevlayer.shape[0],
                 "h": prevlayer.shape[1],
                 "c": prevlayer.shape[2],
-                **layer_dict}
+                **layer_dict
+            }
         else:
             l = layer_dict
         return clz(**l)
@@ -101,13 +99,13 @@ class Config(ABC):
         """
         return None
 
+
 class _LayerBuilder(dict):
     """
     This class defines a registry for the layer builder in the DarkNet weight
     parser. It allows for syntactic sugar when registering Config subclasses to
     the parser.
     """
-
     def __getitem__(self, key):
         try:
             return super().__getitem__(key)
@@ -122,6 +120,7 @@ class _LayerBuilder(dict):
             for layer_type in layer_types:
                 self[layer_type] = clz
             return clz
+
         return decorator
 
 
@@ -146,7 +145,7 @@ class convCFG(Config):
     dilation: int = field(init=True, repr=False, default=1)
 
     nweights: int = field(repr=False, default=0)
-    biases: np.array = field(repr=False, default=None) #
+    biases: np.array = field(repr=False, default=None)  #
     weights: np.array = field(repr=False, default=None)
     scales: np.array = field(repr=False, default=None)
     rolling_mean: np.array = field(repr=False, default=None)
@@ -154,8 +153,8 @@ class convCFG(Config):
 
     def __post_init__(self):
         self.pad = int(self.pad) if self.size != 1 else 0
-        self.nweights = int((self.c / self.groups) *
-                            self.filters * self.size * self.size)
+        self.nweights = int(
+            (self.c / self.groups) * self.filters * self.size * self.size)
         return
 
     @property
@@ -177,21 +176,24 @@ class convCFG(Config):
         # used as a guide:
         # https://github.com/thtrieu/darkflow/blob/master/darkflow/dark/convolution.py
         weights = read_n_floats(self.nweights, files)
-        self.weights = weights.reshape(
-            self.filters, self.c, self.size, self.size).transpose([2, 3, 1, 0])
+        self.weights = weights.reshape(self.filters, self.c, self.size,
+                                       self.size).transpose([2, 3, 1, 0])
         bytes_read += self.nweights
         return bytes_read * 4
 
     def get_weights(self, printing=False):
         if printing:
-            print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
+            print(
+                "[weights, biases, biases, scales, rolling_mean, rolling_variance]"
+            )
         if self.batch_normalize:
             return [
                 self.weights,
-                self.scales, #gamma
-                self.biases, #beta
+                self.scales,  #gamma
+                self.biases,  #beta
                 self.rolling_mean,
-                self.rolling_variance]
+                self.rolling_variance
+            ]
         else:
             return [self.weights, self.biases]
 
@@ -201,12 +203,13 @@ class convCFG(Config):
             filters=self.filters,
             kernel_size=(self.size, self.size),
             strides=(self.stride, self.stride),
-            padding='same', # TODO: THIS ONE
+            padding='same',  # TODO: THIS ONE
             dilation_rate=(self.dilation, self.dilation),
             use_bn=bool(self.batch_normalize),
             activation=activation_function_dn_to_keras_name(self.activation),
-        ) # TODO: Where does groups go
+        )  # TODO: Where does groups go
         return layer(tensors[-1]), layer
+
 
 @layer_builder.register('shortcut')
 @dataclass
@@ -232,7 +235,7 @@ class shortcutCFG(Config):
         '''
         _from = layer_dict['from']
         if type(_from) is not tuple:
-            _from = (_from,)
+            _from = (_from, )
 
         prevlayer = net[-1]
         l = {
@@ -283,12 +286,16 @@ class routeCFG(Config):
             for l in layers_iter:
                 lw, lh, lc = net[l].shape
                 if (lw, lh) != (w, h):
-                    raise ValueError(f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}")
+                    raise ValueError(
+                        f"Width and heights of route layer [#{len(net)}] inputs {layers} do not match.\n   Previous: {(w, h)}\n   New: {(lw, lh)}"
+                    )
                 c += lc
         else:
             w, h, c = net[layers].shape
-            layers = (layers,)
-        assert c % layer_dict.get('groups', 1) == 0, "The number of channels must evenly divide among the groups."
+            layers = (layers, )
+        assert c % layer_dict.get(
+            'groups', 1
+        ) == 0, "The number of channels must evenly divide among the groups."
 
         # Create layer
         l = layer_dict.copy()
@@ -330,17 +337,20 @@ class netCFG(Config):
 
     @classmethod
     def from_dict(clz, net, layer_dict):
-        assert len(net.data) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
+        assert len(
+            net.data
+        ) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
         l = {
             "_type": layer_dict["_type"],
             "w": layer_dict["width"],
             "h": layer_dict["height"],
-            "c": layer_dict["channels"]}
+            "c": layer_dict["channels"]
+        }
         return clz(**l)
 
     def to_tf(self, tensors):
         from tensorflow.keras import Input
-        return Input(shape = [self.w, self.h, self.c])
+        return Input(shape=[self.w, self.h, self.c])
 
 
 @layer_builder.register('yolo')
@@ -368,11 +378,12 @@ class yoloCFG(Config):
             "anchors": layer_dict['anchors'],
             "w": prevlayer.shape[0],
             "h": prevlayer.shape[1],
-            "c": prevlayer.shape[2]}
+            "c": prevlayer.shape[2]
+        }
         return clz(**l)
 
     def to_tf(self, tensors):
-        return tensors[-1] # TODO: Fill out
+        return tensors[-1]  # TODO: Fill out
 
 
 @layer_builder.register('upsample')
@@ -409,12 +420,16 @@ class maxpoolCFG(Config):
     def shape(self):
         pad = 0 if self.stride == 1 else 1
         #print((self.w//self.stride, self.h//self.stride, self.c))
-        return (self.w//self.stride, self.h//self.stride, self.c)#((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+        return (
+            self.w // self.stride, self.h // self.stride, self.c
+        )  #((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
     def to_tf(self, tensors):
         #from tensorflow.nn import max_pool2d
         from tensorflow.keras.layers import MaxPooling2D
-        return MaxPooling2D(pool_size=(self.size, self.size), strides=(self.stride, self.stride), padding='same')(tensors[-1])
+        return MaxPooling2D(pool_size=(self.size, self.size),
+                            strides=(self.stride, self.stride),
+                            padding='same')(tensors[-1])
 
 
 def len_width(n, f, p, s):
@@ -456,6 +471,7 @@ def read_n_long(n, bfile, unsigned=False):
 
 def activation_function_dn_to_keras_name(dn):
     return dn
+
 
 def get_primitive_tf_layer_name(var, piece=3):
     name = var.name
