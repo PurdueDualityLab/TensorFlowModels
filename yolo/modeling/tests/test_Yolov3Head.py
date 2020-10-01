@@ -9,7 +9,6 @@ import unittest
 
 from yolo.modeling.backbones import backbone_builder as builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
-from yolo.modeling import yolo_v3
 
 
 class Yolov3HeadTest(tf.test.TestCase, parameterized.TestCase):

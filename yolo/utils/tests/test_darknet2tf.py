@@ -8,7 +8,7 @@ except BaseException:
     # Shim for Python 3.6 and older
     import importlib_resources
 
-from yolo.modeling.yolo_v3 import DarkNet53
+from yolo import DarkNet53
 
 
 class darknet2tf_test(tf.test.TestCase, parameterized.TestCase):

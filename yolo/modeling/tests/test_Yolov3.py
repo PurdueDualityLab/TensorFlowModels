@@ -6,7 +6,7 @@ from absl.testing import parameterized
 import os
 import unittest
 
-from yolo.modeling import yolo_v3
+from yolo import Yolov3
 
 try:
     from tensorflow.python.framework.errors_impl import FailedPreconditionError
@@ -22,10 +22,9 @@ class Yolov3Test(tf.test.TestCase, parameterized.TestCase):
     def test_yolov3(self, model_name, weights_file):
         for device in ['/CPU:0', '/GPU:0']:
             with tf.device(device):
-                model = yolo_v3.Yolov3(classes=80, type=model_name)
+                model = Yolov3(classes=80, model=model_name)
                 model.load_weights_from_dn(dn2tf_backbone=True,
                                            dn2tf_head=True)
-                model.summary()
 
                 if model_name == 'tiny':
                     input_shape = [1, 416, 416, 3]
@@ -33,6 +32,8 @@ class Yolov3Test(tf.test.TestCase, parameterized.TestCase):
                     input_shape = [1, 608, 608, 3]
                 x = tf.ones(shape=input_shape, dtype=tf.float32)
                 model.predict(x)
+
+                model.summary()
 
                 with self.assertRaises(FailedPreconditionError
                                        or NotADirectoryError):
