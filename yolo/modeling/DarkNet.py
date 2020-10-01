@@ -4,7 +4,6 @@ from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.modeling.building_blocks import YoloLayer
 from yolo.utils.file_manager import download
-from yolo.utils import tf_shims
 from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter, load_weights_dnBackbone, load_weights_dnHead
 import os

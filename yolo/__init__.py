@@ -2,9 +2,10 @@ import importlib as _imp
 import sys as _sys
 
 _dict = {
-    'DarkNet53': 'yolo.modeling.yolo_v3',
-    'Yolov3': 'yolo.modeling.yolo_v3',
-    'Yolov4': 'yolo.modeling.yolo_v4',
+    'DarkNet53': 'yolo.modeling.DarkNet',
+    'CSPDarkNet53': 'yolo.modeling.CSPDarkNet',
+    'Yolov3': 'yolo.modeling.Yolov3',
+    'Yolov4': 'yolo.modeling.Yolov4',
 }
 
 __all__ = list(_dict)
