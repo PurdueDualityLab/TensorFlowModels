@@ -10,7 +10,6 @@ import unittest
 from yolo.modeling.backbones import csp_backbone_builder as builder
 from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
 from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
-from yolo.modeling import yolo_v3
 
 # from yolo.utils.testing_utils import prep_gpu
 # prep_gpu()

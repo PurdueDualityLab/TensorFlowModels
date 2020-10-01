@@ -60,13 +60,13 @@ def build_model(name="regular",
                 set_head=True):
 
     if model_version == "v3":
-        from yolo.modeling.Yolov3 import Yolov3
+        from yolo import Yolov3
         model = Yolov3(classes=classes,
                        model=name,
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
     else:
-        from yolo.modeling.Yolov4 import Yolov4
+        from yolo import Yolov4
         model = Yolov4(classes=classes,
                        model="regular",
                        input_shape=(batch_size, w, h, 3),
