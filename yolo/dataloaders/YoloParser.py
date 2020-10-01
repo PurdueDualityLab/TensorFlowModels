@@ -59,14 +59,13 @@ class YoloParser(DatasetParser):
                              square=True,
                              square_w=self._max_process_size)
         boxes = _yxyx_to_xcycwh(data["objects"]["bbox"])
-        classes = tf.one_hot(data["objects"]["label"], depth=self._num_classes)
+        #classes = tf.one_hot(data["objects"]["label"], depth=self._num_classes)
         best_anchor = _get_best_anchor(boxes, self._anchors, self._image_w)
         return {
             "image": image,
             "bbox": boxes,
-            "label": classes,
             "classes": data["objects"]["label"],
-            "best_anchor": best_anchor
+            "best_anchors": best_anchor
         }
 
     def _batched_processing(self, data, is_training=True):
@@ -102,13 +101,13 @@ class YoloParser(DatasetParser):
         image = tf.image.random_hue(image=image, max_delta=.1)  # Hue
         image = tf.clip_by_value(image, 0.0, 1.0)
 
-        image = tf.image.resize(image,
+        image = tf.image.resize(image, 
                                 size=(randscale * self._net_down_scale,
-                                      randscale * self._net_down_scale))
+                                      randscale * self._net_down_scale)) # Random Resize
         image = _translate_image(image, translate_x, translate_y)
         boxes = _jitter_boxes(data["bbox"], translate_x, translate_y, j_x, j_y, j_w, j_h)
-        label = tf.concat([boxes, data["label"], data["best_anchor"]], axis=-1)
-        return {"image": image, "label": label, "bbox": boxes, "classes":data["classes"]}
+        label = tf.concat([boxes, tf.expand_dims(tf.cast(data["classes"], boxes.dtype), axis = -1), data["best_anchors"]], axis=-1)
+        return image, {"label": label, "bbox": boxes, "classes":data["classes"], "best_anchors":data["best_anchors"]}
 
 
     def unbatched_process_fn(self, is_training):

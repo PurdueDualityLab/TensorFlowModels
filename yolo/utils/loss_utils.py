@@ -3,7 +3,7 @@ from tensorflow.keras import backend as K
 
 
 @tf.function
-def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
+def build_grided_gt(y_true, mask, size, classes, true_shape, use_tie_breaker):
     """
     convert ground truth for use in loss functions
     Args: 
@@ -14,35 +14,39 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-    batches = tf.shape(y_true)[0]
-    num_boxes = tf.shape(y_true)[1]
+    boxes = y_true[..., 0:4]
+    classes = tf.one_hot(tf.cast(y_true[..., 4], dtype = tf.int32), depth = classes, dtype = boxes.dtype)
+    anchors = y_true[..., 5:]
+
+    batches = tf.shape(boxes)[0]
+    num_boxes = tf.shape(boxes)[1]
     len_masks = tf.shape(mask)[0]
 
     full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype = y_true.dtype)
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(y_true[..., 0] * tf.cast(size, dtype=y_true.dtype),
+    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=boxes.dtype),
                 dtype=tf.int32)
-    y = tf.cast(y_true[..., 1] * tf.cast(size, dtype=y_true.dtype),
+    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=boxes.dtype),
                 dtype=tf.int32)
 
-    anchors = tf.repeat(tf.expand_dims(y_true[..., -5:], axis=-1),
+    anchors = tf.repeat(tf.expand_dims(anchors, axis=-1),
                         len_masks,
                         axis=-1)
 
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-    update = tf.TensorArray(y_true.dtype, size=0, dynamic_size=True)
-    const = tf.cast(tf.convert_to_tensor([1.]), dtype=y_true.dtype)
-    mask = tf.cast(mask, dtype=y_true.dtype)
+    update = tf.TensorArray(boxes.dtype, size=0, dynamic_size=True)
+    const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
+    mask = tf.cast(mask, dtype=boxes.dtype)
     
     i = 0
     anchor_id = 0
     for batch in range(batches):
         for box_id in range(num_boxes):
-            if K.all(tf.math.equal(y_true[batch, box_id, 2:4], 0)):
+            if K.all(tf.math.equal(boxes[batch, box_id, 2:4], 0)):
                 continue
-            if K.any(tf.math.less(y_true[batch, box_id, 0:2], 0.0)) or K.any(
-                    tf.math.greater_equal(y_true[batch, box_id, 0:2], 1.0)):
+            if K.any(tf.math.less(boxes[batch, box_id, 0:2], 0.0)) or K.any(
+                    tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
                 continue
 
             if use_tie_breaker:
@@ -53,40 +57,24 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                         p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
                         uid = 1
 
-                        used = depth_track[batch, y[batch, box_id],
-                                           x[batch, box_id], p]
+                        used = depth_track[batch, y[batch, box_id],x[batch, box_id], p]
                         if anchor_id == 0:
                             # write the box to the update list
                             # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
                             """peculiar"""
-                            update_index = update_index.write(
-                                i,
-                                [batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([
-                                y_true[batch, box_id, 0:4],
-                                const,
-                                y_true[batch, box_id, 4:-5]
-                            ])
+                            update_index = update_index.write(i,[batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
                             update = update.write(i, value)
                         elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
                             uid = 2
                             # write the box to the update list
                             # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
                             """peculiar"""
-                            update_index = update_index.write(
-                                i,
-                                [batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([
-                                y_true[batch, box_id, 0:4],
-                                const,
-                                y_true[batch, box_id, 4:-5]
-                            ])
+                            update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
                             update = update.write(i, value)
 
-                        depth_track = tf.tensor_scatter_nd_update(
-                            depth_track,
-                            [(batch, y[batch, box_id], x[batch, box_id], p)],
-                            [uid])
+                        depth_track = tf.tensor_scatter_nd_update(depth_track,[(batch, y[batch, box_id], x[batch, box_id], p)],[uid])
                         i += 1
             else:
                 index = tf.math.equal(anchors[batch, box_id, 0], mask)
@@ -94,12 +82,8 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
                     #tf.print(0, anchors[batch, box_id, 0])
                     p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
                                 dtype=tf.int32)
-                    update_index = update_index.write(
-                        i, [batch, y[batch, box_id], x[batch, box_id], p])
-                    value = K.concatenate([
-                        y_true[batch, box_id, 0:4],
-                        const, y_true[batch, box_id, 4:-5]
-                    ])
+                    update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
+                    value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
                     update = update.write(i, value)
                     i += 1
 

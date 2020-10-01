@@ -9,6 +9,7 @@ from yolo.utils.loss_utils import build_grided_gt
 
 class Yolo_Loss(ks.losses.Loss):
     def __init__(self,
+                 classes, 
                  mask,
                  anchors,
                  scale_anchors=1,
@@ -53,6 +54,7 @@ class Yolo_Loss(ks.losses.Loss):
                                         **kwargs)
         #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
+        self._classes = classes
         self._num = tf.cast(len(mask), dtype=tf.int32)
         self._num_extras = num_extras
         self._truth_thresh = truth_thresh
@@ -91,6 +93,8 @@ class Yolo_Loss(ks.losses.Loss):
         self._class_loss = 0.0
         self._iou_count = 0.0
         self._sum_iou = 0.0
+        self._recall = 0.0
+
         self._path_key = path_key
         return
 
@@ -108,8 +112,9 @@ class Yolo_Loss(ks.losses.Loss):
                                                           batch_size,
                                                           dtype=y_pred.dtype)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        y_true = build_grided_gt(tf.cast(y_true, y_pred.dtype), tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, tf.shape(y_pred), self._use_tie_breaker)
 
+        y_true = build_grided_gt(tf.cast(y_true, y_pred.dtype), tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+       
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
 
@@ -194,6 +199,7 @@ class Yolo_Loss(ks.losses.Loss):
         self._loss_box = loss_box
         self._conf_loss = conf_loss
         self._class_loss = class_loss
+        self._recall = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
 
         # hits inf when all loss is neg or 0
         self._sum_iou = tf.reduce_sum(iou)
@@ -215,6 +221,9 @@ class Yolo_Loss(ks.losses.Loss):
 
     def get_confidence_loss(self):
         return self._conf_loss
+    
+    def get_recall(self):
+        return self._recall
 
     def get_config(self):
         """save all loss attributes"""

@@ -78,15 +78,14 @@ class Yolo(tf.keras.Model, ABC):
         opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt, "dynamic")
         '''
         #get the data point
-        image = data["image"]
-        label = data["label"]
+        image, label = data
 
         # computer detivative and apply gradients
         num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
         with tf.GradientTape() as tape:
             # compute a prediction
             y_pred = self(image, training=True)
-            loss = self.compiled_loss(label, y_pred["raw_output"])
+            loss = self.compiled_loss(label["label"], y_pred["raw_output"])
             scaled_loss = loss/num_replicas
 
             # scale the loss for numerical stability
@@ -113,23 +112,23 @@ class Yolo(tf.keras.Model, ABC):
             loss_metrics[
                 f"{loss._path_key}_classes"] = loss.get_classification_loss()
             loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            # loss_metrics[
+            #     f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
             loss_metrics[
-                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-
+                f"{loss._path_key}_recall"] = loss.get_recall()
         #compiled metrics
-        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        self.compiled_metrics.update_state(label["label"], y_pred["raw_output"])
         metrics_dict = {m.name: m.result() for m in self.metrics}
         metrics_dict.update(loss_metrics)
         return metrics_dict
 
     def test_step(self, data):
         #get the data point
-        image = data["image"]
-        label = data["label"]
+        image, label = data
 
         # computer detivative and apply gradients
         y_pred = self(image, training=False)
-        loss = self.compiled_loss(label, y_pred["raw_output"])
+        loss = self.compiled_loss(label["label"], y_pred["raw_output"])
 
         #custom metrics
         loss_metrics = dict()
@@ -138,11 +137,12 @@ class Yolo(tf.keras.Model, ABC):
             loss_metrics[
                 f"{loss._path_key}_classes"] = loss.get_classification_loss()
             loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
+            # loss_metrics[
+            #     f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
             loss_metrics[
-                f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-
+                f"{loss._path_key}_recall"] = loss.get_recall()
         #compiled metrics
-        self.compiled_metrics.update_state(label, y_pred["raw_output"])
+        self.compiled_metrics.update_state(label["label"], y_pred["raw_output"])
         metrics_dict = {m.name: m.result() for m in self.metrics}
         metrics_dict.update(loss_metrics)
         return metrics_dict
@@ -160,7 +160,8 @@ class Yolo(tf.keras.Model, ABC):
         from yolo.modeling.functions.yolo_loss import Yolo_Loss
         loss_dict = {}
         for key in self._masks.keys():
-            loss_dict[key] = Yolo_Loss(mask=self._masks[key],
+            loss_dict[key] = Yolo_Loss(classes = self._classes,
+                                       mask=self._masks[key],
                                        anchors=self._boxes,
                                        scale_anchors=self._path_scales[key],
                                        ignore_thresh=0.7,

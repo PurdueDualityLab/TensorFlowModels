@@ -57,7 +57,8 @@ def build_model(name="regular",
                 saved=False,
                 load_head=True,
                 policy="float32",
-                set_head=True):
+                set_head=True, 
+                weights_file = None):
 
     if model_version == "v3":
         from yolo import Yolov3
@@ -72,7 +73,8 @@ def build_model(name="regular",
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
     model.load_weights_from_dn(dn2tf_backbone=True,
-                                dn2tf_head=load_head)
+                                dn2tf_head=load_head, 
+                                weights_file = weights_file)
     return model
 
 

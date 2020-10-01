@@ -234,6 +234,7 @@ class Yolov4(base_model.Yolo):
 if __name__ == "__main__":
     import tensorflow_datasets as tfds
     from yolo.utils.testing_utils import prep_gpu
+    from yolo.training.call_backs.PrintingCallBack import Printer
     prep_gpu() # must be called before loading a dataset
     train, info = tfds.load('coco',
                             split='train',
@@ -245,16 +246,18 @@ if __name__ == "__main__":
                            with_info=True)
 
     
-    model = Yolov4(model = "regular", policy="mixed_float16")
+    model = Yolov4(model = "regular", policy="mixed_float16", use_tie_breaker=True)
     model.get_summary()
     model.build(model._input_shape)
     model.load_weights_from_dn(dn2tf_head=False)
 
-    train, test = model.process_datasets(train, test, batch_size=10)
+    train, test = model.process_datasets(train, test, batch_size=5, _eval_is_training=True)
     loss_fn = model.generate_loss(loss_type="ciou")
 
     #optimizer = ks.optimizers.SGD(lr=1e-3)
     optimizer = ks.optimizers.Adam(lr=1e-3)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.fit(train, validation_data = test, epochs = 40)
+    model.fit(train, validation_data = test, epochs = 40, verbose= 0, callbacks=[Printer()])
+    #model.evaluate(test, verbose = 0, callbacks=[Printer()])
+
