@@ -241,7 +241,7 @@ if __name__ == "__main__":
     prep_gpu()
     train, info = tfds.load('coco',
                             split='train',
-                            shuffle_files=False,
+                            shuffle_files=True,
                             with_info=True)
     test, info = tfds.load('coco',
                            split='validation',
@@ -249,12 +249,13 @@ if __name__ == "__main__":
                            with_info=True)
 
     model = Yolov3(model = "regular", policy="mixed_float16")
-    model.load_weights_from_dn(dn2tf_head=False)
+    model.load_weights_from_dn(dn2tf_head=False, weights_file="yolov3-regular.weights")
 
-    train, test = model.process_datasets(train, test, batch_size=5, jitter_im = 0.2, jitter_boxes = 0.005, _eval_is_training = True)
+    train, test = model.process_datasets(train, test, batch_size=10, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
-    optimizer = ks.optimizers.SGD(lr=1e-3)
+    #optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.Adam(lr=1e-4)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.fit(train, validation_data = test)
+    model.fit(train, validation_data = test, epochs = 40)

@@ -248,12 +248,13 @@ if __name__ == "__main__":
     model = Yolov4(model = "regular", policy="mixed_float16")
     model.get_summary()
     model.build(model._input_shape)
-    model.load_weights_from_dn(dn2tf_head=True)
+    model.load_weights_from_dn(dn2tf_head=False)
 
-    train, test = model.process_datasets(train, test, batch_size=1)
+    train, test = model.process_datasets(train, test, batch_size=10)
     loss_fn = model.generate_loss(loss_type="ciou")
 
-    optimizer = ks.optimizers.SGD(lr=1e-3)
+    #optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.Adam(lr=1e-3)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.fit(train, validation_data = test)
+    model.fit(train, validation_data = test, epochs = 40)
