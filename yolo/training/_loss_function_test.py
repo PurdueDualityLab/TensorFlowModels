@@ -18,6 +18,7 @@ from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial,
 prep_gpu()
 
 from yolo.dataloaders.YoloParser import YoloParser
+from yolo.utils.box_utils import _xcycwh_to_yxyx
 
 
 def lr_schedule(epoch, lr):
@@ -27,42 +28,41 @@ def lr_schedule(epoch, lr):
 
 
 def gt_test():
+    import tensorflow_datasets as tfds
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        train, test = get_dataset(batch_size=1)
-        pred_model = build_model(model_version="v4",
-                                 set_head=True)  #policy = "float32
-        model = build_model(model_version="v4",
-                            set_head=False)  #policy = "float32
-        loss_fn = model.generate_loss(loss_type="ciou", scale=416)
-        #map_50 = YoloMAP_recall(name = "recall")
-        partial_model = filter_partial()
+        train, info = tfds.load('coco',
+                            split='train',
+                            shuffle_files=True,
+                            with_info=True)
+        test, info = tfds.load('coco',
+                            split='validation',
+                            shuffle_files=False,
+                            with_info=True)
+        model = build_model(model_version="v4", policy="mixed_float16")
+        model.get_summary()
+
+        loss_fn = model.generate_loss(loss_type="ciou")
+        train, test = model.process_datasets(train, test, jitter_boxes=0.005, jitter_im=0.1, batch_size=1)
 
     colors = gen_colors(80)
     coco_names = get_coco_names()
     i = 0
-    for image, label in train:
-        box, classif = partial_model(label)
-        pred = pred_model(image)
-        item = model(image)
-
-        #image = tf.image.draw_bounding_boxes(image, box, [[0.0, 1.0, 0.0]])
-        #image = tf.image.draw_bounding_boxes(image, boxes, [[1.0, 0.0, 0.0]])
+    for data in test:
+        print(data.keys())
+        pred = model(data["image"])
+        
+        image = tf.image.draw_bounding_boxes(data["image"], pred["bbox"], [[1.0, 0.0, 0.0]])
+        image = tf.image.draw_bounding_boxes(image, _xcycwh_to_yxyx(data["bbox"]) , [[0.0, 1.0, 0.0]])
         image = image[0].numpy()
-        boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"],
-                                         image.shape[0], image.shape[1])
-        box, classif = int_scale_boxes(box, classif, image.shape[0],
-                                       image.shape[1])
-        draw_box(image, boxes[0].numpy(), classes[0].numpy(), None, [0, 1, 0],
-                 coco_names)
-        draw_box(image, box[0].numpy(), classif[0].numpy(), None, [1, 0, 0],
-                 coco_names)
 
         plt.imshow(image)
         plt.show()
 
-        for key in item.keys():
-            print(key, loss_fn[key](label[key], item[key]))
+        loss = 0
+        for key in pred["raw_output"].keys():
+            loss += loss_fn[key](data["label"], pred["raw_output"][key])
+        print(f"loss: {loss}")
         if i == 10:
             break
         i += 1
@@ -272,9 +272,9 @@ def loss_test():
 
 
 def main(argv, args=None):
-    loss_test()
+    #loss_test()
     #loss_test_eager()
-    #gt_test()
+    gt_test()
     return
 
 

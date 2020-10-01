@@ -33,7 +33,8 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
     update = tf.TensorArray(y_true.dtype, size=0, dynamic_size=True)
     const = tf.cast(tf.convert_to_tensor([1.]), dtype=y_true.dtype)
-
+    mask = tf.cast(mask, dtype=y_true.dtype)
+    
     i = 0
     anchor_id = 0
     for batch in range(batches):
@@ -46,12 +47,10 @@ def build_grided_gt(y_true, mask, size, true_shape, use_tie_breaker):
 
             if use_tie_breaker:
                 for anchor_id in range(tf.shape(anchors)[-1]):
-                    index = tf.math.equal(anchors[batch, box_id, anchor_id],
-                                          mask)
+                    index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
                     if K.any(index):
                         #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
-                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
-                                    dtype=tf.int32)
+                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
                         uid = 1
 
                         used = depth_track[batch, y[batch, box_id],

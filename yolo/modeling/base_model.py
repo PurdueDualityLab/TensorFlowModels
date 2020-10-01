@@ -42,7 +42,8 @@ class Yolo(tf.keras.Model, ABC):
                          image_h=416,
                          fixed_size=False,
                          jitter_im=0.1,
-                         jitter_boxes=0.005):
+                         jitter_boxes=0.005,
+                         _eval_is_training = False):
 
         from yolo.dataloaders.YoloParser import YoloParser
         parser = YoloParser(image_w=image_w,
@@ -56,8 +57,8 @@ class Yolo(tf.keras.Model, ABC):
         preprocess_train = parser.unbatched_process_fn(is_training=True)
         postprocess_train = parser.batched_process_fn(is_training=True)
 
-        preprocess_test = parser.unbatched_process_fn(is_training=False)
-        postprocess_test = parser.batched_process_fn(is_training=False)
+        preprocess_test = parser.unbatched_process_fn(is_training=_eval_is_training)
+        postprocess_test = parser.batched_process_fn(is_training=_eval_is_training)
 
         train = train.map(preprocess_train).padded_batch(batch_size)
         train = train.map(postprocess_train)
@@ -98,9 +99,12 @@ class Yolo(tf.keras.Model, ABC):
 
         # get unscaled loss if the scaled_loss was used
         if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
-            gradients = self.optimizer.get_unscaled_gradients(grads)
+            gradients = self.optimizer.get_unscaled_gradients(gradients)
 
-        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+        # if self._clip_grads_norm != None:
+        #     gradients = tf.clip_by_global_norm(gradients, clip_norm = self._clip_grads_norm)
+
+        self.optimizer.apply_gradients(zip(gradients, train_vars))
 
         #custom metrics
         loss_metrics = dict()
@@ -166,6 +170,11 @@ class Yolo(tf.keras.Model, ABC):
                                        scale_x_y=self._x_y_scales[key],
                                        use_tie_breaker=self._use_tie_breaker)
         return loss_dict
+
+    def match_optimizer_to_policy(self, optimizer, scaling = "dynamic"):
+        if self._policy != "float32":
+            return tf.keras.mixed_precision.experimental.LossScaleOptimizer(optimizer, scaling)
+        return optimizer
 
     def set_policy(self,
                    policy='mixed_float16',

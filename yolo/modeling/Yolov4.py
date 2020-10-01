@@ -33,6 +33,7 @@ class Yolov4(base_model.Yolo):
             scale_boxes: int = 416,
             scale_mult: float = 1.0,
             use_tie_breaker: bool = True,
+            clip_grads_norm = None, 
             policy="float32",
             **kwargs):
         super().__init__(**kwargs)
@@ -76,6 +77,8 @@ class Yolov4(base_model.Yolo):
         self.neck = neck
         self.head = head
         self.head_filter = head_filter
+
+        self._clip_grads_norm = clip_grads_norm
 
         self.get_models()
         return
@@ -242,14 +245,15 @@ if __name__ == "__main__":
                            with_info=True)
 
     
-    model = Yolov4(model = "regular", policy="float16")
+    model = Yolov4(model = "regular", policy="mixed_float16")
     model.get_summary()
     model.build(model._input_shape)
-    model.load_weights_from_dn()
+    model.load_weights_from_dn(dn2tf_head=True)
 
     train, test = model.process_datasets(train, test, batch_size=1)
     loss_fn = model.generate_loss(loss_type="ciou")
 
     optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.evaluate(test)  #fit(train, validation_data = test)
+    model.fit(train, validation_data = test)

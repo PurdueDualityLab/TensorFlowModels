@@ -75,27 +75,21 @@ def _scale_image(image, square=False, square_w=None):
     return image
 
 @tf.function
-def _jitter_boxes(box, j_cx, j_cy, j_w, j_h):
+def _jitter_boxes(box, translate_x, translate_y, j_cx, j_cy, j_w, j_h):
     with tf.name_scope("jitter_boxs"):
         x = tf.clip_by_value(tf.math.add(box[..., 0], j_cx), clip_value_min=0.0, clip_value_max=1.0)
+        if translate_x != 0.0:
+            x = tf.math.add(x, translate_x)
         x = tf.expand_dims(x, axis=-1)
         y = tf.clip_by_value(tf.math.add(box[..., 1], j_cy), clip_value_min=0.0, clip_value_max=1.0)
+        if translate_y != 0.0:
+            y = tf.math.add(y, translate_y)
         y = tf.expand_dims(y, axis=-1)
         w = box[..., 2] * j_w
         w = tf.expand_dims(w, axis=-1)
         h = box[..., 3] * j_h
         h = tf.expand_dims(h, axis=-1)
         box = tf.concat([x, y, w, h], axis=-1)
-    return box
-
-def _translate_boxes(box, translate_x, translate_y):
-    with tf.name_scope("translate_box"):
-        if (translate_x != 0 and translate_y != 0):
-            x = tf.math.add(box[..., 0], translate_x)
-            x = tf.expand_dims(x, axis=-1)
-            y = tf.math.add(box[..., 0], translate_y)
-            y = tf.expand_dims(y, axis=-1)
-            box = tf.concat([x, y, box[..., 2:4]], axis=-1)
     return box
 
 def _translate_image(image, translate_x, translate_y):
