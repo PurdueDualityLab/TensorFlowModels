@@ -103,24 +103,26 @@ class Yolo_Loss(ks.losses.Loss):
         if tf.reduce_any(tf.math.is_nan(pred_conf)):
             tf.print("\nerror")
 
-    def call(self, y_true, y_pred):
+    def call(self, y_true, y_pred, tape = None):
         #1. generate and store constants and format output
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
-        grid_points, anchor_grid = self._anchor_generator(width,
-                                                          height,
-                                                          batch_size,
-                                                          dtype=y_pred.dtype)
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
+        y_true = tf.cast(y_true, y_pred.dtype)
 
-        y_true = build_grided_gt(tf.cast(y_true, y_pred.dtype), tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+        if tape != None: 
+            grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=y_pred.dtype)
+            y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+        else: 
+            with tape.stop_recording():
+                grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=y_pred.dtype)
+                y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
        
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-        pred_xy = tf.math.sigmoid(
-            y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
+        pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = y_pred[..., 2:4]
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
@@ -182,18 +184,15 @@ class Yolo_Loss(ks.losses.Loss):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-        loss_box = tf.reduce_mean(
-            tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype))
-        conf_loss = tf.reduce_mean(
-            tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype))
-        class_loss = tf.reduce_mean(
-            tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype))
+        loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype)
+        conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype)
+        class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype)
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-        loss = class_loss + conf_loss + loss_box
+        loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
 
         #10. store values for use in metrics
         self._loss_box = loss_box
@@ -206,8 +205,6 @@ class Yolo_Loss(ks.losses.Loss):
         self._iou_count = tf.cast(tf.math.count_nonzero(
             tf.cast(iou > 0, dtype=y_pred.dtype)),
                                   dtype=y_pred.dtype)
-        del grid_points
-        del anchor_grid
         return loss
 
     def get_avg_iou(self):
