@@ -258,7 +258,7 @@ if __name__ == "__main__":
                            with_info=True)
 
     
-    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
+    model = Yolov4(model = "regular", policy="mixed_float16", use_tie_breaker=True)
     model.get_summary()
     model.build(model._input_shape)
     model.load_weights_from_dn(dn2tf_head=False)

@@ -73,7 +73,7 @@ class Backbone_Builder(ks.Model):
                                        kernel_size=config.kernel_size,
                                        strides=config.strides,
                                        padding=config.padding,
-                                       l2_regularization=self._weight_decay
+                                       l2_regularization=self._weight_decay,
                                        name=f"{name}_{i}")(x)
             elif config.name == "darkyolotiny":
                 x = nn_blocks.DarkTiny(filters=config.filters,
@@ -88,7 +88,7 @@ class Backbone_Builder(ks.Model):
                 layer = self._layer_dict[config.name]
                 x = layer(filters=config.filters,
                           downsample=config.downsample,
-                          l2_regularization=self._weight_decay
+                          l2_regularization=self._weight_decay,
                           name=f"{name}_{i}")(x)
             i += 1
         return x
