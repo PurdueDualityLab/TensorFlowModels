@@ -445,7 +445,7 @@ class FastVideo(object):
 
 if __name__ == "__main__":
     cap = FastVideo("testing_files/test.mp4",
-                    model="tiny",
+                    model="regular",
                     model_version="v3",
                     process_width=416,
                     process_height=416,

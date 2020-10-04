@@ -16,7 +16,7 @@ class Backbone_Builder(ks.Model):
                  name,
                  input_shape=(None, None, None, 3),
                  config=None,
-                 weight_decay = 0.005, 
+                 weight_decay = 5e-4, 
                  **kwargs):
         self._layer_dict = {
             "DarkRes": nn_blocks.DarkResidual,

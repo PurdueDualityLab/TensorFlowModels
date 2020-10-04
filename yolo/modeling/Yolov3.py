@@ -26,7 +26,7 @@ class Yolov3(base_model.Yolo):
             path_scales=None,
             x_y_scales=None,
             thresh: int = 0.45,
-            weight_decay = 0.005,
+            weight_decay = 5e-4, 
             class_thresh: int = 0.45,
             max_boxes: int = 200,
             scale_boxes: int = 416,

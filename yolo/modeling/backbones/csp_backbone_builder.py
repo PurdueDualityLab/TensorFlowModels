@@ -15,7 +15,7 @@ class CSP_Backbone_Builder(ks.Model):
     def __init__(self,
                  name="darknet53",
                  input_shape=(None, None, None, 3),
-                 weight_decay = 0.005, 
+                 weight_decay = 5e-4, 
                  config=None,
                  **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual}
@@ -85,16 +85,19 @@ class CSP_Backbone_Builder(ks.Model):
         x, x_route = nn_blocks.CSPDownSample(filters=config.filters,
                                              filter_reduce=csp_filter_reduce,
                                              activation=config.activation,
+                                             l2_regularization=self._weight_decay,
                                              name=f"{name}_csp_down")(inputs)
         for i in range(config.repetitions):
             x = self._layer_dict[config.layer](
                 filters=config.filters // scale_filters,
                 filter_scale=residual_filter_reduce,
                 conv_activation=config.activation,
+                l2_regularization=self._weight_decay,
                 name=f"{name}_{i}")(x)
         output = nn_blocks.CSPConnect(filters=config.filters,
                                       filter_reduce=csp_filter_reduce,
                                       activation=config.activation,
+                                      l2_regularization=self._weight_decay,
                                       name=f"{name}_csp_connect")([x, x_route])
         return output
 

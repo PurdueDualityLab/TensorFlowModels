@@ -13,6 +13,7 @@ class DarkResidual(ks.layers.Layer):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
+                 l2_regularization=5e-4,
                  use_bn=True,
                  use_sync_bn=False,
                  norm_moment=0.99,
@@ -55,6 +56,7 @@ class DarkResidual(ks.layers.Layer):
         self._bias_initializer = bias_initializer
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
+        self._l2_regularization = l2_regularization
 
         # normal params
         self._norm_moment = norm_moment
@@ -82,6 +84,7 @@ class DarkResidual(ks.layers.Layer):
                                    norm_moment=self._norm_moment,
                                    norm_epsilon=self._norm_epsilon,
                                    activation=self._conv_activation,
+                                   l2_regularization=self._l2_regularization,
                                    leaky_alpha=self._leaky_alpha)
         else:
             self._dconv = Identity()
@@ -98,6 +101,7 @@ class DarkResidual(ks.layers.Layer):
                                norm_moment=self._norm_moment,
                                norm_epsilon=self._norm_epsilon,
                                activation=self._conv_activation,
+                               l2_regularization=self._l2_regularization,
                                leaky_alpha=self._leaky_alpha)
         self._conv2 = DarkConv(filters=self._filters,
                                kernel_size=(3, 3),
@@ -111,6 +115,7 @@ class DarkResidual(ks.layers.Layer):
                                norm_moment=self._norm_moment,
                                norm_epsilon=self._norm_epsilon,
                                activation=self._conv_activation,
+                               l2_regularization=self._l2_regularization,
                                leaky_alpha=self._leaky_alpha)
 
         self._shortcut = ks.layers.Add()

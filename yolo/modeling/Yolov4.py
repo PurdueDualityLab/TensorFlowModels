@@ -28,7 +28,7 @@ class Yolov4(base_model.Yolo):
             path_scales=None,
             x_y_scales=None,
             thresh: int = 0.45,
-            weight_decay = 0.005,
+            weight_decay = 5e-4, 
             class_thresh: int = 0.45,
             max_boxes: int = 200,
             scale_boxes: int = 416,
@@ -258,7 +258,7 @@ if __name__ == "__main__":
                            with_info=True)
 
     
-    model = Yolov4(model = "regular", policy="mixed_float16", use_tie_breaker=True)
+    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.get_summary()
     model.build(model._input_shape)
     model.load_weights_from_dn(dn2tf_head=False)
