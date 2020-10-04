@@ -81,6 +81,8 @@ class Yolov4(base_model.Yolo):
         self._clip_grads_norm = clip_grads_norm
 
         self.get_models()
+        self._loss_fn = None
+        self._loss_weight = None
         return
 
     def get_models(self):
@@ -152,6 +154,7 @@ class Yolov4(base_model.Yolo):
                                          scale_mult=self._scale_mult,
                                          path_scale=self._path_scales)
 
+
         self._model_name = default_dict[self.model_name]["name"]
         return
 
@@ -168,15 +171,18 @@ class Yolov4(base_model.Yolo):
         self.backbone.build(input_shape)
         self.neck.build(self.backbone.output_shape)
         self.head.build(self.neck.output_shape)
-        self.head_filter.build(self.head.output_shape)
+        #self.head_filter.build(self.head.output_shape)
         return
 
     def call(self, inputs, training=True):
         feature_maps = self.backbone(inputs)
         neck_maps = self.neck(feature_maps)
         raw_head = self.head(neck_maps)
-        predictions = self.head_filter(raw_head)
-        return predictions
+        if training:
+            return {"raw_output": raw_head}
+        else:
+            predictions = self.head_filter(raw_head)
+            return predictions
 
     def load_weights_from_dn(self,
                              dn2tf_backbone=True,
@@ -223,10 +229,13 @@ class Yolov4(base_model.Yolo):
         if dn2tf_backbone:
             #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
             load_weights_backbone(self.backbone, encoder)
+            self.backbone.trainable = False
 
         if dn2tf_head:
             load_weights_backbone(self.neck, neck)
+            self.neck.trainable = False
             load_weights_v4head(self.head, decoder)
+            self.head.trainable = False
 
         return
 
@@ -238,7 +247,7 @@ if __name__ == "__main__":
     prep_gpu() # must be called before loading a dataset
     train, info = tfds.load('coco',
                             split='train',
-                            shuffle_files=False,
+                            shuffle_files=True,
                             with_info=True)
     test, info = tfds.load('coco',
                            split='validation',
@@ -246,18 +255,22 @@ if __name__ == "__main__":
                            with_info=True)
 
     
-    model = Yolov4(model = "regular", policy="mixed_float16", use_tie_breaker=True)
+    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.get_summary()
     model.build(model._input_shape)
     model.load_weights_from_dn(dn2tf_head=False)
 
-    train, test = model.process_datasets(train, test, batch_size=5, _eval_is_training=True)
+    train, test = model.process_datasets(train, test, batch_size=2, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
     #optimizer = ks.optimizers.SGD(lr=1e-3)
     optimizer = ks.optimizers.Adam(lr=1e-3)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.fit(train, validation_data = test, epochs = 40, verbose= 0, callbacks=[Printer()])
-    #model.evaluate(test, verbose = 0, callbacks=[Printer()])
+
+    try:
+        model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
+        model.save_weights("testing_weights/yolov4/simple_test1")
+    except:
+        model.save_weights("testing_weights/yolov4/simple_test1_early")
 

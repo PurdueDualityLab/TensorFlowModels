@@ -5,9 +5,10 @@ from tensorflow.keras import backend as K
 from yolo.utils.iou_utils import *
 from yolo.utils.loss_utils import GridGenerator
 from yolo.utils.loss_utils import build_grided_gt
+from yolo.utils.loss_utils import parse_yolo_box_predictions
 
 
-class Yolo_Loss(ks.losses.Loss):
+class Yolo_Loss(object):
     def __init__(self,
                  classes, 
                  mask,
@@ -49,9 +50,9 @@ class Yolo_Loss(ks.losses.Loss):
         call Return: 
             float: for the average loss 
         """
-        super(Yolo_Loss, self).__init__(reduction=reduction,
-                                        name=name,
-                                        **kwargs)
+        # super(Yolo_Loss, self).__init__(reduction=reduction,
+        #                                 name=name,
+        #                                 **kwargs)
         #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
 
         self._classes = classes
@@ -88,66 +89,76 @@ class Yolo_Loss(ks.losses.Loss):
                 name=path_key)  #f"{path_key}_loss")
 
         # metric struff
-        self._loss_box = 0.0
-        self._conf_loss = 0.0
-        self._class_loss = 0.0
-        self._iou_count = 0.0
-        self._sum_iou = 0.0
-        self._recall = 0.0
-
         self._path_key = path_key
         return
 
     @tf.function
-    def print_error(self, pred_conf):
-        if tf.reduce_any(tf.math.is_nan(pred_conf)):
-            tf.print("\nerror")
+    def print_error(self, pred_conf, tape):
+        if tape == None:
+            return
+        with tape.stop_recording():
+            if tf.reduce_any(tf.math.is_nan(pred_conf)):
+                tf.print("\nerror")
 
-    def call(self, y_true, y_pred, tape = None):
+    @tf.function
+    def _get_label_attributes(self, width, height, batch_size, y_true, tape, y_pred, dtype):
+        if tape == None: 
+            grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
+            y_true = build_grided_gt(tf.cast(y_true, dtype), tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+        else:
+            with tape.stop_recording():
+                grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
+                y_true = build_grided_gt(tf.cast(y_true, dtype), tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+        return grid_points, anchor_grid, y_true
+    
+    @tf.function
+    def _get_predicted_box(self, width, height, unscaled_box, anchor_grid, grid_points):
+        pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
+        pred_wh = unscaled_box[..., 2:4]
+        box_xy = tf.stack([pred_xy[..., 0]/width, pred_xy[..., 1]/height], axis = -1) + grid_points
+        box_wh = tf.math.exp(pred_wh) * anchor_grid
+        pred_box = K.concatenate([box_xy, box_wh], axis=-1)
+        return pred_xy, pred_wh, pred_box
+        #return parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_points, self._scale_x_y)
+    
+    @tf.function
+    def _scale_ground_truth_box(self, box, width, height, anchor_grid, grid_points, tape, dtype):
+        if tape == None: 
+            xy = tf.nn.relu(box[..., 0:2] - grid_points)
+            xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
+            wh = tf.math.log(box[..., 2:4] / anchor_grid)
+            wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
+            wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
+        else:
+            with tape.stop_recording():
+                xy = tf.nn.relu(box[..., 0:2] - grid_points)
+                xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
+                wh = tf.math.log(box[..., 2:4] / anchor_grid)
+                wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
+                wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
+        return xy, wh
+    
+    @tf.function
+    def __call__(self, y_true, y_pred, tape = None):
         #1. generate and store constants and format output
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        y_true = tf.cast(y_true, y_pred.dtype)
+        grid_points, anchor_grid, y_true = self._get_label_attributes(width, height, batch_size, y_true, tape, y_pred, y_pred.dtype)
 
-        if tape != None: 
-            grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=y_pred.dtype)
-            y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
-        else: 
-            with tape.stop_recording():
-                grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=y_pred.dtype)
-                y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=y_pred.dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
-       
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-        pred_xy = tf.math.sigmoid(y_pred[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
-        pred_wh = y_pred[..., 2:4]
+        pred_xy, pred_wh, pred_box = self._get_predicted_box(fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
-        self.print_error(pred_conf)
+        self.print_error(pred_conf, tape)
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
-        true_xy = tf.nn.relu(y_true[..., 0:2] - grid_points)
-        true_xy = K.concatenate([
-            K.expand_dims(true_xy[..., 0] * fwidth, axis=-1),
-            K.expand_dims(true_xy[..., 1] * fheight, axis=-1)
-        ],
-                                axis=-1)
-        true_wh = tf.math.log(y_true[..., 2:4] / anchor_grid)
-        true_wh = tf.where(tf.math.is_nan(true_wh),
-                           tf.cast(0.0, dtype=y_pred.dtype), true_wh)
-        true_wh = tf.where(tf.math.is_inf(true_wh),
-                           tf.cast(0.0, dtype=y_pred.dtype), true_wh)
+        true_box = y_true[..., 0:4]
         true_conf = y_true[..., 4]
         true_class = y_true[..., 5:]
-
-        #4. use iou to calculate the mask of where the network belived there to be an object -> used to penelaize the network for wrong predictions
-        box_xy = pred_xy[..., 0:2] / fwidth + grid_points
-        box_wh = tf.math.exp(pred_wh) * anchor_grid
-        pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-        true_box = y_true[..., 0:4]
 
         #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
         if self._loss_type == "giou":
@@ -166,11 +177,12 @@ class Yolo_Loss(ks.losses.Loss):
             mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
 
             # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
-            scale = (
-                2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
+            scale = (2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
+            true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight, anchor_grid, grid_points, tape, y_pred.dtype)
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
             loss_box = (loss_wh + loss_xy) * true_conf * scale
+            #loss_box = tf.math.minimum(loss_box, self._max_value)
 
         #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
         class_loss = self._cls_normalizer * tf.reduce_sum(
@@ -184,43 +196,25 @@ class Yolo_Loss(ks.losses.Loss):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-        loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype)
-        conf_loss = tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype)
-        class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
-                    dtype=y_pred.dtype)
+        loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype))
+        conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype))
+        class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
+                    dtype=y_pred.dtype))
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-        loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+        loss = class_loss + conf_loss + loss_box
 
         #10. store values for use in metrics
-        self._loss_box = loss_box
-        self._conf_loss = conf_loss
-        self._class_loss = class_loss
-        self._recall = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-
-        # hits inf when all loss is neg or 0
-        self._sum_iou = tf.reduce_sum(iou)
-        self._iou_count = tf.cast(tf.math.count_nonzero(
-            tf.cast(iou > 0, dtype=y_pred.dtype)),
-                                  dtype=y_pred.dtype)
-        return loss
-
-    def get_avg_iou(self):
-        return self._sum_iou / (self._iou_count + 1e-7)
-
-    def get_classification_loss(self):
-        return self._class_loss
-
-    def get_box_loss(self):
-        return self._loss_box
-
-    def get_confidence_loss(self):
-        return self._conf_loss
-    
-    def get_recall(self):
-        return self._recall
+        if tape != None:
+            with tape.stop_recording():
+                recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+                avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
+        else:
+            recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+            avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
+        return loss, loss_box, conf_loss, class_loss, avg_iou, recall50
 
     def get_config(self):
         """save all loss attributes"""
@@ -238,5 +232,3 @@ class Yolo_Loss(ks.losses.Loss):
         layer_config.update(super().get_config())
         return layer_config
 
-
-# exploding grad change the lr at fp16

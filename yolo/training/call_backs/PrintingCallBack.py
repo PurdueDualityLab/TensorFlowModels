@@ -22,7 +22,7 @@ class Printer(ks.callbacks.Callback):
                 printer = f"step: {self._step} \t||"
                 printer += " %s: %0.3f \t"%("loss", self._avg_dict["loss"]/self._step)  
                 for key in sorted(self._avg_dict.keys()):
-                    if "loss" not in key and "box" not in key:
+                    if key != "loss":
                         printer += " %s: %0.3f \t"%(key, self._avg_dict[key]/self._step)          
                 print(printer, end = self._end, flush=True)  
                 #self._avg_dict = dict()   
@@ -38,10 +38,12 @@ class Printer(ks.callbacks.Callback):
         self._print_me(batch, logs = logs)
         return 
     
-    def on_train_epoch_begin():
+    def on_train_epoch_begin(self, epoch, logs):
         self._step = 1
         self._avg_dict = dict()
+        print(epoch)
     
-    def on_test_epoch_begin():
+    def on_test_epoch_begin(self, epoch, logs):
         self._step = 1
         self._avg_dict = dict()
+        print(epoch)

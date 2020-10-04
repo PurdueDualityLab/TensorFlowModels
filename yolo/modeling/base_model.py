@@ -71,6 +71,33 @@ class Yolo(tf.keras.Model, ABC):
 
         return train, test
 
+    def compile(self, optimizer='rmsprop', loss=None, metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=None, **kwargs):
+        super().compile(optimizer=optimizer, loss=loss, metrics=metrics, loss_weights=loss_weights, weighted_metrics=weighted_metrics, run_eagerly=run_eagerly, **kwargs)
+        self._loss_fn = loss
+        self._loss_weights = loss_weights
+        return 
+        
+    def apply_loss_fn(self, label, y_pred, tape = None):
+        loss = 0.0
+        loss_box = 0.0
+        loss_conf = 0.0
+        loss_class = 0.0
+        metric_dict = dict()
+
+        for key in y_pred.keys():
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_fn[key](label, y_pred[key], tape = tape)
+            loss += _loss
+            loss_box += _loss_box
+            loss_conf += _loss_conf
+            loss_class += _loss_class
+            metric_dict[f"recall50_{key}"] = _recall50
+            metric_dict[f"avg_iou_{key}"] =  _avg_iou
+        
+        metric_dict["box_loss"] = loss_box
+        metric_dict["conf_loss"] = loss_conf
+        metric_dict["class_loss"] = loss_class
+        return loss, metric_dict
+
     def train_step(self, data):
         '''
         for float16 training
@@ -85,7 +112,7 @@ class Yolo(tf.keras.Model, ABC):
         with tf.GradientTape() as tape:
             # compute a prediction
             y_pred = self(image, training=True)
-            loss = self.compiled_loss(label["label"], y_pred["raw_output"])
+            loss, metrics = self.apply_loss_fn(label["label"], y_pred["raw_output"], tape = tape)
             scaled_loss = loss/num_replicas
 
             # scale the loss for numerical stability
@@ -100,27 +127,12 @@ class Yolo(tf.keras.Model, ABC):
         if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
             gradients = self.optimizer.get_unscaled_gradients(gradients)
 
-        # if self._clip_grads_norm != None:
-        #     gradients = tf.clip_by_global_norm(gradients, clip_norm = self._clip_grads_norm)
-
         self.optimizer.apply_gradients(zip(gradients, train_vars))
 
         #custom metrics
-        loss_metrics = dict()
-        for loss in self.compiled_loss._losses:
-            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
-            loss_metrics[
-                f"{loss._path_key}_classes"] = loss.get_classification_loss()
-            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
-            # loss_metrics[
-            #     f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-            loss_metrics[
-                f"{loss._path_key}_recall"] = loss.get_recall()
-        #compiled metrics
-        self.compiled_metrics.update_state(label["label"], y_pred["raw_output"])
-        metrics_dict = {m.name: m.result() for m in self.metrics}
-        metrics_dict.update(loss_metrics)
-        return metrics_dict
+        loss_metrics = {"loss":loss}
+        loss_metrics.update(metrics)
+        return loss_metrics
 
     def test_step(self, data):
         #get the data point
@@ -128,24 +140,12 @@ class Yolo(tf.keras.Model, ABC):
 
         # computer detivative and apply gradients
         y_pred = self(image, training=False)
-        loss = self.compiled_loss(label["label"], y_pred["raw_output"])
+        loss, metrics = self.apply_loss_fn(label["label"], y_pred["raw_output"], tape = None)
 
         #custom metrics
-        loss_metrics = dict()
-        for loss in self.compiled_loss._losses:
-            loss_metrics[f"{loss._path_key}_boxes"] = loss.get_box_loss()
-            loss_metrics[
-                f"{loss._path_key}_classes"] = loss.get_classification_loss()
-            loss_metrics[f"{loss._path_key}_avg_iou"] = loss.get_avg_iou()
-            # loss_metrics[
-            #     f"{loss._path_key}_confidence"] = loss.get_confidence_loss()
-            loss_metrics[
-                f"{loss._path_key}_recall"] = loss.get_recall()
-        #compiled metrics
-        self.compiled_metrics.update_state(label["label"], y_pred["raw_output"])
-        metrics_dict = {m.name: m.result() for m in self.metrics}
-        metrics_dict.update(loss_metrics)
-        return metrics_dict
+        loss_metrics = {"loss":loss}
+        loss_metrics.update(metrics)
+        return loss_metrics
 
     def generate_loss(self,
                       scale: float = 1.0,

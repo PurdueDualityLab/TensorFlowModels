@@ -153,7 +153,7 @@ class Yolov4Head(tf.keras.Model):
 
     def _connect_layers(self, routes, resamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = collections.OrderedDict()  #dict()
+        outputs = dict() #collections.OrderedDict() 
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]]  # layer input to the next layer
 

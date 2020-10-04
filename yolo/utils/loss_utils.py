@@ -1,6 +1,14 @@
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
+def parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_points, scale_x_y = 1.0):
+    #with tf.name_scope("decode_box_predictions_yolo"):
+    pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
+    pred_wh = unscaled_box[..., 2:4]
+    box_xy = tf.stack([pred_xy[..., 0]/width, pred_xy[..., 1]/height], axis = -1) + grid_points
+    box_wh = tf.math.exp(pred_wh) * anchor_grid
+    pred_box = K.concatenate([box_xy, box_wh], axis=-1)
+    return pred_xy, pred_wh, pred_box
 
 @tf.function
 def build_grided_gt(y_true, mask, size, classes, true_shape, use_tie_breaker):

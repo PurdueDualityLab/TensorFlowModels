@@ -8,71 +8,8 @@ import matplotlib.patches as patches
 import sys
 
 from yolo.utils.loss_utils import GridGenerator
-
-
-@ks.utils.register_keras_serializable(package='yolo')
-class YoloFilterCell(ks.layers.Layer):
-    def __init__(self,
-                 anchors,
-                 thresh,
-                 path_scale,
-                 path_key=None,
-                 max_box=200,
-                 **kwargs):
-        super().__init__(**kwargs)
-        self._mask_len = len(anchors)
-        self._anchors = tf.cast(tf.convert_to_tensor(anchors),
-                                dtype=self.dtype)
-        self._thresh = thresh
-        self._path_scale = path_scale
-
-        self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
-        #tf.print(path_key)
-        if self._anchor_generator == None:
-            self._anchor_generator = GridGenerator(self._anchors,
-                                                   scale_anchors=path_scale,
-                                                   low_memory=False,
-                                                   name=path_key)
-        return
-
-    def call(self, inputs):
-        shape = tf.shape(inputs)
-        #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
-        data = tf.reshape(inputs,
-                          [shape[0], shape[1], shape[2], self._mask_len, -1])
-        centers, anchors = self._anchor_generator(shape[1],
-                                                  shape[2],
-                                                  shape[0],
-                                                  dtype=data.dtype)
-
-        # compute the true box output values
-        box_xy = centers + (tf.math.sigmoid(data[..., 0:2])) / tf.cast(
-            shape[1], dtype=data.dtype)
-        box_wh = tf.math.exp(data[..., 2:4]) * anchors
-
-        # convert the box to Tensorflow Expected format
-        minpoint = box_xy - box_wh / 2
-        maxpoint = box_xy + box_wh / 2
-        box = K.stack([
-            minpoint[..., 1], minpoint[..., 0], maxpoint[..., 1], maxpoint[...,
-                                                                           0]
-        ],
-                      axis=-1)
-
-        # computer objectness and generate grid cell mask for where objects are located in the image
-        objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis=-1)
-        scaled = tf.math.sigmoid(data[..., 5:]) * objectness
-
-        #compute the mask of where objects have been located
-        mask = tf.reduce_any(objectness > self._thresh, axis=-1)
-        mask = tf.reduce_any(mask, axis=0)
-
-        # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
-        box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
-        # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
-        classifications = tf.boolean_mask(scaled, mask, axis=1)[:, :200, :]
-        return box, classifications
-
+from yolo.utils.loss_utils import parse_yolo_box_predictions
+from yolo.utils.box_utils import _xcycwh_to_yxyx
 
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
@@ -96,32 +33,54 @@ class YoloLayer(ks.Model):
         self._keys = list(masks.keys())
         self._len_keys = len(self._keys)
         self._path_scale = path_scale
-        return
 
-    def build(self, input_shape):
-        if list(input_shape.keys()) != self._keys and list(
-                reversed(input_shape.keys())) != self._keys:
-            raise Exception(
-                f"input size does not match the layers initialization, {self._keys} != {list(input_shape.keys())}"
-            )
-
-        self._filters = {}
+        self._generator = {}
+        self._len_mask = {}
         for i, key in enumerate(self._keys):
             anchors = [self._anchors[mask] for mask in self._masks[key]]
-            self._filters[key] = YoloFilterCell(
-                anchors=anchors,
-                thresh=self._thresh,
-                path_key=key,
-                max_box=self._max_boxes,
-                path_scale=self._path_scale[key])
+            self._generator[key] = self.get_generators(anchors, self._path_scale[key], key)
+            self._len_mask[key] = len(self._masks[key])
         return
 
+    def get_generators(self, anchors, path_scale, path_key):
+        anchor_generator = GridGenerator.get_generator_from_key(path_key)
+        if anchor_generator == None:
+            anchor_generator = GridGenerator(anchors,
+                                            scale_anchors=path_scale,
+                                            low_memory=False,
+                                            name=path_key)
+        return anchor_generator
+
+    def parse_prediction_path(self, generator, len_mask, inputs):
+        shape = tf.shape(inputs)
+        #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
+        data = tf.reshape(inputs,[shape[0], shape[1], shape[2], len_mask, -1])
+        centers, anchors = generator(shape[1], shape[2], shape[0], dtype=data.dtype)
+
+        # compute the true box output values
+        _, _, boxes = parse_yolo_box_predictions(data[..., 0:4], tf.cast(shape[1], data.dtype), tf.cast(shape[2], data.dtype), anchors, centers)
+        box = _xcycwh_to_yxyx(boxes)
+
+        # computer objectness and generate grid cell mask for where objects are located in the image
+        objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis=-1)
+        scaled = tf.math.sigmoid(data[..., 5:]) * objectness
+
+        #compute the mask of where objects have been located
+        mask = tf.reduce_any(objectness > self._thresh, axis=-1)
+        mask = tf.reduce_any(mask, axis=0)
+
+        # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
+        box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
+        # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
+        classifications = tf.boolean_mask(scaled, mask, axis=1)[:, :200, :]
+        return box, classifications
+
     def call(self, inputs):
-        boxes, classifs = self._filters[self._keys[0]](inputs[self._keys[0]])
+        boxes, classifs = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], inputs[self._keys[0]])
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
-            b, c = self._filters[key](inputs[key])
+            b, c = self.parse_prediction_path(self._generator[key], self._len_mask[key], inputs[key])
             boxes = K.concatenate([boxes, b], axis=1)
             classifs = K.concatenate([classifs, c], axis=1)
             i += 1
