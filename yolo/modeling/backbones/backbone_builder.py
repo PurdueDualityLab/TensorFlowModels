@@ -16,6 +16,7 @@ class Backbone_Builder(ks.Model):
                  name,
                  input_shape=(None, None, None, 3),
                  config=None,
+                 weight_decay = 0.005, 
                  **kwargs):
         self._layer_dict = {
             "DarkRes": nn_blocks.DarkResidual,
@@ -31,6 +32,7 @@ class Backbone_Builder(ks.Model):
             self._model_name = name
             layer_specs = self.get_model_config(name)
 
+        self._weight_decay = weight_decay
         inputs = ks.layers.Input(shape=self._input_shape[1:])
         output = self._build_struct(layer_specs, inputs)
         super().__init__(inputs=inputs, outputs=output, name=self._model_name)
@@ -71,6 +73,7 @@ class Backbone_Builder(ks.Model):
                                        kernel_size=config.kernel_size,
                                        strides=config.strides,
                                        padding=config.padding,
+                                       l2_regularization=self._weight_decay
                                        name=f"{name}_{i}")(x)
             elif config.name == "darkyolotiny":
                 x = nn_blocks.DarkTiny(filters=config.filters,
@@ -85,6 +88,7 @@ class Backbone_Builder(ks.Model):
                 layer = self._layer_dict[config.name]
                 x = layer(filters=config.filters,
                           downsample=config.downsample,
+                          l2_regularization=self._weight_decay
                           name=f"{name}_{i}")(x)
             i += 1
         return x

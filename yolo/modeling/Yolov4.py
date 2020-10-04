@@ -28,6 +28,7 @@ class Yolov4(base_model.Yolo):
             path_scales=None,
             x_y_scales=None,
             thresh: int = 0.45,
+            weight_decay = 0.005,
             class_thresh: int = 0.45,
             max_boxes: int = 200,
             scale_boxes: int = 416,
@@ -77,6 +78,7 @@ class Yolov4(base_model.Yolo):
         self.neck = neck
         self.head = head
         self.head_filter = head_filter
+        self._weight_decay = weight_decay
 
         self._clip_grads_norm = clip_grads_norm
 
@@ -117,7 +119,8 @@ class Yolov4(base_model.Yolo):
             self.backbone = CSP_Backbone_Builder(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
-                input_shape=self._input_shape)
+                input_shape=self._input_shape, 
+                weight_decay=self._weight_decay)
 
         else:
             self._custom_aspects = True
