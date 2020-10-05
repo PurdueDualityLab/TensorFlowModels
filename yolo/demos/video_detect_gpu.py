@@ -444,8 +444,15 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    cap = FastVideo("testing_files/test.mp4",
-                    model="regular",
+    from yolo.modeling.Yolov3 import Yolov3
+    prep_gpu()
+    model = Yolov3(model = "regular", policy="float32", use_tie_breaker=True)
+    model.load_weights_from_dn(dn2tf_head=True)
+    model.get_summary()
+    model.set_policy("mixed_float16")
+
+    cap = FastVideo("testing_files/test1.mp4",
+                    model=model, #"regular",
                     model_version="v3",
                     process_width=416,
                     process_height=416,

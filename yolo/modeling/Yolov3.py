@@ -72,37 +72,19 @@ class Yolov3(base_model.Yolo):
         self.model_name = model
         self._model_name = None
         self._backbone_name = None
-        self.backbone = backbone
-        self.head = head
-        self.head_filter = head_filter
+        self._backbone_cfg = backbone
+        self._head_cfg = head
+        self._head_filter_cfg = head_filter
         self._weight_decay = weight_decay
 
         self._clip_grads_norm = clip_grads_norm
 
-        self.get_models()
+        self.get_default_attributes()
         self._loss_fn = None
         self._loss_weight = None
         return
 
-    def get_models(self):
-        default_dict = {
-            "regular": {
-                "backbone": "darknet53",
-                "head": "regular",
-                "name": "yolov3"
-            },
-            "spp": {
-                "backbone": "darknet53",
-                "head": "spp",
-                "name": "yolov3-spp"
-            },
-            "tiny": {
-                "backbone": "darknet_tiny",
-                "head": "tiny",
-                "name": "yolov3-tiny"
-            }
-        }
-
+    def get_default_attributes(self):
         if self.model_name == "regular" or self.model_name == "spp":
             self._encoder_decoder_split_location = 76
             self._boxes = self._boxes or [(10, 13), (16, 30), (33, 23),
@@ -130,64 +112,86 @@ class Yolov3(base_model.Yolo):
             self._masks = self._masks or {"1024": [3, 4, 5], "256": [0, 1, 2]}
             self._path_scales = self._path_scales or {"1024": 32, "256": 8}
             self._x_y_scales = self._x_y_scales or {"1024": 1.0, "256": 1.0}
+        return
 
-        if self.backbone == None or isinstance(self.backbone, Dict):
+    def get_summary(self):
+        self._backbone.summary()
+        self._head.summary()
+        print(self._backbone.output_shape)
+        print(self._head.output_shape)
+        self.summary()
+        return
+
+    def build(self, input_shape):
+        default_dict = {
+            "regular": {
+                "backbone": "darknet53",
+                "head": "regular",
+                "name": "yolov3"
+            },
+            "spp": {
+                "backbone": "darknet53",
+                "head": "spp",
+                "name": "yolov3-spp"
+            },
+            "tiny": {
+                "backbone": "darknet_tiny",
+                "head": "tiny",
+                "name": "yolov3-tiny"
+            }
+        }
+        if self._backbone_cfg == None or isinstance(self._backbone_cfg, Dict):
             self._backbone_name = default_dict[self.model_name]["backbone"]
-            if isinstance(self.backbone, Dict):
-                default_dict[self.model_name]["backbone"] = self.backbone
-            self.backbone = Backbone_Builder(
+            if isinstance(self._backbone_cfg, Dict):
+                default_dict[self.model_name]["backbone"] = self._backbone_cfg
+            self._backbone = Backbone_Builder(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape, 
                 weight_decay=self._weight_decay)
-
         else:
+            self._backbone = self._backbone_cfg
             self._custom_aspects = True
-
-        if self.head == None or isinstance(self.head, Dict):
-            if isinstance(self.head, Dict):
-                default_dict[self.model_name]["head"] = self.head
-            self.head = Yolov3Head(
+        
+        if self._head_cfg == None or isinstance(self._head_cfg, Dict):
+            if isinstance(self._head_cfg, Dict):
+                default_dict[self.model_name]["head"] = self._head_cfg
+            self._head = Yolov3Head(
                 model=default_dict[self.model_name]["head"],
                 cfg_dict=default_dict[self.model_name]["head"],
                 classes=self._classes,
                 boxes=len(self._boxes),
                 input_shape=self._input_shape)
         else:
+            self._head = self._head_cfg
             self._custom_aspects = True
 
-        if self.head_filter == None:
-            self.head_filter = YoloLayer(masks=self._masks,
-                                         anchors=self._boxes,
-                                         thresh=self._thresh,
-                                         cls_thresh=self._class_thresh,
-                                         max_boxes=self._max_boxes,
-                                         scale_boxes=self._scale_boxes,
-                                         scale_mult=self._scale_mult,
-                                         path_scale=self._path_scales,) 
+        if self._head_filter_cfg == None:
+            self._head_filter = YoloLayer(masks=self._masks,
+                                        anchors=self._boxes,
+                                        thresh=self._thresh,
+                                        cls_thresh=self._class_thresh,
+                                        max_boxes=self._max_boxes,
+                                        scale_boxes=self._scale_boxes,
+                                        scale_mult=self._scale_mult,
+                                        path_scale=self._path_scales)
+        else:
+            self._head_filter = self._head_filter_cfg
 
         self._model_name = default_dict[self.model_name]["name"]
+        self._backbone.build(input_shape)
+        self._head.build(self._backbone.output_shape)
+        self._built = True
+        super().build(input_shape)
         return
 
-    def get_summary(self):
-        self.backbone.summary()
-        self.head.summary()
-        print(self.backbone.output_shape)
-        print(self.head.output_shape)
-        return
-
-    def build(self, input_shape):
-        self.backbone.build(input_shape)
-        self.head.build(self.backbone.output_shape)
-        return
-
-    def call(self, inputs, training=True):
-        feature_maps = self.backbone(inputs)
-        raw_head = self.head(feature_maps)
+    def call(self, inputs, training=False):
+        feature_maps = self._backbone(inputs)
+        raw_head = self._head(feature_maps)
         if training:
             return {"raw_output": raw_head}
         else:
-            predictions = self.head_filter(raw_head)
+            predictions = self._head_filter(raw_head)
             return predictions
 
     def load_weights_from_dn(self,
@@ -223,6 +227,9 @@ class Yolov3(base_model.Yolo):
             config_file: str path for the location of the configuration file to use when decoding darknet weights
             weights_file: str path with the file containing the dark net weights
         """
+        if not self._built:
+            self.build(self._input_shape)
+
         if dn2tf_backbone or dn2tf_head:
             if config_file is None:
                 config_file = download(self._model_name + '.cfg')
@@ -233,12 +240,12 @@ class Yolov3(base_model.Yolo):
                 list_encdec, self._encoder_decoder_split_location)
 
         if dn2tf_backbone:
-            load_weights_dnBackbone(self.backbone,
+            load_weights_dnBackbone(self._backbone,
                                     encoder,
                                     mtype=self._backbone_name)
 
         if dn2tf_head:
-            load_weights_dnHead(self.head, decoder)
+            load_weights_dnHead(self._head, decoder)
         return
 
 
@@ -256,10 +263,10 @@ if __name__ == "__main__":
                            shuffle_files=False,
                            with_info=True)
 
-    model = Yolov3(model = "regular", policy="mixed_float16", use_tie_breaker=False)
+    model = Yolov3(model = "regular", policy="float32", use_tie_breaker=False)
     model.load_weights_from_dn(dn2tf_head=False, weights_file="testing_weights/yolov3-regular.weights")
 
-    train, test = model.process_datasets(train, test, fixed_size = False , batch_size=2, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
+    train, test = model.process_datasets(train, test, fixed_size = False , batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
     #optimizer = ks.optimizers.SGD(lr=1e-3)

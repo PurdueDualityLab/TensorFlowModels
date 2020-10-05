@@ -7,7 +7,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 class Yolo(tf.keras.Model, ABC):
     @abstractmethod
-    def get_models():
+    def get_default_attributes():
         ...
 
     @abstractmethod
@@ -22,18 +22,6 @@ class Yolo(tf.keras.Model, ABC):
                              weights_file=None):
         ...
 
-    # @abstractmethod
-    # def train_step(self, data):
-    #     ...
-
-    # @abstractmethod
-    # def test_step(self):
-    #     ...
-
-    # @abstractmethod
-    # def process_datasets(self):
-    #     ...
-
     def process_datasets(self,
                          train,
                          test,
@@ -45,7 +33,10 @@ class Yolo(tf.keras.Model, ABC):
                          jitter_boxes=0.005,
                          _eval_is_training = False):
 
+        from yolo.dataloaders.YoloParser import YoloDecoder
         from yolo.dataloaders.YoloParser import YoloParser
+        from yolo.dataloaders.YoloParser import batch_dataset
+        
         parser = YoloParser(image_w=image_w,
                             image_h=image_h,
                             fixed_size=fixed_size,
@@ -53,22 +44,28 @@ class Yolo(tf.keras.Model, ABC):
                             jitter_boxes=jitter_boxes,
                             masks=self._masks,
                             anchors=self._boxes)
+        decoder = YoloDecoder(image_w=image_w,
+                            image_h=image_h,
+                            fixed_size=fixed_size,
+                            jitter_im=jitter_im,
+                            jitter_boxes=jitter_boxes,
+                            masks=self._masks,
+                            anchors=self._boxes)
 
-        preprocess_train = parser.unbatched_process_fn(is_training=True)
-        postprocess_train = parser.batched_process_fn(is_training=True)
+        dset_decode = decoder.decode
+        train_parser = parser.parse_fn(is_training= True)
+        test_parser = parser.parse_fn(is_training=_eval_is_training)
+        train_transform_batch = batch_dataset(batch_size=batch_size)
+        test_transform_batch = batch_dataset(batch_size=batch_size)
 
-        preprocess_test = parser.unbatched_process_fn(is_training=_eval_is_training)
-        postprocess_test = parser.batched_process_fn(is_training=_eval_is_training)
+        train = train.map(dset_decode)
+        test = test.map(dset_decode)
 
-        train = train.map(preprocess_train).padded_batch(batch_size)
-        train = train.map(postprocess_train)
-        test = test.map(preprocess_test).padded_batch(batch_size)
-        test = test.map(postprocess_test)
+        train = train_transform_batch(train, None)
+        test = train_transform_batch(test, None)
 
-        train_size = tf.data.experimental.cardinality(train)
-        test_size = tf.data.experimental.cardinality(test)
-        print(train_size, test_size)
-
+        train = train.map(train_parser)
+        test = test.map(train_parser)
         return train, test
 
     def compile(self, optimizer='rmsprop', loss=None, metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=None, **kwargs):
@@ -112,7 +109,7 @@ class Yolo(tf.keras.Model, ABC):
         with tf.GradientTape() as tape:
             # compute a prediction
             y_pred = self(image, training=True)
-            loss, metrics = self.apply_loss_fn(label["label"], y_pred["raw_output"], tape = tape)
+            loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"], tape = tape)
             scaled_loss = loss/num_replicas
 
             # scale the loss for numerical stability
@@ -140,7 +137,7 @@ class Yolo(tf.keras.Model, ABC):
 
         # computer detivative and apply gradients
         y_pred = self(image, training=False)
-        loss, metrics = self.apply_loss_fn(label["label"], y_pred["raw_output"], tape = None)
+        loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"], tape = None)
 
         #custom metrics
         loss_metrics = {"loss":loss}
@@ -170,6 +167,7 @@ class Yolo(tf.keras.Model, ABC):
                                        path_key=key,
                                        scale_x_y=self._x_y_scales[key],
                                        use_tie_breaker=self._use_tie_breaker)
+        self._loss_fn = loss_dict
         return loss_dict
 
     def match_optimizer_to_policy(self, optimizer, scaling = "dynamic"):

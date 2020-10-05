@@ -59,8 +59,7 @@ def _rotate(image, angle):
                                      interpolation="NEAREST")
     return img_utils.from_4D_image(output, ndim)
 
-
-def _scale_image(image, square=False, square_w=None):
+def _scale_image(image, resize=False, w=None, h=None):
     """Image Normalization.
     Args:
         image(tensorflow.python.framework.ops.Tensor): The image.
@@ -69,8 +68,8 @@ def _scale_image(image, square=False, square_w=None):
     """
     with tf.name_scope("scale_image"):
         image = tf.convert_to_tensor(image)
-        if square:
-            image = tf.image.resize(image, size=(square_w, square_w))
+        if resize:
+            image = tf.image.resize(image, size=(w, h))
         image = image / 255
     return image
 
@@ -102,7 +101,7 @@ def _translate_image(image, translate_x, translate_y):
     return image
 
 
-def _get_best_anchor(y_true, anchors, size):
+def _get_best_anchor(y_true, anchors, width, height):
     """
     get the correct anchor that is assoiciated with each box using IOU betwenn input anchors and gt
     Args:
@@ -113,13 +112,17 @@ def _get_best_anchor(y_true, anchors, size):
         tf.Tensor: y_true with the anchor associated with each ground truth box known
     """
     with tf.name_scope("get_anchor"):
-        size = tf.cast(size, dtype=tf.float32)
+        width = tf.cast(width, dtype=tf.float32)
+        height = tf.cast(height, dtype=tf.float32)
 
         anchor_xy = y_true[..., 0:2]
         true_wh = y_true[..., 2:4]
 
         # scale thhe boxes
-        anchors = tf.convert_to_tensor(anchors, dtype=tf.float32) / size
+        anchors = tf.convert_to_tensor(anchors, dtype=tf.float32)
+        anchors_x = anchors[..., 0]/width
+        anchors_y = anchors[..., 1]/height
+        anchors = tf.stack([anchors_x, anchors_y], axis = -1)
 
         # build a matrix of anchor boxes
         anchors = tf.transpose(anchors, perm=[1, 0])

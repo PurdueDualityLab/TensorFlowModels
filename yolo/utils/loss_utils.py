@@ -11,7 +11,7 @@ def parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_po
     return pred_xy, pred_wh, pred_box
 
 @tf.function
-def build_grided_gt(y_true, mask, size, classes, true_shape, use_tie_breaker):
+def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_breaker):
     """
     convert ground truth for use in loss functions
     Args: 
@@ -22,20 +22,20 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, use_tie_breaker):
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-    boxes = y_true[..., 0:4]
-    classes = tf.one_hot(tf.cast(y_true[..., 4], dtype = tf.int32), depth = classes, dtype = boxes.dtype)
-    anchors = y_true[..., 5:]
+    boxes = tf.cast(y_true["bbox"], dtype) 
+    classes = tf.one_hot(tf.cast(y_true["classes"], dtype = tf.int32), depth = classes, dtype = dtype)
+    anchors = tf.cast(y_true["best_anchors"], dtype) 
 
     batches = tf.shape(boxes)[0]
     num_boxes = tf.shape(boxes)[1]
     len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype = y_true.dtype)
+    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype = dtype)
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=boxes.dtype),
+    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype),
                 dtype=tf.int32)
-    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=boxes.dtype),
+    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype),
                 dtype=tf.int32)
 
     anchors = tf.repeat(tf.expand_dims(anchors, axis=-1),
@@ -43,9 +43,9 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, use_tie_breaker):
                         axis=-1)
 
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-    update = tf.TensorArray(boxes.dtype, size=0, dynamic_size=True)
-    const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
-    mask = tf.cast(mask, dtype=boxes.dtype)
+    update = tf.TensorArray(dtype, size=0, dynamic_size=True)
+    const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
+    mask = tf.cast(mask, dtype=dtype)
     
     i = 0
     anchor_id = 0
@@ -137,7 +137,8 @@ class GridGenerator(object):
                  masks=None,
                  scale_anchors=None,
                  name=None,
-                 low_memory=True):
+                 low_memory=True,
+                 reset = False):
         self.dtype = tf.keras.backend.floatx()
         if masks != None:
             self._num = len(masks)
@@ -163,7 +164,9 @@ class GridGenerator(object):
                 self.dtype)
 
         if name != None:
-            if name not in GridGenerator.inuse.keys():
+            if name not in GridGenerator.inuse.keys() or reset == True:
+                if name in GridGenerator.inuse.keys():
+                    del GridGenerator.inuse[name]
                 GridGenerator.inuse[name] = self
             else:
                 raise Exception("the name you are using is already in use")

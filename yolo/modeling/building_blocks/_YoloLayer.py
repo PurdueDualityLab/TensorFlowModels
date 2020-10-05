@@ -43,12 +43,11 @@ class YoloLayer(ks.Model):
         return
 
     def get_generators(self, anchors, path_scale, path_key):
-        anchor_generator = GridGenerator.get_generator_from_key(path_key)
-        if anchor_generator == None:
-            anchor_generator = GridGenerator(anchors,
-                                            scale_anchors=path_scale,
-                                            low_memory=False,
-                                            name=path_key)
+        anchor_generator = GridGenerator(anchors,
+                                        scale_anchors = path_scale,
+                                        low_memory = True,
+                                        name = f"yolo_layer_{path_key}",
+                                        reset = True)
         return anchor_generator
 
     def parse_prediction_path(self, generator, len_mask, inputs):

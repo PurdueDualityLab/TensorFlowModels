@@ -50,11 +50,6 @@ class Yolo_Loss(object):
         call Return: 
             float: for the average loss 
         """
-        # super(Yolo_Loss, self).__init__(reduction=reduction,
-        #                                 name=name,
-        #                                 **kwargs)
-        #self._anchors = tf.convert_to_tensor([anchors[i] for i in mask], dtype= self.dtype)/scale_anchors #<- division done for testing
-
         self._classes = classes
         self._num = tf.cast(len(mask), dtype=tf.int32)
         self._num_extras = num_extras
@@ -98,17 +93,17 @@ class Yolo_Loss(object):
             return
         with tape.stop_recording():
             if tf.reduce_any(tf.math.is_nan(pred_conf)):
-                tf.print("\nerror")
+                tf.print("\nerror: stop training")
 
     @tf.function
     def _get_label_attributes(self, width, height, batch_size, y_true, tape, y_pred, dtype):
         if tape == None: 
             grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-            y_true = build_grided_gt(tf.cast(y_true, dtype), tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+            y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
         else:
             with tape.stop_recording():
                 grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-                y_true = build_grided_gt(tf.cast(y_true, dtype), tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), self._use_tie_breaker)
+                y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
         return grid_points, anchor_grid, y_true
     
     @tf.function
