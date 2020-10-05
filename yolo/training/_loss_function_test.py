@@ -39,7 +39,7 @@ def gt_test():
                             split='validation',
                             shuffle_files=False,
                             with_info=True)
-        model = build_model(model_version="v4", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
+        model = build_model(model_version="v3", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
         model.get_summary()
 
         loss_fn = model.generate_loss(loss_type="ciou")
