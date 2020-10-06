@@ -78,54 +78,6 @@ def build_model(name="regular",
     return model
 
 
-def filter_partial(end=255, dtype=tf.float32):
-    import yolo.modeling.building_blocks as nn_blocks
-    o1 = ks.layers.Input(shape=[None, None, 3, end // 3])
-    o2 = ks.layers.Input(shape=[None, None, 3, end // 3])
-    o3 = ks.layers.Input(shape=[None, None, 3, end // 3])
-
-    outputs = {1024: o1, 512: o2, 256: o3}
-    b1, c1 = nn_blocks.YoloGT(anchors=[(116, 90), (156, 198), (373, 326)],
-                              thresh=0.5,
-                              reshape=False,
-                              dtype=dtype)(outputs[1024])
-    b2, c2 = nn_blocks.YoloGT(anchors=[(30, 61), (62, 45), (59, 119)],
-                              thresh=0.5,
-                              reshape=False,
-                              dtype=dtype)(outputs[512])
-    b3, c3 = nn_blocks.YoloGT(anchors=[(10, 13), (16, 30), (33, 23)],
-                              thresh=0.5,
-                              reshape=False,
-                              dtype=dtype)(outputs[256])
-    b = K.concatenate([b1, b2, b3], axis=1)
-    c = K.concatenate([c1, c2, c3], axis=1)
-
-    run = ks.Model(inputs=[outputs], outputs=[b, c])
-    return run
-
-
-def build_model_partial(name="regular",
-                        classes=80,
-                        boxes=9,
-                        ltype="giou",
-                        use_mixed=True,
-                        w=None,
-                        h=None,
-                        dataset_name="coco",
-                        split='validation',
-                        batch_size=1,
-                        load_head=True,
-                        fixed_size=False):
-    from yolo.modeling.yolo_v3 import Yolov3
-    model = Yolov3(classes=classes,
-                   boxes=boxes,
-                   type=name,
-                   input_shape=(batch_size, w, h, 3))
-    model.load_weights_from_dn(dn2tf_backbone=True, dn2tf_head=load_head)
-    loss_fns = model.generate_loss(scale=w_scale)
-    return model, loss_fns, model._boxes, model._masks
-
-
 def prep_gpu(distribution=None):
     print(f"\n!--PREPPING GPU--! with stratagy ")
     #traceback.print_stack()

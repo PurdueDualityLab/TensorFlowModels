@@ -14,7 +14,7 @@ import numpy as np
 from absl import app
 import time
 
-from yolo.utils.testing_utils import prep_gpu, build_model, build_model_partial, filter_partial, draw_box, int_scale_boxes, gen_colors, get_coco_names
+from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 prep_gpu()
 
 from yolo.dataloaders.YoloParser import YoloParser

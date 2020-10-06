@@ -270,18 +270,22 @@ if __name__ == "__main__":
     model.build(model._input_shape)
     model.get_summary()
     model.load_weights_from_dn(dn2tf_head=False)
+    
 
     train, test = model.process_datasets(train, test, batch_size=2, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
-    #optimizer = ks.optimizers.SGD(lr=1e-3)
-    optimizer = ks.optimizers.Adam(lr=1e-3)
+    
+    # #optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.Adam(lr=1e-3/32)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
+    model.load_weights("testing_weights/yolov4/simple_test1_early")
+    model.evaluate(test)
 
-    try:
-        model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
-        model.save_weights("testing_weights/yolov4/simple_test1")
-    except:
-        model.save_weights("testing_weights/yolov4/simple_test1_early")
+    # try:
+    #     #model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
+    #     #model.save_weights("testing_weights/yolov4/simple_test1")
+    # except:
+    #     #model.save_weights("testing_weights/yolov4/simple_test1_early")
 

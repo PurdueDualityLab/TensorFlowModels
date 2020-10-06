@@ -10,7 +10,7 @@ def parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_po
     pred_box = K.concatenate([box_xy, box_wh], axis=-1)
     return pred_xy, pred_wh, pred_box
 
-@tf.function
+@tf.function(experimental_relax_shapes=True)
 def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_breaker):
     """
     convert ground truth for use in loss functions
@@ -104,21 +104,18 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
     return full
 
 
-@tf.function
+@tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
     """ generate a grid that is used to detemine the relative centers of the bounding boxs """
     with tf.name_scope("center_grid"):
         x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis=-1)
         x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
-        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),
-                                       num,
-                                       axis=-2),
-                             axis=0)
+        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),num,axis=-2),axis=0)
     return x_y
 
 
-@tf.function
+@tf.function(experimental_relax_shapes=True)
 def _build_anchor_grid(width, height, anchors, num, dtype):
     with tf.name_scope("anchor_grid"):
         """ get the transformed anchor boxes for each dimention """
@@ -172,11 +169,11 @@ class GridGenerator(object):
                 raise Exception("the name you are using is already in use")
         return
 
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def _extend_batch(self, grid, batch_size):
         return tf.repeat(grid, batch_size, axis=0)
 
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def _get_grids_high_memory(self, width, height, batch_size, dtype=None):
         self._lock = True
         if dtype == None:
@@ -206,9 +203,9 @@ class GridGenerator(object):
         grid_points = self._extend_batch(self._grid_points, batch_size)
         anchor_grid = self._extend_batch(self._anchor_grid, batch_size)
         self._lock = False
-        return grid_points, anchor_grid
+        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
 
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def _get_grids_low_memory(self, width, height, batch_size, dtype=None):
         if not self._lock:
             if dtype == None:
@@ -219,13 +216,12 @@ class GridGenerator(object):
         anchor_grid = _build_anchor_grid(
             width, height,
             tf.cast(self._anchors, self.dtype) /
-            tf.cast(self._scale_anchors * width, self.dtype), self._num,
-            self.dtype)
+            tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
         grid_points = self._extend_batch(grid_points, batch_size)
         anchor_grid = self._extend_batch(anchor_grid, batch_size)
-        return grid_points, anchor_grid
+        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
 
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def __call__(self, width, height, batch_size, dtype=None):
         if self._low_memory or self._lock:
             return self._get_grids_low_memory(width,

@@ -444,11 +444,24 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    from yolo.modeling.Yolov3 import Yolov3
+    from yolo.modeling.Yolov4 import Yolov4
     prep_gpu()
-    model = Yolov3(model = "regular", policy="float32", use_tie_breaker=True)
-    model.load_weights_from_dn(dn2tf_head=True)
+    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
+    model.build(model._input_shape)
     model.get_summary()
+    model.load_weights_from_dn(dn2tf_head=False)
+    
+
+    #train, test = model.process_datasets(train, test, batch_size=2, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
+    loss_fn = model.generate_loss(loss_type="ciou")
+
+    
+    # #optimizer = ks.optimizers.SGD(lr=1e-3)
+    optimizer = ks.optimizers.Adam(lr=1e-3/32)
+    optimizer = model.match_optimizer_to_policy(optimizer)
+    model.compile(optimizer=optimizer, loss=loss_fn)
+    model.load_weights("testing_weights/yolov4/simple_test1_1epoch")
+    #model.evaluate(test)
     model.set_policy("mixed_float16")
 
     cap = FastVideo("testing_files/test1.mp4",

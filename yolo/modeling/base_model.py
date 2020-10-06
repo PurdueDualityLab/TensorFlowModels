@@ -74,7 +74,7 @@ class Yolo(tf.keras.Model, ABC):
         self._loss_weights = loss_weights
         return 
         
-    def apply_loss_fn(self, label, y_pred, tape = None):
+    def apply_loss_fn(self, label, y_pred):
         loss = 0.0
         loss_box = 0.0
         loss_conf = 0.0
@@ -82,13 +82,13 @@ class Yolo(tf.keras.Model, ABC):
         metric_dict = dict()
 
         for key in y_pred.keys():
-            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_fn[key](label, y_pred[key], tape = tape)
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_fn[key](label, y_pred[key])
             loss += _loss
             loss_box += _loss_box
             loss_conf += _loss_conf
             loss_class += _loss_class
-            metric_dict[f"recall50_{key}"] = _recall50
-            metric_dict[f"avg_iou_{key}"] =  _avg_iou
+            metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
+            metric_dict[f"avg_iou_{key}"] =  tf.stop_gradient(_avg_iou)
         
         metric_dict["box_loss"] = loss_box
         metric_dict["conf_loss"] = loss_conf
@@ -109,7 +109,7 @@ class Yolo(tf.keras.Model, ABC):
         with tf.GradientTape() as tape:
             # compute a prediction
             y_pred = self(image, training=True)
-            loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"], tape = tape)
+            loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"])
             scaled_loss = loss/num_replicas
 
             # scale the loss for numerical stability
@@ -124,8 +124,10 @@ class Yolo(tf.keras.Model, ABC):
         if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
             gradients = self.optimizer.get_unscaled_gradients(gradients)
 
-        self.optimizer.apply_gradients(zip(gradients, train_vars))
+        gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
 
+        self.optimizer.apply_gradients(zip(gradients, train_vars))
+        
         #custom metrics
         loss_metrics = {"loss":loss}
         loss_metrics.update(metrics)
@@ -137,7 +139,7 @@ class Yolo(tf.keras.Model, ABC):
 
         # computer detivative and apply gradients
         y_pred = self(image, training=False)
-        loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"], tape = None)
+        loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"])
 
         #custom metrics
         loss_metrics = {"loss":loss}

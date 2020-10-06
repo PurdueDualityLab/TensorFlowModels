@@ -78,6 +78,6 @@ def compute_ciou(box1, box2):
                                       box2[..., 3])
 
         # compute IOU regularization
-        a = v / ((1 - iou) + v)
+        a = tf.math.divide_no_nan(v, ((1 - iou) + v))
         ciou = diou + v * a
     return iou, ciou

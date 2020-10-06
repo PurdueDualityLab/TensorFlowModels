@@ -50,9 +50,9 @@ class Yolo_Loss(object):
         call Return: 
             float: for the average loss 
         """
-        self._classes = classes
+        self._classes = tf.cast(classes, dtype=tf.int32)
         self._num = tf.cast(len(mask), dtype=tf.int32)
-        self._num_extras = num_extras
+        self._num_extras = tf.cast(num_extras, dtype=tf.int32)
         self._truth_thresh = truth_thresh
         self._ignore_thresh = ignore_thresh
         self._masks = mask
@@ -62,9 +62,9 @@ class Yolo_Loss(object):
         # if iou > self._iou_thresh then the network check the other anchors, so basically
         # checking anchor box 1 on prediction for anchor box 2
         #self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
-        self._use_tie_breaker = use_tie_breaker
+        self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
 
-        self._loss_type = loss_type
+        self._loss_type = tf.cast(loss_type, tf.string)
         self._iou_normalizer = iou_normalizer
         self._cls_normalizer = cls_normalizer
         self._scale_x_y = scale_x_y
@@ -72,7 +72,7 @@ class Yolo_Loss(object):
 
         # used in detection filtering
         self._beta_nms = beta_nms
-        self._nms_kind = nms_kind
+        self._nms_kind = tf.cast(nms_kind, tf.string)
 
         # grid comp
         self._anchor_generator = GridGenerator.get_generator_from_key(path_key)
@@ -87,26 +87,18 @@ class Yolo_Loss(object):
         self._path_key = path_key
         return
 
-    @tf.function
-    def print_error(self, pred_conf, tape):
-        if tape == None:
-            return
-        with tape.stop_recording():
-            if tf.reduce_any(tf.math.is_nan(pred_conf)):
-                tf.print("\nerror: stop training")
+    @tf.function(experimental_relax_shapes=True)
+    def print_error(self, pred_conf):
+        if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred_conf))):
+            tf.print("\nerror: stop training")
 
-    @tf.function
-    def _get_label_attributes(self, width, height, batch_size, y_true, tape, y_pred, dtype):
-        if tape == None: 
-            grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-            y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
-        else:
-            with tape.stop_recording():
-                grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-                y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
-        return grid_points, anchor_grid, y_true
+    @tf.function(experimental_relax_shapes=True)
+    def _get_label_attributes(self, width, height, batch_size, y_true, y_pred, dtype):
+        grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
+        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
+        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid), tf.stop_gradient(y_true)
     
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def _get_predicted_box(self, width, height, unscaled_box, anchor_grid, grid_points):
         pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = unscaled_box[..., 2:4]
@@ -116,39 +108,39 @@ class Yolo_Loss(object):
         return pred_xy, pred_wh, pred_box
         #return parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_points, self._scale_x_y)
     
-    @tf.function
-    def _scale_ground_truth_box(self, box, width, height, anchor_grid, grid_points, tape, dtype):
-        if tape == None: 
-            xy = tf.nn.relu(box[..., 0:2] - grid_points)
-            xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
-            wh = tf.math.log(box[..., 2:4] / anchor_grid)
-            wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
-            wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
-        else:
-            with tape.stop_recording():
-                xy = tf.nn.relu(box[..., 0:2] - grid_points)
-                xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
-                wh = tf.math.log(box[..., 2:4] / anchor_grid)
-                wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
-                wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
-        return xy, wh
+    @tf.function(experimental_relax_shapes=True)
+    def _scale_ground_truth_box(self, box, width, height, anchor_grid, grid_points, dtype):
+        xy = tf.nn.relu(box[..., 0:2] - grid_points)
+        xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
+        wh = tf.math.log(box[..., 2:4] / anchor_grid)
+        wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
+        wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
+        return tf.stop_gradient(xy), tf.stop_gradient(wh)
     
-    @tf.function
-    def __call__(self, y_true, y_pred, tape = None):
+    def rm_nan_inf(self, x):
+        x = tf.where(tf.math.is_nan(x),tf.cast(0.0, dtype=x.dtype), x)
+        x = tf.where(tf.math.is_inf(x),tf.cast(0.0, dtype=x.dtype), x)
+        return x
+
+
+    @tf.function(experimental_relax_shapes=True)
+    def __call__(self, y_true, y_pred):
         #1. generate and store constants and format output
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        grid_points, anchor_grid, y_true = self._get_label_attributes(width, height, batch_size, y_true, tape, y_pred, y_pred.dtype)
-
+        grid_points, anchor_grid, y_true = self._get_label_attributes(width, height, batch_size, y_true, y_pred, y_pred.dtype)
+        
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
+
 
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
         pred_xy, pred_wh, pred_box = self._get_predicted_box(fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
+        pred_conf = self.rm_nan_inf(pred_conf)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
-        self.print_error(pred_conf, tape)
+        self.print_error(pred_box)
 
         #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
         true_box = y_true[..., 0:4]
@@ -160,12 +152,12 @@ class Yolo_Loss(object):
             iou, giou = compute_giou(true_box, pred_box)
             mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
             loss_box = (1 - giou) * self._iou_normalizer * true_conf
-            loss_box = tf.math.minimum(loss_box, self._max_value)
+            #loss_box = tf.math.minimum(loss_box, self._max_value)
         elif self._loss_type == "ciou":
             iou, ciou = compute_ciou(true_box, pred_box)
             mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
             loss_box = (1 - ciou) * self._iou_normalizer * true_conf
-            loss_box = tf.math.minimum(loss_box, self._max_value)
+            #loss_box = tf.math.minimum(loss_box, self._max_value)
         else:
             # iou mask computation
             iou = compute_iou(true_box, pred_box)
@@ -173,7 +165,7 @@ class Yolo_Loss(object):
 
             # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
             scale = (2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
-            true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight, anchor_grid, grid_points, tape, y_pred.dtype)
+            true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight, anchor_grid, grid_points, y_pred.dtype)
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
             loss_box = (loss_wh + loss_xy) * true_conf * scale
@@ -202,13 +194,8 @@ class Yolo_Loss(object):
         loss = class_loss + conf_loss + loss_box
 
         #10. store values for use in metrics
-        if tape != None:
-            with tape.stop_recording():
-                recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-                avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
-        else:
-            recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-            avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
+        recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+        avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
         return loss, loss_box, conf_loss, class_loss, avg_iou, recall50
 
     def get_config(self):
