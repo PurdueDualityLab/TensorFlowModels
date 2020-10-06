@@ -457,12 +457,12 @@ if __name__ == "__main__":
     model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
     model.set_policy("mixed_float16")
 
-    cap = FastVideo("testing_files/test3.mp4",
+    cap = FastVideo("testing_files/test1.mp4",
                     model=model, #"regular",
                     model_version="v3",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu= True, 
-                    max_batch = 5, 
-                    policy="float16")
+                    max_batch = 4, 
+                    policy="mixed_float16")
     cap.run()

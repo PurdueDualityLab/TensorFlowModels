@@ -174,7 +174,8 @@ class Yolov3(base_model.Yolo):
                                         max_boxes=self._max_boxes,
                                         scale_boxes=self._scale_boxes,
                                         scale_mult=self._scale_mult,
-                                        path_scale=self._path_scales)
+                                        path_scale=self._path_scales, 
+                                        scale_xy=self._x_y_scales)
         else:
             self._head_filter = self._head_filter_cfg
 

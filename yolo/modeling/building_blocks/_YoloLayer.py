@@ -22,6 +22,7 @@ class YoloLayer(ks.Model):
                  scale_boxes=1,
                  scale_mult=1,
                  path_scale=None,
+                 scale_xy = None,
                  **kwargs):
         super().__init__(**kwargs)
         self._masks = masks
@@ -33,7 +34,7 @@ class YoloLayer(ks.Model):
         self._keys = list(masks.keys())
         self._len_keys = len(self._keys)
         self._path_scale = path_scale
-
+        self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.values()}
         self._generator = {}
         self._len_mask = {}
         for i, key in enumerate(self._keys):
@@ -50,14 +51,14 @@ class YoloLayer(ks.Model):
                                         reset = True)
         return anchor_generator
 
-    def parse_prediction_path(self, generator, len_mask, inputs):
+    def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
         shape = tf.shape(inputs)
         #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
         data = tf.reshape(inputs,[shape[0], shape[1], shape[2], len_mask, -1])
         centers, anchors = generator(shape[1], shape[2], shape[0], dtype=data.dtype)
 
         # compute the true box output values
-        _, _, boxes = parse_yolo_box_predictions(data[..., 0:4], tf.cast(shape[1], data.dtype), tf.cast(shape[2], data.dtype), anchors, centers)
+        _, _, boxes = parse_yolo_box_predictions(data[..., 0:4], tf.cast(shape[1], data.dtype), tf.cast(shape[2], data.dtype), anchors, centers, scale_x_y=scale_xy)
         box = _xcycwh_to_yxyx(boxes)
 
         # computer objectness and generate grid cell mask for where objects are located in the image
@@ -75,11 +76,11 @@ class YoloLayer(ks.Model):
         return box, classifications
 
     def call(self, inputs):
-        boxes, classifs = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], inputs[self._keys[0]])
+        boxes, classifs = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], self._scale_xy[self._keys[0]], inputs[self._keys[0]])
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
-            b, c = self.parse_prediction_path(self._generator[key], self._len_mask[key], inputs[key])
+            b, c = self.parse_prediction_path(self._generator[key], self._len_mask[key], self._scale_xy[key], inputs[key])
             boxes = K.concatenate([boxes, b], axis=1)
             classifs = K.concatenate([classifs, c], axis=1)
             i += 1
