@@ -449,22 +449,15 @@ if __name__ == "__main__":
     model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
-    model.load_weights_from_dn(dn2tf_head=False)
-    
-
-    #train, test = model.process_datasets(train, test, batch_size=2, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
-    
-    # #optimizer = ks.optimizers.SGD(lr=1e-3)
     optimizer = ks.optimizers.Adam(lr=1e-3/32)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.load_weights("testing_weights/yolov4/simple_test1_1epoch")
-    #model.evaluate(test)
+    model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
     model.set_policy("mixed_float16")
 
-    cap = FastVideo("testing_files/test1.mp4",
+    cap = FastVideo("testing_files/test3.mp4",
                     model=model, #"regular",
                     model_version="v3",
                     process_width=416,

@@ -133,12 +133,13 @@ class YoloParser(Parser):
         return image, {"source_id": data["source_id"],
                         "bbox": boxes,
                         "classes": data["classes"],
-                        "area": data["area"],
-                        "is_crowd": data["is_crowd"],
+                        #"area": data["area"],
+                        #"is_crowd": data["is_crowd"],
                         "best_anchors": data["best_anchors"], 
-                        "width": data["width"],
-                        "height": data["height"],
-                        "num_detections": data["num_detections"]}
+                        #"width": data["width"],
+                        #"height": data["height"],
+                        #"num_detections": data["num_detections"],
+                        }
 
     def _parse_eval_data(self, data):
         randscale = self._image_w // self._net_down_scale
