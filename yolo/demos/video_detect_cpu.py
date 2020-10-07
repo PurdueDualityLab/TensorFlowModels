@@ -62,6 +62,68 @@ import tensorflow.keras.backend as K
 from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 '''Video Buffer using cv2'''
 
+def preprocess_fn(image, dtype= tf.float32):
+    image = tf.convert_to_tensor(image)
+    image = tf.cast(image, dtype=dtype)
+    image = image / 255
+    return image
+
+def rt_preprocess_fn(image, dtype= tf.float32):
+    image = tf.convert_to_tensor(image)
+    image = tf.cast(image, dtype=dtype)
+    image = image / 255
+    image = tf.image.resize(image, (416, 416))
+    image = tf.expand_dims(image, axis=0)
+    return image
+    
+    
+
+class frame_iter():
+    def __init__(self, file, preprocess_fn):
+        self.file = file
+        self.cap = cv2.VideoCapture(file)
+        assert self.cap.isOpened()
+        self.pre_process_fn = preprocess_fn
+        self.width = int(self.cap.get(3))
+        self.height = int(self.cap.get(4))
+        self.frame = None
+        self.time = None
+    
+    def __delete__(self):
+        self.cap.release()
+    
+    def get_frame(self):
+        while self.cap.isOpened():
+            success, image = self.cap.read()
+            self.frame = image
+            e = datetime.datetime.now() 
+            image = self.pre_process_fn(image)
+            f = datetime.datetime.now()
+            self.time = (f - e)
+            yield image
+
+    def get_og_frame(self):
+        return self.frame
+    
+    def rescale_frame(self, image):
+        return tf.image.resize(image, (self.height, self.width))
+
+def new_video_proc_rt(og_model_dir, rt_model_save_path, video_path):
+    import yolo.demos.tensor_rt as trt
+    video = frame_iter(video_path, rt_preprocess_fn)
+    prep_gpu()
+    trt.get_rt_model(og_model_dir, rt_model_save_path, video.get_frame)
+    # model = trt.get_func_from_saved_model(rt_model_save_path)
+    # for frame in video.get_frame():
+    #     pred = model(frame)
+    #     frame = video.get_og_frame()
+    #     cv2.imshow('frame', frame)
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
+    return 
+
+
+
 
 def video_processor(model, version , vidpath, device="/CPU:0"):
     img_array = []
@@ -71,9 +133,17 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
     start = time.time()
     tick = 0
     e, f, a, b, c, d = 0, 0, 0, 0, 0, 0
-    with tf.device(device):
-        model = build_model(name=model, model_version=version)
-        model.make_predict_function()
+    if isinstance(model, str):
+        with tf.device(device):
+            model = build_model(name=model, model_version=version)
+            model.make_predict_function()
+    if hasattr(model, "predict"):
+        predfunc = model.predict
+        print("using pred function")
+    else:
+        predfunc = model
+        print("using call function")
+        
     colors = gen_colors(80)
     label_names = get_coco_names(
         path="yolo/dataloaders/dataset_specs/coco.names")
@@ -92,18 +162,18 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
     while cap.isOpened():
         success, image = cap.read()
 
-        with tf.device(device):
-            e = datetime.datetime.now()
-            image = tf.cast(image, dtype=tf.float32)
-            image = image / 255
-            f = datetime.datetime.now()
+        #with tf.device(device):
+        e = datetime.datetime.now()
+        image = tf.cast(image, dtype=tf.float32)
+        image = image / 255
+        f = datetime.datetime.now()
 
         if t % 1 == 0:
             a = datetime.datetime.now()
-            with tf.device(device):
-                pimage = tf.expand_dims(image, axis=0)
-                pimage = tf.image.resize(pimage, (416, 416))
-                pred = model.predict(pimage)
+            #with tf.device(device):
+            pimage = tf.expand_dims(image, axis=0)
+            pimage = tf.image.resize(pimage, (416, 416))
+            pred = predfunc(pimage)
             b = datetime.datetime.now()
 
         image = image.numpy()
@@ -163,6 +233,27 @@ def main(argv, args=None):
     video_processor(model, version, vidpath)
     return 0
 
+def input_fn(cap, num_iterations):
+    cap = cv2.VideoCapture(vidpath)
+    assert cap.isOpened()
+    while cap.isOpened():
+        success, image = cap.read()
+        yield image
+    cap.release()
+
+def main2():
+    import contextlib
+    from yolo.demos.tensor_rt import load_model_16
+    #prep_gpu()
+
+    #model = trt.get_func_from_saved_model("testing_weights/yolov4/full_models/v4_16_tensorrt")
+    #support_windows()
+    #video_processor(model, version = None, vidpath="testing_files/test2.mp4")
+    load_model_16()
+    new_video_proc_rt("testing_weights/yolov4/full_models/v4_16", "testing_weights/yolov4/full_models/v4_16_tensorrt", "testing_files/test2.mp4")
+    return 0
+
 
 if __name__ == "__main__":
-    app.run(main)
+    #app.run(main)
+    main2()

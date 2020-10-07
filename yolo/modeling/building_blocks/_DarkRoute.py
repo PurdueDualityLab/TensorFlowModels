@@ -97,7 +97,6 @@ class DarkRoute(ks.layers.Layer):
             "norm_epsilon": self._norm_epsilon,
             "conv_activation": self._conv_activation,
             "leaky_alpha": self._leaky_alpha,
-            "upsampling_size": self._upsampling_size
         }
         layer_config.update(super().get_config())
         return layer_config

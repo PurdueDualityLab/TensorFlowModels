@@ -300,12 +300,10 @@ class FastVideo(object):
             with tf.device(self._gpu_device):
                 pimage = tf.image.resize(image,(self._p_width, self._p_height))
                 pimage = tf.expand_dims(pimage, axis = 0)
-                try:
-                    pred = model.predict(pimage)
+                if hasattr(model, "predict"):
                     predfunc = model.predict
                     print("using pred function")
-                except:
-                    pred = model(pimage)
+                else:
                     predfunc = model
                     print("using call function")
         else:
@@ -444,25 +442,30 @@ class FastVideo(object):
 
 
 if __name__ == "__main__":
-    from yolo.modeling.Yolov4 import Yolov4
+    # from yolo.modeling.Yolov4 import Yolov4
+    # model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
+    # model.build(model._input_shape)
+    # model.get_summary()
+    # loss_fn = model.generate_loss(loss_type="ciou")
+
+    # optimizer = ks.optimizers.Adam(lr=1e-3/32)
+    # optimizer = model.match_optimizer_to_policy(optimizer)
+    # model.compile(optimizer=optimizer, loss=loss_fn)
+    # model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
+    # model.set_policy("mixed_float16")
+    import contextlib
+    import yolo.demos.tensor_rt as trt
     prep_gpu()
-    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
-    model.build(model._input_shape)
-    model.get_summary()
-    loss_fn = model.generate_loss(loss_type="ciou")
 
-    optimizer = ks.optimizers.Adam(lr=1e-3/32)
-    optimizer = model.match_optimizer_to_policy(optimizer)
-    model.compile(optimizer=optimizer, loss=loss_fn)
-    model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
-    model.set_policy("mixed_float16")
+    model = trt.get_func_from_saved_model("testing_weights/yolov4/full_models/v4_32_tensorrt_fixed")
+    print(dir(model))
 
-    cap = FastVideo("testing_files/test1.mp4",
+    cap = FastVideo("testing_files/test2.mp4",
                     model=model, #"regular",
-                    model_version="v3",
+                    model_version="v4",
                     process_width=416,
                     process_height=416,
-                    preprocess_with_gpu= True, 
-                    max_batch = 4, 
-                    policy="mixed_float16")
+                    preprocess_with_gpu=True, 
+                    max_batch = 5, 
+                    policy="float16")
     cap.run()

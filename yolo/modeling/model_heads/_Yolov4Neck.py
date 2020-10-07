@@ -193,7 +193,6 @@ class Yolov4Neck(tf.keras.Model):
     def get_config(self):
         layer_config = {
             "cfg_dict": self._cfg_dict,
-            "boxes": self._boxes,
             "model": self._model_name
         }
         layer_config.update(super().get_config())
