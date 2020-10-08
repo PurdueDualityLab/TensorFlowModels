@@ -23,6 +23,7 @@ class YoloLayer(ks.Model):
                  scale_mult=1,
                  path_scale=None,
                  scale_xy = None,
+                 use_nms = True,
                  **kwargs):
         super().__init__(**kwargs)
         self._masks = masks
@@ -34,6 +35,7 @@ class YoloLayer(ks.Model):
         self._keys = list(masks.keys())
         self._len_keys = len(self._keys)
         self._path_scale = path_scale
+        self._use_nms = use_nms
         self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.values()}
         self._generator = {}
         self._len_mask = {}
@@ -87,15 +89,23 @@ class YoloLayer(ks.Model):
 
         boxes = tf.cast(boxes, dtype=tf.float32)
         classifs = tf.cast(classifs, dtype=tf.float32)
-        nms = tf.image.combined_non_max_suppression(
-            tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
-            self._max_boxes, self._thresh, self._cls_thresh)
-        return {
-            "bbox": nms.nmsed_boxes,
-            "classes": nms.nmsed_classes,
-            "confidence": nms.nmsed_scores,
-            "raw_output": inputs
-        }
+        if self._use_nms:
+            nms = tf.image.combined_non_max_suppression(
+                tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
+                self._max_boxes, self._thresh, self._cls_thresh)
+            return {
+                "bbox": nms.nmsed_boxes,
+                "classes": nms.nmsed_classes,
+                "confidence": nms.nmsed_scores,
+                "raw_output": inputs
+            }
+        else:
+            return {
+                "bbox": boxes,
+                "classes": tf.math.argmax(classifs, axis = -1),
+                "confidence": [-1],
+                "raw_output": inputs
+            }
 
     def get_config(self):
         return {

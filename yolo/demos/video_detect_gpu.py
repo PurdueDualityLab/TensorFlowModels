@@ -68,8 +68,11 @@ class FastVideo(object):
                  process_height=416,
                  classes=80,
                  labels=None,
+                 print_conf = True, 
                  max_batch = None, 
+                 wait_time = None, 
                  preprocess_with_gpu=False, 
+                 scale_que = 1, 
                  policy = "float16",
                  gpu_device="/GPU:0",
                  preprocess_gpu="/GPU:0"):
@@ -81,7 +84,7 @@ class FastVideo(object):
         support_windows()
 
         self._file = file_name
-        self._fps = 120
+        self._fps = 1200000
 
         self._gpu_device = gpu_device
         if preprocess_with_gpu:
@@ -126,16 +129,20 @@ class FastVideo(object):
         else:
             self._labels = labels
 
-        self._load_que = Queue(self._batch_size)
-        self._display_que = Queue(1)#self._batch_size)
+        self._load_que = Queue(self._batch_size * scale_que)
+        self._display_que = Queue(1 * scale_que)
         self._running = True
-        self._wait_time = 0.01
+        if self._batch_size != 1:
+            self._wait_time = 0.0015 * self._batch_size if wait_time == None else wait_time # 0.05 default
+        else:
+            self._wait_time = 0.0001
+        self._print_conf = print_conf
 
         self._read_fps = 1
         self._display_fps = 1
-        self._latency = None
+        self._latency = -1
         self._batch_proc = 1
-        self._frames = 0
+        self._frames = 1
         self._obj_detected = 0
         return
 
@@ -182,7 +189,6 @@ class FastVideo(object):
         tick = 0
         timeout = 0
         process_device = self._pre_process_device
-
         if self._preprocess_function == None:
             preprocess = self._preprocess
         else:
@@ -222,9 +228,14 @@ class FastVideo(object):
                     l = 0
                 # sleep for default 0.01 seconds, to allow other functions the time to catch up or keep pace
                 time.sleep(self._wait_time)
-        except:
+        except ValueError:
             self._running = False
-            return
+            raise
+        except Exception as e:
+            #print ("reading", e)
+            self._running = False
+            #time.sleep(10)
+            raise e
         self._running = False
         return
 
@@ -253,9 +264,14 @@ class FastVideo(object):
 
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
-                    self._obj_detected = draw_box(image[i], boxes[i], classes[i],
-                                                conf[i], self._colors,
-                                                self._labels)
+                    if self._print_conf:
+                        self._obj_detected = draw_box(image[i], boxes[i], classes[i],
+                                                    conf[i], self._colors,
+                                                    self._labels)
+                    else:
+                        self._obj_detected = draw_box(image[i], boxes[i], classes[i],
+                            None, self._colors,
+                            self._labels)
                     #display the frame then wait in case something else needs to catch up
                     cv2.imshow("frame", image[i])
                     time.sleep(self._wait_time)
@@ -269,9 +285,14 @@ class FastVideo(object):
                         l = 0
                     if cv2.waitKey(1) & 0xFF == ord('q') or not self._running:
                         break
-        except:
+        except ValueError:
             self._running = False
-            return
+            raise
+        except Exception as e:
+            #print ("display", e)
+            self._running = False
+            #time.sleep(10)
+            raise e
         self._running = False
         return
 
@@ -352,10 +373,10 @@ class FastVideo(object):
                 # computation latency to see how much delay between input and output
                 if self._frames >= 1000:
                     self._frames = 0
-                    self._latency = None
+                    self._latency = -1
 
                 # compute the latency
-                if self._latency != None:
+                if self._latency != -1:
                     self._latency += (b - a)
                 else:
                     self._latency = (b - a)
@@ -405,7 +426,6 @@ class FastVideo(object):
             self._running = False
             time.sleep(5)
             
-
             # join the laoding thread and diplay thread
             load_thread.join()
             display_thread.join()
@@ -413,7 +433,6 @@ class FastVideo(object):
             # close the video capture and destroy all open windows
             self._cap.release()
             cv2.destroyAllWindows()
-
         return
 
     def print_opt(self):
@@ -443,29 +462,37 @@ class FastVideo(object):
 
 if __name__ == "__main__":
     # from yolo.modeling.Yolov4 import Yolov4
-    # model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
-    # model.build(model._input_shape)
-    # model.get_summary()
-    # loss_fn = model.generate_loss(loss_type="ciou")
+    # prep_gpu()
+    # model = Yolov4(model = "regular", policy="float16", use_tie_breaker=True, use_nms=True)
+    # model.load_weights_from_dn()
 
-    # optimizer = ks.optimizers.Adam(lr=1e-3/32)
-    # optimizer = model.match_optimizer_to_policy(optimizer)
-    # model.compile(optimizer=optimizer, loss=loss_fn)
-    # model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
-    # model.set_policy("mixed_float16")
-    import contextlib
-    import yolo.demos.tensor_rt as trt
+    import yolo.utils.tensor_rt as trt
     prep_gpu()
-
-    model = trt.get_func_from_saved_model("testing_weights/yolov4/full_models/v4_32_tensorrt_fixed")
-    print(dir(model))
-
-    cap = FastVideo("testing_files/test2.mp4",
-                    model=model, #"regular",
+    def func(inputs):
+        boxes = inputs["bbox"]
+        classifs = tf.one_hot(inputs["classes"], axis = -1, dtype = tf.float32, depth = 80)
+        nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
+        return {"bbox": nms.nmsed_boxes,
+                "classes": nms.nmsed_classes,
+                "confidence": nms.nmsed_scores,}
+    
+    name = "testing_weights/yolov4/full_models/v4_32"
+    new_name = f"{name}_tensorrt"
+    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000)
+    #model.convertModel()
+    model.compile()
+    model.summary()
+    model.set_postprocessor_fn(func)
+    
+    cap = FastVideo("testing_files/test.mp4",
+                    model=model, 
                     model_version="v4",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
-                    max_batch = 5, 
+                    print_conf=True, 
+                    max_batch = 1, 
+                    scale_que= 10, 
+                    wait_time = 0.0000001,#None, 
                     policy="float16")
     cap.run()

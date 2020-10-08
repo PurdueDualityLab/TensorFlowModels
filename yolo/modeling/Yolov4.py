@@ -30,6 +30,8 @@ class Yolov4(base_model.Yolo):
             thresh: int = 0.45,
             weight_decay = 5e-4, 
             class_thresh: int = 0.45,
+            use_nms = True,
+            using_rt = False, 
             max_boxes: int = 200,
             scale_boxes: int = 416,
             scale_mult: float = 1.0,
@@ -79,6 +81,8 @@ class Yolov4(base_model.Yolo):
         self._neck_cfg = neck
         self._head_cfg = head
         self._head_filter_cfg = head_filter
+        self._use_nms = use_nms
+        self._using_rt = using_rt
 
         self._clip_grads_norm = clip_grads_norm
 
@@ -171,7 +175,8 @@ class Yolov4(base_model.Yolo):
                                         scale_boxes=self._scale_boxes,
                                         scale_mult=self._scale_mult,
                                         path_scale=self._path_scales, 
-                                        scale_xy=self._x_y_scales)
+                                        scale_xy=self._x_y_scales,
+                                        use_nms=self._use_nms)
         else:
             self._head_filter = self._head_filter_cfg
 
@@ -187,7 +192,7 @@ class Yolov4(base_model.Yolo):
         feature_maps = self._backbone(inputs)
         neck_maps = self._neck(feature_maps)
         raw_head = self._head(neck_maps)
-        if training:
+        if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
             predictions = self._head_filter(raw_head)
@@ -282,7 +287,9 @@ if __name__ == "__main__":
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
     model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
-    model.evaluate(test)
+
+    tensorboard = tf.keras.callbacks.TensorBoard()
+    model.evaluate(test, callbacks = [tensorboard])
 
     # try:
     #     model.fit(train, validation_data = test, epochs = 39, verbose = 1, shuffle = True)

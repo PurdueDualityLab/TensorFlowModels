@@ -29,16 +29,12 @@ def support_windows():
 
 
 def draw_box(image, boxes, classes, conf, colors, label_names):
+    i = 0
     for i in range(boxes.shape[0]):
         if boxes[i][3] == 0:
             break
         box = boxes[i]
-
-        if type(conf) == type(None):
-            cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors, 1)
-        else:
-            cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]),
-                          colors[classes[i]], 1)
+        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]),colors[classes[i]], 1)
 
         if type(conf) != type(None):
             cv2.putText(image,

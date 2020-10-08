@@ -28,6 +28,8 @@ class Yolov3(base_model.Yolo):
             thresh: int = 0.45,
             weight_decay = 5e-4, 
             class_thresh: int = 0.45,
+            use_nms = True,
+            using_rt = False,
             max_boxes: int = 200,
             scale_boxes: int = 416,
             scale_mult: float = 1.0,
@@ -76,6 +78,8 @@ class Yolov3(base_model.Yolo):
         self._head_cfg = head
         self._head_filter_cfg = head_filter
         self._weight_decay = weight_decay
+        self._use_nms = use_nms
+        self._using_rt = using_rt
 
         self._clip_grads_norm = clip_grads_norm
 
@@ -175,7 +179,8 @@ class Yolov3(base_model.Yolo):
                                         scale_boxes=self._scale_boxes,
                                         scale_mult=self._scale_mult,
                                         path_scale=self._path_scales, 
-                                        scale_xy=self._x_y_scales)
+                                        scale_xy=self._x_y_scales,
+                                        use_nms=self._use_nms)
         else:
             self._head_filter = self._head_filter_cfg
 
@@ -189,7 +194,7 @@ class Yolov3(base_model.Yolo):
     def call(self, inputs, training=False):
         feature_maps = self._backbone(inputs)
         raw_head = self._head(feature_maps)
-        if training:
+        if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
             predictions = self._head_filter(raw_head)
