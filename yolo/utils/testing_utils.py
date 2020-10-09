@@ -27,22 +27,31 @@ def support_windows():
         windll.kernel32.SetConsoleMode(c_int(stdout_handle), mode)
     return
 
-
-def draw_box(image, boxes, classes, conf, colors, label_names):
+def draw_box(image, boxes, classes, conf, draw_fn):
     i = 0
     for i in range(boxes.shape[0]):
-        if boxes[i][3] == 0:
-            break
-        box = boxes[i]
-        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]),colors[classes[i]], 1)
-
-        if type(conf) != type(None):
-            cv2.putText(image,
-                        "%s, %0.3f" % (label_names[classes[i]], conf[i]),
-                        (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        colors[classes[i]], 1)
+        if draw_fn(image, boxes[i], classes[i], conf[i]):
+            i += 1
+        else:
+            return i 
     return i
 
+def get_draw_fn(colors, label_names, display_name):
+    def draw_box_name(image, box, classes, conf):
+        if box[3] == 0:
+            return False
+        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]),colors[classes], 1)
+        cv2.putText(image,"%s, %0.3f" % (label_names[classes], conf),(box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,colors[classes], 1)
+        return True
+    def draw_box(image, box, classes, conf):
+        if box[3] == 0:
+            return False
+        cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]),colors[classes], 1)
+        return True
+    if display_name:
+        return draw_box_name
+    else:
+        return draw_box 
 
 def build_model(name="regular",
                 model_version="v3",

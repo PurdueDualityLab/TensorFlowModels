@@ -103,7 +103,7 @@ class YoloLayer(ks.Model):
             return {
                 "bbox": boxes,
                 "classes": tf.math.argmax(classifs, axis = -1),
-                "confidence": [-1],
+                "confidence": classifs,#tf.math.reduce_max(classifs, axis = -1),
                 "raw_output": inputs
             }
 

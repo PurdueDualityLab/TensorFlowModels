@@ -7,24 +7,26 @@ from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
 from yolo.utils.testing_utils import prep_gpu
 
-def load_model(name = "testing_weights/yolov4/full_models/v4_32"):
+def load_model_v4(name = "testing_weights/yolov4/full_models/v4_32", policy = "float32"):
     from yolo.modeling.Yolov4 import Yolov4
-    #prep_gpu()
-    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True, use_nms=False, using_rt=True)
+    model = Yolov4(model = "regular", policy=policy, use_nms=False, using_rt=False)
     model.build((None, None, None, 3))
     model.load_weights_from_dn()
     model(tf.random.normal((1, 416, 416, 3)))
     model.save(name, include_optimizer=False)
+    del model
     return name
 
-def load_model_16(name = "testing_weights/yolov4/full_models/v4_16"):
-    from yolo.modeling.Yolov4 import Yolov4
-    #prep_gpu()
-    model = Yolov4(model = "regular", policy="float16", use_tie_breaker=True, use_nms=False, using_rt=True)
+def load_model_v3(type = "regular",name = "testing_weights/yolov4/full_models/v4_32", policy = "float32"):
+    from yolo.modeling.Yolov3 import Yolov3
+    model = Yolov3(model = type, policy=policy, use_nms=False, using_rt=False)
     model.build((None, None, None, 3))
     model.load_weights_from_dn()
     model(tf.random.normal((1, 416, 416, 3)))
     model.save(name, include_optimizer=False)
+    del model
+    return name
+
 
 def get_rt_model(modelpath, savepath, input_fn):
     params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(precision_mode='FP16',is_dynamic_op=True, max_workspace_size_bytes=4000000000,max_batch_size=8)
@@ -42,40 +44,53 @@ def get_func_from_saved_model(saved_model_dir):
 class TensorRT(object):
     def __init__(self, 
                  saved_model, 
-                 batch_size = 1, 
                  image_shape = (416, 416, 3),
                  over_write_model = False,
                  save_new_path = None,
                  precision_mode = "FP16", 
                  is_dynamic_op = True, 
                  max_workspace_size_bytes = 1, 
-                 max_batch_size = 8):
+                 max_batch_size = 8, 
+                 use_calibration = False):
         self._model_path = saved_model
         self._model_save_path = saved_model if over_write_model else save_new_path
-        self._batch_size = batch_size
+        self._batch_size = max_batch_size
         self._image_shape = image_shape    
+        self._use_calibration_fn = use_calibration
         if self._model_save_path == None:
             raise Exception("model save path not specified")
         self._params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(precision_mode=precision_mode,
                                                                   is_dynamic_op=is_dynamic_op, 
                                                                   max_workspace_size_bytes=max_workspace_size_bytes,
-                                                                  max_batch_size=max_batch_size)
-        self._parent = None
+                                                                  max_batch_size=8, 
+                                                                  use_calibration=use_calibration)
+        #self._parent = None
         self._model = None
         self._processor = None
         self._converted = False
         return 
     
-    def gen_fn(self):
-        shaped_item = tf.random.normal((1, self._batch_size, *self._image_shape))
-        print(shaped_item.shape)
+    def callibration_fn(self):
+        import numpy as np
+        shaped_item = np.random.normal(size = (1, 1, *self._image_shape))
+        shaped_item = shaped_item.astype(np.float32)
+        print(shaped_item.shape, shaped_item.dtype)
         yield shaped_item
+    
+    def gen_fn(self):
+        for i in range(1, self._batch_size + 1):
+            item = tf.random.normal(( i, *self._image_shape))
+            print(item.shape)
+            yield (item, )
     
     def convertModel(self):
         converter = trt.TrtGraphConverterV2(input_saved_model_dir=self._model_path, conversion_params=self._params)
-        converter.convert()
+        if self._use_calibration_fn:
+            converter.convert(calibration_input_fn=self.callibration_fn)
+        else:
+            converter.convert()
         converter.build(self.gen_fn)
-        self._converter.save(self._model_save_path)
+        converter.save(self._model_save_path)
         self._converted = True
         return 
     
@@ -88,12 +103,12 @@ class TensorRT(object):
         saved_model_loaded = tf.saved_model.load(saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
         graph_func = saved_model_loaded.signatures[tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
         self._model = graph_func
-        self._parent = saved_model_loaded
+        #self._parent = saved_model_loaded
         return 
     
     def summary(self):
         print(dir(self._model))
-        print(dir(self._parent), self._parent._x_y_scales)
+        #print(dir(self._parent), self._parent._x_y_scales)
         print(self._model.output_shapes)
         print(self._model.outputs)
         pass
@@ -109,35 +124,16 @@ class TensorRT(object):
     @tf.function
     def _postprocess(self, inputs):
         return self._processor(inputs)
-    
-    # @tf.function
-    # def _compute_parent(self, inputs):
-    #     return self._parent(inputs)
 
     @tf.function
     def predict(self, mod_inputs):
-        if self._parent == None:
+        if self._model == None:
             raise Exception("Compile the Model first")
         if self._processor != None:
             return self._postprocess(self._compute(mod_inputs))
         else:
             return self._compute(mod_inputs)
-
-#     @tf.function
-#     def predict(self, mod_inputs):
-#         if self._parent == None:
-#             raise Exception("Compile the Model first")
-# #        if tf.shape(mod_inputs)[0] == 1:
-#         return self._predict(mod_inputs)
-#         # else:
-#         #     # outputs = self._predict(tf.expand_dims(mod_inputs[0], axis = 0))
-#         #     # for inputs in range(1, tf.shape(mod_inputs)[0]):
-#         #     #     i = tf.expand_dims(mod_inputs[inputs], axis = 0)    
-#         #     #     o = self._predict(i)
-#         #     #     outputs = self.stack(outputs, o)
-#         #     # return outputs
-#         #     raise Exception("Batch size Must be 1")
-
+            
     @tf.function
     def stack(self, outputs, new):
         if isinstance(outputs, dict):

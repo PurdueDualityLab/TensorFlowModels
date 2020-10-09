@@ -18,6 +18,7 @@ from yolo.utils.testing_utils import draw_box
 from yolo.utils.testing_utils import int_scale_boxes 
 from yolo.utils.testing_utils import gen_colors 
 from yolo.utils.testing_utils import get_coco_names
+from yolo.utils.testing_utils import get_draw_fn
 
 
 class FastVideo(object):
@@ -66,6 +67,7 @@ class FastVideo(object):
                  preprocess_function=None,
                  process_width=416,
                  process_height=416,
+                 disp_h = 720, 
                  classes=80,
                  labels=None,
                  print_conf = True, 
@@ -84,7 +86,7 @@ class FastVideo(object):
         support_windows()
 
         self._file = file_name
-        self._fps = 1200000
+        self._fps = 120000000
 
         self._gpu_device = gpu_device
         if preprocess_with_gpu:
@@ -93,8 +95,9 @@ class FastVideo(object):
             self._pre_process_device = "/CPU:0"
 
         self._preprocess_function = preprocess_function
-        self._width = int(self._cap.get(3))
-        self._height = int(self._cap.get(4))
+        self._height = int(self._cap.get(4)) if disp_h == None else disp_h
+        self._og_height = int(self._cap.get(4))
+        self._width = int(self._cap.get(3) * (self._height/self._og_height)) 
         self._classes = classes
         self._p_width = process_width
         self._p_height = process_height
@@ -128,6 +131,8 @@ class FastVideo(object):
                 path="yolo/dataloaders/dataset_specs/coco.names")
         else:
             self._labels = labels
+        
+        self._draw_fn = get_draw_fn(self._colors, self._labels, print_conf)
 
         self._load_que = Queue(self._batch_size * scale_que)
         self._display_que = Queue(1 * scale_que)
@@ -136,14 +141,13 @@ class FastVideo(object):
             self._wait_time = 0.0015 * self._batch_size if wait_time == None else wait_time # 0.05 default
         else:
             self._wait_time = 0.0001
-        self._print_conf = print_conf
 
         self._read_fps = 1
         self._display_fps = 1
         self._latency = -1
         self._batch_proc = 1
         self._frames = 1
-        self._obj_detected = 0
+        self._obj_detected = -1
         return
 
     def _load_model(self, model):
@@ -261,17 +265,10 @@ class FastVideo(object):
 
                 # get the images, the predictions placed on the que via the run function (the model)
                 image, boxes, classes, conf = self._display_que.get()
-
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
-                    if self._print_conf:
-                        self._obj_detected = draw_box(image[i], boxes[i], classes[i],
-                                                    conf[i], self._colors,
-                                                    self._labels)
-                    else:
-                        self._obj_detected = draw_box(image[i], boxes[i], classes[i],
-                            None, self._colors,
-                            self._labels)
+                    self._obj_detected = draw_box(image[i], boxes[i], classes[i], conf[i], self._draw_fn)
+
                     #display the frame then wait in case something else needs to catch up
                     cv2.imshow("frame", image[i])
                     time.sleep(self._wait_time)
@@ -368,6 +365,8 @@ class FastVideo(object):
                     boxes, classes = int_scale_boxes(pred["bbox"],
                                                      pred["classes"],
                                                      self._width, self._height)
+                    if image.shape[1] != self._height:
+                        image = tf.image.resize(image, (self._height, self._width))
                 b = datetime.datetime.now()
 
                 # computation latency to see how much delay between input and output
@@ -419,10 +418,10 @@ class FastVideo(object):
             # close the video capture and destroy all open windows
             self._cap.release()
             cv2.destroyAllWindows()
-        except:
+        except Exception as e:
             # arbitrary keyboard input
             self.print_opt()
-            print("\n\n\n\n\n::: Video File Complete :::")
+            print(f"\n\n\n\n\n::: Video File Complete ::: or error  -> -> ->{e}")
             self._running = False
             time.sleep(5)
             
@@ -470,29 +469,32 @@ if __name__ == "__main__":
     prep_gpu()
     def func(inputs):
         boxes = inputs["bbox"]
-        classifs = tf.one_hot(inputs["classes"], axis = -1, dtype = tf.float32, depth = 80)
+        classifs = inputs["confidence"]
         nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
         return {"bbox": nms.nmsed_boxes,
                 "classes": nms.nmsed_classes,
                 "confidence": nms.nmsed_scores,}
     
-    name = "testing_weights/yolov4/full_models/v4_32"
-    new_name = f"{name}_tensorrt"
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000)
+    #name = trt.load_model_v3(type = "tiny", name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms")
+    name = "testing_weights/yolov4/full_models/fp32_no_nms"
+    #name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms"
+    new_name = f"{name}_tensorrt_2"#_int8"
+    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=1)#, precision_mode="INT8", use_calibration=True)
     #model.convertModel()
     model.compile()
     model.summary()
     model.set_postprocessor_fn(func)
     
-    cap = FastVideo("testing_files/test.mp4",
-                    model=model, 
-                    model_version="v4",
+    cap = FastVideo("testing_files/test4.mp4",
+                    model= model, 
+                    model_version="v3",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
                     print_conf=True, 
-                    max_batch = 1, 
-                    scale_que= 10, 
-                    wait_time = 0.0000001,#None, 
+                    max_batch = 3, 
+                    disp_h= 360, 
+                    scale_que= 1, 
+                    wait_time = 0.00003,#None, 
                     policy="float16")
     cap.run()
