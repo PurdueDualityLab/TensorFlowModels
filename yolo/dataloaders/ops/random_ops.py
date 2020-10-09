@@ -34,6 +34,7 @@ def _jitter_rand(box_jitter=0.005):
     return jitter_cx, jitter_cy, jitter_bw, jitter_bh
 
 
+
 def _translate_rand(image_jitter=0.1):
     global RANDOM_SEED
     translate_x = RANDOM_SEED.uniform(minval=-image_jitter,

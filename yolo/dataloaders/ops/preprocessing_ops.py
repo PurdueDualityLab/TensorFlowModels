@@ -73,33 +73,98 @@ def _scale_image(image, resize=False, w=None, h=None):
         image = image / 255
     return image
 
-@tf.function
-def _jitter_boxes(box, translate_x, translate_y, j_cx, j_cy, j_w, j_h):
+def random_jitter_boxes(boxes, box_jitter, seed = 10):
+    num_gen = tf.shape(boxes)[0]
+    jx = tf.random.uniform(minval=-box_jitter,
+                             maxval=box_jitter,
+                             shape=(num_gen, ),
+                             seed = seed, 
+                             dtype=tf.float32)
+    jy = tf.random.uniform(minval=-box_jitter,
+                             maxval=box_jitter,
+                             shape=(num_gen, ),
+                             seed = seed, 
+                             dtype=tf.float32)
+    jw = tf.random.uniform(minval=-box_jitter,
+                             maxval=box_jitter,
+                             shape=(num_gen, ),
+                             seed = seed, 
+                             dtype=tf.float32)+1
+    jh = tf.random.uniform(minval=-box_jitter,
+                             maxval=box_jitter,
+                             shape=(num_gen, ),
+                             seed = seed, 
+                             dtype=tf.float32)+1
+    #tf.print(tf.math.reduce_sum(jx))
+    boxes = _jitter_boxes(boxes, jx, jy, jw, jh)
+    return boxes
+
+def _jitter_boxes(box, j_cx, j_cy, j_w, j_h):
     with tf.name_scope("jitter_boxs"):
         x = tf.clip_by_value(tf.math.add(box[..., 0], j_cx), clip_value_min=0.0, clip_value_max=1.0)
-        if translate_x != 0.0:
-            x = tf.math.add(x, translate_x)
-        x = tf.expand_dims(x, axis=-1)
         y = tf.clip_by_value(tf.math.add(box[..., 1], j_cy), clip_value_min=0.0, clip_value_max=1.0)
-        if translate_y != 0.0:
-            y = tf.math.add(y, translate_y)
-        y = tf.expand_dims(y, axis=-1)
         w = box[..., 2] * j_w
-        w = tf.expand_dims(w, axis=-1)
         h = box[..., 3] * j_h
-        h = tf.expand_dims(h, axis=-1)
-        box = tf.concat([x, y, w, h], axis=-1)
+        box = tf.stack([x, y, w, h], axis = -1)
+        box.set_shape([None, 4])
+    return box
+
+def random_translate(image, box, t, seed = 10):
+    t_x = tf.random.uniform(minval=-t,
+                            maxval=t,
+                            shape=(),
+                            dtype=tf.float32)
+    t_y = tf.random.uniform(minval=-t,
+                            maxval=t,
+                            shape=(),
+                            dtype=tf.float32)
+    #tf.print(t_x+t_y)
+    box = _translate_boxes(box, t_x, t_y)
+    image = _translate_image(image, t_x, t_y)
+    return image, box
+
+def _translate_boxes(box, translate_x, translate_y):
+    with tf.name_scope("translate_boxs"):
+        x = box[..., 0] + translate_x
+        y = box[..., 1] + translate_y
+        box = tf.stack([x, y, box[..., 2], box[..., 3]], axis = -1)
+        box.set_shape([None, 4])
     return box
 
 def _translate_image(image, translate_x, translate_y):
     with tf.name_scope("translate_image"):
         if (translate_x != 0 and translate_y != 0):
-            image_jitter = tf.concat([translate_x, translate_y], axis=0)
+            image_jitter = tf.convert_to_tensor([translate_x, translate_y])
             image_jitter.set_shape([2])
             image = tfa.image.translate(
                 image, image_jitter * tf.cast(tf.shape(image)[1], tf.float32))
     return image
 
+def random_flip(image, box, seed = 10):
+    do_flip_x = tf.greater(tf.random.uniform([], seed=seed), 0.5)
+    x = box[..., 0]
+    y = box[..., 1]
+    if do_flip_x:
+        image = tf.image.flip_left_right(image)
+        x = 1 - x
+    do_flip_y = tf.greater(tf.random.uniform([], seed=seed), 0.5)
+    if do_flip_y:
+        image = tf.image.flip_up_down(image)
+        y = 1 - y
+    return image, tf.stack([x, y, box[..., 2], box[..., 3]], axis = -1)
+
+def pad_max_instances(value, instances, pad_value = 0):
+    shape = tf.shape(value)
+    dim1 = shape[0]
+
+    if dim1 > instances: 
+        value = value[:instances, ...]
+        return value
+    else: 
+        nshape = tf.tensor_scatter_nd_update(shape, [[0]], [instances - dim1])# 
+        pad_tensor = tf.ones(nshape, dtype=value.dtype) * pad_value
+        value = tf.concat([value, pad_tensor], axis = 0)
+        return value 
 
 def _get_best_anchor(y_true, anchors, width, height):
     """

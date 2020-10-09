@@ -56,7 +56,6 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
             if K.any(tf.math.less(boxes[batch, box_id, 0:2], 0.0)) or K.any(
                     tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
                 continue
-
             if use_tie_breaker:
                 for anchor_id in range(tf.shape(anchors)[-1]):
                     index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
