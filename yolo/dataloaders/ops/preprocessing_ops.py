@@ -147,10 +147,10 @@ def random_flip(image, box, seed = 10):
     if do_flip_x:
         image = tf.image.flip_left_right(image)
         x = 1 - x
-    do_flip_y = tf.greater(tf.random.uniform([], seed=seed), 0.5)
-    if do_flip_y:
-        image = tf.image.flip_up_down(image)
-        y = 1 - y
+    # do_flip_y = tf.greater(tf.random.uniform([], seed=seed), 0.5)
+    # if do_flip_y:
+    #     image = tf.image.flip_up_down(image)
+    #     y = 1 - y
     return image, tf.stack([x, y, box[..., 2], box[..., 3]], axis = -1)
 
 def pad_max_instances(value, instances, pad_value = 0):

@@ -275,7 +275,7 @@ if __name__ == "__main__":
     model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
-    model.load_weights_from_dn(dn2tf_head=False)
+    model.load_weights_from_dn(dn2tf_head=True)
     
 
     train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
@@ -286,7 +286,6 @@ if __name__ == "__main__":
     optimizer = ks.optimizers.Adam(lr=1e-3/32)
     optimizer = model.match_optimizer_to_policy(optimizer)
     model.compile(optimizer=optimizer, loss=loss_fn)
-    model.load_weights("testing_weights/yolov4/simple_test1_2epoch")
 
     tensorboard = tf.keras.callbacks.TensorBoard()
     model.evaluate(test, callbacks = [tensorboard])

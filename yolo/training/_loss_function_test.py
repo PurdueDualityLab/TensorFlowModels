@@ -39,7 +39,7 @@ def gt_test():
                             split='validation',
                             shuffle_files=False,
                             with_info=True)
-        model = build_model(model_version="v3", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
+        model = build_model(model_version="v4", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
         model.get_summary()
 
         loss_fn = model.generate_loss(loss_type="ciou")
@@ -53,7 +53,7 @@ def gt_test():
         pred = model.predict(image)
         
         image = tf.image.draw_bounding_boxes(image, pred["bbox"], [[1.0, 0.0, 0.0]])
-        #image = tf.image.draw_bounding_boxes(image, _xcycwh_to_yxyx(label["bbox"]) , [[0.0, 1.0, 0.0]])
+        image = tf.image.draw_bounding_boxes(image, _xcycwh_to_yxyx(label["bbox"]) , [[0.0, 1.0, 0.0]])
         image = image[0].numpy()
 
         plt.imshow(image)

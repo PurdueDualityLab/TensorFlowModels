@@ -60,10 +60,10 @@ class YoloParser(Parser):
         image = tf.clip_by_value(image, 0.0, 1.0)
         if self._random_flip:
             image, boxes = random_flip(image, boxes, seed = self._seed)
-        
+
         if self._jitter_im != 0.0:
             image, boxes = random_translate(image, boxes, self._jitter_im, seed = self._seed)
-
+            
         boxes = pad_max_instances(boxes, self._max_num_instances, 0)
         classes = pad_max_instances(data["objects"]["label"], self._max_num_instances, -1)
         best_anchors = pad_max_instances(best_anchors, self._max_num_instances, 0)
@@ -93,11 +93,11 @@ class YoloParser(Parser):
         return image, {"source_id": data["image/id"],
                         "bbox": boxes,
                         "classes": classes,
-                        "area": area,
-                        "is_crowd": is_crowd,
+                        #"area": area,
+                        #"is_crowd": is_crowd,
                         "best_anchors": best_anchors, 
-                        "width": shape[1],
-                        "height": shape[2],
+                        #"width": shape[1],
+                        #"height": shape[2],
                         "num_detections": tf.shape(data["objects"]["label"])[0]
                     }
     
@@ -146,30 +146,3 @@ class YoloPostProcessing():
                 randscale = tf.random.uniform([], minval = 10, maxval = 20, seed=self._seed, dtype = tf.int32)
         image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
         return image, label
-
-
-if __name__ == "__main__":
-    import tensorflow_datasets as tfds
-    from yolo.utils.testing_utils import prep_gpu
-    import matplotlib.pyplot as plt 
-    train, info = tfds.load('coco/2017',
-                            split='train',
-                            shuffle_files=True,
-                            with_info=True)
-    Parser = YoloParser(anchors=[(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)])
-    post = YoloPostProcessing()
-    train_fn = Parser.parse_fn(is_training=True)
-    postprocess_fn = post.postprocess_fn
-
-    train = train.map(train_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    train = train.batch(10)
-    train = train.map(postprocess_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    i = 0
-    for image, label in train: 
-        image = tf.image.draw_bounding_boxes(image, _xcycwh_to_yxyx(label["bbox"]) , [[0.0, 1.0, 0.0]])
-        image = image[0].numpy()
-        plt.imshow(image)
-        plt.show()
-        if i == 10:
-            break
-        i += 1

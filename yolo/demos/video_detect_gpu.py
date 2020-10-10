@@ -267,7 +267,7 @@ class FastVideo(object):
                 image, boxes, classes, conf = self._display_que.get()
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
-                    #self._obj_detected = draw_box(image[i], boxes[i], classes[i], conf[i], self._draw_fn)
+                    self._obj_detected = draw_box(image[i], boxes[i], classes[i], conf[i], self._draw_fn)
 
                     #display the frame then wait in case something else needs to catch up
                     cv2.imshow("frame", image[i])
@@ -470,31 +470,34 @@ if __name__ == "__main__":
     def func(inputs):
         boxes = inputs["bbox"]
         classifs = inputs["confidence"]
-        nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.1)
+        nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
         return {"bbox": nms.nmsed_boxes,
                 "classes": nms.nmsed_classes,
                 "confidence": nms.nmsed_scores,}
     
-    #name = trt.load_model_v3(type = "tiny", name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms")
-    #name = "testing_weights/yolov4/full_models/fp32_no_nms"
-    name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms"
+    # name = trt.load_model_v3(type = "tiny", name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms")
+    name = "testing_weights/yolov4/full_models/fp32_no_nms"
+    #name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms"
     new_name = f"{name}_tensorrt_2"
     model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=1)#, precision_mode="INT8", use_calibration=True)
     #model.convertModel()
     model.compile()
     model.summary()
     model.set_postprocessor_fn(func)
+    # saved_model_dir
+    # saved_model_loaded = tf.saved_model.load(saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
+    # graph_func = saved_model_loaded.signatures["serving"]
     
     cap = FastVideo("testing_files/test2.mp4",
                     model= model, 
-                    model_version="v3",
+                    model_version="v4",
                     process_width=416,
                     process_height=416,
                     preprocess_with_gpu=True, 
                     print_conf=True, 
-                    max_batch = 3, 
+                    max_batch = 4, 
                     disp_h= 360, 
                     scale_que= 1, 
-                    wait_time = 0.00001,#None, 
-                    policy="float16")
+                    wait_time = 0.00003,
+                    policy="mixed_float16")
     cap.run()

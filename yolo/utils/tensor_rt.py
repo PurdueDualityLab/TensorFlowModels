@@ -102,6 +102,7 @@ class TensorRT(object):
          
         saved_model_loaded = tf.saved_model.load(saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
         graph_func = saved_model_loaded.signatures[tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        #graph_func = saved_model_loaded.signatures["serving"]
         self._model = graph_func
         #self._parent = saved_model_loaded
         return 

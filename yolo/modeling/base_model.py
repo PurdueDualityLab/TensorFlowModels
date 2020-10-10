@@ -33,39 +33,30 @@ class Yolo(tf.keras.Model, ABC):
                          jitter_boxes=0.005,
                          _eval_is_training = False):
 
-        from yolo.dataloaders.YoloParser import YoloDecoder
         from yolo.dataloaders.YoloParser import YoloParser
-        from yolo.dataloaders.YoloParser import batch_dataset
-        
+        from yolo.dataloaders.YoloParser import YoloPostProcessing
+
         parser = YoloParser(image_w=image_w,
                             image_h=image_h,
                             fixed_size=fixed_size,
                             jitter_im=jitter_im,
                             jitter_boxes=jitter_boxes,
+                            max_num_instances=self._max_boxes,
                             masks=self._masks,
                             anchors=self._boxes)
-        decoder = YoloDecoder(image_w=image_w,
-                            image_h=image_h,
-                            fixed_size=fixed_size,
-                            jitter_im=jitter_im,
-                            jitter_boxes=jitter_boxes,
-                            masks=self._masks,
-                            anchors=self._boxes)
-
-        dset_decode = decoder.decode
+        post = YoloPostProcessing(image_w=image_w,image_h=image_h)
         train_parser = parser.parse_fn(is_training= True)
         test_parser = parser.parse_fn(is_training=_eval_is_training)
-        train_transform_batch = batch_dataset(batch_size=batch_size)
-        test_transform_batch = batch_dataset(batch_size=batch_size)
 
-        train = train.map(dset_decode)
-        test = test.map(dset_decode)
+        train = train.map(train_parser, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        test = test.map(train_parser, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
-        train = train_transform_batch(train, None)
-        test = train_transform_batch(test, None)
-
-        train = train.map(train_parser)
-        test = test.map(train_parser)
+        train = train.batch(batch_size)
+        test = test.batch(batch_size)
+        
+        train = train.map(post.postprocess_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        train = train.prefetch(tf.data.experimental.AUTOTUNE)
+        test = test.prefetch(tf.data.experimental.AUTOTUNE)
         return train, test
 
     def compile(self, optimizer='rmsprop', loss=None, metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=None, **kwargs):
