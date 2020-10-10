@@ -1,6 +1,20 @@
+""" Detection Data parser and processing for YOLO.
+
+Parse image and ground truths in a dataset to training targets and package them
+into (image, labels) tuple for RetinaNet.
+"""
+
+# Import libraries
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from yolo.dataloaders.Parser import Parser
+
+from Parser import Parser
+
+from preprocessing_ops import *
+from box_utils import *
+
+
+'''
 
 from yolo.dataloaders.ops.preprocessing_ops import _get_best_anchor
 from yolo.dataloaders.ops.preprocessing_ops import random_jitter_boxes
@@ -11,6 +25,7 @@ from yolo.dataloaders.ops.preprocessing_ops import pad_max_instances
 from yolo.utils.box_utils import _xcycwh_to_xyxy
 from yolo.utils.box_utils import _xcycwh_to_yxyx
 from yolo.utils.box_utils import _yxyx_to_xcycwh
+'''
 
 class YoloParser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -145,23 +160,6 @@ class YoloParser(Parser):
             "num_detections": tf.shape(data["objects"]["label"])[0],
         }
         return image, labels
-    
-    def parse_fn(self, is_training):
-        """Returns a parse fn that reads and parses raw tensors from the decoder.
-        Args:
-            is_training: a `bool` to indicate whether it is in training mode.
-        Returns:
-            parse: a `callable` that takes the serialized examle and generate the
-                images, labels tuple where labels is a dict of Tensors that contains
-                labels.
-        """
-        def parse(decoded_tensors):
-            """Parses the serialized example data."""
-            if is_training:
-                return self._parse_train_data(decoded_tensors)
-            else:
-                return self._parse_eval_data(decoded_tensors)
-        return parse
 
 class YoloPostProcessing():
     """Parser to parse an image and its annotations into a dictionary of tensors."""
