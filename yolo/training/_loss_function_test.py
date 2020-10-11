@@ -17,7 +17,7 @@ import time
 from yolo.utils.testing_utils import prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
 prep_gpu()
 
-from yolo.dataloaders.YoloParser import YoloParser
+from yolo.dataloaders.YOLO_Detection_Input import YoloParser
 from yolo.utils.box_utils import _xcycwh_to_yxyx
 
 

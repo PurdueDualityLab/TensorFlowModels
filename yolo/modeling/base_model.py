@@ -33,8 +33,8 @@ class Yolo(tf.keras.Model, ABC):
                          jitter_boxes=0.005,
                          _eval_is_training = False):
 
-        from yolo.dataloaders.YoloParser import YoloParser
-        from yolo.dataloaders.YoloParser import YoloPostProcessing
+        from yolo.dataloaders.YOLO_Detection_Input import YoloParser
+        from yolo.dataloaders.YOLO_Detection_Input import YoloPostProcessing
 
         parser = YoloParser(image_w=image_w,
                             image_h=image_h,
