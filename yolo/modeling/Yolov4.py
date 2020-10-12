@@ -3,7 +3,7 @@ import tensorflow.keras as ks
 from typing import *
 
 import yolo.modeling.base_model as base_model
-from yolo.modeling.backbones.csp_backbone_builder import CSP_Backbone_Builder 
+from yolo.modeling.backbones.csp_backbone_builder import CSP_Backbone_Builder
 from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
 from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
 from yolo.modeling.building_blocks import YoloLayer
@@ -20,7 +20,7 @@ class Yolov4(base_model.Yolo):
             model="regular",  # options {regular, spp, tiny}
             classes=80,
             backbone=None,
-            neck = None, 
+            neck = None,
             head=None,
             head_filter=None,
             masks=None,
@@ -28,15 +28,15 @@ class Yolov4(base_model.Yolo):
             path_scales=None,
             x_y_scales=None,
             thresh: int = 0.45,
-            weight_decay = 5e-4, 
+            weight_decay = 5e-4,
             class_thresh: int = 0.45,
             use_nms = True,
-            using_rt = False, 
+            using_rt = False,
             max_boxes: int = 200,
             scale_boxes: int = 416,
             scale_mult: float = 1.0,
             use_tie_breaker: bool = True,
-            clip_grads_norm = None, 
+            clip_grads_norm = None,
             policy="float32",
             **kwargs):
         super().__init__(**kwargs)
@@ -72,7 +72,7 @@ class Yolov4(base_model.Yolo):
         self._path_scales = path_scales
         self._use_tie_breaker = use_tie_breaker
         self._weight_decay = weight_decay
-        
+
         #init models
         self.model_name = model
         self._model_name = None
@@ -106,7 +106,7 @@ class Yolov4(base_model.Yolo):
                 "256": 8
             }
             self._x_y_scales = self._x_y_scales or {"1024": 1.05, "512": 1.1, "256": 1.2}
-        
+
         return
 
     def get_summary(self):
@@ -136,19 +136,20 @@ class Yolov4(base_model.Yolo):
             self._backbone = CSP_Backbone_Builder(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
-                input_shape=self._input_shape, 
+                input_shape=self._input_shape,
                 weight_decay=self._weight_decay)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
-        
+
         if self._neck_cfg == None or isinstance(self._neck_cfg, Dict):
             if isinstance(self._neck_cfg, Dict):
                 default_dict[self.model_name]["neck"] = self._neck_cfg
             self._neck = Yolov4Neck(
                 name=default_dict[self.model_name]["neck"],
                 cfg_dict=default_dict[self.model_name]["neck"],
-                input_shape=self._input_shape)
+                input_shape=self._input_shape,
+                weight_decay=self._weight_decay)
         else:
             self._neck = self._neck_cfg
             self._custom_aspects = True
@@ -161,7 +162,8 @@ class Yolov4(base_model.Yolo):
                 cfg_dict=default_dict[self.model_name]["head"],
                 classes=self._classes,
                 boxes=len(self._boxes),
-                input_shape=self._input_shape)
+                input_shape=self._input_shape,
+                weight_decay=self._weight_decay)
         else:
             self._head = self._head_cfg
             self._custom_aspects = True
@@ -174,7 +176,7 @@ class Yolov4(base_model.Yolo):
                                         max_boxes=self._max_boxes,
                                         scale_boxes=self._scale_boxes,
                                         scale_mult=self._scale_mult,
-                                        path_scale=self._path_scales, 
+                                        path_scale=self._path_scales,
                                         scale_xy=self._x_y_scales,
                                         use_nms=self._use_nms)
         else:
@@ -271,17 +273,17 @@ if __name__ == "__main__":
                            shuffle_files=False,
                            with_info=True)
 
-    
+
     model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
     model.load_weights_from_dn(dn2tf_head=True)
-    
+
 
     train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     loss_fn = model.generate_loss(loss_type="ciou")
 
-    
+
     #optimizer = ks.optimizers.SGD(lr=1e-3)
     optimizer = ks.optimizers.Adam(lr=1e-3/32)
     optimizer = model.match_optimizer_to_policy(optimizer)
@@ -295,4 +297,3 @@ if __name__ == "__main__":
     #     model.save_weights("testing_weights/yolov4/simple_test1")
     # except:
     #     model.save_weights("testing_weights/yolov4/simple_test1_early")
-

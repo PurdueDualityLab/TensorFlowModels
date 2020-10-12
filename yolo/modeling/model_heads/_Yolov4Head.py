@@ -23,6 +23,7 @@ class Yolov4Head(tf.keras.Model):
                  boxes=9,
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
+                 weight_decay = 5e-4,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -73,6 +74,7 @@ class Yolov4Head(tf.keras.Model):
         self._cfg_dict = cfg_dict
         self._classes = classes
         self._boxes = boxes
+        self._weight_decay = weight_decay
 
         if not isinstance(self._cfg_dict, Dict):
             self._model_name = model
@@ -132,12 +134,14 @@ class Yolov4Head(tf.keras.Model):
                 layer = ks.utils.get_registered_object(path_keys["resample"])
                 resamples[key] = layer(**args)
 
-            args = path_keys["processor_conditions"]
+            args = path_keys["processor_conditions"].copy()
+            args['l2_regularization'] = self._weight_decay
             layer = ks.utils.get_registered_object(path_keys["processor"])
             # print(path_keys["processor"], ks.utils.get_registered_object(path_keys["processor"]))
             routes[key] = layer(**args)
 
-            args = path_keys["output_conditions"]
+            args = path_keys["output_conditions"].copy()
+            args['l2_regularization'] = self._weight_decay
             prediction_heads[key] = DarkConv(filters=self._conv_depth +
                                              path_keys["output-extras"],
                                              **args)
@@ -153,7 +157,7 @@ class Yolov4Head(tf.keras.Model):
 
     def _connect_layers(self, routes, resamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = dict() #collections.OrderedDict() 
+        outputs = dict() #collections.OrderedDict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]]  # layer input to the next layer
 

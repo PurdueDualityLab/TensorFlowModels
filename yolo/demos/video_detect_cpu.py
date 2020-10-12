@@ -59,7 +59,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names
+from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names, get_draw_fn
 '''Video Buffer using cv2'''
 
 def preprocess_fn(image, dtype= tf.float32):
@@ -75,8 +75,8 @@ def rt_preprocess_fn(image, dtype= tf.float32):
     image = tf.image.resize(image, (416, 416))
     image = tf.expand_dims(image, axis=0)
     return image
-    
-    
+
+
 
 class frame_iter():
     def __init__(self, file, preprocess_fn):
@@ -88,24 +88,24 @@ class frame_iter():
         self.height = int(self.cap.get(4))
         self.frame = None
         self.time = None
-    
+
     def __delete__(self):
         self.cap.release()
-    
+
     def get_frame(self):
         while self.cap.isOpened():
             success, image = self.cap.read()
             self.frame = image
-            e = datetime.datetime.now() 
+            e = datetime.datetime.now()
             image = self.pre_process_fn(image)
             f = datetime.datetime.now()
             self.time = (f - e)
             yield image
-    
+
     def get_frame_rt(self):
         while self.cap.isOpened():
             success, image = self.cap.read()
-            e = datetime.datetime.now() 
+            e = datetime.datetime.now()
             image = self.pre_process_fn(image)
             image = tf.expand_dims(image, axis=0)
             print(image.shape)
@@ -114,7 +114,7 @@ class frame_iter():
 
     def get_og_frame(self):
         return self.frame
-    
+
     def rescale_frame(self, image):
         return tf.image.resize(image, (self.height, self.width))
 
@@ -130,7 +130,7 @@ def new_video_proc_rt(og_model_dir, rt_model_save_path, video_path):
     #     cv2.imshow('frame', frame)
     #     if cv2.waitKey(1) & 0xFF == ord('q'):
     #         break
-    return 
+    return
 
 
 
@@ -154,7 +154,7 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
     else:
         predfunc = model
         print("using call function")
-        
+
     colors = gen_colors(80)
     label_names = get_coco_names(
         path="yolo/dataloaders/dataset_specs/coco.names")
@@ -192,8 +192,9 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
             c = datetime.datetime.now()
             boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"],
                                              width, height)
+            draw = get_draw_fn(colors, label_names, 'YOLO')
             draw_box(image, boxes[0].numpy(), classes[0].numpy(),
-                     pred["confidence"][0], colors, label_names)
+                     pred["confidence"][0], draw)
             d = datetime.datetime.now()
 
         cv2.imshow('frame', image)
@@ -236,7 +237,7 @@ def main(argv, args=None):
             exit()
     else:
         vidpath = args.webcam
-    
+
     version = args.version
 
     # NOTE: on mac use the default terminal or the program will fail
@@ -256,7 +257,7 @@ def input_fn(cap, num_iterations):
 
 def main2():
     import contextlib
-    import yolo.utils.tensor_rt as trt 
+    import yolo.utils.tensor_rt as trt
     prep_gpu()
     def func(inputs):
         boxes = inputs["bbox"]
@@ -265,7 +266,7 @@ def main2():
         return {"bbox": nms.nmsed_boxes,
                 "classes": nms.nmsed_classes,
                 "confidence": nms.nmsed_scores,}
-    
+
     name = "testing_weights/yolov4/full_models/v4_32"
     new_name = f"{name}_tensorrt"
     model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000)
@@ -276,10 +277,10 @@ def main2():
     support_windows()
     video_processor(model, version = None, vidpath="testing_files/test2.mp4")
 
-  
+
     return 0
 
 
 if __name__ == "__main__":
-    #app.run(main)
-    main2()
+    app.run(main)
+    #main2()
