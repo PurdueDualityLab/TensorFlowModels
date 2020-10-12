@@ -26,7 +26,7 @@ class Yolov3(base_model.Yolo):
             path_scales=None,
             x_y_scales=None,
             thresh: int = 0.45,
-            weight_decay = 5e-4, 
+            weight_decay = 5e-4,
             class_thresh: int = 0.45,
             use_nms = True,
             using_rt = False,
@@ -34,7 +34,7 @@ class Yolov3(base_model.Yolo):
             scale_boxes: int = 416,
             scale_mult: float = 1.0,
             use_tie_breaker: bool = False,
-            clip_grads_norm = None, 
+            clip_grads_norm = None,
             policy="float32",
             **kwargs):
         super().__init__(**kwargs)
@@ -151,12 +151,12 @@ class Yolov3(base_model.Yolo):
             self._backbone = Backbone_Builder(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
-                input_shape=self._input_shape, 
+                input_shape=self._input_shape,
                 weight_decay=self._weight_decay)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
-        
+
         if self._head_cfg == None or isinstance(self._head_cfg, Dict):
             if isinstance(self._head_cfg, Dict):
                 default_dict[self.model_name]["head"] = self._head_cfg
@@ -165,7 +165,8 @@ class Yolov3(base_model.Yolo):
                 cfg_dict=default_dict[self.model_name]["head"],
                 classes=self._classes,
                 boxes=len(self._boxes),
-                input_shape=self._input_shape)
+                input_shape=self._input_shape,
+                weight_decay=self._weight_decay)
         else:
             self._head = self._head_cfg
             self._custom_aspects = True
@@ -178,7 +179,7 @@ class Yolov3(base_model.Yolo):
                                         max_boxes=self._max_boxes,
                                         scale_boxes=self._scale_boxes,
                                         scale_mult=self._scale_mult,
-                                        path_scale=self._path_scales, 
+                                        path_scale=self._path_scales,
                                         scale_xy=self._x_y_scales,
                                         use_nms=self._use_nms)
         else:

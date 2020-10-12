@@ -20,6 +20,7 @@ class Yolov4Neck(tf.keras.Model):
                  model="neck",
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
+                 weight_decay = 5e-4,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -65,6 +66,7 @@ class Yolov4Neck(tf.keras.Model):
 
         """
         self._cfg_dict = cfg_dict
+        self._weight_decay = weight_decay
 
         if not isinstance(self._cfg_dict, Dict):
             self._model_name = model
@@ -97,12 +99,14 @@ class Yolov4Neck(tf.keras.Model):
                                kernel_size=(1, 1),
                                strides=(1, 1),
                                padding="same",
-                               activation="leaky")(inputs)
+                               activation="leaky",
+                               l2_regularization=self._weight_decay)(inputs)
             x = DarkConv(filters=filters // 4,
                          kernel_size=(1, 1),
                          strides=(1, 1),
                          padding="same",
-                         activation="leaky")(x_route)
+                         activation="leaky",
+                         l2_regularization=self._weight_decay)(x_route)
             x = ks.layers.UpSampling2D(size=2)(x)
             return x_route, x
 
@@ -114,7 +118,8 @@ class Yolov4Neck(tf.keras.Model):
                          kernel_size=(1, 1),
                          strides=(1, 1),
                          padding="same",
-                         activation="leaky")(inputs)
+                         activation="leaky",
+                         l2_regularization=self._weight_decay)(inputs)
             return x, None
 
         return block
@@ -142,11 +147,13 @@ class Yolov4Neck(tf.keras.Model):
                 [None, start_width, start_height, path_keys["depth"]])
 
             if type(path_keys["upsample"]) != type(None):
-                args = path_keys["upsample_conditions"]
+                args = path_keys["upsample_conditions"].copy()
+                args['l2_regularization'] = self._weight_decay
                 layer = ks.utils.get_registered_object(path_keys["upsample"])
                 resamples[key] = layer(**args)
 
-            args = path_keys["processor_conditions"]
+            args = path_keys["processor_conditions"].copy()
+            args['l2_regularization'] = self._weight_decay
             layer = ks.utils.get_registered_object(path_keys["processor"])
             routes[key] = layer(**args)
 

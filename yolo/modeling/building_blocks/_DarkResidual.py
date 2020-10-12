@@ -139,6 +139,7 @@ class DarkResidual(ks.layers.Layer):
             "use_bias": self._use_bias,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
+            "l2_regularization": self._l2_regularization,
             "use_bn": self._use_bn,
             "use_sync_bn": self._use_sync_bn,
             "norm_moment": self._norm_moment,
