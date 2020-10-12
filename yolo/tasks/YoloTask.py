@@ -20,11 +20,16 @@ from official.vision.beta.modeling import factory
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
-  """A single-replica view of training procedure.
-  RetinaNet task provides artifacts for training/evalution procedures, including
-  loading/iterating over Datasets, initializing the model, calculating the loss,
-  post-processing, and customized metrics with reduction.
-  """
+    """A single-replica view of training procedure.
+    RetinaNet task provides artifacts for training/evalution procedures, including
+    loading/iterating over Datasets, initializing the model, calculating the loss,
+    post-processing, and customized metrics with reduction.
+    """
+    def __init__(self, params, logging_dir: str = None):
+        super().__init__(params, logging_dir)
+        self._model_pointer = None
+        return
+
 
     def build_model(self):
         """get an instance of Yolo v3 or v4"""
@@ -57,6 +62,7 @@ class YoloTask(base_task.Task):
                           use_tie_breaker = cfg.use_tie_breaker,
                           clip_grads_norm = cfg.clip_grads_norm, 
                           policy=cfg.policy)
+        self._model_pointer = model
         return model
 
     def initialize(self, model: tf.keras.Model):
@@ -113,29 +119,3 @@ class YoloTask(base_task.Task):
         return
 
 
-class YoloTask(task.Task):
-    def __init__(self):
-        super().__init__()
-        return 
-
-    def initialize(self):
-        return 
-
-    def build_model(self, cfg):
-
-        return model
-    
-    def compile_model(self):
-        return 
-    
-    def build_losses(self):
-        return 
-        
-    def build_metrics(self):
-        return 
-
-    def train_step(self):
-        return 
-    
-    def validation_step(self):
-        return
