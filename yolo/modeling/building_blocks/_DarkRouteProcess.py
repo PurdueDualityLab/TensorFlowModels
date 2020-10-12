@@ -13,6 +13,7 @@ class DarkRouteProcess(ks.layers.Layer):
                  insert_spp=False,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
+                 l2_regularization=5e-4,  # default find where is it is stated
                  norm_moment=0.99,
                  norm_epsilon=0.001,
                  activation='leaky',
@@ -53,6 +54,7 @@ class DarkRouteProcess(ks.layers.Layer):
         self._filters = filters // mod
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
+        self._l2_regularization = l2_regularization
 
         # normal params
         self._norm_moment = norm_moment
@@ -86,6 +88,7 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
+                      l2_regularization=self._l2_regularization,
                       norm_moment=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
@@ -97,6 +100,7 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
+                      l2_regularization=self._l2_regularization,
                       norm_moment=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
@@ -111,6 +115,7 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
+                      l2_regularization=self._l2_regularization,
                       norm_moment=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
@@ -147,6 +152,7 @@ class DarkRouteProcess(ks.layers.Layer):
             "filters": self._filters,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
+            "l2_regularization": self._l2_regularization,
             "repetitions": self._repetitions,
             "insert_spp": self._insert_spp,
             "norm_moment": self._norm_moment,

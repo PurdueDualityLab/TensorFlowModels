@@ -16,7 +16,7 @@ class Backbone_Builder(ks.Model):
                  name,
                  input_shape=(None, None, None, 3),
                  config=None,
-                 weight_decay = 5e-4, 
+                 weight_decay = 5e-4,
                  **kwargs):
         self._layer_dict = {
             "DarkRes": nn_blocks.DarkResidual,
@@ -78,11 +78,13 @@ class Backbone_Builder(ks.Model):
             elif config.name == "darkyolotiny":
                 x = nn_blocks.DarkTiny(filters=config.filters,
                                        strides=config.strides,
+                                       l2_regularization=self._weight_decay,
                                        name=f"{name}_{i}")(x)
             elif config.name == "MaxPool":
                 x = ks.layers.MaxPool2D(pool_size=config.kernel_size,
                                         strides=config.strides,
                                         padding=config.padding,
+                                        l2_regularization=self._weight_decay,
                                         name=f"{name}_{i}")(x)
             else:
                 layer = self._layer_dict[config.name]

@@ -12,6 +12,7 @@ class DarkTiny(ks.layers.Layer):
                  strides=2,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
+                 l2_regularization=5e-4,  # default find where is it is stated
                  use_bn=True,
                  use_sync_bn=False,
                  norm_moment=0.99,
@@ -29,6 +30,7 @@ class DarkTiny(ks.layers.Layer):
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
         self._strides = strides
+        self._l2_regularization = l2_regularization
 
         # normal params
         self._norm_moment = norm_moment
@@ -61,6 +63,7 @@ class DarkTiny(ks.layers.Layer):
                                    use_bias=self._use_bias,
                                    kernel_initializer=self._kernel_initializer,
                                    bias_initializer=self._bias_initializer,
+                                   l2_regularization=self._l2_regularization,
                                    use_bn=self._use_bn,
                                    use_sync_bn=self._use_sync_bn,
                                    norm_moment=self._norm_moment,
@@ -84,6 +87,7 @@ class DarkTiny(ks.layers.Layer):
             "strides": self._strides,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
+            "l2_regularization": self._l2_regularization,
             "use_bn": self._use_bn,
             "use_sync_bn": self._use_sync_bn,
             "norm_moment": self._norm_moment,
