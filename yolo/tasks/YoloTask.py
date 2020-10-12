@@ -119,3 +119,8 @@ class YoloTask(base_task.Task):
         return
 
 
+if __name__ == "__main__":
+    import yolo.configs.network as model_cfg 
+    model_cfg.
+
+

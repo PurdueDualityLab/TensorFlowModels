@@ -19,14 +19,14 @@ class Yolov4(base_model.Yolo):
             input_shape=[None, None, None, 3],
             model="regular",  # options {regular, spp, tiny}
             classes=80,
-            backbone=None,
+            backbone = None,
             neck = None,
-            head=None,
-            head_filter=None,
-            masks=None,
-            boxes=None,
-            path_scales=None,
-            x_y_scales=None,
+            head = None,
+            head_filter = None,
+            masks = None,
+            boxes = None,
+            path_scales = None,
+            x_y_scales = None,
             thresh: int = 0.45,
             weight_decay = 5e-4,
             class_thresh: int = 0.45,
@@ -96,7 +96,7 @@ class Yolov4(base_model.Yolo):
             self._encoder_decoder_split_location = 106
             self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)]
             self._masks = self._masks or {
-                "1024": [6, 7, 8],
+                "1024": [6, 7, 8], 
                 "512": [3, 4, 5],
                 "256": [0, 1, 2]
             }
