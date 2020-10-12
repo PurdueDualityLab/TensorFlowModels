@@ -88,6 +88,14 @@ class Yolov3(base_model.Yolo):
         self._loss_weight = None
         return
 
+    @property
+    def backbone():
+        return self._backbone
+
+    @property
+    def head():
+        return self._head
+
     def get_default_attributes(self):
         if self.model_name == "regular" or self.model_name == "spp":
             self._encoder_decoder_split_location = 76

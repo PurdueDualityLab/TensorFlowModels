@@ -91,29 +91,26 @@ class YoloTask(base_task.Task):
 
             logging.info('Finished loading pretrained checkpoint from %s', ckpt_dir_or_file)
 
-
-
-
-
     def build_inputs(self, params, input_context=None):
-
+        return
 
     def build_losses(self, outputs, labels, aux_losses=None):
-
+        return
 
     def build_metrics(self, training=True):
-
+        return
 
     def train_step(self, inputs, model, optimizer, metrics=None):
-
+        return
 
     def validation_step(self, inputs, model, metrics=None):
-
+        return
 
     def aggregate_logs(self, state=None, step_outputs=None):
-
+        return
 
     def reduce_aggregated_logs(self, aggregated_logs):
+        return
 
 
 class YoloTask(task.Task):
