@@ -92,9 +92,10 @@ class YoloLayer(hyperparams.Config):
     generator_params: Gridpoints = Gridpoints()
     iou_thresh: float = 0.45
     class_thresh: float = 0.45
+    max_boxes: int = 200
     anchor_generation_scale: int = 416
     use_nms: bool = True
-
+    
 # model definition
 @dataclasses.dataclass
 class Yolov4regular(YoloCFG):
@@ -156,26 +157,25 @@ class Yolo(hyperparams.OneOfConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-    num_classes: int = 80
     _input_size: Optional[List[int]] = None
     model:Yolo = Yolo()
     loss:YoloLoss = YoloLoss()
+    train_data: DataConfig = DataConfig(is_training=True)
+    validation_data: DataConfig = DataConfig(is_training=False)
+    num_classes: int = 80
     min_level: int = 3
     max_level: int = 5
     weight_decay: float = 5e-4
     gradient_clip_norm: float = 0.0
-    max_boxes: int = 200
-    train_data: DataConfig = DataConfig(is_training=True)
-    validation_data: DataConfig = DataConfig(is_training=False)
-    init_checkpoint: Optional[str] = None
+
     init_checkpoint_modules: str = 'all'  # all or backbone
+    init_checkpoint: Optional[str] = None
     annotation_file: Optional[str] = None
-    gradient_clip_norm: float = 0.0
     per_category_metrics = False
+
     load_original_weights: bool = True
     backbone_from_darknet: bool = True
     head_from_darknet: bool = False
-    weights_file: Optional[str] = None
 
     @property
     def input_size(self):
