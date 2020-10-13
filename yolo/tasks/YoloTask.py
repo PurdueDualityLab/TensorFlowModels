@@ -105,7 +105,7 @@ class YoloTask(base_task.Task):
 if __name__ == "__main__":
     cfg = exp_cfg.YoloTask()
 
-    print(cfg.get_build_model_dict())
+    print(cfg.as_dict())
     # task = YoloTask(exp_cfg.YoloTask())
     # model = task.build_model()
     # model.summary()

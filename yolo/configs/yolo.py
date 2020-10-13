@@ -23,29 +23,7 @@ from official.core import exp_factory
 from official.modeling import hyperparams
 from official.modeling import optimization
 from official.modeling.hyperparams import config_definitions as cfg
-from official.vision.beta.configs import backbones
-from official.vision.beta.configs import common
-
-@dataclasses.dataclass
-class YoloCFG(hyperparams.Config):
-    @property
-    def boxes(self):
-        boxes = []
-        for box in self._boxes:
-            f = []
-            for b in box.split(","):
-                f.append(int(b.strip()))
-            boxes.append(f)
-        return boxes
-    
-    @boxes.setter 
-    def boxes(self, box_list):
-        setter = []
-        for value in box_list:
-            value = str(list(value))
-            setter.append(value[1:-1])
-        self._boxes = setter
-
+from yolo.configs import cfg_defs as yolo_cfg
 
 # dataset parsers
 @dataclasses.dataclass
@@ -98,7 +76,7 @@ class YoloLayer(hyperparams.Config):
     
 # model definition
 @dataclasses.dataclass
-class Yolov4regular(YoloCFG):
+class Yolov4regular(yolo_cfg.YoloCFG):
     model: str = "regular"
     backbone: Optional[Dict] = None #"regular"
     neck: Optional[Dict] = None #"regular"
@@ -111,7 +89,7 @@ class Yolov4regular(YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3regular(YoloCFG):
+class Yolov3regular(yolo_cfg.YoloCFG):
     model: str = "regular"
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
@@ -123,7 +101,7 @@ class Yolov3regular(YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3spp(YoloCFG):
+class Yolov3spp(yolo_cfg.YoloCFG):
     model: str = "spp"
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"spp"
@@ -135,7 +113,7 @@ class Yolov3spp(YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3tiny(YoloCFG):
+class Yolov3tiny(yolo_cfg.YoloCFG):
     model: str = "tiny"
     backbone: Optional[Dict] = None #"tiny"
     head: Optional[Dict] = None #"tiny"
@@ -156,7 +134,7 @@ class Yolo(hyperparams.OneOfConfig):
 
 # model task
 @dataclasses.dataclass
-class YoloTask(cfg.TaskConfig):
+class YoloTask(yolo_cfg.TaskConfig):
     _input_size: Optional[List[int]] = None
     model:Yolo = Yolo()
     loss:YoloLoss = YoloLoss()
@@ -177,16 +155,7 @@ class YoloTask(cfg.TaskConfig):
     backbone_from_darknet: bool = True
     head_from_darknet: bool = False
 
-    @property
-    def input_size(self):
-        if self._input_size == None:
-            return [None, None, 3]
-        else:
-            return self._input_size
-    
-    @input_size.setter 
-    def input_size(self, input_size):
-        self._input_size = input_size
+
 
 
 
