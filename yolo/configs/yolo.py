@@ -76,6 +76,10 @@ class Anchors(hyperparams.Config):
                 f.append(int(b.strip()))
             boxes.append(f)
         return boxes
+    
+    @boxes.setter 
+    def input_size(self, box_string):
+        self._boxes = box_string
 
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
