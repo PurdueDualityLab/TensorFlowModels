@@ -25,7 +25,7 @@ class Backbone_Builder(ks.Model):
         }
 
         self._input_shape = input_shape
-        self._model_name = "custom_csp_backbone"
+        self._model_name = "custom_backbone"
         layer_specs = config
 
         if not isinstance(config, Dict):
@@ -40,8 +40,8 @@ class Backbone_Builder(ks.Model):
 
     @staticmethod
     def get_model_config(name):
-        # if name == "darknet53":
-        #     name = "darknet_53"
+        if name == "spp":
+            name = "regular"
 
         try:
             backbone = importlib.import_module(

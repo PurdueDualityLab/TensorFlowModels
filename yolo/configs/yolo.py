@@ -99,10 +99,7 @@ class Yolov4regular(yolo_cfg.YoloCFG):
     neck: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
     head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146", "142, 110" ,"192, 243", "459, 401"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.05, 4: 1.1, 3: 1.2})
+
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -111,10 +108,7 @@ class Yolov3regular(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
     head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
+
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -123,10 +117,7 @@ class Yolov3spp(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"spp"
     head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
+
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -135,10 +126,7 @@ class Yolov3tiny(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"tiny"
     head: Optional[Dict] = None #"tiny"
     head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 14", "23, 27", "37, 58","81, 82", "135, 169", "344, 319"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 3: 1.0})
+
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass

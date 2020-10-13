@@ -9,13 +9,15 @@ import yolo.modeling.building_blocks as nn_blocks
 from yolo.modeling.backbones.get_config import csp_build_block_specs
 from . import configs
 
-
 @ks.utils.register_keras_serializable(package='yolo')
 class CSP_Backbone_Builder(ks.Model):
     def __init__(self,
                  name="darknet53",
                  input_shape=(None, None, None, 3),
                  weight_decay = 5e-4, 
+                 use_default_outputs = True, 
+                 min_level = None, 
+                 max_level = None,
                  config=None,
                  **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual}
@@ -23,6 +25,7 @@ class CSP_Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._input_shape = input_shape
         self._model_name = "custom_csp_backbone"
+        self._use_default_outputs = use_default_outputs 
         layer_specs = config
 
         if not isinstance(config, Dict):
@@ -39,39 +42,29 @@ class CSP_Backbone_Builder(ks.Model):
         endpoints = collections.OrderedDict()
         stack_outputs = [inputs]
         for i, config in enumerate(net):
-            if not config.stack:
+            if config.stack == None:
                 x = self._build_block(stack_outputs[config.route],
                                       config,
                                       name=f"{config.layer}_{i}")
                 stack_outputs.append(x)
-            else:
+            elif config.stack == "residual":
+                x = self._residual_stack(stack_outputs[config.route],
+                                    config,
+                                    name=f"{config.layer}_{i}")
+                stack_outputs.append(x)
+            elif config.stack == "csp":
                 x = self._csp_stack(stack_outputs[config.route],
                                     config,
                                     name=f"{config.layer}_{i}")
                 stack_outputs.append(x)
-            if config.output_name != None:
+            elif config.stack == "csp_tiny":
+                x_pass, x = self._tiny_stack(stack_outputs[config.route],
+                                             config,
+                                             name=f"{config.layer}_{i}")
+                stack_outputs.append(x_pass)
+            if config.output_name != None :
                 endpoints[config.output_name] = x
         return endpoints
-
-    def _build_block(self, inputs, config, name):
-        x = inputs
-        i = 0
-        while i < config.repetitions:
-            if config.layer == "DarkConv":
-                x = nn_blocks.DarkConv(filters=config.filters,
-                                       kernel_size=config.kernel_size,
-                                       strides=config.strides,
-                                       padding=config.padding,
-                                       l2_regularization=self._weight_decay,
-                                       name=f"{name}_{i}")(x)
-            else:
-                layer = self._layer_dict[config.name]
-                x = layer(filters=config.filters,
-                          downsample=config.downsample,
-                          l2_regularization=self._weight_decay,
-                          name=f"{name}_{i}")(x)
-            i += 1
-        return x
 
     def _csp_stack(self, inputs, config, name):
         if config.bottleneck:
@@ -100,6 +93,61 @@ class CSP_Backbone_Builder(ks.Model):
                                       l2_regularization=self._weight_decay,
                                       name=f"{name}_csp_connect")([x, x_route])
         return output
+    
+    def _tiny_stack(self, inputs, config, name):
+        x, x_route = nn_blocks.CSPTiny(filters=config.filters,
+                                       activation=config.activation,
+                                       l2_regularization=self._weight_decay,
+                                       name=f"{name}_tiny")(inputs)
+        return x, x_route
+
+    def _residual_stack(self, inputs, config, name):
+        x = self._layer_dict[config.layer](
+                filters=config.filters,
+                conv_activation=config.activation,
+                downsample=True, 
+                l2_regularization=self._weight_decay,
+                name=f"{name}_residual_down")(inputs)
+        for i in range(config.repetitions - 1):
+            x = self._layer_dict[config.layer](
+                filters=config.filters,
+                conv_activation=config.activation,
+                l2_regularization=self._weight_decay,
+                name=f"{name}_{i}")(x)
+        return x
+
+    def _build_block(self, inputs, config, name):
+        x = inputs
+        i = 0
+        while i < config.repetitions:
+            if config.layer == "DarkConv":
+                x = nn_blocks.DarkConv(filters=config.filters,
+                                       kernel_size=config.kernel_size,
+                                       strides=config.strides,
+                                       padding=config.padding,
+                                       l2_regularization=self._weight_decay,
+                                       activation=config.activation,
+                                       name=f"{name}_{i}")(x)
+            elif config.layer == "darkyolotiny":
+                x = nn_blocks.DarkTiny(filters=config.filters,
+                                       strides=config.strides,
+                                       l2_regularization=self._weight_decay,
+                                       conv_activation=config.activation,
+                                       name=f"{name}_{i}")(x)
+            elif config.layer == "MaxPool":
+                x = ks.layers.MaxPool2D(pool_size=config.kernel_size,
+                                        strides=config.strides,
+                                        padding=config.padding,
+                                        l2_regularization=self._weight_decay,
+                                        name=f"{name}_{i}")(x)
+            else:
+                layer = self._layer_dict[config.name]
+                x = layer(filters=config.filters,
+                          downsample=config.downsample,
+                          l2_regularization=self._weight_decay,
+                          name=f"{name}_{i}")(x)
+            i += 1
+        return x
 
     @staticmethod
     def get_model_config(name):
@@ -119,7 +167,7 @@ class CSP_Backbone_Builder(ks.Model):
 
 
 if __name__ == "__main__":
-    model = CSP_Backbone_Builder(name="darknet53")
+    model = CSP_Backbone_Builder(name="new_tinyv4", input_shape=[None, 416, 416, 3])
     model.summary()
     tf.keras.utils.plot_model(model,
                               to_file='CSPDarknet53.png',
@@ -138,3 +186,5 @@ if __name__ == "__main__":
     for layer in model.layers:
         weights = layer.get_weights()
         print(f"{layer.name}: {print_weights(weights)}")
+    
+    print(model.output_shape)

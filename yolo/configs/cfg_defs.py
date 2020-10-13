@@ -5,7 +5,7 @@ from official.modeling import hyperparams
 from official.modeling.hyperparams import config_definitions as cfg
 
 @dataclasses.dataclass
-class YoloCFG(hyperparams.Config):
+class AnchorCFG(hyperparams.Config):
     @property
     def boxes(self):
         boxes = []

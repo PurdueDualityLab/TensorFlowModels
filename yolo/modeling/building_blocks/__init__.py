@@ -9,4 +9,5 @@ from ._DarkRoute import DarkRoute
 from ._Identity import Identity
 from ._CSPConnect import CSPConnect
 from ._CSPDownSample import CSPDownSample
+from ._CSPTiny import CSPTiny
 from ._YoloLayer import YoloLayer
