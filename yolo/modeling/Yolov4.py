@@ -122,8 +122,8 @@ class Yolov4(base_model.Yolo):
     def build(self, input_shape):
         default_dict = {
             "regular": {
-                "backbone": "darknet53",
-                "neck": "neck",
+                "backbone": "regular",
+                "neck": "regular",
                 "head": "regular",
                 "name": "yolov4"
             },
@@ -264,33 +264,33 @@ if __name__ == "__main__":
     from yolo.utils.testing_utils import prep_gpu
     from yolo.training.call_backs.PrintingCallBack import Printer
     prep_gpu() # must be called before loading a dataset
-    train, info = tfds.load('coco/2017',
-                            split='train',
-                            shuffle_files=True,
-                            with_info=True)
-    test, info = tfds.load('coco/2017',
-                           split='validation',
-                           shuffle_files=False,
-                           with_info=True)
+    # train, info = tfds.load('coco/2017',
+    #                         split='train',
+    #                         shuffle_files=True,
+    #                         with_info=True)
+    # test, info = tfds.load('coco/2017',
+    #                        split='validation',
+    #                        shuffle_files=False,
+    #                        with_info=True)
 
 
     model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
-    model.load_weights_from_dn(dn2tf_head=True)
+    # model.load_weights_from_dn(dn2tf_head=True)
 
 
-    train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
-    loss_fn = model.generate_loss(loss_type="ciou")
+    # train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
+    # loss_fn = model.generate_loss(loss_type="ciou")
 
 
-    #optimizer = ks.optimizers.SGD(lr=1e-3)
-    optimizer = ks.optimizers.Adam(lr=1e-3/32)
-    optimizer = model.match_optimizer_to_policy(optimizer)
-    model.compile(optimizer=optimizer, loss=loss_fn)
+    # #optimizer = ks.optimizers.SGD(lr=1e-3)
+    # optimizer = ks.optimizers.Adam(lr=1e-3/32)
+    # optimizer = model.match_optimizer_to_policy(optimizer)
+    # model.compile(optimizer=optimizer, loss=loss_fn)
 
-    tensorboard = tf.keras.callbacks.TensorBoard()
-    model.evaluate(test, callbacks = [tensorboard])
+    # tensorboard = tf.keras.callbacks.TensorBoard()
+    # model.evaluate(test, callbacks = [tensorboard])
 
     # try:
     #     model.fit(train, validation_data = test, epochs = 39, verbose = 1, shuffle = True)

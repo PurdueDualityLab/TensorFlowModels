@@ -137,17 +137,17 @@ class Yolov3(base_model.Yolo):
     def build(self, input_shape):
         default_dict = {
             "regular": {
-                "backbone": "darknet53",
+                "backbone": "regular",
                 "head": "regular",
                 "name": "yolov3"
             },
             "spp": {
-                "backbone": "darknet53",
+                "backbone": "regular",
                 "head": "spp",
                 "name": "yolov3-spp"
             },
             "tiny": {
-                "backbone": "darknet_tiny",
+                "backbone": "tiny",
                 "head": "tiny",
                 "name": "yolov3-tiny"
             }
@@ -269,29 +269,31 @@ if __name__ == "__main__":
     from yolo.utils.testing_utils import prep_gpu
     from yolo.training.call_backs.PrintingCallBack import Printer
     prep_gpu()
-    train, info = tfds.load('coco',
-                            split='train',
-                            shuffle_files=True,
-                            with_info=True)
-    test, info = tfds.load('coco',
-                           split='validation',
-                           shuffle_files=False,
-                           with_info=True)
+    # train, info = tfds.load('coco',
+    #                         split='train',
+    #                         shuffle_files=True,
+    #                         with_info=True)
+    # test, info = tfds.load('coco',
+    #                        split='validation',
+    #                        shuffle_files=False,
+    #                        with_info=True)
 
     model = Yolov3(model = "regular", policy="float32", use_tie_breaker=False)
-    model.load_weights_from_dn(dn2tf_head=False, weights_file="testing_weights/yolov3-regular.weights")
+    model.build(input_shape = [None, None, None, 3])
+    model.summary()
+    # model.load_weights_from_dn(dn2tf_head=False, weights_file="testing_weights/yolov3-regular.weights")
 
-    train, test = model.process_datasets(train, test, fixed_size = False , batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
-    loss_fn = model.generate_loss(loss_type="ciou")
+    # train, test = model.process_datasets(train, test, fixed_size = False , batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
+    # loss_fn = model.generate_loss(loss_type="ciou")
 
-    #optimizer = ks.optimizers.SGD(lr=1e-3)
-    optimizer = ks.optimizers.Adam(lr=1e-3)
-    optimizer = model.match_optimizer_to_policy(optimizer)
-    model.compile(optimizer=optimizer, loss=loss_fn)
+    # #optimizer = ks.optimizers.SGD(lr=1e-3)
+    # optimizer = ks.optimizers.Adam(lr=1e-3)
+    # optimizer = model.match_optimizer_to_policy(optimizer)
+    # model.compile(optimizer=optimizer, loss=loss_fn)
 
-    try:
-        model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
-        model.save_weights("testing_weights/yolov3/simple_test1")
-    except:
-        model.save_weights("testing_weights/yolov3/simple_test1_early")
-    #model.evaluate(test)
+    # try:
+    #     model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
+    #     model.save_weights("testing_weights/yolov3/simple_test1")
+    # except:
+    #     model.save_weights("testing_weights/yolov3/simple_test1_early")
+    # #model.evaluate(test)

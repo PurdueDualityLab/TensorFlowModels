@@ -17,7 +17,7 @@ import collections
 @ks.utils.register_keras_serializable(package='yolo')
 class Yolov4Neck(tf.keras.Model):
     def __init__(self,
-                 model="neck",
+                 model="regular",
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
                  weight_decay = 5e-4,
@@ -85,7 +85,7 @@ class Yolov4Neck(tf.keras.Model):
     def load_dict_cfg(clz, model):
         """ find the config file and load it for use"""
         try:
-            return importlib.import_module('.yolov4_' + model,
+            return importlib.import_module('.yolov4_' + model + "_neck",
                                            package=configs.__package__).head
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.yolov4_' + model:

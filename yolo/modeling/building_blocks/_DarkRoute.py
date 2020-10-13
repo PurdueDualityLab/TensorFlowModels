@@ -70,7 +70,6 @@ class DarkRoute(ks.layers.Layer):
                                   bias_initializer=self._bias_initializer,
                                   l2_regularization=self._l2_regularization,
                                   use_bn=self._use_bn,
-                                  l2_regularization=self._l2_regularization,
                                   use_sync_bn=self._use_sync_bn,
                                   norm_moment=self._norm_moment,
                                   norm_epsilon=self._norm_epsilon,

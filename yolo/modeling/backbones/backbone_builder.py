@@ -40,8 +40,8 @@ class Backbone_Builder(ks.Model):
 
     @staticmethod
     def get_model_config(name):
-        if name == "darknet53":
-            name = "darknet_53"
+        # if name == "darknet53":
+        #     name = "darknet_53"
 
         try:
             backbone = importlib.import_module(
