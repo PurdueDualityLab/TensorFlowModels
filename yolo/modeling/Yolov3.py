@@ -32,7 +32,7 @@ class Yolov3(base_model.Yolo):
             anchors=None,
             max_boxes: int = 200,
             scale_boxes: int = 416,
-            policy="float32",
+            policy = None, 
             use_nms = True,
             using_rt = False,
             **kwargs):
@@ -104,27 +104,27 @@ class Yolov3(base_model.Yolo):
                                           (30, 61), (62, 45), (59, 119),
                                           (116, 90), (156, 198), (373, 326)]
             self._masks = self._masks or {
-                "1024": [6, 7, 8],
-                "512": [3, 4, 5],
-                "256": [0, 1, 2]
+                5: [6, 7, 8],
+                4: [3, 4, 5],
+                3: [0, 1, 2]
             }
             self._path_scales = self._path_scales or {
-                "1024": 32,
-                "512": 16,
-                "256": 8
+                5: 32,
+                4: 16,
+                3: 8
             }
             self._x_y_scales = self._x_y_scales or {
-                "1024": 1.0,
-                "512": 1.0,
-                "256": 1.0
+                5: 1.0,
+                4: 1.0,
+                3: 1.0
             }
         elif self.model_name == "tiny":
             self._encoder_decoder_split_location = 14
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
-            self._masks = self._masks or {"1024": [3, 4, 5], "256": [0, 1, 2]}
-            self._path_scales = self._path_scales or {"1024": 32, "256": 8}
-            self._x_y_scales = self._x_y_scales or {"1024": 1.0, "256": 1.0}
+            self._masks = self._masks or {5: [3, 4, 5], 3: [0, 1, 2]}
+            self._path_scales = self._path_scales or {5: 32, 3: 8}
+            self._x_y_scales = self._x_y_scales or {5: 1.0, 3: 1.0}
         return
 
     def get_summary(self):

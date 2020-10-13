@@ -1,5 +1,5 @@
 head = {
-    "1024": {
+    5: {
         "depth": 1024,
         "upsample": None,
         "upsample_conditions": None,
@@ -11,7 +11,7 @@ head = {
         },
         "tailing_conditions": "standard",
     },
-    "512": {
+    4: {
         "depth": 512,
         "upsample": 'yolo>DarkRoute',
         "upsample_conditions": {
@@ -25,7 +25,7 @@ head = {
         },
         "tailing_conditions": "standard",
     },
-    "256": {
+    3: {
         "depth": 256,
         "upsample": 'yolo>DarkRoute',
         "upsample_conditions": {

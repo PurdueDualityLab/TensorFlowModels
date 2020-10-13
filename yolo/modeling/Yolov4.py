@@ -36,7 +36,7 @@ class Yolov4(base_model.Yolo):
             scale_boxes: int = 416,
             use_tie_breaker: bool = True,
             clip_grads_norm = None,
-            policy="float32",
+            policy=None,
             **kwargs):
         super().__init__(**kwargs)
 
@@ -97,16 +97,16 @@ class Yolov4(base_model.Yolo):
             self._encoder_decoder_split_location = 106
             self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)]
             self._masks = self._masks or {
-                "1024": [6, 7, 8], 
-                "512": [3, 4, 5],
-                "256": [0, 1, 2]
+                5: [6, 7, 8], 
+                4: [3, 4, 5],
+                3: [0, 1, 2]
             }
             self._path_scales = self._path_scales or {
-                "1024": 32,
-                "512": 16,
-                "256": 8
+                5: 32,
+                4: 16,
+                3: 8
             }
-            self._x_y_scales = self._x_y_scales or {"1024": 1.05, "512": 1.1, "256": 1.2}
+            self._x_y_scales = self._x_y_scales or {5: 1.05, 4: 1.1, 3: 1.2}
 
         return
 
@@ -175,8 +175,6 @@ class Yolov4(base_model.Yolo):
                                         thresh=self._thresh,
                                         cls_thresh=self._class_thresh,
                                         max_boxes=self._max_boxes,
-                                        scale_boxes=self._scale_boxes,
-                                        scale_mult=self._scale_mult,
                                         path_scale=self._path_scales,
                                         scale_xy=self._x_y_scales,
                                         use_nms=self._use_nms)

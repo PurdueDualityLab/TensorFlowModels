@@ -1,5 +1,5 @@
 head = {
-    "256": {
+    3: {
         "depth": 128,
         "resample": None,
         "resample_conditions": None,
@@ -20,7 +20,7 @@ head = {
         },
         "output-extras": 0,
     },
-    "512": {
+    4: {
         "depth": 256,
         "resample": 'yolo>DarkRoute',
         "resample_conditions": {
@@ -42,7 +42,7 @@ head = {
         },
         "output-extras": 0,
     },
-    "1024": {
+    5: {
         "depth": 512,
         "resample": 'yolo>DarkRoute',
         "resample_conditions": {

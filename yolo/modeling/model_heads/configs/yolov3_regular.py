@@ -1,5 +1,5 @@
 head = {
-    "1024": {
+    5: {
         "depth": 1024,
         "upsample": None,
         "upsample_conditions": None,
@@ -18,7 +18,7 @@ head = {
         },
         "output-extras": 0,
     },
-    "512": {
+    4: {
         "depth": 512,
         "upsample": 'yolo>DarkUpsampleRoute',
         "upsample_conditions": {
@@ -39,7 +39,7 @@ head = {
         },
         "output-extras": 0,
     },
-    "256": {
+    3: {
         "depth": 256,
         "upsample": 'yolo>DarkUpsampleRoute',
         "upsample_conditions": {
