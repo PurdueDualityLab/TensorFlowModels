@@ -10,14 +10,13 @@ from yolo.modeling.backbones.get_config import csp_build_block_specs
 from . import configs
 
 @ks.utils.register_keras_serializable(package='yolo')
-class CSP_Backbone_Builder(ks.Model):
+class Darknet(ks.Model):
     def __init__(self,
                  name="darknet53",
                  input_shape=(None, None, None, 3),
                  weight_decay = 5e-4, 
-                 use_default_outputs = True, 
-                 min_level = None, 
-                 max_level = None,
+                 min_size = None, 
+                 max_size = 5,
                  config=None,
                  **kwargs):
         self._layer_dict = {"DarkRes": nn_blocks.DarkResidual}
@@ -25,12 +24,14 @@ class CSP_Backbone_Builder(ks.Model):
         # subclass of ks.Model
         self._input_shape = input_shape
         self._model_name = "custom_csp_backbone"
-        self._use_default_outputs = use_default_outputs 
+        self._over_ride = min_size != None
+        self._min_size = min_size
+        self._max_size = max_size
         layer_specs = config
 
         if not isinstance(config, Dict):
             self._model_name = name
-            layer_specs = self.get_model_config(name)
+            layer_specs = self.get_model_config(name, min_size, max_size)
 
         self._weight_decay = weight_decay
         inputs = ks.layers.Input(shape=self._input_shape[1:])
@@ -62,7 +63,9 @@ class CSP_Backbone_Builder(ks.Model):
                                              config,
                                              name=f"{config.layer}_{i}")
                 stack_outputs.append(x_pass)
-            if config.output_name != None :
+            if (config.is_output and self._min_size == None):# or isinstance(config.output_name, str):
+                endpoints[config.output_name] = x
+            elif self._min_size != None and config.output_name >= self._min_size and config.output_name <= self._max_size:
                 endpoints[config.output_name] = x
         return endpoints
 
@@ -150,10 +153,7 @@ class CSP_Backbone_Builder(ks.Model):
         return x
 
     @staticmethod
-    def get_model_config(name):
-        # if name == "darknet53":
-        #     name = "darknet_53"
-
+    def get_model_config(name, min_size, max_size):
         try:
             backbone = importlib.import_module(
                 '.csp_' + name, package=configs.__package__).backbone
@@ -163,11 +163,11 @@ class CSP_Backbone_Builder(ks.Model):
             else:
                 raise
 
-        return csp_build_block_specs(backbone)
+        return csp_build_block_specs(backbone, min_size, max_size)
 
 
 if __name__ == "__main__":
-    model = CSP_Backbone_Builder(name="new_tinyv4", input_shape=[None, 416, 416, 3])
+    model = Darknet(name="new_tiny", input_shape=[None, 416, 416, 3], min_size= 2, max_size=5)
     model.summary()
     tf.keras.utils.plot_model(model,
                               to_file='CSPDarknet53.png',

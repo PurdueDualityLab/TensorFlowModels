@@ -3,9 +3,10 @@ import tensorflow.keras as ks
 from typing import *
 
 import yolo.modeling.base_model as base_model
-from yolo.modeling.backbones.csp_backbone_builder import CSP_Backbone_Builder
+from yolo.modeling.backbones.Darknet import Darknet
 from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
 from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
+from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.modeling.building_blocks import YoloLayer
 
 from yolo.utils.file_manager import download
@@ -107,15 +108,24 @@ class Yolov4(base_model.Yolo):
                 3: 8
             }
             self._x_y_scales = self._x_y_scales or {5: 1.05, 4: 1.1, 3: 1.2}
-
+        elif self.model_name == "tiny":
+            self._encoder_decoder_split_location = 14
+            self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
+                                          (81, 82), (135, 169), (344, 319)]
+            self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
+            self._path_scales = self._path_scales or {5: 32, 4: 16}
+            self._x_y_scales = self._x_y_scales or {5: 1.0, 4: 1.0}
         return
 
     def get_summary(self):
         self._backbone.summary()
-        self._neck.summary()
+        if self._neck != None:
+            self._neck.summary()
         self._head.summary()
+        
         print(self._backbone.output_shape)
-        print(self._neck.output_shape)
+        if self._neck != None:
+            print(self._neck.output_shape)
         print(self._head.output_shape)
         self.summary()
         return
@@ -127,6 +137,11 @@ class Yolov4(base_model.Yolo):
                 "neck": "regular",
                 "head": "regular",
                 "name": "yolov4"
+            }, "tiny": {
+                "backbone": "new_tinyv4",
+                "neck": None,
+                "head": "tinyv4",
+                "name": "yolov4_tiny"
             },
         }
         #if not self._built:
@@ -134,7 +149,7 @@ class Yolov4(base_model.Yolo):
             self._backbone_name = default_dict[self.model_name]["backbone"]
             if isinstance(self._backbone_cfg, Dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
-            self._backbone = CSP_Backbone_Builder(
+            self._backbone = Darknet(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
@@ -146,11 +161,14 @@ class Yolov4(base_model.Yolo):
         if self._neck_cfg == None or isinstance(self._neck_cfg, Dict):
             if isinstance(self._neck_cfg, Dict):
                 default_dict[self.model_name]["neck"] = self._neck_cfg
-            self._neck = Yolov4Neck(
-                name=default_dict[self.model_name]["neck"],
-                cfg_dict=default_dict[self.model_name]["neck"],
-                input_shape=self._input_shape,
-                weight_decay=self._weight_decay)
+            if default_dict[self.model_name]["neck"] != None:
+                self._neck = Yolov4Neck(
+                    name=default_dict[self.model_name]["neck"],
+                    cfg_dict=default_dict[self.model_name]["neck"],
+                    input_shape=self._input_shape,
+                    weight_decay=self._weight_decay)
+            else:
+                self._neck = None
         else:
             self._neck = self._neck_cfg
             self._custom_aspects = True
@@ -158,13 +176,22 @@ class Yolov4(base_model.Yolo):
         if self._head_cfg == None or isinstance(self._head_cfg, Dict):
             if isinstance(self._head_cfg, Dict):
                 default_dict[self.model_name]["head"] = self._head_cfg
-            self._head = Yolov4Head(
-                model=default_dict[self.model_name]["head"],
-                cfg_dict=default_dict[self.model_name]["head"],
-                classes=self._classes,
-                boxes=len(self._boxes),
-                input_shape=self._input_shape,
-                weight_decay=self._weight_decay)
+            if default_dict[self.model_name]["head"] == "tinyv4":
+                self._head = Yolov3Head(
+                    model=default_dict[self.model_name]["head"],
+                    cfg_dict=default_dict[self.model_name]["head"],
+                    classes=self._classes,
+                    boxes=len(self._boxes),
+                    input_shape=self._input_shape,
+                    weight_decay=self._weight_decay)
+            else:
+                self._head = Yolov4Head(
+                    model=default_dict[self.model_name]["head"],
+                    cfg_dict=default_dict[self.model_name]["head"],
+                    classes=self._classes,
+                    boxes=len(self._boxes),
+                    input_shape=self._input_shape,
+                    weight_decay=self._weight_decay)
         else:
             self._head = self._head_cfg
             self._custom_aspects = True
@@ -183,16 +210,21 @@ class Yolov4(base_model.Yolo):
 
         self._model_name = default_dict[self.model_name]["name"]
         self._backbone.build(input_shape)
-        self._neck.build(self._backbone.output_shape)
-        self._head.build(self._neck.output_shape)
+        if self._neck != None:
+            self._neck.build(self._backbone.output_shape)
+            preshape = self._neck.output_shape
+        else:
+            preshape = self._backbone.output_shape
+        self._head.build(preshape)
         self._built = True
         super().build(input_shape)
         return
 
     def call(self, inputs, training=False):
-        feature_maps = self._backbone(inputs)
-        neck_maps = self._neck(feature_maps)
-        raw_head = self._head(neck_maps)
+        maps = self._backbone(inputs)
+        if self._neck != None:
+            maps = self._neck(maps)
+        raw_head = self._head(maps)
         if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
@@ -273,7 +305,7 @@ if __name__ == "__main__":
     #                        with_info=True)
 
 
-    model = Yolov4(model = "regular", policy="float32", use_tie_breaker=True)
+    model = Yolov4(model = "tiny", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
     # model.load_weights_from_dn(dn2tf_head=True)

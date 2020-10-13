@@ -6,7 +6,6 @@ from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkUpsampleRoute
 # for testing
-from yolo.modeling.backbones.backbone_builder import Backbone_Builder
 
 from . import configs
 

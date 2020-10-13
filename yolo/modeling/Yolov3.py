@@ -3,7 +3,7 @@ import tensorflow.keras as ks
 from typing import *
 
 import yolo.modeling.base_model as base_model
-from yolo.modeling.backbones.backbone_builder import Backbone_Builder
+from yolo.modeling.backbones.Darknet import Darknet
 from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
 from yolo.modeling.building_blocks import YoloLayer
 
@@ -138,17 +138,17 @@ class Yolov3(base_model.Yolo):
     def build(self, input_shape):
         default_dict = {
             "regular": {
-                "backbone": "regular",
+                "backbone": "new_regular",
                 "head": "regular",
                 "name": "yolov3"
             },
             "spp": {
-                "backbone": "regular",
+                "backbone": "new_regular",
                 "head": "spp",
                 "name": "yolov3-spp"
             },
             "tiny": {
-                "backbone": "tiny",
+                "backbone": "new_tiny",
                 "head": "tiny",
                 "name": "yolov3-tiny"
             }
@@ -157,7 +157,7 @@ class Yolov3(base_model.Yolo):
             self._backbone_name = default_dict[self.model_name]["backbone"]
             if isinstance(self._backbone_cfg, Dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
-            self._backbone = Backbone_Builder(
+            self._backbone = Darknet(
                 name=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
@@ -278,8 +278,9 @@ if __name__ == "__main__":
     #                        with_info=True)
 
     model = Yolov3(model = "regular", policy="float32", use_tie_breaker=False)
+    model.load_weights_from_dn(weights_file="yolov3-regular.weights")
     model.build(input_shape = [None, None, None, 3])
-    model.summary()
+    model.get_summary()
     # model.load_weights_from_dn(dn2tf_head=False, weights_file="testing_weights/yolov3-regular.weights")
 
     # train, test = model.process_datasets(train, test, fixed_size = False , batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)

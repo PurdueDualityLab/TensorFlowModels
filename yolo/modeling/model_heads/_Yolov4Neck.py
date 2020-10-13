@@ -5,7 +5,7 @@ from yolo.modeling.building_blocks import DarkConv
 from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkRoute
 # for testing
-from yolo.modeling.backbones.csp_backbone_builder import CSP_Backbone_Builder
+
 
 from . import configs
 

@@ -29,7 +29,7 @@ class BlockConfig(object):
 
 class CSPBlockConfig(object):
     def __init__(self, layer, stack, reps, bottleneck, filters, kernel_size,
-                 strides, padding, activation, route, output_name):
+                 strides, padding, activation, route, output_name, is_output):
         '''
         get layer config to make code more readable
 
@@ -52,6 +52,7 @@ class CSPBlockConfig(object):
         self.activation = activation
         self.route = route
         self.output_name = output_name
+        self.is_output = is_output
         return
 
     def __repr__(self):
@@ -65,7 +66,7 @@ def build_block_specs(config):
     return specs
 
 
-def csp_build_block_specs(config):
+def csp_build_block_specs(config, min_size, max_size):
     specs = []
     for layer in config:
         specs.append(CSPBlockConfig(*layer))
