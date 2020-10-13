@@ -82,6 +82,7 @@ class Yolov3Head(tf.keras.Model):
             self._cfg_dict = self.load_dict_cfg(model)
         else:
             self._model_name = "custom_head"
+
         self._conv_depth = boxes // len(self._cfg_dict) * (classes + 5)
 
         inputs, input_shapes, routes, upsamples, prediction_heads = self._get_attributes(
@@ -141,6 +142,7 @@ class Yolov3Head(tf.keras.Model):
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
+            args['l2_regularization'] = self._weight_decay
             prediction_heads[key] = DarkConv(filters=self._conv_depth +
                                              path_keys["output-extras"],
                                              **args)

@@ -10,8 +10,8 @@ from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
 from official.vision import keras_cv
-from official.vision.beta.configs import retinanet as exp_cfg
-from official.vision.beta.dataloaders import retinanet_input
+from yolo.configs import yolo as exp_cfg
+# from official.vision.beta.dataloaders import retinanet_input
 from official.vision.beta.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
@@ -34,34 +34,16 @@ class YoloTask(base_task.Task):
     def build_model(self):
         """get an instance of Yolo v3 or v4"""
         cfg = self.task_config
-        if cfg.version == "v3":
+        if "v3" in cfg.model.type:
             from yolo.modeling.Yolov3 import Yolov3 as run_model 
-        elif cfg.version == "v4":
+        elif "v4" in cfg.model.type:
             from yolo.modeling.Yolov4 import Yolov4 as run_model 
         else:
             raise Exception("unsupported model in build model")
         
-        model = run_model(input_shape = cfg.input_shape,
-                          model = cfg.type,
-                          classes = cfg.classes,
-                          backbone = cfg.backbone,
-                          head = cfg.head,
-                          head_filter = cfg.head_filter,
-                          masks = cfg.masks,
-                          boxes = cfg.boxes,
-                          path_scales = cfg.path_scales,
-                          x_y_scales = cfg.x_y_scales,
-                          thresh = cfg.thresh,
-                          weight_decay = cfg.weight_decay, 
-                          class_thresh = dfg.class_thresh,
-                          use_nms = cfg.use_nms,
-                          using_rt = cfg.using_rt,
-                          max_boxes = cfg.max_boxes,
-                          scale_boxes = cfg.scale_boxes,
-                          scale_mult = cfg.scale_mult,
-                          use_tie_breaker = cfg.use_tie_breaker,
-                          clip_grads_norm = cfg.clip_grads_norm, 
-                          policy=cfg.policy)
+        task_cfg = cfg.get_build_model_dict()
+        model = run_model(**task_cfg)
+        model.build(model._input_shape)
         self._model_pointer = model
         return model
 
@@ -69,7 +51,7 @@ class YoloTask(base_task.Task):
         if self.task_config.load_original_weights:
             backbone_weights = self.task_config.backbone_from_darknet
             head_weights = self.task_config.head_from_darknet
-            weights_file = self.task_config.backbone_from_darknet
+            weights_file = self.task_config.weights_file
 
             model.load_weights_from_dn(dn2tf_backbone = backbone_weights, 
                                        dn2tf_head = head_weights, 
@@ -120,7 +102,8 @@ class YoloTask(base_task.Task):
 
 
 if __name__ == "__main__":
-    import yolo.configs.network as model_cfg 
-    model_cfg.
+    task = YoloTask(exp_cfg.YoloTask())
+    model = task.build_model()
+    model.summary()
 
 
