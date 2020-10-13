@@ -83,6 +83,7 @@ class YoloTask(base_task.Task):
         return
 
     def build_losses(self, outputs, labels, aux_losses=None):
+
         return
 
     def build_metrics(self, training=True):
@@ -102,8 +103,11 @@ class YoloTask(base_task.Task):
 
 
 if __name__ == "__main__":
-    task = YoloTask(exp_cfg.YoloTask())
-    model = task.build_model()
-    model.summary()
+    cfg = exp_cfg.YoloTask()
+
+    print(cfg.get_build_model_dict())
+    # task = YoloTask(exp_cfg.YoloTask())
+    # model = task.build_model()
+    # model.summary()
 
 

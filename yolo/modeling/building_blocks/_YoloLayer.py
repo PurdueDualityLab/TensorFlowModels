@@ -19,8 +19,6 @@ class YoloLayer(ks.Model):
                  thresh,
                  cls_thresh,
                  max_boxes,
-                 scale_boxes=1,
-                 scale_mult=1,
                  path_scale=None,
                  scale_xy = None,
                  use_nms = True,
@@ -28,7 +26,6 @@ class YoloLayer(ks.Model):
         super().__init__(**kwargs)
         self._masks = masks
         self._anchors = anchors
-        self._scale_mult = scale_mult
         self._thresh = thresh
         self._cls_thresh = cls_thresh
         self._max_boxes = max_boxes
@@ -115,7 +112,6 @@ class YoloLayer(ks.Model):
             "thresh": self._thresh,
             "cls_thresh": self._cls_thresh,
             "max_boxes": self._max_boxes,
-            "scale_mult": self._scale_mult,
         }
 
 if __name__ == "__main__":

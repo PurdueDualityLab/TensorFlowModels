@@ -138,7 +138,8 @@ class Yolo(tf.keras.Model, ABC):
         return loss_metrics
 
     def generate_loss(self,
-                      scale: float = 1.0,
+                      ignore_thresh: float = 0.7, 
+                      truth_thresh: float = 1.0,
                       loss_type="ciou") -> "Dict[Yolo_Loss]":
         """
         Create loss function instances for each of the detection heads.
@@ -151,13 +152,13 @@ class Yolo(tf.keras.Model, ABC):
         loss_dict = {}
         for key in self._masks.keys():
             loss_dict[key] = Yolo_Loss(classes = self._classes,
-                                       mask=self._masks[key],
                                        anchors=self._boxes,
-                                       scale_anchors=self._path_scales[key],
-                                       ignore_thresh=0.7,
-                                       truth_thresh=1,
+                                       ignore_thresh=ignore_thresh,
+                                       truth_thresh=truth_thresh,
                                        loss_type=loss_type,
                                        path_key=key,
+                                       mask=self._masks[key],
+                                       scale_anchors=self._path_scales[key],
                                        scale_x_y=self._x_y_scales[key],
                                        use_tie_breaker=self._use_tie_breaker)
         self._loss_fn = loss_dict

@@ -24,17 +24,16 @@ class Yolov4(base_model.Yolo):
             head = None,
             head_filter = None,
             masks = None,
-            boxes = None,
+            anchors = None,
             path_scales = None,
             x_y_scales = None,
-            thresh: int = 0.45,
+            iou_thresh: int = 0.45,
             weight_decay = 5e-4,
             class_thresh: int = 0.45,
             use_nms = True,
             using_rt = False,
             max_boxes: int = 200,
             scale_boxes: int = 416,
-            scale_mult: float = 1.0,
             use_tie_breaker: bool = True,
             clip_grads_norm = None,
             policy="float32",
@@ -50,24 +49,26 @@ class Yolov4(base_model.Yolo):
         self._custom_aspects = False
 
         #setting the running policy
-        if type(policy) != str:
-            policy = policy.name
-        self._og_policy = policy
-        self._policy = tf.keras.mixed_precision.experimental.global_policy(
-        ).name
-        self.set_policy(policy=policy)
+        if policy == None:
+            if type(policy) != str:
+                policy = policy.name
+            self._og_policy = policy
+            self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self.set_policy(policy=policy)
+        else:
+            self._og_policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self._policy = self._og_policy
 
         #filtering params
-        self._thresh = thresh
+        self._thresh = iou_thresh
         self._class_thresh = 0.45
         self._max_boxes = max_boxes
         self._scale_boxes = scale_boxes
-        self._scale_mult = scale_mult
         self._x_y_scales = x_y_scales
 
         #init base params
         self._encoder_decoder_split_location = None
-        self._boxes = boxes
+        self._boxes = anchors
         self._masks = masks
         self._path_scales = path_scales
         self._use_tie_breaker = use_tie_breaker

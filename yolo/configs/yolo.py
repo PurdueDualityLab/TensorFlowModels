@@ -26,47 +26,8 @@ from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import backbones
 from official.vision.beta.configs import common
 
-# model definitions
 @dataclasses.dataclass
-class Yolov4regular(hyperparams.Config):
-    model: str = "regular"
-    backbone: Optional[Dict] = None #"regular"
-    neck: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"regular"
-    use_tie_breaker: bool = True
-
-@dataclasses.dataclass
-class Yolov3regular(hyperparams.Config):
-    model: str = "regular"
-    backbone: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"regular"
-    use_tie_breaker: bool = False
-
-@dataclasses.dataclass
-class Yolov3spp(hyperparams.Config):
-    model: str = "spp"
-    backbone: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"spp"
-    use_tie_breaker: bool = False
-
-@dataclasses.dataclass
-class Yolov3tiny(hyperparams.Config):
-    model: str = "tiny"
-    backbone: Optional[Dict] = None #"tiny"
-    head: Optional[Dict] = None #"tiny"
-    use_tie_breaker: bool = False
-
-# loss function parameters
-@dataclasses.dataclass
-class Gridpoints(hyperparams.Config):
-    low_memory: bool = False
-    reset: bool = True
-
-@dataclasses.dataclass
-class Anchors(hyperparams.Config):
-    prediction_scale: int = 416
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146", "142, 110" ,"192, 243", "459, 401"])
-
+class YoloCFG(hyperparams.Config):
     @property
     def boxes(self):
         boxes = []
@@ -78,19 +39,13 @@ class Anchors(hyperparams.Config):
         return boxes
     
     @boxes.setter 
-    def input_size(self, box_string):
-        self._boxes = box_string
+    def boxes(self, box_list):
+        setter = []
+        for value in box_list:
+            value = str(list(value))
+            setter.append(value[1:-1])
+        self._boxes = setter
 
-@dataclasses.dataclass
-class YoloLossLayer(hyperparams.Config):
-    thresh: int = 0.45
-    class_thresh: int = 0.45
-    anchors: Anchors = Anchors()
-    masks: Dict = dataclasses.field(default_factory=lambda: {"1024": [6, 7, 8], "512": [3, 4, 5], "256": [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 32, "512": 16, "256": 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 1.05, "512": 1.1, "256": 1.2})
-    use_tie_breaker: bool = True
-    generator_params: Gridpoints = Gridpoints()
 
 # dataset parsers
 @dataclasses.dataclass
@@ -108,7 +63,6 @@ class Parser(hyperparams.Config):
     pct_rand: float = 0.5
     seed: int = 10
     shuffle_buffer_size: int = 10000
-    anchors: Anchors = Anchors()
 
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
@@ -121,8 +75,76 @@ class DataConfig(cfg.DataConfig):
     parser: Parser = Parser()
     shuffle_buffer_size: int = 10000
 
+# Loss and Filter definitions
+@dataclasses.dataclass
+class Gridpoints(hyperparams.Config):
+    low_memory: bool = False
+    reset: bool = True
 
-# model selction
+@dataclasses.dataclass
+class YoloLoss(hyperparams.Config):
+    ignore_thresh: float = 0.7
+    truth_thresh: float = 1.0
+    use_tie_breaker: bool = None
+
+@dataclasses.dataclass
+class YoloLayer(hyperparams.Config):
+    generator_params: Gridpoints = Gridpoints()
+    iou_thresh: float = 0.45
+    class_thresh: float = 0.45
+    anchor_generation_scale: int = 416
+    use_nms: bool = True
+
+# model definition
+@dataclasses.dataclass
+class Yolov4regular(YoloCFG):
+    model: str = "regular"
+    backbone: Optional[Dict] = None #"regular"
+    neck: Optional[Dict] = None #"regular"
+    head: Optional[Dict] = None #"regular"
+    head_filter: YoloLayer = YoloLayer()
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146", "142, 110" ,"192, 243", "459, 401"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {"1024": [6, 7, 8], "512": [3, 4, 5], "256": [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 32, "512": 16, "256": 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 1.05, "512": 1.1, "256": 1.2})
+    use_tie_breaker: bool = None
+
+@dataclasses.dataclass
+class Yolov3regular(YoloCFG):
+    model: str = "regular"
+    backbone: Optional[Dict] = None #"regular"
+    head: Optional[Dict] = None #"regular"
+    head_filter: YoloLayer = YoloLayer()
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {"1024": [6, 7, 8], "512": [3, 4, 5], "256": [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 32, "512": 16, "256": 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 1.0, "512": 1.0, "256": 1.0})
+    use_tie_breaker: bool = None
+
+@dataclasses.dataclass
+class Yolov3spp(YoloCFG):
+    model: str = "spp"
+    backbone: Optional[Dict] = None #"regular"
+    head: Optional[Dict] = None #"spp"
+    head_filter: YoloLayer = YoloLayer()
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {"1024": [6, 7, 8], "512": [3, 4, 5], "256": [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 32, "512": 16, "256": 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 1.0, "512": 1.0, "256": 1.0})
+    use_tie_breaker: bool = None
+
+@dataclasses.dataclass
+class Yolov3tiny(YoloCFG):
+    model: str = "tiny"
+    backbone: Optional[Dict] = None #"tiny"
+    head: Optional[Dict] = None #"tiny"
+    head_filter: YoloLayer = YoloLayer()
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 14", "23, 27", "37, 58","81, 82", "135, 169", "344, 319"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {"1024": [3, 4, 5], "256": [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 32, "256": 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {"1024": 1.0, "256": 1.0})
+    use_tie_breaker: bool = None
+
 @dataclasses.dataclass
 class Yolo(hyperparams.OneOfConfig):
     type: str = "v4"
@@ -137,7 +159,7 @@ class YoloTask(cfg.TaskConfig):
     num_classes: int = 80
     _input_size: Optional[List[int]] = None
     model:Yolo = Yolo()
-    lossfilter:YoloLossLayer = YoloLossLayer()
+    loss:YoloLoss = YoloLoss()
     min_level: int = 3
     max_level: int = 5
     weight_decay: float = 5e-4
@@ -154,8 +176,6 @@ class YoloTask(cfg.TaskConfig):
     backbone_from_darknet: bool = True
     head_from_darknet: bool = False
     weights_file: Optional[str] = None
-    use_nms: bool = True
-
 
     @property
     def input_size(self):
@@ -167,19 +187,6 @@ class YoloTask(cfg.TaskConfig):
     @input_size.setter 
     def input_size(self, input_size):
         self._input_size = input_size
-
-    def get_build_model_dict(self):
-        task_dict = {
-            "input_shape":[None] + self.input_size, 
-            "classes":self.num_classes, 
-            "weight_decay": self.weight_decay,
-            "max_boxes": self.max_boxes,
-            "model": self.model.type
-        }
-
-        model_dict = self.model.as_dict()
-        task_dict.update(model_dict[self.model.type])
-        return task_dict
 
 
 
