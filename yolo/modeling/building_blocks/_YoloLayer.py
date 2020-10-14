@@ -33,7 +33,7 @@ class YoloLayer(ks.Model):
         self._len_keys = len(self._keys)
         self._path_scale = path_scale
         self._use_nms = use_nms
-        self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.values()}
+        self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
         self._generator = {}
         self._len_mask = {}
         for i, key in enumerate(self._keys):

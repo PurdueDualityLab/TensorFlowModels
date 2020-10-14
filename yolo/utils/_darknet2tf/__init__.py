@@ -177,7 +177,7 @@ class DarkNetConverter(_DarkNetSectionList):
                                cls_thresh=class_thresh,
                                max_boxes=max_boxes,
                                dtype=dtype,
-                               scale_boxes=self.net.w,
-                               scale_mult=scale_x_y,
+                               #scale_boxes=self.net.w,
+                               scale_xy=scale_x_y,
                                path_scale=path_scales)
         return yolo_layer(outs)
