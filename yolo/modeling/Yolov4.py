@@ -292,7 +292,7 @@ class Yolov4(base_model.Yolo):
             if neck is not None:
                 load_weights_backbone(self._neck, neck)
                 self._neck.trainable = False
-                load_weights_v4head(self._head, decoder)
+                load_weights_v4head(self._head, decoder, (3, 5, 0, 1, 6, 2, 4, 7))
                 self._head.trainable = False
             else:
                 load_weights_v4head(self._head, decoder, (0, 4, 1, 2, 3))

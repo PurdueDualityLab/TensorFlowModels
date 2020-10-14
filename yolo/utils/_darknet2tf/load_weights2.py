@@ -26,7 +26,7 @@ def load_weights_backbone(model, net):
                     sublayer.set_weights(cfg.get_weights())
 
 
-def load_weights_v4head(model, net, remap=(4, 6, 0, 1, 7, 2, 3, 5)):
+def load_weights_v4head(model, net, remap):
     convs = []
     for layer in net:
         if isinstance(layer, convCFG):
