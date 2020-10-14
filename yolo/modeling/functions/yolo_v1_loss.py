@@ -63,7 +63,7 @@ class Yolo_Loss_v1(ks.losses.Loss):
         loss_wh = tf.reduce_sum(K.square(tf.math.sqrt(true_wh) -
                                          tf.math.sqrt(pred_wh)), axis=-1) * predictor_mask * true_confidence
 
-        localization_loss = self._coord_scale * (tf.reduce_sum(loss_xy + loss_wh))
+        localization_loss = self._coord_scale * (tf.reduce_mean(loss_xy + loss_wh))
 
         # Confidence loss:
         obj_loss = K.square(true_confidence - 
@@ -71,9 +71,9 @@ class Yolo_Loss_v1(ks.losses.Loss):
         noobj_loss = K.square(true_confidence - 
                                             pred_confidence) * (1 - predictor_mask) * (1 - true_confidence)
         
-        confidence_loss = tf.reduce_sum(obj_loss + self._noobj_scale * noobj_loss)
+        confidence_loss = tf.reduce_mean(obj_loss + self._noobj_scale * noobj_loss)
         # Class Probability loss:
-        # TODO: implement
+        # TODO: Need to implement
 
 
 
