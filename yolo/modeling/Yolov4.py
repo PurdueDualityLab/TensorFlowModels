@@ -50,7 +50,7 @@ class Yolov4(base_model.Yolo):
         self._custom_aspects = False
 
         #setting the running policy
-        if policy == None:
+        if policy is not None:
             if type(policy) != str:
                 policy = policy.name
             self._og_policy = policy
@@ -98,7 +98,7 @@ class Yolov4(base_model.Yolo):
             self._encoder_decoder_split_location = 106
             self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)]
             self._masks = self._masks or {
-                5: [6, 7, 8], 
+                5: [6, 7, 8],
                 4: [3, 4, 5],
                 3: [0, 1, 2]
             }
@@ -109,7 +109,7 @@ class Yolov4(base_model.Yolo):
             }
             self._x_y_scales = self._x_y_scales or {5: 1.05, 4: 1.1, 3: 1.2}
         elif self.model_name == "tiny":
-            self._encoder_decoder_split_location = 14
+            self._encoder_decoder_split_location = 39
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
             self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
@@ -228,8 +228,8 @@ class Yolov4(base_model.Yolo):
         if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
-            predictions.update({"raw_output": raw_head})
             predictions = self._head_filter(raw_head)
+            predictions.update({"raw_output": raw_head})
             return predictions
 
     def load_weights_from_dn(self,
@@ -269,13 +269,19 @@ class Yolov4(base_model.Yolo):
             self.build(self._input_shape)
 
         if dn2tf_backbone or dn2tf_neck or dn2tf_head:
+            model_name = self._model_name.replace('_', '-')
             if config_file is None:
-                config_file = download(self._model_name + '.cfg')
+                config_file = download(model_name + '.cfg')
             if weights_file is None:
-                weights_file = download(self._model_name + '.weights')
+                weights_file = download(model_name + '.weights')
             list_encdec = DarkNetConverter.read(config_file, weights_file)
-            encoder, neck, decoder = split_converter(
-                list_encdec, self._encoder_decoder_split_location, 138)
+            if model_name == 'yolov4-tiny':
+                encoder, decoder = split_converter(
+                    list_encdec, self._encoder_decoder_split_location)
+                neck = None
+            else:
+                encoder, neck, decoder = split_converter(
+                    list_encdec, self._encoder_decoder_split_location, 138)
 
 
         if dn2tf_backbone:
@@ -284,8 +290,9 @@ class Yolov4(base_model.Yolo):
             self._backbone.trainable = False
 
         if dn2tf_head:
-            load_weights_backbone(self._neck, neck)
-            self._neck.trainable = False
+            if neck is not None:
+                load_weights_backbone(self._neck, neck)
+                self._neck.trainable = False
             load_weights_v4head(self._head, decoder)
             self._head.trainable = False
         return
