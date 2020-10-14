@@ -27,11 +27,13 @@ class Darknet(ks.Model):
         self._over_ride = min_size != None
         self._min_size = min_size
         self._max_size = max_size
+        self._splits = None
         layer_specs = config
 
         if not isinstance(config, Dict):
             self._model_name = name
-            layer_specs = self.get_model_config(name, min_size, max_size)
+            layer_specs, splits = self.get_model_config(name, min_size, max_size)
+            self._splits = splits
 
         self._weight_decay = weight_decay
         inputs = ks.layers.Input(shape=self._input_shape[1:])
@@ -155,15 +157,16 @@ class Darknet(ks.Model):
     @staticmethod
     def get_model_config(name, min_size, max_size):
         try:
-            backbone = importlib.import_module(
-                '.csp_' + name, package=configs.__package__).backbone
+            backbone_dict = importlib.import_module(
+                '.' + name, package=configs.__package__).backbone
         except ModuleNotFoundError as e:
             if e.name == configs.__package__ + '.' + name:
                 raise ValueError(f"Invlid backbone '{name}'") from e
             else:
                 raise
-
-        return csp_build_block_specs(backbone, min_size, max_size)
+        backbone = backbone_dict["backbone"]
+        splits = backbone_dict["splits"]
+        return csp_build_block_specs(backbone, min_size, max_size), splits
 
 
 if __name__ == "__main__":

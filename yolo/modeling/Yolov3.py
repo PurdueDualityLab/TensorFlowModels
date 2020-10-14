@@ -138,17 +138,17 @@ class Yolov3(base_model.Yolo):
     def build(self, input_shape):
         default_dict = {
             "regular": {
-                "backbone": "new_regular",
+                "backbone": "DarkNet53",
                 "head": "regular",
                 "name": "yolov3"
             },
             "spp": {
-                "backbone": "new_regular",
+                "backbone": "DarkNet53",
                 "head": "spp",
                 "name": "yolov3-spp"
             },
             "tiny": {
-                "backbone": "new_tiny",
+                "backbone": "DarkNetTiny",
                 "head": "tiny",
                 "name": "yolov3-tiny"
             }
@@ -206,6 +206,7 @@ class Yolov3(base_model.Yolo):
             return {"raw_output": raw_head}
         else:
             predictions = self._head_filter(raw_head)
+            predictions.update({"raw_output": raw_head})
             return predictions
 
     def load_weights_from_dn(self,

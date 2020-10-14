@@ -122,7 +122,7 @@ class Yolov4(base_model.Yolo):
         if self._neck != None:
             self._neck.summary()
         self._head.summary()
-        
+
         print(self._backbone.output_shape)
         if self._neck != None:
             print(self._neck.output_shape)
@@ -133,12 +133,12 @@ class Yolov4(base_model.Yolo):
     def build(self, input_shape):
         default_dict = {
             "regular": {
-                "backbone": "regular",
+                "backbone": "CSPDarkNet53",
                 "neck": "regular",
                 "head": "regular",
                 "name": "yolov4"
             }, "tiny": {
-                "backbone": "new_tinyv4",
+                "backbone": "CSPDarkNetTiny",
                 "neck": None,
                 "head": "tinyv4",
                 "name": "yolov4_tiny"
@@ -228,6 +228,7 @@ class Yolov4(base_model.Yolo):
         if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
+            predictions.update({"raw_output": raw_head})
             predictions = self._head_filter(raw_head)
             return predictions
 

@@ -95,14 +95,12 @@ class YoloLayer(ks.Model):
                 "bbox": nms.nmsed_boxes,
                 "classes": nms.nmsed_classes,
                 "confidence": nms.nmsed_scores,
-                "raw_output": inputs
             }
         else:
             return {
                 "bbox": boxes,
                 "classes": tf.math.argmax(classifs, axis = -1),
                 "confidence": classifs,#tf.math.reduce_max(classifs, axis = -1),
-                "raw_output": inputs
             }
 
     def get_config(self):
