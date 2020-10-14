@@ -109,7 +109,7 @@ class Yolov4(base_model.Yolo):
             }
             self._x_y_scales = self._x_y_scales or {5: 1.05, 4: 1.1, 3: 1.2}
         elif self.model_name == "tiny":
-            self._encoder_decoder_split_location = 39
+            self._encoder_decoder_split_location = 28
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
             self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
@@ -268,7 +268,7 @@ class Yolov4(base_model.Yolo):
         if not self._built:
             self.build(self._input_shape)
 
-        if dn2tf_backbone or dn2tf_neck or dn2tf_head:
+        if dn2tf_backbone or dn2tf_head:
             model_name = self._model_name.replace('_', '-')
             if config_file is None:
                 config_file = download(model_name + '.cfg')
@@ -285,7 +285,6 @@ class Yolov4(base_model.Yolo):
 
 
         if dn2tf_backbone:
-            #load_weights_dnBackbone(self._backbone, encoder, mtype = self._backbone_name)
             load_weights_backbone(self._backbone, encoder)
             self._backbone.trainable = False
 
@@ -293,8 +292,11 @@ class Yolov4(base_model.Yolo):
             if neck is not None:
                 load_weights_backbone(self._neck, neck)
                 self._neck.trainable = False
-            load_weights_v4head(self._head, decoder)
-            self._head.trainable = False
+                load_weights_v4head(self._head, decoder)
+                self._head.trainable = False
+            else:
+                load_weights_v4head(self._head, decoder, (0, 4, 1, 2, 3))
+                self._head.trainable = False
         return
 
 

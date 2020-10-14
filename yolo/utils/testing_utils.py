@@ -33,7 +33,7 @@ def draw_box(image, boxes, classes, conf, draw_fn):
         if draw_fn(image, boxes[i], classes[i], conf[i]):
             i += 1
         else:
-            return i 
+            return i
     return i
 
 def get_draw_fn(colors, label_names, display_name):
@@ -51,7 +51,7 @@ def get_draw_fn(colors, label_names, display_name):
     if display_name:
         return draw_box_name
     else:
-        return draw_box 
+        return draw_box
 
 def build_model(name="regular",
                 model_version="v3",
@@ -62,7 +62,7 @@ def build_model(name="regular",
                 saved=False,
                 load_head=True,
                 policy="float32",
-                set_head=True, 
+                set_head=True,
                 weights_file = None):
 
     if model_version == "v3":
@@ -74,11 +74,11 @@ def build_model(name="regular",
     else:
         from yolo import Yolov4
         model = Yolov4(classes=classes,
-                       model="regular",
+                       model=name,
                        input_shape=(batch_size, w, h, 3),
                        policy=policy)
     model.load_weights_from_dn(dn2tf_backbone=True,
-                                dn2tf_head=load_head, 
+                                dn2tf_head=load_head,
                                 weights_file = weights_file)
     return model
 

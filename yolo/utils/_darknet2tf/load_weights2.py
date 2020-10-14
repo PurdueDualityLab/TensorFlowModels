@@ -26,7 +26,7 @@ def load_weights_backbone(model, net):
                     sublayer.set_weights(cfg.get_weights())
 
 
-def load_weights_v4head(model, net):
+def load_weights_v4head(model, net, remap=(4, 6, 0, 1, 7, 2, 3, 5)):
     convs = []
     for layer in net:
         if isinstance(layer, convCFG):
@@ -45,15 +45,10 @@ def load_weights_v4head(model, net):
                 blocks.append(block)
 
     # 4 and 0 have the same shape
-    remap = [4, 6, 0, 1, 7, 2, 3, 5]
     old_blocks = blocks
     blocks = [old_blocks[i] for i in remap]
 
     for block in blocks:
         for layer in block:
             cfg = convs.pop(0)
-            print(cfg)#, layer.input_shape)
             layer.set_weights(cfg.get_weights())
-        print()
-
-    print(convs)
