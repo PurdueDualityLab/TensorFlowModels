@@ -1,10 +1,11 @@
 """Classification parser."""
-from yolo.dataloaders.Parser import Parser
-from yolo.dataloaders.ops.random_ops import _rand_number
+
+# Import libraries
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
+from yolo.dataloaders.parsers.Parser import Parser
 
 class Classification_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -18,6 +19,7 @@ class Classification_Parser(Parser):
                  aug_rand_hue=True,
                  aug_rand_aspect=True,
                  scale=[128, 448],
+                 seed=10,
                  dtype='float32'):
         """Initializes parameters for parsing annotations in the dataset.
         Args:
@@ -38,6 +40,7 @@ class Classification_Parser(Parser):
                 aspect.
             scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
                 scale.
+            seed: an `int` for the seed used by tf.random
         """
         self._output_size = output_size
         self._aug_rand_saturation = aug_rand_saturation
@@ -47,10 +50,8 @@ class Classification_Parser(Parser):
         self._aug_rand_hue = aug_rand_hue
         self._num_classes = num_classes
         self._aug_rand_aspect = aug_rand_aspect
-        self._scale = [
-            tf.cast(scale[0], tf.float32)[None],
-            tf.cast(scale[1], tf.float32)[None]
-        ]
+        self._scale = scale
+        self._seed = seed
         if dtype == 'float32':
             self._dtype = tf.float32
         elif dtype == 'float16':
@@ -69,22 +70,17 @@ class Classification_Parser(Parser):
                 labels: a dict of Tensors that contains labels.
         """
         image = tf.cast(decoded_tensors['image'], tf.float32)
-        image = image / 255
         w = tf.cast(tf.shape(image)[0], tf.float32)
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_aspect:
-            aspect = tf.py_function(_rand_number, [.75, 1.25], [tf.float32])
-            aspect = tf.cast(aspect, dtype=tf.float32)[0]
+            aspect = tf.random.uniform([], minval = 3, maxval = 5, seed=self._seed, dtype = tf.float32) / 4.
             nh = tf.cast(w / aspect, dtype=tf.int32)
             nw = tf.cast(w, dtype=tf.int32)
             image = tf.image.resize(image, size=(nw, nh))
 
         if self._aug_rand_zoom:
-            scale = tf.py_function(_rand_number,
-                                   [self._scale[0], self._scale[1]],
-                                   [tf.float32])
-            scale = tf.cast(scale, dtype=tf.int32)[0][0]
+            scale =  tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)
@@ -94,7 +90,7 @@ class Classification_Parser(Parser):
                                          target_height=self._output_size[1])
 
         if self._aug_rand_rotate:
-            deg = tf.py_function(_rand_number, [-30.0, 30.0], tf.float32)
+            deg = tf.random.uniform([], minval = -30, maxval = 30, seed=self._seed, dtype = tf.float32)
             deg = deg * 3.14 / 180.
             deg.set_shape(())
             image = tfa.image.rotate(image, deg, interpolation="NEAREST")
@@ -110,6 +106,7 @@ class Classification_Parser(Parser):
         if self._aug_rand_hue:
             image = tf.image.random_hue(image=image, max_delta=.1)
 
+        image = image / 255
         image = tf.clip_by_value(image, 0, 1)
         image = tf.image.convert_image_dtype(image, self._dtype)
 

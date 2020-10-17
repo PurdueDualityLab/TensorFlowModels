@@ -1,10 +1,11 @@
 """Priming parser."""
-from yolo.dataloaders.Parser import Parser
-from yolo.dataloaders.ops.random_ops import _rand_number
+
+# Import libraries
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
+from yolo.dataloaders.Parser import Parser
 
 class Priming_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -13,6 +14,7 @@ class Priming_Parser(Parser):
                  num_classes,
                  aug_rand_zoom=True,
                  scale=[128, 448],
+                 seed=10,
                  dtype='float32'):
         """Initializes parameters for parsing annotations in the dataset.
         Args:
@@ -23,14 +25,13 @@ class Priming_Parser(Parser):
                 zoom.
             scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
                 scale.
+            seed: an `int` for the seed used by tf.random
         """
         self._output_size = output_size
         self._aug_rand_zoom = aug_rand_zoom
         self._num_classes = num_classes
-        self._scale = [
-            tf.cast(scale[0], tf.float32)[None],
-            tf.cast(scale[1], tf.float32)[None]
-        ]
+        self._scale = scale
+        self._seed = seed
         if dtype == 'float32':
             self._dtype = tf.float32
         elif dtype == 'float16':
@@ -53,10 +54,7 @@ class Priming_Parser(Parser):
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_zoom:
-            scale = tf.py_function(_rand_number,
-                                   [self._scale[0], self._scale[1]],
-                                   [tf.float32])
-            scale = tf.cast(scale, dtype=tf.int32)[0][0]
+            scale = tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)
@@ -92,4 +90,3 @@ class Priming_Parser(Parser):
         else:
             return image, tf.one_hot(decoded_tensors['label'],
                                      self._num_classes)
-
