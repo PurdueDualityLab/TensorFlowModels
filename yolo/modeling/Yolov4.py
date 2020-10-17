@@ -49,7 +49,7 @@ class Yolov4(base_model.Yolo):
         self._custom_aspects = False
 
         #setting the running policy
-        if policy == None:
+        if policy is not None:
             if type(policy) != str:
                 policy = policy.name
             self._og_policy = policy
@@ -97,7 +97,7 @@ class Yolov4(base_model.Yolo):
             self._encoder_decoder_split_location = 106
             self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)]
             self._masks = self._masks or {
-                5: [6, 7, 8], 
+                5: [6, 7, 8],
                 4: [3, 4, 5],
                 3: [0, 1, 2]
             }
@@ -130,9 +130,9 @@ class Yolov4(base_model.Yolo):
             },
         }
         #if not self._built:
-        if self._backbone_cfg == None or isinstance(self._backbone_cfg, Dict):
+        if self._backbone_cfg == None or isinstance(self._backbone_cfg, dict):
             self._backbone_name = default_dict[self.model_name]["backbone"]
-            if isinstance(self._backbone_cfg, Dict):
+            if isinstance(self._backbone_cfg, dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
             self._backbone = CSP_Backbone_Builder(
                 name=default_dict[self.model_name]["backbone"],
