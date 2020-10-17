@@ -52,6 +52,8 @@ class Yolo_Loss_v1(ks.losses.Loss):
         true_class = y_true[..., class_start:]
 
         # Get components from the box
+        pred_class = tf.reshape(pred_class, [-1, 1, self._num_classes])
+        true_class = tf.reshape(true_class, [-1, 1, self._num_classes])
         pred_boxes = tf.reshape(pred_boxes, [-1, self._num_boxes, 5])
         true_boxes = tf.reshape(true_boxes, [-1, self._num_boxes, 5])
 
@@ -74,22 +76,25 @@ class Yolo_Loss_v1(ks.losses.Loss):
         # Localization loss:
         loss_xy = tf.reduce_sum(tf.math.square(true_xy - pred_xy), axis=-1) * predictor_mask * true_confidence
         loss_wh = tf.reduce_sum(tf.math.square(tf.math.sqrt(true_wh) -
-                                         tf.math.sqrt(pred_wh)), axis=-1) * predictor_mask * true_confidence
+                                tf.math.sqrt(pred_wh)), axis=-1) * predictor_mask * true_confidence
 
         localization_loss = self._coord_scale * (tf.reduce_mean(loss_xy + loss_wh))
 
         # Confidence loss:
         obj_loss = tf.math.square(true_confidence - 
-                            pred_confidence) * predictor_mask * true_confidence
+                                  pred_confidence) * predictor_mask * true_confidence
         noobj_loss = tf.math.square(true_confidence - 
-                              pred_confidence) * (1 - predictor_mask) * (1 - true_confidence)
+                                    pred_confidence) * (1 - predictor_mask) * (1 - true_confidence)
         
         confidence_loss = tf.reduce_mean(obj_loss + self._noobj_scale * noobj_loss)
 
         # Class Probability loss:
-        # TODO: Need to implement
-        classification_loss = 0
+        ignore_object_mask = self.get_ignore_object_mask(iou)
+        classification_loss = tf.reduce_sum(tf.math.square(true_class - 
+                                                           pred_class), axis=-1) * ignore_object_mask * true_confidence
 
+        classification_loss = tf.reduce_mean(classification_loss)
+        
         # Update metrics:
         self._localization_loss = localization_loss
         self._confidence_loss = confidence_loss
@@ -144,3 +149,21 @@ class Yolo_Loss_v1(ks.losses.Loss):
     #         highest_iou_mask = highest_iou_mask >= 1
         
     #     return tf.cast(highest_iou_mask, dtype=tf.float32)
+
+    def get_ignore_object_mask(self, iou):
+        """
+        Generates a mask for each cell whether either bounding box prediction detects an object
+
+        The mask is generated determining if either of the prediction-ground truth box iou
+        exceeds self._ignore_thresh
+
+        Args: 
+            iou: Tensor of shape [num_cells, num_boxes] denoting the iou of each box compared to the
+                 ground truth of each cell
+        Return: 
+            Tensor of shape [num_cells, 1] denoting whether an object appears in the cell
+        """
+        highest_iou = tf.reduce_max(iou, axis=-1, keepdims=True)
+        ignore_object_mask = highest_iou >= self._ignore_thresh
+
+        return tf.cast(ignore_object_mask, tf.float32)
