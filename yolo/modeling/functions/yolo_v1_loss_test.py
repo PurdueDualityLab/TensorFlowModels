@@ -34,6 +34,8 @@ def makeRandomGroundTruth(batchSize, numCells, numBoxes, numClasses, seed=94820)
     return y_true
 
 def testLossOnShape(batchSize, numCells, numBoxes, numClasses):
+    # Tests loss function on different shaped inputs as specified by
+    # batchSize, numCells, numBoxes, and numClasses.
     tf.print("=-" * 50)
     tf.print("Testing loss function on parameters:\nBatch Size: {}\nNum Grids: {}x{}\nNum Boxes: {}\nNum Classes: {}\n" \
     .format(batchSize, numCells, numCells, numBoxes, numClasses))
@@ -47,6 +49,25 @@ def testLossOnShape(batchSize, numCells, numBoxes, numClasses):
     tf.print("Calculated Loss: ", loss(y_true, y_pred))
     tf.print("=-" * 50)
 
+def testCompile():
+    # Tests loss function with model.compile() with trivial model
+    tf.print("=-" * 50)
+    tf.print("Testing loss function on model.compile()")
+    loss = Yolo_Loss_v1(num_boxes=2, num_classes=20)
+
+    inputs = tf.keras.layers.Input(shape=(3,))
+    outputs = tf.keras.layers.Dense(2)(inputs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
+    while True:
+        try:
+            model.compile(optimizer="Adam", loss=loss, metrics=["mae"])
+            break
+        except ValueError:
+            tf.print("Loss function does not compile!")
+            return
+
+    tf.print("Loss function compiles!") 
+
 if __name__ == "__main__":
     tf.print("\n\nTesting shapes:")
     testLossOnShape(1, 7, 2, 20)
@@ -58,3 +79,5 @@ if __name__ == "__main__":
     testLossOnShape(64, 7, 2, 20)
 
     testLossOnShape(64, 7, 3, 20)
+
+    testCompile()
