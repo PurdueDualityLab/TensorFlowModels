@@ -87,19 +87,19 @@ class YoloTask(base_task.Task):
         return
 
     def build_metrics(self, training=True):
-        return
+        return super().build_metrics(training=training)
 
     def train_step(self, inputs, model, optimizer, metrics=None):
-        return
+        return super().train_step(inputs, model, optimizer, metrics=metics)
 
     def validation_step(self, inputs, model, metrics=None):
-        return
+        return super().validation_step(inputs, model, optimizer, metrics=metics)
 
     def aggregate_logs(self, state=None, step_outputs=None):
-        return
+        return super().aggregate_logs(state=state, step_outputs=step_outputs)
 
     def reduce_aggregated_logs(self, aggregated_logs):
-        return
+        return super().reduce_aggregated_logsI(aggregated_logs)
 
 
 if __name__ == "__main__":

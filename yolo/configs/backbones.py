@@ -73,3 +73,21 @@ class Backbone(hyperparams.OneOfConfig):
   darknet53: DarkNet53 = DarkNet53()
   cspdarknet53: CSPDarkNet53 = CSPDarkNet53()
 
+
+# TODO: Move to Backbone files
+from official.vision.beta.modeling.backbones import factory
+import tensorflow as tf
+@factory.register_backbone_builder('darknet53')
+def build_darknet53(
+    input_specs: tf.keras.layers.InputSpec,
+    model_config,
+    l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
+  """Builds ResNet 3d backbone from a config."""
+  backbone_type = model_config.backbone.type
+  backbone_cfg = model_config.backbone.get()
+  norm_activation_config = model_config.norm_activation
+  assert backbone_type == 'darknet53', (f'Inconsistent backbone type '
+                                        f'{backbone_type}')
+
+  from yolo import DarkNet53
+  return DarkNet53() # TODO: Complete
