@@ -105,7 +105,7 @@ class Darknet(ks.Model):
 
         if not isinstance(config, Dict):
             self._model_name = model_id.lower()
-            layer_specs, splits = self.get_model_config(model_id, min_size, max_size)
+            layer_specs, splits = self.get_model_config(self._model_name, min_size, max_size)
             self._splits = splits
 
         if isinstance(input_shape, List) or isinstance(input_shape, Tuple):

@@ -78,7 +78,7 @@ class Yolov3(base_model.Yolo):
         self._backbone_cfg = backbone
         self._head_cfg = head
         self._head_filter_cfg = head_filter
-        self._weight_decay = weight_decay
+        self._weight_decay = tf.keras.regularizers.l2(l=weight_decay)
         self._use_nms = use_nms
         self._using_rt = using_rt
 
@@ -158,10 +158,10 @@ class Yolov3(base_model.Yolo):
             if isinstance(self._backbone_cfg, Dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
             self._backbone = Darknet(
-                name=default_dict[self.model_name]["backbone"],
+                model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                weight_decay=self._weight_decay)
+                kernel_regularizer =self._weight_decay)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True

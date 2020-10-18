@@ -73,7 +73,7 @@ class Yolov4(base_model.Yolo):
         self._masks = masks
         self._path_scales = path_scales
         self._use_tie_breaker = use_tie_breaker
-        self._weight_decay = weight_decay
+        self._weight_decay = tf.keras.regularizers.l2(l=weight_decay)
 
         #init models
         self.model_name = model
@@ -149,11 +149,12 @@ class Yolov4(base_model.Yolo):
             self._backbone_name = default_dict[self.model_name]["backbone"]
             if isinstance(self._backbone_cfg, Dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
+            print(default_dict[self.model_name]["backbone"])
             self._backbone = Darknet(
-                name=default_dict[self.model_name]["backbone"],
+                model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                weight_decay=self._weight_decay)
+                kernel_regularizer =self._weight_decay)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
@@ -318,7 +319,7 @@ if __name__ == "__main__":
     model = Yolov4(model = "tiny", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
-    # model.load_weights_from_dn(dn2tf_head=True)
+    model.load_weights_from_dn(dn2tf_head=True)
 
 
     # train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
