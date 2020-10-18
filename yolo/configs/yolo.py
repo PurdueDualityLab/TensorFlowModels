@@ -99,7 +99,7 @@ class YoloLoss(hyperparams.Config):
 
 # model definition
 @dataclasses.dataclass
-class Yolov4regular(yolo_cfg.YoloCFG):
+class Yolov4regular(yolo_cfg.AnchorCFG):
     model: str = "regular"
     backbone: Optional[Dict] = None #"regular"
     neck: Optional[Dict] = None #"regular"
@@ -112,7 +112,7 @@ class Yolov4regular(yolo_cfg.YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3regular(yolo_cfg.YoloCFG):
+class Yolov3regular(yolo_cfg.AnchorCFG):
     model: str = "regular"
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
@@ -124,7 +124,7 @@ class Yolov3regular(yolo_cfg.YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3spp(yolo_cfg.YoloCFG):
+class Yolov3spp(yolo_cfg.AnchorCFG):
     model: str = "spp"
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"spp"
@@ -136,7 +136,7 @@ class Yolov3spp(yolo_cfg.YoloCFG):
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
-class Yolov3tiny(yolo_cfg.YoloCFG):
+class Yolov3tiny(yolo_cfg.AnchorCFG):
     model: str = "tiny"
     backbone: Optional[Dict] = None #"tiny"
     head: Optional[Dict] = None #"tiny"
