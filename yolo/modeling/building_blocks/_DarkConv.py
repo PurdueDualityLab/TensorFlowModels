@@ -171,3 +171,6 @@ class DarkConv(ks.layers.Layer):
         }
         layer_config.update(super(DarkConv, self).get_config())
         return layer_config
+
+    def __repr__(self):
+        return repr(self.get_config())

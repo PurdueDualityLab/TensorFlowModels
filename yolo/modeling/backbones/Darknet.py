@@ -43,7 +43,7 @@ def csp_build_block_specs(config, min_size, max_size):
 
 def darkconv_config_todict(config, kwargs):
     dictvals = {
-        "filters" : config.filters, 
+        "filters" : config.filters,
         "kernel_size" : config.kernel_size,
         "strides" : config.strides,
         "padding" : config.padding
@@ -53,8 +53,8 @@ def darkconv_config_todict(config, kwargs):
 
 def darktiny_config_todict(config, kwargs):
     dictvals = {
-        "filters" : config.filters, 
-        "strides" : config.strides} 
+        "filters" : config.filters,
+        "strides" : config.strides}
     dictvals.update(kwargs)
     return dictvals
 
@@ -67,8 +67,8 @@ def maxpool_config_todict(config, kwargs):
 
 class layer_registry(object):
     def __init__(self):
-        self._layer_dict = {"DarkTiny": (nn_blocks.DarkTiny, darktiny_config_todict), 
-                            "DarkConv": (nn_blocks.DarkConv, darkconv_config_todict), 
+        self._layer_dict = {"DarkTiny": (nn_blocks.DarkTiny, darktiny_config_todict),
+                            "DarkConv": (nn_blocks.DarkConv, darkconv_config_todict),
                             "MaxPool": (tf.keras.layers.MaxPool2D, maxpool_config_todict)}
         return
 
@@ -79,17 +79,17 @@ class layer_registry(object):
         layer, get_param_dict = self._get_layer(config.layer)
         param_dict = get_param_dict(config, kwargs)
         print(kwargs)
-        return layer(**param_dict) 
+        return layer(**param_dict)
 
-    
+
 @ks.utils.register_keras_serializable(package='yolo')
 class Darknet(ks.Model):
     def __init__(self,
                  model_id="darknet53",
                  input_shape=(None, None, None, 3),
-                 min_size = None, 
+                 min_size = None,
                  max_size = 5,
-                 activation = None, 
+                 activation = None,
                  use_sync_bn = False,
                  norm_momentum = 0.99,
                  norm_epsilon = 0.001,
@@ -112,11 +112,11 @@ class Darknet(ks.Model):
             if len(input_shape) == 4:
                 self._input_shape = tf.keras.layers.InputSpec(shape = input_shape)
             else:
-                self._input_shape = tf.keras.layers.InputSpec(shape = [None] + input_shape) 
-        else: 
+                self._input_shape = tf.keras.layers.InputSpec(shape = [None] + input_shape)
+        else:
             self._input_shape = input_shape
 
-        # default layer look up 
+        # default layer look up
         self._min_size = min_size
         self._max_size = max_size
         self._registry = layer_registry()
@@ -131,14 +131,14 @@ class Darknet(ks.Model):
         self._weight_decay = kernel_regularizer
 
         self._default_dict = {"kernel_initializer": self._kernel_initializer,
-                "weight_decay": self._weight_decay, 
+                "weight_decay": self._weight_decay,
                 "bias_regularizer": self._bias_regularizer,
                 "norm_momentum": self._norm_momentum,
-                "norm_epsilon": self._norm_epislon, 
+                "norm_epsilon": self._norm_epislon,
                 "use_sync_bn": self._use_sync_bn,
-                "activation": self._activation, 
+                "activation": self._activation,
                 "name": None}
-        
+
         inputs = ks.layers.Input(shape=self._input_shape.shape[1:])
         output = self._build_struct(layer_specs, inputs)
 
@@ -175,12 +175,12 @@ class Darknet(ks.Model):
                 endpoints[config.output_name] = x
             elif self._min_size != None and config.output_name >= self._min_size and config.output_name <= self._max_size:
                 endpoints[config.output_name] = x
-        
+
         self._output_specs = {l: endpoints[l].get_shape() for l in endpoints.keys()}
         return endpoints
 
     def _get_activation(self, activation):
-        if self._activation == None: 
+        if self._activation == None:
             return activation
         else:
             return self._activation
@@ -205,7 +205,7 @@ class Darknet(ks.Model):
                 filters=config.filters // scale_filters,
                 filter_scale=residual_filter_reduce,
                 **self._default_dict)(x)
-        
+
         self._default_dict["name"] = f"{name}_csp_connect"
         output = nn_blocks.CSPConnect(filters=config.filters,
                                       filter_reduce=csp_filter_reduce,
@@ -213,7 +213,7 @@ class Darknet(ks.Model):
         self._default_dict["activation"] = self._activation
         self._default_dict["name"] = None
         return output
-    
+
     def _tiny_stack(self, inputs, config, name):
         self._default_dict["activation"] = self._get_activation(config.activation)
         self._default_dict["name"] = f"{name}_tiny"
@@ -228,7 +228,7 @@ class Darknet(ks.Model):
         self._default_dict["name"] = f"{name}_residual_down"
         x = nn_blocks.DarkResidual(
                 filters = config.filters,
-                downsample = True, 
+                downsample = True,
                 **self._default_dict)(inputs)
         for i in range(config.repetitions - 1):
             self._default_dict["name"] = f"{name}_{i}"
@@ -251,7 +251,7 @@ class Darknet(ks.Model):
         self._default_dict["activation"] = self._activation
         self._default_dict["name"] = None
         return x
-    
+
     @property
     def input_specs(self):
         return self._input_shape
@@ -264,11 +264,10 @@ class Darknet(ks.Model):
     @staticmethod
     def get_model_config(name, min_size, max_size):
         try:
-            backbone_dict = importlib.import_module(
-                '.' + name, package=configs.__package__).backbone
-        except ModuleNotFoundError as e:
+            backbone_dict = getattr(configs, name).backbone
+        except AttributeError as e:
             if e.name == configs.__package__ + '.' + name:
-                raise ValueError(f"Invlid backbone '{name}'") from e
+                raise ValueError(f"Invalid backbone '{name}'") from e
             else:
                 raise
         backbone = backbone_dict["backbone"]
@@ -285,7 +284,7 @@ def build_darknet(
     backbone_cfg = model_config.backbone.get()
     norm_activation_config = model_config.norm_activation
 
-    return DarkNet(model_id=backbone_cfg.model_id,
+    return Darknet(model_id=backbone_cfg.model_id,
             input_shape=input_specs,
             activation=norm_activation_config.activation,
             use_sync_bn=norm_activation_config.use_sync_bn,
@@ -301,7 +300,7 @@ class temp():
 if __name__ == "__main__":
     from yolo.configs import backbones
     from official.core import registry
-    
+
     model = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
     cfg = temp(model)
 
@@ -316,5 +315,5 @@ if __name__ == "__main__":
     for layer in model.layers:
         weights = layer.get_weights()
         print(f"{layer.name}: {print_weights(weights)}")
-    
+
     print(model.output_specs)

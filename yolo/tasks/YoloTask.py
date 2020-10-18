@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf
 
 import official.core.base_task as task
 import official.core.input_reader as dataset
@@ -35,12 +35,12 @@ class YoloTask(base_task.Task):
         """get an instance of Yolo v3 or v4"""
         cfg = self.task_config
         if "v3" in cfg.model.type:
-            from yolo.modeling.Yolov3 import Yolov3 as run_model 
+            from yolo.modeling.Yolov3 import Yolov3 as run_model
         elif "v4" in cfg.model.type:
-            from yolo.modeling.Yolov4 import Yolov4 as run_model 
+            from yolo.modeling.Yolov4 import Yolov4 as run_model
         else:
             raise Exception("unsupported model in build model")
-        
+
         task_cfg = cfg.get_build_model_dict()
         model = run_model(**task_cfg)
         model.build(model._input_shape)
@@ -53,10 +53,10 @@ class YoloTask(base_task.Task):
             head_weights = self.task_config.head_from_darknet
             weights_file = self.task_config.weights_file
 
-            model.load_weights_from_dn(dn2tf_backbone = backbone_weights, 
-                                       dn2tf_head = head_weights, 
+            model.load_weights_from_dn(dn2tf_backbone = backbone_weights,
+                                       dn2tf_head = head_weights,
                                        weights_file = weights_file)
-        else: 
+        else:
             """Loading pretrained checkpoint."""
             if not self.task_config.init_checkpoint:
                 return
@@ -87,19 +87,19 @@ class YoloTask(base_task.Task):
         return
 
     def build_metrics(self, training=True):
-        return
+        return super().build_metrics(training=training)
 
     def train_step(self, inputs, model, optimizer, metrics=None):
-        return
+        return super().train_step(inputs, model, optimizer, metrics=metics)
 
     def validation_step(self, inputs, model, metrics=None):
-        return
+        return super().validation_step(inputs, model, optimizer, metrics=metics)
 
     def aggregate_logs(self, state=None, step_outputs=None):
-        return
+        return super().aggregate_logs(state=state, step_outputs=step_outputs)
 
     def reduce_aggregated_logs(self, aggregated_logs):
-        return
+        return super().reduce_aggregated_logsI(aggregated_logs)
 
 
 if __name__ == "__main__":
@@ -109,5 +109,3 @@ if __name__ == "__main__":
     # task = YoloTask(exp_cfg.YoloTask())
     # model = task.build_model()
     # model.summary()
-
-

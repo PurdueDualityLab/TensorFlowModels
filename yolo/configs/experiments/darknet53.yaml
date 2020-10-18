@@ -7,7 +7,7 @@ task:
     num_classes: 1001
     input_size: [224, 224, 3]
     backbone:
-      type: 'darknet53'
+      type: 'darknet'
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
