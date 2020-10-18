@@ -20,7 +20,8 @@ class Yolov4Neck(tf.keras.Model):
                  model="regular",
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 weight_decay = 5e-4,
+                 weight_decay = None,
+                 activation = "leaky", 
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -74,6 +75,8 @@ class Yolov4Neck(tf.keras.Model):
         else:
             self._model_name = "custom_neck"
 
+        self._activation = activation
+
         inputs, input_shapes, routes, resamples, tails = self._get_attributes(
             input_shape)
         self._input_shape = input_shapes
@@ -99,14 +102,14 @@ class Yolov4Neck(tf.keras.Model):
                                kernel_size=(1, 1),
                                strides=(1, 1),
                                padding="same",
-                               activation="leaky",
-                               l2_regularization=self._weight_decay)(inputs)
+                               activation=self._activation,
+                               weight_decay=self._weight_decay)(inputs)
             x = DarkConv(filters=filters // 4,
                          kernel_size=(1, 1),
                          strides=(1, 1),
                          padding="same",
-                         activation="leaky",
-                         l2_regularization=self._weight_decay)(x_route)
+                         activation=self._activation,
+                         weight_decay=self._weight_decay)(x_route)
             x = ks.layers.UpSampling2D(size=2)(x)
             return x_route, x
 
@@ -118,8 +121,8 @@ class Yolov4Neck(tf.keras.Model):
                          kernel_size=(1, 1),
                          strides=(1, 1),
                          padding="same",
-                         activation="leaky",
-                         l2_regularization=self._weight_decay)(inputs)
+                         activation=self._activation,
+                         weight_decay=self._weight_decay)(inputs)
             return x, None
 
         return block
@@ -148,12 +151,12 @@ class Yolov4Neck(tf.keras.Model):
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"].copy()
-                args['l2_regularization'] = self._weight_decay
+                args['weight_decay'] = self._weight_decay
                 layer = ks.utils.get_registered_object(path_keys["upsample"])
                 resamples[key] = layer(**args)
 
             args = path_keys["processor_conditions"].copy()
-            args['l2_regularization'] = self._weight_decay
+            args['weight_decay'] = self._weight_decay
             layer = ks.utils.get_registered_object(path_keys["processor"])
             routes[key] = layer(**args)
 
@@ -167,9 +170,6 @@ class Yolov4Neck(tf.keras.Model):
             if start_height != None:
                 start_height *= 2
 
-        # print(routes)
-        # print(tails)
-        # print({key:resamples[key]._filters for key in resamples.keys()})
         return inputs, input_shapes, routes, resamples, tails
 
     def _connect_layers(self, routes, resamples, tails, inputs):

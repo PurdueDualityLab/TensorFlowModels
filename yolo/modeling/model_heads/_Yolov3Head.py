@@ -22,7 +22,7 @@ class Yolov3Head(tf.keras.Model):
                  boxes=9,
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 weight_decay = 5e-4,
+                 weight_decay = None,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -131,17 +131,17 @@ class Yolov3Head(tf.keras.Model):
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"].copy()
-                args['l2_regularization'] = self._weight_decay
+                args['weight_decay'] = self._weight_decay
                 layer = ks.utils.get_registered_object(path_keys["upsample"])
                 upsamples[key] = layer(**args)
 
             args = path_keys["processor_conditions"].copy()
-            args['l2_regularization'] = self._weight_decay
+            args['weight_decay'] = self._weight_decay
             layer = ks.utils.get_registered_object(path_keys["processor"])
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
-            args['l2_regularization'] = self._weight_decay
+            args['weight_decay'] = self._weight_decay
             prediction_heads[key] = DarkConv(filters=self._conv_depth +
                                              path_keys["output-extras"],
                                              **args)
