@@ -16,7 +16,6 @@ def load_weights_backbone(model, net):
             convs.append(layer)
 
     for layer in model.layers:
-        print (layer)
         if isinstance(layer, DarkConv):
             cfg = convs.pop(0)
             layer.set_weights(cfg.get_weights())

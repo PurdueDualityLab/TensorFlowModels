@@ -68,7 +68,6 @@ class DarkConv(ks.layers.Layer):
         self._weight_decay = weight_decay#ks.regularizers.l2(l2_regularization)
         self._bias_regularizer = bias_regularizer
 
-        tf.print(self._weight_decay)
         # batchnorm params
         self._use_bn = use_bn
         if self._use_bn:
