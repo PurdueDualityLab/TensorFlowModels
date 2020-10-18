@@ -22,10 +22,10 @@ class DarkConv(ks.layers.Layer):
             kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
             bias_regularizer=None,
-            l2_regularization=5e-4,  # default find where is it is stated
+            weight_decay=None,  # default find where is it is stated
             use_bn=True,
             use_sync_bn=False,
-            norm_moment=0.99,
+            norm_momentum=0.99,
             norm_epsilon=0.001,
             activation='leaky',
             leaky_alpha=0.1,
@@ -65,7 +65,7 @@ class DarkConv(ks.layers.Layer):
         self._use_bias = use_bias
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._l2_regularization = l2_regularization
+        self._weight_decay = weight_decay#ks.regularizers.l2(l2_regularization)
         self._bias_regularizer = bias_regularizer
 
         # batchnorm params
@@ -73,7 +73,7 @@ class DarkConv(ks.layers.Layer):
         if self._use_bn:
             self._use_bias = False
         self._use_sync_bn = use_sync_bn
-        self._norm_moment = norm_moment
+        self._norm_moment = norm_momentum
         self._norm_epsilon = norm_epsilon
 
         if tf.keras.backend.image_data_format() == 'channels_last':
@@ -111,7 +111,7 @@ class DarkConv(ks.layers.Layer):
             use_bias=self._use_bias,
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
-            kernel_regularizer=ks.regularizers.l2(self._l2_regularization),
+            kernel_regularizer=self._weight_decay,
             bias_regularizer=self._bias_regularizer)
 
         #self.conv =tf.nn.convolution(filters=self._filters, strides=self._strides, padding=self._padding

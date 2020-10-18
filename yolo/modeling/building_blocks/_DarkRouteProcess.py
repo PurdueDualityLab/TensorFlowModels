@@ -13,11 +13,12 @@ class DarkRouteProcess(ks.layers.Layer):
                  insert_spp=False,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
-                 l2_regularization=5e-4,  # default find where is it is stated
-                 norm_moment=0.99,
+                 weight_decay= None,  # default find where is it is stated
+                 norm_momentum=0.99,
                  norm_epsilon=0.001,
                  activation='leaky',
                  leaky_alpha=0.1,
+                 spp_keys = None,
                  **kwargs):
         """
         process darknet outputs and connect back bone to head more generalizably
@@ -54,10 +55,10 @@ class DarkRouteProcess(ks.layers.Layer):
         self._filters = filters // mod
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._l2_regularization = l2_regularization
+        self._weight_decay = weight_decay
 
         # normal params
-        self._norm_moment = norm_moment
+        self._norm_moment = norm_momentum
         self._norm_epsilon = norm_epsilon
 
         # activation params
@@ -68,6 +69,7 @@ class DarkRouteProcess(ks.layers.Layer):
         self._repetitions = repetitions
         self._lim = repetitions * 2
         self._insert_spp = insert_spp
+        self._spp_keys = spp_keys if spp_keys != None else [5, 9, 13]
 
         self.layer_list = self._get_layer_list()
         # print(self.layer_list)
@@ -88,8 +90,8 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
-                      l2_regularization=self._l2_regularization,
-                      norm_moment=self._norm_moment,
+                      weight_decay=self._weight_decay,
+                      norm_momentum=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
                       leaky_alpha=self._leaky_alpha)
@@ -100,8 +102,8 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
-                      l2_regularization=self._l2_regularization,
-                      norm_moment=self._norm_moment,
+                      weight_decay=self._weight_decay,
+                      norm_momentum=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
                       leaky_alpha=self._leaky_alpha)
@@ -115,13 +117,13 @@ class DarkRouteProcess(ks.layers.Layer):
                       use_bn=True,
                       kernel_initializer=self._kernel_initializer,
                       bias_initializer=self._bias_initializer,
-                      l2_regularization=self._l2_regularization,
-                      norm_moment=self._norm_moment,
+                      weight_decay=self._weight_decay,
+                      norm_momentum=self._norm_moment,
                       norm_epsilon=self._norm_epsilon,
                       activation=self._activation,
                       leaky_alpha=self._leaky_alpha)
         # repalce with spp
-        x2 = DarkSpp([5, 9, 13])
+        x2 = DarkSpp(self._spp_keys)
         return [x1, x2]
 
     def build(self, input_shape):
@@ -152,7 +154,7 @@ class DarkRouteProcess(ks.layers.Layer):
             "filters": self._filters,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
-            "l2_regularization": self._l2_regularization,
+            "weight_decay": self._weight_decay,
             "repetitions": self._repetitions,
             "insert_spp": self._insert_spp,
             "norm_moment": self._norm_moment,

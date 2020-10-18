@@ -99,7 +99,6 @@ class Yolov4regular(yolo_cfg.YoloCFG):
     neck: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
     head_filter: YoloLayer = YoloLayer()
-
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -159,6 +158,9 @@ class YoloTask(yolo_cfg.TaskConfig):
     load_original_weights: bool = True
     backbone_from_darknet: bool = True
     head_from_darknet: bool = False
+
+
+
 
 
 

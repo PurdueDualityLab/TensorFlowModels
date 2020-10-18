@@ -13,12 +13,12 @@ class DarkUpsampleRoute(ks.layers.Layer):
             kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
             bias_regularizer=None,
-            l2_regularization=5e-4,  # default find where is it is stated
+            weight_decay= None,  # default find where is it is stated
             use_bn=True,
             use_sync_bn=False,
-            norm_moment=0.99,
+            norm_momentum=0.99,
             norm_epsilon=0.001,
-            conv_activation='leaky',
+            activation='leaky',
             leaky_alpha=0.1,
             upsampling_size=(2, 2),
             **kwargs):
@@ -29,16 +29,16 @@ class DarkUpsampleRoute(ks.layers.Layer):
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
         self._bias_regularizer = bias_regularizer
-        self._l2_regularization = l2_regularization
+        self._weight_decay = weight_decay
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
 
         # normal params
-        self._norm_moment = norm_moment
+        self._norm_moment = norm_momentum
         self._norm_epsilon = norm_epsilon
 
         # activation params
-        self._conv_activation = conv_activation
+        self._conv_activation = activation
         self._leaky_alpha = leaky_alpha
         self._upsampling_size = upsampling_size
 
@@ -52,10 +52,10 @@ class DarkUpsampleRoute(ks.layers.Layer):
                               use_bias=self._use_bias,
                               kernel_initializer=self._kernel_initializer,
                               bias_initializer=self._bias_initializer,
-                              l2_regularization=self._l2_regularization,
+                              weight_decay=self._weight_decay,
                               use_bn=self._use_bn,
                               use_sync_bn=self._use_sync_bn,
-                              norm_moment=self._norm_moment,
+                              norm_momentum=self._norm_moment,
                               norm_epsilon=self._norm_epsilon,
                               activation=self._conv_activation,
                               leaky_alpha=self._leaky_alpha)
@@ -80,12 +80,12 @@ class DarkUpsampleRoute(ks.layers.Layer):
             "use_bias": self._use_bias,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
-            "l2_regularization": self._l2_regularization,
+            "weight_decay": self._weight_decay,
             "use_bn": self._use_bn,
             "use_sync_bn": self._use_sync_bn,
             "norm_moment": self._norm_moment,
             "norm_epsilon": self._norm_epsilon,
-            "conv_activation": self._conv_activation,
+            "activation": self._conv_activation,
             "leaky_alpha": self._leaky_alpha,
             "upsampling_size": self._upsampling_size
         }

@@ -12,6 +12,6 @@ BACKBONE = [
 
 
 backbone = {
-    "splits": {"backbone_split": 76}
+    "splits": {"backbone_split": 76},
     "backbone": BACKBONE,  
 }
