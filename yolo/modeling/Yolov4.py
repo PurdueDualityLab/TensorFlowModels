@@ -145,9 +145,9 @@ class Yolov4(base_model.Yolo):
             },
         }
         #if not self._built:
-        if self._backbone_cfg == None or isinstance(self._backbone_cfg, Dict):
+        if self._backbone_cfg == None or isinstance(self._backbone_cfg, dict):
             self._backbone_name = default_dict[self.model_name]["backbone"]
-            if isinstance(self._backbone_cfg, Dict):
+            if isinstance(self._backbone_cfg, dict):
                 default_dict[self.model_name]["backbone"] = self._backbone_cfg
             self._backbone = Darknet(
                 name=default_dict[self.model_name]["backbone"],

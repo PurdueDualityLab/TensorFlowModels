@@ -20,9 +20,15 @@ import dataclasses
 import os
 
 from official.core import exp_factory
-from official.modeling import hyperparams
+from official.modeling import hyperparams, optimization
 from official.modeling.hyperparams import config_definitions as cfg
 from yolo.configs import cfg_defs as yolo_cfg
+
+COCO_INPUT_PATH_BASE = 'coco'
+IMAGENET_TRAIN_EXAMPLES = 1281167
+IMAGENET_VAL_EXAMPLES = 50000
+IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
+
 
 # dataset parsers
 @dataclasses.dataclass
@@ -75,7 +81,7 @@ class YoloHead(hyperparams.Config):
     version: str = "v4"
     name: str = "regular"
     cfg: Optional[Dict] = None
-    
+
 @dataclasses.dataclass
 class YoloLayer(hyperparams.Config):
     generator_params: Gridpoints = Gridpoints()
@@ -99,6 +105,10 @@ class Yolov4regular(yolo_cfg.YoloCFG):
     neck: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
     head_filter: YoloLayer = YoloLayer()
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146", "142, 110" ,"192, 243", "459, 401"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.05, 4: 1.1, 3: 1.2})
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -107,7 +117,10 @@ class Yolov3regular(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"regular"
     head_filter: YoloLayer = YoloLayer()
-
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -116,7 +129,10 @@ class Yolov3spp(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"regular"
     head: Optional[Dict] = None #"spp"
     head_filter: YoloLayer = YoloLayer()
-
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -125,7 +141,10 @@ class Yolov3tiny(yolo_cfg.YoloCFG):
     backbone: Optional[Dict] = None #"tiny"
     head: Optional[Dict] = None #"tiny"
     head_filter: YoloLayer = YoloLayer()
-
+    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 14", "23, 27", "37, 58","81, 82", "135, 169", "344, 319"])
+    masks: Dict = dataclasses.field(default_factory=lambda: {5: [3, 4, 5], 3: [0, 1, 2]})
+    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 3: 8})
+    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 3: 1.0})
     use_tie_breaker: bool = None
 
 @dataclasses.dataclass
@@ -160,11 +179,66 @@ class YoloTask(yolo_cfg.TaskConfig):
     head_from_darknet: bool = False
 
 
+@exp_factory.register_config_factory('yolo_v4_coco')
+def yolo_v4_coco() -> cfg.ExperimentConfig:
+  """COCO object detection with YOLO."""
+  train_batch_size = 4096
+  eval_batch_size = 4096
+  steps_per_epoch = IMAGENET_TRAIN_EXAMPLES // train_batch_size
 
+  config = cfg.ExperimentConfig(
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='float32'),
+      task=YoloTask(
+          model=Yolo(
+              type='v4',
+              v4=Yolov4regular(
+                  backbone=YoloBackbone(),
+                  neck=YoloNeck(),
+                  head=YoloHead())),
+          train_data=DataConfig(
+              input_path=os.path.join(COCO_INPUT_PATH_BASE, 'train*'),
+              is_training=True,
+              global_batch_size=train_batch_size,
+              parser=Parser()),
+          validation_data=DataConfig(
+              input_path=os.path.join(COCO_INPUT_PATH_BASE, 'val*'),
+              is_training=False,
+              global_batch_size=eval_batch_size)),
+      trainer=cfg.TrainerConfig(
+          steps_per_loop=steps_per_epoch,
+          summary_interval=steps_per_epoch,
+          checkpoint_interval=steps_per_epoch,
+          train_steps=90 * steps_per_epoch,
+          validation_steps=IMAGENET_VAL_EXAMPLES // eval_batch_size,
+          validation_interval=steps_per_epoch,
+          optimizer_config=optimization.OptimizationConfig({
+              'optimizer': {
+                  'type': 'sgd',
+                  'sgd': {
+                      'momentum': 0.9
+                  }
+              },
+              'learning_rate': {
+                  'type': 'stepwise',
+                  'stepwise': {
+                      'boundaries': [
+                          30 * steps_per_epoch, 60 * steps_per_epoch,
+                          80 * steps_per_epoch
+                      ],
+                      'values': [0.8, 0.08, 0.008, 0.0008]
+                  }
+              },
+              'warmup': {
+                  'type': 'linear',
+                  'linear': {
+                      'warmup_steps': 5 * steps_per_epoch,
+                      'warmup_learning_rate': 0
+                  }
+              }
+          })),
+      restrictions=[
+          'task.train_data.is_training != None',
+          'task.validation_data.is_training != None'
+      ])
 
-
-
-
-
-    
-
+  return config

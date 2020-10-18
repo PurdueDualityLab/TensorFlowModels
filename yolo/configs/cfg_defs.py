@@ -15,8 +15,8 @@ class AnchorCFG(hyperparams.Config):
                 f.append(int(b.strip()))
             boxes.append(f)
         return boxes
-    
-    @boxes.setter 
+
+    @boxes.setter
     def boxes(self, box_list):
         setter = []
         for value in box_list:
@@ -32,7 +32,17 @@ class TaskConfig(cfg.TaskConfig):
             return [None, None, 3]
         else:
             return self._input_size
-    
-    @input_size.setter 
+
+    @input_size.setter
     def input_size(self, input_size):
         self._input_size = input_size
+
+    def get_build_model_dict(self):
+        model_cfg = getattr(self.model, self.model.type)
+        model_kwargs = model_cfg.as_dict()
+
+        # TODO: Better method
+        for k in ('_boxes', 'backbone', 'head', 'neck', 'head_filter'):
+            model_kwargs.pop(k)
+
+        return model_kwargs

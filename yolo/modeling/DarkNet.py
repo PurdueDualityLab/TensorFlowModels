@@ -30,7 +30,7 @@ class DarkNet53(ks.Model):
 
         """
         super(DarkNet53, self).__init__()
-        self.backbone = Backbone_Builder("darknet53")
+        self.backbone = Backbone_Builder("regular")
         self.head = ks.Sequential([
             ks.layers.GlobalAveragePooling2D(),
             ks.layers.Dense(classes, activation="sigmoid")

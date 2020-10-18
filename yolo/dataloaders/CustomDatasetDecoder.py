@@ -55,20 +55,3 @@ class DatasetReader():
 
         dataset = train.concatenate(val)
         return dataset
-
-
-if __name__ == "__main__":
-    config = Dataset(
-        dataset_type="custom",
-        dataset_name="coco",
-        train_set_path="/home/vishnu/datasets/coco/images/train2014/*",
-        val_set_path="/home/vishnu/datasets/coco/images/val2014/*",
-        train_labels_paths="/home/vishnu/datasets/coco/labels/train2014/*",
-        val_labels_paths="/home/vishnu/datasets/coco/labels/val2014/*",
-        id_parser=_yolo_coco_id_parser)
-    dsset = DatasetReader(config)
-
-    s = dsset.build_dataset()
-
-    for value in s.take(12):
-        print(value)

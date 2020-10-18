@@ -32,7 +32,7 @@ class CSPDarkNet53(ks.Model):
 
         """
         super().__init__()
-        self.backbone = CSP_Backbone_Builder("darknet53")
+        self.backbone = CSP_Backbone_Builder("csp_regular")
         self.head = ks.Sequential([
             ks.layers.GlobalAveragePooling2D(),
             ks.layers.Dense(classes, activation="sigmoid")
