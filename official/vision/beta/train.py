@@ -28,6 +28,21 @@ from official.common import flags as tfm_flags
 from official.core import task_factory
 from official.core import train_lib
 from official.modeling import performance
+# to the beginning of official/vision/beta/train.py
+from yolo.modeling.backbones import Darknet
+from yolo.configs import yolo
+from yolo.tasks import YoloTask
+# to the end of official/vision/beta/configs/backbones.py
+from yolo.configs.backbones import DarkNet
+from typing import Type
+
+from official.modeling import hyperparams
+
+
+
+def augment_oneof(clz: Type[hyperparams.OneOfConfig], name, value, value_class = None):
+  setattr(clz, name, value)
+  clz.__annotations__[name] = value_class if value_class is not None else type(value)
 
 FLAGS = flags.FLAGS
 
