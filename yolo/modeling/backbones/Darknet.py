@@ -62,7 +62,6 @@ def maxpool_config_todict(config, kwargs):
     return {"pool_size": config.kernel_size,
             "strides": config.strides,
             "padding": config.padding,
-            "weight_decay": kwargs["weight_decay"],
             "name": kwargs["name"]}
 
 class layer_registry(object):
@@ -78,7 +77,6 @@ class layer_registry(object):
     def __call__(self, config, kwargs):
         layer, get_param_dict = self._get_layer(config.layer)
         param_dict = get_param_dict(config, kwargs)
-        print(kwargs)
         return layer(**param_dict)
 
 
@@ -112,7 +110,7 @@ class Darknet(ks.Model):
             if len(input_shape) == 4:
                 self._input_shape = tf.keras.layers.InputSpec(shape = input_shape)
             else:
-                self._input_shape = tf.keras.layers.InputSpec(shape = [None] + input_shape)
+                self._input_shape = tf.keras.layers.InputSpec(shape = [None] + list(input_shape))
         else:
             self._input_shape = input_shape
 
@@ -145,7 +143,12 @@ class Darknet(ks.Model):
         super().__init__(inputs=inputs, outputs=output, name=self._model_name)
         return
 
+    #TODO: build the model from arbitrary level numbers
+    def _build_contiguous_struct(self, net, inputs):
+        endpoints = collections.OrderedDict()
+        stack_outputs = [inputs]
 
+        return
 
     def _build_struct(self, net, inputs):
         endpoints = collections.OrderedDict()
@@ -260,6 +263,9 @@ class Darknet(ks.Model):
     def output_specs(self):
         return self._output_specs
 
+    @property
+    def splits(self):
+        return self._splits
 
     @staticmethod
     def get_model_config(name, min_size, max_size):
@@ -282,20 +288,24 @@ def build_darknet(
 
     backbone_type = model_config.backbone.type
     backbone_cfg = model_config.backbone.get()
-    norm_activation_config = model_config.norm_activation
+    #norm_activation_config = model_config.norm_activation
 
     return Darknet(model_id=backbone_cfg.model_id,
             input_shape=input_specs,
-            activation=norm_activation_config.activation,
-            use_sync_bn=norm_activation_config.use_sync_bn,
-            norm_momentum=norm_activation_config.norm_momentum,
-            norm_epsilon=norm_activation_config.norm_epsilon,
+            # activation=norm_activation_config.activation,
+            # use_sync_bn=norm_activation_config.use_sync_bn,
+            # norm_momentum=norm_activation_config.norm_momentum,
+            # norm_epsilon=norm_activation_config.norm_epsilon,
             kernel_regularizer=l2_regularizer)
 
 class temp():
     def __init__(self, backbone):
         self.backbone = backbone
 
+
+# for generic usage have a depth of 8 for every layer except for the first 3 and the last. 
+# the last has 4 and the first 3 have 1 1 2 
+# tiny, 1 per depth and a final non down sampling layer with stride = 1 
 
 if __name__ == "__main__":
     from yolo.configs import backbones

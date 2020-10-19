@@ -65,7 +65,7 @@ class DarkConv(ks.layers.Layer):
         self._use_bias = use_bias
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._weight_decay = weight_decay#ks.regularizers.l2(l2_regularization)
+        self._weight_decay = weight_decay
         self._bias_regularizer = bias_regularizer
 
         # batchnorm params

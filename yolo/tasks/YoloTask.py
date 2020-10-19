@@ -17,7 +17,6 @@ from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.modeling import factory
 
-
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
     """A single-replica view of training procedure.
@@ -27,24 +26,22 @@ class YoloTask(base_task.Task):
     """
     def __init__(self, params, logging_dir: str = None):
         super().__init__(params, logging_dir)
-        self._model_pointer = None
+        self._loss_dict = None
         return
 
 
     def build_model(self):
         """get an instance of Yolo v3 or v4"""
-        cfg = self.task_config
-        if "v3" in cfg.model.type:
-            from yolo.modeling.Yolov3 import Yolov3 as run_model
-        elif "v4" in cfg.model.type:
-            from yolo.modeling.Yolov4 import Yolov4 as run_model
-        else:
-            raise Exception("unsupported model in build model")
+        from yolo.modeling.Yolo import build_yolo
 
-        task_cfg = cfg.get_build_model_dict()
-        model = run_model(**task_cfg)
-        model.build(model._input_shape)
-        self._model_pointer = model
+        model_base_cfg = self.task_config.model
+        l2_weight_decay = self.task_config.weight_decay
+
+        input_specs = tf.keras.layers.InputSpec(shape = [None] + model_base_cfg.input_size)
+        l2_regularizer = (tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
+
+        model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
+        self._loss_dict = losses
         return model
 
     def initialize(self, model: tf.keras.Model):
@@ -83,17 +80,73 @@ class YoloTask(base_task.Task):
         return
 
     def build_losses(self, outputs, labels, aux_losses=None):
+        loss = 0.0
+        loss_box = 0.0
+        loss_conf = 0.0
+        loss_class = 0.0
+        metric_dict = dict()
 
-        return
+        for key in output.keys():
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
+            loss += _loss
+            loss_box += _loss_box
+            loss_conf += _loss_conf
+            loss_class += _loss_class
+            metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
+            metric_dict[f"avg_iou_{key}"] =  tf.stop_gradient(_avg_iou)
+        
+        metric_dict["box_loss"] = loss_box
+        metric_dict["conf_loss"] = loss_conf
+        metric_dict["class_loss"] = loss_class
+        return loss, metric_dict
 
     def build_metrics(self, training=True):
         return super().build_metrics(training=training)
 
     def train_step(self, inputs, model, optimizer, metrics=None):
-        return super().train_step(inputs, model, optimizer, metrics=metics)
+        #get the data point
+        image, label = inputs
+
+        num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+        with tf.GradientTape() as tape:
+            # compute a prediction
+            y_pred = model(image, training=True)
+            loss, metrics = self.build_losses(y_pred["raw_output"], label)
+            scaled_loss = loss/num_replicas
+
+            # scale the loss for numerical stability
+            if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
+                scaled_loss = self.optimizer.get_scaled_loss(scaled_loss)
+        
+        # compute the gradient
+        train_vars = model.trainable_variables
+        gradients = tape.gradient(scaled_loss, train_vars)
+
+        # get unscaled loss if the scaled_loss was used
+        if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+            gradients = optimizer.get_unscaled_gradients(gradients)
+
+        if self.task_config.gradient_clip_norm > 0.0:
+            gradients, _ = tf.clip_by_global_norm(gradients, self.task_config.gradient_clip_norm )
+        optimizer.apply_gradients(zip(gradients, train_vars))
+        
+        #custom metrics
+        logs = {"loss":loss}
+        logs.update(metrics)
+        return logs
 
     def validation_step(self, inputs, model, metrics=None):
-        return super().validation_step(inputs, model, optimizer, metrics=metics)
+        #get the data point
+        image, label = inputs
+
+        # computer detivative and apply gradients
+        y_pred = model(image, training=False)
+        loss, metrics = self.build_losses(y_pred["raw_output"], label)
+
+        #custom metrics
+        loss_metrics = {"loss":loss}
+        loss_metrics.update(metrics)
+        return loss_metrics
 
     def aggregate_logs(self, state=None, step_outputs=None):
         return super().aggregate_logs(state=state, step_outputs=step_outputs)
@@ -103,9 +156,9 @@ class YoloTask(base_task.Task):
 
 
 if __name__ == "__main__":
+    from yolo.configs import yolo as exp_cfg
     cfg = exp_cfg.YoloTask()
-
-    print(cfg.as_dict())
-    # task = YoloTask(exp_cfg.YoloTask())
-    # model = task.build_model()
-    # model.summary()
+    task = YoloTask(exp_cfg.YoloTask())
+    model = task.build_model()
+    model.load_weights_from_dn()
+    model.summary()

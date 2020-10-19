@@ -42,7 +42,6 @@ class Yolo(tf.keras.Model, ABC):
                             jitter_im=jitter_im,
                             jitter_boxes=jitter_boxes,
                             max_num_instances=self._max_boxes,
-                            masks=self._masks,
                             anchors=self._boxes)
         post = YoloPostProcessing(image_w=image_w,image_h=image_h)
         train_parser = parser.parse_fn(is_training= True)

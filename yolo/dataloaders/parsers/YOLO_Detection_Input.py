@@ -6,7 +6,7 @@ into (image, labels) tuple for RetinaNet.
 # Import libraries
 import tensorflow as tf
 
-from yolo.dataloaders.Parser import Parser
+from yolo.dataloaders.parsers.Parser import Parser
 
 from yolo.dataloaders.ops.preprocessing_ops import _get_best_anchor
 from yolo.dataloaders.ops.preprocessing_ops import random_jitter_boxes
@@ -127,7 +127,8 @@ class YoloParser(Parser):
             labels: a dict of Tensors that contains labels.
         """
         shape = tf.shape(data["image"])
-        image = _scale_image(data["image"], resize=True, w = self._image_w, h = self._image_h)
+        image = data["image"]/255
+        image = tf.image.resize(image, (self._image_w, self._image_h))
         boxes = _yxyx_to_xcycwh(data["objects"]["bbox"])
         best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w, self._image_h)
         boxes = pad_max_instances(boxes, self._max_num_instances, 0)

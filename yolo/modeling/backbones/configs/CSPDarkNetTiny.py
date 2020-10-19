@@ -9,6 +9,6 @@ BACKBONE = [
 ]  # 52 layers
 
 backbone = {
-    "splits": {"backbone_split": 14},
+    "splits": {"backbone_split": 28},
     "backbone": BACKBONE
 }

@@ -31,15 +31,16 @@ def gt_test():
     import tensorflow_datasets as tfds
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
-        train, info = tfds.load('coco',
+        train, info = tfds.load('voc',
                             split='train',
                             shuffle_files=True,
                             with_info=True)
-        test, info = tfds.load('coco',
+        test, info = tfds.load('voc',
                             split='validation',
                             shuffle_files=False,
                             with_info=True)
-        model = build_model(model_version="v4", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
+        model = build_model(name = "regular", model_version="v4", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
+        #model.load_weights_from_dn
         model.get_summary()
 
         loss_fn = model.generate_loss(loss_type="ciou")
@@ -61,7 +62,7 @@ def gt_test():
 
         loss, metric_dict = model.apply_loss_fn(label, pred["raw_output"])
         print(f"loss: {loss}")
-        if i == 10:
+        if i == 5:
             break
         i += 1
     return
