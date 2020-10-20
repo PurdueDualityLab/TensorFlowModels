@@ -2,6 +2,8 @@ import tensorflow as tf
 import tensorflow.keras as ks
 
 from yolo.utils.iou_utils import *
+# TODO: UNCOMMENT
+# from yolo.modeling.functions.build_gridded_gt import build_gridded_gt_v1
 
 class Yolo_Loss_v1(ks.losses.Loss):
     def __init__(self,
@@ -9,6 +11,7 @@ class Yolo_Loss_v1(ks.losses.Loss):
                  noobj_scale=0.5,
                  num_boxes=2,
                  num_classes=20,
+                 size=7,
                  ignore_thresh=0.7,
                  reduction=tf.keras.losses.Reduction.NONE,
                  name=None,
@@ -21,6 +24,7 @@ class Yolo_Loss_v1(ks.losses.Loss):
             noobj_scale: float indicating the weight on the confidence loss
             num_boxes: integer, number of prediction boxes per grid cell 
             num_classes: integer, number of class probabilities each box predicts
+            size: integer, specifying that the input has size * size grid cells
             ignore_thresh: float indicating the confidence threshold of whether a box
                            contains an object within it.
         call Return: 
@@ -34,6 +38,7 @@ class Yolo_Loss_v1(ks.losses.Loss):
         self._num_boxes = num_boxes
         self._num_classes = num_classes
         self._ignore_thresh = ignore_thresh
+        self._size = size
 
         # metrics
         self._localization_loss = 0.0
@@ -42,6 +47,9 @@ class Yolo_Loss_v1(ks.losses.Loss):
         
     
     def call(self, y_true, y_pred):
+        # TODO: UNCOMMENT
+        # y_true = build_gridded_gt_v1(y_true=y_true, num_classes=self._num_classes, 
+        #                              size=self._size, dtype=tf.float32);
         class_start = self._num_boxes * 5
 
         # Seperate bounding box components from class probabilities
