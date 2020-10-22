@@ -113,7 +113,7 @@ class Yolov4(base_model.Yolo):
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
             self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
-            self._path_scales = self._path_scales or {5: 32, 4: 16}
+            self._path_scales = self._path_scales or {5: 32, 4: 8}
             self._x_y_scales = self._x_y_scales or {5: 1.0, 4: 1.0}
         return
 
