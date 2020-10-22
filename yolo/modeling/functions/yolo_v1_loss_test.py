@@ -1,5 +1,8 @@
 import tensorflow as tf
-from yolo.modeling.functions.yolo_v1_loss import Yolo_Loss_v1
+import tensorflow.keras as ks
+import tensorflow_datasets as tfds
+
+from yolo.modeling.functions.yolo_v1_loss import Yolo_Loss_v1, build_gridded_gt_v1
 
 def makeRandomPrediction(batchSize, numCells, numBoxes, numClasses, seed=36835):
     # Creates a random tensor as shape [batchSize, numCells, numBoxes, numClasses]
@@ -68,16 +71,41 @@ def testCompile():
 
     tf.print("Loss function compiles!") 
 
+def gt_test():
+    DATASET_DIRECTORY = "D:\Datasets" # modify to select download location
+    # train, train_info = tfds.load('voc', 
+    #                         split='train', 
+    #                         shuffle_files=False, 
+    #                         with_info=True, 
+    #                         data_dir=DATASET_DIRECTORY)
+    # test, test_info = tfds.load('voc', 
+    #                         split='test', 
+    #                         shuffle_files=False, 
+    #                         with_info=True, 
+    #                         data_dir=DATASET_DIRECTORY)
+    # val, val_info = tfds.load('voc', 
+    #                         split='validation', 
+    #                         shuffle_files=False, 
+    #                         with_info=True, 
+    #                         data_dir=DATASET_DIRECTORY)
+    coco = tfds.load('coco', 
+                      split=['train', 'test', 'validation'], 
+                      shuffle_files=False, 
+                      with_info=True, 
+                      data_dir=DATASET_DIRECTORY)
+    return
+
 if __name__ == "__main__":
-    tf.print("\n\nTesting shapes:")
-    testLossOnShape(1, 7, 2, 20)
-    testLossOnShape(10, 7, 2, 20)
-    testLossOnShape(64, 7, 2, 20)
+    # tf.print("\n\nTesting shapes:")
+    # testLossOnShape(1, 7, 2, 20)
+    # testLossOnShape(10, 7, 2, 20)
+    # testLossOnShape(64, 7, 2, 20)
 
-    testLossOnShape(64, 5, 2, 20)
+    # testLossOnShape(64, 5, 2, 20)
 
-    testLossOnShape(64, 7, 2, 20)
+    # testLossOnShape(64, 7, 2, 20)
 
-    testLossOnShape(64, 7, 3, 20)
+    # testLossOnShape(64, 7, 3, 20)
 
-    testCompile()
+    # testCompile()
+    gt_test()

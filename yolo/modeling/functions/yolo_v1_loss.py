@@ -2,8 +2,7 @@ import tensorflow as tf
 import tensorflow.keras as ks
 
 from yolo.utils.iou_utils import *
-# TODO: UNCOMMENT
-# from yolo.modeling.functions.build_gridded_gt import build_gridded_gt_v1
+from yolo.modeling.functions.build_gridded_gt import build_gridded_gt_v1
 
 class Yolo_Loss_v1(ks.losses.Loss):
     def __init__(self,
@@ -47,9 +46,7 @@ class Yolo_Loss_v1(ks.losses.Loss):
         
     
     def call(self, y_true, y_pred):
-        # TODO: UNCOMMENT
-        # y_true = build_gridded_gt_v1(y_true=y_true, num_classes=self._num_classes, 
-        #                              size=self._size, dtype=tf.float32);
+        y_true = build_gridded_gt_v1(y_true=y_true, num_classes=self._num_classes, size=self._size);
         class_start = self._num_boxes * 5
 
         # Seperate bounding box components from class probabilities
