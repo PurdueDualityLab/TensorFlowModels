@@ -487,9 +487,19 @@ if __name__ == "__main__":
     # saved_model_dir
     # saved_model_loaded = tf.saved_model.load(saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
     # graph_func = saved_model_loaded.signatures["serving"]
+    from yolo.modeling.YoloModel import Yolo
+    prep_gpu()
+
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    mixed_precision.set_policy("mixed_float16")
+
+    model = Yolo(model_version = "v3", model_type = "regular")
+    model.build([None, None, None, 3])
+    model.load_weights_from_dn()
+    model.summary()
     
     cap = FastVideo("testing_files/test.mp4",
-                    model= "tiny", 
+                    model= model, 
                     model_version="v4",
                     process_width=416,
                     process_height=416,

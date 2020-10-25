@@ -21,7 +21,7 @@ class Yolov3(base_model.Yolo):
             backbone=None,
             head=None,
             head_filter=None,
-            weight_decay = 5e-4,
+            kernel_regularizer = 5e-4,
             clip_grads_norm = None,
             thresh: int = 0.45,
             class_thresh: int = 0.45,
@@ -78,7 +78,7 @@ class Yolov3(base_model.Yolo):
         self._backbone_cfg = backbone
         self._head_cfg = head
         self._head_filter_cfg = head_filter
-        self._weight_decay = tf.keras.regularizers.l2(l=weight_decay)
+        self._kernel_regularizer = tf.keras.regularizers.l2(l=kernel_regularizer)
         self._use_nms = use_nms
         self._using_rt = using_rt
 
@@ -122,9 +122,9 @@ class Yolov3(base_model.Yolo):
             self._encoder_decoder_split_location = 14
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
-            self._masks = self._masks or {5: [3, 4, 5], 3: [0, 1, 2]}
-            self._path_scales = self._path_scales or {5: 32, 3: 8}
-            self._x_y_scales = self._x_y_scales or {5: 1.0, 3: 1.0}
+            self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
+            self._path_scales = self._path_scales or {5: 32, 4: 16}
+            self._x_y_scales = self._x_y_scales or {5: 1.0, 4: 1.0}
         return
 
     def get_summary(self):
@@ -161,7 +161,7 @@ class Yolov3(base_model.Yolo):
                 model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                kernel_regularizer =self._weight_decay)
+                kernel_regularizer =self._kernel_regularizer)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
@@ -175,7 +175,7 @@ class Yolov3(base_model.Yolo):
                 classes=self._classes,
                 boxes=len(self._boxes),
                 input_shape=self._input_shape,
-                weight_decay=self._weight_decay)
+                kernel_regularizer=self._kernel_regularizer)
         else:
             self._head = self._head_cfg
             self._custom_aspects = True
@@ -202,6 +202,7 @@ class Yolov3(base_model.Yolo):
     def call(self, inputs, training=False):
         feature_maps = self._backbone(inputs)
         raw_head = self._head(feature_maps)
+        tf.print([tf.shape(raw_head[key]) for key in raw_head.keys()])
         if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
@@ -269,32 +270,8 @@ if __name__ == "__main__":
     from yolo.utils.testing_utils import prep_gpu
     from yolo.training.call_backs.PrintingCallBack import Printer
     prep_gpu()
-    # train, info = tfds.load('coco',
-    #                         split='train',
-    #                         shuffle_files=True,
-    #                         with_info=True)
-    # test, info = tfds.load('coco',
-    #                        split='validation',
-    #                        shuffle_files=False,
-    #                        with_info=True)
 
     model = Yolov3(model = "regular", policy="float32", use_tie_breaker=False)
     model.load_weights_from_dn(weights_file="yolov3-regular.weights")
     model.build(input_shape = [None, None, None, 3])
     model.get_summary()
-    # model.load_weights_from_dn(dn2tf_head=False, weights_file="testing_weights/yolov3-regular.weights")
-
-    # train, test = model.process_datasets(train, test, fixed_size = False , batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
-    # loss_fn = model.generate_loss(loss_type="ciou")
-
-    # #optimizer = ks.optimizers.SGD(lr=1e-3)
-    # optimizer = ks.optimizers.Adam(lr=1e-3)
-    # optimizer = model.match_optimizer_to_policy(optimizer)
-    # model.compile(optimizer=optimizer, loss=loss_fn)
-
-    # try:
-    #     model.fit(train, validation_data = test, epochs = 40, verbose = 1, shuffle = True)
-    #     model.save_weights("testing_weights/yolov3/simple_test1")
-    # except:
-    #     model.save_weights("testing_weights/yolov3/simple_test1_early")
-    # #model.evaluate(test)

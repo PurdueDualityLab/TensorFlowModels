@@ -6,7 +6,7 @@ head = {
         "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 1024,
-            "repetitions": 3,
+            "repetitions": 6,
             "insert_spp": False
         },
         "output_conditions": {
@@ -27,7 +27,7 @@ head = {
         "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 512,
-            "repetitions": 3,
+            "repetitions": 6,
             "insert_spp": False
         },
         "output_conditions": {
@@ -48,7 +48,7 @@ head = {
         "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 256,
-            "repetitions": 3,
+            "repetitions": 6,
             "insert_spp": False
         },
         "output_conditions": {

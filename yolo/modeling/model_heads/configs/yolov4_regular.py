@@ -3,13 +3,11 @@ head = {
         "depth": 128,
         "resample": None,
         "resample_conditions": None,
-        "processor": 'yolo>DarkConv',
+        "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 256,
-            "use_bn": True,
-            "kernel_size": (3, 3),
-            "strides": (1, 1),
-            "padding": 'same'
+            "repetitions": 1,
+            "insert_spp": False
         },
         "output_conditions": {
             "kernel_size": (1, 1),
@@ -30,7 +28,7 @@ head = {
         "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 512,
-            "repetitions": 3,
+            "repetitions": 6,
             "insert_spp": False
         },
         "output_conditions": {
@@ -52,7 +50,7 @@ head = {
         "processor": 'yolo>DarkRouteProcess',
         "processor_conditions": {
             "filters": 1024,
-            "repetitions": 3,
+            "repetitions": 6,
             "insert_spp": False
         },
         "output_conditions": {

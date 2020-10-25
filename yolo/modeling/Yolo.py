@@ -147,16 +147,16 @@ def build_yolo_neck(input_specs, model_config, l2_regularization):
     if model_config.neck == None:
         return None
 
-    model = Yolov4Neck(model = model_config.neck.name, input_shape = input_specs.shape, weight_decay = l2_regularization)
+    model = Yolov4Neck(model = model_config.neck.name, input_shape = input_specs.shape, kernel_regularizer = l2_regularization)
     return model
 
 def build_yolo_head(input_specs, model_config, parent_config, l2_regularization):
     box_cfg = parent_config.anchors.get()
     num_boxes = len(box_cfg.boxes)
     if model_config.head.version == "v3" or model_config.head.name == "tinyv4":
-        model = Yolov3Head(classes = parent_config.num_classes, boxes = num_boxes, model = model_config.head.name, input_shape = input_specs.shape, weight_decay = l2_regularization)
+        model = Yolov3Head(classes = parent_config.num_classes, boxes = num_boxes, model = model_config.head.name, input_shape = input_specs.shape, kernel_regularizer = l2_regularization)
     elif model_config.head.version == "v4":
-        model = Yolov4Head(classes = parent_config.num_classes, boxes = num_boxes, model = model_config.head.name, input_shape = input_specs.shape, weight_decay = l2_regularization)
+        model = Yolov4Head(classes = parent_config.num_classes, boxes = num_boxes, model = model_config.head.name, input_shape = input_specs.shape, kernel_regularizer = l2_regularization)
     return model
 
 def build_yolo_decoder(model_config):

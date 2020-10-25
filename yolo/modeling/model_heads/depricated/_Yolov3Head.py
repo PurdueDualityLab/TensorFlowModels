@@ -22,7 +22,7 @@ class Yolov3Head(tf.keras.Model):
                  boxes=9,
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 weight_decay = None,
+                 kernel_regularizer = None,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -74,7 +74,7 @@ class Yolov3Head(tf.keras.Model):
         self._classes = classes
         self._boxes = boxes
         self._model_name = model
-        self._weight_decay = weight_decay
+        self._kernel_regularizer = kernel_regularizer
 
         if not isinstance(self._cfg_dict, Dict):
             self._model_name = model
@@ -131,23 +131,24 @@ class Yolov3Head(tf.keras.Model):
 
             if type(path_keys["upsample"]) != type(None):
                 args = path_keys["upsample_conditions"].copy()
-                args['weight_decay'] = self._weight_decay
+                args['kernel_regularizer'] = self._kernel_regularizer
                 layer = ks.utils.get_registered_object(path_keys["upsample"])
                 upsamples[key] = layer(**args)
 
             args = path_keys["processor_conditions"].copy()
-            args['weight_decay'] = self._weight_decay
+            args['kernel_regularizer'] = self._kernel_regularizer
             layer = ks.utils.get_registered_object(path_keys["processor"])
             routes[key] = layer(**args)
 
             args = path_keys["output_conditions"]
-            args['weight_decay'] = self._weight_decay
+            args['kernel_regularizer'] = self._kernel_regularizer
             prediction_heads[key] = DarkConv(filters=self._conv_depth +
                                              path_keys["output-extras"],
                                              **args)
 
             if start_width != None:
                 start_width *= 2
+            
             if start_height != None:
                 start_height *= 2
 

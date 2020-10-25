@@ -22,7 +22,7 @@ class DarkConv(ks.layers.Layer):
             kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
             bias_regularizer=None,
-            weight_decay=None,  # default find where is it is stated
+            kernel_regularizer=None,  # default find where is it is stated
             use_bn=True,
             use_sync_bn=False,
             norm_momentum=0.99,
@@ -65,7 +65,7 @@ class DarkConv(ks.layers.Layer):
         self._use_bias = use_bias
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._weight_decay = weight_decay
+        self._kernel_regularizer = kernel_regularizer
         self._bias_regularizer = bias_regularizer
 
         # batchnorm params
@@ -94,11 +94,15 @@ class DarkConv(ks.layers.Layer):
         return
 
     def build(self, input_shape):
-        kernel_size = self._kernel_size if type(
-            self._kernel_size) == int else self._kernel_size[0]
+        kernel_size = self._kernel_size if isinstance(self._kernel_size, int) else self._kernel_size[0]
+        strides = self._strides if isinstance(self._strides, int) else self._strides[0]
         if self._padding == "same" and kernel_size != 1:
-            self._zeropad = ks.layers.ZeroPadding2D(
-                ((1, 1), (1, 1)))  # symetric padding
+            # self._zeropad = ks.layers.ZeroPadding2D(
+            #     ((1, 1), (1, 1)))  # symetric padding 2x2 padding 
+
+            # think tell him to tyr it
+            padding = kernel_size - 1
+            self._zeropad = ks.layers.ZeroPadding2D(((padding//2, padding//2), (padding//2, padding//2))) 
         else:
             self._zeropad = Identity()
 
@@ -111,7 +115,7 @@ class DarkConv(ks.layers.Layer):
             use_bias=self._use_bias,
             kernel_initializer=self._kernel_initializer,
             bias_initializer=self._bias_initializer,
-            kernel_regularizer=self._weight_decay,
+            kernel_regularizer=self._kernel_regularizer,
             bias_regularizer=self._bias_regularizer)
 
         #self.conv =tf.nn.convolution(filters=self._filters, strides=self._strides, padding=self._padding
@@ -160,7 +164,7 @@ class DarkConv(ks.layers.Layer):
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
             "bias_regularizer": self._bias_regularizer,
-            "l2_regularization": self._l2_regularization,
+            "kernel_regularizer": self._kernel_regularizer,
             "use_bn": self._use_bn,
             "use_sync_bn": self._use_sync_bn,
             "norm_moment": self._norm_moment,
@@ -173,3 +177,7 @@ class DarkConv(ks.layers.Layer):
 
     def __repr__(self):
         return repr(self.get_config())
+    
+    @property
+    def filters(self):
+        return self._filters

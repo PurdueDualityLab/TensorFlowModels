@@ -29,7 +29,7 @@ class Yolov4(base_model.Yolo):
             path_scales = None,
             x_y_scales = None,
             iou_thresh: int = 0.45,
-            weight_decay = 5e-4,
+            kernel_regularizer = 5e-4,
             class_thresh: int = 0.45,
             use_nms = True,
             using_rt = False,
@@ -73,7 +73,7 @@ class Yolov4(base_model.Yolo):
         self._masks = masks
         self._path_scales = path_scales
         self._use_tie_breaker = use_tie_breaker
-        self._weight_decay = tf.keras.regularizers.l2(l=weight_decay)
+        self._kernel_regularizer = tf.keras.regularizers.l2(l=kernel_regularizer)
 
         #init models
         self.model_name = model
@@ -113,7 +113,7 @@ class Yolov4(base_model.Yolo):
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
                                           (81, 82), (135, 169), (344, 319)]
             self._masks = self._masks or {5: [3, 4, 5], 4: [0, 1, 2]}
-            self._path_scales = self._path_scales or {5: 32, 4: 8}
+            self._path_scales = self._path_scales or {5: 32, 4: 16}
             self._x_y_scales = self._x_y_scales or {5: 1.0, 4: 1.0}
         return
 
@@ -154,7 +154,7 @@ class Yolov4(base_model.Yolo):
                 model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                kernel_regularizer =self._weight_decay)
+                kernel_regularizer =self._kernel_regularizer)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
@@ -167,7 +167,7 @@ class Yolov4(base_model.Yolo):
                     name=default_dict[self.model_name]["neck"],
                     cfg_dict=default_dict[self.model_name]["neck"],
                     input_shape=self._input_shape,
-                    weight_decay=self._weight_decay)
+                    kernel_regularizer=self._kernel_regularizer)
             else:
                 self._neck = None
         else:
@@ -184,7 +184,7 @@ class Yolov4(base_model.Yolo):
                     classes=self._classes,
                     boxes=len(self._boxes),
                     input_shape=self._input_shape,
-                    weight_decay=self._weight_decay)
+                    kernel_regularizer=self._kernel_regularizer)
             else:
                 self._head = Yolov4Head(
                     model=default_dict[self.model_name]["head"],
@@ -192,7 +192,7 @@ class Yolov4(base_model.Yolo):
                     classes=self._classes,
                     boxes=len(self._boxes),
                     input_shape=self._input_shape,
-                    weight_decay=self._weight_decay)
+                    kernel_regularizer=self._kernel_regularizer)
         else:
             self._head = self._head_cfg
             self._custom_aspects = True
@@ -226,6 +226,7 @@ class Yolov4(base_model.Yolo):
         if self._neck != None:
             maps = self._neck(maps)
         raw_head = self._head(maps)
+        tf.print([tf.shape(raw_head[key]) for key in raw_head.keys()])
         if training or self._using_rt:
             return {"raw_output": raw_head}
         else:
