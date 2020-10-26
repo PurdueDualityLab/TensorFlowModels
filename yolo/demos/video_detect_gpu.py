@@ -458,56 +458,49 @@ class FastVideo(object):
         print("\033[F\033[F\033[F\033[F\033[F\033[F", end="\n")
         return
 
+def func(inputs):
+    boxes = inputs["bbox"]
+    classifs = inputs["confidence"]
+    nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
+    return {"bbox": nms.nmsed_boxes,
+            "classes": nms.nmsed_classes,
+            "confidence": nms.nmsed_scores,}
 
 if __name__ == "__main__":
-    # from yolo.modeling.Yolov4 import Yolov4
-    # prep_gpu()
-    # model = Yolov4(model = "regular", policy="float16", use_tie_breaker=True, use_nms=True)
-    # model.load_weights_from_dn()
-
-    # import yolo.utils.tensor_rt as trt
-    # prep_gpu()
-    # def func(inputs):
-    #     boxes = inputs["bbox"]
-    #     classifs = inputs["confidence"]
-    #     nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
-    #     return {"bbox": nms.nmsed_boxes,
-    #             "classes": nms.nmsed_classes,
-    #             "confidence": nms.nmsed_scores,}
-    
-    # # name = trt.load_model_v3(type = "tiny", name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms")
-    # name = "testing_weights/yolov4/full_models/fp32_no_nms"
-    # #name = "testing_weights/yolov3/full_models/fp32_tiny_no_nms"
-    # new_name = f"{name}_tensorrt_2"
-    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=1)#, precision_mode="INT8", use_calibration=True)
-    # #model.convertModel()
-    # model.compile()
-    # model.summary()
-    # model.set_postprocessor_fn(func)
-    # saved_model_dir
-    # saved_model_loaded = tf.saved_model.load(saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
-    # graph_func = saved_model_loaded.signatures["serving"]
     from yolo.modeling.YoloModel import Yolo
+    import yolo.utils.tensor_rt as trt
     prep_gpu()
 
-    from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    mixed_precision.set_policy("mixed_float16")
+    # from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    # mixed_precision.set_policy("float32")
 
-    model = Yolo(model_version = "v3", model_type = "regular")
-    model.build([None, None, None, 3])
-    model.load_weights_from_dn()
+    # model = Yolo(model_version = "v4", model_type = "tiny", use_nms=False)
+    # model.build([None, None, None, 3])
+    # model.load_weights_from_dn()
+    # model.summary()
+
+    # echo $LD_LIBRARY_PATH:/usr/local/TensorRT-6.0.1.5
+    name = "saved_models/v4/regular"
+    # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
+    # model.save(name)
+    new_name = f"{name}_tensorrt"
+
+    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.convertModel()
+    model.compile()
     model.summary()
+    model.set_postprocessor_fn(func)
     
     cap = FastVideo("testing_files/test.mp4",
                     model= model, 
                     model_version="v4",
                     process_width=416,
                     process_height=416,
-                    preprocess_with_gpu=False, 
+                    preprocess_with_gpu=True, 
                     print_conf=True, 
                     max_batch = 5, 
                     disp_h= 416, 
-                    scale_que= 1, 
-                    wait_time = None,
+                    scale_que= 10, 
+                    wait_time = 0.00000001, #0.0001,#None,
                     policy="mixed_float16")
     cap.run()

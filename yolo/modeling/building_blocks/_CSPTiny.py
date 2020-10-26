@@ -138,7 +138,6 @@ class CSPTiny(ks.layers.Layer):
         layer_config = {
             "filters": self._filters,
             "use_bias": self._use_bias,
-            "strides": self._strides,
             "kernel_initializer": self._kernel_initializer,
             "bias_initializer": self._bias_initializer,
             "kernel_regularizer": self._kernel_regularizer,
@@ -148,7 +147,6 @@ class CSPTiny(ks.layers.Layer):
             "norm_epsilon": self._norm_epsilon,
             "activation": self._conv_activation,
             "leaky_alpha": self._leaky_alpha,
-            "sc_activation": self._sc_activation,
         }
         layer_config.update(super().get_config())
         return layer_config
