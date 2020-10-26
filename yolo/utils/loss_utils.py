@@ -86,7 +86,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
             else:
                 index = tf.math.equal(anchors[batch, box_id, 0], mask)
                 if K.any(index):
-                    #tf.print(0, anchors[batch, box_id, 0])
+                    #tf.(0, anchors[batch, box_id, 0])
                     p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
                                 dtype=tf.int32)
                     update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])

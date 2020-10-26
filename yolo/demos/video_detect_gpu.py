@@ -471,36 +471,35 @@ if __name__ == "__main__":
     import yolo.utils.tensor_rt as trt
     prep_gpu()
 
-    # from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    # mixed_precision.set_policy("float32")
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    mixed_precision.set_policy("float16")
 
-    # model = Yolo(model_version = "v4", model_type = "tiny", use_nms=False)
-    # model.build([None, None, None, 3])
-    # model.load_weights_from_dn()
-    # model.summary()
-
-    # echo $LD_LIBRARY_PATH:/usr/local/TensorRT-6.0.1.5
-    name = "saved_models/v4/regular"
-    # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
-    # model.save(name)
-    new_name = f"{name}_tensorrt"
-
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    # model.convertModel()
-    model.compile()
+    model = Yolo(model_version = "v4", model_type = "regular", use_nms=True)
+    model.build([None, None, None, 3])
+    model.load_weights_from_dn()
     model.summary()
-    model.set_postprocessor_fn(func)
+
+    # name = "saved_models/v4/regular"
+    # # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
+    # # model.save(name)
+    # new_name = f"{name}_tensorrt"
+
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # # model.convertModel()
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
     
     cap = FastVideo("testing_files/test.mp4",
                     model= model, 
                     model_version="v4",
                     process_width=416,
                     process_height=416,
-                    preprocess_with_gpu=True, 
+                    preprocess_with_gpu=False, 
                     print_conf=True, 
-                    max_batch = 5, 
+                    max_batch = 6, 
                     disp_h= 416, 
                     scale_que= 10, 
-                    wait_time = 0.00000001, #0.0001,#None,
+                    wait_time = None, #0.00000001, #None,
                     policy="mixed_float16")
     cap.run()
