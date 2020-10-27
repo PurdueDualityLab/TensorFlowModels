@@ -6,7 +6,7 @@ def build_gridded_gt_v1(y_true: dict, num_classes: int, size: int,
     """
     Convert ground truth for use in loss functions.
     Args:
-        y_true: dict[tf.Tensor] containing 'bbox':boxes, 'classes':classes
+        y_true: dict[tf.Tensor] containing 'bbox':boxes, 'label':classes
         num_classes: number of classes
         size: dimensions of grid S*S
         dtype: type of float
@@ -15,7 +15,7 @@ def build_gridded_gt_v1(y_true: dict, num_classes: int, size: int,
         tf.Tensor[batch, size, size, num_boxes, num_classes + 5]
     """
     boxes = tf.cast(y_true["bbox"], dtype)  # [xcenter, ycenter, width, height]
-    classes = tf.one_hot(tf.cast(y_true["classes"], dtype=tf.int32),
+    classes = tf.one_hot(tf.cast(y_true["label"], dtype=tf.int32),
                          depth=num_classes, dtype=dtype)
     batches = boxes.get_shape().as_list()[0]
     gt_boxes = boxes.get_shape().as_list()[1]
@@ -29,6 +29,8 @@ def build_gridded_gt_v1(y_true: dict, num_classes: int, size: int,
     full_confidence = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
     update = tf.TensorArray(dtype, size=0, dynamic_size=True)
+
+    tf.print(boxes)
     for batch in range(batches):
         for box_id in range(gt_boxes):
             if tf.math.reduce_all(tf.math.equal(boxes[batch, box_id, 2:4], 0),

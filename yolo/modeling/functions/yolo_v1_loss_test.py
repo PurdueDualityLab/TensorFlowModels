@@ -2,7 +2,10 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow_datasets as tfds
 
-from yolo.modeling.functions.yolo_v1_loss import Yolo_Loss_v1, build_gridded_gt_v1
+import matplotlib.pyplot as plt
+
+from yolo.modeling.functions.yolo_v1_loss import Yolo_Loss_v1
+from yolo.modeling.functions.build_gridded_gt import build_gridded_gt_v1
 
 def makeRandomPrediction(batchSize, numCells, numBoxes, numClasses, seed=36835):
     # Creates a random tensor as shape [batchSize, numCells, numBoxes, numClasses]
@@ -73,27 +76,33 @@ def testCompile():
 
 def gt_test():
     DATASET_DIRECTORY = "D:\Datasets" # modify to select download location
-    # train, train_info = tfds.load('voc', 
-    #                         split='train', 
-    #                         shuffle_files=False, 
-    #                         with_info=True, 
-    #                         data_dir=DATASET_DIRECTORY)
-    # test, test_info = tfds.load('voc', 
-    #                         split='test', 
-    #                         shuffle_files=False, 
-    #                         with_info=True, 
-    #                         data_dir=DATASET_DIRECTORY)
-    # val, val_info = tfds.load('voc', 
-    #                         split='validation', 
-    #                         shuffle_files=False, 
-    #                         with_info=True, 
-    #                         data_dir=DATASET_DIRECTORY)
-    coco = tfds.load('coco', 
-                      split=['train', 'test', 'validation'], 
+    train, info = tfds.load('voc', 
+                      split='train', 
                       shuffle_files=False, 
                       with_info=True, 
                       data_dir=DATASET_DIRECTORY)
-    return
+
+    train.batch(batch_size=1)
+    train = train.enumerate()
+
+    i = 0
+    for element in train.as_numpy_iterator():
+        print(element)
+        data = element[1] # gives dict with keys: image, image/filename, image/id, objects
+        y_true = data['objects'] # gives dict with keys: area, bbox, id, is_crowd, label
+
+        tf.print("YTRUE BEFORE GT: ", y_true)
+        y_true_after_gt = build_gridded_gt_v1(y_true, num_classes=20, size=7,
+                        num_boxes=2, dtype=tf.float64)
+        tf.print(y_true_after_gt)
+        i += 1
+        if i == 1:
+            break;
+
+    # prediction = makeRandomPrediction(batchSize=1, numCells=7, numBoxes=2, numClasses=20)
+
+    # tf.print("Output of ground truth builder shape: ", y_true_after_gt.get_shape())
+    # tf.print("Prediction shape: ", prediction.get_shape())
 
 if __name__ == "__main__":
     # tf.print("\n\nTesting shapes:")
