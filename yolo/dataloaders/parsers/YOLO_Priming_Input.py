@@ -7,6 +7,7 @@ import tensorflow_addons as tfa
 
 from yolo.dataloaders.Parser import Parser
 
+
 class Priming_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
@@ -54,7 +55,11 @@ class Priming_Parser(Parser):
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_zoom:
-            scale = tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
+            scale = tf.random.uniform([],
+                                      minval=self._scale[0],
+                                      maxval=self._scale[1],
+                                      seed=self._seed,
+                                      dtype=tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)

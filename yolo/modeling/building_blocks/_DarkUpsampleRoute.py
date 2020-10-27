@@ -13,7 +13,7 @@ class DarkUpsampleRoute(ks.layers.Layer):
             kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
             bias_regularizer=None,
-            kernel_regularizer= None,  # default find where is it is stated
+            kernel_regularizer=None,  # default find where is it is stated
             use_bn=True,
             use_sync_bn=False,
             norm_momentum=0.99,

@@ -32,19 +32,26 @@ def gt_test():
     strat = tf.distribute.MirroredStrategy()
     with strat.scope():
         train, info = tfds.load('voc',
-                            split='train',
-                            shuffle_files=True,
-                            with_info=True)
+                                split='train',
+                                shuffle_files=True,
+                                with_info=True)
         test, info = tfds.load('voc',
-                            split='validation',
-                            shuffle_files=False,
-                            with_info=True)
-        model = build_model(name = "regular", model_version="v4", policy="mixed_float16")#, weights_file= "testing_weights/yolov3-regular.weights")
+                               split='validation',
+                               shuffle_files=False,
+                               with_info=True)
+        model = build_model(
+            name="regular", model_version="v4", policy="mixed_float16"
+        )  #, weights_file= "testing_weights/yolov3-regular.weights")
         #model.load_weights_from_dn
         model.get_summary()
 
         loss_fn = model.generate_loss(loss_type="ciou")
-        train, test = model.process_datasets(train, test, jitter_boxes=None, jitter_im=0.1, batch_size=1,  _eval_is_training=False)
+        train, test = model.process_datasets(train,
+                                             test,
+                                             jitter_boxes=None,
+                                             jitter_im=0.1,
+                                             batch_size=1,
+                                             _eval_is_training=False)
 
     colors = gen_colors(80)
     coco_names = get_coco_names()
@@ -52,9 +59,12 @@ def gt_test():
     for image, label in train:
         print(label.keys())
         pred = model.predict(image)
-        
-        image = tf.image.draw_bounding_boxes(image, pred["bbox"], [[1.0, 0.0, 0.0]])
-        image = tf.image.draw_bounding_boxes(image, _xcycwh_to_yxyx(label["bbox"]) , [[0.0, 1.0, 0.0]])
+
+        image = tf.image.draw_bounding_boxes(image, pred["bbox"],
+                                             [[1.0, 0.0, 0.0]])
+        image = tf.image.draw_bounding_boxes(image,
+                                             _xcycwh_to_yxyx(label["bbox"]),
+                                             [[0.0, 1.0, 0.0]])
         image = image[0].numpy()
 
         plt.imshow(image)
@@ -66,6 +76,7 @@ def gt_test():
             break
         i += 1
     return
+
 
 def main(argv, args=None):
     #loss_test()

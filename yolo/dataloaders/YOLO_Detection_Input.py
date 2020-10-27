@@ -21,22 +21,24 @@ from yolo.utils.box_utils import _yxyx_to_xcycwh
 
 class YoloParser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
-    def __init__(self,
-                 image_w=416,
-                 image_h=416,
-                 num_classes=80,
-                 fixed_size=False,
-                 jitter_im=0.1,
-                 jitter_boxes=0.005,
-                 net_down_scale=32,
-                 max_process_size=608,
-                 min_process_size=320,
-                 max_num_instances = 200,
-                 random_flip = True,
-                 pct_rand=0.5,
-                 masks=None,
-                 anchors=None,
-                 seed = 10, ):
+    def __init__(
+        self,
+        image_w=416,
+        image_h=416,
+        num_classes=80,
+        fixed_size=False,
+        jitter_im=0.1,
+        jitter_boxes=0.005,
+        net_down_scale=32,
+        max_process_size=608,
+        min_process_size=320,
+        max_num_instances=200,
+        random_flip=True,
+        pct_rand=0.5,
+        masks=None,
+        anchors=None,
+        seed=10,
+    ):
         """Initializes parameters for parsing annotations in the dataset.
         Args:
             image_w: a `Tensor` or `int` for width of input image.
@@ -59,8 +61,10 @@ class YoloParser(Parser):
             seed: an `int` for the seed used by tf.random
         """
         self._net_down_scale = net_down_scale
-        self._image_w = (image_w//self._net_down_scale) * self._net_down_scale 
-        self._image_h = self.image_w if image_h == None else (image_h // self._net_down_scale) * self._net_down_scale
+        self._image_w = (image_w //
+                         self._net_down_scale) * self._net_down_scale
+        self._image_h = self.image_w if image_h == None else (
+            image_h // self._net_down_scale) * self._net_down_scale
         self._max_process_size = max_process_size
         self._min_process_size = min_process_size
         self._anchors = anchors
@@ -71,9 +75,9 @@ class YoloParser(Parser):
         self._pct_rand = pct_rand
         self._max_num_instances = max_num_instances
         self._random_flip = random_flip
-        self._seed = seed 
+        self._seed = seed
         return
-    
+
     def _parse_train_data(self, data):
         """Generates images and labels that are usable for model training.
         Args:
@@ -86,26 +90,40 @@ class YoloParser(Parser):
         shape = tf.shape(data["image"])
         boxes = _yxyx_to_xcycwh(data["groundtruth_boxes"])
         if self._jitter_boxes != 0.0:
-            boxes = random_jitter_boxes(boxes, self._jitter_boxes, seed = self._seed)
-        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w, self._image_h)
+            boxes = random_jitter_boxes(boxes,
+                                        self._jitter_boxes,
+                                        seed=self._seed)
+        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w,
+                                        self._image_h)
 
         image = data["image"] / 255
-        image = tf.image.resize(image, (self._max_process_size, self._max_process_size))
-        image = tf.image.random_brightness(image=image, max_delta=.1)  # Brightness
-        image = tf.image.random_saturation(image=image, lower=0.75, upper=1.25)  # Saturation
+        image = tf.image.resize(
+            image, (self._max_process_size, self._max_process_size))
+        image = tf.image.random_brightness(image=image,
+                                           max_delta=.1)  # Brightness
+        image = tf.image.random_saturation(image=image, lower=0.75,
+                                           upper=1.25)  # Saturation
         image = tf.image.random_hue(image=image, max_delta=.1)  # Hue
         image = tf.clip_by_value(image, 0.0, 1.0)
         if self._random_flip:
-            image, boxes = random_flip(image, boxes, seed = self._seed)
-        
+            image, boxes = random_flip(image, boxes, seed=self._seed)
+
         if self._jitter_im != 0.0:
-            image, boxes = random_translate(image, boxes, self._jitter_im, seed = self._seed)
+            image, boxes = random_translate(image,
+                                            boxes,
+                                            self._jitter_im,
+                                            seed=self._seed)
 
         boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-        classes = pad_max_instances(data["groundtruth_classes"], self._max_num_instances, -1)
-        best_anchors = pad_max_instances(best_anchors, self._max_num_instances, 0)
-        area = pad_max_instances(data["groundtruth_area"], self._max_num_instances, 0)
-        is_crowd = pad_max_instances(tf.cast(data["groundtruth_is_crowd"], tf.int32), self._max_num_instances, 0)
+        classes = pad_max_instances(data["groundtruth_classes"],
+                                    self._max_num_instances, -1)
+        best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
+                                         0)
+        area = pad_max_instances(data["groundtruth_area"],
+                                 self._max_num_instances, 0)
+        is_crowd = pad_max_instances(
+            tf.cast(data["groundtruth_is_crowd"], tf.int32),
+            self._max_num_instances, 0)
         labels = {
             "source_id": data["source_id"],
             "bbox": boxes,
@@ -127,16 +145,25 @@ class YoloParser(Parser):
             images: the image tensor.
             labels: a dict of Tensors that contains labels.
         """
-        
+
         shape = tf.shape(data["image"])
-        image = _scale_image(data["image"], resize=True, w = self._image_w, h = self._image_h)
+        image = _scale_image(data["image"],
+                             resize=True,
+                             w=self._image_w,
+                             h=self._image_h)
         boxes = _yxyx_to_xcycwh(data["groundtruth_boxes"])
-        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w, self._image_h)
+        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w,
+                                        self._image_h)
         boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-        classes = pad_max_instances(data["groundtruth_classes"], self._max_num_instances, 0)
-        best_anchors = pad_max_instances(best_anchors, self._max_num_instances, 0)
-        area = pad_max_instances(data["groundtruth_area"], self._max_num_instances, 0)
-        is_crowd = pad_max_instances(tf.cast(data["groundtruth_is_crowd"], tf.int32), self._max_num_instances, 0)
+        classes = pad_max_instances(data["groundtruth_classes"],
+                                    self._max_num_instances, 0)
+        best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
+                                         0)
+        area = pad_max_instances(data["groundtruth_area"],
+                                 self._max_num_instances, 0)
+        is_crowd = pad_max_instances(
+            tf.cast(data["groundtruth_is_crowd"], tf.int32),
+            self._max_num_instances, 0)
         labels = {
             "source_id": data["source_id"],
             "bbox": boxes,
@@ -150,6 +177,7 @@ class YoloParser(Parser):
         }
         return image, labels
 
+
 class YoloPostProcessing():
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
@@ -157,10 +185,10 @@ class YoloPostProcessing():
                  image_h=416,
                  fixed_size=False,
                  net_down_scale=32,
-                 pct_rand = 0.3, 
+                 pct_rand=0.3,
                  max_process_size=608,
-                 min_process_size=320, 
-                 seed = 10):
+                 min_process_size=320,
+                 seed=10):
         """Initializes parameters for post processing parser of the dataset.
         Args:
             image_w: a `Tensor` or `int` for width of input image.
@@ -182,12 +210,18 @@ class YoloPostProcessing():
         self._pct_rand = pct_rand
         self._seed = seed
         return
-    
+
     def postprocess_fn(self, image, label):
         randscale = self._image_w // self._net_down_scale
         if not self._fixed_size:
-            do_scale = tf.greater(tf.random.uniform([], seed=self._seed), 1 - self._pct_rand)
+            do_scale = tf.greater(tf.random.uniform([], seed=self._seed),
+                                  1 - self._pct_rand)
             if do_scale:
-                randscale = tf.random.uniform([], minval = 10, maxval = 20, seed=self._seed, dtype = tf.int32)
-        image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
+                randscale = tf.random.uniform([],
+                                              minval=10,
+                                              maxval=20,
+                                              seed=self._seed,
+                                              dtype=tf.int32)
+        image = tf.image.resize(image, (randscale * self._net_down_scale,
+                                        randscale * self._net_down_scale))
         return image, label

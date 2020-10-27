@@ -6,7 +6,6 @@ from yolo.modeling.building_blocks import DarkRouteProcess
 from yolo.modeling.building_blocks import DarkRoute
 # for testing
 
-
 from . import configs
 
 import importlib
@@ -20,8 +19,8 @@ class Yolov4Neck(tf.keras.Model):
                  model="regular",
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 kernel_regularizer = None,
-                 activation = "leaky", 
+                 kernel_regularizer=None,
+                 activation="leaky",
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -98,12 +97,13 @@ class Yolov4Neck(tf.keras.Model):
 
     def _standard_block(self, filters):
         def block(inputs):
-            x_route = DarkConv(filters=filters // 2,
-                               kernel_size=(1, 1),
-                               strides=(1, 1),
-                               padding="same",
-                               activation=self._activation,
-                               kernel_regularizer=self._kernel_regularizer)(inputs)
+            x_route = DarkConv(
+                filters=filters // 2,
+                kernel_size=(1, 1),
+                strides=(1, 1),
+                padding="same",
+                activation=self._activation,
+                kernel_regularizer=self._kernel_regularizer)(inputs)
             x = DarkConv(filters=filters // 4,
                          kernel_size=(1, 1),
                          strides=(1, 1),
@@ -198,10 +198,7 @@ class Yolov4Neck(tf.keras.Model):
         return outputs
 
     def get_config(self):
-        layer_config = {
-            "cfg_dict": self._cfg_dict,
-            "model": self._model_name
-        }
+        layer_config = {"cfg_dict": self._cfg_dict, "model": self._model_name}
         layer_config.update(super().get_config())
         return layer_config
 

@@ -6,22 +6,23 @@ from ._DarkSpp import DarkSpp
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkRouteProcess(ks.layers.Layer):
-    def __init__(self,
-                 filters=2,
-                 mod=1,
-                 repetitions=2,
-                 insert_spp=False,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 bias_regularizer=None, 
-                 use_sync_bn = False, 
-                 kernel_regularizer= None,  # default find where is it is stated
-                 norm_momentum=0.99,
-                 norm_epsilon=0.001,
-                 activation='leaky',
-                 leaky_alpha=0.1,
-                 spp_keys = None,
-                 **kwargs):
+    def __init__(
+            self,
+            filters=2,
+            mod=1,
+            repetitions=2,
+            insert_spp=False,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            bias_regularizer=None,
+            use_sync_bn=False,
+            kernel_regularizer=None,  # default find where is it is stated
+            norm_momentum=0.99,
+            norm_epsilon=0.001,
+            activation='leaky',
+            leaky_alpha=0.1,
+            spp_keys=None,
+            **kwargs):
         """
         process darknet outputs and connect back bone to head more generalizably
         Abstracts repetition of DarkConv objects that is common in YOLO.
@@ -58,7 +59,7 @@ class DarkRouteProcess(ks.layers.Layer):
         self._use_sync_bn = use_sync_bn
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._bias_regularizer=bias_regularizer
+        self._bias_regularizer = bias_regularizer
         self._kernel_regularizer = kernel_regularizer
 
         # normal params
@@ -72,9 +73,9 @@ class DarkRouteProcess(ks.layers.Layer):
         # layer configs
         if repetitions % 2 == 1:
             self._append_conv = True
-        else: 
+        else:
             self._append_conv = False
-        self._repetitions = repetitions // 2 
+        self._repetitions = repetitions // 2
         self._lim = repetitions
         self._insert_spp = insert_spp
         self._spp_keys = spp_keys if spp_keys != None else [5, 9, 13]
@@ -86,7 +87,7 @@ class DarkRouteProcess(ks.layers.Layer):
 
     def _get_layer_list(self):
         layer_config = []
-        if self._repetitions > 0: 
+        if self._repetitions > 0:
             layers = ['block'] * self._repetitions
             if self._repetitions > 2 and self._insert_spp:
                 layers[1] = 'spp'
@@ -97,18 +98,18 @@ class DarkRouteProcess(ks.layers.Layer):
 
     def _mono_conv(self, filters):
         return DarkConv(filters=filters,
-                      kernel_size=(3, 3),
-                      strides=(1, 1),
-                      padding="same",
-                      use_bn=True,
-                      use_sync_bn=self._use_sync_bn,
-                      kernel_initializer=self._kernel_initializer,
-                      bias_initializer=self._bias_initializer,
-                      kernel_regularizer=self._kernel_regularizer,
-                      norm_momentum=self._norm_moment,
-                      norm_epsilon=self._norm_epsilon,
-                      activation=self._activation,
-                      leaky_alpha=self._leaky_alpha)
+                        kernel_size=(3, 3),
+                        strides=(1, 1),
+                        padding="same",
+                        use_bn=True,
+                        use_sync_bn=self._use_sync_bn,
+                        kernel_initializer=self._kernel_initializer,
+                        bias_initializer=self._bias_initializer,
+                        kernel_regularizer=self._kernel_regularizer,
+                        norm_momentum=self._norm_moment,
+                        norm_epsilon=self._norm_epsilon,
+                        activation=self._activation,
+                        leaky_alpha=self._leaky_alpha)
 
     def _block(self, filters):
         x1 = DarkConv(filters=filters // 2,

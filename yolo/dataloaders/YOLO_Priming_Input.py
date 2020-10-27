@@ -7,6 +7,7 @@ import tensorflow_addons as tfa
 
 from yolo.dataloaders.Parser import Parser
 
+
 class Priming_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
@@ -55,7 +56,11 @@ class Priming_Parser(Parser):
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_zoom:
-            scale = tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
+            scale = tf.random.uniform([],
+                                      minval=self._scale[0],
+                                      maxval=self._scale[1],
+                                      seed=self._seed,
+                                      dtype=tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)
@@ -66,7 +71,8 @@ class Priming_Parser(Parser):
 
         image = tf.image.convert_image_dtype(image / 255, self._dtype)
 
-        label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+        label = tf.one_hot(decoded_tensors['image/class/label'],
+                           self._num_classes)
         return image, label
 
     def _parse_eval_data(self, decoded_tensors):
@@ -84,6 +90,7 @@ class Priming_Parser(Parser):
             target_width=self._output_size[0],
             target_height=self._output_size[1])  # Final Output Shape
         image = image / 255.  # Normalize
-        
-        label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+
+        label = tf.one_hot(decoded_tensors['image/class/label'],
+                           self._num_classes)
         return image, label

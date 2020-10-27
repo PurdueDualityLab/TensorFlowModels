@@ -7,6 +7,7 @@ import tensorflow_addons as tfa
 
 from yolo.dataloaders.parsers.Parser import Parser
 
+
 class Classification_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
@@ -74,13 +75,18 @@ class Classification_Parser(Parser):
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_aspect:
-            aspect = tf.random.uniform([], minval = 3, maxval = 5, seed=self._seed, dtype = tf.float32) / 4.
+            aspect = tf.random.uniform(
+                [], minval=3, maxval=5, seed=self._seed, dtype=tf.float32) / 4.
             nh = tf.cast(w / aspect, dtype=tf.int32)
             nw = tf.cast(w, dtype=tf.int32)
             image = tf.image.resize(image, size=(nw, nh))
 
         if self._aug_rand_zoom:
-            scale =  tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
+            scale = tf.random.uniform([],
+                                      minval=self._scale[0],
+                                      maxval=self._scale[1],
+                                      seed=self._seed,
+                                      dtype=tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)
@@ -90,7 +96,11 @@ class Classification_Parser(Parser):
                                          target_height=self._output_size[1])
 
         if self._aug_rand_rotate:
-            deg = tf.random.uniform([], minval = -30, maxval = 30, seed=self._seed, dtype = tf.float32)
+            deg = tf.random.uniform([],
+                                    minval=-30,
+                                    maxval=30,
+                                    seed=self._seed,
+                                    dtype=tf.float32)
             deg = deg * 3.14 / 180.
             deg.set_shape(())
             image = tfa.image.rotate(image, deg, interpolation="NEAREST")

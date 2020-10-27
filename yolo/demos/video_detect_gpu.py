@@ -11,12 +11,12 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import support_windows 
+from yolo.utils.testing_utils import support_windows
 from yolo.utils.testing_utils import prep_gpu
-from yolo.utils.testing_utils import build_model 
+from yolo.utils.testing_utils import build_model
 from yolo.utils.testing_utils import draw_box
-from yolo.utils.testing_utils import int_scale_boxes 
-from yolo.utils.testing_utils import gen_colors 
+from yolo.utils.testing_utils import int_scale_boxes
+from yolo.utils.testing_utils import gen_colors
 from yolo.utils.testing_utils import get_coco_names
 from yolo.utils.testing_utils import get_draw_fn
 
@@ -67,15 +67,15 @@ class FastVideo(object):
                  preprocess_function=None,
                  process_width=416,
                  process_height=416,
-                 disp_h = 720, 
+                 disp_h=720,
                  classes=80,
                  labels=None,
-                 print_conf = True, 
-                 max_batch = None, 
-                 wait_time = None, 
-                 preprocess_with_gpu=False, 
-                 scale_que = 1, 
-                 policy = "float16",
+                 print_conf=True,
+                 max_batch=None,
+                 wait_time=None,
+                 preprocess_with_gpu=False,
+                 scale_que=1,
+                 policy="float16",
                  gpu_device="/GPU:0",
                  preprocess_gpu="/GPU:0"):
         self._cap = cv2.VideoCapture(file_name)
@@ -97,7 +97,7 @@ class FastVideo(object):
         self._preprocess_function = preprocess_function
         self._height = int(self._cap.get(4)) if disp_h == None else disp_h
         self._og_height = int(self._cap.get(4))
-        self._width = int(self._cap.get(3) * (self._height/self._og_height)) 
+        self._width = int(self._cap.get(3) * (self._height / self._og_height))
         self._classes = classes
         self._p_width = process_width
         self._p_height = process_height
@@ -131,14 +131,14 @@ class FastVideo(object):
                 path="yolo/dataloaders/dataset_specs/coco.names")
         else:
             self._labels = labels
-        
+
         self._draw_fn = get_draw_fn(self._colors, self._labels, print_conf)
 
         self._load_que = Queue(self._batch_size * scale_que)
         self._display_que = Queue(1 * scale_que)
         self._running = True
         if self._batch_size != 1:
-            self._wait_time = 0.0015 * self._batch_size if wait_time == None else wait_time # 0.05 default
+            self._wait_time = 0.0015 * self._batch_size if wait_time == None else wait_time  # 0.05 default
         else:
             self._wait_time = 0.0001
 
@@ -156,8 +156,8 @@ class FastVideo(object):
             with tf.device(self._gpu_device):
                 model = build_model(name="regular",
                                     w=self._p_width,
-                                    h=self._p_height, 
-                                    policy = self._policy)
+                                    h=self._p_height,
+                                    policy=self._policy)
             return model
         default_set = {"regular", "tiny", "spp"}
         if (type(model) == str and model in default_set):
@@ -169,7 +169,7 @@ class FastVideo(object):
                                     w=self._p_width,
                                     h=self._p_height,
                                     saved=False,
-                                    policy = self._policy)
+                                    policy=self._policy)
             return model
         elif (type(model) == str):
             raise Exception("unsupported default model")
@@ -267,7 +267,9 @@ class FastVideo(object):
                 image, boxes, classes, conf = self._display_que.get()
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
-                    self._obj_detected = draw_box(image[i], boxes[i], classes[i], conf[i], self._draw_fn)
+                    self._obj_detected = draw_box(image[i], boxes[i],
+                                                  classes[i], conf[i],
+                                                  self._draw_fn)
 
                     #display the frame then wait in case something else needs to catch up
                     cv2.imshow("frame", image[i])
@@ -316,8 +318,9 @@ class FastVideo(object):
                 self._load_que.put(image)
                 f = datetime.datetime.now()
             with tf.device(self._gpu_device):
-                pimage = tf.image.resize(image,(self._p_width, self._p_height))
-                pimage = tf.expand_dims(pimage, axis = 0)
+                pimage = tf.image.resize(image,
+                                         (self._p_width, self._p_height))
+                pimage = tf.expand_dims(pimage, axis=0)
                 if hasattr(model, "predict"):
                     predfunc = model.predict
                     print("using pred function")
@@ -366,7 +369,8 @@ class FastVideo(object):
                                                      pred["classes"],
                                                      self._width, self._height)
                     if image.shape[1] != self._height:
-                        image = tf.image.resize(image, (self._height, self._width))
+                        image = tf.image.resize(image,
+                                                (self._height, self._width))
                 b = datetime.datetime.now()
 
                 # computation latency to see how much delay between input and output
@@ -421,10 +425,11 @@ class FastVideo(object):
         except Exception as e:
             # arbitrary keyboard input
             self.print_opt()
-            print(f"\n\n\n\n\n::: Video File Complete ::: or error  -> -> ->{e}")
+            print(
+                f"\n\n\n\n\n::: Video File Complete ::: or error  -> -> ->{e}")
             self._running = False
             time.sleep(5)
-            
+
             # join the laoding thread and diplay thread
             load_thread.join()
             display_thread.join()
@@ -458,13 +463,18 @@ class FastVideo(object):
         print("\033[F\033[F\033[F\033[F\033[F\033[F", end="\n")
         return
 
+
 def func(inputs):
     boxes = inputs["bbox"]
     classifs = inputs["confidence"]
-    nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
-    return {"bbox": nms.nmsed_boxes,
-            "classes": nms.nmsed_classes,
-            "confidence": nms.nmsed_scores,}
+    nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2),
+                                                classifs, 200, 200, 0.5, 0.5)
+    return {
+        "bbox": nms.nmsed_boxes,
+        "classes": nms.nmsed_classes,
+        "confidence": nms.nmsed_scores,
+    }
+
 
 if __name__ == "__main__":
     from yolo.modeling.YoloModel import Yolo
@@ -474,7 +484,7 @@ if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
 
-    model = Yolo(model_version = "v4", model_type = "regular", use_nms=True)
+    model = Yolo(model_version="v4", model_type="regular", use_nms=True)
     model.build([None, None, None, 3])
     model.load_weights_from_dn()
     model.summary()
@@ -489,17 +499,18 @@ if __name__ == "__main__":
     # model.compile()
     # model.summary()
     # model.set_postprocessor_fn(func)
-    
-    cap = FastVideo("testing_files/test.mp4",
-                    model= model, 
-                    model_version="v4",
-                    process_width=416,
-                    process_height=416,
-                    preprocess_with_gpu=False, 
-                    print_conf=True, 
-                    max_batch = 6, 
-                    disp_h= 416, 
-                    scale_que= 10, 
-                    wait_time = None, #0.00000001, #None,
-                    policy="mixed_float16")
+
+    cap = FastVideo(
+        "testing_files/test.mp4",
+        model=model,
+        model_version="v4",
+        process_width=416,
+        process_height=416,
+        preprocess_with_gpu=False,
+        print_conf=True,
+        max_batch=6,
+        disp_h=416,
+        scale_que=10,
+        wait_time=None,  #0.00000001, #None,
+        policy="mixed_float16")
     cap.run()

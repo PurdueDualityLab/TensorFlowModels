@@ -20,10 +20,9 @@ parser.add_argument(
     'version',
     metavar='version',
     default='v3',
-    choices=('v3','v4'),
+    choices=('v3', 'v4'),
     type=str,
-    help=
-    'version of the model. Defaults to v3. The options are ("v3", "v4")',
+    help='version of the model. Defaults to v3. The options are ("v3", "v4")',
     nargs='?')
 
 parser.add_argument(
@@ -62,20 +61,21 @@ import tensorflow.keras.backend as K
 from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names, get_draw_fn
 '''Video Buffer using cv2'''
 
-def preprocess_fn(image, dtype= tf.float32):
+
+def preprocess_fn(image, dtype=tf.float32):
     image = tf.convert_to_tensor(image)
     image = tf.cast(image, dtype=dtype)
     image = image / 255
     return image
 
-def rt_preprocess_fn(image, dtype= tf.float32):
+
+def rt_preprocess_fn(image, dtype=tf.float32):
     image = tf.convert_to_tensor(image)
     image = tf.cast(image, dtype=dtype)
     image = image / 255
     image = tf.image.resize(image, (416, 416))
     image = tf.expand_dims(image, axis=0)
     return image
-
 
 
 class frame_iter():
@@ -118,6 +118,7 @@ class frame_iter():
     def rescale_frame(self, image):
         return tf.image.resize(image, (self.height, self.width))
 
+
 def new_video_proc_rt(og_model_dir, rt_model_save_path, video_path):
     import yolo.demos.tensor_rt as trt
     video = frame_iter(video_path, rt_preprocess_fn)
@@ -133,9 +134,7 @@ def new_video_proc_rt(og_model_dir, rt_model_save_path, video_path):
     return
 
 
-
-
-def video_processor(model, version , vidpath, device="/CPU:0"):
+def video_processor(model, version, vidpath, device="/CPU:0"):
     img_array = []
 
     i = 0
@@ -245,6 +244,7 @@ def main(argv, args=None):
     video_processor(model, version, vidpath)
     return 0
 
+
 def input_fn(cap, num_iterations):
     cap = cv2.VideoCapture(vidpath)
     assert cap.isOpened()
@@ -254,29 +254,36 @@ def input_fn(cap, num_iterations):
     cap.release()
 
 
-
 def main2():
     import contextlib
     import yolo.utils.tensor_rt as trt
     prep_gpu()
+
     def func(inputs):
         boxes = inputs["bbox"]
-        classifs = tf.one_hot(inputs["classes"], axis = -1, dtype = tf.float32, depth = 80)
-        nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
-        return {"bbox": nms.nmsed_boxes,
-                "classes": nms.nmsed_classes,
-                "confidence": nms.nmsed_scores,}
+        classifs = tf.one_hot(inputs["classes"],
+                              axis=-1,
+                              dtype=tf.float32,
+                              depth=80)
+        nms = tf.image.combined_non_max_suppression(
+            tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
+        return {
+            "bbox": nms.nmsed_boxes,
+            "classes": nms.nmsed_classes,
+            "confidence": nms.nmsed_scores,
+        }
 
     name = "testing_weights/yolov4/full_models/v4_32"
     new_name = f"{name}_tensorrt"
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000)
+    model = trt.TensorRT(saved_model=new_name,
+                         save_new_path=new_name,
+                         max_workspace_size_bytes=4000000000)
     model.compile()
     model.summary()
     model.set_postprocessor_fn(func)
 
     support_windows()
-    video_processor(model, version = None, vidpath="testing_files/test2.mp4")
-
+    video_processor(model, version=None, vidpath="testing_files/test2.mp4")
 
     return 0
 

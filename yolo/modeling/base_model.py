@@ -5,6 +5,7 @@ from abc import abstractmethod
 
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
+
 class Yolo(tf.keras.Model, ABC):
     @abstractmethod
     def get_default_attributes():
@@ -31,7 +32,7 @@ class Yolo(tf.keras.Model, ABC):
                          fixed_size=False,
                          jitter_im=0.1,
                          jitter_boxes=0.005,
-                         _eval_is_training = False):
+                         _eval_is_training=False):
 
         from yolo.dataloaders.YoloParser import YoloParser
         from yolo.dataloaders.YoloParser import YoloPostProcessing
@@ -43,27 +44,43 @@ class Yolo(tf.keras.Model, ABC):
                             jitter_boxes=jitter_boxes,
                             max_num_instances=self._max_boxes,
                             anchors=self._boxes)
-        post = YoloPostProcessing(image_w=image_w,image_h=image_h)
-        train_parser = parser.parse_fn(is_training= True)
+        post = YoloPostProcessing(image_w=image_w, image_h=image_h)
+        train_parser = parser.parse_fn(is_training=True)
         test_parser = parser.parse_fn(is_training=_eval_is_training)
 
-        train = train.map(train_parser, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        test = test.map(train_parser, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        train = train.map(train_parser,
+                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        test = test.map(train_parser,
+                        num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
         train = train.batch(batch_size)
         test = test.batch(batch_size)
-        
-        train = train.map(post.postprocess_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+        train = train.map(post.postprocess_fn,
+                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
         train = train.prefetch(tf.data.experimental.AUTOTUNE)
         test = test.prefetch(tf.data.experimental.AUTOTUNE)
         return train, test
 
-    def compile(self, optimizer='rmsprop', loss=None, metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=None, **kwargs):
-        super().compile(optimizer=optimizer, loss=loss, metrics=metrics, loss_weights=loss_weights, weighted_metrics=weighted_metrics, run_eagerly=run_eagerly, **kwargs)
+    def compile(self,
+                optimizer='rmsprop',
+                loss=None,
+                metrics=None,
+                loss_weights=None,
+                weighted_metrics=None,
+                run_eagerly=None,
+                **kwargs):
+        super().compile(optimizer=optimizer,
+                        loss=loss,
+                        metrics=metrics,
+                        loss_weights=loss_weights,
+                        weighted_metrics=weighted_metrics,
+                        run_eagerly=run_eagerly,
+                        **kwargs)
         self._loss_fn = loss
         self._loss_weights = loss_weights
-        return 
-        
+        return
+
     def apply_loss_fn(self, label, y_pred):
         loss = 0.0
         loss_box = 0.0
@@ -72,14 +89,15 @@ class Yolo(tf.keras.Model, ABC):
         metric_dict = dict()
 
         for key in y_pred.keys():
-            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_fn[key](label, y_pred[key])
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_fn[
+                key](label, y_pred[key])
             loss += _loss
             loss_box += _loss_box
             loss_conf += _loss_conf
             loss_class += _loss_class
             metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
-            metric_dict[f"avg_iou_{key}"] =  tf.stop_gradient(_avg_iou)
-        
+            metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
+
         metric_dict["box_loss"] = loss_box
         metric_dict["conf_loss"] = loss_conf
         metric_dict["class_loss"] = loss_class
@@ -100,7 +118,7 @@ class Yolo(tf.keras.Model, ABC):
             # compute a prediction
             y_pred = self(image, training=True)
             loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"])
-            scaled_loss = loss/num_replicas
+            scaled_loss = loss / num_replicas
 
             # scale the loss for numerical stability
             if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
@@ -117,9 +135,9 @@ class Yolo(tf.keras.Model, ABC):
         gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
 
         self.optimizer.apply_gradients(zip(gradients, train_vars))
-        
+
         #custom metrics
-        loss_metrics = {"loss":loss}
+        loss_metrics = {"loss": loss}
         loss_metrics.update(metrics)
         return loss_metrics
 
@@ -132,12 +150,12 @@ class Yolo(tf.keras.Model, ABC):
         loss, metrics = self.apply_loss_fn(label, y_pred["raw_output"])
 
         #custom metrics
-        loss_metrics = {"loss":loss}
+        loss_metrics = {"loss": loss}
         loss_metrics.update(metrics)
         return loss_metrics
 
     def generate_loss(self,
-                      ignore_thresh: float = 0.7, 
+                      ignore_thresh: float = 0.7,
                       truth_thresh: float = 1.0,
                       loss_type="ciou") -> "Dict[Yolo_Loss]":
         """
@@ -150,7 +168,7 @@ class Yolo(tf.keras.Model, ABC):
         from yolo.modeling.functions.yolo_loss import Yolo_Loss
         loss_dict = {}
         for key in self._masks.keys():
-            loss_dict[key] = Yolo_Loss(classes = self._classes,
+            loss_dict[key] = Yolo_Loss(classes=self._classes,
                                        anchors=self._boxes,
                                        ignore_thresh=ignore_thresh,
                                        truth_thresh=truth_thresh,
@@ -163,9 +181,10 @@ class Yolo(tf.keras.Model, ABC):
         self._loss_fn = loss_dict
         return loss_dict
 
-    def match_optimizer_to_policy(self, optimizer, scaling = "dynamic"):
+    def match_optimizer_to_policy(self, optimizer, scaling="dynamic"):
         if self._policy != "float32":
-            return tf.keras.mixed_precision.experimental.LossScaleOptimizer(optimizer, scaling)
+            return tf.keras.mixed_precision.experimental.LossScaleOptimizer(
+                optimizer, scaling)
         return optimizer
 
     def set_policy(self,

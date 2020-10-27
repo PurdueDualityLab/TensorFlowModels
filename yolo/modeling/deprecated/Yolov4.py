@@ -14,29 +14,30 @@ from yolo.utils import DarkNetConverter
 from yolo.utils._darknet2tf.load_weights import split_converter
 from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone, load_weights_v4head
 
+
 class Yolov4(base_model.Yolo):
     def __init__(
             self,
             input_shape=[None, None, None, 3],
             model="regular",  # options {regular, spp, tiny}
             classes=80,
-            backbone = None,
-            neck = None,
-            head = None,
-            head_filter = None,
-            masks = None,
-            anchors = None,
-            path_scales = None,
-            x_y_scales = None,
+            backbone=None,
+            neck=None,
+            head=None,
+            head_filter=None,
+            masks=None,
+            anchors=None,
+            path_scales=None,
+            x_y_scales=None,
             iou_thresh: int = 0.45,
-            kernel_regularizer = 5e-4,
+            kernel_regularizer=5e-4,
             class_thresh: int = 0.45,
-            use_nms = True,
-            using_rt = False,
+            use_nms=True,
+            using_rt=False,
             max_boxes: int = 200,
             scale_boxes: int = 416,
             use_tie_breaker: bool = True,
-            clip_grads_norm = None,
+            clip_grads_norm=None,
             policy=None,
             **kwargs):
         super().__init__(**kwargs)
@@ -54,10 +55,12 @@ class Yolov4(base_model.Yolo):
             if type(policy) != str:
                 policy = policy.name
             self._og_policy = policy
-            self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self._policy = tf.keras.mixed_precision.experimental.global_policy(
+            ).name
             self.set_policy(policy=policy)
         else:
-            self._og_policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self._og_policy = tf.keras.mixed_precision.experimental.global_policy(
+            ).name
             self._policy = self._og_policy
 
         #filtering params
@@ -73,7 +76,8 @@ class Yolov4(base_model.Yolo):
         self._masks = masks
         self._path_scales = path_scales
         self._use_tie_breaker = use_tie_breaker
-        self._kernel_regularizer = tf.keras.regularizers.l2(l=kernel_regularizer)
+        self._kernel_regularizer = tf.keras.regularizers.l2(
+            l=kernel_regularizer)
 
         #init models
         self.model_name = model
@@ -96,17 +100,15 @@ class Yolov4(base_model.Yolo):
     def get_default_attributes(self):
         if self.model_name == "regular":
             self._encoder_decoder_split_location = 106
-            self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110),(192, 243), (459, 401)]
+            self._boxes = self._boxes or [(12, 16), (19, 36), (40, 28),
+                                          (36, 75), (76, 55), (72, 146),
+                                          (142, 110), (192, 243), (459, 401)]
             self._masks = self._masks or {
                 5: [6, 7, 8],
                 4: [3, 4, 5],
                 3: [0, 1, 2]
             }
-            self._path_scales = self._path_scales or {
-                5: 32,
-                4: 16,
-                3: 8
-            }
+            self._path_scales = self._path_scales or {5: 32, 4: 16, 3: 8}
             self._x_y_scales = self._x_y_scales or {5: 1.05, 4: 1.1, 3: 1.2}
         elif self.model_name == "tiny":
             self._encoder_decoder_split_location = 28
@@ -137,7 +139,8 @@ class Yolov4(base_model.Yolo):
                 "neck": "regular",
                 "head": "regular",
                 "name": "yolov4"
-            }, "tiny": {
+            },
+            "tiny": {
                 "backbone": "CSPDarkNetTiny",
                 "neck": None,
                 "head": "tinyv4",
@@ -154,7 +157,7 @@ class Yolov4(base_model.Yolo):
                 model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                kernel_regularizer =self._kernel_regularizer)
+                kernel_regularizer=self._kernel_regularizer)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
@@ -199,13 +202,13 @@ class Yolov4(base_model.Yolo):
 
         if self._head_filter_cfg == None:
             self._head_filter = YoloLayer(masks=self._masks,
-                                        anchors=self._boxes,
-                                        thresh=self._thresh,
-                                        cls_thresh=self._class_thresh,
-                                        max_boxes=self._max_boxes,
-                                        path_scale=self._path_scales,
-                                        scale_xy=self._x_y_scales,
-                                        use_nms=self._use_nms)
+                                          anchors=self._boxes,
+                                          thresh=self._thresh,
+                                          cls_thresh=self._class_thresh,
+                                          max_boxes=self._max_boxes,
+                                          path_scale=self._path_scales,
+                                          scale_xy=self._x_y_scales,
+                                          use_nms=self._use_nms)
         else:
             self._head_filter = self._head_filter_cfg
 
@@ -285,7 +288,6 @@ class Yolov4(base_model.Yolo):
                 encoder, neck, decoder = split_converter(
                     list_encdec, self._encoder_decoder_split_location, 138)
 
-
         if dn2tf_backbone:
             load_weights_backbone(self._backbone, encoder)
             self._backbone.trainable = False
@@ -294,7 +296,8 @@ class Yolov4(base_model.Yolo):
             if neck is not None:
                 load_weights_backbone(self._neck, neck)
                 self._neck.trainable = False
-                load_weights_v4head(self._head, decoder, (3, 5, 0, 1, 6, 2, 4, 7))
+                load_weights_v4head(self._head, decoder,
+                                    (3, 5, 0, 1, 6, 2, 4, 7))
                 self._head.trainable = False
             else:
                 load_weights_v4head(self._head, decoder, (0, 4, 1, 2, 3))
@@ -306,7 +309,7 @@ if __name__ == "__main__":
     import tensorflow_datasets as tfds
     from yolo.utils.testing_utils import prep_gpu
     from yolo.training.call_backs.PrintingCallBack import Printer
-    prep_gpu() # must be called before loading a dataset
+    prep_gpu()  # must be called before loading a dataset
     # train, info = tfds.load('coco/2017',
     #                         split='train',
     #                         shuffle_files=True,
@@ -316,16 +319,13 @@ if __name__ == "__main__":
     #                        shuffle_files=False,
     #                        with_info=True)
 
-
-    model = Yolov4(model = "tiny", policy="float32", use_tie_breaker=True)
+    model = Yolov4(model="tiny", policy="float32", use_tie_breaker=True)
     model.build(model._input_shape)
     model.get_summary()
     model.load_weights_from_dn(dn2tf_head=True)
 
-
     # train, test = model.process_datasets(train, test, batch_size=1, jitter_im = 0.1, jitter_boxes = 0.005, _eval_is_training = False)
     # loss_fn = model.generate_loss(loss_type="ciou")
-
 
     # #optimizer = ks.optimizers.SGD(lr=1e-3)
     # optimizer = ks.optimizers.Adam(lr=1e-3/32)

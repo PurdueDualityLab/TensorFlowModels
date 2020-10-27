@@ -7,6 +7,7 @@ import tensorflow_addons as tfa
 
 from yolo.dataloaders.Parser import Parser
 
+
 class Classification_Parser(Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
@@ -76,13 +77,18 @@ class Classification_Parser(Parser):
         h = tf.cast(tf.shape(image)[1], tf.int32)
 
         if self._aug_rand_aspect:
-            aspect = tf.random.uniform([], minval = 3, maxval = 5, seed=self._seed, dtype = tf.float32) / 4.
+            aspect = tf.random.uniform(
+                [], minval=3, maxval=5, seed=self._seed, dtype=tf.float32) / 4.
             nh = tf.cast(w / aspect, dtype=tf.int32)
             nw = tf.cast(w, dtype=tf.int32)
             image = tf.image.resize(image, size=(nw, nh))
 
         if self._aug_rand_zoom:
-            scale =  tf.random.uniform([], minval = self._scale[0], maxval = self._scale[1], seed=self._seed, dtype = tf.int32)
+            scale = tf.random.uniform([],
+                                      minval=self._scale[0],
+                                      maxval=self._scale[1],
+                                      seed=self._seed,
+                                      dtype=tf.int32)
             image = tf.image.resize_with_crop_or_pad(image,
                                                      target_height=scale,
                                                      target_width=scale)
@@ -92,14 +98,17 @@ class Classification_Parser(Parser):
                                          target_height=self._output_size[1])
 
         if self._aug_rand_rotate:
-            deg = tf.random.uniform([], minval = -30, maxval = 30, seed=self._seed, dtype = tf.float32)
+            deg = tf.random.uniform([],
+                                    minval=-30,
+                                    maxval=30,
+                                    seed=self._seed,
+                                    dtype=tf.float32)
             deg = deg * 3.14 / 180.
             deg.set_shape(())
             image = tfa.image.rotate(image, deg, interpolation="NEAREST")
 
         if self._aug_rand_brightness:
             image = tf.image.random_brightness(image=image, max_delta=.75)
-        
 
         if self._aug_rand_saturation:
             image = tf.image.random_saturation(image=image,
@@ -113,7 +122,8 @@ class Classification_Parser(Parser):
         image = tf.clip_by_value(image, 0, 1)
         image = tf.image.convert_image_dtype(image, self._dtype)
 
-        label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+        label = tf.one_hot(decoded_tensors['image/class/label'],
+                           self._num_classes)
 
         return image, label
 
@@ -133,6 +143,7 @@ class Classification_Parser(Parser):
             target_width=self._output_size[0],
             target_height=self._output_size[1])  # Final Output Shape
         image = image / 255.  # Normalize
-        label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
-        
+        label = tf.one_hot(decoded_tensors['image/class/label'],
+                           self._num_classes)
+
         return image, label

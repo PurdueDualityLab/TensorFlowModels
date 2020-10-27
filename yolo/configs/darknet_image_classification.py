@@ -1,5 +1,6 @@
 from yolo.configs import backbones
 
+
 @exp_factory.register_config_factory('darknet_imagenet')
 def image_classification_imagenet_darknet() -> cfg.ExperimentConfig:
     """Returns a revnet config for image classification on imagenet."""
@@ -12,18 +13,21 @@ def image_classification_imagenet_darknet() -> cfg.ExperimentConfig:
             model=ImageClassificationModel(
                 num_classes=1001,
                 input_size=[224, 224, 3],
-                backbone=backbones.Backbone(type='darknet', revnet=backbones.DarkNet(model_id="darknettiny")),
-                norm_activation=common.NormActivation(norm_momentum=0.9, norm_epsilon=1e-5),
+                backbone=backbones.Backbone(
+                    type='darknet',
+                    revnet=backbones.DarkNet(model_id="darknettiny")),
+                norm_activation=common.NormActivation(norm_momentum=0.9,
+                                                      norm_epsilon=1e-5),
                 add_head_batch_norm=True),
             losses=Losses(l2_weight_decay=1e-5),
-            train_data=DataConfig(
-                input_path=os.path.join(IMAGENET_INPUT_PATH_BASE, 'train*'),
-                is_training=True,
-                global_batch_size=train_batch_size),
-            validation_data=DataConfig(
-                input_path=os.path.join(IMAGENET_INPUT_PATH_BASE, 'valid*'),
-                is_training=False,
-                global_batch_size=eval_batch_size)),
+            train_data=DataConfig(input_path=os.path.join(
+                IMAGENET_INPUT_PATH_BASE, 'train*'),
+                                  is_training=True,
+                                  global_batch_size=train_batch_size),
+            validation_data=DataConfig(input_path=os.path.join(
+                IMAGENET_INPUT_PATH_BASE, 'valid*'),
+                                       is_training=False,
+                                       global_batch_size=eval_batch_size)),
         trainer=cfg.TrainerConfig(
             steps_per_loop=steps_per_epoch,
             summary_interval=steps_per_epoch,
@@ -35,15 +39,15 @@ def image_classification_imagenet_darknet() -> cfg.ExperimentConfig:
                 'optimizer': {
                     'type': 'sgd',
                     'sgd': {
-                        'momentum': 0.9
+                        'momentum': 0.9,
                     }
                 },
                 'learning_rate': {
                     'type': 'polynomial',
                     'polynomial': {
-                        "initial_learning_rate": 0.1
-                        "end_learning_rate": 0.0001
-                        "power": 4.0
+                        "initial_learning_rate": 0.1,
+                        "end_learning_rate": 0.0001,
+                        "power": 4.0,
                     }
                 },
                 'warmup': {

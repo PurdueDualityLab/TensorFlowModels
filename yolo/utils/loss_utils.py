@@ -1,17 +1,27 @@
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-def parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_points, scale_x_y = 1.0):
+
+def parse_yolo_box_predictions(unscaled_box,
+                               width,
+                               height,
+                               anchor_grid,
+                               grid_points,
+                               scale_x_y=1.0):
     #with tf.name_scope("decode_box_predictions_yolo"):
-    pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
+    pred_xy = tf.math.sigmoid(
+        unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
     pred_wh = unscaled_box[..., 2:4]
-    box_xy = tf.stack([pred_xy[..., 0]/width, pred_xy[..., 1]/height], axis = -1) + grid_points
+    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
+                      axis=-1) + grid_points
     box_wh = tf.math.exp(pred_wh) * anchor_grid
     pred_box = K.concatenate([box_xy, box_wh], axis=-1)
     return pred_xy, pred_wh, pred_box
 
+
 @tf.function(experimental_relax_shapes=True)
-def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_breaker):
+def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
+                    use_tie_breaker):
     """
     convert ground truth for use in loss functions
     Args: 
@@ -22,31 +32,30 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-    boxes = tf.cast(y_true["bbox"], dtype) 
-    classes = tf.one_hot(tf.cast(y_true["classes"], dtype = tf.int32), depth = classes, dtype = dtype)
-    anchors = tf.cast(y_true["best_anchors"], dtype) 
+    boxes = tf.cast(y_true["bbox"], dtype)
+    classes = tf.one_hot(tf.cast(y_true["classes"], dtype=tf.int32),
+                         depth=classes,
+                         dtype=dtype)
+    anchors = tf.cast(y_true["best_anchors"], dtype)
 
     batches = tf.shape(boxes)[0]
     num_boxes = tf.shape(boxes)[1]
     len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype = dtype)
+    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]],
+                    dtype=dtype)
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype),
-                dtype=tf.int32)
-    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype),
-                dtype=tf.int32)
+    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)
+    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype), dtype=tf.int32)
 
-    anchors = tf.repeat(tf.expand_dims(anchors, axis=-1),
-                        len_masks,
-                        axis=-1)
+    anchors = tf.repeat(tf.expand_dims(anchors, axis=-1), len_masks, axis=-1)
 
     update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
     update = tf.TensorArray(dtype, size=0, dynamic_size=True)
     const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
     mask = tf.cast(mask, dtype=dtype)
-    
+
     i = 0
     anchor_id = 0
     for batch in range(batches):
@@ -58,30 +67,46 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
                 continue
             if use_tie_breaker:
                 for anchor_id in range(tf.shape(anchors)[-1]):
-                    index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
+                    index = tf.math.equal(anchors[batch, box_id, anchor_id],
+                                          mask)
                     if K.any(index):
                         #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
-                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
+                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
+                                    dtype=tf.int32)
                         uid = 1
 
-                        used = depth_track[batch, y[batch, box_id],x[batch, box_id], p]
+                        used = depth_track[batch, y[batch, box_id],
+                                           x[batch, box_id], p]
                         if anchor_id == 0:
                             # write the box to the update list
                             # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
                             """peculiar"""
-                            update_index = update_index.write(i,[batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
+                            update_index = update_index.write(
+                                i,
+                                [batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([
+                                boxes[batch, box_id], const, classes[batch,
+                                                                     box_id]
+                            ])
                             update = update.write(i, value)
                         elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
                             uid = 2
                             # write the box to the update list
                             # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
                             """peculiar"""
-                            update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
+                            update_index = update_index.write(
+                                i,
+                                [batch, y[batch, box_id], x[batch, box_id], p])
+                            value = K.concatenate([
+                                boxes[batch, box_id], const, classes[batch,
+                                                                     box_id]
+                            ])
                             update = update.write(i, value)
 
-                        depth_track = tf.tensor_scatter_nd_update(depth_track,[(batch, y[batch, box_id], x[batch, box_id], p)],[uid])
+                        depth_track = tf.tensor_scatter_nd_update(
+                            depth_track,
+                            [(batch, y[batch, box_id], x[batch, box_id], p)],
+                            [uid])
                         i += 1
             else:
                 index = tf.math.equal(anchors[batch, box_id, 0], mask)
@@ -89,8 +114,10 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype, use_tie_brea
                     #tf.(0, anchors[batch, box_id, 0])
                     p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
                                 dtype=tf.int32)
-                    update_index = update_index.write(i, [batch, y[batch, box_id], x[batch, box_id], p])
-                    value = K.concatenate([boxes[batch, box_id],const, classes[batch, box_id]])
+                    update_index = update_index.write(
+                        i, [batch, y[batch, box_id], x[batch, box_id], p])
+                    value = K.concatenate(
+                        [boxes[batch, box_id], const, classes[batch, box_id]])
                     update = update.write(i, value)
                     i += 1
 
@@ -110,7 +137,10 @@ def _build_grid_points(lwidth, lheight, num, dtype):
         x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis=-1)
         x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
-        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),num,axis=-2),axis=0)
+        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),
+                                       num,
+                                       axis=-2),
+                             axis=0)
     return x_y
 
 
@@ -134,7 +164,7 @@ class GridGenerator(object):
                  scale_anchors=None,
                  name=None,
                  low_memory=True,
-                 reset = False):
+                 reset=False):
         self.dtype = tf.keras.backend.floatx()
         if masks != None:
             self._num = len(masks)
@@ -215,7 +245,8 @@ class GridGenerator(object):
         anchor_grid = _build_anchor_grid(
             width, height,
             tf.cast(self._anchors, self.dtype) /
-            tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
+            tf.cast(self._scale_anchors * width, self.dtype), self._num,
+            self.dtype)
         grid_points = self._extend_batch(grid_points, batch_size)
         anchor_grid = self._extend_batch(anchor_grid, batch_size)
         return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)

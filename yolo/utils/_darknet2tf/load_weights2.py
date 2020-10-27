@@ -8,16 +8,18 @@ def split_converter(lst, i, j=None):
         return lst.data[:i], lst.data[i:j], lst.data[j:]
     return lst.data[:i], lst.data[i:]
 
+
 def load_weights(convs, layers):
     min_key = min(layers.keys())
     max_key = max(layers.keys())
     for i in range(min_key, max_key + 1):
         try:
             cfg = convs.pop(0)
-            print(cfg.c, cfg.filters , layers[i]._filters)
+            print(cfg.c, cfg.filters, layers[i]._filters)
             layers[i].set_weights(cfg.get_weights())
         except:
             print(f"an error has occured, {layers[i].name}, {i}")
+
 
 def load_weights_backbone(model, net):
     convs = []
@@ -27,13 +29,13 @@ def load_weights_backbone(model, net):
 
     layers = dict()
     base_key = 0
-    alternate = 0 
+    alternate = 0
     for layer in model.layers:
         # non sub module conv blocks
         if isinstance(layer, DarkConv):
             if base_key + alternate not in layers.keys():
                 layers[base_key + alternate] = layer
-            else: 
+            else:
                 base_key += 1
                 layers[base_key + alternate] = layer
             print(base_key + alternate, layer.name)
@@ -44,23 +46,25 @@ def load_weights_backbone(model, net):
                 if isinstance(sublayer, DarkConv):
                     if sublayer.name == "dark_conv":
                         key = 0
-                    else: 
-                        key = int(sublayer.name.split("_")[-1]) 
+                    else:
+                        key = int(sublayer.name.split("_")[-1])
                     layers[key + base_key] = sublayer
                     print(key + base_key, sublayer.name)
-                    if key > alternate: 
+                    if key > alternate:
                         alternate = key
             #alternate += 1
 
     load_weights(convs, layers)
     return
 
+
 def ishead(out_conv, layer):
-    if layer.filters == out_conv: 
+    if layer.filters == out_conv:
         return True
     return False
 
-def load_head(model, net, out_conv = 255):
+
+def load_head(model, net, out_conv=255):
     convs = []
     cfg_heads = []
     for layer in net:
@@ -77,9 +81,9 @@ def load_head(model, net, out_conv = 255):
         if isinstance(layer, DarkConv):
             if layer.name == "dark_conv":
                 key = 0
-            else: 
+            else:
                 key = int(layer.name.split("_")[-1])
-            
+
             if ishead(out_conv, layer):
                 heads[key] = layer
             else:
@@ -89,18 +93,17 @@ def load_head(model, net, out_conv = 255):
                 if isinstance(sublayer, DarkConv):
                     if sublayer.name == "dark_conv":
                         key = 0
-                    else: 
+                    else:
                         key = int(sublayer.name.split("_")[-1])
                     if ishead(out_conv, sublayer):
                         heads[key] = sublayer
                     else:
                         layers[key] = sublayer
                     print(key, sublayer.name)
-    
+
     load_weights(convs, layers)
     load_weights(cfg_heads, heads)
     return
-
 
 
 def load_weights_v4head(model, net, remap):
@@ -115,7 +118,7 @@ def load_weights_v4head(model, net, remap):
         if isinstance(layer, DarkConv):
             if layer.name == "dark_conv":
                 key = 0
-            else: 
+            else:
                 key = int(layer.name.split("_")[-1])
             layers[key] = layer
             base_key += 1
@@ -125,7 +128,7 @@ def load_weights_v4head(model, net, remap):
                 if isinstance(sublayer, DarkConv):
                     if sublayer.name == "dark_conv":
                         key = 0 + base_key
-                    else: 
+                    else:
                         key = int(sublayer.name.split("_")[-1]) + base_key
                     layers[key] = sublayer
                     print(key, sublayer.name)

@@ -21,8 +21,8 @@ class Yolov3(base_model.Yolo):
             backbone=None,
             head=None,
             head_filter=None,
-            kernel_regularizer = 5e-4,
-            clip_grads_norm = None,
+            kernel_regularizer=5e-4,
+            clip_grads_norm=None,
             thresh: int = 0.45,
             class_thresh: int = 0.45,
             path_scales=None,
@@ -32,9 +32,9 @@ class Yolov3(base_model.Yolo):
             anchors=None,
             max_boxes: int = 200,
             scale_boxes: int = 416,
-            policy = None, 
-            use_nms = True,
-            using_rt = False,
+            policy=None,
+            use_nms=True,
+            using_rt=False,
             **kwargs):
         super().__init__(**kwargs)
 
@@ -51,10 +51,12 @@ class Yolov3(base_model.Yolo):
             if type(policy) != str:
                 policy = policy.name
             self._og_policy = policy
-            self._policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self._policy = tf.keras.mixed_precision.experimental.global_policy(
+            ).name
             self.set_policy(policy=policy)
         else:
-            self._og_policy = tf.keras.mixed_precision.experimental.global_policy().name
+            self._og_policy = tf.keras.mixed_precision.experimental.global_policy(
+            ).name
             self._policy = self._og_policy
 
         #filtering params
@@ -78,7 +80,8 @@ class Yolov3(base_model.Yolo):
         self._backbone_cfg = backbone
         self._head_cfg = head
         self._head_filter_cfg = head_filter
-        self._kernel_regularizer = tf.keras.regularizers.l2(l=kernel_regularizer)
+        self._kernel_regularizer = tf.keras.regularizers.l2(
+            l=kernel_regularizer)
         self._use_nms = use_nms
         self._using_rt = using_rt
 
@@ -108,16 +111,8 @@ class Yolov3(base_model.Yolo):
                 4: [3, 4, 5],
                 3: [0, 1, 2]
             }
-            self._path_scales = self._path_scales or {
-                5: 32,
-                4: 16,
-                3: 8
-            }
-            self._x_y_scales = self._x_y_scales or {
-                5: 1.0,
-                4: 1.0,
-                3: 1.0
-            }
+            self._path_scales = self._path_scales or {5: 32, 4: 16, 3: 8}
+            self._x_y_scales = self._x_y_scales or {5: 1.0, 4: 1.0, 3: 1.0}
         elif self.model_name == "tiny":
             self._encoder_decoder_split_location = 14
             self._boxes = self._boxes or [(10, 14), (23, 27), (37, 58),
@@ -161,7 +156,7 @@ class Yolov3(base_model.Yolo):
                 model_id=default_dict[self.model_name]["backbone"],
                 config=default_dict[self.model_name]["backbone"],
                 input_shape=self._input_shape,
-                kernel_regularizer =self._kernel_regularizer)
+                kernel_regularizer=self._kernel_regularizer)
         else:
             self._backbone = self._backbone_cfg
             self._custom_aspects = True
@@ -271,7 +266,7 @@ if __name__ == "__main__":
     from yolo.training.call_backs.PrintingCallBack import Printer
     prep_gpu()
 
-    model = Yolov3(model = "regular", policy="float32", use_tie_breaker=False)
+    model = Yolov3(model="regular", policy="float32", use_tie_breaker=False)
     model.load_weights_from_dn(weights_file="yolov3-regular.weights")
-    model.build(input_shape = [None, None, None, 3])
+    model.build(input_shape=[None, None, None, 3])
     model.get_summary()

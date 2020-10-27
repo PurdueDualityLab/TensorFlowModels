@@ -3,7 +3,6 @@ import tensorflow as tf
 import official.core.base_task as task
 import official.core.input_reader as dataset
 
-
 from absl import logging
 import tensorflow as tf
 from official.core import base_task
@@ -17,6 +16,7 @@ from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.modeling import factory
 
+
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
     """A single-replica view of training procedure.
@@ -29,7 +29,6 @@ class YoloTask(base_task.Task):
         self._loss_dict = None
         return
 
-
     def build_model(self):
         """get an instance of Yolo v3 or v4"""
         from yolo.modeling.Yolo import build_yolo
@@ -37,8 +36,10 @@ class YoloTask(base_task.Task):
         model_base_cfg = self.task_config.model
         l2_weight_decay = self.task_config.weight_decay
 
-        input_specs = tf.keras.layers.InputSpec(shape = [None] + model_base_cfg.input_size)
-        l2_regularizer = (tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
+        input_specs = tf.keras.layers.InputSpec(shape=[None] +
+                                                model_base_cfg.input_size)
+        l2_regularizer = (tf.keras.regularizers.l2(l2_weight_decay)
+                          if l2_weight_decay else None)
 
         model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
         self._loss_dict = losses
@@ -50,9 +51,9 @@ class YoloTask(base_task.Task):
             head_weights = self.task_config.head_from_darknet
             weights_file = self.task_config.weights_file
 
-            model.load_weights_from_dn(dn2tf_backbone = backbone_weights,
-                                       dn2tf_head = head_weights,
-                                       weights_file = weights_file)
+            model.load_weights_from_dn(dn2tf_backbone=backbone_weights,
+                                       dn2tf_head=head_weights,
+                                       weights_file=weights_file)
         else:
             """Loading pretrained checkpoint."""
             if not self.task_config.init_checkpoint:
@@ -74,7 +75,8 @@ class YoloTask(base_task.Task):
             else:
                 assert "Only 'all' or 'backbone' can be used to initialize the model."
 
-            logging.info('Finished loading pretrained checkpoint from %s', ckpt_dir_or_file)
+            logging.info('Finished loading pretrained checkpoint from %s',
+                         ckpt_dir_or_file)
 
     def build_inputs(self, params, input_context=None):
         return
@@ -87,14 +89,15 @@ class YoloTask(base_task.Task):
         metric_dict = dict()
 
         for key in output.keys():
-            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+                key](labels, outputs[key])
             loss += _loss
             loss_box += _loss_box
             loss_conf += _loss_conf
             loss_class += _loss_class
             metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
-            metric_dict[f"avg_iou_{key}"] =  tf.stop_gradient(_avg_iou)
-        
+            metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
+
         metric_dict["box_loss"] = loss_box
         metric_dict["conf_loss"] = loss_conf
         metric_dict["class_loss"] = loss_class
@@ -112,12 +115,12 @@ class YoloTask(base_task.Task):
             # compute a prediction
             y_pred = model(image, training=True)
             loss, metrics = self.build_losses(y_pred["raw_output"], label)
-            scaled_loss = loss/num_replicas
+            scaled_loss = loss / num_replicas
 
             # scale the loss for numerical stability
             if isinstance(self.optimizer, mixed_precision.LossScaleOptimizer):
                 scaled_loss = self.optimizer.get_scaled_loss(scaled_loss)
-        
+
         # compute the gradient
         train_vars = model.trainable_variables
         gradients = tape.gradient(scaled_loss, train_vars)
@@ -127,11 +130,12 @@ class YoloTask(base_task.Task):
             gradients = optimizer.get_unscaled_gradients(gradients)
 
         if self.task_config.gradient_clip_norm > 0.0:
-            gradients, _ = tf.clip_by_global_norm(gradients, self.task_config.gradient_clip_norm )
+            gradients, _ = tf.clip_by_global_norm(
+                gradients, self.task_config.gradient_clip_norm)
         optimizer.apply_gradients(zip(gradients, train_vars))
-        
+
         #custom metrics
-        logs = {"loss":loss}
+        logs = {"loss": loss}
         logs.update(metrics)
         return logs
 
@@ -144,7 +148,7 @@ class YoloTask(base_task.Task):
         loss, metrics = self.build_losses(y_pred["raw_output"], label)
 
         #custom metrics
-        loss_metrics = {"loss":loss}
+        loss_metrics = {"loss": loss}
         loss_metrics.update(metrics)
         return loss_metrics
 

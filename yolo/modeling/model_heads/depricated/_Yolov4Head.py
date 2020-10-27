@@ -22,7 +22,7 @@ class Yolov4Head(tf.keras.Model):
                  boxes=9,
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 weight_decay = None,
+                 weight_decay=None,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -157,7 +157,7 @@ class Yolov4Head(tf.keras.Model):
 
     def _connect_layers(self, routes, resamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = dict() #collections.OrderedDict()
+        outputs = dict()  #collections.OrderedDict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]]  # layer input to the next layer
 

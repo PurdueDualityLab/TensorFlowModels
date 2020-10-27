@@ -7,6 +7,7 @@ import yolo.modeling.building_blocks as nn_blocks
 from official.vision.beta.modeling.backbones import factory
 from . import configs
 
+
 class CSPBlockConfig(object):
     def __init__(self, layer, stack, reps, bottleneck, filters, kernel_size,
                  strides, padding, activation, route, output_name, is_output):
@@ -35,40 +36,47 @@ class CSPBlockConfig(object):
         self.is_output = is_output
         return
 
+
 def csp_build_block_specs(config, min_size, max_size):
     specs = []
     for layer in config:
         specs.append(CSPBlockConfig(*layer))
     return specs
 
+
 def darkconv_config_todict(config, kwargs):
     dictvals = {
-        "filters" : config.filters,
-        "kernel_size" : config.kernel_size,
-        "strides" : config.strides,
-        "padding" : config.padding
+        "filters": config.filters,
+        "kernel_size": config.kernel_size,
+        "strides": config.strides,
+        "padding": config.padding
     }
     dictvals.update(kwargs)
     return dictvals
 
+
 def darktiny_config_todict(config, kwargs):
-    dictvals = {
-        "filters" : config.filters,
-        "strides" : config.strides}
+    dictvals = {"filters": config.filters, "strides": config.strides}
     dictvals.update(kwargs)
     return dictvals
 
+
 def maxpool_config_todict(config, kwargs):
-    return {"pool_size": config.kernel_size,
-            "strides": config.strides,
-            "padding": config.padding,
-            "name": kwargs["name"]}
+    return {
+        "pool_size": config.kernel_size,
+        "strides": config.strides,
+        "padding": config.padding,
+        "name": kwargs["name"]
+    }
+
 
 class layer_registry(object):
     def __init__(self):
-        self._layer_dict = {"DarkTiny": (nn_blocks.DarkTiny, darktiny_config_todict),
-                            "DarkConv": (nn_blocks.DarkConv, darkconv_config_todict),
-                            "MaxPool": (tf.keras.layers.MaxPool2D, maxpool_config_todict)}
+        self._layer_dict = {
+            "DarkTiny": (nn_blocks.DarkTiny, darktiny_config_todict),
+            "DarkConv": (nn_blocks.DarkConv, darkconv_config_todict),
+            "MaxPool": (tf.keras.layers.MaxPool2D, maxpool_config_todict)
+        }
         return
 
     def _get_layer(self, key):
@@ -85,15 +93,15 @@ class Darknet(ks.Model):
     def __init__(self,
                  model_id="darknet53",
                  input_shape=(None, None, None, 3),
-                 min_size = None,
-                 max_size = 5,
-                 activation = None,
-                 use_sync_bn = False,
-                 norm_momentum = 0.99,
-                 norm_epsilon = 0.001,
-                 kernel_initializer = 'glorot_uniform',
-                 kernel_regularizer = None,
-                 bias_regularizer = None,
+                 min_size=None,
+                 max_size=5,
+                 activation=None,
+                 use_sync_bn=False,
+                 norm_momentum=0.99,
+                 norm_epsilon=0.001,
+                 kernel_initializer='glorot_uniform',
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
                  config=None,
                  **kwargs):
 
@@ -103,14 +111,17 @@ class Darknet(ks.Model):
 
         if not isinstance(config, Dict):
             self._model_name = model_id.lower()
-            layer_specs, splits = self.get_model_config(self._model_name, min_size, max_size)
+            layer_specs, splits = self.get_model_config(
+                self._model_name, min_size, max_size)
             self._splits = splits
 
         if isinstance(input_shape, List) or isinstance(input_shape, Tuple):
             if len(input_shape) == 4:
-                self._input_shape = tf.keras.layers.InputSpec(shape = input_shape)
+                self._input_shape = tf.keras.layers.InputSpec(
+                    shape=input_shape)
             else:
-                self._input_shape = tf.keras.layers.InputSpec(shape = [None] + list(input_shape))
+                self._input_shape = tf.keras.layers.InputSpec(
+                    shape=[None] + list(input_shape))
         else:
             self._input_shape = input_shape
 
@@ -128,14 +139,16 @@ class Darknet(ks.Model):
         self._activation = activation
         self._kernel_regularizer = kernel_regularizer
 
-        self._default_dict = {"kernel_initializer": self._kernel_initializer,
-                "kernel_regularizer": self._kernel_regularizer,
-                "bias_regularizer": self._bias_regularizer,
-                "norm_momentum": self._norm_momentum,
-                "norm_epsilon": self._norm_epislon,
-                "use_sync_bn": self._use_sync_bn,
-                "activation": self._activation,
-                "name": None}
+        self._default_dict = {
+            "kernel_initializer": self._kernel_initializer,
+            "kernel_regularizer": self._kernel_regularizer,
+            "bias_regularizer": self._bias_regularizer,
+            "norm_momentum": self._norm_momentum,
+            "norm_epsilon": self._norm_epislon,
+            "use_sync_bn": self._use_sync_bn,
+            "activation": self._activation,
+            "name": None
+        }
 
         inputs = ks.layers.Input(shape=self._input_shape.shape[1:])
         output = self._build_struct(layer_specs, inputs)
@@ -161,8 +174,8 @@ class Darknet(ks.Model):
                 stack_outputs.append(x)
             elif config.stack == "residual":
                 x = self._residual_stack(stack_outputs[config.route],
-                                    config,
-                                    name=f"{config.layer}_{i}")
+                                         config,
+                                         name=f"{config.layer}_{i}")
                 stack_outputs.append(x)
             elif config.stack == "csp":
                 x = self._csp_stack(stack_outputs[config.route],
@@ -174,12 +187,16 @@ class Darknet(ks.Model):
                                              config,
                                              name=f"{config.layer}_{i}")
                 stack_outputs.append(x_pass)
-            if (config.is_output and self._min_size == None):# or isinstance(config.output_name, str):
+            if (config.is_output and self._min_size
+                    == None):  # or isinstance(config.output_name, str):
                 endpoints[str(config.output_name)] = x
             elif self._min_size != None and config.output_name >= self._min_size and config.output_name <= self._max_size:
                 endpoints[str(config.output_name)] = x
 
-        self._output_specs = {l: endpoints[l].get_shape() for l in endpoints.keys()}
+        self._output_specs = {
+            l: endpoints[l].get_shape()
+            for l in endpoints.keys()
+        }
         return endpoints
 
     def _get_activation(self, activation):
@@ -197,17 +214,17 @@ class Darknet(ks.Model):
             csp_filter_reduce = 2
             residual_filter_reduce = 1
             scale_filters = 2
-        self._default_dict["activation"] = self._get_activation(config.activation)
+        self._default_dict["activation"] = self._get_activation(
+            config.activation)
         self._default_dict["name"] = f"{name}_csp_down"
-        x, x_route = nn_blocks.CSPDownSample(filters = config.filters,
-                                             filter_reduce = csp_filter_reduce,
+        x, x_route = nn_blocks.CSPDownSample(filters=config.filters,
+                                             filter_reduce=csp_filter_reduce,
                                              **self._default_dict)(inputs)
         for i in range(config.repetitions):
             self._default_dict["name"] = f"{name}_{i}"
-            x = nn_blocks.DarkResidual(
-                filters=config.filters // scale_filters,
-                filter_scale=residual_filter_reduce,
-                **self._default_dict)(x)
+            x = nn_blocks.DarkResidual(filters=config.filters // scale_filters,
+                                       filter_scale=residual_filter_reduce,
+                                       **self._default_dict)(x)
 
         self._default_dict["name"] = f"{name}_csp_connect"
         output = nn_blocks.CSPConnect(filters=config.filters,
@@ -218,7 +235,8 @@ class Darknet(ks.Model):
         return output
 
     def _tiny_stack(self, inputs, config, name):
-        self._default_dict["activation"] = self._get_activation(config.activation)
+        self._default_dict["activation"] = self._get_activation(
+            config.activation)
         self._default_dict["name"] = f"{name}_tiny"
         x, x_route = nn_blocks.CSPTiny(filters=config.filters,
                                        **self._default_dict)(inputs)
@@ -227,17 +245,16 @@ class Darknet(ks.Model):
         return x, x_route
 
     def _residual_stack(self, inputs, config, name):
-        self._default_dict["activation"] = self._get_activation(config.activation)
+        self._default_dict["activation"] = self._get_activation(
+            config.activation)
         self._default_dict["name"] = f"{name}_residual_down"
-        x = nn_blocks.DarkResidual(
-                filters = config.filters,
-                downsample = True,
-                **self._default_dict)(inputs)
+        x = nn_blocks.DarkResidual(filters=config.filters,
+                                   downsample=True,
+                                   **self._default_dict)(inputs)
         for i in range(config.repetitions - 1):
             self._default_dict["name"] = f"{name}_{i}"
-            x = nn_blocks.DarkResidual(
-                filters = config.filters,
-                **self._default_dict)(x)
+            x = nn_blocks.DarkResidual(filters=config.filters,
+                                       **self._default_dict)(x)
         self._default_dict["activation"] = self._activation
         self._default_dict["name"] = None
         return x
@@ -245,7 +262,8 @@ class Darknet(ks.Model):
     def _build_block(self, inputs, config, name):
         x = inputs
         i = 0
-        self._default_dict["activation"] = self._get_activation(config.activation)
+        self._default_dict["activation"] = self._get_activation(
+            config.activation)
         while i < config.repetitions:
             self._default_dict["name"] = f"{name}_{i}"
             layer = self._registry(config, self._default_dict)
@@ -280,41 +298,47 @@ class Darknet(ks.Model):
         splits = backbone_dict["splits"]
         return csp_build_block_specs(backbone, min_size, max_size), splits
 
+
 @factory.register_backbone_builder('darknet')
 def build_darknet(
-        input_specs: tf.keras.layers.InputSpec,
-        model_config,
-        l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
+    input_specs: tf.keras.layers.InputSpec,
+    model_config,
+    l2_regularizer: tf.keras.regularizers.Regularizer = None
+) -> tf.keras.Model:
 
     backbone_type = model_config.backbone.type
     backbone_cfg = model_config.backbone.get()
     #norm_activation_config = model_config.norm_activation
 
-    return Darknet(model_id=backbone_cfg.model_id,
-            input_shape=input_specs,
-            # activation=norm_activation_config.activation,
-            # use_sync_bn=norm_activation_config.use_sync_bn,
-            # norm_momentum=norm_activation_config.norm_momentum,
-            # norm_epsilon=norm_activation_config.norm_epsilon,
-            kernel_regularizer=l2_regularizer)
+    return Darknet(
+        model_id=backbone_cfg.model_id,
+        input_shape=input_specs,
+        # activation=norm_activation_config.activation,
+        # use_sync_bn=norm_activation_config.use_sync_bn,
+        # norm_momentum=norm_activation_config.norm_momentum,
+        # norm_epsilon=norm_activation_config.norm_epsilon,
+        kernel_regularizer=l2_regularizer)
+
 
 class temp():
     def __init__(self, backbone):
         self.backbone = backbone
 
 
-# for generic usage have a depth of 8 for every layer except for the first 3 and the last. 
-# the last has 4 and the first 3 have 1 1 2 
-# tiny, 1 per depth and a final non down sampling layer with stride = 1 
+# for generic usage have a depth of 8 for every layer except for the first 3 and the last.
+# the last has 4 and the first 3 have 1 1 2
+# tiny, 1 per depth and a final non down sampling layer with stride = 1
 
 if __name__ == "__main__":
     from yolo.configs import backbones
     from official.core import registry
 
-    model = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
+    model = backbones.Backbone(type="darknet",
+                               darknet=backbones.DarkNet(model_id="darknet53"))
     cfg = temp(model)
 
-    model = factory.build_backbone(tf.keras.layers.InputSpec(shape = [None, 416, 416, 3]), cfg, None)
+    model = factory.build_backbone(
+        tf.keras.layers.InputSpec(shape=[None, 416, 416, 3]), cfg, None)
 
     def print_weights(weights):
         shapes = []

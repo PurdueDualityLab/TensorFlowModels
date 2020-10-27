@@ -10,7 +10,7 @@ from yolo.utils.loss_utils import parse_yolo_box_predictions
 
 class Yolo_Loss(object):
     def __init__(self,
-                 classes, 
+                 classes,
                  mask,
                  anchors,
                  scale_anchors=1,
@@ -93,35 +93,49 @@ class Yolo_Loss(object):
             tf.print("\nerror: stop training")
 
     @tf.function(experimental_relax_shapes=True)
-    def _get_label_attributes(self, width, height, batch_size, y_true, y_pred, dtype):
-        grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-        y_true = build_grided_gt(y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width, self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
-        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid), tf.stop_gradient(y_true)
-    
+    def _get_label_attributes(self, width, height, batch_size, y_true, y_pred,
+                              dtype):
+        grid_points, anchor_grid = self._anchor_generator(width,
+                                                          height,
+                                                          batch_size,
+                                                          dtype=dtype)
+        y_true = build_grided_gt(
+            y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width,
+            self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
+        return tf.stop_gradient(grid_points), tf.stop_gradient(
+            anchor_grid), tf.stop_gradient(y_true)
+
     @tf.function(experimental_relax_shapes=True)
-    def _get_predicted_box(self, width, height, unscaled_box, anchor_grid, grid_points):
-        pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
+    def _get_predicted_box(self, width, height, unscaled_box, anchor_grid,
+                           grid_points):
+        pred_xy = tf.math.sigmoid(unscaled_box[
+            ..., 0:2]) * self._scale_x_y - 0.5 * (self._scale_x_y - 1)
         pred_wh = unscaled_box[..., 2:4]
-        box_xy = tf.stack([pred_xy[..., 0]/width, pred_xy[..., 1]/height], axis = -1) + grid_points
+        box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
+                          axis=-1) + grid_points
         box_wh = tf.math.exp(pred_wh) * anchor_grid
         pred_box = K.concatenate([box_xy, box_wh], axis=-1)
         return pred_xy, pred_wh, pred_box
         #return parse_yolo_box_predictions(unscaled_box, width, height, anchor_grid, grid_points, self._scale_x_y)
-    
-    @tf.function(experimental_relax_shapes=True)
-    def _scale_ground_truth_box(self, box, width, height, anchor_grid, grid_points, dtype):
-        xy = tf.nn.relu(box[..., 0:2] - grid_points)
-        xy = K.concatenate([K.expand_dims(xy[..., 0] * width, axis=-1),K.expand_dims(xy[..., 1] * height, axis=-1)],axis=-1)
-        wh = tf.math.log(box[..., 2:4] / anchor_grid)
-        wh = tf.where(tf.math.is_nan(wh),tf.cast(0.0, dtype=dtype), wh)
-        wh = tf.where(tf.math.is_inf(wh),tf.cast(0.0, dtype=dtype), wh)
-        return tf.stop_gradient(xy), tf.stop_gradient(wh)
-    
-    def rm_nan_inf(self, x):
-        x = tf.where(tf.math.is_nan(x),tf.cast(0.0, dtype=x.dtype), x)
-        x = tf.where(tf.math.is_inf(x),tf.cast(0.0, dtype=x.dtype), x)
-        return x
 
+    @tf.function(experimental_relax_shapes=True)
+    def _scale_ground_truth_box(self, box, width, height, anchor_grid,
+                                grid_points, dtype):
+        xy = tf.nn.relu(box[..., 0:2] - grid_points)
+        xy = K.concatenate([
+            K.expand_dims(xy[..., 0] * width, axis=-1),
+            K.expand_dims(xy[..., 1] * height, axis=-1)
+        ],
+                           axis=-1)
+        wh = tf.math.log(box[..., 2:4] / anchor_grid)
+        wh = tf.where(tf.math.is_nan(wh), tf.cast(0.0, dtype=dtype), wh)
+        wh = tf.where(tf.math.is_inf(wh), tf.cast(0.0, dtype=dtype), wh)
+        return tf.stop_gradient(xy), tf.stop_gradient(wh)
+
+    def rm_nan_inf(self, x):
+        x = tf.where(tf.math.is_nan(x), tf.cast(0.0, dtype=x.dtype), x)
+        x = tf.where(tf.math.is_inf(x), tf.cast(0.0, dtype=x.dtype), x)
+        return x
 
     @tf.function(experimental_relax_shapes=True)
     def __call__(self, y_true, y_pred):
@@ -129,14 +143,15 @@ class Yolo_Loss(object):
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
         y_pred = tf.reshape(y_pred, [batch_size, width, height, self._num, -1])
-        grid_points, anchor_grid, y_true = self._get_label_attributes(width, height, batch_size, y_true, y_pred, y_pred.dtype)
-        
+        grid_points, anchor_grid, y_true = self._get_label_attributes(
+            width, height, batch_size, y_true, y_pred, y_pred.dtype)
+
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
 
-
         #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-        pred_xy, pred_wh, pred_box = self._get_predicted_box(fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
+        pred_xy, pred_wh, pred_box = self._get_predicted_box(
+            fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
         pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
         pred_conf = self.rm_nan_inf(pred_conf)
         pred_class = tf.math.sigmoid(y_pred[..., 5:])
@@ -164,8 +179,11 @@ class Yolo_Loss(object):
             mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
 
             # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
-            scale = (2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
-            true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight, anchor_grid, grid_points, y_pred.dtype)
+            scale = (
+                2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
+            true_xy, true_wh = self._scale_ground_truth_box(
+                true_box, fwidth, fheight, anchor_grid, grid_points,
+                y_pred.dtype)
             loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
             loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
             loss_box = (loss_wh + loss_xy) * true_conf * scale
@@ -183,19 +201,31 @@ class Yolo_Loss(object):
         conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
         #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-        loss_box = tf.reduce_mean(tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
+        loss_box = tf.reduce_mean(
+            tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)),
                     dtype=y_pred.dtype))
-        conf_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
+        conf_loss = tf.reduce_mean(
+            tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)),
                     dtype=y_pred.dtype))
-        class_loss = tf.reduce_mean(tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
+        class_loss = tf.reduce_mean(
+            tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)),
                     dtype=y_pred.dtype))
 
         #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
         loss = class_loss + conf_loss + loss_box
 
         #10. store values for use in metrics
-        recall50 = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis = -1) > 0.5, dtype=true_conf.dtype) * true_conf, axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-        avg_iou = tf.math.divide_no_nan(tf.reduce_sum(iou), tf.cast(tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),dtype=y_pred.dtype))
+        recall50 = tf.reduce_mean(
+            tf.math.divide_no_nan(
+                tf.reduce_sum(tf.cast(tf.squeeze(pred_conf, axis=-1) > 0.5,
+                                      dtype=true_conf.dtype) * true_conf,
+                              axis=(1, 2, 3)),
+                (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+        avg_iou = tf.math.divide_no_nan(
+            tf.reduce_sum(iou),
+            tf.cast(tf.math.count_nonzero(tf.cast(iou > 0,
+                                                  dtype=y_pred.dtype)),
+                    dtype=y_pred.dtype))
         return loss, loss_box, conf_loss, class_loss, avg_iou, recall50
 
     def get_config(self):
@@ -213,4 +243,3 @@ class Yolo_Loss(object):
         }
         layer_config.update(super().get_config())
         return layer_config
-

@@ -36,9 +36,11 @@ def _xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
         xy, wh = tf.split(box, 2, axis=-1)
         xy_min = xy - wh / 2
         xy_max = xy + wh / 2
-        box = tf.stack([xy_min[..., 1], xy_min[..., 0], xy_max[..., 1], xy_max[...,0]], axis=-1)
+        box = tf.stack(
+            [xy_min[..., 1], xy_min[..., 0], xy_max[..., 1], xy_max[..., 0]],
+            axis=-1)
         if split_min_max:
-            box = tf.split(box, 2, axis = -1)
+            box = tf.split(box, 2, axis=-1)
     return box
 
 
@@ -76,8 +78,8 @@ def _intersection_and_union(box1: tf.Tensor, box2: tf.Tensor):
     with tf.name_scope("intersection_and_union"):
         intersect_mins = tf.math.maximum(box1[..., 0:2], box2[..., 0:2])
         intersect_maxes = tf.math.minimum(box1[..., 2:4], box2[..., 2:4])
-        intersect_wh =  tf.math.maximum(intersect_maxes - intersect_mins,
-                                  tf.zeros_like(intersect_mins))
+        intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
+                                       tf.zeros_like(intersect_mins))
         intersection = intersect_wh[..., 0] * intersect_wh[..., 1]
 
         box1_area = _get_area(box1)

@@ -22,7 +22,7 @@ class Yolov3Head(tf.keras.Model):
                  boxes=9,
                  cfg_dict=None,
                  input_shape=(None, None, None, 3),
-                 kernel_regularizer = None,
+                 kernel_regularizer=None,
                  **kwargs):
         """
         construct a detection head for an arbitrary back bone following the Yolo style
@@ -148,7 +148,7 @@ class Yolov3Head(tf.keras.Model):
 
             if start_width != None:
                 start_width *= 2
-            
+
             if start_height != None:
                 start_height *= 2
 
@@ -156,7 +156,7 @@ class Yolov3Head(tf.keras.Model):
 
     def _connect_layers(self, routes, upsamples, prediction_heads, inputs):
         """ connect all attributes the yolo way, if you want a different method of construction use something else """
-        outputs = dict() #collections.OrderedDict()
+        outputs = dict()  #collections.OrderedDict()
         layer_keys = list(self._cfg_dict.keys())
         layer_in = inputs[layer_keys[0]]
 

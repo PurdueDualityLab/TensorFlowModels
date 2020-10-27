@@ -13,8 +13,8 @@ class DarkResidual(ks.layers.Layer):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
-                 kernel_regularizer= None,
-                 bias_regularizer = None,
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
                  use_bn=True,
                  use_sync_bn=False,
                  norm_momentum=0.99,
@@ -58,7 +58,7 @@ class DarkResidual(ks.layers.Layer):
         self._bias_regularizer = bias_regularizer
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
-        self._kernel_regularizer=kernel_regularizer
+        self._kernel_regularizer = kernel_regularizer
 
         # normal params
         self._norm_moment = norm_momentum

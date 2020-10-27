@@ -6,33 +6,34 @@ from ._DarkConv import DarkConv
 
 @ks.utils.register_keras_serializable(package='yolo')
 class DarkTiny(ks.layers.Layer):
-    def __init__(self,
-                 filters=1,
-                 use_bias=True,
-                 strides=2,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 bias_regularizer = None,
-                 kernel_regularizer= None,  # default find where is it is stated
-                 use_bn=True,
-                 use_sync_bn=False,
-                 norm_momentum=0.99,
-                 norm_epsilon=0.001,
-                 activation='leaky',
-                 leaky_alpha=0.1,
-                 sc_activation='linear',
-                 **kwargs):
+    def __init__(
+            self,
+            filters=1,
+            use_bias=True,
+            strides=2,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            bias_regularizer=None,
+            kernel_regularizer=None,  # default find where is it is stated
+            use_bn=True,
+            use_sync_bn=False,
+            norm_momentum=0.99,
+            norm_epsilon=0.001,
+            activation='leaky',
+            leaky_alpha=0.1,
+            sc_activation='linear',
+            **kwargs):
 
         # darkconv params
         self._filters = filters
         self._use_bias = use_bias
         self._kernel_initializer = kernel_initializer
         self._bias_initializer = bias_initializer
-        self._bias_regularizer=bias_regularizer
+        self._bias_regularizer = bias_regularizer
         self._use_bn = use_bn
         self._use_sync_bn = use_sync_bn
         self._strides = strides
-        self._kernel_regularizer=kernel_regularizer
+        self._kernel_regularizer = kernel_regularizer
 
         # normal params
         self._norm_moment = norm_momentum

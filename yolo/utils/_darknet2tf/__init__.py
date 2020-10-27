@@ -171,13 +171,14 @@ class DarkNetConverter(_DarkNetSectionList):
 
             path_scales[yolo_tensor.name] = self.data[i - 1].c >> 5
 
-        yolo_layer = YoloLayer(masks=masks,
-                               anchors=anchors,
-                               thresh=thresh,
-                               cls_thresh=class_thresh,
-                               max_boxes=max_boxes,
-                               dtype=dtype,
-                               #scale_boxes=self.net.w,
-                               scale_xy=scale_x_y,
-                               path_scale=path_scales)
+        yolo_layer = YoloLayer(
+            masks=masks,
+            anchors=anchors,
+            thresh=thresh,
+            cls_thresh=class_thresh,
+            max_boxes=max_boxes,
+            dtype=dtype,
+            #scale_boxes=self.net.w,
+            scale_xy=scale_x_y,
+            path_scale=path_scales)
         return yolo_layer(outs)

@@ -1,6 +1,7 @@
 import abc
 from typing import Callable
 
+
 class Parser(object):
     """Parses data and produces tensors to be consumed by models."""
 

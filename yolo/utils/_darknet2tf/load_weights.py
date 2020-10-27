@@ -8,6 +8,7 @@ from collections import defaultdict
 from yolo.modeling.building_blocks import DarkConv
 from .config_classes import convCFG
 
+
 def split_converter(lst, i, j=None):
     if j is None:
         return lst.data[:i], lst.data[i:]
@@ -62,9 +63,6 @@ def get_tiny_tf_format(encoder):
         if layer._type != "maxpool":
             weights.append(layer.get_weights())
     return encoder, weights
-
-
-
 
 
 # DEBUGGING
@@ -205,11 +203,12 @@ def load_weights_v4head(model, net):
     for block in blocks:
         for layer in block:
             cfg = convs.pop(0)
-            print(cfg)#, layer.input_shape)
+            print(cfg)  #, layer.input_shape)
             layer.set_weights(cfg.get_weights())
         print()
 
     print(convs)
+
 
 def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
     # get weights for backbone
