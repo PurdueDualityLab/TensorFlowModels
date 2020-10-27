@@ -109,15 +109,100 @@ class YoloKmeans:
         if self._with_color:
             return clusters, last
         else:
-            return clusters
+            return clusters, None
+
+
+class MiniBatchKMeansNN():
+    def __init__(self, boxes=None, k=9):
+        assert isinstance(k, int)
+        self._k = k
+    
+    @tf.function(experimental_relax_shapes=True)
+    def compute_iou(self, sample, clusters):
+        boxes = sample[..., 2:]
+        n = tf.shape(boxes)[0]
+        boxes = tf.repeat(tf.expand_dims(boxes, axis = 0), repeats = self._k, axis = 0)
+        clusters = tf.repeat(clusters, repeats = n, axis = 1)
+        zero_xy = tf.zeros_like(clusters)
+        boxes = tf.concat([zero_xy, boxes], axis = -1)
+        clusters = tf.concat([zero_xy, clusters], axis = -1)
+        return compute_iou(boxes, clusters)
+
+    @tf.function(experimental_relax_shapes=True)
+    def get_boxes_in_cluster(self, boxes, iou, cluster_sum, boxes_in_cluster):
+        box_list = []
+        lens = []
+        indexes = tf.math.argmax(iou, axis=0)
+        for i in range(self._k):  
+            boxes_ = tf.boolean_mask(boxes, indexes == i, axis=0)
+            value = tf.math.reduce_sum(boxes_, axis = 0)
+            lens.append(tf.shape(boxes_)[0])
+            box_list.append(value[..., 2:])
+        cluster_sum += tf.stack(box_list, axis = 0)
+        boxes_in_cluster += tf.cast(tf.stack(lens, axis = 0), dtype = tf.float32)
+        return cluster_sum, boxes_in_cluster
+
+    @tf.function(experimental_relax_shapes=True)
+    def train_step(self, boxes, clusters, cluster_sum, boxes_in_cluster):
+        boxes = _yxyx_to_xcycwh(boxes)
+        iou = self.compute_iou(boxes, clusters)
+        cluster_sum, boxes_in_cluster = self.get_boxes_in_cluster(boxes, iou, cluster_sum, boxes_in_cluster)
+        return cluster_sum, boxes_in_cluster
+    
+    @tf.function(experimental_relax_shapes=True)
+    def update_step(self, cluster_sum, boxes_in_cluster):
+        clusters = tf.expand_dims(cluster_sum/tf.stack((boxes_in_cluster, boxes_in_cluster), axis = -1), axis = 1)
+        cluster_sum = tf.zeros(shape= (self._k, 2), dtype = tf.float32)
+        boxes_in_cluster = tf.zeros(shape= (self._k, ), dtype = tf.float32)
+        return clusters, cluster_sum, boxes_in_cluster
+
+    def __call__(self, dataset, mean_steps = 2000, epochs = 10):
+        mean_clusters = tf.random.uniform(minval = 0, maxval = 1, shape= (self._k, 1, 2), dtype = tf.float32)
+        cluster_sum = tf.zeros(shape= (self._k, 2), dtype = tf.float32)
+        boxes_in_cluster = tf.zeros(shape= (self._k, ), dtype = tf.float32)
+        minibatch_counter = 1
+        counter = 1
+
+        try:
+            for j in range(epochs):
+                clusters = mean_clusters
+                for i, data in enumerate(dataset):
+                    # use a thread pool of n smaples
+                    minibatch_counter = (minibatch_counter + 1)%(mean_steps + 1)
+                    cluster_sum, boxes_in_cluster = self.train_step(data["objects"]["bbox"], clusters, cluster_sum, boxes_in_cluster)
+                    if minibatch_counter == 0:
+                        clusters, cluster_sum, boxes_in_cluster = self.update_step(cluster_sum, boxes_in_cluster)
+                        #tf.print(tf.squeeze(clusters, axis=1) * 416, summarize = -1, end = "\n\n")
+                        mean_clusters += clusters
+                        counter += 1
+                    tf.print(minibatch_counter, i, j, end="\r")
+                mean_clusters = mean_clusters/counter
+                counter = 1
+            clusters = tf.squeeze(clusters, axis=1)
+            clusters = clusters.numpy()
+            clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
+        except KeyboardInterrupt:
+            clusters = tf.squeeze(clusters, axis=1)
+            clusters = clusters.numpy()
+            clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
+        return clusters
+    
 
 
 if __name__ == '__main__':
-    km = YoloKmeans(with_color=True)
-    km.load_coco_boxes()
-    centroids, cmap = km.run_kmeans()
-    boxes = km.get_boxes()
-    plt.scatter(boxes[:, 0], boxes[:, 1], c=cmap)
-    plt.scatter(centroids[:, 0], centroids[:, 1], c='b')
-    plt.show()
-    print((centroids * 416).astype(int))
+    import tensorflow_datasets as tfds
+
+    coco = tfds.load("coco", split = "train", shuffle_files = True)
+    coco = coco.shuffle(10000).prefetch(10000)
+
+
+    km2 = YoloKmeans(k = 9)
+    km2.get_box_from_dataset(coco)
+    boxes, _  = km2.run_kmeans()
+    print(boxes * 416)
+
+    km = MiniBatchKMeansNN(k = 9)
+    print(km(coco, epochs=2) * 416)
+
+
+

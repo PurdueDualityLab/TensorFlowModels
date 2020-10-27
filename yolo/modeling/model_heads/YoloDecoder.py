@@ -567,6 +567,9 @@ class YoloDecoder(ks.Model):
             start += self._boxes_per_level
         return boxes, path_scales, scale_x_y
 
+    def get_boxes(self):
+        
+        return boxes, path_scales, scale_x_y
 
 def test():
     from yolo.modeling.backbones.Darknet import Darknet

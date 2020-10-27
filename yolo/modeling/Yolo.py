@@ -3,18 +3,9 @@ import tensorflow.keras as ks
 from typing import *
 
 from yolo.modeling.backbones.Darknet import Darknet
-from yolo.modeling.model_heads._Yolov4Head import Yolov4Head
-from yolo.modeling.model_heads._Yolov3Head import Yolov3Head
-from yolo.modeling.model_heads._Yolov4Neck import Yolov4Neck
+from yolo.modeling.model_heads.YoloDecoder import YoloDecoder
 from yolo.modeling.building_blocks import YoloLayer
 
-from yolo.utils import DarkNetConverter
-from yolo.utils.file_manager import download
-from yolo.utils._darknet2tf.load_weights import split_converter
-from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
-from yolo.utils._darknet2tf.load_weights2 import load_weights_v4head
-from yolo.utils._darknet2tf.load_weights import load_weights_dnBackbone
-from yolo.utils._darknet2tf.load_weights import load_weights_dnHead
 
 
 class Yolo(ks.Model):
@@ -73,109 +64,25 @@ class Yolo(ks.Model):
     def decoder(self):
         return self._decoder
 
-    def load_weights_from_dn(self,
-                             dn2tf_backbone=True,
-                             dn2tf_head=True,
-                             config_file=None,
-                             weights_file=None):
-        if not self.built:
-            self.build([None, None, None, 3])
-
-        if dn2tf_backbone or dn2tf_head:
-            if self.backbone.name == "cspdarknet53":
-                if config_file == None:
-                    config_file = download('yolov4.cfg')
-                if weights_file == None:
-                    weights_file = download('yolov4.weights')
-            elif self.backbone.name == "darknet53":
-                if self.head.name == "regular":
-                    if config_file == None:
-                        config_file = download('yolov3.cfg')
-                    if weights_file == None:
-                        weights_file = download('yolov3.weights')
-                elif self.head.name == "spp":
-                    if config_file == None:
-                        config_file = download('yolov3-spp.cfg')
-                    if weights_file == None:
-                        weights_file = download('yolov3-spp.weights')
-            elif self.backbone.name == "cspdarknettiny":
-                if config_file == None:
-                    config_file = download('yolov4-tiny.cfg')
-                if weights_file == None:
-                    weights_file = download('yolov4-tiny.weights')
-            elif self.backbone.name == "darknettiny":
-                if config_file == None:
-                    config_file = download('yolov3-tiny.cfg')
-                if weights_file == None:
-                    weights_file = download('yolov3-tiny.weights')
-            list_encdec = DarkNetConverter.read(config_file, weights_file)
-            splits = self.backbone.splits
-
-            if len(splits.keys()) == 1:
-                encoder, decoder = split_converter(list_encdec,
-                                                   splits["backbone_split"])
-                neck = None
-            elif len(splits.keys()) == 2:
-                encoder, neck, decoder = split_converter(
-                    list_encdec, splits["backbone_split"],
-                    splits["neck_split"])
-
-            if dn2tf_backbone:
-                load_weights_backbone(self.backbone, encoder)
-                self.backbone.trainable = False
-
-            if dn2tf_head:
-                if neck is not None:
-                    load_weights_backbone(self._neck, neck)
-                    self._neck.trainable = False
-
-                if "csp" in self.backbone.name:
-                    if self.head.name == "tinyv4":
-                        load_weights_v4head(self._head, decoder,
-                                            (3, 5, 0, 1, 6, 2, 4, 7))
-                    else:
-                        load_weights_v4head(self._head, decoder,
-                                            (0, 4, 1, 2, 3))
-                else:
-                    load_weights_dnHead(self._head, decoder)
-                self._head.trainable = False
-
 
 from yolo.modeling.backbones.Darknet import build_darknet
 from official.vision.beta.modeling.backbones import factory
 from official.core import registry
 
 
-def build_yolo_neck(input_specs, model_config, l2_regularization):
-    if model_config.neck == None:
-        return None
+def build_yolo_decoder(input_specs, model_config, parent_config, l2_regularization):
 
-    model = Yolov4Neck(model=model_config.neck.name,
-                       input_shape=input_specs.shape,
-                       kernel_regularizer=l2_regularization)
+    model = YoloDecoder(classes=model_config.num_classes,
+                        boxes_per_level=3,
+                        embed_spp=False,
+                        embed_fpn=False,
+                        max_level_process_len=None,
+                        kernel_regularizer=l2_regularization
+                        path_process_len=6)
     return model
 
 
-def build_yolo_head(input_specs, model_config, parent_config,
-                    l2_regularization):
-    box_cfg = parent_config.anchors.get()
-    num_boxes = len(box_cfg.boxes)
-    if model_config.head.version == "v3" or model_config.head.name == "tinyv4":
-        model = Yolov3Head(classes=parent_config.num_classes,
-                           boxes=num_boxes,
-                           model=model_config.head.name,
-                           input_shape=input_specs.shape,
-                           kernel_regularizer=l2_regularization)
-    elif model_config.head.version == "v4":
-        model = Yolov4Head(classes=parent_config.num_classes,
-                           boxes=num_boxes,
-                           model=model_config.head.name,
-                           input_shape=input_specs.shape,
-                           kernel_regularizer=l2_regularization)
-    return model
-
-
-def build_yolo_decoder(model_config):
+def build_yolo_filter(model_config):
     anchor_cfg = model_config.anchors.get()
     model = YoloLayer(masks=anchor_cfg.masks.as_dict(),
                       anchors=anchor_cfg.boxes,
@@ -215,14 +122,11 @@ def build_yolo(input_specs, model_config, l2_regularization):
     print(l2_regularization)
 
     base_config = model_config.base.get()
-    backbone = factory.build_backbone(input_specs, base_config,
-                                      l2_regularization)
-    neck = build_yolo_neck(input_specs, base_config, l2_regularization)
-    head = build_yolo_head(input_specs, base_config, model_config,
-                           l2_regularization)
+    backbone = factory.build_backbone(input_specs, base_config, l2_regularization)
+    head = build_yolo_decoder(input_specs, base_config, model_config,l2_regularization)
+    filter = build_yolo_filter(model_config)
 
-    decoder = build_yolo_decoder(model_config)
-    model = Yolo(backbone=backbone, neck=neck, head=head, decoder=decoder)
+    model = Yolo(backbone=backbone, head=head, decoder=filter)
     model.build(input_specs.shape)
 
     losses = build_yolo_default_loss(model_config)
