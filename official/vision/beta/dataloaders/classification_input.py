@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Classification parser."""
 
 # Import libraries
@@ -152,6 +153,8 @@ class Parser(Parser):
 
 
 '''
+=======
+>>>>>>> f6c84926c6f7f72dd29bc8a4012df3ba16c19dab
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -280,4 +283,3 @@ class Parser(parser.Parser):
     image = tf.image.convert_image_dtype(image, self._dtype)
 
     return image, label
-'''

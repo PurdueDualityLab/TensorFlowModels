@@ -77,7 +77,7 @@ def build_yolo_decoder(input_specs, model_config, parent_config, l2_regularizati
                         embed_spp=False,
                         embed_fpn=False,
                         max_level_process_len=None,
-                        kernel_regularizer=l2_regularization
+                        kernel_regularizer=l2_regularization,
                         path_process_len=6)
     return model
 
@@ -123,7 +123,7 @@ def build_yolo(input_specs, model_config, l2_regularization):
 
     base_config = model_config.base.get()
     backbone = factory.build_backbone(input_specs, base_config, l2_regularization)
-    head = build_yolo_decoder(input_specs, base_config, model_config,l2_regularization)
+    head = build_yolo_decoder(input_specs, base_config, model_config, l2_regularization)
     filter = build_yolo_filter(model_config)
 
     model = Yolo(backbone=backbone, head=head, decoder=filter)
