@@ -16,6 +16,9 @@ from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.modeling import factory
 
+from yolo.dataloaders import YOLO_Detection_Input
+from yolo.dataloaders import tfds_coco_decoder
+
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
@@ -78,8 +81,47 @@ class YoloTask(base_task.Task):
             logging.info('Finished loading pretrained checkpoint from %s',
                          ckpt_dir_or_file)
 
-    def build_inputs(self, params, input_context=None):
-        return
+def build_inputs(self, params, input_context=None):
+    """Build input dataset."""
+    decoder = tfds_coco_decoder.MSCOCODecoder()
+    '''
+    decoder_cfg = params.decoder.get()
+    if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    else:
+        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
+    '''
+
+    parser = YOLO_Detection_Input.Parser(
+        image_w=params.parser.image_w,
+        image_h=params.parser.image_h,
+        num_classes=params.parser.num_classes,
+        fixed_size=params.parser.fixed_size,
+        jitter_im=params.parser.jitter_im,
+        jitter_boxes=params.parser.jitter_boxes,
+        net_down_scale=params.parser.net_down_scale,
+        min_process_size=params.parser.min_process_size,
+        max_process_size=params.parser.max_process_size,
+        max_num_instances = params.parser.max_num_instances,
+        random_flip = params.parser.random_flip,
+        pct_rand=params.parser.pct_rand,
+        seed = params.parser.seed
+        anchors = self.task_config.model.anchors._boxes,
+        masks = self.task_config.model.anchors.masks)
+
+    reader = input_reader.InputReader(
+        params,
+        dataset_fn=tf.data.TFRecordDataset,
+        decoder_fn=decoder.decode,
+        parser_fn=parser.parse_fn(params.is_training))
+    dataset = reader.read(input_context=input_context)
+
+    return dataset
 
     def build_losses(self, outputs, labels, aux_losses=None):
         loss = 0.0

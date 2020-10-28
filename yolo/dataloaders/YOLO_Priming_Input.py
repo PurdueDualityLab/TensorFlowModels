@@ -5,10 +5,9 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
-from yolo.dataloaders.Parser import Parser
+from yolo.dataloaders import Parser
 
-
-class Priming_Parser(Parser):
+class Parser(Parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
                  output_size,

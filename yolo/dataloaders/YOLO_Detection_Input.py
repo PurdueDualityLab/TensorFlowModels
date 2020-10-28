@@ -6,8 +6,6 @@ into (image, labels) tuple for RetinaNet.
 # Import libraries
 import tensorflow as tf
 
-from yolo.dataloaders.Parser import Parser
-
 from yolo.dataloaders.ops.preprocessing_ops import _get_best_anchor
 from yolo.dataloaders.ops.preprocessing_ops import random_jitter_boxes
 from yolo.dataloaders.ops.preprocessing_ops import random_translate
@@ -18,8 +16,9 @@ from yolo.utils.box_utils import _xcycwh_to_xyxy
 from yolo.utils.box_utils import _xcycwh_to_yxyx
 from yolo.utils.box_utils import _yxyx_to_xcycwh
 
+from yolo.dataloaders import Parser
 
-class YoloParser(Parser):
+class Parser(Parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(
         self,
