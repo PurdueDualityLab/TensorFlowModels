@@ -210,6 +210,8 @@ class Parser(hyperparams.Config):
 class DataConfig(cfg.DataConfig):
     """Input config for training."""
     input_path: str = ''
+    tfds_name: str = 'coco'
+    tfds_split: str = 'train'
     global_batch_size: int = 10
     is_training: bool = True
     dtype: str = 'float16'
