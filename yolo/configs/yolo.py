@@ -221,12 +221,6 @@ class DataConfig(cfg.DataConfig):
 
 
 @dataclasses.dataclass
-class YoloNeck(hyperparams.Config):
-    version: str = "v4"
-    name: str = "regular"
-
-
-@dataclasses.dataclass
 class YoloHead(hyperparams.Config):
     version: str = "v4"
     name: str = "regular"
@@ -248,7 +242,6 @@ class YoloLossLayer(hyperparams.Config):
 class Yolov3(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    neck: Optional[YoloNeck] = None
     head: YoloHead = YoloHead(version="v3", name="regular")
 
 
@@ -256,7 +249,6 @@ class Yolov3(hyperparams.Config):
 class Yolov3spp(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    neck: Optional[YoloNeck] = None
     head: YoloHead = YoloHead(version="v3", name="spp")
 
 
@@ -264,7 +256,6 @@ class Yolov3spp(hyperparams.Config):
 class Yolov3tiny(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknettiny"))
-    neck: Optional[YoloNeck] = None
     head: YoloHead = YoloHead(version="v3", name="tiny")
 
 
@@ -272,7 +263,6 @@ class Yolov3tiny(hyperparams.Config):
 class Yolov4(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-    neck: Optional[YoloNeck] = YoloNeck(version="v4", name="regular")
     head: YoloHead = YoloHead(version="v4", name="regular")
 
 
@@ -280,7 +270,6 @@ class Yolov4(hyperparams.Config):
 class Yolov4tiny(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny"))
-    neck: Optional[YoloNeck] = None
     head: YoloHead = YoloHead(version="v4", name="tinyv4")
 
 
