@@ -6,17 +6,10 @@ into (image, labels) tuple for RetinaNet.
 # Import libraries
 import tensorflow as tf
 
-from yolo.dataloaders.ops.preprocessing_ops import _get_best_anchor
-from yolo.dataloaders.ops.preprocessing_ops import random_jitter_boxes
-from yolo.dataloaders.ops.preprocessing_ops import random_translate
-from yolo.dataloaders.ops.preprocessing_ops import random_flip
-from yolo.dataloaders.ops.preprocessing_ops import pad_max_instances
+from yolo.dataloaders.ops import preprocessing_ops
+from yolo.utils import box_utils
 
-from yolo.utils.box_utils import _xcycwh_to_xyxy
-from yolo.utils.box_utils import _xcycwh_to_yxyx
-from yolo.utils.box_utils import _yxyx_to_xcycwh
-
-from yolo.dataloaders import Parser
+from official.vision.beta.dataloaders import Parser
 
 class Parser(Parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -34,6 +27,7 @@ class Parser(Parser.Parser):
         max_num_instances=200,
         random_flip=True,
         pct_rand=0.5,
+        masks=None,
         anchors=None,
         seed=10,
     ):
@@ -86,12 +80,12 @@ class Parser(Parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        boxes = _yxyx_to_xcycwh(data["groundtruth_boxes"])
+        boxes = box_utils._yxyx_to_xcycwh(data["groundtruth_boxes"])
         if self._jitter_boxes != 0.0:
-            boxes = random_jitter_boxes(boxes,
+            boxes = preprocessing_ops.random_jitter_boxes(boxes,
                                         self._jitter_boxes,
                                         seed=self._seed)
-        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w,
+        best_anchors = preprocessing_ops._get_best_anchor(boxes, self._anchors, self._image_w,
                                         self._image_h)
 
         image = data["image"] / 255
@@ -104,22 +98,22 @@ class Parser(Parser.Parser):
         image = tf.image.random_hue(image=image, max_delta=.1)  # Hue
         image = tf.clip_by_value(image, 0.0, 1.0)
         if self._random_flip:
-            image, boxes = random_flip(image, boxes, seed=self._seed)
+            image, boxes = preprocessing_ops.random_flip(image, boxes, seed=self._seed)
 
         if self._jitter_im != 0.0:
-            image, boxes = random_translate(image,
+            image, boxes = preprocessing_ops.random_translate(image,
                                             boxes,
                                             self._jitter_im,
                                             seed=self._seed)
 
-        boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-        classes = pad_max_instances(data["groundtruth_classes"],
+        boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
+        classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],
                                     self._max_num_instances, -1)
-        best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
+        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances,
                                          0)
-        area = pad_max_instances(data["groundtruth_area"],
+        area = preprocessing_ops.pad_max_instances(data["groundtruth_area"],
                                  self._max_num_instances, 0)
-        is_crowd = pad_max_instances(
+        is_crowd = preprocessing_ops.pad_max_instances(
             tf.cast(data["groundtruth_is_crowd"], tf.int32),
             self._max_num_instances, 0)
         labels = {
@@ -149,17 +143,17 @@ class Parser(Parser.Parser):
                              resize=True,
                              w=self._image_w,
                              h=self._image_h)
-        boxes = _yxyx_to_xcycwh(data["groundtruth_boxes"])
-        best_anchors = _get_best_anchor(boxes, self._anchors, self._image_w,
+        boxes = box_utils._yxyx_to_xcycwh(data["groundtruth_boxes"])
+        best_anchors = preprocessing_ops._get_best_anchor(boxes, self._anchors, self._image_w,
                                         self._image_h)
-        boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-        classes = pad_max_instances(data["groundtruth_classes"],
+        boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
+        classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],
                                     self._max_num_instances, 0)
-        best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
+        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances,
                                          0)
-        area = pad_max_instances(data["groundtruth_area"],
+        area = preprocessing_ops.pad_max_instances(data["groundtruth_area"],
                                  self._max_num_instances, 0)
-        is_crowd = pad_max_instances(
+        is_crowd = preprocessing_ops.pad_max_instances(
             tf.cast(data["groundtruth_is_crowd"], tf.int32),
             self._max_num_instances, 0)
         labels = {

@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
-from yolo.dataloaders import Parser
+from official.vision.beta.dataloaders import Parser
 
 class Parser(Parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""

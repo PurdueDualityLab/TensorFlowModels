@@ -1,6 +1,6 @@
 import tensorflow_datasets as tfds
 import tensorflow as tf
-from yolo.dataloaders import decoder
+from official.vision.beta.dataloaders import decoder
 
 
 class ImageNetDecoder(decoder.Decoder):

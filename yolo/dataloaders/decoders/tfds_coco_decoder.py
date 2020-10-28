@@ -1,5 +1,5 @@
 import tensorflow as tf
-from yolo.dataloaders import decoder
+from official.vision.beta.dataloaders import decoder
 
 class MSCOCODecoder(decoder.Decoder):
   """Tensorflow Example proto decoder."""
