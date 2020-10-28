@@ -202,12 +202,14 @@ class YoloTask(base_task.Task):
 
 if __name__ == "__main__":
     from yolo.configs import yolo as exp_cfg
+    import matplotlib.pyplot as plt
     task = YoloTask(exp_cfg.YoloTask())
     ds = task.build_inputs(exp_cfg.YoloTask().train_data)
     print(ds)
-    for el in ds:
+    for i, el in enumerate(ds):
         print(el[0][0])
         print(el[0][0].shape)
-        cv2.imshow("img", el[0][0].numpy())
-        cv2.waitKey(0)
-        break
+        plt.imshow(el[0][0].numpy())
+        plt.show()
+        if i == 10:
+            break
