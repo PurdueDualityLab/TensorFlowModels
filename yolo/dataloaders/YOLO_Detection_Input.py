@@ -34,7 +34,6 @@ class Parser(Parser.Parser):
         max_num_instances=200,
         random_flip=True,
         pct_rand=0.5,
-        masks=None,
         anchors=None,
         seed=10,
     ):
