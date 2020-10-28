@@ -280,3 +280,4 @@ class Parser(parser.Parser):
     image = tf.image.convert_image_dtype(image, self._dtype)
 
     return image, label
+'''
