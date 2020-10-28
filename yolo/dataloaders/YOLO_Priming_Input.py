@@ -5,9 +5,9 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
-from official.vision.beta.dataloaders import Parser
+from official.vision.beta.dataloaders import parser
 
-class Parser(Parser.Parser):
+class Parser(parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(self,
                  output_size,
