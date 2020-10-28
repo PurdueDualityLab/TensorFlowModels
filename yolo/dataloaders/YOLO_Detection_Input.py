@@ -6,12 +6,12 @@ into (image, labels) tuple for RetinaNet.
 # Import libraries
 import tensorflow as tf
 
-from yolo.dataloaders.ops import preprocessing_ops
+from yolo.dataloaders import preprocessing_ops
 from yolo.utils import box_utils
 
-from official.vision.beta.dataloaders import Parser
+from official.vision.beta.dataloaders import parser
 
-class Parser(Parser.Parser):
+class Parser(parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
     def __init__(
         self,

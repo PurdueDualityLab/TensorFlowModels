@@ -5,8 +5,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
-from yolo.dataloaders.Parser import Parser
-from yolo.dataloaders import decoder
+from official.vision.beta.dataloaders.parser import Parser
+from official.vision.beta.dataloaders import decoder
 
 class Decoder(decoder.Decoder):
   """Tensorflow Example proto decoder."""

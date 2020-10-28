@@ -17,7 +17,7 @@ from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.modeling import factory
 
 from yolo.dataloaders import YOLO_Detection_Input
-from yolo.dataloaders import tfds_coco_decoder
+from yolo.dataloaders.decoders import tfds_coco_decoder
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
