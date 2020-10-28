@@ -97,30 +97,30 @@ def build_inputs(self, params, input_context=None):
         raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
     '''
 
+    ANCHOR = self.task_config.model.anchors.get()
+    anchors = [[float(f) for f in a.split(',')] for a in ANCHOR._boxes]
     parser = YOLO_Detection_Input.Parser(
-        image_w=params.parser.image_w,
-        image_h=params.parser.image_h,
-        num_classes=params.parser.num_classes,
-        fixed_size=params.parser.fixed_size,
-        jitter_im=params.parser.jitter_im,
-        jitter_boxes=params.parser.jitter_boxes,
-        net_down_scale=params.parser.net_down_scale,
-        min_process_size=params.parser.min_process_size,
-        max_process_size=params.parser.max_process_size,
-        max_num_instances = params.parser.max_num_instances,
-        random_flip = params.parser.random_flip,
-        pct_rand=params.parser.pct_rand,
-        seed = params.parser.seed
-        anchors = self.task_config.model.anchors._boxes,
-        masks = self.task_config.model.anchors.masks)
-
+                image_w=params.parser.image_w,
+                image_h=params.parser.image_h,
+                num_classes=self.task_config.model.num_classes,
+                fixed_size=params.parser.fixed_size,
+                jitter_im=params.parser.jitter_im,
+                jitter_boxes=params.parser.jitter_boxes,
+                net_down_scale=params.parser.net_down_scale,
+                min_process_size=params.parser.min_process_size,
+                max_process_size=params.parser.max_process_size,
+                max_num_instances = params.parser.max_num_instances,
+                random_flip = params.parser.random_flip,
+                pct_rand=params.parser.pct_rand,
+                seed = params.parser.seed,
+                anchors = anchors,
+                masks = ANCHOR.masks)
     reader = input_reader.InputReader(
         params,
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
         parser_fn=parser.parse_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
-
     return dataset
 
     def build_losses(self, outputs, labels, aux_losses=None):
@@ -203,8 +203,12 @@ def build_inputs(self, params, input_context=None):
 
 if __name__ == "__main__":
     from yolo.configs import yolo as exp_cfg
-    cfg = exp_cfg.YoloTask()
     task = YoloTask(exp_cfg.YoloTask())
-    model = task.build_model()
-    model.load_weights_from_dn()
-    model.summary()
+    ds = task.build_inputs(exp_cfg.YoloTask().train_data)
+    print(ds)
+    for el in ds:
+        print(el[0][0])
+        print(el[0][0].shape)
+        cv2.imshow("img", el[0][0].numpy())
+        cv2.waitKey(0)
+        break
