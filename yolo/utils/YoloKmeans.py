@@ -6,6 +6,7 @@ from yolo.utils.iou_utils import compute_iou
 from yolo.utils.box_utils import _yxyx_to_xcycwh
 import tensorflow as tf
 
+# TODO: merge both 
 
 class YoloKmeans:
     """K-means for YOLO anchor box priors
@@ -38,8 +39,9 @@ class YoloKmeans:
         self._boxes = boxes
         self._with_color = with_color
 
+    @tf.function
     def iou(self, boxes, clusters):
-        n = boxes.shape[0]
+        n = tf.shape(boxes)[0]
         boxes = tf.repeat(boxes, self._k, axis=0)
         boxes = tf.reshape(boxes, (n, self._k, -1))
         boxes = tf.cast(boxes, tf.float32)
@@ -51,7 +53,7 @@ class YoloKmeans:
         zeros = tf.cast(tf.zeros(boxes.shape), dtype=tf.float32)
 
         boxes = tf.concat([zeros, boxes], axis=-1)
-        clusters = tf.concat([zeros, clusters], axis=-1)
+        clusters = tf.concat([zeros, clusters], axis=-1) 
         return compute_iou(boxes, clusters)
 
     def get_box_from_file(self, filename):
@@ -61,15 +63,20 @@ class YoloKmeans:
             pass
         self._boxes = pickle.load(f)
 
+    # slow as fuck
+    # load via threads
     def get_box_from_dataset(self, dataset):
-        box_ls = []
+        box_ls = None
         if not isinstance(dataset, list):
             dataset = [dataset]
         for ds in dataset:
-            for el in ds:
-                for box in list(el['objects']['bbox']):
-                    box_ls.append(_yxyx_to_xcycwh(box).numpy()[..., 2:])
-        self._boxes = np.array(box_ls)
+            for el in ds:  
+                if type(box_ls) == type(None):
+                    box_ls = _yxyx_to_xcycwh(el['objects']['bbox'])[..., 2:]
+                else:
+                    box_ls = tf.concat([box_ls, _yxyx_to_xcycwh(el['objects']['bbox'])[..., 2:]], axis = 0)
+                tf.print(box_ls)
+        self._boxes = box_ls
 
     def load_voc_boxes(self):
         self.get_box_from_dataset(
@@ -80,42 +87,52 @@ class YoloKmeans:
             tfds.load('coco',
                       split=['test', 'test2015', 'train', 'validation']))
 
+    @property
     def get_boxes(self):
-        return self._boxes
+        return self._boxes.numpy()
 
-    def run_kmeans(self, max_iter=300):
-        if not isinstance(self._boxes, np.ndarray):
-            raise Exception('Box Not found')
-
-        box_num = self._boxes.shape[0]
-        k = self._k
-        dists = np.zeros((box_num, k))
-        last = np.zeros((box_num, ))
-        np.random.seed()
-        clusters = self._boxes[np.random.choice(box_num, k, replace=False)]
+    @tf.function
+    def kmeans(self, max_iter, box_num, cluster_select, k):
+        dists = tf.zeros((box_num, k))
+        last = tf.zeros((box_num, ), dtype=tf.int64)
+        clusters = tf.gather(self._boxes, cluster_select, axis = 0)
         num_iters = 0
 
-        while num_iters < max_iter:
+        while tf.math.less(num_iters, max_iter):
             dists = 1 - self.iou(self._boxes, clusters)
-            curr = np.argmin(dists, axis=-1)
-            if (curr == last).all():
+            curr = tf.math.argmin(dists, axis=-1)
+            if tf.math.reduce_all(curr == last):
                 break
             for i in range(k):
-                clusters[i] = np.mean(self._boxes[curr == i], axis=0)
+                hold = tf.math.reduce_mean(self._boxes[curr == i], axis=0)
+                clusters = tf.tensor_scatter_nd_update(clusters, [[i]], [hold])    
             last = curr
             num_iters += 1
-        print(f'num_iters = {num_iters}')
+            tf.print(f'num_iters = ', num_iters , end = "\n")
+        return clusters
+
+    def run_kmeans(self, max_iter=300):
+        box_num = tf.shape(self._boxes)[0]
+        cluster_select = tf.convert_to_tensor(np.random.choice(box_num, self._k, replace=False))
+        clusters = self.kmeans(max_iter, box_num, cluster_select, self._k)
+        clusters = clusters.numpy()
         clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
         if self._with_color:
             return clusters, last
         else:
             return clusters, None
-
+    
+    def __call__(self, dataset, max_iter = 300, image_width = 416):
+        self.get_box_from_dataset(dataset)
+        clusters, _  = self.run_kmeans(max_iter=max_iter)
+        return tf.cast(clusters * image_width, tf.int32)
 
 class MiniBatchKMeansNN():
-    def __init__(self, boxes=None, k=9):
+    def __init__(self, k=9, box_width = 416):
         assert isinstance(k, int)
         self._k = k
+        self._box_width = box_width
+
     
     @tf.function(experimental_relax_shapes=True)
     def compute_iou(self, sample, clusters):
@@ -156,8 +173,8 @@ class MiniBatchKMeansNN():
         boxes_in_cluster = tf.zeros(shape= (self._k, ), dtype = tf.float32)
         return clusters, cluster_sum, boxes_in_cluster
 
-    def __call__(self, dataset, mean_steps = 2000, epochs = 10):
-        mean_clusters = tf.random.uniform(minval = 0, maxval = 1, shape= (self._k, 1, 2), dtype = tf.float32)
+    def __call__(self, dataset, mean_steps = 2000, epochs = 1):
+        clusters = tf.random.uniform(minval = 0, maxval = 1, shape= (self._k, 1, 2), dtype = tf.float32)
         cluster_sum = tf.zeros(shape= (self._k, 2), dtype = tf.float32)
         boxes_in_cluster = tf.zeros(shape= (self._k, ), dtype = tf.float32)
         minibatch_counter = 1
@@ -165,19 +182,16 @@ class MiniBatchKMeansNN():
 
         try:
             for j in range(epochs):
-                clusters = mean_clusters
                 for i, data in enumerate(dataset):
                     # use a thread pool of n smaples
                     minibatch_counter = (minibatch_counter + 1)%(mean_steps + 1)
                     cluster_sum, boxes_in_cluster = self.train_step(data["objects"]["bbox"], clusters, cluster_sum, boxes_in_cluster)
                     if minibatch_counter == 0:
                         clusters, cluster_sum, boxes_in_cluster = self.update_step(cluster_sum, boxes_in_cluster)
-                        #tf.print(tf.squeeze(clusters, axis=1) * 416, summarize = -1, end = "\n\n")
-                        mean_clusters += clusters
-                        counter += 1
+                        tf.print(tf.squeeze(clusters, axis=1) * self._box_width, summarize = -1, end = "\n\n")
                     tf.print(minibatch_counter, i, j, end="\r")
-                mean_clusters = mean_clusters/counter
-                counter = 1
+                clusters, cluster_sum, boxes_in_cluster = self.update_step(cluster_sum, boxes_in_cluster)
+                tf.print(tf.squeeze(clusters, axis=1) * self._box_width, summarize = -1, end = "\n\n")
             clusters = tf.squeeze(clusters, axis=1)
             clusters = clusters.numpy()
             clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
@@ -185,24 +199,22 @@ class MiniBatchKMeansNN():
             clusters = tf.squeeze(clusters, axis=1)
             clusters = clusters.numpy()
             clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
-        return clusters
+        return tf.cast(clusters * self._box_width, tf.int32)
     
 
 
 if __name__ == '__main__':
     import tensorflow_datasets as tfds
 
-    coco = tfds.load("coco", split = "train", shuffle_files = True)
+    coco = tfds.load("coco", split = "validation", shuffle_files = True)
     coco = coco.shuffle(10000).prefetch(10000)
 
 
     km2 = YoloKmeans(k = 9)
-    km2.get_box_from_dataset(coco)
-    boxes, _  = km2.run_kmeans()
-    print(boxes * 416)
+    print(km2(coco, image_width=608))
 
-    km = MiniBatchKMeansNN(k = 9)
-    print(km(coco, epochs=2) * 416)
+    km = MiniBatchKMeansNN(k = 9, box_width = 608)
+    print(km(coco, epochs=1))
 
 
 
