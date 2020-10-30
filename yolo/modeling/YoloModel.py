@@ -4,7 +4,7 @@ from typing import *
 
 from yolo.modeling.backbones.Darknet import Darknet
 from yolo.modeling.model_heads.YoloDecoder import YoloDecoder
-from yolo.modeling.building_blocks import YoloLayer
+from yolo.modeling.model_heads.YoloLayer import YoloLayer
 
 from yolo.utils import DarkNetConverter
 from yolo.utils.file_manager import download
@@ -93,9 +93,12 @@ class Yolo(ks.Model):
         self._backbone.build(input_shape)
         nshape = self._backbone.output_shape
         self._head.build(nshape)
-        masks, path_scales, x_y_scales = self._head.get_loss_attributes()
+        masks = self._head.masks
+        path_scales = self._head.path_scales
+        x_y_scales = self._head.scale_xy
 
         self._filter = YoloLayer(masks=masks,
+                                 classes = 80,
                                   anchors=self._boxes,
                                   thresh=0.5,
                                   cls_thresh=0.5,

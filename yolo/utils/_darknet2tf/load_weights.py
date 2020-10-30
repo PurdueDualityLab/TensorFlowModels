@@ -5,7 +5,7 @@ format into TensorFlow layers
 import itertools
 from tensorflow import keras as ks
 from collections import defaultdict
-from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.layers import DarkConv
 from .config_classes import convCFG
 
 

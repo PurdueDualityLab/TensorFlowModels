@@ -77,117 +77,6 @@ class ModelConfig(hyperparams.Config):
             model_kwargs.pop(k)
         return model_kwargs
 
-
-@dataclasses.dataclass
-class Yolov3Anchors(AnchorCFG):
-    """RevNet config."""
-    # Specifies the depth of RevNet.
-    _boxes: List[str] = dataclasses.field(default_factory=lambda: [
-        "10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90",
-        "156, 198", "373, 326"
-    ])
-    masks: Dict = dataclasses.field(default_factory=lambda: {
-        5: [6, 7, 8],
-        4: [3, 4, 5],
-        3: [0, 1, 2]
-    })
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 32,
-        4: 16,
-        3: 8
-    })
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 1.0,
-        4: 1.0,
-        3: 1.0
-    })
-
-
-@dataclasses.dataclass
-class Yolov4Anchors(AnchorCFG):
-    """RevNet config."""
-    # Specifies the depth of RevNet.
-    _boxes: List[str] = dataclasses.field(default_factory=lambda: [
-        "12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146",
-        "142, 110", "192, 243", "459, 401"
-    ])
-    masks: Dict = dataclasses.field(default_factory=lambda: {
-        5: [6, 7, 8],
-        4: [3, 4, 5],
-        3: [0, 1, 2]
-    })
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 32,
-        4: 16,
-        3: 8
-    })
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 1.05,
-        4: 1.1,
-        3: 1.2
-    })
-
-
-@dataclasses.dataclass
-class YoloTinyv4Anchors(AnchorCFG):
-    """RevNet config."""
-    # Specifies the depth of RevNet.
-    _boxes: List[str] = dataclasses.field(
-        default_factory=lambda:
-        ["10, 14", "23, 27", "37, 58", "81, 82", "135, 169", "344, 319"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {
-        5: [3, 4, 5],
-        4: [0, 1, 2]
-    })
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 32,
-        4: 8
-    })
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 1.0,
-        4: 1.0
-    })
-
-
-@dataclasses.dataclass
-class YoloTinyv3Anchors(AnchorCFG):
-    """RevNet config."""
-    # Specifies the depth of RevNet.
-    _boxes: List[str] = dataclasses.field(
-        default_factory=lambda:
-        ["10, 14", "23, 27", "37, 58", "81, 82", "135, 169", "344, 319"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {
-        5: [3, 4, 5],
-        3: [0, 1, 2]
-    })
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 32,
-        3: 8
-    })
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {
-        5: 1.0,
-        3: 1.0
-    })
-
-
-@dataclasses.dataclass
-class Anchors(hyperparams.OneOfConfig):
-    """Configuration for backbones.
-    Attributes:
-        type: 'str', type of backbone be used, one the of fields below.
-        resnet: resnet backbone config.
-        revnet: revnet backbone config.
-        efficientnet: efficientnet backbone config.
-        spinenet: spinenet backbone config.
-        mobilenet: mobilenet backbone config.
-    """
-    type: Optional[str] = None
-    v3: Yolov3Anchors = Yolov3Anchors()
-    v4: Yolov4Anchors = Yolov4Anchors()
-    tiny: YoloTinyv3Anchors = YoloTinyv3Anchors()
-    tinyv4: YoloTinyv4Anchors = YoloTinyv4Anchors()
-
-
 # dataset parsers
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -222,9 +111,15 @@ class DataConfig(cfg.DataConfig):
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
-    version: str = "v4"
-    name: str = "regular"
-
+    """if the name is specified, or version is specified we ignore input parameters and use version and name defaults"""
+    version: Optional[str] = None
+    type: Optional[str] = None
+    embed_fpn: bool =False
+    fpn_path_len: int = 4
+    path_process_len: int = 6
+    max_level_process_len: Optional[int] = None
+    embed_spp: bool = False
+    xy_exponential: bool = False
 
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
@@ -240,56 +135,52 @@ class YoloLossLayer(hyperparams.Config):
 
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
-    backbone: backbones.Backbone = backbones.Backbone(
-        type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-    decoder: YoloDecoder = YoloDecoder(version="v4", name="regular")
+    backbone: backbones.Backbone = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
+    decoder: YoloDecoder = YoloDecoder(version="v4", type="regular")
 
 
 @dataclasses.dataclass
 class Yolo(ModelConfig):
     num_classes: int = 80
     _input_size: Optional[List[int]] = None
-    min_level: Optional[int] = None
+    min_level: int = 4
     max_level: int = 5
-    anchors: Anchors = Anchors(type="tiny")
+    boxes_per_scale: int = 3
     base: Union[str, YoloBase] = YoloBase()
     filter: YoloLossLayer = YoloLossLayer()
-    norm_activation_backbone: common.NormActivation = common.NormActivation(
+    norm_activation: common.NormActivation = common.NormActivation(
         activation="mish",
         use_sync_bn=False,
         norm_momentum=0.99,
         norm_epsilon=0.001)
-    norm_activation_decoder: common.NormActivation = common.NormActivation(
-        activation="leaky",
-        use_sync_bn=False,
-        norm_momentum=0.99,
-        norm_epsilon=0.001)
+    decoder_activation: str = "leaky"
+    _boxes: ClassVar = None#[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
 
     _DEFAULTS: ClassVar = {
         'v3': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            decoder = YoloDecoder(version="v3", name="regular")
+            decoder = YoloDecoder(version="v3", type="regular")
         ),
         'v3spp': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            decoder = YoloDecoder(version="v3", name="spp")
+            decoder = YoloDecoder(version="v3", type="spp")
         ),
         'v3tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknettiny")),
-            decoder = YoloDecoder(version="v3", name="tiny")
+            decoder = YoloDecoder(version="v3", type="tiny")
         ),
         'v4': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
-            decoder = YoloDecoder(version="v4", name="regular")
+            decoder = YoloDecoder(version="v4", type="regular")
         ),
         'v4tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny")),
-            decoder = YoloDecoder(version="v4", name="tinyv4")
+            decoder = YoloDecoder(version="v4", type="tiny")
         ),
     }
 
@@ -314,14 +205,37 @@ class Yolo(ModelConfig):
         else:
             return self.base.decoder
 
-    @backbone.setter
+    @decoder.setter
     def decoder(self, val):
         self.base.decoder = val
+    
+    @property
+    def boxes(self):
+        if self._boxes == None:
+            return None
+        boxes = []
+        for box in self._boxes:
+            try:
+                f = []
+                for b in box.split(","):
+                    f.append(float(b.strip()))
+                boxes.append(f)
+            except:
+                boxes.append(box)
+        return boxes
+
+    
+    def set_boxes(self, box_list):
+        setter = []
+        for value in box_list:
+            value = str(list(value))
+            setter.append(value[1:-1])
+        self._boxes = setter
 
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-    model: Yolo = Yolo()
+    model: Yolo = Yolo(base = "v4tiny")
     train_data: DataConfig = DataConfig(is_training=True)
     validation_data: DataConfig = DataConfig(is_training=False)
     weight_decay: float = 5e-4
@@ -329,6 +243,10 @@ class YoloTask(cfg.TaskConfig):
     gradient_clip_norm: float = 0.0
     per_category_metrics: bool = False
 
+    load_darknet_weights: bool = True
+    darknet_weights_file: str = "yolov4-tiny.weights"
+    darknet_weights_cfg: str = "yolov4-tiny.cfg"
+    darknet_load_decoder: bool = False
 
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:

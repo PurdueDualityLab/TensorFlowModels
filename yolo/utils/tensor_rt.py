@@ -127,14 +127,13 @@ class TensorRT(object):
         graph_func = saved_model_loaded.signatures[
             tf.python.saved_model.signature_constants.
             DEFAULT_SERVING_SIGNATURE_DEF_KEY]
-        #graph_func = saved_model_loaded.signatures["serving"]
+        # graph_func = model.signatures['serving_default']
         self._model = graph_func
-        #self._parent = saved_model_loaded
+        # self._parent = saved_model_loaded
         return
 
     def summary(self):
         print(dir(self._model))
-        #print(dir(self._parent), self._parent._x_y_scales)
         print(self._model.output_shapes)
         print(self._model.outputs)
         pass

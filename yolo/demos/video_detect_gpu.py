@@ -484,21 +484,21 @@ if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
 
-    # model = Yolo(model_version="v4", model_type="regular", use_nms=True)
-    # model.build([None, None, None, 3])
-    # model.load_weights_from_dn()#(weights_file="yolov3-spp.weights")
-    # model.summary()
-
-    name = "saved_models/v4/tiny"
-    # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
-    # model.save(name)
-    new_name = f"{name}_tensorrt"
-
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    # model.convertModel()
-    model.compile()
+    model = Yolo(model_version="v4", model_type="regular", use_nms=True)
+    model.build([None, None, None, 3])
+    model.load_weights_from_dn()#(weights_file="yolov3-spp.weights")
     model.summary()
-    model.set_postprocessor_fn(func)
+
+    # name = "saved_models/v4/tiny"
+    # # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
+    # # model.save(name)
+    # new_name = f"{name}_tensorrt"
+
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # # model.convertModel()
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
 
     cap = FastVideo(
         "testing_files/test.mp4",

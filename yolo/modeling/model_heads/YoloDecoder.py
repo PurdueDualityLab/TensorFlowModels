@@ -1,9 +1,9 @@
 import tensorflow as tf
 import tensorflow.keras as ks
-from yolo.modeling.building_blocks import DarkConv
-from yolo.modeling.building_blocks import DarkRouteProcess
-from yolo.modeling.building_blocks import DarkRoute
-from yolo.modeling.building_blocks import DarkUpsampleRoute
+from yolo.modeling.layers import DarkConv
+from yolo.modeling.layers import DarkRouteProcess
+from yolo.modeling.layers import DarkRoute
+from yolo.modeling.layers import DarkUpsampleRoute
 # config independent
 
 
@@ -443,7 +443,9 @@ class YoloDecoder(ks.Model):
                  path_process_len=6,
                  max_level_process_len=None,
                  embed_spp=False,
-                 skip_list=[],
+                 xy_exponential=False,
+                 exp_base=2,
+                 xy_scale_base="default_value",
                  activation="leaky",
                  use_sync_bn=False,
                  norm_momentum=0.99,
@@ -461,7 +463,14 @@ class YoloDecoder(ks.Model):
         self._path_process_len = path_process_len
         self._max_level_process_len = max_level_process_len
         self._embed_spp = embed_spp
-        self._skip_list = skip_list
+        self._skip_list = []
+
+        self._masks = None
+        self._path_scales = None
+        self._x_y_scales = None
+        self._xy_exponential = xy_exponential
+        self._exp_base = exp_base
+        self._xy_scale_base = xy_scale_base
 
         self._activation = "leaky" if activation == None else activation
         self._use_sync_bn = use_sync_bn
@@ -517,7 +526,39 @@ class YoloDecoder(ks.Model):
                 kernel_initializer=self._kernel_initializer,
                 kernel_regularizer=self._kernel_regularizer,
                 bias_regularizer=self._bias_regularizer)
+        self._get_filtering_attributes(xy_exponential=self._xy_exponential, exp_base=self._exp_base, xy_scale_base=self._xy_scale_base)
         return
+
+    def _get_filtering_attributes(self,
+                                  xy_exponential=False,
+                                  exp_base=2,
+                                  xy_scale_base="default_value"):
+        start = 0
+        boxes = {}
+        path_scales = {}
+        scale_x_y = {}
+
+        if xy_scale_base == "default_base":
+            xy_scale_base = 0.05
+            xy_scale_base = xy_scale_base / (
+                self._boxes_per_level *
+                (self._max_level - self._min_level + 1) - 1)
+        elif xy_scale_base == "default_value":
+            xy_scale_base = 0.00625
+
+        for i in range(self._min_level, self._max_level + 1):
+            boxes[str(i)] = list(range(start, self._boxes_per_level + start))
+            path_scales[str(i)] = 2**i
+            if xy_exponential:
+                scale_x_y[str(i)] = 1.0 + xy_scale_base * (exp_base**i)
+            else:
+                scale_x_y[str(i)] = 1.0
+            start += self._boxes_per_level
+        
+        self._masks = boxes
+        self._path_scales = path_scales
+        self._x_y_scales= scale_x_y
+        return 
 
     def call(self, inputs, training=False):
         if self._embed_fpn:
@@ -540,36 +581,29 @@ class YoloDecoder(ks.Model):
         return (self._classes + self._output_extras +
                 5) * self._boxes_per_level
 
-    def get_loss_attributes(self,
-                            xy_exponential=False,
-                            exp_base=2,
-                            xy_scale_base="default_value"):
-        start = 0
-        boxes = {}
-        path_scales = {}
-        scale_x_y = {}
+    @property
+    def masks(self):
+        if self._masks == None: 
+            raise Exception("model has to be built before the masks can be determined")
+        return self._masks
 
-        if xy_scale_base == "default_base":
-            xy_scale_base = 0.05
-            xy_scale_base = xy_scale_base / (
-                self._boxes_per_level *
-                (self._max_level - self._min_level + 1) - 1)
-        elif xy_scale_base == "default_value":
-            xy_scale_base = 0.00625
+    @property
+    def path_scales(self):
+        if self._path_scales == None: 
+            raise Exception("model has to be built before the path_scales can be determined")
+        return self._path_scales
 
-        for i in range(self._min_level, self._max_level + 1):
-            boxes[str(i)] = list(range(start, self._boxes_per_level + start))
-            path_scales[str(i)] = 2**i
-            if xy_exponential:
-                scale_x_y[str(i)] = 1.0 + xy_scale_base * (exp_base**i)
-            else:
-                scale_x_y[str(i)] = 1.0
-            start += self._boxes_per_level
-        return boxes, path_scales, scale_x_y
-
-    def get_boxes(self):
-        
-        return boxes, path_scales, scale_x_y
+    @property
+    def scale_xy(self):
+        if self._x_y_scales == None: 
+            raise Exception("model has to be built before the x_y_scales can be determined")
+        return self._x_y_scales
+    
+    @property
+    def num_boxes(self):
+        if self._min_level == None or self._max_level == None: 
+            raise Exception("model has to be built before number of boxes can be determined")
+        return (self._max_level - self._min_level + 1) * self._boxes_per_level
 
 def test():
     from yolo.modeling.backbones.Darknet import Darknet

@@ -169,51 +169,16 @@ class Parser(parser.Parser):
         }
         return image, labels
 
-
-class YoloPostProcessing():
-    """Parser to parse an image and its annotations into a dictionary of tensors."""
-    def __init__(self,
-                 image_w=416,
-                 image_h=416,
-                 fixed_size=False,
-                 net_down_scale=32,
-                 pct_rand=0.3,
-                 max_process_size=608,
-                 min_process_size=320,
-                 seed=10):
-        """Initializes parameters for post processing parser of the dataset.
-        Args:
-            image_w: a `Tensor` or `int` for width of input image.
-            image_h: a `Tensor` or `int` for height of input image.
-            fixed_size: a `bool` if True all output images have the same size.
-            net_down_scale: an `int` that down scales the image width and height to the
-                closest multiple of net_down_scale.
-            pct_rand: an `int` that prevents do_scale from becoming larger than 1-pct_rand.
-            max_process_size: an `int` for maximum image width and height.
-            min_process_size: an `int` for minimum image width and height ,
-            seed: an `int` for the seed used by tf.random
-        """
-        self._net_down_scale = net_down_scale
-        self._max_process_size = max_process_size
-        self._min_process_size = min_process_size
-        self._image_w = image_w
-        self._image_h = image_h
-        self._fixed_size = fixed_size
-        self._pct_rand = pct_rand
-        self._seed = seed
-        return
-
     def postprocess_fn(self, image, label):
         randscale = self._image_w // self._net_down_scale
         if not self._fixed_size:
-            do_scale = tf.greater(tf.random.uniform([], seed=self._seed),
-                                  1 - self._pct_rand)
+            do_scale = tf.greater(tf.random.uniform([], minval=0, maxval=1, seed=self._seed), 1 - self._pct_rand)
             if do_scale:
                 randscale = tf.random.uniform([],
                                               minval=10,
                                               maxval=20,
                                               seed=self._seed,
                                               dtype=tf.int32)
-        image = tf.image.resize(image, (randscale * self._net_down_scale,
-                                        randscale * self._net_down_scale))
+
+        image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
         return image, label

@@ -18,6 +18,8 @@ from official.vision.beta.modeling import factory
 
 from yolo.dataloaders import YOLO_Detection_Input
 from yolo.dataloaders.decoders import tfds_coco_decoder
+from yolo.utils.YoloKmeans import YoloKmeans
+from yolo.utils.box_utils import _xcycwh_to_yxyx
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
@@ -30,14 +32,28 @@ class YoloTask(base_task.Task):
     def __init__(self, params, logging_dir: str = None):
         super().__init__(params, logging_dir)
         self._loss_dict = None
+        self._num_boxes = None
+        self._anchors_built = False
         return
 
     def build_model(self):
         """get an instance of Yolo v3 or v4"""
         from yolo.modeling.Yolo import build_yolo
-
+        params = self.task_config.train_data
         model_base_cfg = self.task_config.model
         l2_weight_decay = self.task_config.weight_decay
+
+        if params.is_training and self.task_config.model.boxes == None and not self._anchors_built:
+            self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level + 1) * model_base_cfg.boxes_per_scale
+            decoder = tfds_coco_decoder.MSCOCODecoder()
+            reader = BoxGenInputReader(params,
+                                       dataset_fn=tf.data.TFRecordDataset,
+                                       decoder_fn=decoder.decode,
+                                       parser_fn=None)
+            anchors = reader.read(k = self._num_boxes, image_width = params.parser.image_w)
+            self.task_config.model.set_boxes(anchors)
+            self._anchors_built = True
+            del reader
 
         input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                                 model_base_cfg.input_size)
@@ -49,14 +65,37 @@ class YoloTask(base_task.Task):
         return model
 
     def initialize(self, model: tf.keras.Model):
-        if self.task_config.load_original_weights:
-            backbone_weights = self.task_config.backbone_from_darknet
-            head_weights = self.task_config.head_from_darknet
-            weights_file = self.task_config.weights_file
+        if self.task_config.load_darknet_weights:
+            from yolo.utils import DarkNetConverter
+            from yolo.utils._darknet2tf.load_weights import split_converter
+            from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
+            from yolo.utils._darknet2tf.load_weights2 import load_head
+            
+            weights_file = self.task_config.darknet_weights_file
+            config_file = self.task_config.darknet_weights_cfg
 
-            model.load_weights_from_dn(dn2tf_backbone=backbone_weights,
-                                       dn2tf_head=head_weights,
-                                       weights_file=weights_file)
+            list_encdec = DarkNetConverter.read(config_file, weights_file)
+            splits = model.backbone._splits
+            {"backbone_split": 106,
+               "neck_split": 138},
+            if "neck_split" in splits.keys():
+                encoder, neck, decoder = split_converter(
+                    list_encdec, splits["backbone_split"],
+                    splits["neck_split"])
+            else:
+                encoder, decoder = split_converter(list_encdec,splits["backbone_split"])
+                neck = None
+
+            load_weights_backbone(model.backbone, encoder)
+            model.backbone.trainable = False
+
+            if self.task_config.darknet_load_decoder:
+                if neck != None:
+                    load_weights_backbone(model.decoder.neck, neck)
+                    model.decoder.neck.trainable = False
+                load_head(model.decoder.head, decoder)
+                model.decoder.head.trainable = True
+
         else:
             """Loading pretrained checkpoint."""
             if not self.task_config.init_checkpoint:
@@ -97,8 +136,23 @@ class YoloTask(base_task.Task):
             raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
         '''
 
-        ANCHOR = self.task_config.model.anchors.get()
-        anchors = [[float(f) for f in a.split(',')] for a in ANCHOR._boxes]
+        #ANCHOR = self.task_config.model.anchors.get()
+        #anchors = [[float(f) for f in a.split(',')] for a in ANCHOR._boxes]
+        if params.is_training and self.task_config.model.boxes == None and not self._anchors_built:
+            model_base_cfg = self.task_config.model
+            self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level + 1) * model_base_cfg.boxes_per_scale
+            decoder = tfds_coco_decoder.MSCOCODecoder()
+            reader = BoxGenInputReader(params,
+                                       dataset_fn=tf.data.TFRecordDataset,
+                                       decoder_fn=decoder.decode,
+                                       parser_fn=None)
+            anchors = reader.read(k = 9, image_width = params.parser.image_w, input_context=input_context)
+            self.task_config.model.set_boxes(anchors)
+            self._anchors_built = True
+            del reader
+        else:
+            anchors = self.task_config.model.boxes
+        
         parser = YOLO_Detection_Input.Parser(
                     image_w=params.parser.image_w,
                     image_h=params.parser.image_h,
@@ -114,11 +168,17 @@ class YoloTask(base_task.Task):
                     pct_rand=params.parser.pct_rand,
                     seed = params.parser.seed,
                     anchors = anchors)
-        reader = input_reader.InputReader(
-            params,
-            dataset_fn=tf.data.TFRecordDataset,
-            decoder_fn=decoder.decode,
-            parser_fn=parser.parse_fn(params.is_training))
+        
+        if params.is_training:
+            post_process_fn = parser.postprocess_fn
+        else:
+            post_process_fn = None
+ 
+        reader = input_reader.InputReader(params,
+                                   dataset_fn = tf.data.TFRecordDataset,
+                                   decoder_fn = decoder.decode,
+                                   parser_fn = parser.parse_fn(params.is_training), 
+                                   postprocess_fn = post_process_fn)
         dataset = reader.read(input_context=input_context)
         return dataset
 
@@ -130,8 +190,7 @@ class YoloTask(base_task.Task):
         metric_dict = dict()
 
         for key in output.keys():
-            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
-                key](labels, outputs[key])
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
             loss += _loss
             loss_box += _loss_box
             loss_conf += _loss_conf
@@ -198,18 +257,66 @@ class YoloTask(base_task.Task):
 
     def reduce_aggregated_logs(self, aggregated_logs):
         return super().reduce_aggregated_logsI(aggregated_logs)
+    
+    @property
+    def anchors(self):
+        return self.task_config.model.boxes
+
+
+
+
+
+class BoxGenInputReader(input_reader.InputReader):
+  """Input reader that returns a tf.data.Dataset instance."""
+  def read(self, k = None, image_width = 416, input_context = None) -> tf.data.Dataset:
+    """Generates a tf.data.Dataset object."""
+    self._is_training = False
+    if self._tfds_builder:
+      dataset = self._read_tfds(input_context)
+    elif len(self._matched_files) > 1:
+      dataset = self._read_sharded_files(input_context)
+    elif len(self._matched_files) == 1:
+      dataset = self._read_single_file(input_context)
+    else:
+      raise ValueError('It is unexpected that `tfds_builder` is None and '
+                       'there is also no `matched_files`.')
+
+    if self._cache:
+      dataset = dataset.cache()
+
+    if self._is_training:
+      dataset = dataset.shuffle(self._shuffle_buffer_size)
+
+    def maybe_map_fn(dataset, fn):
+      return dataset if fn is None else dataset.map(
+          fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+    dataset = maybe_map_fn(dataset, self._decoder_fn)
+
+    kmeans_gen = YoloKmeans(k = k)
+    boxes = kmeans_gen(dataset, image_width=image_width)
+    del kmeans_gen # free the memory
+
+    print("clusting complete -> default boxes used ::")
+    print(boxes)
+    return boxes
 
 
 if __name__ == "__main__":
     from yolo.configs import yolo as exp_cfg
     import matplotlib.pyplot as plt
-    task = YoloTask(exp_cfg.YoloTask())
-    ds = task.build_inputs(exp_cfg.YoloTask().train_data)
-    print(ds)
+    config = exp_cfg.YoloTask()
+    task = YoloTask(config)
+    ds = task.build_inputs(config.train_data)
+    model = task.build_model()
+    task.initialize(model)
+    print(model)
     for i, el in enumerate(ds):
-        print(el[0][0])
         print(el[0][0].shape)
-        plt.imshow(el[0][0].numpy())
+        image = tf.image.draw_bounding_boxes(el[0], _xcycwh_to_yxyx(el[1]["bbox"]), [[0.0, 1.0, 0.0]])
+
+        print(task.anchors, el[1]["best_anchors"])
+        plt.imshow(image[0].numpy())
         plt.show()
         if i == 10:
             break

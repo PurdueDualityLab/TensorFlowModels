@@ -12,7 +12,7 @@ from yolo.utils.loss_utils import parse_yolo_box_predictions
 from yolo.utils.box_utils import _xcycwh_to_yxyx
 
 
-@ks.utils.register_keras_serializable(package='yolo')
+#@ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
     def __init__(self,
                  masks,

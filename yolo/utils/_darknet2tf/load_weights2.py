@@ -1,5 +1,5 @@
 from collections import defaultdict
-from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.layers import DarkConv
 from .config_classes import convCFG
 
 
