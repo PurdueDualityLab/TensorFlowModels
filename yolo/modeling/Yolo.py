@@ -11,14 +11,12 @@ from yolo.modeling.building_blocks import YoloLayer
 class Yolo(ks.Model):
     def __init__(self,
                  backbone=None,
-                 neck=None,
                  decoder=None,
                  filter=None,
                  **kwargs):
         super().__init__(**kwargs)
         #model components
         self._backbone = backbone
-        self._neck = neck
         self._decoder = decoder
         self._filter = filter
 
@@ -27,19 +25,12 @@ class Yolo(ks.Model):
     def build(self, input_shape):
         self._backbone.build(input_shape)
         nshape = self._backbone.output_shape
-        if self._neck != None:
-            self.neck.build(nshape)
-            nshape = self._neck.output_shape
         self._decoder.build(nshape)
         super().build(input_shape)
         return
 
     def call(self, inputs, training=False):
         maps = self._backbone(inputs)
-
-        if self._neck != None:
-            maps = self._neck(maps)
-
         raw_predictions = self._decoder(maps)
         if training:
             return {"raw_output": raw_predictions}
@@ -51,10 +42,6 @@ class Yolo(ks.Model):
     @property
     def backbone(self):
         return self._backbone
-
-    @property
-    def neck(self):
-        return self._neck
 
     @property
     def decoder(self):
