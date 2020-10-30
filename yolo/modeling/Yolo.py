@@ -13,14 +13,14 @@ class Yolo(ks.Model):
                  backbone=None,
                  neck=None,
                  head=None,
-                 decoder=None,
+                 filter=None,
                  **kwargs):
         super().__init__(**kwargs)
         #model components
         self._backbone = backbone
         self._neck = neck
         self._head = head
-        self._decoder = decoder
+        self._filter = filter
 
         return
 
@@ -44,7 +44,7 @@ class Yolo(ks.Model):
         if training:
             return {"raw_output": raw_predictions}
         else:
-            predictions = self._decoder(raw_predictions)
+            predictions = self._filter(raw_predictions)
             predictions.update({"raw_output": raw_predictions})
             return predictions
 
@@ -61,8 +61,8 @@ class Yolo(ks.Model):
         return self._head
 
     @property
-    def decoder(self):
-        return self._decoder
+    def filter(self):
+        return self._filter
 
 
 from yolo.modeling.backbones.Darknet import build_darknet
@@ -86,12 +86,12 @@ def build_yolo_filter(model_config):
     anchor_cfg = model_config.anchors.get()
     model = YoloLayer(masks=anchor_cfg.masks.as_dict(),
                       anchors=anchor_cfg.boxes,
-                      thresh=model_config.decoder.iou_thresh,
-                      cls_thresh=model_config.decoder.class_thresh,
-                      max_boxes=model_config.decoder.max_boxes,
+                      thresh=model_config.filter.iou_thresh,
+                      cls_thresh=model_config.filter.class_thresh,
+                      max_boxes=model_config.filter.max_boxes,
                       path_scale=anchor_cfg.path_scales.as_dict(),
                       scale_xy=anchor_cfg.x_y_scales.as_dict(),
-                      use_nms=model_config.decoder.use_nms)
+                      use_nms=model_config.filter.use_nms)
     return model
 
 
@@ -106,13 +106,13 @@ def build_yolo_default_loss(model_config):
         loss_dict[key] = Yolo_Loss(
             classes=model_config.num_classes,
             anchors=anchors.boxes,
-            ignore_thresh=model_config.decoder.ignore_thresh,
-            loss_type=model_config.decoder.loss_type,
+            ignore_thresh=model_config.filter.ignore_thresh,
+            loss_type=model_config.filter.loss_type,
             path_key=key,
             mask=masks[key],
             scale_anchors=path_scales[key],
             scale_x_y=x_y_scales[key],
-            use_tie_breaker=model_config.decoder.use_tie_breaker)
+            use_tie_breaker=model_config.filter.use_tie_breaker)
     return loss_dict
 
 
@@ -125,7 +125,7 @@ def build_yolo(input_specs, model_config, l2_regularization):
     head = build_yolo_decoder(input_specs, model_config, l2_regularization)
     filter = build_yolo_filter(model_config)
 
-    model = Yolo(backbone=backbone, head=head, decoder=filter)
+    model = Yolo(backbone=backbone, head=head, filter=filter)
     model.build(input_specs.shape)
 
     losses = build_yolo_default_loss(model_config)

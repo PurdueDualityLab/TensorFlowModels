@@ -253,7 +253,7 @@ class Yolo(ModelConfig):
     max_level: int = 5
     anchors: Anchors = Anchors(type="tiny")
     base: Union[str, YoloBase] = YoloBase()
-    decoder: YoloLossLayer = YoloLossLayer()
+    filter: YoloLossLayer = YoloLossLayer()
     norm_activation_backbone: common.NormActivation = common.NormActivation(
         activation="mish",
         use_sync_bn=False,

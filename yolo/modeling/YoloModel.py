@@ -95,7 +95,7 @@ class Yolo(ks.Model):
         self._head.build(nshape)
         masks, path_scales, x_y_scales = self._head.get_loss_attributes()
 
-        self._decoder = YoloLayer(masks=masks,
+        self._filter = YoloLayer(masks=masks,
                                   anchors=self._boxes,
                                   thresh=0.5,
                                   cls_thresh=0.5,
@@ -114,7 +114,7 @@ class Yolo(ks.Model):
         if training:
             return {"raw_output": raw_predictions}
         else:
-            predictions = self._decoder(raw_predictions)
+            predictions = self._filter(raw_predictions)
             predictions.update({"raw_output": raw_predictions})
             return predictions
 
@@ -127,8 +127,8 @@ class Yolo(ks.Model):
         return self._head
 
     @property
-    def decoder(self):
-        return self._decoder
+    def filter(self):
+        return self._filter
 
     def load_weights_from_dn(self,
                              dn2tf_backbone=True,
