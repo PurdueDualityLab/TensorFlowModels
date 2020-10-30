@@ -70,7 +70,7 @@ from official.vision.beta.modeling.backbones import factory
 from official.core import registry
 
 
-def build_yolo_decoder(input_specs, model_config, parent_config, l2_regularization):
+def build_yolo_decoder(input_specs, model_config, l2_regularization):
 
     model = YoloDecoder(classes=model_config.num_classes,
                         boxes_per_level=3,
@@ -121,9 +121,8 @@ def build_yolo(input_specs, model_config, l2_regularization):
     print(input_specs)
     print(l2_regularization)
 
-    base_config = model_config.base.get()
-    backbone = factory.build_backbone(input_specs, base_config, l2_regularization)
-    head = build_yolo_decoder(input_specs, base_config, model_config, l2_regularization)
+    backbone = factory.build_backbone(input_specs, model_config, l2_regularization)
+    head = build_yolo_decoder(input_specs, model_config, l2_regularization)
     filter = build_yolo_filter(model_config)
 
     model = Yolo(backbone=backbone, head=head, decoder=filter)

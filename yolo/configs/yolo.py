@@ -15,7 +15,7 @@
 # ==============================================================================
 """YOLO configuration definition."""
 import tensorflow as tf
-from typing import Dict, List, Optional, Tuple, Union
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses
 import os
 
@@ -239,49 +239,10 @@ class YoloLossLayer(hyperparams.Config):
 
 
 @dataclasses.dataclass
-class Yolov3(hyperparams.Config):
-    backbone: backbones.Backbone = backbones.Backbone(
-        type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    head: YoloDecoder = YoloDecoder(version="v3", name="regular")
-
-
-@dataclasses.dataclass
-class Yolov3spp(hyperparams.Config):
-    backbone: backbones.Backbone = backbones.Backbone(
-        type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    head: YoloDecoder = YoloDecoder(version="v3", name="spp")
-
-
-@dataclasses.dataclass
-class Yolov3tiny(hyperparams.Config):
-    backbone: backbones.Backbone = backbones.Backbone(
-        type="darknet", darknet=backbones.DarkNet(model_id="darknettiny"))
-    head: YoloDecoder = YoloDecoder(version="v3", name="tiny")
-
-
-@dataclasses.dataclass
-class Yolov4(hyperparams.Config):
+class YoloBase(hyperparams.OneOfConfig):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
     head: YoloDecoder = YoloDecoder(version="v4", name="regular")
-
-
-@dataclasses.dataclass
-class Yolov4tiny(hyperparams.Config):
-    backbone: backbones.Backbone = backbones.Backbone(
-        type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny"))
-    head: YoloDecoder = YoloDecoder(version="v4", name="tinyv4")
-
-
-
-@dataclasses.dataclass
-class YoloFamilySelector(hyperparams.OneOfConfig):
-    type: Optional[str] = None
-    v3: Yolov3 = Yolov3()
-    v3_spp: Yolov3spp = Yolov3spp()
-    v3_tiny: Yolov3tiny = Yolov3tiny()
-    v4: Yolov4 = Yolov4()
-    v4_tiny: Yolov4tiny = Yolov4tiny()
 
 
 @dataclasses.dataclass
@@ -291,7 +252,7 @@ class Yolo(ModelConfig):
     min_level: Optional[int] = None
     max_level: int = 5
     anchors: Anchors = Anchors(type="tiny")
-    base: YoloFamilySelector = YoloFamilySelector(type="v3_tiny")
+    base: Union[str, YoloBase] = YoloBase()
     decoder: YoloLossLayer = YoloLossLayer()
     norm_activation_backbone: common.NormActivation = common.NormActivation(
         activation="mish",
@@ -304,6 +265,58 @@ class Yolo(ModelConfig):
         norm_momentum=0.99,
         norm_epsilon=0.001)
 
+    _DEFAULTS: ClassVar = {
+        'v3': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
+            head = YoloDecoder(version="v3", name="regular")
+        ),
+        'v3spp': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
+            head = YoloDecoder(version="v3", name="spp")
+        ),
+        'v3tiny': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknettiny")),
+            head = YoloDecoder(version="v3", name="tiny")
+        ),
+        'v4': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
+            head = YoloDecoder(version="v4", name="regular")
+        ),
+        'v4tiny': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny")),
+            head = YoloDecoder(version="v4", name="tinyv4")
+        ),
+    }
+
+    for v in _DEFAULTS.values():
+        v.lock()
+
+    @property
+    def backbone(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].backbone
+        else:
+            return self.base.backbone
+
+    @backbone.setter
+    def backbone(self, val):
+        self.base.backbone = val
+
+    @property
+    def head(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].head
+        else:
+            return self.base.head
+
+    @backbone.setter
+    def head(self, val):
+        self.base.head = val
 
 # model task
 @dataclasses.dataclass

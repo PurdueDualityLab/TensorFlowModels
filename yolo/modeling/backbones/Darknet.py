@@ -1,5 +1,5 @@
-"""Contains definitions of Darknet Backbone Networks. 
-   The models are inspired by ResNet, and CSPNet 
+"""Contains definitions of Darknet Backbone Networks.
+   The models are inspired by ResNet, and CSPNet
 
 Residual networks (ResNets) were proposed in:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
@@ -12,7 +12,7 @@ Cross Stage Partial networks (CSPNets) were proposed in:
 
 DarkNets Are used mainly for Object detection in:
 [1] Joseph Redmon, Ali Farhadi
-    YOLOv3: An Incremental Improvement. arXiv:1804.02767 
+    YOLOv3: An Incremental Improvement. arXiv:1804.02767
 
 [2] Alexey Bochkovskiy, Chien-Yao Wang, Hong-Yuan Mark Liao
     YOLOv4: Optimal Speed and Accuracy of Object Detection. arXiv:2004.10934
@@ -36,13 +36,13 @@ class BlockConfig(object):
         layer: string layer name
         stack: the type of layer ordering to use for this specific level
         repetitions: integer for the number of times to repeat block
-        bottelneck: boolean for does this stack have a bottle neck layer 
+        bottelneck: boolean for does this stack have a bottle neck layer
         filters: integer for the output depth of the level
-        pool_size: integer the pool_size of max pool layers 
+        pool_size: integer the pool_size of max pool layers
         kernel_size: optional integer, for convolution kernel size
-        strides: integer or tuple to indicate convolution strides 
+        strides: integer or tuple to indicate convolution strides
         padding: the padding to apply to layers in this stack
-        activation: string for the activation to use for this stack 
+        activation: string for the activation to use for this stack
         route: integer for what level to route from to get the next input
         output_name: the name to use for this output
         is_output: is this layer an output in the default model
@@ -73,10 +73,10 @@ def build_block_specs(config):
 
 
 class layer_factory(object):
-    """ 
+    """
   class for quick look up of default layers used by darknet to
-  connect, introduce or exit a level. Used in place of an if condition 
-  or switch to make adding new layers easier and to reduce redundant code  
+  connect, introduce or exit a level. Used in place of an if condition
+  or switch to make adding new layers easier and to reduce redundant code
   """
     def __init__(self):
         self._layer_dict = {
@@ -493,7 +493,7 @@ def build_darknet(
 
     backbone_type = model_config.backbone.type
     backbone_cfg = model_config.backbone.get()
-    norm_activation_config = model_config.norm_activation
+    norm_activation_config = model_config.norm_activation_backbone
     model = Darknet(model_id=backbone_cfg.model_id,
                     input_shape=input_specs,
                     activation=norm_activation_config.activation,
