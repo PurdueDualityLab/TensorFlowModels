@@ -12,14 +12,14 @@ class Yolo(ks.Model):
     def __init__(self,
                  backbone=None,
                  neck=None,
-                 head=None,
+                 decoder=None,
                  filter=None,
                  **kwargs):
         super().__init__(**kwargs)
         #model components
         self._backbone = backbone
         self._neck = neck
-        self._head = head
+        self._decoder = decoder
         self._filter = filter
 
         return
@@ -30,7 +30,7 @@ class Yolo(ks.Model):
         if self._neck != None:
             self.neck.build(nshape)
             nshape = self._neck.output_shape
-        self._head.build(nshape)
+        self._decoder.build(nshape)
         super().build(input_shape)
         return
 
@@ -40,7 +40,7 @@ class Yolo(ks.Model):
         if self._neck != None:
             maps = self._neck(maps)
 
-        raw_predictions = self._head(maps)
+        raw_predictions = self._decoder(maps)
         if training:
             return {"raw_output": raw_predictions}
         else:
@@ -57,8 +57,8 @@ class Yolo(ks.Model):
         return self._neck
 
     @property
-    def head(self):
-        return self._head
+    def decoder(self):
+        return self._decoder
 
     @property
     def filter(self):
@@ -122,10 +122,10 @@ def build_yolo(input_specs, model_config, l2_regularization):
     print(l2_regularization)
 
     backbone = factory.build_backbone(input_specs, model_config, l2_regularization)
-    head = build_yolo_decoder(input_specs, model_config, l2_regularization)
+    decoder = build_yolo_decoder(input_specs, model_config, l2_regularization)
     filter = build_yolo_filter(model_config)
 
-    model = Yolo(backbone=backbone, head=head, filter=filter)
+    model = Yolo(backbone=backbone, decoder=decoder, filter=filter)
     model.build(input_specs.shape)
 
     losses = build_yolo_default_loss(model_config)

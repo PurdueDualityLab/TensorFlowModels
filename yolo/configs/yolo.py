@@ -73,7 +73,7 @@ class ModelConfig(hyperparams.Config):
         model_kwargs = model_cfg.as_dict()
 
         # TODO: Better method
-        for k in ('_boxes', 'backbone', 'head', 'neck', 'head_filter'):
+        for k in ('_boxes', 'backbone', 'head', 'decoder', 'filter'):
             model_kwargs.pop(k)
         return model_kwargs
 
@@ -242,7 +242,7 @@ class YoloLossLayer(hyperparams.Config):
 class YoloBase(hyperparams.OneOfConfig):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-    head: YoloDecoder = YoloDecoder(version="v4", name="regular")
+    decoder: YoloDecoder = YoloDecoder(version="v4", name="regular")
 
 
 @dataclasses.dataclass
@@ -259,7 +259,7 @@ class Yolo(ModelConfig):
         use_sync_bn=False,
         norm_momentum=0.99,
         norm_epsilon=0.001)
-    norm_activation_head: common.NormActivation = common.NormActivation(
+    norm_activation_decoder: common.NormActivation = common.NormActivation(
         activation="leaky",
         use_sync_bn=False,
         norm_momentum=0.99,
@@ -269,27 +269,27 @@ class Yolo(ModelConfig):
         'v3': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            head = YoloDecoder(version="v3", name="regular")
+            decoder = YoloDecoder(version="v3", name="regular")
         ),
         'v3spp': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            head = YoloDecoder(version="v3", name="spp")
+            decoder = YoloDecoder(version="v3", name="spp")
         ),
         'v3tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknettiny")),
-            head = YoloDecoder(version="v3", name="tiny")
+            decoder = YoloDecoder(version="v3", name="tiny")
         ),
         'v4': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
-            head = YoloDecoder(version="v4", name="regular")
+            decoder = YoloDecoder(version="v4", name="regular")
         ),
         'v4tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny")),
-            head = YoloDecoder(version="v4", name="tinyv4")
+            decoder = YoloDecoder(version="v4", name="tinyv4")
         ),
     }
 
@@ -308,15 +308,15 @@ class Yolo(ModelConfig):
         self.base.backbone = val
 
     @property
-    def head(self):
+    def decoder(self):
         if isinstance(self.base, str):
-            return Yolo._DEFAULTS[self.base].head
+            return Yolo._DEFAULTS[self.base].decoder
         else:
-            return self.base.head
+            return self.base.decoder
 
     @backbone.setter
-    def head(self, val):
-        self.base.head = val
+    def decoder(self, val):
+        self.base.decoder = val
 
 # model task
 @dataclasses.dataclass
