@@ -88,13 +88,13 @@ class YoloLayer(ks.Model):
     def call(self, inputs):
         boxes, classifs = self.parse_prediction_path(
             self._generator[self._keys[0]], self._len_mask[self._keys[0]],
-            self._scale_xy[self._keys[0]], inputs[self._keys[0]])
+            self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
             b, c = self.parse_prediction_path(self._generator[key],
                                               self._len_mask[key],
-                                              self._scale_xy[key], inputs[key])
+                                              self._scale_xy[key], inputs[str(key)])
             boxes = K.concatenate([boxes, b], axis=1)
             classifs = K.concatenate([classifs, c], axis=1)
             i += 1
