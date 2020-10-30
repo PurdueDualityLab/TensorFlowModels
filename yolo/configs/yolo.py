@@ -221,7 +221,7 @@ class DataConfig(cfg.DataConfig):
 
 
 @dataclasses.dataclass
-class YoloHead(hyperparams.Config):
+class YoloDecoder(hyperparams.Config):
     version: str = "v4"
     name: str = "regular"
 
@@ -242,35 +242,35 @@ class YoloLossLayer(hyperparams.Config):
 class Yolov3(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    head: YoloHead = YoloHead(version="v3", name="regular")
+    head: YoloDecoder = YoloDecoder(version="v3", name="regular")
 
 
 @dataclasses.dataclass
 class Yolov3spp(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknet53"))
-    head: YoloHead = YoloHead(version="v3", name="spp")
+    head: YoloDecoder = YoloDecoder(version="v3", name="spp")
 
 
 @dataclasses.dataclass
 class Yolov3tiny(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="darknettiny"))
-    head: YoloHead = YoloHead(version="v3", name="tiny")
+    head: YoloDecoder = YoloDecoder(version="v3", name="tiny")
 
 
 @dataclasses.dataclass
 class Yolov4(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-    head: YoloHead = YoloHead(version="v4", name="regular")
+    head: YoloDecoder = YoloDecoder(version="v4", name="regular")
 
 
 @dataclasses.dataclass
 class Yolov4tiny(hyperparams.Config):
     backbone: backbones.Backbone = backbones.Backbone(
         type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny"))
-    head: YoloHead = YoloHead(version="v4", name="tinyv4")
+    head: YoloDecoder = YoloDecoder(version="v4", name="tinyv4")
 
 
 
