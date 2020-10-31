@@ -198,7 +198,7 @@ class convCFG(Config):
             return [self.weights, self.biases]
 
     def to_tf(self, tensors):
-        from yolo.modeling.building_blocks import DarkConv
+        from yolo.modeling.layers import DarkConv
         layer = DarkConv(
             filters=self.filters,
             kernel_size=(self.size, self.size),
