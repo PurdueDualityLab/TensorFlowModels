@@ -176,3 +176,6 @@ def download(name: str, trust: bool = False) -> str:
             raise HTTPException(str(e)) from e
         else:
             raise
+
+if __name__ == '__main__':
+    download('yolov4-tiny.cfg')

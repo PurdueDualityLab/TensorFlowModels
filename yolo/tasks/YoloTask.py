@@ -203,14 +203,22 @@ class YoloTask(base_task.Task):
             loss_class += _loss_class
             metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
             metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
-
+        
         metric_dict["box_loss"] = loss_box
         metric_dict["conf_loss"] = loss_conf
         metric_dict["class_loss"] = loss_class
+        
         return loss, metric_dict
 
     def build_metrics(self, training=True):
-        return super().build_metrics(training=training)
+        #return super().build_metrics(training=training)
+
+        if not training:
+            self.coco_metric = coco_evaluator.COCOEvaluator(
+                annotation_file = self.task_config.annotation_file,
+                include_mask = False,
+                per_category_metrics=self._task_config.per_category_metrics)
+        return None
 
     def train_step(self, inputs, model, optimizer, metrics=None):
         #get the data point
@@ -256,20 +264,33 @@ class YoloTask(base_task.Task):
         #custom metrics
         loss_metrics = {"loss": loss}
         loss_metrics.update(metrics)
+
+        coco_model_outputs = {'detection_boxes': y_pred['bbox'],
+                              'detection_scores': y_pred['confidence'],
+                              'detection_classes': y_pred['classes'],
+                              'num_detections': tf.shape(y_pred['bbox'])[:-1],
+                              'source_id': label['groundtruths']['source_id'],}
+        loss_metrics.update({self.coco_metric.name:(label['groundtruths'],
+                                                          coco_model_outputs)})
+        
         return loss_metrics
 
     def aggregate_logs(self, state=None, step_outputs=None):
-        return super().aggregate_logs(state=state, step_outputs=step_outputs)
+        #return super().aggregate_logs(state=state, step_outputs=step_outputs)
+        if not state:
+            self.coco_metric.reset_states()
+            state = self.coco_metric
+        self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
+                                      step_outputs[self.coco_metric.name][1])
+        return state
 
     def reduce_aggregated_logs(self, aggregated_logs):
-        return super().reduce_aggregated_logsI(aggregated_logs)
+        #return super().reduce_aggregated_logsI(aggregated_logs)
+        return self.coco_metric.result()
     
     @property
     def anchors(self):
         return self.task_config.model.boxes
-
-
-
 
 
 class BoxGenInputReader(input_reader.InputReader):
@@ -307,22 +328,5 @@ class BoxGenInputReader(input_reader.InputReader):
     print(boxes)
     return boxes
 
-
-if __name__ == "__main__":
-    from yolo.configs import yolo as exp_cfg
-    import matplotlib.pyplot as plt
-    config = exp_cfg.YoloTask()
-    task = YoloTask(config)
-    ds = task.build_inputs(config.train_data)
-    model = task.build_model()
-    task.initialize(model)
-    print(model)
-    for i, el in enumerate(ds):
-        print(el[0][0].shape)
-        image = tf.image.draw_bounding_boxes(el[0], _xcycwh_to_yxyx(el[1]["bbox"]), [[0.0, 1.0, 0.0]])
-
-        print(task.anchors, el[1]["best_anchors"])
-        plt.imshow(image[0].numpy())
-        plt.show()
-        if i == 10:
-            break
+if __name__ == '__main__':
+    print("Get Me Off Your Fucking Mailing List")
