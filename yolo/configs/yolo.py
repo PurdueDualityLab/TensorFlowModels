@@ -137,7 +137,8 @@ class YoloLossLayer(hyperparams.Config):
 class YoloBase(hyperparams.OneOfConfig):
     backbone: backbones.Backbone = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
     decoder: YoloDecoder = YoloDecoder(version="v4", type="regular")
-
+    darknet_weights_file: str = "yolov4-tiny.weights"
+    darknet_weights_cfg: str = "yolov4-tiny.cfg"
 
 @dataclasses.dataclass
 class Yolo(ModelConfig):
@@ -160,27 +161,38 @@ class Yolo(ModelConfig):
         'v3': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            decoder = YoloDecoder(version="v3", type="regular")
+            decoder = YoloDecoder(version="v3", type="regular"),
+            _config_file = "",
+            darknet_weights_file = "cache://yolov3.weights",
+            darknet_weights_cfg = "cache://yolov3.cfg"
         ),
         'v3spp': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
-            decoder = YoloDecoder(version="v3", type="spp")
+            decoder = YoloDecoder(version="v3", type="spp"),
+            darknet_weights_file = "cache://yolov3-spp.weights",
+            darknet_weights_cfg = "cache://yolov3-spp.cfg"
         ),
         'v3tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknettiny")),
-            decoder = YoloDecoder(version="v3", type="tiny")
+            decoder = YoloDecoder(version="v3", type="tiny"),
+            darknet_weights_file = "cache://yolov3-tiny.weights",
+            darknet_weights_cfg = "cache://yolov3-tiny.cfg"
         ),
         'v4': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
-            decoder = YoloDecoder(version="v4", type="regular")
+            decoder = YoloDecoder(version="v4", type="regular"),
+            darknet_weights_file = "cache://yolov4.weights",
+            darknet_weights_cfg = "cache://yolov4.cfg"
         ),
         'v4tiny': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny")),
-            decoder = YoloDecoder(version="v4", type="tiny")
+            decoder = YoloDecoder(version="v4", type="tiny"),
+            darknet_weights_file = "cache://yolov4-tiny.weights",
+            darknet_weights_cfg = "cache://yolov4-tiny.cfg"
         ),
     }
 
@@ -208,7 +220,7 @@ class Yolo(ModelConfig):
     @decoder.setter
     def decoder(self, val):
         self.base.decoder = val
-    
+
     @property
     def boxes(self):
         if self._boxes == None:
@@ -224,7 +236,7 @@ class Yolo(ModelConfig):
                 boxes.append(box)
         return boxes
 
-    
+
     def set_boxes(self, box_list):
         setter = []
         for value in box_list:
@@ -244,8 +256,6 @@ class YoloTask(cfg.TaskConfig):
     per_category_metrics: bool = False
 
     load_darknet_weights: bool = True
-    darknet_weights_file: str = "yolov4-tiny.weights"
-    darknet_weights_cfg: str = "yolov4-tiny.cfg"
     darknet_load_decoder: bool = False
 
 @exp_factory.register_config_factory('yolo_v4_coco')
@@ -257,7 +267,7 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
 
     config = cfg.ExperimentConfig(
         runtime=cfg.RuntimeConfig(mixed_precision_dtype='float32'),
-        task=YoloTask(model=Yolo(type='v4'),
+        task=YoloTask(model=Yolo(base='v4'),
                       train_data=DataConfig(input_path=os.path.join(
                           COCO_INPUT_PATH_BASE, 'train*'),
                                             is_training=True,

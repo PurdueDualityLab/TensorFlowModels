@@ -70,9 +70,15 @@ class YoloTask(base_task.Task):
             from yolo.utils._darknet2tf.load_weights import split_converter
             from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
             from yolo.utils._darknet2tf.load_weights2 import load_head
-            
-            weights_file = self.task_config.darknet_weights_file
-            config_file = self.task_config.darknet_weights_cfg
+            from yolo.utils.file_manager import download
+
+            weights_file = self.task_config.model.base.darknet_weights_file
+            config_file = self.task_config.model.base.darknet_weights_cfg
+
+            if weights_file.startswith('cache://')
+                weights_file = download(weights_file[8:])
+            if config_file.startswith('cache://')
+                config_file = download(config_file[8:])
 
             list_encdec = DarkNetConverter.read(config_file, weights_file)
             splits = model.backbone._splits
