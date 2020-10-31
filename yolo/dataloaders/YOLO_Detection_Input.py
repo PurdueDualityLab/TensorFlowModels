@@ -139,7 +139,7 @@ class Parser(parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        image = _scale_image(data["image"],
+        image = preprocessing_ops._scale_image(data["image"],
                              resize=True,
                              w=self._image_w,
                              h=self._image_h)
