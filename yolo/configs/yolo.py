@@ -144,7 +144,7 @@ class YoloBase(hyperparams.OneOfConfig):
 class Yolo(ModelConfig):
     num_classes: int = 80
     _input_size: Optional[List[int]] = None
-    min_level: int = 4
+    min_level: int = 3
     max_level: int = 5
     boxes_per_scale: int = 3
     base: Union[str, YoloBase] = YoloBase()
@@ -155,14 +155,16 @@ class Yolo(ModelConfig):
         norm_momentum=0.99,
         norm_epsilon=0.001)
     decoder_activation: str = "leaky"
-    _boxes: ClassVar = [[10,14],  [23,27],  [37,58],  [81,82],  [135,169],  [344,319]] #[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
+    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),
+                               (76, 55), (72, 146), (142, 110), (192, 243),
+                               (459, 401)] #[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
+    # [[10.0,14.0],  [23.0,27.0],  [37.0,58.0],  [81.0,82.0],  [135.0,169.0],  [344.0,319.0]]
 
     _DEFAULTS: ClassVar = {
         'v3': YoloBase(
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
             decoder = YoloDecoder(version="v3", type="regular"),
-            _config_file = "",
             darknet_weights_file = "cache://yolov3.weights",
             darknet_weights_cfg = "cache://yolov3.cfg"
         ),
@@ -193,7 +195,7 @@ class Yolo(ModelConfig):
             decoder = YoloDecoder(version="v4", type="tiny"),
             darknet_weights_file = "cache://yolov4-tiny.weights",
             darknet_weights_cfg = "cache://yolov4-tiny.cfg"
-        ),
+        ), # TODO: fix activation for v4 tiny and all v3 models
     }
 
     for v in _DEFAULTS.values():
@@ -222,6 +224,20 @@ class Yolo(ModelConfig):
         self.base.decoder = val
 
     @property
+    def darknet_weights_file(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].darknet_weights_file
+        else:
+            return self.base.darknet_weights_file
+
+    @property
+    def darknet_weights_cfg(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].darknet_weights_cfg
+        else:
+            return self.base.darknet_weights_cfg
+
+    @property
     def boxes(self):
         if self._boxes == None:
             return None
@@ -236,8 +252,8 @@ class Yolo(ModelConfig):
                 boxes.append(box)
         return boxes
 
-
-    def set_boxes(self, box_list):
+    @boxes.setter
+    def boxes(self, box_list):
         setter = []
         for value in box_list:
             value = str(list(value))
@@ -256,18 +272,22 @@ class YoloTask(cfg.TaskConfig):
     per_category_metrics: bool = False
 
     load_darknet_weights: bool = True
-    darknet_load_decoder: bool = False
+    darknet_load_decoder: bool = True
 
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:
     """COCO object detection with YOLO."""
-    train_batch_size = 16
-    eval_batch_size = 16
-    steps_per_epoch = 118287 // train_batch_size
+    train_batch_size = 2
+    eval_batch_size = 2
+    num_batches = 2000800 // train_batch_size
 
     config = cfg.ExperimentConfig(
-        runtime=cfg.RuntimeConfig(mixed_precision_dtype='float32'),
-        task=YoloTask(model=Yolo(base='v4tiny'),
+        runtime=cfg.RuntimeConfig(
+#            mixed_precision_dtype='float16',
+#            loss_scale='dynamic',
+
+            num_gpus=2),
+        task=YoloTask(model=Yolo(base='v4'),
                       train_data=DataConfig(#input_path=os.path.join(
                           #COCO_INPUT_PATH_BASE, 'train*'),
                                             is_training=True,
@@ -281,11 +301,11 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
                           global_batch_size=eval_batch_size,
                           shuffle_buffer_size=2)),
         trainer=cfg.TrainerConfig(
-            steps_per_loop=10,
-            summary_interval=10,
+            steps_per_loop=2000,
+            summary_interval=8000,
             checkpoint_interval=10000,
-            train_steps=90 * steps_per_epoch,
-            validation_steps=10,
+            train_steps=num_batches,
+            validation_steps=1000,
             validation_interval=10,
             optimizer_config=optimization.OptimizationConfig({
                 'optimizer': {
@@ -298,16 +318,15 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
                     'type': 'stepwise',
                     'stepwise': {
                         'boundaries': [
-                            30 * steps_per_epoch, 60 * steps_per_epoch,
-                            80 * steps_per_epoch
+                            int(0.8 * num_batches), int(0.9 * num_batches)
                         ],
-                        'values': [0.8, 0.08, 0.008, 0.0008]
+                        'values': [0.00261 * 64 / num_batches, 0.000261 * 64 / num_batches, 0.0000261 * 64 / num_batches]
                     }
                 },
                 'warmup': {
                     'type': 'linear',
                     'linear': {
-                        'warmup_steps': 5 * steps_per_epoch,
+                        'warmup_steps': 1000 * 64 // num_batches,
                         'warmup_learning_rate': 0
                     }
                 }
