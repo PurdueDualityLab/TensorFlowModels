@@ -196,7 +196,7 @@ def pad_max_instances(value, instances, pad_value=0):
         return value
 
 
-def get_best_anchor(y_true, anchors, width, height):
+def get_best_anchor(y_true, anchors, width = 1, height = 1):
     """
     get the correct anchor that is assoiciated with each box using IOU betwenn input anchors and gt
     Args:

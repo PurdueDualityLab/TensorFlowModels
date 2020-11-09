@@ -62,7 +62,7 @@ class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
     fixed_size: bool = False
-    jitter_im: float = 0.1
+    jitter_im: float = 0.3
     jitter_boxes: float = 0.005
     net_down_scale: int = 32
     min_process_size: int = 320

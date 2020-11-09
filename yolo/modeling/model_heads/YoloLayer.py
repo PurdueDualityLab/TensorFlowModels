@@ -7,9 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import sys
 
-from yolo.utils.loss_utils import GridGenerator
-from yolo.utils.loss_utils import parse_yolo_box_predictions
-from yolo.utils.box_utils import _xcycwh_to_yxyx
+from yolo.utils import loss_utils 
+from yolo.utils import box_utils
 from yolo.modeling.functions.yolo_loss import Yolo_Loss
 
 
@@ -55,7 +54,7 @@ class YoloLayer(ks.Model):
         return
 
     def get_generators(self, anchors, path_scale, path_key):
-        anchor_generator = GridGenerator(anchors,
+        anchor_generator = loss_utils.GridGenerator(anchors,
                                          scale_anchors=path_scale,
                                          low_memory=True,
                                          name=f"yolo_layer_{path_key}",
@@ -72,13 +71,13 @@ class YoloLayer(ks.Model):
                                      dtype=data.dtype)
 
         # compute the true box output values
-        _, _, boxes = parse_yolo_box_predictions(data[..., 0:4],
+        _, _, boxes = loss_utils.parse_yolo_box_predictions(data[..., 0:4],
                                                  tf.cast(shape[1], data.dtype),
                                                  tf.cast(shape[2], data.dtype),
                                                  anchors,
                                                  centers,
                                                  scale_x_y=scale_xy)
-        box = _xcycwh_to_yxyx(boxes)
+        box = box_utils.xcycwh_to_yxyx(boxes)
 
         # computer objectness and generate grid cell mask for where objects are located in the image
         objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis=-1)
