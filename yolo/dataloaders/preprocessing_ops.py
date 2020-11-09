@@ -3,64 +3,65 @@ import tensorflow_addons as tfa
 from tensorflow_addons.image import utils as img_utils
 import tensorflow.keras.backend as K
 from yolo.utils.iou_utils import *
+from yolo.utils import box_utils
 
 
-@tf.function
-def _angles_to_projective_transforms(angle, image_w, image_h):
-    """Generate projective transform matrix for tfa.image.transform.
-    Args:
-        angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
-        image_w(tensorflow.python.framework.ops.EagerTensor): The width of the image.
-        image_h(tensorflow.python.framework.ops.EagerTensor): The height of the image.
-    Returns:
-        projective transform matrix(tensorflow.python.framework.ops.EagerTensor)
-    """
-    with tf.name_scope("rotate_parent"):
-        angle_or_angles = tf.convert_to_tensor(angle,
-                                               name="angles",
-                                               dtype=tf.dtypes.float32)
-        angles = angle_or_angles[None]
-        x_offset = ((image_w - 1) - (tf.math.cos(angles) *
-                                     (image_w - 1) - tf.math.sin(angles) *
-                                     (image_h - 1))) / 2.0
-        y_offset = ((image_h - 1) - (tf.math.sin(angles) *
-                                     (image_w - 1) + tf.math.cos(angles) *
-                                     (image_h - 1))) / 2.0
-        num_angles = tf.shape(angles)[0]
-    return tf.concat([
-        tf.math.cos(angles)[:, None], -tf.math.sin(angles)[:, None],
-        x_offset[:, None],
-        tf.math.sin(angles)[:, None],
-        tf.math.cos(angles)[:, None], y_offset[:, None],
-        tf.zeros((1, 2))
-    ],
-                     axis=1)
+# @tf.function
+# def angles_to_projective_transforms(angle, image_w, image_h):
+#     """Generate projective transform matrix for tfa.image.transform.
+#     Args:
+#         angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
+#         image_w(tensorflow.python.framework.ops.EagerTensor): The width of the image.
+#         image_h(tensorflow.python.framework.ops.EagerTensor): The height of the image.
+#     Returns:
+#         projective transform matrix(tensorflow.python.framework.ops.EagerTensor)
+#     """
+#     with tf.name_scope("rotate_parent"):
+#         angle_or_angles = tf.convert_to_tensor(angle,
+#                                                name="angles",
+#                                                dtype=tf.dtypes.float32)
+#         angles = angle_or_angles[None]
+#         x_offset = ((image_w - 1) - (tf.math.cos(angles) *
+#                                      (image_w - 1) - tf.math.sin(angles) *
+#                                      (image_h - 1))) / 2.0
+#         y_offset = ((image_h - 1) - (tf.math.sin(angles) *
+#                                      (image_w - 1) + tf.math.cos(angles) *
+#                                      (image_h - 1))) / 2.0
+#         num_angles = tf.shape(angles)[0]
+#     return tf.concat([
+#         tf.math.cos(angles)[:, None], -tf.math.sin(angles)[:, None],
+#         x_offset[:, None],
+#         tf.math.sin(angles)[:, None],
+#         tf.math.cos(angles)[:, None], y_offset[:, None],
+#         tf.zeros((1, 2))
+#     ],
+#                      axis=1)
 
 
-@tf.function
-def _rotate(image, angle):
-    """Generates a rotated image with the use of tfa.image.transform
-    Args:
-        image(tensorflow.python.framework.ops.Tensor): The image.
-        angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
-    Returns:
-        The rotated image.
-    """
-    with tf.name_scope("rotate"):
-        image = tf.convert_to_tensor(image)
-        img = img_utils.to_4D_image(image)
-        ndim = image.get_shape().ndims
-        image_h = tf.cast(img.shape[0], tf.dtypes.float32)
-        image_w = tf.cast(img.shape[1], tf.dtypes.float32)
-        rotation_key = _angles_to_projective_transforms(
-            angle, image_w, image_h)
-        output = tfa.image.transform(img,
-                                     rotation_key,
-                                     interpolation="NEAREST")
-    return img_utils.from_4D_image(output, ndim)
+# @tf.function
+# def rotate(image, angle):
+#     """Generates a rotated image with the use of tfa.image.transform
+#     Args:
+#         image(tensorflow.python.framework.ops.Tensor): The image.
+#         angle(tensorflow.python.framework.ops.EagerTensor): The rotation angle.
+#     Returns:
+#         The rotated image.
+#     """
+#     with tf.name_scope("rotate"):
+#         image = tf.convert_to_tensor(image)
+#         img = img_utils.to_4D_image(image)
+#         ndim = image.get_shape().ndims
+#         image_h = tf.cast(img.shape[0], tf.dtypes.float32)
+#         image_w = tf.cast(img.shape[1], tf.dtypes.float32)
+#         rotation_key = angles_to_projective_transforms(
+#             angle, image_w, image_h)
+#         output = tfa.image.transform(img,
+#                                      rotation_key,
+#                                      interpolation="NEAREST")
+#     return img_utils.from_4D_image(output, ndim)
 
 
-def _scale_image(image, resize=False, w=None, h=None):
+def scale_image(image, resize=False, w=None, h=None):
     """Image Normalization.
     Args:
         image(tensorflow.python.framework.ops.Tensor): The image.
@@ -98,11 +99,34 @@ def random_jitter_boxes(boxes, box_jitter, seed=10):
                            seed=seed,
                            dtype=tf.float32) + 1
     #tf.print(tf.math.reduce_sum(jx))
-    boxes = _jitter_boxes(boxes, jx, jy, jw, jh)
+    boxes = jitter_boxes(boxes, jx, jy, jw, jh)
     return boxes
 
+def resize_crop_filter(image, boxes, default_width, default_height, target_width, target_height):
+    with tf.name_scope("resize_crop_filter"):
+        image = tf.image.resize(image, (target_width, target_height))
+        image = tf.image.resize_with_crop_or_pad(image, target_height=default_height, target_width=default_width)
+        
+        default_width = tf.cast(default_width, boxes.dtype)
+        default_height = tf.cast(default_height, boxes.dtype)
+        target_width = tf.cast(target_width, boxes.dtype)
+        target_height = tf.cast(target_height, boxes.dtype)
+        
+        shift_width =  default_width - (target_width + default_width)/2
+        shift_height =  default_height - (target_height + default_height)/2
+        aspect_change_width = target_width/default_width
+        aspect_change_height = target_height/default_height
+        
+        boxes = box_utils.yxyx_to_xcycwh(boxes)
+        x, y, width, height = tf.split(boxes, 4, axis = -1)
+        x = ((x * target_width) + shift_width)/default_width 
+        y = ((y * target_height) + shift_height)/default_width
+        width = width * aspect_change_width
+        height = height * aspect_change_height
+        boxes = box_utils.xcycwh_to_yxyx(tf.concat([x, y, width, height], axis = -1))
+    return image, boxes
 
-def _jitter_boxes(box, j_cx, j_cy, j_w, j_h):
+def jitter_boxes(box, j_cx, j_cy, j_w, j_h):
     with tf.name_scope("jitter_boxs"):
         x = tf.clip_by_value(tf.math.add(box[..., 0], j_cx),
                              clip_value_min=0.0,
@@ -120,13 +144,12 @@ def _jitter_boxes(box, j_cx, j_cy, j_w, j_h):
 def random_translate(image, box, t, seed=10):
     t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
     t_y = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
-    #tf.print(t_x+t_y)
-    box = _translate_boxes(box, t_x, t_y)
-    image = _translate_image(image, t_x, t_y)
+    box = translate_boxes(box, t_x, t_y)
+    image = translate_image(image, t_x, t_y)
     return image, box
 
 
-def _translate_boxes(box, translate_x, translate_y):
+def translate_boxes(box, translate_x, translate_y):
     with tf.name_scope("translate_boxs"):
         x = box[..., 0] + translate_x
         y = box[..., 1] + translate_y
@@ -135,7 +158,7 @@ def _translate_boxes(box, translate_x, translate_y):
     return box
 
 
-def _translate_image(image, translate_x, translate_y):
+def translate_image(image, translate_x, translate_y):
     with tf.name_scope("translate_image"):
         if (translate_x != 0 and translate_y != 0):
             image_jitter = tf.convert_to_tensor([translate_x, translate_y])
@@ -152,10 +175,10 @@ def random_flip(image, box, seed=10):
     if do_flip_x:
         image = tf.image.flip_left_right(image)
         x = 1 - x
-    # do_flip_y = tf.greater(tf.random.uniform([], seed=seed), 0.5)
-    # if do_flip_y:
-    #     image = tf.image.flip_up_down(image)
-    #     y = 1 - y
+    do_flip_y = tf.greater(tf.random.uniform([], seed=seed), 0.9)
+    if do_flip_y:
+        image = tf.image.flip_up_down(image)
+        y = 1 - y
     return image, tf.stack([x, y, box[..., 2], box[..., 3]], axis=-1)
 
 
@@ -167,14 +190,13 @@ def pad_max_instances(value, instances, pad_value=0):
         value = value[:instances, ...]
         return value
     else:
-        nshape = tf.tensor_scatter_nd_update(shape, [[0]],
-                                             [instances - dim1])  #
+        nshape = tf.tensor_scatter_nd_update(shape, [[0]],[instances - dim1])
         pad_tensor = tf.ones(nshape, dtype=value.dtype) * pad_value
         value = tf.concat([value, pad_tensor], axis=0)
         return value
 
 
-def _get_best_anchor(y_true, anchors, width, height):
+def get_best_anchor(y_true, anchors, width, height):
     """
     get the correct anchor that is assoiciated with each box using IOU betwenn input anchors and gt
     Args:

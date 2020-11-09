@@ -94,6 +94,11 @@ class FastVideo(object):
         else:
             self._pre_process_device = "/CPU:0"
 
+        # self._cap.set(3, int(960))
+        # self._cap.set(4, int(720))
+        # self._cap.set(cv2.CAP_PROP_FPS, int(30))
+        print(self._cap.get(3), self._cap.get(4))
+
         self._preprocess_function = preprocess_function
         self._height = int(self._cap.get(4)) if disp_h == None else disp_h
         self._og_height = int(self._cap.get(4))
@@ -489,7 +494,7 @@ if __name__ == "__main__":
     model.load_weights_from_dn()#(weights_file="yolov3-spp.weights")
     model.summary()
 
-    # name = "saved_models/v4/tiny"
+    # name = "saved_models/v4/regular"
     # # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
     # # model.save(name)
     # new_name = f"{name}_tensorrt"
@@ -501,7 +506,7 @@ if __name__ == "__main__":
     # model.set_postprocessor_fn(func)
 
     cap = FastVideo(
-        "testing_files/test.mp4",
+        0, #"testing_files/test.mp4",
         model=model,
         model_version="v4",
         process_width=416,
@@ -509,8 +514,8 @@ if __name__ == "__main__":
         preprocess_with_gpu=False,
         print_conf=True,
         max_batch=5,
-        disp_h=240,
-        scale_que=10,
-        wait_time=0.00000001, #None,
+        disp_h=480,
+        scale_que=1,
+        wait_time=None, #0.00000001, #None,
         policy="mixed_float16")
     cap.run()

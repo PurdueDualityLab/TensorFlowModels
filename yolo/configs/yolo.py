@@ -35,27 +35,6 @@ IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
 
 # default param classes
 @dataclasses.dataclass
-class AnchorCFG(hyperparams.Config):
-    @property
-    def boxes(self):
-        boxes = []
-        for box in self._boxes:
-            f = []
-            for b in box.split(","):
-                f.append(int(b.strip()))
-            boxes.append(f)
-        return boxes
-
-    @boxes.setter
-    def boxes(self, box_list):
-        setter = []
-        for value in box_list:
-            value = str(list(value))
-            setter.append(value[1:-1])
-        self._boxes = setter
-
-
-@dataclasses.dataclass
 class ModelConfig(hyperparams.Config):
     @property
     def input_size(self):
@@ -99,7 +78,7 @@ class Parser(hyperparams.Config):
 class DataConfig(cfg.DataConfig):
     """Input config for training."""
     input_path: str = ''
-    tfds_name: str = 'coco/2017'
+    tfds_name: str = 'coco'
     tfds_split: str = 'train'
     global_batch_size: int = 10
     is_training: bool = True
@@ -107,6 +86,7 @@ class DataConfig(cfg.DataConfig):
     decoder = None
     parser: Parser = Parser()
     shuffle_buffer_size: int = 10000
+    tfds_download: bool = True
 
 
 @dataclasses.dataclass
@@ -155,9 +135,7 @@ class Yolo(ModelConfig):
         norm_momentum=0.99,
         norm_epsilon=0.001)
     decoder_activation: str = "leaky"
-    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),
-                               (76, 55), (72, 146), (142, 110), (192, 243),
-                               (459, 401)] #[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
+    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)] #[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
     # [[10.0,14.0],  [23.0,27.0],  [37.0,58.0],  [81.0,82.0],  [135.0,169.0],  [344.0,319.0]]
 
     _DEFAULTS: ClassVar = {
@@ -186,8 +164,8 @@ class Yolo(ModelConfig):
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
             decoder = YoloDecoder(version="v4", type="regular"),
-            darknet_weights_file = "cache://yolov4.weights",
-            darknet_weights_cfg = "cache://yolov4.cfg"
+            darknet_weights_file = "yolov4.weights",
+            darknet_weights_cfg = "yolov4.cfg"
         ),
         'v4tiny': YoloBase(
             backbone = backbones.Backbone(
@@ -252,8 +230,7 @@ class Yolo(ModelConfig):
                 boxes.append(box)
         return boxes
 
-    @boxes.setter
-    def boxes(self, box_list):
+    def set_boxes(self, box_list):
         setter = []
         for value in box_list:
             value = str(list(value))
@@ -277,9 +254,10 @@ class YoloTask(cfg.TaskConfig):
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:
     """COCO object detection with YOLO."""
-    train_batch_size = 2
-    eval_batch_size = 2
-    num_batches = 2000800 // train_batch_size
+    train_batch_size = 1
+    eval_batch_size = 1
+    base_default = 1200000
+    num_batches = 1200000 * 64/train_batch_size
 
     config = cfg.ExperimentConfig(
         runtime=cfg.RuntimeConfig(
@@ -315,12 +293,13 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
                     }
                 },
                 'learning_rate': {
+
                     'type': 'stepwise',
                     'stepwise': {
                         'boundaries': [
-                            int(0.8 * num_batches), int(0.9 * num_batches)
+                            int(400000/base_default * num_batches), int(450000/base_default * num_batches)
                         ],
-                        'values': [0.00261 * 64 / num_batches, 0.000261 * 64 / num_batches, 0.0000261 * 64 / num_batches]
+                        'values': [0.00261 * train_batch_size/64 , 0.000261 * train_batch_size/64, 0.0000261 * train_batch_size/64]
                     }
                 },
                 'warmup': {

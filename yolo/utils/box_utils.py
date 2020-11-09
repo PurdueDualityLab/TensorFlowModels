@@ -6,7 +6,7 @@ import math
 from typing import *
 
 
-def _yxyx_to_xcycwh(box: tf.Tensor):
+def yxyx_to_xcycwh(box: tf.Tensor):
     """Converts boxes from ymin, xmin, ymax, xmax to x_center, y_center, width, height.
     Args:
         box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes
@@ -24,7 +24,7 @@ def _yxyx_to_xcycwh(box: tf.Tensor):
     return box
 
 
-def _xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
+def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
     """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, xmax.
     Args:
         box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -44,7 +44,7 @@ def _xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
     return box
 
 
-def _xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
+def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
     """Converts boxes from x_center, y_center, width, height to xmin, ymin, xmax, ymax.
     Args:
         box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -62,7 +62,7 @@ def _xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
     return box
 
 
-def _intersection_and_union(box1: tf.Tensor, box2: tf.Tensor):
+def intersection_and_union(box1: tf.Tensor, box2: tf.Tensor):
     """Calculates the intersection and union between between box1 and box2.
     Args:
         box1: a `Tensor` with a shape of [batch_size, N, 4]. N is the number of
@@ -82,13 +82,13 @@ def _intersection_and_union(box1: tf.Tensor, box2: tf.Tensor):
                                        tf.zeros_like(intersect_mins))
         intersection = intersect_wh[..., 0] * intersect_wh[..., 1]
 
-        box1_area = _get_area(box1)
-        box2_area = _get_area(box2)
+        box1_area = get_area(box1)
+        box2_area = get_area(box2)
         union = box1_area + box2_area - intersection
     return intersection, union
 
 
-def _get_area(box: Union[tf.Tensor, Tuple],
+def get_area(box: Union[tf.Tensor, Tuple],
               xywh: bool = False,
               use_tuple: bool = False):
     """Calculates the area of the box.
@@ -101,13 +101,13 @@ def _get_area(box: Union[tf.Tensor, Tuple],
     """
     with tf.name_scope("box_area"):
         if use_tuple:
-            area = _get_area_tuple(box=box, xywh=xywh)
+            area = get_area_tuple(box=box, xywh=xywh)
         else:
-            area = _get_area_tensor(box=box, xywh=xywh)
+            area = get_area_tensor(box=box, xywh=xywh)
     return area
 
 
-def _get_area_tensor(box: tf.Tensor, xywh: bool = False):
+def get_area_tensor(box: tf.Tensor, xywh: bool = False):
     """Calculates the area of the box.
     Args:
         box: a `Tensor` whose last dimension is 4.
@@ -124,7 +124,7 @@ def _get_area_tensor(box: tf.Tensor, xywh: bool = False):
     return area
 
 
-def _get_area_tuple(box: Tuple, xywh: bool = False):
+def get_area_tuple(box: Tuple, xywh: bool = False):
     """Calculates the area of the box.
     Args:
         box: a `Tuple` whose last dimension is 4.
@@ -140,7 +140,7 @@ def _get_area_tuple(box: Tuple, xywh: bool = False):
     return area
 
 
-def _center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
+def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
     """Calculates the squared distance between two points.
     Args:
         center_1: a `Tensor` that represents a point.
@@ -155,7 +155,7 @@ def _center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
     return dist
 
 
-def _aspect_ratio_consistancy(w_gt: tf.Tensor, h_gt: tf.Tensor, w: tf.Tensor,
+def aspect_ratio_consistancy(w_gt: tf.Tensor, h_gt: tf.Tensor, w: tf.Tensor,
                               h: tf.Tensor):
     """Calculates the consistency aspect ratio.
     Args:

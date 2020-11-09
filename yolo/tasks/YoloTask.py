@@ -20,7 +20,7 @@ from official.vision.beta.modeling import factory
 from yolo.dataloaders import YOLO_Detection_Input
 from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.utils.YoloKmeans import YoloKmeans
-from yolo.utils.box_utils import _xcycwh_to_yxyx
+from yolo.utils.box_utils import xcycwh_to_yxyx
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
@@ -52,7 +52,7 @@ class YoloTask(base_task.Task):
                                        decoder_fn=decoder.decode,
                                        parser_fn=None)
             anchors = reader.read(k = self._num_boxes, image_width = params.parser.image_w)
-            self.task_config.model.boxes = anchors
+            self.task_config.model.set_boxes(anchors)
             self._anchors_built = True
             del reader
 
@@ -76,19 +76,8 @@ class YoloTask(base_task.Task):
             weights_file = self.task_config.model.darknet_weights_file
             config_file = self.task_config.model.darknet_weights_cfg
 
-            """
-            if weights_file.startswith('cache://'):
-                weights_file = download(weights_file[8:])
-            if config_file.startswith('cache://'):
-                config_file = download(config_file[8:])
-"""
-            weights_file = '/tmp/.keras/weights/yolov4.weights'
-            config_file = '/tmp/.keras/cfg/yolov4.cfg'
-
             list_encdec = DarkNetConverter.read(config_file, weights_file)
             splits = model.backbone._splits
-            {"backbone_split": 106,
-               "neck_split": 138},
             if "neck_split" in splits.keys():
                 encoder, neck, decoder = split_converter(
                     list_encdec, splits["backbone_split"],
@@ -188,8 +177,8 @@ class YoloTask(base_task.Task):
         reader = input_reader.InputReader(params,
                                    dataset_fn = tf.data.TFRecordDataset,
                                    decoder_fn = decoder.decode,
-                                   parser_fn = parser.parse_fn(params.is_training), 
-                                   postprocess_fn = post_process_fn)
+                                   parser_fn = parser.parse_fn(params.is_training), )
+                                   #postprocess_fn = post_process_fn)
         dataset = reader.read(input_context=input_context)
         return dataset
 
@@ -268,21 +257,13 @@ class YoloTask(base_task.Task):
         loss_metrics.update(metrics)
         label['boxes'] = _xcycwh_to_yxyx(label['bbox'])
         del label['bbox']
-        # tf.print('################################')
-        # tf.print('groundtruth')
-        # tf.print(label['boxes'])
-        # tf.print()
-        # tf.print('################################')
-        # tf.print('prediction')
-        # tf.print(y_pred['bbox'])
-        # tf.print()
+
         coco_model_outputs = {'detection_boxes': y_pred['bbox'],
                               'detection_scores': y_pred['confidence'],
                               'detection_classes': y_pred['classes'],
                               'num_detections': tf.shape(y_pred['bbox'])[:-1],
                               'source_id': label['source_id'],}
-        loss_metrics.update({self.coco_metric.name:(label,
-                                                          coco_model_outputs)})
+        loss_metrics.update({self.coco_metric.name:(label, coco_model_outputs)})
         return loss_metrics
 
     def aggregate_logs(self, state=None, step_outputs=None):
@@ -337,3 +318,24 @@ class BoxGenInputReader(input_reader.InputReader):
     print("clusting complete -> default boxes used ::")
     print(boxes)
     return boxes
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt 
+
+    config = exp_cfg.yolo_v4_coco()    
+    task = YoloTask(config.task)
+    #model = task.build_model()
+    #task.initialize(model)
+    train_data = task.build_inputs(config.task.train_data)
+    # test_data = task.build_inputs(config.task.validation_data)
+    #print(task.anchors)
+
+    for l, (i, j) in enumerate(train_data):
+        boxes = xcycwh_to_yxyx(j['bbox'])
+        i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 0.0]])
+        plt.imshow(i[0].numpy())
+        plt.show()
+
+        if l > 10: 
+            break

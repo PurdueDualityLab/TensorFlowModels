@@ -7,9 +7,9 @@ runtime:
   enable_xla: false
   gpu_thread_mode: null
   loss_scale: null
-  mixed_precision_dtype: float32
+  mixed_precision_dtype: null
   num_cores_per_replica: 1
-  num_gpus: 0
+  num_gpus: 2
   num_packs: 1
   per_gpu_thread_count: 0
   run_eagerly: false
@@ -18,15 +18,13 @@ runtime:
   worker_hosts: null
 task:
   annotation_file: null
-  darknet_load_decoder: false
-  darknet_weights_cfg: yolov4-tiny.cfg
-  darknet_weights_file: yolov4-tiny.weights
+  darknet_load_decoder: true
   gradient_clip_norm: 0.0
   init_checkpoint: ''
   load_darknet_weights: true
   model:
     _input_size: null
-    base: v4tiny
+    base: v4
     boxes_per_scale: 3
     decoder_activation: leaky
     filter:
@@ -39,7 +37,7 @@ task:
       use_nms: true
       use_tie_breaker: true
     max_level: 5
-    min_level: 4
+    min_level: 3
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
@@ -55,7 +53,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 16
+    global_batch_size: 2
     input_path: ''
     is_training: true
     parser:
@@ -78,8 +76,8 @@ task:
     tf_data_service_job_name: null
     tfds_as_supervised: false
     tfds_data_dir: ''
-    tfds_download: false
-    tfds_name: coco/2017
+    tfds_download: true
+    tfds_name: coco
     tfds_skip_decoding_feature: ''
     tfds_split: train
   validation_data:
@@ -90,7 +88,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 16
+    global_batch_size: 2
     input_path: ''
     is_training: false
     parser:
@@ -113,8 +111,8 @@ task:
     tf_data_service_job_name: null
     tfds_as_supervised: false
     tfds_data_dir: ''
-    tfds_download: false
-    tfds_name: coco/2017
+    tfds_download: true
+    tfds_name: coco
     tfds_skip_decoding_feature: ''
     tfds_split: train
   weight_decay: 0.0005
@@ -131,9 +129,9 @@ trainer:
     ema: null
     learning_rate:
       stepwise:
-        boundaries: [221760, 443520, 591360]
+        boundaries: [800320, 900360]
         name: PiecewiseConstantDecay
-        values: [0.8, 0.08, 0.008, 0.0008]
+        values: [1.6697321071571371e-07, 1.6697321071571373e-08, 1.6697321071571373e-09]
       type: stepwise
     optimizer:
       sgd:
@@ -148,12 +146,12 @@ trainer:
       linear:
         name: linear
         warmup_learning_rate: 0
-        warmup_steps: 36960
+        warmup_steps: 0
       type: linear
-  steps_per_loop: 10
-  summary_interval: 10
-  train_steps: 665280
+  steps_per_loop: 2000
+  summary_interval: 8000
+  train_steps: 1000400
   train_tf_function: true
   train_tf_while_loop: true
   validation_interval: 10
-  validation_steps: 10
+  validation_steps: 1000

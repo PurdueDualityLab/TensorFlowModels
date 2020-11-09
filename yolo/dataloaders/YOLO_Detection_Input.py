@@ -19,7 +19,7 @@ class Parser(parser.Parser):
         image_h=416,
         num_classes=80,
         fixed_size=False,
-        jitter_im=0.1,
+        jitter_im=0.3,
         jitter_boxes=0.005,
         net_down_scale=32,
         max_process_size=608,
@@ -80,17 +80,27 @@ class Parser(parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        boxes = box_utils._yxyx_to_xcycwh(data["groundtruth_boxes"])
+        image = data["image"] / 255
+
+        randscale = self._image_w // self._net_down_scale
+        if not self._fixed_size:
+            do_scale = tf.greater(tf.random.uniform([], minval=0, maxval=1, seed=self._seed), 1 - 1)#self._pct_rand)
+            if do_scale:
+                randscale = tf.random.uniform([],
+                                            minval=10,
+                                            maxval=21,
+                                            seed=self._seed,
+                                            dtype=tf.int32)
+        
+        image, boxes = preprocessing_ops.resize_crop_filter(image, data["groundtruth_boxes"], default_width=self._image_w, default_height=self._image_h, target_width=randscale * self._net_down_scale, target_height=randscale * self._net_down_scale)
+        boxes = box_utils.yxyx_to_xcycwh(boxes)
         if self._jitter_boxes != 0.0:
             boxes = preprocessing_ops.random_jitter_boxes(boxes,
                                         self._jitter_boxes,
                                         seed=self._seed)
-        best_anchors = preprocessing_ops._get_best_anchor(boxes, self._anchors, self._image_w,
+        best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, self._image_w,
                                         self._image_h)
 
-        image = data["image"] / 255
-        image = tf.image.resize(
-            image, (self._max_process_size, self._max_process_size))
         image = tf.image.random_brightness(image=image,
                                            max_delta=.1)  # Brightness
         image = tf.image.random_saturation(image=image, lower=0.75,
@@ -109,8 +119,7 @@ class Parser(parser.Parser):
         boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
         classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],
                                     self._max_num_instances, -1)
-        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances,
-                                         0)
+        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, 0)
         area = preprocessing_ops.pad_max_instances(data["groundtruth_area"],
                                  self._max_num_instances, 0)
         is_crowd = preprocessing_ops.pad_max_instances(
@@ -139,18 +148,18 @@ class Parser(parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        image = preprocessing_ops._scale_image(data["image"],
+        image = preprocessing_ops.scale_image(data["image"],
                              resize=True,
                              w=self._image_w,
                              h=self._image_h)
-        boxes = box_utils._yxyx_to_xcycwh(data["groundtruth_boxes"])
-        best_anchors = preprocessing_ops._get_best_anchor(boxes, self._anchors, self._image_w,
+        boxes = box_utils.yxyx_to_xcycwh(data["groundtruth_boxes"])
+        best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, self._image_w,
                                         self._image_h)
         boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
         classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],
                                     self._max_num_instances, 0)
-        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances,
-                                         0)
+        best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, 0)
+
         area = preprocessing_ops.pad_max_instances(data["groundtruth_area"],
                                  self._max_num_instances, 0)
         is_crowd = preprocessing_ops.pad_max_instances(
@@ -182,3 +191,5 @@ class Parser(parser.Parser):
 
         image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
         return image, label
+
+

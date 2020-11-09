@@ -3,7 +3,7 @@ import pickle
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
 from yolo.utils.iou_utils import compute_iou
-from yolo.utils.box_utils import _yxyx_to_xcycwh
+from yolo.utils.box_utils import yxyx_to_xcycwh
 import tensorflow as tf
 
 
@@ -73,10 +73,10 @@ class YoloKmeans:
         for ds in dataset:
             for el in ds:  
                 if type(box_ls) == type(None):
-                    #box_ls = _yxyx_to_xcycwh(el['objects']['bbox'])[..., 2:]
-                    box_ls = _yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]
+                    #box_ls = yxyx_to_xcycwh(el['objects']['bbox'])[..., 2:]
+                    box_ls = yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]
                 else:
-                    box_ls = tf.concat([box_ls, _yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]], axis = 0)
+                    box_ls = tf.concat([box_ls, yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]], axis = 0)
         self._boxes = box_ls
 
     def load_voc_boxes(self):
