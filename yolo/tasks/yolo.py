@@ -305,7 +305,7 @@ if __name__ == "__main__":
     from yolo.utils.run_utils import prep_gpu
     prep_gpu()
 
-    config = exp_cfg.YoloTask()  
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3'))  
     task = YoloTask(config)
     model = task.build_model()
     model.summary()

@@ -451,6 +451,24 @@ def func(inputs):
     }
 
 
+def get_model(model):
+    @tf.function
+    def ret(image):
+        outs = model.call(image, training = False)
+        
+        with tf.device('cpu:0'):
+            boxes = tf.cast(outs["bbox"], tf.float32)
+            classifs = tf.cast(outs["confidence"], tf.float32)
+            nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
+        
+        fouts = {
+            "bbox": nms.nmsed_boxes,
+            "classes": nms.nmsed_classes,
+            "confidence": nms.nmsed_scores,
+        }
+        return fouts 
+    return ret
+
 if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
@@ -460,23 +478,34 @@ if __name__ == "__main__":
     from yolo.tasks.yolo import YoloTask
     prep_gpu()
 
-    config = exp_cfg.YoloTask()  
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', min_level=3))  
     task = YoloTask(config)
     model = task.build_model()
     task.initialize(model)
     model.summary()
+    
 
-
-    cap = FastVideo(
-        "videos/nyc.mp4",
-        model=model,
-        process_width=416,
-        process_height=416,
-        preprocess_with_gpu=False,
-        print_conf=True,
-        max_batch=5,
-        disp_h=480,
-        scale_que=1,
-        wait_time=None, #0.00000001, #None,
-        policy="mixed_float16")
-    cap.run()
+    # cap = FastVideo(
+    #     "videos/nyc.mp4",
+    #     model=model,
+    #     process_width=416,
+    #     process_height=416,
+    #     preprocess_with_gpu=False,
+    #     print_conf=False,
+    #     max_batch=10,
+    #     disp_h=320,
+    #     scale_que=1,
+    #     wait_time=None, #0.00000001, #None,
+    #     policy="mixed_float16")
+    # cap.run()
+    # 
+    input_signature = tf.TensorSpec(
+        shape=[1, 416, 416, 3],
+        dtype=tf.float16)
+    signatures = {
+        'serving_default':get_model(model).get_concrete_function(input_signature)
+    }
+    model(tf.ones((1, 416, 416, 3)))
+    tf.saved_model.save(model, "saved_models/v4/regular", signatures=signatures)
+    
+    # model.save("saved_models/v4/regular", include_optimizer=False)
