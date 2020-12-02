@@ -126,7 +126,6 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
         update_index = update_index.stack()
         update = update.stack()
         full = tf.tensor_scatter_nd_add(full, update_index, update)
-    #tf.print(K.sum(full), K.sum(y_true))
     return full
 
 
@@ -137,10 +136,7 @@ def _build_grid_points(lwidth, lheight, num, dtype):
         x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
         x_y = K.stack([x_left, y_left], axis=-1)
         x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
-        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),
-                                       num,
-                                       axis=-2),
-                             axis=0)
+        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),num,axis=-2),axis=0)
     return x_y
 
 
@@ -156,8 +152,6 @@ def _build_anchor_grid(width, height, anchors, num, dtype):
 
 
 class GridGenerator(object):
-    inuse = dict()
-
     def __init__(self,
                  anchors,
                  masks=None,
@@ -171,31 +165,13 @@ class GridGenerator(object):
         else:
             self._num = tf.shape(anchors)[0]
 
-        self._low_memory = low_memory
         if masks != None:
             anchors = [anchors[mask] for mask in masks]
+        
+        self._low_memory = low_memory
 
-        self._lock = False
         self._scale_anchors = scale_anchors
         self._anchors = tf.convert_to_tensor(anchors)
-
-        if not self._low_memory:
-            self._prev_width = 13
-            self._grid_points = _build_grid_points(13, 13, self._num,
-                                                   self.dtype)
-            self._anchor_grid = _build_anchor_grid(
-                13, 13,
-                tf.cast(self._anchors, self.dtype) /
-                tf.cast(self._scale_anchors * 13, self.dtype), self._num,
-                self.dtype)
-
-        if name != None:
-            if name not in GridGenerator.inuse.keys() or reset == True:
-                if name in GridGenerator.inuse.keys():
-                    del GridGenerator.inuse[name]
-                GridGenerator.inuse[name] = self
-            else:
-                raise Exception("the name you are using is already in use")
         return
 
     @tf.function(experimental_relax_shapes=True)
@@ -203,73 +179,13 @@ class GridGenerator(object):
         return tf.repeat(grid, batch_size, axis=0)
 
     @tf.function(experimental_relax_shapes=True)
-    def _get_grids_high_memory(self, width, height, batch_size, dtype=None):
-        self._lock = True
+    def __call__(self, width, height, batch_size, dtype=None):
         if dtype == None:
             self.dtype = tf.keras.backend.floatx()
         else:
             self.dtype = dtype
-
-        if width != self._prev_width:
-            del self._anchor_grid
-            del self._grid_points
-            self._grid_points = _build_grid_points(width, height, self._num,
-                                                   self.dtype)
-            self._anchor_grid = _build_anchor_grid(
-                width, height,
-                tf.cast(self._anchors, self.dtype) /
-                tf.cast(self._scale_anchors * width, self.dtype), self._num,
-                self.dtype)
-            self._prev_width = width
-        else:
-            self._grid_points = tf.cast(self._grid_points, self.dtype)
-            self._anchor_grid = tf.cast(self._anchor_grid, self.dtype)
-
-        if self._grid_points.dtype != self.dtype:
-            self._grid_points = tf.cast(self._grid_points, self.dtype)
-            self._anchor_grid = tf.cast(self._anchor_grid, self.dtype)
-
-        grid_points = self._extend_batch(self._grid_points, batch_size)
-        anchor_grid = self._extend_batch(self._anchor_grid, batch_size)
-        self._lock = False
-        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
-
-    @tf.function(experimental_relax_shapes=True)
-    def _get_grids_low_memory(self, width, height, batch_size, dtype=None):
-        if not self._lock:
-            if dtype == None:
-                self.dtype = tf.keras.backend.floatx()
-            else:
-                self.dtype = dtype
         grid_points = _build_grid_points(width, height, self._num, self.dtype)
-        anchor_grid = _build_anchor_grid(
-            width, height,
-            tf.cast(self._anchors, self.dtype) /
-            tf.cast(self._scale_anchors * width, self.dtype), self._num,
-            self.dtype)
+        anchor_grid = _build_anchor_grid(width, height, tf.cast(self._anchors, self.dtype) / tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
         grid_points = self._extend_batch(grid_points, batch_size)
         anchor_grid = self._extend_batch(anchor_grid, batch_size)
         return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
-
-    @tf.function(experimental_relax_shapes=True)
-    def __call__(self, width, height, batch_size, dtype=None):
-        if self._low_memory or self._lock:
-            return self._get_grids_low_memory(width,
-                                              height,
-                                              batch_size,
-                                              dtype=dtype)
-        else:
-            return self._get_grids_high_memory(width,
-                                               height,
-                                               batch_size,
-                                               dtype=dtype)
-
-    @staticmethod
-    def get_generator_from_key(key):
-        if key == None:
-            return None
-        if key not in GridGenerator.inuse.keys():
-            return None
-        else:
-            return GridGenerator.inuse[key]
-        return None

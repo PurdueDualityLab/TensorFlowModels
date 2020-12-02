@@ -27,7 +27,7 @@ import tensorflow as tf
 
 from official.core import train_utils
 from official.core import base_task
-from official.modeling.hyperparams import config_definitions
+from official.core import config_definitions
 
 
 class BestCheckpointExporter:
@@ -169,11 +169,9 @@ def run_experiment(distribution_strategy: tf.distribute.Strategy,
   """
 
   with distribution_strategy.scope():
-    model = task.build_model()
     trainer = train_utils.create_trainer(
         params,
         task,
-        model=model,
         model_dir=model_dir,
         train='train' in mode,
         evaluate=('eval' in mode) or run_post_eval,

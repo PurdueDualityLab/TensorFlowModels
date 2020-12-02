@@ -2,7 +2,7 @@ import collections
 import collections.abc
 import io
 
-from ..file_manager import PathABC
+from yolo.utils.downloads.file_manager import PathABC
 
 from typing import Union, Type, TypeVar
 

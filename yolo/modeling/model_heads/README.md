@@ -1,2 +1,0 @@
-# Detection and classification heads
-

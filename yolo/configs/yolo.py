@@ -116,9 +116,9 @@ class YoloLossLayer(hyperparams.Config):
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
     backbone: backbones.Backbone = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-    decoder: YoloDecoder = YoloDecoder(version="v4", type="regular")
-    darknet_weights_file: str = "yolov4-tiny.weights"
-    darknet_weights_cfg: str = "yolov4-tiny.cfg"
+    decoder: YoloDecoder = YoloDecoder(version="v3", type="regular")
+    darknet_weights_file: str = "yolov3.weights"
+    darknet_weights_cfg: str = "yolov3.cfg"
 
 @dataclasses.dataclass
 class Yolo(ModelConfig):
@@ -240,7 +240,7 @@ class Yolo(ModelConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-    model: Yolo = Yolo(base = "v4tiny")
+    model: Yolo = Yolo(base = "v3")
     train_data: DataConfig = DataConfig(is_training=True)
     validation_data: DataConfig = DataConfig(is_training=False)
     weight_decay: float = 5e-4

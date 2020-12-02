@@ -1,5 +1,5 @@
 from collections import defaultdict
-from yolo.modeling.layers import DarkConv
+from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
 
 
@@ -32,7 +32,7 @@ def load_weights_backbone(model, net):
     alternate = 0
     for layer in model.layers:
         # non sub module conv blocks
-        if isinstance(layer, DarkConv):
+        if isinstance(layer, ConvBN):
             if base_key + alternate not in layers.keys():
                 layers[base_key + alternate] = layer
             else:
@@ -43,8 +43,8 @@ def load_weights_backbone(model, net):
         else:
             #base_key = max(layers.keys())
             for sublayer in layer.submodules:
-                if isinstance(sublayer, DarkConv):
-                    if sublayer.name == "dark_conv":
+                if isinstance(sublayer, ConvBN):
+                    if sublayer.name == "conv_bn":
                         key = 0
                     else:
                         key = int(sublayer.name.split("_")[-1])
@@ -59,8 +59,13 @@ def load_weights_backbone(model, net):
 
 
 def ishead(out_conv, layer):
-    if layer.filters == out_conv:
-        return True
+    print(out_conv, layer)
+    try:
+        if layer.filters == out_conv:
+            return True
+    except:
+        if layer._filters == out_conv:
+            return True
     return False
 
 
@@ -78,8 +83,8 @@ def load_head(model, net, out_conv=255):
     heads = dict()
     for layer in model.layers:
         # non sub module conv blocks
-        if isinstance(layer, DarkConv):
-            if layer.name == "dark_conv":
+        if isinstance(layer, ConvBN):
+            if layer.name == "conv_bn":
                 key = 0
             else:
                 key = int(layer.name.split("_")[-1])
@@ -90,8 +95,8 @@ def load_head(model, net, out_conv=255):
                 layers[key] = layer
         else:
             for sublayer in layer.submodules:
-                if isinstance(sublayer, DarkConv):
-                    if sublayer.name == "dark_conv":
+                if isinstance(sublayer, ConvBN):
+                    if sublayer.name == "conv_bn":
                         key = 0
                     else:
                         key = int(sublayer.name.split("_")[-1])
@@ -102,8 +107,20 @@ def load_head(model, net, out_conv=255):
                     print(key, sublayer.name)
 
     load_weights(convs, layers)
-    load_weights(cfg_heads, heads)
-    return
+    try:
+        load_weights(cfg_heads, heads)
+    except:
+        print(heads, cfg_heads)
+    return cfg_heads
+
+def load_weights_prediction_layers(convs, model):
+    print(convs)
+    i = 0
+    for sublayer in model.submodules:
+        if ('conv_bn' in sublayer.name):
+            sublayer.set_weights(convs[i].get_weights())
+            i += 1
+    return 
 
 
 def load_weights_v4head(model, net, remap):
@@ -115,8 +132,8 @@ def load_weights_v4head(model, net, remap):
     layers = dict()
     base_key = 0
     for layer in model.layers:
-        if isinstance(layer, DarkConv):
-            if layer.name == "dark_conv":
+        if isinstance(layer, ConvBN):
+            if layer.name == "conv_bn":
                 key = 0
             else:
                 key = int(layer.name.split("_")[-1])
@@ -125,8 +142,8 @@ def load_weights_v4head(model, net, remap):
             print(base_key, layer.name)
         else:
             for sublayer in layer.submodules:
-                if isinstance(sublayer, DarkConv):
-                    if sublayer.name == "dark_conv":
+                if isinstance(sublayer, ConvBN):
+                    if sublayer.name == "conv_bn":
                         key = 0 + base_key
                     else:
                         key = int(sublayer.name.split("_")[-1]) + base_key
