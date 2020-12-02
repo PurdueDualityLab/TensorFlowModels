@@ -5,7 +5,7 @@ import tensorflow.lite as tflite
 
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
-from yolo.utils.testing_utils import prep_gpu
+from yolo.utils.run_utils import prep_gpu
 
 class TensorRT(object):
     def __init__(self,

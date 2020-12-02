@@ -461,51 +461,65 @@ def get_model(model):
             classifs = tf.cast(outs["confidence"], tf.float32)
             nms = tf.image.combined_non_max_suppression(tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
         
-        fouts = {
-            "bbox": nms.nmsed_boxes,
-            "classes": nms.nmsed_classes,
-            "confidence": nms.nmsed_scores,
-        }
+            fouts = {
+                "bbox": tf.cast(nms.nmsed_boxes, tf.float32),
+                "classes": tf.cast(nms.nmsed_classes, tf.float32),
+                "confidence": tf.cast(nms.nmsed_scores, tf.float32),
+            }
         return fouts 
     return ret
 
 if __name__ == "__main__":
-    from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    mixed_precision.set_policy("float16")
-
     from yolo.utils.run_utils import prep_gpu
     from yolo.configs import yolo as exp_cfg
     from yolo.tasks.yolo import YoloTask
+    import yolo.utils.export.tensor_rt as trt
     prep_gpu()
+
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    mixed_precision.set_policy("float32")
 
     config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', min_level=3))  
     task = YoloTask(config)
     model = task.build_model()
     task.initialize(model)
     model.summary()
-    
+
+    # name = "saved_models/v4/regular"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
 
     # cap = FastVideo(
-    #     "videos/nyc.mp4",
+    #     0,#"videos/nyc.mp4",
     #     model=model,
     #     process_width=416,
     #     process_height=416,
-    #     preprocess_with_gpu=False,
-    #     print_conf=False,
-    #     max_batch=10,
-    #     disp_h=320,
+    #     preprocess_with_gpu=True,
+    #     print_conf=True,
+    #     max_batch=5,
+    #     disp_h=720,
     #     scale_que=1,
-    #     wait_time=None, #0.00000001, #None,
+    #     wait_time=0.00000001, #None,
     #     policy="mixed_float16")
     # cap.run()
-    # 
-    input_signature = tf.TensorSpec(
-        shape=[1, 416, 416, 3],
-        dtype=tf.float16)
-    signatures = {
-        'serving_default':get_model(model).get_concrete_function(input_signature)
-    }
-    model(tf.ones((1, 416, 416, 3)))
-    tf.saved_model.save(model, "saved_models/v4/regular", signatures=signatures)
-    
-    # model.save("saved_models/v4/regular", include_optimizer=False)
+
+    # input_signature = tf.TensorSpec(
+    #     shape=[1, 416, 416, 3],
+    #     dtype=tf.float32)
+    # signatures = {
+    #     'serving_default':get_model(model).get_concrete_function(input_signature)
+    # }
+    # model(tf.ones((1, 416, 416, 3)))
+    # tf.saved_model.save(model, "saved_models/v4/regular_nms", signatures=signatures)
+
+    name = "saved_models/v4/regular_nms"
+    new_name = f"{name}_tensorrt"
+    model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    model.convertModel()
+    model.compile()
+    model.summary()
+    #model.set_postprocessor_fn(func)
+
