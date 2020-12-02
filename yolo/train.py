@@ -22,7 +22,7 @@ import sys
 
 from official.core import train_utils
 # pylint: disable=unused-import
-from official.vision.beta.projects.yolo.common import registry_imports
+from yolo.common import registry_imports
 # pylint: enable=unused-import
 from official.common import distribute_utils
 from official.common import flags as tfm_flags
@@ -33,7 +33,7 @@ from official.modeling import performance
 FLAGS = flags.FLAGS
 
 '''
-python3 -m official.vision.beta.projects.yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=official/vision/beta/projects/yolo/configs/experiments/darknet53_tfds.yaml
+python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=yolo/configs/experiments/darknet53.yaml
 '''
 
 def main(_):
