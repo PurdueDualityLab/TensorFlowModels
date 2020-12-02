@@ -11,14 +11,13 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.testing_utils import support_windows
-from yolo.utils.testing_utils import prep_gpu
-from yolo.utils.testing_utils import build_model
-from yolo.utils.testing_utils import draw_box
-from yolo.utils.testing_utils import int_scale_boxes
-from yolo.utils.testing_utils import gen_colors
-from yolo.utils.testing_utils import get_coco_names
-from yolo.utils.testing_utils import get_draw_fn
+from yolo.utils.run_utils import support_windows
+from yolo.utils.run_utils import prep_gpu
+from yolo.utils.demos.coco import draw_box
+from yolo.utils.demos.coco import get_draw_fn
+from yolo.utils.demos.coco import gen_colors
+from yolo.utils.demos.coco import get_coco_names
+from yolo.utils.demos.coco import int_scale_boxes
 
 
 class FastVideo(object):
@@ -62,8 +61,7 @@ class FastVideo(object):
     """
     def __init__(self,
                  file_name,
-                 model="regular",
-                 model_version="v3",
+                 model=None,
                  preprocess_function=None,
                  process_width=416,
                  process_height=416,
@@ -106,9 +104,8 @@ class FastVideo(object):
         self._classes = classes
         self._p_width = process_width
         self._p_height = process_height
-        self._model_version = model_version
         self._policy = policy
-        self._model = self._load_model(model)
+        self._model = model
 
         # fast but as close to one 2 one as possible
         if max_batch == None:
@@ -154,33 +151,6 @@ class FastVideo(object):
         self._frames = 1
         self._obj_detected = -1
         return
-
-    def _load_model(self, model):
-        if (type(model) == type(None)):
-            prep_gpu()
-            with tf.device(self._gpu_device):
-                model = build_model(name="regular",
-                                    w=self._p_width,
-                                    h=self._p_height,
-                                    policy=self._policy)
-            return model
-        default_set = {"regular", "tiny", "spp"}
-        if (type(model) == str and model in default_set):
-            print(model)
-            prep_gpu()
-            with tf.device(self._gpu_device):
-                model = build_model(name=model,
-                                    model_version=self._model_version,
-                                    w=self._p_width,
-                                    h=self._p_height,
-                                    saved=False,
-                                    policy=self._policy)
-            return model
-        elif (type(model) == str):
-            raise Exception("unsupported default model")
-
-        # a model object passed in
-        return model
 
     def _preprocess(self, image):
         # flip the image to make it mirror if you are using a webcam
@@ -482,33 +452,24 @@ def func(inputs):
 
 
 if __name__ == "__main__":
-    from yolo.modeling.YoloModel import Yolo
-    import yolo.utils.tensor_rt as trt
-    prep_gpu()
-
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
 
-    model = Yolo(model_version="v4", model_type="regular", use_nms=True)
-    model.build([None, None, None, 3])
-    model.load_weights_from_dn()#(weights_file="yolov3-spp.weights")
+    from yolo.utils.run_utils import prep_gpu
+    from yolo.configs import yolo as exp_cfg
+    from yolo.tasks.yolo import YoloTask
+    prep_gpu()
+
+    config = exp_cfg.YoloTask()  
+    task = YoloTask(config)
+    model = task.build_model()
+    task.initialize(model)
     model.summary()
 
-    # name = "saved_models/v4/regular"
-    # # model(tf.ones(shape = (1, 416, 416, 3), dtype = tf.float32))
-    # # model.save(name)
-    # new_name = f"{name}_tensorrt"
-
-    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    # # model.convertModel()
-    # model.compile()
-    # model.summary()
-    # model.set_postprocessor_fn(func)
 
     cap = FastVideo(
-        0, #"testing_files/test.mp4",
+        "videos/nyc.mp4",
         model=model,
-        model_version="v4",
         process_width=416,
         process_height=416,
         preprocess_with_gpu=False,

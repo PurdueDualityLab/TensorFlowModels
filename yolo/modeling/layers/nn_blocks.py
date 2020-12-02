@@ -15,32 +15,32 @@ class Identity(tf.keras.layers.Layer):
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class ConvBN(tf.keras.layers.Layer):
     '''
-  Modified Convolution layer to match that of the DarkNet Library. The Layer is a standards combination of Conv BatchNorm Activation,
-  however, the use of bias in the conv is determined by the use of batch normalization.
-  Cross Stage Partial networks (CSPNets) were proposed in:
-  [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh
-      CSPNet: A New Backbone that can Enhance Learning Capability of CNN. arXiv:1911.11929
-  Args:
-      filters: integer for output depth, or the number of features to learn
-      kernel_size: integer or tuple for the shape of the weight matrix or kernel to learn
-      strides: integer of tuple how much to move the kernel after each kernel use
-      padding: string 'valid' or 'same', if same, then pad the image, else do not
-      dialtion_rate: tuple to indicate how much to modulate kernel weights and
-                      how many pixels in a feature map to skip
-      kernel_initializer: string to indicate which function to use to initialize weights
-      bias_initializer: string to indicate which function to use to initialize bias
-      kernel_regularizer: string to indicate which function to use to regularizer weights
-      bias_regularizer: string to indicate which function to use to regularizer bias
-      use_bn: boolean for whether to use batch normalization
-      use_sync_bn: boolean for whether sync batch normalization statistics
-                    of all batch norm layers to the models global statistics (across all input batches)
-      norm_moment: float for moment to use for batch normalization
-      norm_epsilon: float for batch normalization epsilon
-      activation: string or None for activation function to use in layer,
-                  if None activation is replaced by linear
-      leaky_alpha: float to use as alpha if activation function is leaky
-      **kwargs: Keyword Arguments
-  '''
+    Modified Convolution layer to match that of the DarkNet Library. The Layer is a standards combination of Conv BatchNorm Activation,
+    however, the use of bias in the conv is determined by the use of batch normalization.
+    Cross Stage Partial networks (CSPNets) were proposed in:
+    [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh
+        CSPNet: A New Backbone that can Enhance Learning Capability of CNN. arXiv:1911.11929
+    Args:
+        filters: integer for output depth, or the number of features to learn
+        kernel_size: integer or tuple for the shape of the weight matrix or kernel to learn
+        strides: integer of tuple how much to move the kernel after each kernel use
+        padding: string 'valid' or 'same', if same, then pad the image, else do not
+        dialtion_rate: tuple to indicate how much to modulate kernel weights and
+                        how many pixels in a feature map to skip
+        kernel_initializer: string to indicate which function to use to initialize weights
+        bias_initializer: string to indicate which function to use to initialize bias
+        kernel_regularizer: string to indicate which function to use to regularizer weights
+        bias_regularizer: string to indicate which function to use to regularizer bias
+        use_bn: boolean for whether to use batch normalization
+        use_sync_bn: boolean for whether sync batch normalization statistics
+                        of all batch norm layers to the models global statistics (across all input batches)
+        norm_moment: float for moment to use for batch normalization
+        norm_epsilon: float for batch normalization epsilon
+        activation: string or None for activation function to use in layer,
+                    if None activation is replaced by linear
+        leaky_alpha: float to use as alpha if activation function is leaky
+        **kwargs: Keyword Arguments
+    '''
     def __init__(
             self,
             filters=1,
