@@ -77,12 +77,23 @@ class YoloTask(base_task.Task):
             weights_file = self.task_config.model.darknet_weights_file
             config_file = self.task_config.model.darknet_weights_cfg
             
-            if ("cachw" not in weights_file and "cache" not in config_file)
+            if ("cache" not in weights_file and "cache" not in config_file):
                 list_encdec = DarkNetConverter.read(config_file, weights_file)
             else:
-                download(config_file.split("/")[-1])
-                download(weights_file.split("/")[-1])
-                list_encdec = DarkNetConverter.read(config_file, weights_file)
+                import os
+                path = os.path.abspath("cache") 
+                if (not os.path.isdir(path)):
+                    os.mkdir(path)
+                
+                cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
+                if not os.path.isfile(cfg):
+                    download(config_file.split("/")[-1])
+                
+                wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
+                if not os.path.isfile(wgt):
+                    download(weights_file.split("/")[-1])
+                 
+                list_encdec = DarkNetConverter.read(cfg, wgt)
                 
             splits = model.backbone._splits
             if "neck_split" in splits.keys():
@@ -158,6 +169,7 @@ class YoloTask(base_task.Task):
         else:
             anchors = self.task_config.model.boxes
         
+        print(params.parser.fixed_size)
         parser = yolo_input.Parser(
                     image_w=params.parser.image_w,
                     image_h=params.parser.image_h,
@@ -174,16 +186,16 @@ class YoloTask(base_task.Task):
                     seed = params.parser.seed,
                     anchors = anchors)
         
-        # if params.is_training:
-        #     post_process_fn = parser.postprocess_fn
-        # else:
-        #     post_process_fn = None
+        if params.is_training:
+            post_process_fn = parser.postprocess_fn()
+        else:
+            post_process_fn = None
  
         reader = input_reader.InputReader(params,
-                                   dataset_fn = tf.data.TFRecordDataset,
-                                   decoder_fn = decoder.decode,
-                                   parser_fn = parser.parse_fn(params.is_training), )
-                                   #postprocess_fn = post_process_fn)
+                                        dataset_fn = tf.data.TFRecordDataset,
+                                        decoder_fn = decoder.decode,
+                                        parser_fn = parser.parse_fn(params.is_training),
+                                        postprocess_fn = post_process_fn)
         dataset = reader.read(input_context=input_context)
         return dataset
 
@@ -290,6 +302,8 @@ class YoloTask(base_task.Task):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt 
+    from yolo.utils.run_utils import prep_gpu
+    prep_gpu()
 
     config = exp_cfg.YoloTask()  
     task = YoloTask(config)
@@ -297,14 +311,14 @@ if __name__ == "__main__":
     model.summary()
     task.initialize(model)
     
-    train_data = task.build_inputs(config.task.train_data)
+    train_data = task.build_inputs(config.train_data)
     # test_data = task.build_inputs(config.task.validation_data)
     # print(task.anchors)
 
     for l, (i, j) in enumerate(train_data):
         preds = model(i, training = False)
         boxes = xcycwh_to_yxyx(j['bbox'])
-        print(task.build_losses(preds["raw_output"], j)[0])
+        #print(task.build_losses(preds["raw_output"], j)[0])
 
         i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 0.0]])
 
@@ -312,5 +326,5 @@ if __name__ == "__main__":
         plt.imshow(i[0].numpy())
         plt.show()
 
-        if l > 10: 
+        if l > 2: 
             break

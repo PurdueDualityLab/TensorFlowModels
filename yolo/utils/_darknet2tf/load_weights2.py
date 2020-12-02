@@ -115,11 +115,20 @@ def load_head(model, net, out_conv=255):
 
 def load_weights_prediction_layers(convs, model):
     print(convs)
-    i = 0
-    for sublayer in model.submodules:
-        if ('conv_bn' in sublayer.name):
-            sublayer.set_weights(convs[i].get_weights())
-            i += 1
+    try:
+        i = 0
+        for sublayer in model.submodules:
+            if ('conv_bn' in sublayer.name):
+                print(sublayer, convs[i])
+                sublayer.set_weights(convs[i].get_weights())
+                i += 1
+    except:
+        i = len(convs) - 1
+        for sublayer in model.submodules:
+            if ('conv_bn' in sublayer.name):
+                print(sublayer, convs[i])
+                sublayer.set_weights(convs[i].get_weights())
+                i -= 1
     return 
 
 

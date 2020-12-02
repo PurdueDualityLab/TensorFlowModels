@@ -61,6 +61,7 @@ class Parser(parser.Parser):
         self._anchors = anchors
 
         self._fixed_size = fixed_size
+
         self._jitter_im = 0.0 if jitter_im == None else jitter_im
         self._jitter_boxes = 0.0 if jitter_boxes == None else jitter_boxes
         self._pct_rand = pct_rand
@@ -95,7 +96,7 @@ class Parser(parser.Parser):
 
         randscale = self._image_w // self._net_down_scale
 
-        if not self._fixed_size:
+        if self._fixed_size:
             do_scale = tf.greater(tf.random.uniform([], minval=0, maxval=1, seed=self._seed), 1 - self._pct_rand)
             if do_scale:
                 randscale = tf.random.uniform([],
@@ -187,3 +188,20 @@ class Parser(parser.Parser):
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
         return image, labels
+    
+    def _postprocess_fn(self, image, label):
+        randscale = self._image_w // self._net_down_scale
+        if not self._fixed_size:
+            do_scale = tf.greater(tf.random.uniform([], minval=0, maxval=1, seed=self._seed), 1 - self._pct_rand)
+            if do_scale:
+                randscale = tf.random.uniform([],
+                                              minval=10,
+                                              maxval=20,
+                                              seed=self._seed,
+                                              dtype=tf.int32)
+
+        image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
+        return image, label
+    
+    def postprocess_fn(self):
+        return self._postprocess_fn if not self._fixed_size else None

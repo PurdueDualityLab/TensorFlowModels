@@ -209,10 +209,6 @@ def load_weights_v4head(model, net):
 
     print(convs)
 
-def load_weights_prediction_layers(convs, model):
-    print(convs)
-    print(model)
-    return 
 
 def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
     # get weights for backbone

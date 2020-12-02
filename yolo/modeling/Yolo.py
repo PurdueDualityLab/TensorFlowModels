@@ -147,11 +147,12 @@ def build_yolo_filter(model_config:yolo.Yolo, decoder:YoloDecoder):
 def build_yolo_head(input_specs, model_config:yolo.Yolo , l2_regularization):
     head = YoloHead(classes=model_config.num_classes,
              boxes_per_level=model_config.boxes_per_scale, 
-             xy_exponential= model_config.decoder.version == 'v4',
+             xy_exponential= False,#model_config.decoder.version == 'v4',
              norm_momentum= model_config.norm_activation.norm_momentum,
              norm_epsilon= model_config.norm_activation.norm_epsilon,
              kernel_regularizer= l2_regularization)
     head.build(input_specs)
+    print(head.masks, head.scale_xy)
     return head
 
 

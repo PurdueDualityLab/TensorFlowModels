@@ -62,7 +62,7 @@ class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
     fixed_size: bool = False
-    jitter_im: float = 0.3
+    jitter_im: float = 0.1
     jitter_boxes: float = 0.005
     net_down_scale: int = 32
     min_process_size: int = 320
@@ -135,8 +135,11 @@ class Yolo(ModelConfig):
         norm_momentum=0.99,
         norm_epsilon=0.001)
     decoder_activation: str = "leaky"
-    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)] #[[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
-    # [[10.0,14.0],  [23.0,27.0],  [37.0,58.0],  [81.0,82.0],  [135.0,169.0],  [344.0,319.0]]
+    #_boxes: ClassVar = [(10, 14), (23, 27), (37, 58), (81, 82), (135, 169), (344, 319)]
+    #_boxes: ClassVar = [(10, 13), (16, 30), (33, 23),(30, 61), (62, 45), (59, 119),(116, 90), (156, 198), (373, 326)]
+    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)] 
+    #_boxes: ClassVar = [[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0], [133.0, 127.0], [79.0, 225.0], [302.0, 150.0], [172.0, 286.0], [348.0, 340.0]]
+    
 
     _DEFAULTS: ClassVar = {
         'v3': YoloBase(
@@ -164,8 +167,8 @@ class Yolo(ModelConfig):
             backbone = backbones.Backbone(
                 type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
             decoder = YoloDecoder(version="v4", type="regular"),
-            darknet_weights_file = "yolov4.weights",
-            darknet_weights_cfg = "yolov4.cfg"
+            darknet_weights_file = "cache://yolov4.weights",
+            darknet_weights_cfg = "cache://yolov4.cfg"
         ),
         'v4tiny': YoloBase(
             backbone = backbones.Backbone(
@@ -240,7 +243,7 @@ class Yolo(ModelConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-    model: Yolo = Yolo(base = "v3")
+    model: Yolo = Yolo(base = "v4")
     train_data: DataConfig = DataConfig(is_training=True)
     validation_data: DataConfig = DataConfig(is_training=False)
     weight_decay: float = 5e-4
