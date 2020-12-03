@@ -414,37 +414,3 @@ class YoloDecoder(tf.keras.Model):
     @property
     def head(self):
         return self._decoder
-
-# def test():
-#     from yolo.modeling.backbones.Darknet import Darknet
-#     from yolo.modeling.backbones.Spinenet import SmallSpineNet
-
-#     inputs = tf.keras.layers.Input(shape=[416, 416, 3])
-#     backbone = Darknet(model_id="darknettiny",
-#                        min_level=2,
-#                        max_level=5,
-#                        input_specs=(416, 416, 3))
-
-#     #backbone = SmallSpineNet(input_shape=(None, 416, 416, 3), min_level= 3, max_level=5)
-#     decoder = YoloDecoder(classes=80,
-#                           boxes_per_level=3,
-#                           embed_spp=False,
-#                           embed_fpn=True,
-#                           max_level_process_len=6,
-#                           path_process_len=6)
-
-#     y = backbone(inputs)
-#     print(y)
-#     outputs = decoder(y)
-#     model = tf.keras.Model(inputs=inputs, outputs=outputs)
-#     model.build([None, 416, 416, 3])
-#     model.summary()
-
-#     print(backbone.output_shape)
-#     print(
-#         decoder.get_loss_attributes(xy_exponential=True,
-#                                     xy_scale_base="default_value"))
-
-
-# if __name__ == "__main__":
-#     test()

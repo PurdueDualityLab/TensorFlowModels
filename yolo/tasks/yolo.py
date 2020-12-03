@@ -112,6 +112,7 @@ class YoloTask(base_task.Task):
                 cfgheads = load_head(model.decoder.head, decoder)
                 model.decoder.head.trainable = False
                 load_weights_prediction_layers(cfgheads, model.head)
+                model.head.trainable = False
         else:
             """Loading pretrained checkpoint."""
             if not self.task_config.init_checkpoint:
@@ -133,8 +134,7 @@ class YoloTask(base_task.Task):
             else:
                 assert "Only 'all' or 'backbone' can be used to initialize the model."
 
-            logging.info('Finished loading pretrained checkpoint from %s',
-                         ckpt_dir_or_file)
+            logging.info('Finished loading pretrained checkpoint from %s',ckpt_dir_or_file)
 
     def build_inputs(self, params, input_context=None):
         """Build input dataset."""
@@ -237,8 +237,10 @@ class YoloTask(base_task.Task):
         num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
         with tf.GradientTape() as tape:
             # compute a prediction
+            # cast to float32
             y_pred = model(image, training=True)
             loss, metrics = self.build_losses(y_pred["raw_output"], label)
+            tf.print("loss: ", loss, end = "\r")
             scaled_loss = loss / num_replicas
 
             # scale the loss for numerical stability

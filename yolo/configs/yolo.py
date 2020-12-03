@@ -47,20 +47,23 @@ class ModelConfig(hyperparams.Config):
     def input_size(self, input_size):
         self._input_size = input_size
 
-    def get_build_model_dict(self):
-        model_cfg = getattr(self.model, self.model.type)
-        model_kwargs = model_cfg.as_dict()
+    def as_dict(self):#get_build_model_dict(self):
+        #model_cfg = getattr(self.model, self.model.type)
+        #model_kwargs = model_cfg.as_dict()
+        model_kwargs = super().as_dict()
+        print(model_kwargs)
+        model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
 
-        # TODO: Better method
-        for k in ('_boxes', 'backbone', 'head', 'decoder', 'filter'):
-            model_kwargs.pop(k)
+        #TODO: Better method
+        #for k in ('_boxes', 'backbone', 'head', 'decoder', 'filter'):
+            #model_kwargs.pop(k)
         return model_kwargs
     
     @property
     def backbone(self):
         if isinstance(self.base, str):
             # TODO: remove the automatic activation setter
-            self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation 
+            # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation 
             return Yolo._DEFAULTS[self.base].backbone
         else:
             return self.base.backbone
@@ -99,17 +102,27 @@ class ModelConfig(hyperparams.Config):
         if self._boxes == None:
             return None
         boxes = []
+        
         for box in self._boxes:
             try:
                 f = []
-                for b in box.split(","):
+                for b in box[1:-1].split(","):
                     f.append(float(b.strip()))
                 boxes.append(f)
             except:
                 boxes.append(box)
+        print(boxes)
         return boxes
 
     def set_boxes(self, box_list):
+        setter = []
+        for value in box_list:
+            value = str(list(value))
+            setter.append(value[1:-1])
+        self._boxes = setter
+    
+    @boxes.setter
+    def boxes(self, box_list):
         setter = []
         for value in box_list:
             value = str(list(value))
@@ -198,7 +211,8 @@ class Yolo(ModelConfig):
     decoder_activation: str = "leaky"
     #_boxes: ClassVar = [(10, 14), (23, 27), (37, 58), (81, 82), (135, 169), (344, 319)]
     #_boxes: ClassVar = [(10, 13), (16, 30), (33, 23),(30, 61), (62, 45), (59, 119),(116, 90), (156, 198), (373, 326)]
-    _boxes: ClassVar = [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)] 
+    #_boxes: ClassVar =  [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)]
+    _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'])
     #_boxes: ClassVar = None
 
     _DEFAULTS: ClassVar = {

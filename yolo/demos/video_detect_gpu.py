@@ -477,7 +477,7 @@ if __name__ == "__main__":
     prep_gpu()
 
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    mixed_precision.set_policy("float32")
+    mixed_precision.set_policy("float16")
 
     config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', min_level=3))  
     task = YoloTask(config)
@@ -492,19 +492,19 @@ if __name__ == "__main__":
     # model.summary()
     # model.set_postprocessor_fn(func)
 
-    # cap = FastVideo(
-    #     0,#"videos/nyc.mp4",
-    #     model=model,
-    #     process_width=416,
-    #     process_height=416,
-    #     preprocess_with_gpu=True,
-    #     print_conf=True,
-    #     max_batch=5,
-    #     disp_h=720,
-    #     scale_que=1,
-    #     wait_time=0.00000001, #None,
-    #     policy="mixed_float16")
-    # cap.run()
+    cap = FastVideo(
+        "videos/nyc.mp4",
+        model=model,
+        process_width=416,
+        process_height=416,
+        preprocess_with_gpu=True,
+        print_conf=True,
+        max_batch=8,
+        disp_h=416,
+        scale_que=1,
+        wait_time=0.00000001, #None,
+        policy="mixed_float16")
+    cap.run()
 
     # input_signature = tf.TensorSpec(
     #     shape=[1, 416, 416, 3],
@@ -515,11 +515,11 @@ if __name__ == "__main__":
     # model(tf.ones((1, 416, 416, 3)))
     # tf.saved_model.save(model, "saved_models/v4/regular_nms", signatures=signatures)
 
-    name = "saved_models/v4/regular_nms"
-    new_name = f"{name}_tensorrt"
-    model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    model.convertModel()
-    model.compile()
-    model.summary()
+    # name = "saved_models/v4/regular_nms"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.convertModel()
+    # model.compile()
+    # model.summary()
     #model.set_postprocessor_fn(func)
 
