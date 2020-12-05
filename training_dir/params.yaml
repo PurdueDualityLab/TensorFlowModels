@@ -23,8 +23,8 @@ task:
   init_checkpoint: ''
   load_darknet_weights: true
   model:
-    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,
-        55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    _boxes: ['[10.0, 14.0]', '[23.0, 27.0]', '[37.0, 58.0]', '[81.0, 82.0]', '[135.0,
+        169.0]', '[344.0, 319.0]']
     _input_size: null
     base: v4tiny
     boxes_per_scale: 3
@@ -36,12 +36,12 @@ task:
       iou_thresh: 0.45
       loss_type: ciou
       max_boxes: 200
-      use_nms: true
+      use_nms: false
       use_tie_breaker: true
     max_level: 5
-    min_level: 3
+    min_level: 4
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: false
@@ -55,7 +55,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 1
+    global_batch_size: 64
     input_path: ''
     is_training: true
     parser:
@@ -73,7 +73,7 @@ task:
       seed: 10
       shuffle_buffer_size: 10000
     sharding: true
-    shuffle_buffer_size: 2
+    shuffle_buffer_size: 10000
     tf_data_service_address: null
     tf_data_service_job_name: null
     tfds_as_supervised: false
@@ -90,7 +90,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 1
+    global_batch_size: 8
     input_path: ''
     is_training: false
     parser:
@@ -116,7 +116,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_skip_decoding_feature: ''
-    tfds_split: train
+    tfds_split: validation
   weight_decay: 0.0005
 trainer:
   allow_tpu_summary: false
@@ -131,9 +131,9 @@ trainer:
     ema: null
     learning_rate:
       stepwise:
-        boundaries: [25600000, 28800000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [4.078125e-05, 4.078125e-06, 4.078125e-07]
+        values: [0.00261, 0.000261, 2.61e-05]
       type: stepwise
     optimizer:
       sgd:
@@ -148,12 +148,12 @@ trainer:
       linear:
         name: linear
         warmup_learning_rate: 0
-        warmup_steps: 0.0
+        warmup_steps: 1000
       type: linear
-  steps_per_loop: 2000
-  summary_interval: 8000
-  train_steps: 76800000.0
+  steps_per_loop: 10000
+  summary_interval: 10000
+  train_steps: 500200
   train_tf_function: true
   train_tf_while_loop: true
-  validation_interval: 1000
-  validation_steps: 100
+  validation_interval: 10000
+  validation_steps: 1000

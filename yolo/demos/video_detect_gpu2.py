@@ -136,20 +136,17 @@ class FastVideo(object):
             self._labels = labels
 
         self._draw_fn = utils.DrawBoxes(classes=classes, labels=self._labels, display_names=print_conf) 
-        #get_draw_fn(self._colors, self._labels, print_conf)
+        #self._draw_fn = get_draw_fn(self._colors, self._labels, print_conf)
 
         self._load_que = Queue(self._batch_size * scale_que)
         self._display_que = Queue(1 * scale_que)
         self._running = True
-        
-        self._dynamic_wt = wait_time == 'dynamic'
-        if not self._dynamic_wt: 
-            self._wait_time = utils.get_wait_time(wait_time, max_batch)
+        if self._batch_size != 1:
+            self._wait_time = 0.0015 * self._batch_size if wait_time == None else wait_time  # 0.05 default
         else:
             self._wait_time = 0.0001
 
         self._read_fps = 1
-        self._prev_display_fps = 1
         self._display_fps = 1
         self._latency = -1
         self._batch_proc = 1
@@ -250,9 +247,7 @@ class FastVideo(object):
                 image = self._draw_fn(image, pred)
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
-                    # self._obj_detected = draw_box(image[i], boxes[i],
-                    #                               classes[i], conf[i],
-                    #                               self._draw_fn)
+                    #self._obj_detected = draw_box(image[i], boxes[i],classes[i], conf[i],self._draw_fn)
 
                     #display the frame then wait in case something else needs to catch up
                     cv2.imshow("frame", image[i])
@@ -376,17 +371,8 @@ class FastVideo(object):
                 # put processed frames on the display que
                 self._display_que.put((image, pred))
 
-                if self._dynamic_wt:
-                    if self._prev_display_fps > self._display_fps:
-                        self._wait_time = self._wait_time + 0.01 * self._wait_time
-                        self._prev_display_fps = self._display_fps * 0.1 + 0.9 * self._prev_display_fps
-                    else:
-                        self._wait_time = self._wait_time - 0.02 * self._wait_time
-                        self._prev_display_fps = self._display_fps * 0.1 + 0.9 * self._prev_display_fps
-
                 #print everything
                 self.print_opt()
-                #self._prev_display_fps = self._display_fps * 0.4 + 0.6 * self._prev_display_fps
                 if not self._running:
                     raise
 
@@ -444,15 +430,7 @@ class FastVideo(object):
             "                                 \rbatch processed: \033[1;37;40m%d\033[0m"
             % (self._batch_proc),
             end="\n")
-        print(
-            "                                 \rwait time: \033[1;37;40m%0.15f\033[0m"
-            % (self._wait_time),
-            end="\n")
-        print(
-            "                                 \rfps avg: \033[1;37;40m%0.5f\033[0m"
-            % (self._prev_display_fps),
-            end="\n")
-        print("\033[F\033[F\033[F\033[F\033[F\033[F\033[F", end="\n")
+        print("\033[F\033[F\033[F\033[F\033[F", end="\n")
         return
 
 
@@ -496,17 +474,17 @@ if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', min_level=3))  
-    task = YoloTask(config)
-    model = task.build_model()
-    task.initialize(model)
+    # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', min_level=3))  
+    # task = YoloTask(config)
+    # model = task.build_model()
+    # task.initialize(model)5
 
-    # name = "saved_models/v4/regular"
-    # new_name = f"{name}_tensorrt"
-    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    # model.compile()
-    # model.summary()
-    # model.set_postprocessor_fn(func)
+    name = "saved_models/v4/regular"
+    new_name = f"{name}_tensorrt"
+    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    model.compile()
+    model.summary()
+    model.set_postprocessor_fn(func)
 
     cap = FastVideo(
         "videos/nyc.mp4",
@@ -515,9 +493,27 @@ if __name__ == "__main__":
         process_height=416,
         preprocess_with_gpu=True,
         print_conf=True,
-        max_batch=5,
+        max_batch=2,
         disp_h=416,
         scale_que=1,
-        wait_time= "dynamic",
+        wait_time=0.000000001, #None,
         policy="mixed_float16")
     cap.run()
+
+    # input_signature = tf.TensorSpec(
+    #     shape=[1, 416, 416, 3],
+    #     dtype=tf.float32)
+    # signatures = {
+    #     'serving_default':get_model(model).get_concrete_function(input_signature)
+    # }
+    # model(tf.ones((1, 416, 416, 3)))
+    # tf.saved_model.save(model, "saved_models/v4/regular_nms", signatures=signatures)
+
+    # name = "saved_models/v4/regular_nms"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.convertModel()
+    # model.compile()
+    # model.summary()
+    #model.set_postprocessor_fn(func)
+

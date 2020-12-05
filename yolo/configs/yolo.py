@@ -183,7 +183,7 @@ class YoloLossLayer(hyperparams.Config):
     max_boxes: int = 200
     anchor_generation_scale: int = 416
     use_tie_breaker: bool = True
-    use_nms: bool = False
+    use_nms: bool = True
 
 
 @dataclasses.dataclass
@@ -209,10 +209,10 @@ class Yolo(ModelConfig):
         norm_momentum=0.99,
         norm_epsilon=0.001)
     decoder_activation: str = "leaky"
-    #_boxes: ClassVar = [(10, 14), (23, 27), (37, 58), (81, 82), (135, 169), (344, 319)]
+    _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'])
     #_boxes: ClassVar = [(10, 13), (16, 30), (33, 23),(30, 61), (62, 45), (59, 119),(116, 90), (156, 198), (373, 326)]
     #_boxes: ClassVar =  [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)]
-    _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'])
+    #_boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'])
     #_boxes: ClassVar = None
 
     _DEFAULTS: ClassVar = {
@@ -266,7 +266,7 @@ class Yolo(ModelConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-    model: Yolo = Yolo(base = "v3")
+    model: Yolo = Yolo(base = "v4tiny")
     train_data: DataConfig = DataConfig(is_training=True)
     validation_data: DataConfig = DataConfig(is_training=False)
     weight_decay: float = 5e-4
