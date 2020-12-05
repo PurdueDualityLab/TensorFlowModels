@@ -254,25 +254,25 @@ if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("mixed_float16")
 
-    # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4)  )
-    # task = YoloTask(config)
-    # model = task.build_model()
-    # task.initialize(model)
-    # model.summary()
-    # model.predict(tf.ones((1, 416, 416, 3), dtype = tf.float16))
-
-    name = "saved_models/v4/tiny"
-    new_name = f"{name}_tensorrt"
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    model.compile()
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4)  )
+    task = YoloTask(config)
+    model = task.build_model()
+    task.initialize(model)
     model.summary()
-    model.set_postprocessor_fn(func)
+    model.predict(tf.ones((1, 416, 416, 3), dtype = tf.float16))
+
+    # name = "saved_models/v4/tiny"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
 
     pfn = preprocess_fn
-    pofn = utils.DrawBoxes(classes=80, labels=coco.get_coco_names(), display_names=True, thickness=1)
+    pofn = utils.DrawBoxes(classes=80, labels=coco.get_coco_names(), display_names=True, thickness=2)
 
     server = ModelServer(model=model, preprocess_fn=pfn, postprocess_fn=pofn, wait_time=0.00001, max_batch=5)
-    video = video_t.VideoServer("videos/nyc.mp4", wait_time=0.00000001, que=1000, disp_h=480)
+    video = video_t.VideoServer("videos/nyc2.mp4", wait_time=0.00000001, que=1000, disp_h=480)
     display = video_t.DisplayThread(server, alpha=0.9, wait_time=0.000001, fix_wt=False)
     server.start()
     video.start()

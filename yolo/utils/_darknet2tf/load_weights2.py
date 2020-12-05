@@ -10,9 +10,11 @@ def split_converter(lst, i, j=None):
 
 
 def load_weights(convs, layers):
-    min_key = min(layers.keys())
-    max_key = max(layers.keys())
-    for i in range(min_key, max_key + 1):
+    # min_key = min(layers.keys())
+    # max_key = max(layers.keys())
+    keys = list(layers.keys())
+    keys.sort()
+    for i in keys:#range(min_key, max_key + 1):
         try:
             cfg = convs.pop(0)
             print(cfg.c, cfg.filters, layers[i]._filters)
@@ -158,3 +160,4 @@ def load_weights_v4head(model, net, remap):
                         key = int(sublayer.name.split("_")[-1]) + base_key
                     layers[key] = sublayer
                     print(key, sublayer.name)
+    
