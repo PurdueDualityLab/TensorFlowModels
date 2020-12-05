@@ -172,6 +172,12 @@ class ModelServer(object):
             return None
         return self._return_buffer.get()
     
+    def getall(self):
+        frames = []
+        while not self._return_buffer.empty():
+            frames.append(self._return_buffer.get())
+        return frames
+    
     def read(self):
         return self._running, self.get()
 
