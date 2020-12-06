@@ -70,18 +70,24 @@ class MSCOCODecoder(decoder.Decoder):
     """
     parsed_tensors = serialized_example
     image = self._decode_image(parsed_tensors)
+    
     if "image/id" in parsed_tensors.keys():
       source_id = parsed_tensors['image/id']
     else:
       ime = tf.io.encode_jpeg(image, quality = 100)
       source_id = _generate_source_id(ime)
+
     boxes = self._decode_boxes(parsed_tensors)
     classes = self._decode_classes(parsed_tensors)
     areas = self._decode_areas(parsed_tensors)
-    is_crowds = tf.cond(
-        tf.greater(tf.shape(parsed_tensors['objects']['label'])[0], 0),
+
+    if "is_crowd" in parsed_tensors["objects"].keys():
+      is_crowd = tf.cond(
+        tf.greater(tf.shape(classes)[0], 0),
         lambda: tf.cast(parsed_tensors['objects']['is_crowd'], dtype=tf.bool),
         lambda: tf.zeros_like(classes, dtype=tf.bool))
+    else:
+      is_crowd = tf.zeros_like(classes, dtype=tf.bool)
 
     decoded_tensors = {
         'source_id': source_id,
@@ -89,7 +95,7 @@ class MSCOCODecoder(decoder.Decoder):
         'width': tf.shape(parsed_tensors['image'])[0],
         'height': tf.shape(parsed_tensors['image'])[1],
         'groundtruth_classes': classes,
-        'groundtruth_is_crowd': is_crowds,
+        'groundtruth_is_crowd': is_crowd,
         'groundtruth_area': areas,
         'groundtruth_boxes': boxes,
     }
