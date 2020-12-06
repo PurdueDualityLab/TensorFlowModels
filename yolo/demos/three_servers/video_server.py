@@ -7,11 +7,6 @@ import time
 from yolo.demos.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils
 
-from IPython.display import clear_output, Image
-from IPython.display import display_png
-import base64
-import numpy as np
-
 class VideoServer(object):
     def __init__(self, 
                  file = 0,
@@ -190,14 +185,6 @@ class DisplayThread(object):
         if self._thread != None:
             self._thread.join()
         return 
-    
-    def colab_show(self, imageArray):
-        f = (imageArray * 255).astype(np.uint8)
-        f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
-        ret, png = cv2.imencode('.png', f)
-        encoded = base64.b64encode(png)
-        display_png(Image(data=encoded.decode('ascii')))
-
 
     def display(self):
         try:
@@ -209,10 +196,7 @@ class DisplayThread(object):
             while(self._running):
                 success, frame = self._frame_buffer.read()
                 if success and type(frame) != type(None):
-                    if not self._use_colab:
-                        cv2.imshow("frame", frame)
-                    else:
-                        self.colab_show(frame)
+                    cv2.imshow("frame", frame)
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
