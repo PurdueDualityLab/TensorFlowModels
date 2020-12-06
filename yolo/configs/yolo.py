@@ -103,7 +103,7 @@ class ModelConfig(hyperparams.Config):
             return None
         boxes = []
         for box in self._boxes:
-            if isinstance(box, list) or isinstance(tuple, list):
+            if isinstance(box, list) or isinstance(box, tuple):
                 boxes.append(box)
             elif isinstance(box, str):
                 if box[0] == '(' or box[0] == '[':
@@ -117,6 +117,7 @@ class ModelConfig(hyperparams.Config):
         return boxes
 
     def set_boxes(self, box_list):
+        print(box_list)
         setter = []
         for value in box_list:
             value = str(list(value))
