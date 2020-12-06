@@ -117,9 +117,9 @@ class ModelConfig(hyperparams.Config):
         return boxes
 
     def set_boxes(self, box_list):
-        print(box_list)
         setter = []
         for value in box_list:
+            print(value)
             value = str(list(value))
             setter.append(value[1:-1])
         self._boxes = setter
