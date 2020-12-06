@@ -103,6 +103,7 @@ class ModelConfig(hyperparams.Config):
             return None
         boxes = []
         for box in self._boxes:
+            print(box)
             if isinstance(box, list) or isinstance(box, tuple):
                 boxes.append(box)
             elif isinstance(box, str):
