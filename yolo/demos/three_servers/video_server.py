@@ -10,6 +10,7 @@ from yolo.utils.demos import utils
 from IPython.display import clear_output, Image
 from IPython.display import display_png
 import base64
+import numpy as np
 
 class VideoServer(object):
     def __init__(self, 
