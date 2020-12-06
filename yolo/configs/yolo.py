@@ -112,6 +112,11 @@ class ModelConfig(hyperparams.Config):
                     for b in box[1:-1].split(","):
                         f.append(float(b.strip()))
                     boxes.append(f)
+                else:
+                    f = []
+                    for b in box.split(","):
+                        f.append(float(b.strip()))
+                    boxes.append(f)
             elif isinstance(box, int):
                 raise IOError("unsupported input type, only strings or tuples")
         print(boxes)
