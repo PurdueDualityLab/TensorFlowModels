@@ -102,15 +102,17 @@ class ModelConfig(hyperparams.Config):
         if self._boxes == None:
             return None
         boxes = []
-        
         for box in self._boxes:
-            try:
-                f = []
-                for b in box[1:-1].split(","):
-                    f.append(float(b.strip()))
-                boxes.append(f)
-            except:
+            if isinstance(box, list) or isinstance(tuple, list):
                 boxes.append(box)
+            elif isinstance(box, str):
+                if box[0] == '(' or box[0] == '[':
+                    f = []
+                    for b in box[1:-1].split(","):
+                        f.append(float(b.strip()))
+                    boxes.append(f)
+            elif isinstance(box, int):
+                raise IOError("unsupported input type, only strings or tuples")
         print(boxes)
         return boxes
 
