@@ -191,7 +191,9 @@ class DisplayThread(object):
         return 
     
     def colab_show (self, imageArray):
-        ret, png = cv2.imencode('.png', imageArray)
+        f = (imageArray * 255).astype(np.uint8)
+        f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
+        ret, png = cv2.imencode('.png', f)
         encoded = base64.b64encode(png)
         display_png(Image(data=encoded.decode('ascii')))
 
