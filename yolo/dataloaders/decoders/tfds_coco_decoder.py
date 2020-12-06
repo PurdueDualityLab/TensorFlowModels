@@ -69,8 +69,12 @@ class MSCOCODecoder(decoder.Decoder):
         - groundtruth_instance_masks_png: a string tensor of shape [None].
     """
     parsed_tensors = serialized_example
-    source_id = parsed_tensors['image/id']
     image = self._decode_image(parsed_tensors)
+    if "image/id" in parsed_tensors.keys():
+      source_id = parsed_tensors['image/id']
+    else:
+      ime = tf.io.encode_jpeg(image, quality = 100)
+      source_id = _generate_source_id(ime)
     boxes = self._decode_boxes(parsed_tensors)
     classes = self._decode_classes(parsed_tensors)
     areas = self._decode_areas(parsed_tensors)
