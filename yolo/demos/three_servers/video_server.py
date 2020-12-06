@@ -7,6 +7,10 @@ import time
 from yolo.demos.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils
 
+from IPython.display import clear_output, Image
+from IPython.display import display_png
+import base64
+
 class VideoServer(object):
     def __init__(self, 
                  file = 0,
@@ -163,7 +167,7 @@ class VideoPlayer(object):
 
 
 class DisplayThread(object):
-    def __init__(self, frame_buffer, wait_time = 0.0001, alpha = 0.1, fix_wt = False):
+    def __init__(self, frame_buffer, wait_time = 0.0001, alpha = 0.1, fix_wt = False, use_colab = False):
         self._frame_buffer = frame_buffer
         self._thread = None
         self._running = False
@@ -172,6 +176,7 @@ class DisplayThread(object):
         self._prev_fps = 0
         self._fix_wt = fix_wt
         self._alpha = alpha
+        self._use_colab = use_colab
         return
     
     def start(self):
@@ -185,6 +190,12 @@ class DisplayThread(object):
             self._thread.join()
         return 
     
+    def colab_show (self, imageArray):
+        ret, png = cv2.imencode('.png', imageArray)
+        encoded = base64.b64encode(png)
+        display_png(Image(data=encoded.decode('ascii')))
+
+
     def display(self):
         try:
             start = time.time()
@@ -195,7 +206,11 @@ class DisplayThread(object):
             while(self._running):
                 success, frame = self._frame_buffer.read()
                 if success and type(frame) != type(None):
-                    cv2.imshow("frame", frame)
+                    if not self._use_colab:
+                        cv2.imshow("frame", frame)
+                    else:
+                        self._colab_show(frame)
+
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                     l += 1
