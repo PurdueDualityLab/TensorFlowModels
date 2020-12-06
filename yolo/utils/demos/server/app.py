@@ -18,7 +18,7 @@ def close_model():
 
 @app.route("/send_frame", methods=['POST'])
 def send_frame():
-
+    
     return
 
 @app.route("/get_frame", methods=['GET'])
