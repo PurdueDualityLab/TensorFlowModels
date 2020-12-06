@@ -190,7 +190,7 @@ class DisplayThread(object):
             self._thread.join()
         return 
     
-    def colab_show (self, imageArray):
+    def colab_show(self, imageArray):
         f = (imageArray * 255).astype(np.uint8)
         f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
         ret, png = cv2.imencode('.png', f)
@@ -211,7 +211,7 @@ class DisplayThread(object):
                     if not self._use_colab:
                         cv2.imshow("frame", frame)
                     else:
-                        self._colab_show(frame)
+                        self.colab_show(frame)
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
