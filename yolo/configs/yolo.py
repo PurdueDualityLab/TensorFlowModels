@@ -52,11 +52,11 @@ class ModelConfig(hyperparams.Config):
         #model_kwargs = model_cfg.as_dict()
         model_kwargs = super().as_dict()
         print(model_kwargs)
-        model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
+        if self._boxes != None:
+            model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
+        else: 
+            model_kwargs.update({"_boxes": None})
 
-        #TODO: Better method
-        #for k in ('_boxes', 'backbone', 'head', 'decoder', 'filter'):
-            #model_kwargs.pop(k)
         return model_kwargs
     
     @property

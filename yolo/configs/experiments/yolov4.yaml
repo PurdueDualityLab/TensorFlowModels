@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 2
+  num_gpus: 1
 task:
   model:
     base: v4
@@ -29,7 +29,7 @@ task:
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: train
     drop_remainder: true
     dtype: float16
@@ -45,7 +45,7 @@ task:
     global_batch_size: 8
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
     dtype: float16
     input_path: ''
