@@ -196,8 +196,9 @@ def load_for_colab():
     return
 
 
-def load()
+def load():
     app.run(host = "127.0.0.1", port = 5000)
+    return
 
 if __name__ == "__main__":
     load()
