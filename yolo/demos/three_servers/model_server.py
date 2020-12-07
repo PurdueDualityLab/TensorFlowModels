@@ -49,10 +49,10 @@ class ModelServer(object):
         else:
             self._wait_time = 0.001
 
-        self._load_buffer = Queue(maxsize = max_batch * 10)
+        self._load_buffer = Queue(maxsize = max_batch)
         self._batched_que = Queue(maxsize = max_batch)
         self._processed_que = Queue(maxsize = max_batch)
-        self._return_buffer = Queue(maxsize = max_batch * 10)
+        self._return_buffer = Queue(maxsize = max_batch)
         
         self._running = False
         self._thread = None

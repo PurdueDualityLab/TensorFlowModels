@@ -1,3 +1,7 @@
+<!--
+  Sources:
+    https://www.kirupa.com/html5/accessing_your_webcam_in_html5.htm
+    https://developer.mozilla.org/en-US/docs/Web/Guide/Audio_and_video_manipulation -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -198,12 +202,14 @@
             data: {
                 "frame":url
             },
+            async: false,
             success: function(response){
-				console.log(response);
-			},
-			error: function(error){
-				console.log(error);
-			}
+				      console.log(response);
+			
+            },
+            error: function(error){
+              console.log(error);
+            }
         }).done(function() {
             console.log("Sent");
         });
@@ -214,19 +220,21 @@
     getFrame: async function() {
         var e = this.frames
         $.ajax({
-            url: "http://127.0.0.1:5000/get_frame",
+            url: "http://127.0.0.1:5000/getall_frames",
             type: 'GET',
-            async: true,
+            async: false,
             crossDomain: 'true',
             success: function(data) {
-                var frame = data["frame"];
-                if (frame != "null"){
-                    e.push(frame)
+                var frame_list = data["frames"];
+                if (frame_list !== "null"){
+                  frame_list.forEach(function (item, index){
+                      e.push(item)
+                  })
                 }
             },
             error: function(error){
-				console.log(error);
-			}
+                console.log(error);
+            }
         });
       return;
     },
@@ -235,10 +243,11 @@
         var e = this.frames
         var frame = e.pop();
         if (frame != undefined){
-            console.log(frame);
             const image_id = document.getElementById('image');
             image_id.src = frame;
-        } 
+        } else{
+          console.log(undefined)
+        }
         this.ctx1.drawImage(this.video, 0, 0, this.width, this.height);
     }
   };
