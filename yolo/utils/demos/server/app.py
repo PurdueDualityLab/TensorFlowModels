@@ -15,7 +15,7 @@ class ServerAttr(object):
         self.model = None
         return 
     
-    def init_model(self):
+    def init_model(self, version):
 
         return
 

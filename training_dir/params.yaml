@@ -6,10 +6,10 @@ runtime:
   distribution_strategy: mirrored
   enable_xla: false
   gpu_thread_mode: null
-  loss_scale: dynamic
-  mixed_precision_dtype: float16
+  loss_scale: null
+  mixed_precision_dtype: float32
   num_cores_per_replica: 1
-  num_gpus: 2
+  num_gpus: 1
   num_packs: 1
   per_gpu_thread_count: 0
   run_eagerly: false
@@ -23,7 +23,8 @@ task:
   init_checkpoint: ''
   load_darknet_weights: true
   model:
-    _boxes: null
+    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,
+        55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: null
     base: v4
     boxes_per_scale: 3
@@ -58,7 +59,7 @@ task:
     input_path: ''
     is_training: true
     parser:
-      fixed_size: false
+      fixed_size: true
       image_h: 416
       image_w: 416
       jitter_boxes: 0.005
@@ -78,7 +79,7 @@ task:
     tfds_as_supervised: false
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: voc
+    tfds_name: coco
     tfds_skip_decoding_feature: ''
     tfds_split: train
   validation_data:
@@ -113,7 +114,7 @@ task:
     tfds_as_supervised: false
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: voc
+    tfds_name: coco
     tfds_skip_decoding_feature: ''
     tfds_split: validation
   weight_decay: 0.0005
@@ -122,7 +123,7 @@ trainer:
   best_checkpoint_eval_metric: ''
   best_checkpoint_export_subdir: ''
   best_checkpoint_metric_comp: higher
-  checkpoint_interval: 10000
+  checkpoint_interval: 1000
   continuous_eval_timeout: 3600
   eval_tf_function: true
   max_to_keep: 5
@@ -149,10 +150,10 @@ trainer:
         warmup_learning_rate: 0
         warmup_steps: 1000
       type: linear
-  steps_per_loop: 10000
-  summary_interval: 10000
+  steps_per_loop: 1000
+  summary_interval: 1000
   train_steps: 2002000
   train_tf_function: true
   train_tf_while_loop: true
-  validation_interval: 10000
+  validation_interval: 1000
   validation_steps: 1000
