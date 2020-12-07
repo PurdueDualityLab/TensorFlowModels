@@ -155,6 +155,7 @@ class YoloTask(base_task.Task):
         #ANCHOR = self.task_config.model.anchors.get()
         #anchors = [[float(f) for f in a.split(',')] for a in ANCHOR._boxes]
         if params.is_training and self.task_config.model.boxes == None and not self._anchors_built:
+            # must save the boxes!
             model_base_cfg = self.task_config.model
             self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level + 1) * model_base_cfg.boxes_per_scale
             decoder = tfds_coco_decoder.MSCOCODecoder()

@@ -15,8 +15,11 @@
 # ==============================================================================
 """TensorFlow Model Garden Vision training driver."""
 from yolo.utils.run_utils import prep_gpu
-prep_gpu()
-
+try:
+  prep_gpu()
+except:
+  print("GPUs ready")
+  
 from absl import app
 from absl import flags
 import gin
