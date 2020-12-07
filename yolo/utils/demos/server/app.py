@@ -1,5 +1,8 @@
 from yolo.utils.run_utils import prep_gpu
-prep_gpu()
+try:
+    prep_gpu()
+except:
+    print("GPU's already prepped")
 
 from flask import Flask, request , jsonify
 import numpy as np 
