@@ -6,8 +6,8 @@ runtime:
   distribution_strategy: mirrored
   enable_xla: false
   gpu_thread_mode: null
-  loss_scale: null
-  mixed_precision_dtype: float32
+  loss_scale: dynamic
+  mixed_precision_dtype: float16
   num_cores_per_replica: 1
   num_gpus: 1
   num_packs: 1
@@ -55,7 +55,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 16
+    global_batch_size: 2
     input_path: ''
     is_training: true
     parser:
@@ -90,7 +90,7 @@ task:
     drop_remainder: true
     dtype: float16
     enable_tf_data_service: false
-    global_batch_size: 8
+    global_batch_size: 2
     input_path: ''
     is_training: false
     parser:
@@ -131,9 +131,9 @@ trainer:
     ema: null
     learning_rate:
       stepwise:
-        boundaries: [1600000, 1800000]
+        boundaries: [12800000, 14400000]
         name: PiecewiseConstantDecay
-        values: [0.000325, 3.25e-05, 3.25e-06]
+        values: [4.0625e-05, 4.0625e-06, 4.0625e-07]
       type: stepwise
     optimizer:
       sgd:
@@ -152,8 +152,8 @@ trainer:
       type: linear
   steps_per_loop: 1000
   summary_interval: 1000
-  train_steps: 2002000
+  train_steps: 16016000
   train_tf_function: true
   train_tf_while_loop: true
   validation_interval: 1000
-  validation_steps: 1000
+  validation_steps: 8000
