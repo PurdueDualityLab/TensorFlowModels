@@ -126,13 +126,12 @@ class Yolo_Loss(object):
         return x
 
     @tf.function(experimental_relax_shapes=True)
-    def __call__(self, y_true, y_pred_raw):
+    def __call__(self, y_true, y_pred):
         #1. generate and store constants and format output
         shape = tf.shape(y_pred)
         batch_size, width, height = shape[0], shape[1], shape[2]
-        y_pred = tf.cast(tf.reshape(y_pred_raw, [batch_size, width, height, self._num, -1]), tf.float32)
-        grid_points, anchor_grid, y_true = self._get_label_attributes(
-            width, height, batch_size, y_true, y_pred, y_pred.dtype)
+        y_pred = tf.cast(tf.reshape(y_pred, [batch_size, width, height, self._num, -1]), tf.float32)
+        grid_points, anchor_grid, y_true = self._get_label_attributes(width, height, batch_size, y_true, y_pred, y_pred.dtype)
 
         fwidth = tf.cast(width, y_pred.dtype)
         fheight = tf.cast(height, y_pred.dtype)
