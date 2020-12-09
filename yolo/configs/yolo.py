@@ -192,7 +192,7 @@ class YoloLossLayer(hyperparams.Config):
     max_boxes: int = 200
     anchor_generation_scale: int = 416
     use_tie_breaker: bool = True
-    use_nms: bool = True
+    use_nms: bool = False
 
 
 @dataclasses.dataclass

@@ -71,17 +71,15 @@ def translate_image(image, translate_x, translate_y):
     return image
 
 
-def pad_max_instances(value, instances, pad_value=0):
+def pad_max_instances(value, instances, pad_value=0, pad_axis = 0):
     shape = tf.shape(value)
-    dim1 = shape[0]
-    if dim1 > instances:
-        value = value[:instances, ...]
-        return value
-    else:
-        nshape = tf.tensor_scatter_nd_update(shape, [[0]],[instances - dim1])
-        pad_tensor = tf.ones(nshape, dtype=value.dtype) * pad_value
-        value = tf.concat([value, pad_tensor], axis=0)
-        return value
+    dim1 = shape[pad_axis]
+    value = value[:instances, ...]
+    pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
+    nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis = 0)
+    pad_tensor = tf.ones(nshape, dtype=value.dtype) * tf.cast(pad_value, dtype = value.dtype)
+    value = tf.concat([value, pad_tensor], axis=pad_axis)
+    return value
 
 
 def get_best_anchor(y_true, anchors, width = 1, height = 1):

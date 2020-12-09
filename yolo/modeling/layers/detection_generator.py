@@ -10,6 +10,7 @@ import sys
 from yolo.ops import loss_utils 
 from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
+from yolo.ops import preprocessing_ops as pops
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -125,11 +126,16 @@ class YoloLayer(ks.Model):
             }
         else:
             return {
-                "bbox": boxes,
-                "classes": tf.math.argmax(classifs, axis=-1),
-                "confidence":
-                classifs,  #tf.math.reduce_max(classifs, axis = -1),
+                "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),
+                "classes": pops.pad_max_instances(tf.math.argmax(classifs, axis=-1), self._max_boxes, -1, pad_axis = 1),
+                "confidence": pops.pad_max_instances(classifs, self._max_boxes, -1, pad_axis = 1) 
             }
+        # else:
+        #     return {
+        #         "bbox": boxes,
+        #         "classes": tf.math.argmax(classifs, axis=-1),
+        #         "confidence": classifs 
+        #     }
 
     @property
     def losses(self):

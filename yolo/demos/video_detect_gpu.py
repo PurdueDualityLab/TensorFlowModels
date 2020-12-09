@@ -496,17 +496,17 @@ if __name__ == "__main__":
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
     mixed_precision.set_policy("float16")
 
-    # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', min_level=3))  
-    # task = YoloTask(config)
-    # model = task.build_model()
-    # task.initialize(model)
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4))  
+    task = YoloTask(config)
+    model = task.build_model()
+    task.initialize(model)
 
-    name = "saved_models/v4/regular"
-    new_name = f"{name}_tensorrt"
-    model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-    model.compile()
-    model.summary()
-    model.set_postprocessor_fn(func)
+    # name = "saved_models/v4/regular"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
 
     cap = FastVideo(
         "videos/nyc2.mp4",
@@ -514,10 +514,10 @@ if __name__ == "__main__":
         process_width=416,
         process_height=416,
         preprocess_with_gpu=True,
-        print_conf=True,
+        print_conf=False,
         max_batch=5,
         disp_h=416,
         scale_que=1,
-        wait_time= 0.00000001,#"dynamic",
+        wait_time= "dynamic",
         policy="mixed_float16")
     cap.run()

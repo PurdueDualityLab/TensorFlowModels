@@ -177,7 +177,7 @@ class DrawBoxes(object):
             cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes], 1)
             return True
 
-        if display_name or label_names == None:
+        if display_name and label_names != None:
             return draw_box_name
         else:
             return draw_box
