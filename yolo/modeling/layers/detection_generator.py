@@ -58,11 +58,10 @@ class YoloLayer(ks.Model):
 
     def parse_yolo_box_predictions(self, unscaled_box,width,height,anchor_grid,grid_points,scale_x_y=1.0):
         #with tf.name_scope("decode_box_predictions_yolo"):
-        pred_xy = tf.math.sigmoid(
-            unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
-        pred_wh = unscaled_box[..., 2:4]
-        box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
-                        axis=-1) + grid_points
+        ubxy, pred_wh = tf.split(unscaled_box, 2, axis = -1)
+        pred_xy = tf.math.sigmoid(ubxy) * scale_x_y - 0.5 * (scale_x_y - 1)
+        x, y = tf.split(pred_xy, 2, axis = -1)
+        box_xy = tf.concat([x / width, y / height], axis=-1) + grid_points
         box_wh = tf.math.exp(pred_wh) * anchor_grid
         pred_box = K.concatenate([box_xy, box_wh], axis=-1)
         return pred_xy, pred_wh, pred_box
@@ -77,7 +76,10 @@ class YoloLayer(ks.Model):
                                      dtype=data.dtype)
 
         # compute the true box output values
-        _, _, boxes = self.parse_yolo_box_predictions(data[..., 0:4],
+        ubox, obns, classifics = tf.split(data, [4, 1, -1], axis = -1)
+        classes = tf.shape(classifics)[-1]
+        obns = tf.squeeze(obns, axis = -1)
+        _, _, boxes = self.parse_yolo_box_predictions(ubox,
                                                  tf.cast(shape[1], data.dtype),
                                                  tf.cast(shape[2], data.dtype),
                                                  anchors,
@@ -86,12 +88,17 @@ class YoloLayer(ks.Model):
         box = box_utils.xcycwh_to_yxyx(boxes)
 
         # computer objectness and generate grid cell mask for where objects are located in the image
-        objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis=-1)
-        scaled = tf.math.sigmoid(data[..., 5:]) * objectness
+        objectness = tf.expand_dims(tf.math.sigmoid(obns), axis=-1)
+        scaled = tf.math.sigmoid(classifics) * objectness
 
         #compute the mask of where objects have been located
-        mask = tf.reduce_any(objectness > self._thresh, axis=-1)
+        mask_check = tf.fill(tf.shape(objectness), tf.cast(self._thresh, dtype = objectness.dtype))
+        sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
+        mask = tf.cast(sub, dtype = tf.bool)
+        mask = tf.reduce_any(mask, axis = -1)
+        #mask = tf.reduce_any(objectness > mask_check, axis= -1)
         mask = tf.reduce_any(mask, axis=0)
+        # tf.print(" ")
 
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
@@ -100,10 +107,9 @@ class YoloLayer(ks.Model):
         return box, classifications
 
     def call(self, inputs):
-        boxes, classifs = self.parse_prediction_path(
-            self._generator[self._keys[0]], self._len_mask[self._keys[0]],
-            self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
+        boxes, classifs = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
         i = 1
+        
         while i < self._len_keys:
             key = self._keys[i]
             b, c = self.parse_prediction_path(self._generator[key],

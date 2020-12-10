@@ -163,6 +163,7 @@ class FastVideo(object):
             image = tf.image.flip_left_right(image)
         image = tf.cast(image, dtype=tf.float32)
         image = image / 255
+        #tf.print(" ", end = "\r")
         return image
 
     def read(self, lock=None):
@@ -301,8 +302,7 @@ class FastVideo(object):
                 self._load_que.put(image)
                 f = datetime.datetime.now()
             with tf.device(self._gpu_device):
-                pimage = tf.image.resize(image,
-                                         (self._p_width, self._p_height))
+                pimage = tf.image.resize(image,(self._p_width, self._p_height))
                 pimage = tf.expand_dims(pimage, axis=0)
                 if hasattr(model, "predict"):
                     predfunc = model.predict
@@ -494,9 +494,16 @@ if __name__ == "__main__":
     prep_gpu()
 
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    mixed_precision.set_policy("float16")
+    mixed_precision.set_policy("mixed_float16")
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4))  
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', 
+                            min_level=3, 
+                            norm_activation = exp_cfg.common.NormActivation(activation="mish"), 
+                            #norm_activation = exp_cfg.common.NormActivation(activation="leaky"), 
+                            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+                            _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+                            filter = exp_cfg.YoloLossLayer(use_nms=True)
+                            ))  
     task = YoloTask(config)
     model = task.build_model()
     task.initialize(model)

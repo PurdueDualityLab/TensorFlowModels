@@ -39,18 +39,17 @@ interpreter.invoke()
 
 # # The function `get_tensor()` returns a copy of the tensor data.
 # # Use `tensor()` in order to get a pointer to the tensor.
-# output_data1 = interpreter.get_tensor(output_details[0]['index'])
-# output_data2 = interpreter.get_tensor(output_details[1]['index'])
-# output_data3 = interpreter.get_tensor(output_details[2]['index'])
+output_data1 = interpreter.get_tensor(output_details[0]['index'])
+output_data2 = interpreter.get_tensor(output_details[1]['index'])
+output_data3 = interpreter.get_tensor(output_details[2]['index'])
+print(output_data1.shape, output_data2.shape, output_data3.shape)
+pred = {"bbox": output_data1, "classes": output_data2, "confidence": output_data3}
 
+pimage = draw_fn(image/255, pred)
 
-# pred = {"boxes": output_data1, "classes ": output_data2, "confidence": output_data3}
-
-# pimage = draw_fn(image/255, pred)
-
-# fig, (ax1, ax2) = plt.subplots(1,2)
-# fig.set_figwidth(100)
-# fig.set_figheight(100)
-# ax1.imshow(image)
-# ax2.imshow(pimage)
-# plt.show()
+fig, (ax1, ax2) = plt.subplots(1,2)
+fig.set_figwidth(100)
+fig.set_figheight(100)
+ax1.imshow(image)
+ax2.imshow(pimage)
+plt.show()

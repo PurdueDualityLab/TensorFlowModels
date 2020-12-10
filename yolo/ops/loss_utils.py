@@ -118,7 +118,14 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
 def _build_grid_points(lwidth, lheight, num, dtype):
     """ generate a grid that is used to detemine the relative centers of the bounding boxs """
     with tf.name_scope("center_grid"):
-        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
+        y = tf.range(0, lheight)
+        x = tf.range(0, lwidth)
+        #x_left, y_left = tf.meshgrid(y, x)
+        # tf.print(y_left)
+        x_left = tf.repeat(tf.transpose(tf.expand_dims(y, axis = -1), perm=[1, 0]), [lwidth], axis = 0)
+        y_left = tf.repeat(tf.expand_dims(x, axis = -1), [lheight], axis = 1)
+        # tf.print(_x_left, tf.shape(x_left), tf.shape(_x_left))
+        # tf.print(_y_left, tf.shape(y_left), tf.shape(_y_left))
         x_y = K.stack([x_left, y_left], axis=-1)
         x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
         x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),num,axis=-2),axis=0)

@@ -36,7 +36,9 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
         xy, wh = tf.split(box, 2, axis=-1)
         xy_min = xy - wh / 2
         xy_max = xy + wh / 2
-        box = tf.stack([xy_min[..., 1], xy_min[..., 0], xy_max[..., 1], xy_max[..., 0]],axis=-1)
+        x_min, y_min = tf.split(xy_min, 2, axis=-1)
+        x_max, y_max = tf.split(xy_max, 2, axis=-1)
+        box = tf.concat([y_min, x_min, y_max, x_max],axis=-1)
         if split_min_max:
             box = tf.split(box, 2, axis=-1)
     return box
