@@ -63,10 +63,10 @@ def yololite(image):
 	ax2.imshow(pimage)
 	plt.show()
 
-def TfLiteModel(image):
+def TfLiteModel(image, model_name = "detect.tflite"):
 	draw_fn = utils.DrawBoxes(classes=80, labels=None, display_names=False, thickness=2) 
 	
-	interpreter = tf.lite.Interpreter(model_path="detect.tflite")
+	interpreter = tf.lite.Interpreter(model_path=model_name)
 	interpreter.allocate_tensors()
 
 	input_details = interpreter.get_input_details()
@@ -87,8 +87,10 @@ def TfLiteModel(image):
 	boxes = interpreter.get_tensor(output_details[0]['index'])
 	classes = interpreter.get_tensor(output_details[1]['index'])
 	confidences = interpreter.get_tensor(output_details[2]['index'])
+	num_dets = interpreter.get_tensor(output_details[3]['index'])
 	pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
 
+	print(num_dets)
 	pimage = draw_fn(image, pred)
 	cv2.imshow("testframe", pimage)
 	k = cv2.waitKey(0)
@@ -101,4 +103,4 @@ def TfLiteModel(image):
 
 if __name__ == "__main__":
 	image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
-	TfLiteModel(image)
+	TfLiteModel(image, model_name="yolotiny.tflite")
