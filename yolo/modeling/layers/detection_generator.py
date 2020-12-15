@@ -141,12 +141,6 @@ class YoloLayer(ks.Model):
                 "classes": pops.pad_max_instances(classes, self._max_boxes, -1, pad_axis = 1),
                 "confidence": pops.pad_max_instances(scores, self._max_boxes, -1, pad_axis = 1)
             }
-        # else:
-        #     return {
-        #         "bbox": boxes,
-        #         "classes": tf.math.argmax(classifs, axis=-1),
-        #         "confidence": classifs 
-        #     }
 
     @property
     def losses(self):
