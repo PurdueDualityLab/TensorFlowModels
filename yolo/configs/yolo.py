@@ -286,6 +286,11 @@ class YoloTask(cfg.TaskConfig):
     load_darknet_weights: bool = True
     darknet_load_decoder: bool = True
 
+
+COCO_INPUT_PATH_BASE = 'coco'
+COCO_TRIAN_EXAMPLES = 118287
+COCO_VAL_EXAMPLES = 5000
+
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:
     """COCO object detection with YOLO."""
