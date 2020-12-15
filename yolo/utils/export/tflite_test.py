@@ -62,8 +62,30 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 	elif k == ord('s'): # wait for 's' key to save and exit
 		cv2.imwrite('messigray.png',pimage)
 		cv2.destroyAllWindows()
-	return 
+	return 	
+
+def print_mod(model_name="detect.tflite"):
+	interpreter = tf.lite.Interpreter(model_path=model_name)
+	interpreter.allocate_tensors()
+
+	input_details = interpreter.get_input_details()
+	output_details = interpreter.get_output_details()
+	details = interpreter.get_tensor_details()
+
+	for i in input_details:
+		print(i)
+	
+	print()
+	for i in output_details:
+		print(i)
+
+	print(dir(interpreter))
+	print()
+	for i in details:
+		if "max" in i["name"] or "Max" in i["name"]:
+			print(i)
 
 if __name__ == "__main__":
 	image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
-	TfLiteModel(image, model_name="yolotiny.tflite")
+	TfLiteModel(image, model_name="detect-large.tflite")
+	#print_mod(model_name="detect.tflite")

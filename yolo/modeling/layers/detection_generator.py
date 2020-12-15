@@ -127,7 +127,7 @@ class YoloLayer(ks.Model):
                 self._max_boxes, self._thresh, self._cls_thresh)
             return {
                 "bbox": nms.nmsed_boxes,
-                "classes": nms.nmsed_classes,
+                "classes": tf.cast(nms.nmsed_classes, tf.int32),
                 "confidence": nms.nmsed_scores,
                 "num_dets": self._max_boxes
             }
@@ -135,8 +135,9 @@ class YoloLayer(ks.Model):
             # boxes = tf.cast(boxes, dtype=tf.float32)
             # classifs = tf.cast(classifs, dtype=tf.float32)
             classes = tf.math.argmax(classifs, axis=-1)
-            scores = tf.reduce_max(classifs, axis=-1)
-            num_dets = tf.reduce_sum(tf.math.ceil(scores), axis = -1)
+            classes = tf.cast(classes, tf.float32)
+            scores = tf.math.reduce_max(classifs, axis=-1)
+            num_dets = tf.cast(tf.convert_to_tensor([tf.shape(scores)[-1]]), dtype = tf.float32)#tf.reduce_sum(tf.math.ceil(scores), axis = -1)
 
             return {
                 "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),
