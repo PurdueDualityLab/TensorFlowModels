@@ -131,10 +131,15 @@ class YoloLayer(ks.Model):
                 "confidence": nms.nmsed_scores,
             }
         else:
+            # boxes = tf.cast(boxes, dtype=tf.float32)
+            # classifs = tf.cast(classifs, dtype=tf.float32)
+            classes = tf.math.argmax(classifs, axis=-1)
+            scores = tf.reduce_max(classifs, axis=-1)
+
             return {
                 "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),
-                "classes": pops.pad_max_instances(tf.math.argmax(classifs, axis=-1), self._max_boxes, -1, pad_axis = 1),
-                "confidence": pops.pad_max_instances(classifs, self._max_boxes, -1, pad_axis = 1) 
+                "classes": pops.pad_max_instances(classes, self._max_boxes, -1, pad_axis = 1),
+                "confidence": pops.pad_max_instances(scores, self._max_boxes, -1, pad_axis = 1)
             }
         # else:
         #     return {
