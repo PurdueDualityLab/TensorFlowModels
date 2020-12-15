@@ -162,7 +162,7 @@ class DataConfig(cfg.DataConfig):
     input_path: str = ''
     tfds_name: str = 'coco'
     tfds_split: str = 'train'
-    global_batch_size: int = 10
+    global_batch_size: int = 2
     is_training: bool = True
     dtype: str = 'float16'
     decoder = None

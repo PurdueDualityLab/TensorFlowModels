@@ -26,11 +26,7 @@ with tf.device("cpu:0"):
   # Convert the model
 
   converter = tf.lite.TFLiteConverter.from_saved_model("saved_models/v4/tiny_no_nms") # path to the SavedModel directory
-  #converter.optimizations = [tf.lite.Optimize.DEFAULT]
-  # converter.target_spec.supported_ops = [
-  #   tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
-  #   tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
-  # ]
+  converter.optimizations = [tf.lite.Optimize.DEFAULT]
   #converter.target_spec.supported_types = [tf.float16]
   try:
     tflite_model = converter.convert()

@@ -98,7 +98,7 @@ class YoloLayer(ks.Model):
         mask = tf.reduce_any(mask, axis = -1)
         #mask = tf.reduce_any(objectness > mask_check, axis= -1)
         mask = tf.reduce_any(mask, axis=0)
-        # tf.print(" ")
+        #tf.print(" ")
 
         # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
         box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]

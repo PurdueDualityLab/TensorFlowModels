@@ -107,9 +107,8 @@ def compute_diou(box1, box2):
         # compute max diagnal of the smallest enclosing box
         c_mins = tf.math.minimum(box1[..., 0:2], box2[..., 0:2])
         c_maxes = tf.math.maximum(box1[..., 2:4], box2[..., 2:4])
-        diag_dist = box_utils.center_distance(c_mins, c_maxes)
 
-        diag_dist = dist = tf.reduce_sum((c_maxes - c_mins)**2, axis = -1) 
+        diag_dist = tf.reduce_sum((c_maxes - c_mins)**2, axis = -1) 
         
         regularization = tf.math.divide_no_nan(dist, diag_dist)
         diou = iou + regularization
