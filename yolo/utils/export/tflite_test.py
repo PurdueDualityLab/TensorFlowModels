@@ -19,7 +19,7 @@ def resize_input_image(image, shape, normalize = False, expand_dims = True, dtyp
 		width, height = shape[0], shape[1]
 
 	image = cv2.resize(image, (width, height))
-	if normalize and (dtype is not np.uint8 and dtype is not np.int8): 
+	if normalize and (dtype is not np.uint8 and dtype is not np.int8):
 		image = image/255
 
 	if expand_dims:
@@ -27,8 +27,8 @@ def resize_input_image(image, shape, normalize = False, expand_dims = True, dtyp
 	return image
 
 def TfLiteModel(image, model_name = "detect.tflite"):
-	draw_fn = utils.DrawBoxes(classes=80, labels=None, display_names=False, thickness=2) 
-	
+	draw_fn = utils.DrawBoxes(classes=80, labels=None, display_names=False, thickness=2)
+
 	interpreter = tf.lite.Interpreter(model_path=model_name)
 	interpreter.allocate_tensors()
 
@@ -37,7 +37,7 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 
 	for i in input_details:
 		print(i)
-	
+
 	print()
 	for i in output_details:
 		print(i)
@@ -50,8 +50,10 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 	boxes = interpreter.get_tensor(output_details[0]['index'])
 	classes = interpreter.get_tensor(output_details[1]['index'])
 	confidences = interpreter.get_tensor(output_details[2]['index'])
+	num_dets = interpreter.get_tensor(output_details[3]['index'])
 	pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
 
+	print(num_dets)
 	pimage = draw_fn(image, pred)
 	cv2.imshow("testframe", pimage)
 	k = cv2.waitKey(0)
@@ -60,8 +62,30 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 	elif k == ord('s'): # wait for 's' key to save and exit
 		cv2.imwrite('messigray.png',pimage)
 		cv2.destroyAllWindows()
-	return 
+	return
+
+def print_mod(model_name="detect.tflite"):
+	interpreter = tf.lite.Interpreter(model_path=model_name)
+	interpreter.allocate_tensors()
+
+	input_details = interpreter.get_input_details()
+	output_details = interpreter.get_output_details()
+	details = interpreter.get_tensor_details()
+
+	for i in input_details:
+		print(i)
+
+	print()
+	for i in output_details:
+		print(i)
+
+	print(dir(interpreter))
+	print()
+	for i in details:
+		if "max" in i["name"] or "Max" in i["name"]:
+			print(i)
 
 if __name__ == "__main__":
 	image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
-	TfLiteModel(image, model_name="yolotiny.tflite")
+	TfLiteModel(image, model_name="detect-large.tflite")
+	#print_mod(model_name="detect.tflite")

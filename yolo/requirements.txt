@@ -69,3 +69,4 @@ Pillow
 # NLP related dependencies
 seqeval
 sentencepiece
+tflite_support
