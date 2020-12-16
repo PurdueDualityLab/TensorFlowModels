@@ -19,7 +19,7 @@ def resize_input_image(image, shape, normalize = False, expand_dims = True, dtyp
 		width, height = shape[0], shape[1]
 
 	image = cv2.resize(image, (width, height))
-	if normalize and (dtype is not np.uint8 and dtype is not np.int8): 
+	if normalize and (dtype is not np.uint8 and dtype is not np.int8):
 		image = image/255
 
 	if expand_dims:
@@ -27,8 +27,8 @@ def resize_input_image(image, shape, normalize = False, expand_dims = True, dtyp
 	return image
 
 def TfLiteModel(image, model_name = "detect.tflite"):
-	draw_fn = utils.DrawBoxes(classes=80, labels=None, display_names=False, thickness=2) 
-	
+	draw_fn = utils.DrawBoxes(classes=80, labels=None, display_names=False, thickness=2)
+
 	interpreter = tf.lite.Interpreter(model_path=model_name)
 	interpreter.allocate_tensors()
 
@@ -37,7 +37,7 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 
 	for i in input_details:
 		print(i)
-	
+
 	print()
 	for i in output_details:
 		print(i)
@@ -62,7 +62,7 @@ def TfLiteModel(image, model_name = "detect.tflite"):
 	elif k == ord('s'): # wait for 's' key to save and exit
 		cv2.imwrite('messigray.png',pimage)
 		cv2.destroyAllWindows()
-	return 	
+	return
 
 def print_mod(model_name="detect.tflite"):
 	interpreter = tf.lite.Interpreter(model_path=model_name)
@@ -74,7 +74,7 @@ def print_mod(model_name="detect.tflite"):
 
 	for i in input_details:
 		print(i)
-	
+
 	print()
 	for i in output_details:
 		print(i)
