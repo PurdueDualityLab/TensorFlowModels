@@ -112,26 +112,38 @@ input_stats.min = [0]
 input_meta.stats = input_stats
 
 # Creates output info.
-output_meta = _metadata_fb.TensorMetadataT()
-output_meta.name = "confidence"
-output_meta.description = "."
-output_meta.content = _metadata_fb.ContentT()
-output_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
-output_meta.content.contentPropertiesType = (
+classes_meta = _metadata_fb.TensorMetadataT()
+classes_meta.name = "classes"
+classes_meta.description = "."
+classes_meta.content = _metadata_fb.ContentT()
+classes_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
+classes_meta.content.contentPropertiesType = (
     _metadata_fb.ContentProperties.FeatureProperties)
-output_stats = _metadata_fb.StatsT()
-output_stats.max = [1.0]
-output_stats.min = [0.0]
-output_meta.stats = output_stats
+confidence_stats = _metadata_fb.StatsT()
+confidence_stats.max = [1]
+confidence_stats.min = [0]
+classes_meta.stats = confidence_stats
 label_file = _metadata_fb.AssociatedFileT()
 label_file.name = os.path.basename("saved_models/v4/tiny_no_nms/label_map.txt")
 label_file.description = "Labels for objects that the model can recognize."
 label_file.type = _metadata_fb.AssociatedFileType.TENSOR_AXIS_LABELS
-output_meta.associatedFiles = [label_file]
+classes_meta.associatedFiles = [label_file]
+
+confidence_meta = _metadata_fb.TensorMetadataT()
+confidence_meta.name = "confidence"
+confidence_meta.description = "."
+confidence_meta.content = _metadata_fb.ContentT()
+confidence_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
+confidence_meta.content.contentPropertiesType = (
+    _metadata_fb.ContentProperties.FeatureProperties)
+output_stats = _metadata_fb.StatsT()
+output_stats.max = [1.0]
+output_stats.min = [0.0]
+confidence_meta.stats = output_stats
 
 subgraph = _metadata_fb.SubGraphMetadataT()
 subgraph.inputTensorMetadata = [input_meta]
-subgraph.outputTensorMetadata = [output_meta]
+subgraph.outputTensorMetadata = [confidence_meta]
 model_meta.subgraphMetadata = [subgraph]
 
 b = flatbuffers.Builder(0)
@@ -140,7 +152,7 @@ b.Finish(
     _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
 metadata_buf = b.Output()
 
-populator = _metadata.MetadataPopulator.with_model_file('model-nopad.tflite')
-populator.load_metadata_buffer(metadata_buf)
-populator.load_associated_files(["saved_models/v4/tiny_no_nms/label_map.txt"])
-populator.populate()
+# populator = _metadata.MetadataPopulator.with_model_file('model-nopad.tflite')
+# populator.load_metadata_buffer(metadata_buf)
+# populator.load_associated_files(["saved_models/v4/tiny_no_nms/label_map.txt"])
+# populator.populate()
