@@ -87,5 +87,5 @@ def print_mod(model_name="detect.tflite"):
 
 if __name__ == "__main__":
 	image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
-	TfLiteModel(image, model_name="detect-large.tflite")
+	TfLiteModel(image, model_name="detect.tflite")
 	#print_mod(model_name="detect.tflite")

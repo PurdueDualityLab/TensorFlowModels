@@ -122,11 +122,12 @@ class YoloLayer(ks.Model):
             num_dets += nd
             i += 1
         
-        boxes = tf.cast(boxes, dtype=tf.float32)
-        classifs = tf.cast(classifs, dtype=tf.float32)
+        
         num_dets = tf.cast(tf.squeeze(num_dets, axis = -1), tf.float32)
         
         if self._use_nms:    
+            boxes = tf.cast(boxes, dtype=tf.float32)
+            classifs = tf.cast(classifs, dtype=tf.float32)
             nms = tf.image.combined_non_max_suppression(
                 tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
                 self._max_boxes, self._thresh, self._cls_thresh)

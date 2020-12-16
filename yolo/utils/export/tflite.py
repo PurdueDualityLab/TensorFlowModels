@@ -6,9 +6,9 @@ from skimage import io
 import cv2
 prep_gpu()
 
-from tflite_support import flatbuffers
-from tflite_support import metadata as _metadata
-from tflite_support import metadata_schema_py_generated as _metadata_fb
+# from tflite_support import flatbuffers
+# from tflite_support import metadata as _metadata
+# from tflite_support import metadata_schema_py_generated as _metadata_fb
 
 import os
 
@@ -148,38 +148,29 @@ def url_to_image(url):
 with tf.device("gpu:0"):
   model = None
   config = exp_cfg.YoloTask(
-      model=exp_cfg.Yolo(base='v4',
-                        min_level=3,
-                        norm_activation = exp_cfg.common.NormActivation(activation="mish"),
-                        #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+      model=exp_cfg.Yolo(base='v4tiny',
+                        min_level=4,
+                        norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
+                        _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
                         #_boxes = ['(20, 28)', '(46, 54)', '(74, 116)', '(81, 82)', '(135, 169)', '(344, 319)'],
-                        _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+                        #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
                         filter = exp_cfg.YoloLossLayer(use_nms=False)
                         ))
   task = YoloTask(config)
   model = task.build_model()
   task.initialize(model)
+  #model.build((1, 416, 416, 3))
   model(tf.ones((1, 416, 416, 3), dtype = tf.float32), training = False)
 
   image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
   image = cv2.resize(image, (416, 416))
   image = tf.expand_dims(image, axis = 0)
   func = conversion(model)
-  #model.save("saved_models/v4/tiny_no_nms")
   model.summary()
 
-  with open("saved_models/v4/tiny_no_nms/label_map.txt", 'w') as label_map:
-    label_map.write("???\n")
-    with open("yolo/dataloaders/dataset_specs/coco.names") as coco:
-      lines = coco.readlines()
-      num_labels = len(lines)
-      label_map.writelines(lines)
-
   # Convert the model
-
   converter = tf.lite.TFLiteConverter.from_concrete_functions([func.get_concrete_function(image)])
   converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_LATENCY]
-  #converter.target_spec.supported_types = [tf.float16]
 
   try:
     tflite_model = converter.convert()
@@ -188,8 +179,15 @@ with tf.device("gpu:0"):
     import sys
     sys.exit()
 
-  # Save the model.
-  with open('detect-large.tflite', 'wb') as f:
+  with open('detect-cb.tflite', 'wb') as f:
     f.write(tflite_model)
+  # with open("saved_models/v4/tiny_no_nms/label_map.txt", 'w') as label_map:
+  #   label_map.write("???\n")
+  #   with open("yolo/dataloaders/dataset_specs/coco.names") as coco:
+  #     lines = coco.readlines()
+  #     num_labels = len(lines)
+  #     label_map.writelines(lines)
+  # Save the model.
 
-  create_metadata('detect-large.tflite', 'saved_models/v4/tiny_no_nms/label_map.txt', num_labels)
+
+  #create_metadata('detect-large.tflite', 'saved_models/v4/tiny_no_nms/label_map.txt', num_labels)
