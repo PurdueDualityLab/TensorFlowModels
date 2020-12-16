@@ -497,7 +497,7 @@ if __name__ == "__main__":
     mixed_precision.set_policy("mixed_float16")
     # mixed_precision.set_policy("float32")
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3tiny', 
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', 
                             min_level=4, 
                             #norm_activation = exp_cfg.common.NormActivation(activation="mish"), 
                             norm_activation = exp_cfg.common.NormActivation(activation="leaky"), 
