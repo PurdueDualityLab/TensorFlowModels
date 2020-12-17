@@ -7,7 +7,7 @@ import cv2
 prep_gpu()
 
 
-
+import traceback as st
 import os
 
 def create_metadata(model_file_name, label_map_file_name, num_labels):
@@ -179,10 +179,11 @@ def uniary_convert():
       tflite_model = converter.convert()
     except:
       print("here")
+      #st.print_exc()
       import sys
       sys.exit()
 
-    with open('detect-cb.tflite', 'wb') as f:
+    with open('detect.tflite', 'wb') as f:
       f.write(tflite_model)
 
 if __name__ == "__main__":

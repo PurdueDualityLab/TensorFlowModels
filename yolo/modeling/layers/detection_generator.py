@@ -94,19 +94,38 @@ class YoloLayer(ks.Model):
         #compute the mask of where objects have been located
         mask_check = tf.fill(tf.shape(objectness), tf.cast(self._thresh, dtype = objectness.dtype))
         sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
-        
         num_dets = tf.reduce_sum(sub, axis = (1, 2, 3))
-
-        mask = tf.cast(sub, dtype = tf.bool)
-        mask = tf.reduce_any(mask, axis = -1)
-        #mask = tf.reduce_any(objectness > mask_check, axis= -1)
-        mask = tf.reduce_any(mask, axis=0)
         
 
-        # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
-        box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
-        # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
-        classifications = tf.boolean_mask(scaled, mask, axis=1)[:, :200, :]
+        box = box * sub
+        scaled = scaled * sub
+
+        mask = tf.cast(tf.ones_like(sub), dtype = tf.bool)
+        mask = tf.reduce_any(mask, axis = (0, -1))
+        #mask = tf.reduce_any(mask, axis=0)
+
+        # reduce the dimentions of the predictions to (batch size, max predictions, -1)
+        box = tf.boolean_mask(box, mask, axis=1)
+        classifications = tf.boolean_mask(scaled, mask, axis=1)
+        objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis = -1)
+        k = 5
+        objectness, ind = tf.math.top_k(objectness, k = k)
+        
+        ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0, tf.shape(objectness)[0]), axis = -1)
+        
+        gather_i = tf.reshape(ind, [-1])
+        gather_m = tf.reshape(ind_m, [-1])
+        bind = tf.stack([gather_m, gather_i], axis = -1)
+
+        box = tf.gather_nd(box, bind)
+        classifications = tf.gather_nd(classifications, bind)
+
+        bsize = tf.shape(ind)[0]
+
+
+        box = tf.reshape(box, [bsize, k, -1])
+        classifications = tf.reshape(classifications, [bsize, k, -1])
+        
         return box, classifications, num_dets
 
     def call(self, inputs):
@@ -138,6 +157,7 @@ class YoloLayer(ks.Model):
                 "num_dets": num_dets
             }
         else:
+            #tf.print(tf.shape(boxes))
             classifs = pops.pad_max_instances(classifs, self._max_boxes, -1, pad_axis = 1)
             return {
                 "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),

@@ -135,7 +135,7 @@ class FastVideo(object):
         else:
             self._labels = labels
 
-        self._draw_fn = utils.DrawBoxes(classes=classes, labels=self._labels, display_names=print_conf) 
+        self._draw_fn = utils.DrawBoxes(classes=classes, labels=self._labels, display_names=print_conf, thickness=1) 
         #get_draw_fn(self._colors, self._labels, print_conf)
 
         self._load_que = Queue(self._batch_size * scale_que)
