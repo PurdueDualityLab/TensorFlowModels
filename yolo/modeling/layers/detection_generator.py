@@ -11,6 +11,7 @@ from yolo.ops import loss_utils
 from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.ops import preprocessing_ops as pops
+from official.vision.beta.ops.nms import sorted_non_max_suppression_padded
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -66,6 +67,20 @@ class YoloLayer(ks.Model):
         pred_box = K.concatenate([box_xy, box_wh], axis=-1)
         return pred_xy, pred_wh, pred_box
 
+
+    def _sort_drop(self, objectness, box, classifications, k):
+        objectness, ind = tf.math.top_k(objectness, k = k)
+        ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0, tf.shape(objectness)[0]), axis = -1)
+        bind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis = -1)
+        
+        box = tf.gather_nd(box, bind)
+        classifications = tf.gather_nd(classifications, bind)
+        
+        bsize = tf.shape(ind)[0]
+        box = tf.reshape(box, [bsize, k, -1])
+        classifications = tf.reshape(classifications, [bsize, k, -1])
+        return objectness, box, classifications
+
     def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
         shape = tf.shape(inputs)
         #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
@@ -99,6 +114,7 @@ class YoloLayer(ks.Model):
 
         box = box * sub
         scaled = scaled * sub
+        objectness = objectness * sub
 
         mask = tf.cast(tf.ones_like(sub), dtype = tf.bool)
         mask = tf.reduce_any(mask, axis = (0, -1))
@@ -108,36 +124,21 @@ class YoloLayer(ks.Model):
         box = tf.boolean_mask(box, mask, axis=1)
         classifications = tf.boolean_mask(scaled, mask, axis=1)
         objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis = -1)
-        k = 5
-        objectness, ind = tf.math.top_k(objectness, k = k)
-        
-        ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0, tf.shape(objectness)[0]), axis = -1)
-        
-        gather_i = tf.reshape(ind, [-1])
-        gather_m = tf.reshape(ind_m, [-1])
-        bind = tf.stack([gather_m, gather_i], axis = -1)
 
-        box = tf.gather_nd(box, bind)
-        classifications = tf.gather_nd(classifications, bind)
-
-        bsize = tf.shape(ind)[0]
-
-
-        box = tf.reshape(box, [bsize, k, -1])
-        classifications = tf.reshape(classifications, [bsize, k, -1])
-        
-        return box, classifications, num_dets
+        objectness, box, classifications = self._sort_drop(objectness, box, classifications, self._max_boxes)
+        return objectness, box, classifications, num_dets
 
     def call(self, inputs):
-        boxes, classifs, num_dets = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
+        confidence, boxes, classifs, num_dets = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
-            b, c, nd = self.parse_prediction_path(self._generator[key],
+            conf, b, c, nd = self.parse_prediction_path(self._generator[key],
                                               self._len_mask[key],
                                               self._scale_xy[key], inputs[str(key)])
             boxes = K.concatenate([boxes, b], axis=1)
             classifs = K.concatenate([classifs, c], axis=1)
+            confidence = K.concatenate([confidence, conf], axis=1)
             num_dets += nd
             i += 1
         
@@ -158,11 +159,15 @@ class YoloLayer(ks.Model):
             }
         else:
             #tf.print(tf.shape(boxes))
+            #confidence = tf.math.reduce_max(classifs, axis=-1)
+            confidence, boxes, classifs = self._sort_drop(confidence, boxes, classifs, self._max_boxes)
+            
+            
             classifs = pops.pad_max_instances(classifs, self._max_boxes, -1, pad_axis = 1)
             return {
                 "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),
                 "classes": tf.cast(tf.math.argmax(classifs, axis=-1), tf.float32),
-                "confidence": tf.math.reduce_max(classifs, axis=-1),
+                "confidence": confidence,
                 "num_dets": num_dets
             }
 

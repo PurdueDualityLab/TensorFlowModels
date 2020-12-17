@@ -497,12 +497,12 @@ if __name__ == "__main__":
     mixed_precision.set_policy("mixed_float16")
     # mixed_precision.set_policy("float32")
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', 
-                            min_level=4, 
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', 
+                            min_level=3, 
                             #norm_activation = exp_cfg.common.NormActivation(activation="mish"), 
                             norm_activation = exp_cfg.common.NormActivation(activation="leaky"), 
-                            _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-                            #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+                            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+                            _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
                             filter = exp_cfg.YoloLossLayer(use_nms=False)
                             ))  
     task = YoloTask(config)
