@@ -6,7 +6,7 @@ import math
 
 from yolo.ops import box_ops as box_utils 
 
-def compute_iou(box1, box2):
+def compute_iou(box1, box2, yxyx = False):
     """Calculates the intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -18,19 +18,22 @@ def compute_iou(box1, box2):
     """
     # get box corners
     with tf.name_scope("iou"):
-        box1 = box_utils.xcycwh_to_yxyx(box1)
-        box2 = box_utils.xcycwh_to_yxyx(box2)
+        if not yxyx:
+            box1 = box_utils.xcycwh_to_yxyx(box1)
+            box2 = box_utils.xcycwh_to_yxyx(box2)
 
-        intersect_mins = tf.math.maximum(box1[..., 0:2], box2[..., 0:2])
-        intersect_maxes = tf.math.minimum(box1[..., 2:4], box2[..., 2:4])
+        b1mi, b1ma = tf.split(box1, 2, axis = -1)
+        b2mi, b2ma = tf.split(box2, 2, axis = -1)
+        intersect_mins = tf.math.maximum(b1mi, b2mi)
+        intersect_maxes = tf.math.minimum(b1ma, b2ma)
         intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins, tf.zeros_like(intersect_mins))
-        intersection = intersect_wh[..., 0] * intersect_wh[..., 1]
+        intersection = tf.reduce_prod(intersect_wh, axis = -1) #intersect_wh[..., 0] * intersect_wh[..., 1]
 
-        box1_area = tf.math.abs(tf.reduce_prod(box1[..., 2:4] - box1[..., 0:2], axis=-1))
-        box2_area = tf.math.abs(tf.reduce_prod(box2[..., 2:4] - box2[..., 0:2], axis=-1))
+        box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+        box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
         union = box1_area + box2_area - intersection
 
-        iou = tf.math.divide_no_nan(intersection, union)
+        iou = intersection/(union + 1e-7)#tf.math.divide_no_nan(intersection, union)
         iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
     return iou
 

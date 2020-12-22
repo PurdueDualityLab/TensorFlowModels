@@ -138,9 +138,19 @@ def conversion(model):
       image = tf.cast(image, tf.float32)
       image = image/tf.fill(tf.shape(image), 255.0)
       pred = model.call(image, training = False)
-      pred = {"bbox": pred["bbox"], "classes":pred["classes"], "confidence":pred["confidence"], "num_dets":pred["num_dets"]}
+      pred = {"bbox": tf.cast(pred["bbox"], tf.float32), "classes":tf.cast(pred["classes"], tf.float32), "confidence":tf.cast(pred["confidence"], tf.float32), "num_dets":tf.cast(pred["num_dets"], tf.float32)}
     return pred
   return run
+
+def get_rep_data():
+  import tensorflow_datasets as tfds 
+  dataset = tfds.load("coco", split = "train", shuffle_files = True)
+  dataset = dataset.take(100)
+  def representative_dataset():
+    for data in dataset:
+      data = tf.cast(tf.expand_dims(tf.image.resize(data["image"], (416, 416)), axis = 0), tf.uint8)
+      yield [data]
+  return representative_dataset
 
 def url_to_image(url):
 	image = io.imread(url)
@@ -149,16 +159,26 @@ def url_to_image(url):
 def uniary_convert():
   with tf.device("gpu:0"):
     model = None
+    input_size = [416, 416, 3]
+    # config = exp_cfg.YoloTask(
+    #     model=exp_cfg.Yolo(_input_size = [416, 416, 3],
+    #                       base='v4tiny',
+    #                       min_level=4,
+    #                       norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
+    #                       _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+    #                       #_boxes = ['(20, 28)', '(46, 54)', '(74, 116)', '(81, 82)', '(135, 169)', '(344, 319)'],
+    #                       #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+    #                       #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+    #                       filter = exp_cfg.YoloLossLayer(use_nms=False)
+    #                       ))
     config = exp_cfg.YoloTask(
-        model=exp_cfg.Yolo(_input_size = [416, 416, 3],
-                          base='v4tiny',
-                          min_level=4,
-                          norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-                          _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-                          #_boxes = ['(20, 28)', '(46, 54)', '(74, 116)', '(81, 82)', '(135, 169)', '(344, 319)'],
-                          #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
-                          filter = exp_cfg.YoloLossLayer(use_nms=False)
-                          ))
+    model=exp_cfg.Yolo(_input_size = input_size,
+                      base='v3',
+                      min_level=3,
+                      norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
+                      _boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+                      filter = exp_cfg.YoloLossLayer(use_nms=False)
+                      ))
     task = YoloTask(config)
     model = task.build_model()
     task.initialize(model)
@@ -173,7 +193,8 @@ def uniary_convert():
 
     # Convert the model
     converter = tf.lite.TFLiteConverter.from_concrete_functions([func.get_concrete_function(image)])
-    converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_LATENCY]
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    #converter.representative_dataset = get_rep_data()
 
     try:
       tflite_model = converter.convert()
