@@ -62,8 +62,8 @@ Certainly! We have documented the installation instructions and app walkthrough 
 
 
 
-*   [Android](https://docs.google.com/document/d/1OePAGv5TNhpP2pP-8ZW_Lahc4nsDK0a-uRmzuCJ_pj0/edit?usp=sharing)
-*   [iOS](https://docs.google.com/document/d/17750_k1yvIxOjt8-lMnm3vtyIuInD-uaR9rliPBcQK0/edit?usp=sharing)
+*   [Android](android/)
+*   [iOS](ios/)
 
 We have tested the demo on:
 

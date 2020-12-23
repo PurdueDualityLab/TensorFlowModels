@@ -18,7 +18,7 @@
 
 
 
-![Selecting development team](images/image2.png "Selecting development team")
+![Selecting development team](Images/image2.png "Selecting development team")
 
 
     2. If a Bundle identifier error shows up, go to YoloDemo > signing&capabilities, and change the bundle identifier name to something unique, (something random like: &lt;yourname>.helloe.test)
@@ -29,14 +29,14 @@
 
 
 
-![Select device](images/image4.png "Select device")
+![Select device](Images/image4.png "Select device")
 
 
   2. Select this device and click the triangle (run) to build and install the app on your device
 
 
 
-![Run button](images/image1.png "Run button")
+![Run button](Images/image1.png "Run button")
 
 
 12. You will get an error saying the app could not be opened, you can ignore this.
