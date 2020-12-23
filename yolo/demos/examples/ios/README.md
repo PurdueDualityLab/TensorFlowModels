@@ -50,7 +50,7 @@ _Please do not delete the empty references_ to the .tflite and .txt files after 
 
 ## Model Used
 
-This app uses [YOLOv3 regular and YOLOv4 tiny](../../..) models trained on [COCO dataset](http://cocodataset.org/). The input image size required is 300 X 300 X 3. You can download the model [here](../models). You can find more information on the research on object detection [here](https://github.com/tensorflow/models/tree/master/research/object_detection).
+This app uses [YOLOv3 regular and YOLOv4 tiny](../../..) models trained on [COCO dataset](http://cocodataset.org/). The input image size required is 416 X 416 X 3. You can download the model [here](../models). You can find more information on the research on object detection [here](https://github.com/tensorflow/models/tree/master/research/object_detection).
 
 ## iOS App Details
 
