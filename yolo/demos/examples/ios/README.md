@@ -5,7 +5,7 @@
 
 ## Overview
 
-This is a camera app that continuously detects the objects (bounding boxes and classes) in the frames seen by your device's back camera, using a quantized [MobileNet SSD](https://github.com/tensorflow/models/tree/master/research/object_detection) model trained on the [COCO dataset](http://cocodataset.org/). These instructions walk you through building and running the demo on an iOS device.
+This is a camera app that continuously detects the objects (bounding boxes and classes) in the frames seen by your device's back camera, using quantized [YOLOv3 regular and YOLOv4 tiny](../../..) models trained on the [COCO dataset](http://cocodataset.org/). These instructions walk you through building and running the demo on an iOS device.
 
 The model files are downloaded via scripts in Xcode when you build and run. You don't need to do any steps to download TFLite models into the project explicitly.
 
@@ -50,7 +50,7 @@ _Please do not delete the empty references_ to the .tflite and .txt files after 
 
 ## Model Used
 
-This app uses a MobileNet SSD model trained on [COCO dataset](http://cocodataset.org/). The input image size required is 300 X 300 X 3. You can download the model [here](https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip). You can find more information on the research on object detection [here](https://github.com/tensorflow/models/tree/master/research/object_detection).
+This app uses [YOLOv3 regular and YOLOv4 tiny](../../..) models trained on [COCO dataset](http://cocodataset.org/). The input image size required is 300 X 300 X 3. You can download the model [here](../models). You can find more information on the research on object detection [here](https://github.com/tensorflow/models/tree/master/research/object_detection).
 
 ## iOS App Details
 
