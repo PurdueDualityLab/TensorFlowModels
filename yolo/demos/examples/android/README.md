@@ -16,7 +16,7 @@ Application can run either on device or emulator.
 
 ## Installing the demo from a precompiled APK
 
-See [INSTALL.md](Installation).
+See [Installation](INSTALL.md).
 
 ## Build the demo using Android Studio
 
