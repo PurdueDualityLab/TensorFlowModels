@@ -6,37 +6,24 @@
 2. In terminal, install cocoa pods using the command: ```sudo gem install cocoapods``` (5-10 minutes)
 3. Unzip the file yolodemo.zip to a location that is accessible via your terminal (suggested: desktop, 1 minute)
 4. Via terminal go to the unzipped yolodemo folder
-5. Install all coco pods by using the command ```pod update``` (1 minute)
-    1. If some error occurs, try command ```pod install```
+5. Install all coco pods by using the command ```pod install``` (1 minute)
 6. Go to the unzipped yolodemo folder using finder
 7. Double click YoloDemo.xcworkspace to open the code in Xcode
 8. Now click YoloDemo > signing&capabilities in Xcode
+   ![signing&capabilities](Images/image3.png "signing&capabilities")
 
-![signing&capabilities](Images/image3.png "signing&capabilities")
+   1. Select a development team (this may require you signing into your Apple ID)
+   ![Selecting development team](Images/image2.png "Selecting development team")
 
-    1. Select a development team (this may require you signing into your Apple ID)
-
-
-
-![Selecting development team](Images/image2.png "Selecting development team")
-
-
-    2. If a Bundle identifier error shows up, go to YoloDemo > signing&capabilities, and change the bundle identifier name to something unique, (something random like: &lt;yourname>.helloe.test)
+   2. If a Bundle identifier error shows up, go to YoloDemo > signing&capabilities, and change the bundle identifier name to something unique, (something random like: &lt;yourname>.helloe.test)
 9. Plug your phone into the computer, make sure it can be accessed via finder then Return to the YoloDemo in Xcode
 10. Save the project once (cmnd-s)
 11. On the top left corner next to the buttons to exit the Xcode app there is a  triangle (run), a square (stop), and a label that says YoloDemo>(an iOS device)
     1. Click on the the item with (an iOS device), and scroll all the way to the top. The very first entry should be your iOS device
+    ![Select device](Images/image4.png "Select device")
 
-
-
-![Select device](Images/image4.png "Select device")
-
-
-  2. Select this device and click the triangle (run) to build and install the app on your device
-
-
-
-![Run button](Images/image1.png "Run button")
+    2. Select this device and click the triangle (run) to build and install the app on your device
+    ![Run button](Images/image1.png "Run button")
 
 
 12. You will get an error saying the app could not be opened, you can ignore this.
