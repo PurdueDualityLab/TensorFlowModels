@@ -9,7 +9,7 @@ Welcome to the demo of Purdue University’s first contribution to the TensorFlo
 
 In order to build the Demo, we first took the existing Tensorflow Lite Demo Apps and re-purposed them to work with both Yolov4-tiny, and Yolov3-regular. We used models trained COCO.
 
-You can watch a video of the demo here: [https://youtu.be/EQrwZWpey7Y](https://youtu.be/EQrwZWpey7Y)
+You can watch a video of the demo here: [https://youtu.be/sl8iN6eHCfo](https://youtu.be/sl8iN6eHCfo)
 
 
 ## Technical Details
