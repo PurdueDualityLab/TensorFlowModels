@@ -76,7 +76,7 @@ for more details.
 This example shows you how to perform TensorFlow Lite object detection using a
 custom model.
 
-* Checkout the branch 'tflite'
+* Checkout the branch 'custom_nms'
 * Run the command `python3 -m yolo.utils.export.tflite_convert`
 * The models will be created with the dataset label names packed as metadata
 
