@@ -11,7 +11,7 @@ In order to build the Demo, we first took the existing Tensorflow Lite Demo Apps
 
 You can watch a video of the demo here: [https://youtu.be/sl8iN6eHCfo](https://youtu.be/sl8iN6eHCfo)
 
-You can find a precompiled APK for the Android version of this app on [https://cam2project.net/yolo](https://cam2project.net/yolo)
+You can find a precompiled APK for the Android version of this app on [http://cam2project.net/yolo](https://www.cam2project.net/yolo)
 
 
 ## Technical Details
