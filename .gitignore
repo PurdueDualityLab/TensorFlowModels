@@ -4,6 +4,9 @@ cache
 training_dir
 videos
 saved_models/
+yolo/demos/examples/android
+yolo/demos/examples/ios
+yolo/demos/examples/models
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
