@@ -4,6 +4,10 @@ cache
 training_dir
 videos
 saved_models/
+
+# lfs safe in case the demo is run and someone tries to push
+# if critical update needs to be made, then commen the 3 lines bellow or the 
+# demo folder coralating to version of the app that is being changed
 yolo/demos/examples/android
 yolo/demos/examples/ios
 yolo/demos/examples/models
