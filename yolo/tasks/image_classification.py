@@ -35,14 +35,22 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     num_classes = self.task_config.model.num_classes
     input_size = self.task_config.model.input_size
 
-    if params.tfds_name != None: 
+    if params.tfds_name != None:
       decoder = cli.Decoder()
     else:
       decoder = classification_input.Decoder()
-      
+
     parser = classification_input.Parser(
         output_size=input_size[:2],
         num_classes=num_classes,
+        aug_rand_saturation=params.parser.aug_rand or params.parser.aug_rand_saturation,
+        aug_rand_brightness=params.parser.aug_rand or params.parser.aug_rand_brightness,
+        aug_rand_zoom=params.parser.aug_rand or params.parser.aug_rand_zoom,
+        aug_rand_rotate=params.parser.aug_rand or params.parser.aug_rand_rotate,
+        aug_rand_hue=params.parser.aug_rand or params.parser.aug_rand_hue,
+        aug_rand_aspect=params.parser.aug_rand or params.parser.aug_rand_aspect,
+        scale=params.parser.scale,
+        seed=params.parser.seed,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(

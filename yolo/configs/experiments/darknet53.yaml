@@ -9,7 +9,7 @@ task:
       type: 'darknet'
       darknet:
         model_id: 'darknet53'
-    norm_activation: 
+    norm_activation:
       activation: 'mish'
   losses:
     l2_weight_decay: 0.0005
@@ -20,12 +20,16 @@ task:
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
+    parser:
+      aug_rand: true
   validation_data:
     input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
     drop_remainder: false
+    parser:
+      aug_rand: true
 trainer:
   train_steps: 1200000 # epochs: 120
   validation_steps: 400 # size of validation data
