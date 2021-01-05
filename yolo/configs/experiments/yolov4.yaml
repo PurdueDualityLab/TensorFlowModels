@@ -25,11 +25,11 @@ task:
       max_boxes: 200
       use_tie_breaker: true
   train_data:
-    global_batch_size: 32 # 64 batch size 
+    global_batch_size: 32 # 64 batch size
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: train
     drop_remainder: true
     dtype: float16
@@ -39,13 +39,17 @@ task:
       fixed_size: false
       image_h: 416
       image_w: 416
+      aug_rand_saturation: true
+      aug_rand_brightness: true
+      aug_rand_zoom: true
+      aug_rand_hue: true
       seed: 10
     shuffle_buffer_size: 10000
   validation_data:
     global_batch_size: 8
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: validation
     dtype: float16
     input_path: ''
@@ -53,6 +57,10 @@ task:
     parser:
       image_h: 416
       image_w: 416
+      aug_rand_saturation: true
+      aug_rand_brightness: true
+      aug_rand_zoom: true
+      aug_rand_hue: true
       shuffle_buffer_size: 10000
     shuffle_buffer_size: 2
   weight_decay: 0.0005
@@ -63,7 +71,7 @@ task:
   darknet_load_decoder: False
 trainer:
   train_steps: 1001000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 1000 
+  validation_steps: 1000
   steps_per_loop: 10000
   validation_interval: 10000
   summary_interval: 10000
@@ -84,5 +92,3 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
-

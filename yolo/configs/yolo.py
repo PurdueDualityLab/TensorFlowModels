@@ -54,16 +54,16 @@ class ModelConfig(hyperparams.Config):
         print(model_kwargs)
         if self._boxes != None:
             model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
-        else: 
+        else:
             model_kwargs.update({"_boxes": None})
 
         return model_kwargs
-    
+
     @property
     def backbone(self):
         if isinstance(self.base, str):
             # TODO: remove the automatic activation setter
-            # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation 
+            # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation
             return Yolo._DEFAULTS[self.base].backbone
         else:
             return self.base.backbone
@@ -129,7 +129,7 @@ class ModelConfig(hyperparams.Config):
             value = str(list(value))
             setter.append(value[1:-1])
         self._boxes = setter
-    
+
     @boxes.setter
     def boxes(self, box_list):
         setter = []
@@ -152,6 +152,10 @@ class Parser(hyperparams.Config):
     max_num_instances: int = 200
     random_flip: bool = True
     pct_rand: float = 0.5
+    aug_rand_saturation: bool = True
+    aug_rand_brightness: bool = True
+    aug_rand_zoom: bool = True
+    aug_rand_hue: bool = True
     seed: int = 10
     shuffle_buffer_size: int = 10000
 

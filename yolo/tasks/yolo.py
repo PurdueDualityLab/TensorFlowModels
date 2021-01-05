@@ -76,25 +76,25 @@ class YoloTask(base_task.Task):
 
             weights_file = self.task_config.model.darknet_weights_file
             config_file = self.task_config.model.darknet_weights_cfg
-            
+
             if ("cache" not in weights_file and "cache" not in config_file):
                 list_encdec = DarkNetConverter.read(config_file, weights_file)
             else:
                 import os
-                path = os.path.abspath("cache") 
+                path = os.path.abspath("cache")
                 if (not os.path.isdir(path)):
                     os.mkdir(path)
-                
+
                 cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
                 if not os.path.isfile(cfg):
                     download(config_file.split("/")[-1])
-                
+
                 wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
                 if not os.path.isfile(wgt):
                     download(weights_file.split("/")[-1])
-                 
+
                 list_encdec = DarkNetConverter.read(cfg, wgt)
-                
+
             splits = model.backbone._splits
             if "neck_split" in splits.keys():
                 encoder, neck, decoder = split_converter(list_encdec, splits["backbone_split"],splits["neck_split"])
@@ -169,7 +169,7 @@ class YoloTask(base_task.Task):
             del reader
         else:
             anchors = self.task_config.model.boxes
-        
+
         print(params.parser.fixed_size)
         parser = yolo_input.Parser(
                     image_w=params.parser.image_w,
@@ -185,13 +185,17 @@ class YoloTask(base_task.Task):
                     random_flip = params.parser.random_flip,
                     pct_rand=params.parser.pct_rand,
                     seed = params.parser.seed,
+                    aug_rand_saturation=params.parser.aug_rand_saturation,
+                    aug_rand_brightness=params.parser.aug_rand_brightness,
+                    aug_rand_zoom=params.parser.aug_rand_zoom,
+                    aug_rand_hue=params.parser.aug_rand_hue,
                     anchors = anchors)
-        
+
         if params.is_training:
             post_process_fn = parser.postprocess_fn()
         else:
             post_process_fn = None
- 
+
         reader = input_reader.InputReader(params,
                                         dataset_fn = tf.data.TFRecordDataset,
                                         decoder_fn = decoder.decode,
@@ -215,11 +219,11 @@ class YoloTask(base_task.Task):
             loss_class += _loss_class
             metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
             metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
-        
+
         metric_dict["box_loss"] = loss_box
         metric_dict["conf_loss"] = loss_conf
         metric_dict["class_loss"] = loss_class
-        
+
         return loss, metric_dict
 
     def build_metrics(self, training=True):
@@ -298,22 +302,22 @@ class YoloTask(base_task.Task):
     def reduce_aggregated_logs(self, aggregated_logs):
         #return super().reduce_aggregated_logsI(aggregated_logs)
         return self.coco_metric.result()
-    
+
     @property
     def anchors(self):
         return self.task_config.model.boxes
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
     from yolo.utils.run_utils import prep_gpu
     prep_gpu()
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3'))  
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3'))
     task = YoloTask(config)
     model = task.build_model()
     model.summary()
     task.initialize(model)
-    
+
     train_data = task.build_inputs(config.train_data)
     # test_data = task.build_inputs(config.task.validation_data)
     # print(task.anchors)
@@ -329,5 +333,5 @@ if __name__ == "__main__":
         plt.imshow(i[0].numpy())
         plt.show()
 
-        if l > 2: 
+        if l > 2:
             break

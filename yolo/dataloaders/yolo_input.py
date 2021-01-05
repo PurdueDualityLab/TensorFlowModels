@@ -27,6 +27,10 @@ class Parser(parser.Parser):
         max_num_instances=200,
         random_flip=True,
         pct_rand=0.5,
+        aug_rand_saturation=True,
+        aug_rand_brightness=True,
+        aug_rand_zoom=True,
+        aug_rand_hue=True,
         anchors=None,
         seed=10,
                 ):
@@ -48,6 +52,14 @@ class Parser(parser.Parser):
             random_flip: a `bool` if True, augment training with random horizontal flip.
             pct_rand: an `int` that prevents do_scale from becoming larger than 1-pct_rand.
             masks: a `Tensor`, `List` or `numpy.ndarrray` for anchor masks.
+            aug_rand_saturation: `bool`, if True, augment training with random
+                saturation.
+            aug_rand_brightness: `bool`, if True, augment training with random
+                brightness.
+            aug_rand_zoom: `bool`, if True, augment training with random
+                zoom.
+            aug_rand_hue: `bool`, if True, augment training with random
+                hue.
             anchors: a `Tensor`, `List` or `numpy.ndarrray` for bounding box priors.
             seed: an `int` for the seed used by tf.random
         """
@@ -67,6 +79,12 @@ class Parser(parser.Parser):
         self._pct_rand = pct_rand
         self._max_num_instances = max_num_instances
         self._random_flip = random_flip
+
+        self._aug_rand_saturation = aug_rand_saturation
+        self._aug_rand_brightness = aug_rand_brightness
+        self._aug_rand_zoom = aug_rand_zoom
+        self._aug_rand_hue = aug_rand_hue
+
         self._seed = seed
 
     def _parse_train_data(self, data):
@@ -81,11 +99,14 @@ class Parser(parser.Parser):
         shape = tf.shape(data["image"])
         image = data["image"] / 255
         image = tf.image.resize(image, (self._max_process_size, self._max_process_size))
-        image = tf.image.random_brightness(image=image,
-                                           max_delta=.1)  # Brightness
-        image = tf.image.random_saturation(image=image, lower=0.75,
-                                           upper=1.25)  # Saturation
-        image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
+        if self._aug_rand_brightness:
+            image = tf.image.random_brightness(image=image,
+                                               max_delta=.1)  # Brightness
+        if self._aug_rand_saturation:
+            image = tf.image.random_saturation(image=image, lower=0.75,
+                                               upper=1.25)  # Saturation
+        if self._aug_rand_hue:
+            image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
         image = tf.clip_by_value(image, 0.0, 1.0)
         boxes = data['groundtruth_boxes']
         image_shape = tf.shape(image)[:2]
@@ -118,12 +139,13 @@ class Parser(parser.Parser):
                                             self._jitter_im,
                                             seed=self._seed)
 
-        image, boxes = preprocessing_ops.resize_crop_filter(image,
-                                                            boxes,
-                                                            default_width=self._image_w,
-                                                            default_height=self._image_h,
-                                                            target_width=randscale * self._net_down_scale,
-                                                            target_height=randscale * self._net_down_scale)
+        if self._aug_rand_zoom:
+            image, boxes = preprocessing_ops.resize_crop_filter(image,
+                                                                boxes,
+                                                                default_width=self._image_w,
+                                                                default_height=self._image_h,
+                                                                target_width=randscale * self._net_down_scale,
+                                                                target_height=randscale * self._net_down_scale)
 
         best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width = self._image_w, height = self._image_h)
 
@@ -188,7 +210,7 @@ class Parser(parser.Parser):
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
         return image, labels
-    
+
     def _postprocess_fn(self, image, label):
         randscale = self._image_w // self._net_down_scale
         if not self._fixed_size:
@@ -202,6 +224,6 @@ class Parser(parser.Parser):
 
         image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
         return image, label
-    
+
     def postprocess_fn(self):
         return self._postprocess_fn if not self._fixed_size else None
