@@ -4,6 +4,8 @@ from tensorflow.keras import backend as K
 
 from yolo.ops import iou_ops
 from yolo.ops.loss_utils import GridGenerator
+from yolo.ops.loss_utils import build_grided_gt
+
 
 
 class Yolo_Loss(object):
@@ -87,7 +89,10 @@ class Yolo_Loss(object):
     @tf.function(experimental_relax_shapes=True)
     def _get_label_attributes(self, width, height, batch_size, y_true, y_pred,dtype):
         grid_points, anchor_grid = self._anchor_generator(width, height, batch_size, dtype=dtype)
-        y_true = tf.cast(y_true, dtype)
+        #y_true = tf.cast(y_true, dtype)
+        y_true = build_grided_gt(
+            y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width,
+            self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
         return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid), tf.stop_gradient(y_true)
 
     @tf.function(experimental_relax_shapes=True)

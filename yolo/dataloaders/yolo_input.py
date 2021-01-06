@@ -208,7 +208,7 @@ class Parser(parser.Parser):
 
         if self._fixed_size:
             grid = self._build_grid(labels, self._image_w)
-            labels.update({"grid_form": grid})
+            #labels.update({"grid_form": grid})
         # tf.print()
 
 
@@ -251,6 +251,10 @@ class Parser(parser.Parser):
             "height": shape[2],
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
+
+        # if self._fixed_size:
+        grid = self._build_grid(labels, self._image_w)
+        # labels.update({"grid_form": grid})
         return image, labels
 
     def _postprocess_fn(self, image, label):
@@ -266,7 +270,7 @@ class Parser(parser.Parser):
         width = randscale * self._net_down_scale
         image = tf.image.resize(image, (width, width))
         grid = self._build_grid(label, width, batch=True)
-        label.update({"grid_form": grid})
+        # label.update({"grid_form": grid})
         return image, label
 
     def postprocess_fn(self):

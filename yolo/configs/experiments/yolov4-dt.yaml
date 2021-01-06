@@ -1,8 +1,8 @@
 runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float32
-  #loss_scale: "dynamic"
-  #num_gpus: 1
+  loss_scale: "dynamic"
+  num_gpus: 1
 task:
   model:
     base: v4
@@ -36,7 +36,7 @@ task:
     input_path: ''
     is_training: true
     parser:
-      fixed_size: true
+      fixed_size: false
       image_h: 416
       image_w: 416
       seed: 10
