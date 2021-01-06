@@ -3,7 +3,9 @@ depricated
 cache
 training_dir
 videos
-saved_models/
+saved_models
+*.tflite
+saved_models/*.tflite
 
 # lfs safe in case the demo is run and someone tries to push
 # if critical update needs to be made, then comment the 3 lines bellow or the 
