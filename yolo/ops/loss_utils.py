@@ -23,12 +23,13 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
                          dtype=dtype)
     anchors = tf.cast(y_true["best_anchors"], dtype)
 
+
+    tf.print(boxes.shape)
     batches = tf.shape(boxes)[0]
     num_boxes = tf.shape(boxes)[1]
     len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]],
-                    dtype=dtype)
+    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype=dtype)
     depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
     x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)

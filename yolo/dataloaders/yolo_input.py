@@ -10,6 +10,8 @@ from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
 from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser
+from yolo.ops import loss_utils as loss_ops
+
 
 class Parser(parser.Parser):
     """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -21,7 +23,10 @@ class Parser(parser.Parser):
         fixed_size=False,
         jitter_im=0.1,
         jitter_boxes=0.005,
-        net_down_scale=32,
+        use_tie_breaker = True,
+        min_level = 3, 
+        max_level = 5,
+        masks = None, 
         max_process_size=608,
         min_process_size=320,
         max_num_instances=200,
@@ -63,16 +68,22 @@ class Parser(parser.Parser):
             anchors: a `Tensor`, `List` or `numpy.ndarrray` for bounding box priors.
             seed: an `int` for the seed used by tf.random
         """
-        self._net_down_scale = net_down_scale
-        self._image_w = (image_w //
-                         self._net_down_scale) * self._net_down_scale
-        self._image_h = self._image_w if image_h == None else (
-            image_h // self._net_down_scale) * self._net_down_scale
+        self._net_down_scale = 2 ** max_level
+
+        self._num_classes = num_classes
+        self._key_dict = {f"{key}":key for key in range(min_level, max_level + 1)}
+        print(self._key_dict)
+
+        self._image_w = (image_w //self._net_down_scale) * self._net_down_scale
+        self._image_h = self._image_w if image_h == None else ( image_h // self._net_down_scale) * self._net_down_scale
+
         self._max_process_size = max_process_size
         self._min_process_size = min_process_size
-        self._anchors = anchors
-
         self._fixed_size = fixed_size
+
+        self._anchors = anchors
+        self._masks = masks
+        self._use_tie_breaker = use_tie_breaker
 
         self._jitter_im = 0.0 if jitter_im == None else jitter_im
         self._jitter_boxes = 0.0 if jitter_boxes == None else jitter_boxes
@@ -86,6 +97,27 @@ class Parser(parser.Parser):
         self._aug_rand_hue = aug_rand_hue
 
         self._seed = seed
+
+    def _build_grid(self, raw_true, width, batch = False):
+        mask = self._masks
+        print(raw_true["bbox"].dtype)
+        for key in self._masks.keys():
+            if not batch: 
+                mask[key] = preprocessing_ops.build_grided_gt(raw_true, 
+                                        tf.convert_to_tensor(self._masks[key], dtype=raw_true["bbox"].dtype), 
+                                        width//2 ** int(key), 
+                                        self._num_classes, 
+                                        raw_true["bbox"].dtype, 
+                                        self._use_tie_breaker)
+            else: 
+                mask[key] = preprocessing_ops.build_batch_grided_gt(raw_true, 
+                                     tf.convert_to_tensor(self._masks[key], dtype=raw_true["bbox"].dtype), 
+                                     width//2 ** int(key), 
+                                     self._num_classes, 
+                                     raw_true["bbox"].dtype, 
+                                     self._use_tie_breaker)
+            tf.print(key, "  ", tf.shape(mask[key]))
+        return mask
 
     def _parse_train_data(self, data):
         """Generates images and labels that are usable for model training.
@@ -159,6 +191,9 @@ class Parser(parser.Parser):
         is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
             tf.cast(data["groundtruth_is_crowd"], tf.int32),
             self._max_num_instances, 0)
+        
+
+
         labels = {
             "source_id": data["source_id"],
             "bbox": boxes,
@@ -170,6 +205,13 @@ class Parser(parser.Parser):
             "height": shape[2],
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
+
+        if self._fixed_size:
+            grid = self._build_grid(labels, self._image_w)
+            labels.update({"grid_form": grid})
+        # tf.print()
+
+
         return image, labels
 
     def _parse_eval_data(self, data):
@@ -221,8 +263,10 @@ class Parser(parser.Parser):
                                               maxval=20,
                                               seed=self._seed,
                                               dtype=tf.int32)
-
-        image = tf.image.resize(image, (randscale * self._net_down_scale, randscale * self._net_down_scale))
+        width = randscale * self._net_down_scale
+        image = tf.image.resize(image, (width, width))
+        grid = self._build_grid(label, width, batch=True)
+        label.update({"grid_form": grid})
         return image, label
 
     def postprocess_fn(self):

@@ -65,7 +65,7 @@ pyyaml>=5.1
 # CV related dependencies
 opencv-python
 Pillow
-#pycocotools
+pycocotools
 # NLP related dependencies
 seqeval
 sentencepiece

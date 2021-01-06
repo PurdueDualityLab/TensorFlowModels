@@ -146,7 +146,8 @@ class Parser(hyperparams.Config):
     fixed_size: bool = False
     jitter_im: float = 0.1
     jitter_boxes: float = 0.005
-    net_down_scale: int = 32
+    min_level: int = 3
+    max_level: int = 5
     min_process_size: int = 320
     max_process_size: int = 608
     max_num_instances: int = 200
