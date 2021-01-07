@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import sys
 
-from yolo.ops import loss_utils 
+from yolo.ops import loss_utils
 from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.ops import preprocessing_ops as pops
+from yolo.ops import nms_ops 
 
 
 @ks.utils.register_keras_serializable(package='yolo')
@@ -18,11 +19,11 @@ class YoloLayer(ks.Model):
     def __init__(self,
                  masks,
                  anchors,
-                 classes, 
+                 classes,
                  thresh = 0.5,
                  cls_thresh = 0.5,
-                 ignore_thresh = 0.7, 
-                 loss_type = "ciou", 
+                 ignore_thresh = 0.7,
+                 loss_type = "ciou",
                  use_tie_breaker = True,
                  max_boxes = 200,
                  path_scale = None,
@@ -58,11 +59,10 @@ class YoloLayer(ks.Model):
 
     def parse_yolo_box_predictions(self, unscaled_box,width,height,anchor_grid,grid_points,scale_x_y=1.0):
         #with tf.name_scope("decode_box_predictions_yolo"):
-        pred_xy = tf.math.sigmoid(
-            unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
-        pred_wh = unscaled_box[..., 2:4]
-        box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
-                        axis=-1) + grid_points
+        ubxy, pred_wh = tf.split(unscaled_box, 2, axis = -1)
+        pred_xy = tf.math.sigmoid(ubxy) * scale_x_y - 0.5 * (scale_x_y - 1)
+        x, y = tf.split(pred_xy, 2, axis = -1)
+        box_xy = tf.concat([x / width, y / height], axis=-1) + grid_points
         box_wh = tf.math.exp(pred_wh) * anchor_grid
         pred_box = K.concatenate([box_xy, box_wh], axis=-1)
         return pred_xy, pred_wh, pred_box
@@ -77,7 +77,10 @@ class YoloLayer(ks.Model):
                                      dtype=data.dtype)
 
         # compute the true box output values
-        _, _, boxes = self.parse_yolo_box_predictions(data[..., 0:4],
+        ubox, obns, classifics = tf.split(data, [4, 1, -1], axis = -1)
+        classes = tf.shape(classifics)[-1]
+        obns = tf.squeeze(obns, axis = -1)
+        _, _, boxes = self.parse_yolo_box_predictions(ubox,
                                                  tf.cast(shape[1], data.dtype),
                                                  tf.cast(shape[2], data.dtype),
                                                  anchors,
@@ -86,34 +89,49 @@ class YoloLayer(ks.Model):
         box = box_utils.xcycwh_to_yxyx(boxes)
 
         # computer objectness and generate grid cell mask for where objects are located in the image
-        objectness = tf.expand_dims(tf.math.sigmoid(data[..., 4]), axis=-1)
-        scaled = tf.math.sigmoid(data[..., 5:]) * objectness
+        objectness = tf.expand_dims(tf.math.sigmoid(obns), axis=-1)
+        scaled = tf.math.sigmoid(classifics) * objectness
 
         #compute the mask of where objects have been located
-        mask = tf.reduce_any(objectness > self._thresh, axis=-1)
-        mask = tf.reduce_any(mask, axis=0)
+        mask_check = tf.fill(tf.shape(objectness), tf.cast(self._thresh, dtype = objectness.dtype))
+        sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
+        num_dets = tf.reduce_sum(sub, axis = (1, 2, 3))
+        
 
-        # reduce the dimentions of the box predictions to (batch size, max predictions, 4)
-        box = tf.boolean_mask(box, mask, axis=1)[:, :200, :]
-        # reduce the dimentions of the box predictions to (batch size, max predictions, classes)
-        classifications = tf.boolean_mask(scaled, mask, axis=1)[:, :200, :]
-        return box, classifications
+        box = box * sub
+        scaled = scaled * sub
+        objectness = objectness * sub
+
+        mask = tf.cast(tf.ones_like(sub), dtype = tf.bool)
+        mask = tf.reduce_any(mask, axis = (0, -1))
+        #mask = tf.reduce_any(mask, axis=0)
+
+        # reduce the dimentions of the predictions to (batch size, max predictions, -1)
+        box = tf.boolean_mask(box, mask, axis=1)
+        classifications = tf.boolean_mask(scaled, mask, axis=1)
+        objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis = -1)
+
+        objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+        return objectness, box, classifications, num_dets
 
     def call(self, inputs):
-        boxes, classifs = self.parse_prediction_path(
-            self._generator[self._keys[0]], self._len_mask[self._keys[0]],
-            self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
+        confidence, boxes, classifs, num_dets = self.parse_prediction_path(self._generator[self._keys[0]], self._len_mask[self._keys[0]], self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
         i = 1
         while i < self._len_keys:
             key = self._keys[i]
-            b, c = self.parse_prediction_path(self._generator[key],
+            conf, b, c, nd = self.parse_prediction_path(self._generator[key],
                                               self._len_mask[key],
                                               self._scale_xy[key], inputs[str(key)])
             boxes = K.concatenate([boxes, b], axis=1)
             classifs = K.concatenate([classifs, c], axis=1)
+            confidence = K.concatenate([confidence, conf], axis=1)
+            num_dets += nd
             i += 1
-
-        if self._use_nms:
+        
+        
+        num_dets = tf.cast(tf.squeeze(num_dets, axis = -1), tf.float32)
+        
+        if self._use_nms:    
             boxes = tf.cast(boxes, dtype=tf.float32)
             classifs = tf.cast(classifs, dtype=tf.float32)
             nms = tf.image.combined_non_max_suppression(
@@ -121,21 +139,22 @@ class YoloLayer(ks.Model):
                 self._max_boxes, self._thresh, self._cls_thresh)
             return {
                 "bbox": nms.nmsed_boxes,
-                "classes": nms.nmsed_classes,
+                "classes": tf.cast(nms.nmsed_classes, tf.int32),
                 "confidence": nms.nmsed_scores,
+                "num_dets": num_dets
             }
         else:
+            
+            #boxes, classifs, confidence = nms_ops.nms(boxes, classifs, confidence, self._max_boxes, 2.5, 0.45, sorted = False, one_hot = True)
+
+            confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs, self._max_boxes)
+            
             return {
-                "bbox": pops.pad_max_instances(boxes, self._max_boxes, 0, pad_axis = 1),
-                "classes": pops.pad_max_instances(tf.math.argmax(classifs, axis=-1), self._max_boxes, -1, pad_axis = 1),
-                "confidence": pops.pad_max_instances(classifs, self._max_boxes, -1, pad_axis = 1) 
+                "bbox": boxes, 
+                "classes": tf.math.argmax(classifs, axis = -1),
+                "confidence": confidence,
+                "num_dets": num_dets
             }
-        # else:
-        #     return {
-        #         "bbox": boxes,
-        #         "classes": tf.math.argmax(classifs, axis=-1),
-        #         "confidence": classifs 
-        #     }
 
     @property
     def losses(self):
@@ -152,6 +171,10 @@ class YoloLayer(ks.Model):
                 scale_x_y=self._scale_xy[key],
                 use_tie_breaker=self._use_tie_breaker)
         return loss_dict
+    
+    @property
+    def key_dict(self):
+        return self._scale_xy
 
 
     def get_config(self):
@@ -162,3 +185,4 @@ class YoloLayer(ks.Model):
             "cls_thresh": self._cls_thresh,
             "max_boxes": self._max_boxes,
         }
+

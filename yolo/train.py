@@ -80,5 +80,12 @@ def main(_):
       model_dir=model_dir)
 
 if __name__ == '__main__':
+  import datetime
+
+  a = datetime.datetime.now()
   tfm_flags.define_flags()
   app.run(main)
+  b = datetime.datetime.now()
+
+
+  print("\n\n\n\n\n\n\n {b - a}")

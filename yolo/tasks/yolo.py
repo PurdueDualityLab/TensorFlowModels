@@ -190,7 +190,6 @@ class YoloTask(base_task.Task):
         image, label = inputs
 
         # computer detivative and apply gradients
-        print(model.filter)
         y_pred = model(image, training=False)
         loss, metrics = self.build_losses(y_pred["raw_output"], label)
 

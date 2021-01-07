@@ -246,8 +246,6 @@ class Parser(parser.Parser):
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
 
-        tf.print(labels)
-
         # if self._fixed_size:
         grid = self._build_grid(labels, self._image_w, batch=False, use_tie_breaker = True)
         labels.update({"grid_form": grid})

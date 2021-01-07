@@ -167,7 +167,7 @@ class DataConfig(cfg.DataConfig):
     input_path: str = ''
     tfds_name: str = 'coco'
     tfds_split: str = 'train'
-    global_batch_size: int = 10
+    global_batch_size: int = 2
     is_training: bool = True
     dtype: str = 'float16'
     decoder = None
@@ -290,6 +290,11 @@ class YoloTask(cfg.TaskConfig):
 
     load_darknet_weights: bool = True
     darknet_load_decoder: bool = True
+
+
+COCO_INPUT_PATH_BASE = 'coco'
+COCO_TRIAN_EXAMPLES = 118287
+COCO_VAL_EXAMPLES = 5000
 
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:
