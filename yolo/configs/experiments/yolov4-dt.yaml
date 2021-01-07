@@ -25,7 +25,7 @@ task:
       max_boxes: 200
       use_tie_breaker: true
   train_data:
-    global_batch_size: 8 # 64 batch size 
+    global_batch_size: 2 # 64 batch size 
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
@@ -36,13 +36,13 @@ task:
     input_path: ''
     is_training: true
     parser:
-      fixed_size: false
+      fixed_size: true
       image_h: 416
       image_w: 416
       seed: 10
     shuffle_buffer_size: 10000
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 2
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -53,6 +53,7 @@ task:
     parser:
       image_h: 416
       image_w: 416
+      fixed_size: true
       shuffle_buffer_size: 10000
     shuffle_buffer_size: 2
   weight_decay: 0.0005

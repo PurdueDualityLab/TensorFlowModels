@@ -143,7 +143,7 @@ class ModelConfig(hyperparams.Config):
 class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
-    fixed_size: bool = False
+    fixed_size: bool = True
     jitter_im: float = 0.1
     jitter_boxes: float = 0.005
     min_level: int = 3

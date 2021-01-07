@@ -128,7 +128,9 @@ class YoloTask(base_task.Task):
 
         grid = labels["grid_form"]
         for key in outputs.keys():
-            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])#grid[key], outputs[key])
+            # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
+            _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key], outputs[key])
+            #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
             loss += _loss
             loss_box += _loss_box
             loss_conf += _loss_conf
@@ -192,7 +194,7 @@ class YoloTask(base_task.Task):
         y_pred = model(image, training=False)
         loss, metrics = self.build_losses(y_pred["raw_output"], label)
 
-        #custom metrics
+        # #custom metrics
         loss_metrics = {"loss": loss}
         loss_metrics.update(metrics)
         label['boxes'] = xcycwh_to_yxyx(label['bbox'])
@@ -203,6 +205,8 @@ class YoloTask(base_task.Task):
                               'detection_classes': y_pred['classes'],
                               'num_detections': tf.shape(y_pred['bbox'])[:-1],
                               'source_id': label['source_id'],}
+        
+
         loss_metrics.update({self.coco_metric.name:(label, coco_model_outputs)})
         return loss_metrics
 

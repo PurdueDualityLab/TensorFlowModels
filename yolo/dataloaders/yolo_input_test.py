@@ -60,8 +60,11 @@ def test_yolo_input_task():
                             filter = yolocfg.YoloLossLayer(use_nms=False)
                             )) 
         task = yolo.YoloTask(config)
+
+        # loading both causes issues, but oen at a time is not issue, why?
         train_data = task.build_inputs(config.train_data)
-    return train_data
+        test_data = task.build_inputs(config.validation_data)
+    return train_data, test_data
 
 def test_yolo_input():
     with tf.device("/CPU:0"):
@@ -97,13 +100,33 @@ def test_yolo_input():
     return dataset
 
 if __name__ == "__main__":
-    dataset = test_yolo_input_task()
+    dataset, dsp = test_yolo_input_task()
 
+    
     for l, (i, j) in enumerate(dataset):
-        boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-        i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
-        plt.imshow(i[0].numpy())
-        plt.show()
+        # print(i.shape)
+        # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
 
-        if l > 10:
+        # print(j.keys())
+        # print(tf.shape(j["grid_form"]['5']))
+    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
+    #     plt.imshow(i[0].numpy())
+    #     plt.show()
+
+        print(l)
+        if l > 100:
+            break
+    
+    for l, (i, j) in enumerate(dsp):
+        # print(i.shape)
+        # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
+
+        # print(j.keys())
+        # print(tf.shape(j["grid_form"]['5']))
+    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
+    #     plt.imshow(i[0].numpy())
+    #     plt.show()
+
+        print(l)
+        if l > 100:
             break

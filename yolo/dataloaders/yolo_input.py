@@ -82,7 +82,7 @@ class Parser(parser.Parser):
         self._fixed_size = fixed_size
 
         self._anchors = anchors
-        self._masks = masks
+        self._masks = {key:tf.convert_to_tensor(value) for key, value in masks.items()}
         self._use_tie_breaker = use_tie_breaker
 
         self._jitter_im = 0.0 if jitter_im == None else jitter_im
@@ -96,27 +96,33 @@ class Parser(parser.Parser):
         self._aug_rand_zoom = aug_rand_zoom
         self._aug_rand_hue = aug_rand_hue
 
+        self._builder = preprocessing_ops.GTBuilder(self._num_classes, self._use_tie_breaker)
+
         self._seed = seed
 
-    def _build_grid(self, raw_true, width, batch = False):
+    def _build_grid(self, raw_true, width, batch = False, use_tie_breaker = False):
         mask = self._masks
         print(raw_true["bbox"].dtype)
         for key in self._masks.keys():
             if not batch: 
                 mask[key] = preprocessing_ops.build_grided_gt(raw_true, 
-                                        tf.convert_to_tensor(self._masks[key], dtype=raw_true["bbox"].dtype), 
+                                        self._masks[key],
                                         width//2 ** int(key), 
                                         self._num_classes, 
                                         raw_true["bbox"].dtype, 
-                                        self._use_tie_breaker)
+                                        use_tie_breaker)
             else: 
                 mask[key] = preprocessing_ops.build_batch_grided_gt(raw_true, 
-                                     tf.convert_to_tensor(self._masks[key], dtype=raw_true["bbox"].dtype), 
+                                     self._masks[key],  
                                      width//2 ** int(key), 
                                      self._num_classes, 
                                      raw_true["bbox"].dtype, 
-                                     self._use_tie_breaker)
-            tf.print(key, "  ", tf.shape(mask[key]))
+                                     use_tie_breaker)
+            # tf.print(key, "  ", tf.shape(mask[key]))
+            # width_ = width//(2 ** int(key))
+            # dtype = raw_true["bbox"].dtype
+            # mask[key] = self._builder.gt(raw_true, self._masks[key], width_, dtype)
+
         return mask
 
     def _parse_train_data(self, data):
@@ -183,16 +189,10 @@ class Parser(parser.Parser):
 
         #padding
         boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes, self._max_num_instances, 0)
-        classes = preprocess_ops.clip_or_pad_to_fixed_size(data["groundtruth_classes"],
-                                    self._max_num_instances, -1)
+        classes = preprocess_ops.clip_or_pad_to_fixed_size(data["groundtruth_classes"],self._max_num_instances, -1)
         best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
-        area = preprocess_ops.clip_or_pad_to_fixed_size(data["groundtruth_area"],
-                                 self._max_num_instances, 0)
-        is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
-            tf.cast(data["groundtruth_is_crowd"], tf.int32),
-            self._max_num_instances, 0)
-        
-
+        area = preprocess_ops.clip_or_pad_to_fixed_size(data["groundtruth_area"],self._max_num_instances, 0)
+        is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(tf.cast(data["groundtruth_is_crowd"], tf.int32),self._max_num_instances, 0)
 
         labels = {
             "source_id": data["source_id"],
@@ -207,13 +207,12 @@ class Parser(parser.Parser):
         }
 
         if self._fixed_size:
-            grid = self._build_grid(labels, self._image_w)
-            #labels.update({"grid_form": grid})
-        # tf.print()
-
+            grid = self._build_grid(labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
+            labels.update({"grid_form": grid})
 
         return image, labels
 
+    # broken for some reason in task, i think dictionary to coco evaluator has issues
     def _parse_eval_data(self, data):
         """Generates images and labels that are usable for model training.
         Args:
@@ -224,22 +223,17 @@ class Parser(parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        image = preprocessing_ops.scale_image(data["image"],
-                             resize=True,
-                             w=self._image_w,
-                             h=self._image_h)
+        image = preprocessing_ops.scale_image(data["image"],resize=True,w=self._image_w,h=self._image_h)
         boxes = box_utils.yxyx_to_xcycwh(data["groundtruth_boxes"])
+        
         best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width = self._image_w, height = self._image_h)
         boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
-        classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],
-                                    self._max_num_instances, 0)
+        classes = preprocessing_ops.pad_max_instances(data["groundtruth_classes"],self._max_num_instances, 0)
         best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, 0)
-
-        area = preprocessing_ops.pad_max_instances(data["groundtruth_area"],
-                                 self._max_num_instances, 0)
-        is_crowd = preprocessing_ops.pad_max_instances(
-            tf.cast(data["groundtruth_is_crowd"], tf.int32),
-            self._max_num_instances, 0)
+        area = preprocessing_ops.pad_max_instances(data["groundtruth_area"], self._max_num_instances, 0)
+        is_crowd = preprocessing_ops.pad_max_instances(tf.cast(data["groundtruth_is_crowd"], tf.int32),self._max_num_instances, 0)
+        
+        
         labels = {
             "source_id": data["source_id"],
             "bbox": boxes,
@@ -252,9 +246,11 @@ class Parser(parser.Parser):
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
 
+        tf.print(labels)
+
         # if self._fixed_size:
-        grid = self._build_grid(labels, self._image_w)
-        # labels.update({"grid_form": grid})
+        grid = self._build_grid(labels, self._image_w, batch=False, use_tie_breaker = True)
+        labels.update({"grid_form": grid})
         return image, labels
 
     def _postprocess_fn(self, image, label):
@@ -268,9 +264,9 @@ class Parser(parser.Parser):
                                               seed=self._seed,
                                               dtype=tf.int32)
         width = randscale * self._net_down_scale
-        image = tf.image.resize(image, (width, width))
+        image = tf.image.resize(image, (width, width), use_tie_breaker=self._use_tie_breaker)
         grid = self._build_grid(label, width, batch=True)
-        # label.update({"grid_form": grid})
+        label.update({"grid_form": grid})
         return image, label
 
     def postprocess_fn(self):
