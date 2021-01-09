@@ -12,6 +12,7 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
+   
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
@@ -23,9 +24,9 @@ task:
       ignore_thresh: 0.7
       loss_type: ciou
       max_boxes: 200
-      use_tie_breaker: true
+      use_nms: true
   train_data:
-    global_batch_size: 2 #8 # 64 batch size 
+    global_batch_size: 2 # 64 batch size
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
@@ -36,13 +37,18 @@ task:
     input_path: ''
     is_training: true
     parser:
-      fixed_size: true
+      fixed_size: false
       image_h: 416
       image_w: 416
+      aug_rand_saturation: true
+      aug_rand_brightness: true
+      aug_rand_zoom: true
+      aug_rand_hue: true
       seed: 10
+      use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
-    global_batch_size: 2
+    global_batch_size: 8
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -53,28 +59,33 @@ task:
     parser:
       image_h: 416
       image_w: 416
+      aug_rand_saturation: true
+      aug_rand_brightness: true
+      aug_rand_zoom: true
+      aug_rand_hue: true
       shuffle_buffer_size: 10000
+      use_tie_breaker: true
     shuffle_buffer_size: 2
   weight_decay: 0.0005
   init_checkpoint: ''
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: true
-  darknet_load_decoder: false
+  darknet_load_decoder: true
 trainer:
-  train_steps: 16016000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 8000 
-  steps_per_loop: 1000
-  validation_interval: 1000
-  summary_interval: 1000
-  checkpoint_interval: 1000
+  train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
+  validation_steps: 1000 # 5063 #625
+  steps_per_loop: 10000
+  validation_interval: 10
+  summary_interval: 10000
+  checkpoint_interval: 10000
   optimizer_config:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [12800000, 14400000] # [400000, 450000]
+        boundaries: [800000, 900000] # [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.000040625, 0.0000040625, 0.00000040625] #[0.0013, 0.00013, 0.000013]
+        values: [0.00065, 0.000065, 0.0000065] #[0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
@@ -84,5 +95,3 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
-

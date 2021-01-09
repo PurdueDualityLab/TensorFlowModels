@@ -159,6 +159,7 @@ class Parser(hyperparams.Config):
     aug_rand_hue: bool = True
     seed: int = 10
     shuffle_buffer_size: int = 10000
+    use_tie_breaker: bool = True
 
 
 @dataclasses.dataclass
@@ -196,7 +197,6 @@ class YoloLossLayer(hyperparams.Config):
     loss_type: str = "ciou"
     max_boxes: int = 200
     anchor_generation_scale: int = 416
-    use_tie_breaker: bool = True
     use_nms: bool = False
 
 

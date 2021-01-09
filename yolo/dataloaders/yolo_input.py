@@ -247,7 +247,7 @@ class Parser(parser.Parser):
         }
 
         # if self._fixed_size:
-        grid = self._build_grid(labels, self._image_w, batch=False, use_tie_breaker = True)
+        grid = self._build_grid(labels, self._image_w, batch=False, use_tie_breaker = self._use_tie_breaker)
         labels.update({"grid_form": grid})
         return image, labels
 
@@ -262,8 +262,8 @@ class Parser(parser.Parser):
                                               seed=self._seed,
                                               dtype=tf.int32)
         width = randscale * self._net_down_scale
-        image = tf.image.resize(image, (width, width), use_tie_breaker=self._use_tie_breaker)
-        grid = self._build_grid(label, width, batch=True)
+        image = tf.image.resize(image, (width, width))
+        grid = self._build_grid(label, width, batch=True, use_tie_breaker=self._use_tie_breaker)
         label.update({"grid_form": grid})
         return image, label
 

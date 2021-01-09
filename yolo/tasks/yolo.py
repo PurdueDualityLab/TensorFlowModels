@@ -94,6 +94,7 @@ class YoloTask(base_task.Task):
                     jitter_im=params.parser.jitter_im,
                     jitter_boxes=params.parser.jitter_boxes,
                     masks = masks,
+                    use_tie_breaker = params.parser.use_tie_breaker, 
                     min_process_size=params.parser.min_process_size,
                     max_process_size=params.parser.max_process_size,
                     max_num_instances = params.parser.max_num_instances,
