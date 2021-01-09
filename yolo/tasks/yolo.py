@@ -46,7 +46,7 @@ class YoloTask(base_task.Task):
         from yolo.modeling.Yolo import build_yolo
         params = self.task_config.train_data
         model_base_cfg = self.task_config.model
-        l2_weight_decay = self.task_config.weight_decay
+        l2_weight_decay = self.task_config.weight_decay / 2.0
 
         masks, path_scales, xy_scales = self._get_masks()
         self._get_boxes(gen_boxes=params.is_training)
