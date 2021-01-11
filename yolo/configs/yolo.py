@@ -15,14 +15,128 @@
 # ==============================================================================
 """YOLO configuration definition."""
 import tensorflow as tf
-from typing import Dict, List, Optional, Tuple, Union
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses
 import os
 
 from official.core import exp_factory
 from official.modeling import hyperparams
+from official.modeling import optimization
 from official.modeling.hyperparams import config_definitions as cfg
-from yolo.configs import cfg_defs as yolo_cfg
+from official.vision.beta.configs import common
+
+from yolo.configs import backbones
+
+COCO_INPUT_PATH_BASE = 'coco'
+IMAGENET_TRAIN_EXAMPLES = 1281167
+IMAGENET_VAL_EXAMPLES = 50000
+IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
+
+
+# default param classes
+@dataclasses.dataclass
+class ModelConfig(hyperparams.Config):
+    @property
+    def input_size(self):
+        if self._input_size == None:
+            return [None, None, 3]
+        else:
+            return self._input_size
+
+    @input_size.setter
+    def input_size(self, input_size):
+        self._input_size = input_size
+
+    def as_dict(self):#get_build_model_dict(self):
+        #model_cfg = getattr(self.model, self.model.type)
+        #model_kwargs = model_cfg.as_dict()
+        model_kwargs = super().as_dict()
+        print(model_kwargs)
+        if self._boxes != None:
+            model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
+        else:
+            model_kwargs.update({"_boxes": None})
+
+        return model_kwargs
+
+    @property
+    def backbone(self):
+        if isinstance(self.base, str):
+            # TODO: remove the automatic activation setter
+            # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation
+            return Yolo._DEFAULTS[self.base].backbone
+        else:
+            return self.base.backbone
+
+    @backbone.setter
+    def backbone(self, val):
+        self.base.backbone = val
+
+    @property
+    def decoder(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].decoder
+        else:
+            return self.base.decoder
+
+    @decoder.setter
+    def decoder(self, val):
+        self.base.decoder = val
+
+    @property
+    def darknet_weights_file(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].darknet_weights_file
+        else:
+            return self.base.darknet_weights_file
+
+    @property
+    def darknet_weights_cfg(self):
+        if isinstance(self.base, str):
+            return Yolo._DEFAULTS[self.base].darknet_weights_cfg
+        else:
+            return self.base.darknet_weights_cfg
+
+    @property
+    def boxes(self):
+        if self._boxes == None:
+            return None
+        boxes = []
+        for box in self._boxes:
+            print(box)
+            if isinstance(box, list) or isinstance(box, tuple):
+                boxes.append(box)
+            elif isinstance(box, str):
+                if box[0] == '(' or box[0] == '[':
+                    f = []
+                    for b in box[1:-1].split(","):
+                        f.append(float(b.strip()))
+                    boxes.append(f)
+                else:
+                    f = []
+                    for b in box.split(","):
+                        f.append(float(b.strip()))
+                    boxes.append(f)
+            elif isinstance(box, int):
+                raise IOError("unsupported input type, only strings or tuples")
+        print(boxes)
+        return boxes
+
+    def set_boxes(self, box_list):
+        setter = []
+        for value in box_list:
+            print(value)
+            value = str(list(value))
+            setter.append(value[1:-1])
+        self._boxes = setter
+
+    @boxes.setter
+    def boxes(self, box_list):
+        setter = []
+        for value in box_list:
+            value = str(list(value))
+            setter.append(value[1:-1])
+        self._boxes = setter
 
 # dataset parsers
 @dataclasses.dataclass
@@ -38,143 +152,211 @@ class Parser(hyperparams.Config):
     max_num_instances: int = 200
     random_flip: bool = True
     pct_rand: float = 0.5
+    aug_rand_saturation: bool = True
+    aug_rand_brightness: bool = True
+    aug_rand_zoom: bool = True
+    aug_rand_hue: bool = True
     seed: int = 10
     shuffle_buffer_size: int = 10000
+
 
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
     """Input config for training."""
     input_path: str = ''
+    tfds_name: str = 'coco'
+    tfds_split: str = 'train'
     global_batch_size: int = 10
     is_training: bool = True
     dtype: str = 'float16'
     decoder = None
     parser: Parser = Parser()
     shuffle_buffer_size: int = 10000
+    tfds_download: bool = True
 
-# Loss and Filter definitions
-@dataclasses.dataclass
-class Gridpoints(hyperparams.Config):
-    low_memory: bool = False
-    reset: bool = True
 
 @dataclasses.dataclass
-class YoloBackbone(hyperparams.Config):
-    version: str = "CSPDarknet53"
-    name: str = "regular"
-    cfg: Optional[Dict] = None
+class YoloDecoder(hyperparams.Config):
+    """if the name is specified, or version is specified we ignore input parameters and use version and name defaults"""
+    version: Optional[str] = None
+    type: Optional[str] = None
+    embed_fpn: bool =False
+    fpn_path_len: int = 4
+    path_process_len: int = 6
+    max_level_process_len: Optional[int] = None
+    embed_spp: bool = False
+    xy_exponential: bool = False
 
 @dataclasses.dataclass
-class YoloNeck(hyperparams.Config):
-    version: str = "v4"
-    name: str = "regular"
-    cfg: Optional[Dict] = None
-
-@dataclasses.dataclass
-class YoloHead(hyperparams.Config):
-    version: str = "v4"
-    name: str = "regular"
-    cfg: Optional[Dict] = None
-    
-@dataclasses.dataclass
-class YoloLayer(hyperparams.Config):
-    generator_params: Gridpoints = Gridpoints()
+class YoloLossLayer(hyperparams.Config):
     iou_thresh: float = 0.45
     class_thresh: float = 0.45
+    ignore_thresh: float = 0.7
+    loss_type: str = "ciou"
     max_boxes: int = 200
     anchor_generation_scale: int = 416
-    use_nms: bool = True
+    use_tie_breaker: bool = True
+    use_nms: bool = False
+
 
 @dataclasses.dataclass
-class YoloLoss(hyperparams.Config):
-    ignore_thresh: float = 0.7
-    truth_thresh: float = 1.0
-    use_tie_breaker: bool = None
-
-# model definition
-@dataclasses.dataclass
-class Yolov4regular(yolo_cfg.YoloCFG):
-    model: str = "regular"
-    backbone: Optional[Dict] = None #"regular"
-    neck: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"regular"
-    head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["12, 16", "19, 36", "40, 28", "36, 75", "76, 55", "72, 146", "142, 110" ,"192, 243", "459, 401"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.05, 4: 1.1, 3: 1.2})
-    use_tie_breaker: bool = None
+class YoloBase(hyperparams.OneOfConfig):
+    backbone: backbones.Backbone = backbones.Backbone(type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
+    decoder: YoloDecoder = YoloDecoder(version="v3", type="regular")
+    darknet_weights_file: str = "yolov3.weights"
+    darknet_weights_cfg: str = "yolov3.cfg"
+    activation: str = 'mish'
 
 @dataclasses.dataclass
-class Yolov3regular(yolo_cfg.YoloCFG):
-    model: str = "regular"
-    backbone: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"regular"
-    head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
-    use_tie_breaker: bool = None
+class Yolo(ModelConfig):
+    num_classes: int = 80
+    _input_size: Optional[List[int]] = None
+    min_level: int = 3
+    max_level: int = 5
+    boxes_per_scale: int = 3
+    base: Union[str, YoloBase] = YoloBase()
+    filter: YoloLossLayer = YoloLossLayer()
+    norm_activation: common.NormActivation = common.NormActivation(
+        activation="leaky",
+        use_sync_bn=False,
+        norm_momentum=0.99,
+        norm_epsilon=0.001)
+    decoder_activation: str = "leaky"
+    _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'])
+    #_boxes: ClassVar = [(10, 13), (16, 30), (33, 23),(30, 61), (62, 45), (59, 119),(116, 90), (156, 198), (373, 326)]
+    #_boxes: ClassVar =  [(12, 16), (19, 36), (40, 28), (36, 75),(76, 55), (72, 146), (142, 110), (192, 243),(459, 401)]
+    #_boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'])
+    #_boxes: ClassVar = None
 
-@dataclasses.dataclass
-class Yolov3spp(yolo_cfg.YoloCFG):
-    model: str = "spp"
-    backbone: Optional[Dict] = None #"regular"
-    head: Optional[Dict] = None #"spp"
-    head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 13", "16, 30", "33, 23", "30, 61", "62, 45", "59, 119", "116, 90" ,"156, 198", "373, 326"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [6, 7, 8], 4: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 4: 16, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 4: 1.0, 3: 1.0})
-    use_tie_breaker: bool = None
+    _DEFAULTS: ClassVar = {
+        'v3': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
+            decoder = YoloDecoder(version="v3", type="regular"),
+            darknet_weights_file = "cache://yolov3.weights",
+            darknet_weights_cfg = "cache://yolov3.cfg",
+            activation='leaky'
+        ),
+        'v3spp': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknet53")),
+            decoder = YoloDecoder(version="v3", type="spp"),
+            darknet_weights_file = "cache://yolov3-spp.weights",
+            darknet_weights_cfg = "cache://yolov3-spp.cfg",
+            activation='leaky'
+        ),
+        'v3tiny': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="darknettiny")),
+            decoder = YoloDecoder(version="v3", type="tiny"),
+            darknet_weights_file = "cache://yolov3-tiny.weights",
+            darknet_weights_cfg = "cache://yolov3-tiny.cfg",
+            activation='leaky'
+        ),
+        'v4': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53")),
+            decoder = YoloDecoder(version="v4", type="regular"),
+            darknet_weights_file = "cache://yolov4.weights",
+            darknet_weights_cfg = "cache://yolov4.cfg",
+            activation='mish'
+        ),
+        'v4tiny': YoloBase(
+            backbone = backbones.Backbone(
+                type="darknet", darknet=backbones.DarkNet(model_id="cspdarknettiny")),
+            decoder = YoloDecoder(version="v4", type="tiny"),
+            darknet_weights_file = "cache://yolov4-tiny.weights",
+            darknet_weights_cfg = "cache://yolov4-tiny.cfg",
+            activation='leaky'
+        ), # TODO: fix activation for v4 tiny and all v3 models
+    }
 
-@dataclasses.dataclass
-class Yolov3tiny(yolo_cfg.YoloCFG):
-    model: str = "tiny"
-    backbone: Optional[Dict] = None #"tiny"
-    head: Optional[Dict] = None #"tiny"
-    head_filter: YoloLayer = YoloLayer()
-    _boxes: List[str] = dataclasses.field(default_factory=lambda:["10, 14", "23, 27", "37, 58","81, 82", "135, 169", "344, 319"])
-    masks: Dict = dataclasses.field(default_factory=lambda: {5: [3, 4, 5], 3: [0, 1, 2]})
-    path_scales: Dict = dataclasses.field(default_factory=lambda: {5: 32, 3: 8})
-    x_y_scales: Dict = dataclasses.field(default_factory=lambda: {5: 1.0, 3: 1.0})
-    use_tie_breaker: bool = None
+    for v in _DEFAULTS.values():
+        v.lock()
 
-@dataclasses.dataclass
-class Yolo(hyperparams.OneOfConfig):
-    type: str = "v4"
-    v3: Yolov3regular = Yolov3regular()
-    v3_spp: Yolov3spp = Yolov3spp()
-    v3_tiny: Yolov3tiny = Yolov3tiny()
-    v4: Yolov4regular = Yolov4regular()
+
 
 # model task
 @dataclasses.dataclass
-class YoloTask(yolo_cfg.TaskConfig):
-    _input_size: Optional[List[int]] = None
-    model:Yolo = Yolo()
-    loss:YoloLoss = YoloLoss()
+class YoloTask(cfg.TaskConfig):
+    model: Yolo = Yolo(base = "v4tiny")
     train_data: DataConfig = DataConfig(is_training=True)
     validation_data: DataConfig = DataConfig(is_training=False)
-    num_classes: int = 80
-    min_level: int = 3
-    max_level: int = 5
     weight_decay: float = 5e-4
-    gradient_clip_norm: float = 0.0
-
-    init_checkpoint_modules: str = 'all'  # all or backbone
-    init_checkpoint: Optional[str] = None
     annotation_file: Optional[str] = None
-    per_category_metrics = False
+    gradient_clip_norm: float = 0.0
+    per_category_metrics: bool = False
 
-    load_original_weights: bool = True
-    backbone_from_darknet: bool = True
-    head_from_darknet: bool = False
+    load_darknet_weights: bool = True
+    darknet_load_decoder: bool = True
+
+@exp_factory.register_config_factory('yolo_v4_coco')
+def yolo_v4_coco() -> cfg.ExperimentConfig:
+    """COCO object detection with YOLO."""
+    train_batch_size = 1
+    eval_batch_size = 1
+    base_default = 1200000
+    num_batches = 1200000 * 64/train_batch_size
+
+    config = cfg.ExperimentConfig(
+        runtime=cfg.RuntimeConfig(
+#            mixed_precision_dtype='float16',
+#            loss_scale='dynamic',
+
+            num_gpus=2),
+        task=YoloTask(model=Yolo(base='v4'),
+                      train_data=DataConfig(#input_path=os.path.join(
+                          #COCO_INPUT_PATH_BASE, 'train*'),
+                                            is_training=True,
+                                            global_batch_size=train_batch_size,
+                                            parser=Parser(),
+                                            shuffle_buffer_size=2),
+                      validation_data=DataConfig(
+                          #input_path=os.path.join(COCO_INPUT_PATH_BASE,
+                          #                        'val*'),
+                          is_training=False,
+                          global_batch_size=eval_batch_size,
+                          shuffle_buffer_size=2)),
+        trainer=cfg.TrainerConfig(
+            steps_per_loop=2000,
+            summary_interval=8000,
+            checkpoint_interval=10000,
+            train_steps=num_batches,
+            validation_steps=1000,
+            validation_interval=10,
+            optimizer_config=optimization.OptimizationConfig({
+                'optimizer': {
+                    'type': 'sgd',
+                    'sgd': {
+                        'momentum': 0.9
+                    }
+                },
+                'learning_rate': {
+
+                    'type': 'stepwise',
+                    'stepwise': {
+                        'boundaries': [
+                            int(400000/base_default * num_batches), int(450000/base_default * num_batches)
+                        ],
+                        'values': [0.00261 * train_batch_size/64 , 0.000261 * train_batch_size/64, 0.0000261 * train_batch_size/64]
+                    }
+                },
+                'warmup': {
+                    'type': 'linear',
+                    'linear': {
+                        'warmup_steps': 1000 * 64 // num_batches,
+                        'warmup_learning_rate': 0
+                    }
+                }
+            })),
+        restrictions=[
+            'task.train_data.is_training != None',
+            'task.validation_data.is_training != None'
+        ])
+
+    return config
 
 
-
-
-
-    
-
+if __name__ == "__main__":
+    config = YoloTask()
+    print(config)

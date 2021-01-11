@@ -170,6 +170,10 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
     print('width, height, fps:', width, height, int(cap.get(5)))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    input_shape = (416, 416)
+    if model.input_shape[1] is not None:
+        input_shape = model.input_shape[1:-1]
+
     while cap.isOpened():
         success, image = cap.read()
 
@@ -183,7 +187,7 @@ def video_processor(model, version , vidpath, device="/CPU:0"):
             a = datetime.datetime.now()
             #with tf.device(device):
             pimage = tf.expand_dims(image, axis=0)
-            pimage = tf.image.resize(pimage, (416, 416))
+            pimage = tf.image.resize(pimage, input_shape)
             pred = predfunc(pimage)
             b = datetime.datetime.now()
 

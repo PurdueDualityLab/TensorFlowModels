@@ -121,6 +121,19 @@ pip install -r requirements.txt
 
 > :memo: Provide Building an using the model
 
+```
+from yolo.utils.run_utils import prep_gpu
+from yolo.configs import yolo as exp_cfg
+from yolo.tasks.yolo import YoloTask
+prep_gpu()
+
+config = exp_cfg.YoloTask()  
+task = YoloTask(config)
+model = task.build_model()
+task.initialize(model)
+model.summary()
+```
+
 ## Example Usage
 
 > :memo: Examples for all supported models

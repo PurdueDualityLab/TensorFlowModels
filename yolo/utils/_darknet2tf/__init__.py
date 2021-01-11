@@ -2,7 +2,7 @@ import collections
 import collections.abc
 import io
 
-from ..file_manager import PathABC
+from yolo.utils.downloads.file_manager import PathABC
 
 from typing import Union, Type, TypeVar
 
@@ -137,7 +137,7 @@ class DarkNetConverter(_DarkNetSectionList):
                             max_boxes=200,
                             use_mixed=True):
         import tensorflow as tf
-        from yolo.modeling.building_blocks import YoloLayer
+        from yolo.modeling.layers import YoloLayer
 
         if use_mixed:
             from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -151,7 +151,7 @@ class DarkNetConverter(_DarkNetSectionList):
         outs = collections.OrderedDict()
         masks = {}
         anchors = None
-        scale_x_y = 1
+        scale_x_y = {}
         path_scales = {}
 
         for i, yolo_cfg, yolo_tensor in yolo_tensors:
@@ -162,22 +162,20 @@ class DarkNetConverter(_DarkNetSectionList):
             elif anchors != yolo_cfg.anchors:
                 raise ValueError('Anchors inconsistent in [yolo] layers')
 
-            if scale_x_y is None:
-                scale_x_y = yolo_cfg.scale_x_y
-            elif scale_x_y != yolo_cfg.scale_x_y:
-                raise ValueError('Scale inconsistent in [yolo] layers')
+            scale_x_y[yolo_tensor.name] = yolo_cfg.scale_x_y
 
             outs[yolo_tensor.name] = yolo_tensor
 
             path_scales[yolo_tensor.name] = self.data[i - 1].c >> 5
 
-        yolo_layer = YoloLayer(masks=masks,
-                               anchors=anchors,
-                               thresh=thresh,
-                               cls_thresh=class_thresh,
-                               max_boxes=max_boxes,
-                               dtype=dtype,
-                               scale_boxes=self.net.w,
-                               scale_mult=scale_x_y,
-                               path_scale=path_scales)
+        yolo_layer = YoloLayer(
+            masks=masks,
+            anchors=anchors,
+            thresh=thresh,
+            cls_thresh=class_thresh,
+            max_boxes=max_boxes,
+            dtype=dtype,
+            #scale_boxes=self.net.w,
+            scale_xy=scale_x_y,
+            path_scale=path_scales)
         return yolo_layer(outs)

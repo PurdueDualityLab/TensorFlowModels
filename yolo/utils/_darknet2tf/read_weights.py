@@ -10,7 +10,7 @@ from typing import Union
 
 from .config_classes import *
 from .dn2dicts import convertConfigFile
-from ..file_manager import PathABC, get_size, open_if_not_open
+from yolo.utils.downloads.file_manager import PathABC, get_size, open_if_not_open
 
 
 def build_layer(layer_dict, file, net):
