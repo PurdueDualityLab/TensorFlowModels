@@ -36,11 +36,29 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
         xy, wh = tf.split(box, 2, axis=-1)
         xy_min = xy - wh / 2
         xy_max = xy + wh / 2
-        box = tf.stack([xy_min[..., 1], xy_min[..., 0], xy_max[..., 1], xy_max[..., 0]],axis=-1)
+        x_min, y_min = tf.split(xy_min, 2, axis=-1)
+        x_max, y_max = tf.split(xy_max, 2, axis=-1)
+        box = tf.concat([y_min, x_min, y_max, x_max],axis=-1)
         if split_min_max:
             box = tf.split(box, 2, axis=-1)
     return box
 
+def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
+    """Converts boxes from x_center, y_center, width, height to xmin, ymin, xmax, ymax.
+    Args:
+        box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
+            x_center, y_center, width, height.
+    Returns:
+        box: a `Tensor` whose shape is the same as `box` in new format.
+    """
+    with tf.name_scope("xcycwh_to_yxyx"):
+        xy, wh = tf.split(box, 2, axis=-1)
+        xy_min = xy - wh / 2
+        xy_max = xy + wh / 2
+        box = (xy_min, xy_max)
+        if not split_min_max:
+            box = tf.concat(box, axis=-1)
+    return box
 
 def get_area(box: Union[tf.Tensor, Tuple],
               xywh: bool = False,

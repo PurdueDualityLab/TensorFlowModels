@@ -16,7 +16,7 @@ NUM_PARA=4
 CHECK_AXEL=$(command -v axel)
 
 #default
-PATH_TO_TFDS=/tensorflow_datasets
+PATH_TO_TFDS=/media/vbanna/DATA_SHARE/tfds
 DOWNLOADS_DOWNLOAD_DIR=$PATH_TO_TFDS/downloads
 MANUAL_DOWNLOAD_DIR=$PATH_TO_TFDS/downloads/manual
 

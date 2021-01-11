@@ -11,15 +11,21 @@ import tensorflow as tf
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
     image_w: int = 416
+    image_h: int = 416
     fixed_size: bool = False
     jitter_im: float = 0.1
     jitter_boxes: float = 0.005
-    net_down_scale: int = 32
+    min_level: int = 3
+    max_level: int = 5
     min_process_size: int = 320
     max_process_size: int = 608
     max_num_instances: int = 200
     random_flip: bool = True
-    pct_rand: float = 1.0
+    pct_rand: float = 0.5
+    aug_rand_saturation: bool = True
+    aug_rand_brightness: bool = True
+    aug_rand_zoom: bool = True
+    aug_rand_hue: bool = True
     seed: int = 10
     shuffle_buffer_size: int = 10000
 
@@ -38,6 +44,28 @@ class DataConfig(cfg.DataConfig):
     shuffle_buffer_size: int = 10000
     tfds_download: bool = True
 
+
+from yolo.configs import yolo as yolocfg
+from yolo.tasks import yolo
+
+def test_yolo_input_task():
+    with tf.device("/CPU:0"):   
+        config = yolocfg.YoloTask(model=yolocfg.Yolo(base='v4', 
+                            min_level=3, 
+                            norm_activation = yolocfg.common.NormActivation(activation="mish"), 
+                            #norm_activation = yolocfg.common.NormActivation(activation="leaky"), 
+                            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+                            #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+                            _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+                            filter = yolocfg.YoloLossLayer(use_nms=False)
+                            )) 
+        task = yolo.YoloTask(config)
+
+        # loading both causes issues, but oen at a time is not issue, why?
+        train_data = task.build_inputs(config.train_data)
+        test_data = task.build_inputs(config.validation_data)
+    return train_data, test_data
+
 def test_yolo_input():
     with tf.device("/CPU:0"):
         params = DataConfig(is_training = True)
@@ -54,7 +82,8 @@ def test_yolo_input():
                         fixed_size=params.parser.fixed_size,
                         jitter_im=params.parser.jitter_im,
                         jitter_boxes=params.parser.jitter_boxes,
-                        net_down_scale=params.parser.net_down_scale,
+                        min_level=params.parser.min_level,
+                        max_level=params.parser.max_level,
                         min_process_size=params.parser.min_process_size,
                         max_process_size=params.parser.max_process_size,
                         max_num_instances = params.parser.max_num_instances,
@@ -71,13 +100,33 @@ def test_yolo_input():
     return dataset
 
 if __name__ == "__main__":
-    dataset = test_yolo_input()
+    dataset, dsp = test_yolo_input_task()
 
+    
     for l, (i, j) in enumerate(dataset):
-        boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-        i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
-        plt.imshow(i[0].numpy())
-        plt.show()
+        # print(i.shape)
+        # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
 
-        if l > 10:
+        # print(j.keys())
+        # print(tf.shape(j["grid_form"]['5']))
+    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
+    #     plt.imshow(i[0].numpy())
+    #     plt.show()
+
+        print(l)
+        if l > 100:
+            break
+    
+    for l, (i, j) in enumerate(dsp):
+        # print(i.shape)
+        # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
+
+        # print(j.keys())
+        # print(tf.shape(j["grid_form"]['5']))
+    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
+    #     plt.imshow(i[0].numpy())
+    #     plt.show()
+
+        print(l)
+        if l > 100:
             break

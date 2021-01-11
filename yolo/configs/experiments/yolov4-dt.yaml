@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: mirrored
-  mixed_precision_dtype: float16
+  mixed_precision_dtype: float32
   loss_scale: "dynamic"
   num_gpus: 1
 task:
@@ -23,9 +23,9 @@ task:
       ignore_thresh: 0.7
       loss_type: ciou
       max_boxes: 200
-      use_tie_breaker: true
+      use_nms: true
   train_data:
-    global_batch_size: 8 # 64 batch size 
+    global_batch_size: 4 # 64 batch size 
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
@@ -40,9 +40,10 @@ task:
       image_h: 416
       image_w: 416
       seed: 10
+      use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 4
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -53,7 +54,9 @@ task:
     parser:
       image_h: 416
       image_w: 416
+      fixed_size: true
       shuffle_buffer_size: 10000
+      use_tie_breaker: true
     shuffle_buffer_size: 2
   weight_decay: 0.0005
   init_checkpoint: ''
@@ -62,19 +65,19 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 4004000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 1000 
-  steps_per_loop: 1000
-  validation_interval: 1000
-  summary_interval: 1000
-  checkpoint_interval: 1000
+  train_steps: 8008000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 1000
+  steps_per_loop: 10000
+  validation_interval: 10000 #00
+  summary_interval: 10000
+  checkpoint_interval: 10000
   optimizer_config:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [3200000, 3600000] # [400000, 450000]
+        boundaries: [6400000, 7200000] # [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.0001625, 0.00001625, 0.000001625] #[0.0013, 0.00013, 0.000013]
+        values: [0.00008125, 0.000008125, 0.0000008125] #[0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:

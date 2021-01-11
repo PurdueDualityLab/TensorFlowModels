@@ -217,7 +217,9 @@ class DisplayThread(object):
                     if hasattr(self._frame_buffer, "wait_time"):
                         self._frame_buffer.wait_time = self._wait_time
 
+
                     print("                                 \rshow fps: \033[1;34;40m%d, %0.3f, %0.10f\033[0m " % (self._fps, self._prev_fps, self._wait_time), end="\r")
+                    #print("                                 \rshow fps: \033[1;34;40m%d, %0.3f, %0.10f\033[0m " % (self._fps, self._prev_fps, self._wait_time), end="\n")
                 time.sleep(self._wait_time)
             self._running = False
             cv2.destroyAllWindows()

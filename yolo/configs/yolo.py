@@ -143,10 +143,11 @@ class ModelConfig(hyperparams.Config):
 class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
-    fixed_size: bool = False
+    fixed_size: bool = True
     jitter_im: float = 0.1
     jitter_boxes: float = 0.005
-    net_down_scale: int = 32
+    min_level: int = 3
+    max_level: int = 5
     min_process_size: int = 320
     max_process_size: int = 608
     max_num_instances: int = 200
@@ -158,6 +159,7 @@ class Parser(hyperparams.Config):
     aug_rand_hue: bool = True
     seed: int = 10
     shuffle_buffer_size: int = 10000
+    use_tie_breaker: bool = True
 
 
 @dataclasses.dataclass
@@ -166,7 +168,7 @@ class DataConfig(cfg.DataConfig):
     input_path: str = ''
     tfds_name: str = 'coco'
     tfds_split: str = 'train'
-    global_batch_size: int = 10
+    global_batch_size: int = 2
     is_training: bool = True
     dtype: str = 'float16'
     decoder = None
@@ -195,7 +197,6 @@ class YoloLossLayer(hyperparams.Config):
     loss_type: str = "ciou"
     max_boxes: int = 200
     anchor_generation_scale: int = 416
-    use_tie_breaker: bool = True
     use_nms: bool = False
 
 
@@ -289,6 +290,11 @@ class YoloTask(cfg.TaskConfig):
 
     load_darknet_weights: bool = True
     darknet_load_decoder: bool = True
+
+
+COCO_INPUT_PATH_BASE = 'coco'
+COCO_TRIAN_EXAMPLES = 118287
+COCO_VAL_EXAMPLES = 5000
 
 @exp_factory.register_config_factory('yolo_v4_coco')
 def yolo_v4_coco() -> cfg.ExperimentConfig:

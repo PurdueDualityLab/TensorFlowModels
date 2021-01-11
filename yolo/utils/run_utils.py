@@ -32,3 +32,8 @@ def support_windows():
         mode = c_int(mode.value | 4)
         windll.kernel32.SetConsoleMode(c_int(stdout_handle), mode)
     return
+
+def change_policy(policy):
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    mixed_precision.set_policy(policy)
+    return 

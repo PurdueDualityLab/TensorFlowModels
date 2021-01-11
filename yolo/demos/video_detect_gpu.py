@@ -135,7 +135,7 @@ class FastVideo(object):
         else:
             self._labels = labels
 
-        self._draw_fn = utils.DrawBoxes(classes=classes, labels=self._labels, display_names=print_conf) 
+        self._draw_fn = utils.DrawBoxes(classes=classes, labels=self._labels, display_names=print_conf, thickness=1) 
         #get_draw_fn(self._colors, self._labels, print_conf)
 
         self._load_que = Queue(self._batch_size * scale_que)
@@ -163,6 +163,7 @@ class FastVideo(object):
             image = tf.image.flip_left_right(image)
         image = tf.cast(image, dtype=tf.float32)
         image = image / 255
+        #tf.print(" ", end = "\r")
         return image
 
     def read(self, lock=None):
@@ -248,6 +249,7 @@ class FastVideo(object):
                 # get the images, the predictions placed on the que via the run function (the model)
                 image, pred = self._display_que.get()
                 image = self._draw_fn(image, pred)
+
                 # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
                 for i in range(image.shape[0]):
                     # self._obj_detected = draw_box(image[i], boxes[i],
@@ -301,8 +303,7 @@ class FastVideo(object):
                 self._load_que.put(image)
                 f = datetime.datetime.now()
             with tf.device(self._gpu_device):
-                pimage = tf.image.resize(image,
-                                         (self._p_width, self._p_height))
+                pimage = tf.image.resize(image,(self._p_width, self._p_height))
                 pimage = tf.expand_dims(pimage, axis=0)
                 if hasattr(model, "predict"):
                     predfunc = model.predict
@@ -494,16 +495,63 @@ if __name__ == "__main__":
     prep_gpu()
 
     from tensorflow.keras.mixed_precision import experimental as mixed_precision
-    mixed_precision.set_policy("float16")
+    mixed_precision.set_policy("mixed_float16")
+    # mixed_precision.set_policy("float32")
 
-    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4))  
+    config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4', 
+                            min_level=3, 
+                            norm_activation = exp_cfg.common.NormActivation(activation="mish"), 
+                            #norm_activation = exp_cfg.common.NormActivation(activation="leaky"), 
+                            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+                            #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+                            _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+                            filter = exp_cfg.YoloLossLayer(use_nms=True)
+                            )) 
+    
+
+    # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', 
+    #                     min_level=3, 
+    #                     #norm_activation = exp_cfg.common.NormActivation(activation="mish"), 
+    #                     norm_activation = exp_cfg.common.NormActivation(activation="leaky"), 
+    #                     #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+    #                     #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+    #                     _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
+    #                     filter = exp_cfg.YoloLossLayer(use_nms=False)
+    #                     ))   
     task = YoloTask(config)
     model = task.build_model()
+    # #model.load_weights("v4tiny_logs/ckpt-31000")
+
+    # optimizer = tf.keras.mixed_precision.experimental.LossScaleOptimizer(tf.keras.optimizers.SGD(), "dynamic")
+    
+
+    # ckpt = tf.train.Checkpoint(model = model, optimizer = optimizer)
+    # status = ckpt.restore(tf.train.latest_checkpoint("yolov4-logs")).expect_partial()
+    # print(dir(status))
+    
+    # manager = tf.train.CheckpointManager(ckpt, "v4tiny_logs", 3)
+    # manager.restore_or_initialize()
+    # print(dir(manager))
+    # status.assert_consumed()
+
     task.initialize(model)
 
-    # name = "saved_models/v4/regular"
+    # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
+    # name = "saved_models/v3/tflite-tiny-no-nms"
+    # model.save(name, overwrite=True)
     # new_name = f"{name}_tensorrt"
-    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+    # model.convertModel()
+    # model.compile()
+    # model.summary()
+    # model.set_postprocessor_fn(func)
+
+    # #name = "saved_models/v4/tflite-regualr-no-nms"
+    # name = "saved_models/v4/tflite-tiny-no-nms"
+    # # name = "saved_models/v3/tflite-regular-no-nms"
+    # # name = "saved_models/v3/tflite-tiny-no-nms"
+    # new_name = f"{name}_tensorrt"
+    # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
     # model.compile()
     # model.summary()
     # model.set_postprocessor_fn(func)
@@ -514,7 +562,7 @@ if __name__ == "__main__":
         process_width=416,
         process_height=416,
         preprocess_with_gpu=True,
-        print_conf=False,
+        print_conf=True,
         max_batch=5,
         disp_h=416,
         scale_que=1,
