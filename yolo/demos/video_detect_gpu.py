@@ -386,7 +386,7 @@ class FastVideo(object):
                         self._prev_display_fps = self._display_fps * 0.1 + 0.9 * self._prev_display_fps
 
                 #print everything
-                #self.print_opt()
+                self.print_opt()
                 #self._prev_display_fps = self._display_fps * 0.4 + 0.6 * self._prev_display_fps
                 if not self._running:
                     raise
@@ -505,8 +505,9 @@ if __name__ == "__main__":
                             #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
                             #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
                             _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
-                            filter = exp_cfg.YoloLossLayer(use_nms=False)
+                            filter = exp_cfg.YoloLossLayer(use_nms=True)
                             )) 
+    
 
     # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', 
     #                     min_level=3, 
@@ -519,6 +520,20 @@ if __name__ == "__main__":
     #                     ))   
     task = YoloTask(config)
     model = task.build_model()
+    # #model.load_weights("v4tiny_logs/ckpt-31000")
+
+    # optimizer = tf.keras.mixed_precision.experimental.LossScaleOptimizer(tf.keras.optimizers.SGD(), "dynamic")
+    
+
+    # ckpt = tf.train.Checkpoint(model = model, optimizer = optimizer)
+    # status = ckpt.restore(tf.train.latest_checkpoint("yolov4-logs")).expect_partial()
+    # print(dir(status))
+    
+    # manager = tf.train.CheckpointManager(ckpt, "v4tiny_logs", 3)
+    # manager.restore_or_initialize()
+    # print(dir(manager))
+    # status.assert_consumed()
+
     task.initialize(model)
 
     # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))

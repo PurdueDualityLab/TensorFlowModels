@@ -61,7 +61,6 @@ class YoloHead(tf.keras.layers.Layer):
         self._head = dict()
         for key in self.key_list: 
             self._head[key] = nn_blocks.ConvBN(**self._base_config)
-        self._get_filtering_attributes(xy_exponential=self._xy_exponential, exp_base=self._exp_base, xy_scale_base=self._xy_scale_base)
         return 
     
     def call(self, inputs):
@@ -70,58 +69,9 @@ class YoloHead(tf.keras.layers.Layer):
             outputs[key] = self._head[key](inputs[key])
         return outputs
 
-    def _get_filtering_attributes(self,
-                                  xy_exponential=False,
-                                  exp_base=2,
-                                  xy_scale_base="default_value"):
-        start = 0
-        boxes = {}
-        path_scales = {}
-        scale_x_y = {}
-
-        if xy_scale_base == "default_base":
-            xy_scale_base = 0.05
-            xy_scale_base = xy_scale_base / (
-                self._boxes_per_level *
-                (self._max_level - self._min_level + 1) - 1)
-        elif xy_scale_base == "default_value":
-            xy_scale_base = 0.00625
-
-        for i in range(self._min_level, self._max_level + 1):
-            boxes[str(i)] = list(range(start, self._boxes_per_level + start))
-            path_scales[str(i)] = 2**i
-            if xy_exponential:
-                scale_x_y[str(i)] = 1.0 + xy_scale_base * (exp_base**i)
-            else:
-                scale_x_y[str(i)] = 1.0
-            start += self._boxes_per_level
-        
-        self._masks = boxes
-        self._path_scales = path_scales
-        self._x_y_scales= scale_x_y
-        return 
-
     @property
     def output_depth(self):
         return (self._classes + self._output_extras + 5) * self._boxes_per_level
-
-    @property
-    def masks(self):
-        if self._masks == None: 
-            raise Exception("model has to be built before the masks can be determined")
-        return self._masks
-
-    @property
-    def path_scales(self):
-        if self._path_scales == None: 
-            raise Exception("model has to be built before the path_scales can be determined")
-        return self._path_scales
-
-    @property
-    def scale_xy(self):
-        if self._x_y_scales == None: 
-            raise Exception("model has to be built before the x_y_scales can be determined")
-        return self._x_y_scales
     
     @property
     def num_boxes(self):
