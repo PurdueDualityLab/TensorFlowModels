@@ -11,19 +11,17 @@ from official.vision.beta.dataloaders import decoder
 
 def _generate_source_id(image_bytes):
   return tf.strings.as_string(
-      tf.strings.to_hash_bucket_fast(image_bytes, 2 ** 63 - 1))
+      tf.strings.to_hash_bucket_fast(image_bytes, 2**63 - 1))
 
 
 class MSCOCODecoder(decoder.Decoder):
   """Tensorflow Example proto decoder."""
 
-  def __init__(self,
-               include_mask=False,
-               regenerate_source_id=False):
+  def __init__(self, include_mask=False, regenerate_source_id=False):
     self._include_mask = include_mask
     self._regenerate_source_id = regenerate_source_id
     if include_mask:
-        raise ValueError("TensorFlow Datasets doesn't support masks")
+      raise ValueError("TensorFlow Datasets doesn't support masks")
 
   def _decode_image(self, parsed_tensors):
     """Decodes the image and set its static shape."""
@@ -70,11 +68,11 @@ class MSCOCODecoder(decoder.Decoder):
     """
     parsed_tensors = serialized_example
     image = self._decode_image(parsed_tensors)
-    
+
     if "image/id" in parsed_tensors.keys():
       source_id = parsed_tensors['image/id']
     else:
-      ime = tf.io.encode_jpeg(image, quality = 100)
+      ime = tf.io.encode_jpeg(image, quality=100)
       source_id = _generate_source_id(ime)
 
     boxes = self._decode_boxes(parsed_tensors)
@@ -83,9 +81,9 @@ class MSCOCODecoder(decoder.Decoder):
 
     if "is_crowd" in parsed_tensors["objects"].keys():
       is_crowd = tf.cond(
-        tf.greater(tf.shape(classes)[0], 0),
-        lambda: tf.cast(parsed_tensors['objects']['is_crowd'], dtype=tf.bool),
-        lambda: tf.zeros_like(classes, dtype=tf.bool))
+          tf.greater(tf.shape(classes)[0], 0),
+          lambda: tf.cast(parsed_tensors['objects']['is_crowd'], dtype=tf.bool),
+          lambda: tf.zeros_like(classes, dtype=tf.bool))
     else:
       is_crowd = tf.zeros_like(classes, dtype=tf.bool)
 

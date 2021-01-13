@@ -6,9 +6,9 @@ from skimage import io
 import cv2
 prep_gpu()
 
-
 import traceback as st
 import os
+
 
 def create_metadata(model_file_name, label_map_file_name, num_labels):
   from tflite_support import flatbuffers
@@ -117,13 +117,14 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
 
   subgraph = _metadata_fb.SubGraphMetadataT()
   subgraph.inputTensorMetadata = [input_meta]
-  subgraph.outputTensorMetadata = [bbox_meta, classes_meta, confidence_meta, num_dets_stats] # raw_output_meta
+  subgraph.outputTensorMetadata = [
+      bbox_meta, classes_meta, confidence_meta, num_dets_stats
+  ]  # raw_output_meta
   model_meta.subgraphMetadata = [subgraph]
 
   b = flatbuffers.Builder(0)
   b.Finish(
-      model_meta.Pack(b),
-      _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
+      model_meta.Pack(b), _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
   metadata_buf = b.Output()
 
   populator = _metadata.MetadataPopulator.with_model_file(model_file_name)
@@ -131,30 +132,45 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
   populator.load_associated_files([label_map_file_name])
   populator.populate()
 
+
 def conversion(model):
+
   @tf.function
   def run(image):
     with tf.device("cpu:0"):
       image = tf.cast(image, tf.float32)
-      image = image/tf.fill(tf.shape(image), 255.0)
-      pred = model.call(image, training = False)
-      pred = {"bbox": tf.cast(pred["bbox"], tf.float32), "classes":tf.cast(pred["classes"], tf.float32), "confidence":tf.cast(pred["confidence"], tf.float32), "num_dets":tf.cast(pred["num_dets"], tf.float32)}
+      image = image / tf.fill(tf.shape(image), 255.0)
+      pred = model.call(image, training=False)
+      pred = {
+          "bbox": tf.cast(pred["bbox"], tf.float32),
+          "classes": tf.cast(pred["classes"], tf.float32),
+          "confidence": tf.cast(pred["confidence"], tf.float32),
+          "num_dets": tf.cast(pred["num_dets"], tf.float32)
+      }
     return pred
+
   return run
 
+
 def get_rep_data():
-  import tensorflow_datasets as tfds 
-  dataset = tfds.load("coco", split = "train", shuffle_files = True)
+  import tensorflow_datasets as tfds
+  dataset = tfds.load("coco", split="train", shuffle_files=True)
   dataset = dataset.take(100)
+
   def representative_dataset():
     for data in dataset:
-      data = tf.cast(tf.expand_dims(tf.image.resize(data["image"], (416, 416)), axis = 0), tf.uint8)
+      data = tf.cast(
+          tf.expand_dims(tf.image.resize(data["image"], (416, 416)), axis=0),
+          tf.uint8)
       yield [data]
+
   return representative_dataset
 
+
 def url_to_image(url):
-	image = io.imread(url)
-	return image
+  image = io.imread(url)
+  return image
+
 
 def uniary_convert():
   with tf.device("gpu:0"):
@@ -172,27 +188,33 @@ def uniary_convert():
     #                       filter = exp_cfg.YoloLossLayer(use_nms=False)
     #                       ))
     config = exp_cfg.YoloTask(
-    model=exp_cfg.Yolo(_input_size = input_size,
-                      base='v3',
-                      min_level=3,
-                      norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-                      _boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-                      filter = exp_cfg.YoloLossLayer(use_nms=False)
-                      ))
+        model=exp_cfg.Yolo(
+            _input_size=input_size,
+            base='v3',
+            min_level=3,
+            norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
+            _boxes=[
+                "(10, 13)", "(16, 30)", "(33, 23)", "(30, 61)", "(62, 45)",
+                "(59, 119)", "(116, 90)", "(156, 198)", "(373, 326)"
+            ],
+            filter=exp_cfg.YoloLossLayer(use_nms=False)))
     task = YoloTask(config)
     model = task.build_model()
     task.initialize(model)
     #model.build((1, 416, 416, 3))
-    model(tf.ones((1, 416, 416, 3), dtype = tf.float32), training = False)
+    model(tf.ones((1, 416, 416, 3), dtype=tf.float32), training=False)
 
-    image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
+    image = url_to_image(
+        "https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg"
+    )
     image = cv2.resize(image, (416, 416))
-    image = tf.expand_dims(image, axis = 0)
+    image = tf.expand_dims(image, axis=0)
     func = conversion(model)
     model.summary()
 
     # Convert the model
-    converter = tf.lite.TFLiteConverter.from_concrete_functions([func.get_concrete_function(image)])
+    converter = tf.lite.TFLiteConverter.from_concrete_functions(
+        [func.get_concrete_function(image)])
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     #converter.representative_dataset = get_rep_data()
 
@@ -207,6 +229,7 @@ def uniary_convert():
     with open('detect.tflite', 'wb') as f:
       f.write(tflite_model)
 
+
 if __name__ == "__main__":
   uniary_convert()
 
@@ -217,6 +240,5 @@ if __name__ == "__main__":
   #     num_labels = len(lines)
   #     label_map.writelines(lines)
   # Save the model.
-
 
   #create_metadata('detect-large.tflite', 'saved_models/v4/tiny_no_nms/label_map.txt', num_labels)
