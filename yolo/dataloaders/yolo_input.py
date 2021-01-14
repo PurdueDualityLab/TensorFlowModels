@@ -139,8 +139,6 @@ class Parser(parser.Parser):
         height = shape[1]
 
         image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(image, boxes, width = width, height = height, target_dim = self._max_process_size)
-        
-        tf.print(tf.shape(image))
 
         if self._aug_rand_brightness:
             image = tf.image.random_brightness(image=image,
@@ -153,7 +151,6 @@ class Parser(parser.Parser):
         image = tf.clip_by_value(image, 0.0, 1.0)
         image_shape = tf.shape(image)[:2]
 
-        self._random_flip = False
         if self._random_flip:
             image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes, seed=self._seed)
 

@@ -114,13 +114,13 @@ if __name__ == "__main__":
         if l > 10:
             break
     
-    for l, (i, j) in enumerate(dsp):
-        print(j["width"], j["height"])
+    # for l, (i, j) in enumerate(dsp):
+    #     print(j["width"], j["height"])
 
-        boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-        i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
-        plt.imshow(i[0].numpy())
-        plt.show()
+    #     boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
+    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
+    #     plt.imshow(i[0].numpy())
+    #     plt.show()
 
-        if l > 10:
-            break
+    #     if l > 10:
+    #         break
