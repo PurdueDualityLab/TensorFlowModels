@@ -96,8 +96,6 @@ class Parser(parser.Parser):
         self._aug_rand_zoom = aug_rand_zoom
         self._aug_rand_hue = aug_rand_hue
 
-        self._builder = preprocessing_ops.GTBuilder(self._num_classes, self._use_tie_breaker)
-
         self._seed = seed
 
     def _build_grid(self, raw_true, width, batch = False, use_tie_breaker = False):
@@ -136,7 +134,14 @@ class Parser(parser.Parser):
 
         shape = tf.shape(data["image"])
         image = data["image"] / 255
-        image = tf.image.resize(image, (self._max_process_size, self._max_process_size))
+        boxes = data['groundtruth_boxes']
+        width = shape[0]
+        height = shape[1]
+
+        image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(image, boxes, width = width, height = height, target_dim = self._max_process_size)
+        
+        tf.print(tf.shape(image))
+
         if self._aug_rand_brightness:
             image = tf.image.random_brightness(image=image,
                                                max_delta=.1)  # Brightness
@@ -146,7 +151,6 @@ class Parser(parser.Parser):
         if self._aug_rand_hue:
             image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
         image = tf.clip_by_value(image, 0.0, 1.0)
-        boxes = data['groundtruth_boxes']
         image_shape = tf.shape(image)[:2]
 
         self._random_flip = False
@@ -184,6 +188,7 @@ class Parser(parser.Parser):
                                                                 default_height=self._image_h,
                                                                 target_width=randscale * self._net_down_scale,
                                                                 target_height=randscale * self._net_down_scale)
+        image = tf.image.resize(image, (416,416), preserve_aspect_ratio=False)
 
         best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width = self._image_w, height = self._image_h)
 
@@ -201,8 +206,8 @@ class Parser(parser.Parser):
             "area": area,
             "is_crowd": is_crowd,
             "best_anchors": best_anchors,
-            "width": shape[1],
-            "height": shape[2],
+            "width": width,
+            "height": height,
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
 
@@ -223,8 +228,13 @@ class Parser(parser.Parser):
         """
 
         shape = tf.shape(data["image"])
-        image = preprocessing_ops.scale_image(data["image"],resize=True,w=self._image_w,h=self._image_h)
-        boxes = box_utils.yxyx_to_xcycwh(data["groundtruth_boxes"])
+        image = data["image"] / 255
+        boxes = data['groundtruth_boxes']
+        width = shape[0]
+        height = shape[1]
+
+        image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(image, boxes, width = width, height = height, target_dim = self._image_w)
+        boxes = box_utils.yxyx_to_xcycwh(boxes)
         
         best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width = self._image_w, height = self._image_h)
         boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)

@@ -542,7 +542,7 @@ if __name__ == "__main__":
     # model.set_postprocessor_fn(func)
 
     cap = FastVideo(
-        "videos/nyc2.mp4",
+        0,
         model=model,
         process_width=416,
         process_height=416,

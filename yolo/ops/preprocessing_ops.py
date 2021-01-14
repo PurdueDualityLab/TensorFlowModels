@@ -82,6 +82,41 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis = 0):
     value = tf.concat([value, pad_tensor], axis=pad_axis)
     return value
 
+def fit_preserve_aspect_ratio(image, boxes, width = None, height = None, target_dim = None):
+    if width is None or height is None:
+        shape = tf.shape(data["image"])
+        if tf.shape(shape)[0] == 4:
+            width = shape[1]
+            height = shape[2]
+        else:
+            width = shape[0]
+            height = shape[1]
+    
+    clipper = tf.math.maximum(width, height)
+    if target_dim is None:
+        target_dim = clipper
+        
+    pad_width = clipper - width
+    pad_height = clipper - height
+    image = tf.image.pad_to_bounding_box(image, pad_width//2, pad_height//2, clipper, clipper)
+    
+    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(boxes, 4, axis = -1)
+
+    y *= tf.cast(width/clipper, tf.float32)
+    x *= tf.cast(height/clipper, tf.float32)
+    
+    y += tf.cast((pad_width/clipper)/2, tf.float32)
+    x += tf.cast((pad_height/clipper)/2, tf.float32)
+
+    h *= tf.cast(width/clipper, tf.float32)
+    w *= tf.cast(height/clipper, tf.float32)
+
+    boxes = tf.concat([x, y, w, h], axis = -1)
+
+    boxes = box_utils.xcycwh_to_yxyx(boxes)
+    image = tf.image.resize(image, (target_dim, target_dim))
+    return image, boxes 
 
 def get_best_anchor(y_true, anchors, width = 1, height = 1):
     """
@@ -371,96 +406,3 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breake
         update = update.stack()
         full = tf.tensor_scatter_nd_add(full, update_index, update)
     return full
-
-
-
-
-class GTBuilder(object):
-    def __init__(self, num_classes, use_tie_breaker):
-        self._use_tie_breaker = use_tie_breaker
-        self._num_classes = num_classes
-        return 
-
-    def gt(self, y_true, mask, width, dtype):
-        """
-        convert ground truth for use in loss functions
-        Args: 
-            y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-            mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total. 
-            size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
-        
-        Return:
-            tf.Tensor[] of shape [size, size, #of_anchors, 4, 1, num_classes]
-        """
-        boxes = tf.cast(y_true["bbox"], dtype)
-        classes = tf.one_hot(tf.cast(y_true["classes"], dtype=tf.int32),depth=self._num_classes,dtype=dtype)
-        anchors = tf.cast(y_true["best_anchors"], dtype)
-
-        num_boxes = tf.shape(boxes)[0]
-        len_masks = tf.shape(mask)[0]
-       
-        full = tf.zeros([width, width, len_masks, self._num_classes + 4 + 1], dtype=dtype)
-        depth_track = tf.zeros((width, width, len_masks), dtype=tf.int32)
-    
-        x = tf.cast(boxes[..., 0] * tf.cast(width, dtype=dtype), dtype=tf.int32)
-        y = tf.cast(boxes[..., 1] * tf.cast(width, dtype=dtype), dtype=tf.int32)
-        anchors = tf.repeat(tf.expand_dims(anchors, axis=-1), len_masks, axis=-1)
-
-        update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-        update = tf.TensorArray(dtype, size=0, dynamic_size=True)
-        
-        const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
-        mask = tf.cast(mask, dtype=dtype)
-        anchors = tf.cast(anchors, dtype=dtype)
-
-        i = 0
-        anchor_id = 0
-        for box_id in range(num_boxes):
-            if K.all(tf.math.equal(boxes[box_id, 2:4], 0)):
-                continue
-            if K.any(tf.math.less(boxes[box_id, 0:2], 0.0)) or K.any(tf.math.greater_equal(boxes[box_id, 0:2], 1.0)):
-                continue   
-            if self._use_tie_breaker:
-                for anchor_id in range(tf.shape(anchors)[-1]):
-                    index = tf.math.equal(anchors[box_id, anchor_id], mask)
-
-                    if K.any(index):
-                        uid = 1    
-                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
-                        used = depth_track[y[box_id], x[box_id], p]
-
-                        # tf.print(used)
-                   
-                        if anchor_id == 0:
-                            # write the box to the update list
-                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
-                            """peculiar"""
-                            update_index = update_index.write(i,[y[box_id], x[box_id], p])
-                            value = K.concatenate([boxes[box_id], const, classes[box_id]])
-                            update = update.write(i, value)
-                        elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
-                            # write the box to the update list
-                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
-                            """peculiar"""
-                            uid = 2
-                            update_index = update_index.write(i,[y[box_id], x[box_id], p])
-                            value = K.concatenate([boxes[box_id], const, classes[box_id]])
-                            update = update.write(i, value)
-                        
-                        depth_track = tf.tensor_scatter_nd_update(depth_track, [[y[box_id], x[box_id], p]], [uid])
-                        i += 1
-            else:
-                index = tf.math.equal(anchors[box_id, 0], mask)
-                if K.any(index):
-                    p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
-                    update_index = update_index.write(i, [ y[ box_id], x[ box_id], p])
-                    value = K.concatenate([boxes[ box_id], const, classes[ box_id]])
-                    update = update.write(i, value)
-                    i += 1    
-
-        if tf.math.greater(update_index.size(), 0):
-            update_index = update_index.stack()
-            update = update.stack()
-            full = tf.tensor_scatter_nd_add(full, update_index, update)        
-            
-        return full
