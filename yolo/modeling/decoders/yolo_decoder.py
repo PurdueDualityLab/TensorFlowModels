@@ -109,7 +109,6 @@ class YoloFPN(tf.keras.Model):
         return list(reversed(depths))
 
     def build(self, inputs):
-        tf.print(inputs)
         """ use config dictionary to generate all important attributes for head construction """
         keys = [int(key) for key in inputs.keys()]
         self._min_level = min(keys)
@@ -123,7 +122,6 @@ class YoloFPN(tf.keras.Model):
         for level, depth in zip(
                 reversed(range(self._min_level, self._max_level + 1)),
                 self._depths):
-            print(level, depth)
 
             if level != self._max_level:
                 self.resamples[str(level)] = nn_blocks.RouteMerge(
@@ -204,7 +202,6 @@ class YoloRoutedDecoder(tf.keras.Model):
                 norm_momentum=self._norm_momentum)
 
     def build(self, inputs):
-        # tf.print(inputs)
         keys = [int(key) for key in inputs.keys()]
         self._min_level = min(keys)
         self._max_level = max(keys)
@@ -218,7 +215,6 @@ class YoloRoutedDecoder(tf.keras.Model):
         for level, depth in zip(
                 reversed(range(self._min_level, self._max_level + 1)),
                 self._depths):
-            print(level, depth)
             if level == self._max_level:
                 self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
                     filters=depth,
@@ -302,7 +298,6 @@ class YoloFPNDecoder(tf.keras.Model):
         return depths
 
     def build(self, inputs):
-        tf.print(inputs)
         keys = [int(key) for key in inputs.keys()]
         self._min_level = min(keys)
         self._max_level = max(keys)
@@ -392,7 +387,6 @@ class YoloDecoder(tf.keras.Model):
                 **self._base_config)
 
     def build(self, inputs):
-        tf.print(inputs)
         if self._embed_fpn:
             self._fpn = YoloFPN(fpn_path_len=self._fpn_path_len, **self._base_config)
             self._decoder = YoloFPNDecoder(**self._decoder_config)

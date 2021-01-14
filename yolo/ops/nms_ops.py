@@ -324,13 +324,9 @@ def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
     iou_test = 1 - tf.cast(tf.reduce_any(iou_mask, axis = -2), boxes.dtype)
     #iou_mean = tf.reduce_mean(iou_sum)
 
-    tf.print(iou_test, summarize = -1)
-
     boxes *= tf.expand_dims(iou_test, axis = -1)
     classes *= tf.cast(iou_test, classes.dtype)
     confidence *= tf.cast(iou_test, confidence.dtype)
-
-    tf.print(classes, summarize = -1)
 
     return boxes, classes, confidence
 
@@ -365,13 +361,14 @@ def segment_nms2(boxes, classes, confidence, k, class_thresh, iou_thresh):
     
     # option 2
     # raw = tf.cast(can_suppress_others, boxes.dtype)
-    # tf.print(tf.shape(raw))
-    
+   
     # option 3
     # can_suppress_others = tf.expand_dims(can_suppress_others, axis = -1)
     # supressed_i = can_suppress_others * iou
     # iou = iou_sum - tf.reduce_sum(supressed_i, [1])
     # raw = tf.cast(iou <= 0 , boxes.dtype)
+
+     # tf.print(tf.shape(raw))
 
     boxes *= tf.expand_dims(raw, axis = -1)
     confidence *= tf.cast(raw, confidence.dtype)
@@ -388,8 +385,7 @@ def nms(boxes, classes, confidence, k, class_thresh, iou_thresh, sorted = False,
     if not sorted:
         confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
         classes = tf.squeeze(classes, axis = -1)
-    
-    # tf.print("here")
+
     #box_l, class_l, conf_l = _nms(boxes, classes, confidence, k, class_thresh, iou_thresh)
     box_l, class_l, conf_l = segment_nms2(boxes, classes, confidence, k, class_thresh, iou_thresh)
     conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)

@@ -38,7 +38,7 @@ class Parser(parser.Parser):
         aug_rand_hue=True,
         anchors=None,
         seed=10,
-                ):
+        dtype="float16"):
         """Initializes parameters for parsing annotations in the dataset.
         Args:
             image_w: a `Tensor` or `int` for width of input image.
@@ -71,9 +71,6 @@ class Parser(parser.Parser):
         self._net_down_scale = 2 ** max_level
 
         self._num_classes = num_classes
-        self._key_dict = {f"{key}":key for key in range(min_level, max_level + 1)}
-        print(self._key_dict)
-
         self._image_w = (image_w //self._net_down_scale) * self._net_down_scale
         self._image_h = self._image_w if image_h == None else ( image_h // self._net_down_scale) * self._net_down_scale
 
@@ -98,9 +95,17 @@ class Parser(parser.Parser):
 
         self._seed = seed
 
+        if dtype == "float16":
+            self._dtype = tf.float16
+        elif dtype == "bfloat16":
+            self._dtype = tf.bfloat16
+        elif dtype == "float32":
+            self._dtype = tf.float32
+        else:
+            raise Exception("Unsupported datatype used in parser only {float16, bfloat16, or float32}")
+
     def _build_grid(self, raw_true, width, batch = False, use_tie_breaker = False):
         mask = self._masks
-        print(raw_true["bbox"].dtype)
         for key in self._masks.keys():
             if not batch: 
                 mask[key] = preprocessing_ops.build_grided_gt(raw_true, 
@@ -116,11 +121,8 @@ class Parser(parser.Parser):
                                      self._num_classes, 
                                      raw_true["bbox"].dtype, 
                                      use_tie_breaker)
-            # tf.print(key, "  ", tf.shape(mask[key]))
-            # width_ = width//(2 ** int(key))
-            # dtype = raw_true["bbox"].dtype
-            # mask[key] = self._builder.gt(raw_true, self._masks[key], width_, dtype)
-
+            
+            mask[key] = tf.cast(mask[key], self._dtype)
         return mask
 
     def _parse_train_data(self, data):
@@ -198,11 +200,11 @@ class Parser(parser.Parser):
 
         labels = {
             "source_id": data["source_id"],
-            "bbox": boxes,
-            "classes": classes,
-            "area": area,
+            "bbox": tf.cast(boxes, self._dtype),
+            "classes": tf.cast(classes, self._dtype),
+            "area": tf.cast(area, self._dtype),
             "is_crowd": is_crowd,
-            "best_anchors": best_anchors,
+            "best_anchors": tf.cast(best_anchors, self._dtype),
             "width": width,
             "height": height,
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
@@ -241,17 +243,30 @@ class Parser(parser.Parser):
         is_crowd = preprocessing_ops.pad_max_instances(tf.cast(data["groundtruth_is_crowd"], tf.int32),self._max_num_instances, 0)
         
         
+        # labels = {
+        #     "source_id": data["source_id"],
+        #     "bbox": boxes,
+        #     "classes": classes,
+        #     "area": area,
+        #     "is_crowd": is_crowd,
+        #     "best_anchors": best_anchors,
+        #     "width": shape[1],
+        #     "height": shape[2],
+        #     "num_detections": tf.shape(data["groundtruth_classes"])[0],
+        # }
+
         labels = {
             "source_id": data["source_id"],
-            "bbox": boxes,
-            "classes": classes,
-            "area": area,
+            "bbox": tf.cast(boxes, self._dtype),
+            "classes": tf.cast(classes, self._dtype),
+            "area": tf.cast(area, self._dtype),
             "is_crowd": is_crowd,
-            "best_anchors": best_anchors,
-            "width": shape[1],
-            "height": shape[2],
+            "best_anchors": tf.cast(best_anchors, self._dtype),
+            "width": width,
+            "height": height,
             "num_detections": tf.shape(data["groundtruth_classes"])[0],
         }
+
 
         # if self._fixed_size:
         grid = self._build_grid(labels, self._image_w, batch=False, use_tie_breaker = self._use_tie_breaker)

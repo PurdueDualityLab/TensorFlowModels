@@ -51,7 +51,7 @@ def get_darknet53_tf_format(net, only_weights=True):
                 weights.append(block.get_weights())
             else:
                 weights.append(interleve_weights(block))
-    print("converted/interleved weights for tensorflow format")
+    #print("converted/interleved weights for tensorflow format")
     return new_net, weights
 
 
@@ -71,13 +71,13 @@ def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
         encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
     # set backbone weights
-    print(
-        f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}"
-    )
+    # print(
+    #     f"\nno. layers: {len(backbone.layers)}, no. weights: {len(weights_encoder)}"
+    # )
     set_darknet_weights(backbone, weights_encoder)
 
     backbone.trainable = False
-    print(f"\nsetting backbone.trainable to: {backbone.trainable}\n")
+    # print(f"\nsetting backbone.trainable to: {backbone.trainable}\n")
     return
 
 
@@ -86,9 +86,9 @@ def load_weights_dnHead(head, decoder, v4=True):
     decoder, weights_decoder, head_layers, head_weights = get_decoder_weights(
         decoder)
     # set detection head weights
-    print(
-        f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}"
-    )
+    # print(
+    #     f"\nno. layers: {len(head.layers)}, no. weights: {len(weights_decoder)}"
+    # )
     flat_full = list(flatten_model(head, r_list=False))
     flat_main = flat_full[:-3]
     flat_head = flat_full[-3:]
@@ -97,14 +97,14 @@ def load_weights_dnHead(head, decoder, v4=True):
     if v4:
         flat_main.insert(1, flat_main[-1])
 
-    print(len(flat_main), len(decoder))
-    print(len(flat_head), len(head_layers))
+    # print(len(flat_main), len(decoder))
+    # print(len(flat_head), len(head_layers))
 
     set_darknet_weights(head, weights_decoder, flat_model=flat_main)
     set_darknet_weights_head(flat_head, head_weights)
 
     head.trainable = False
-    print(f"\nsetting head.trainable to: {head.trainable}\n")
+    # print(f"\nsetting head.trainable to: {head.trainable}\n")
     return
 
 
@@ -130,8 +130,8 @@ def flatten_model(model, r_list=True):
 def set_darknet_weights_head(flat_head, weights_head):
     for layer in flat_head:
         weights = layer.get_weights()
-        for weight in weights:
-            print(weight.shape)
+        # for weight in weights:
+        #     print(weight.shape)
         weight_depth = weights[0].shape[-2]
         for weight in weights_head:
             if weight[0].shape[-2] == weight_depth:
@@ -148,9 +148,9 @@ def set_darknet_weights(model, weights_list, flat_model=None):
         zip_fill = flatten_model(model)
     else:
         zip_fill = flat_model
-    for i, (layer, weights) in enumerate(zip(zip_fill, weights_list)):
-        print(layer.name, len(weights))
-        #layer.set_weights(weights)
+    # for i, (layer, weights) in enumerate(zip(zip_fill, weights_list)):
+    #     print(layer.name, len(weights))
+    #     # layer.set_weights(weights)
     return
 
 

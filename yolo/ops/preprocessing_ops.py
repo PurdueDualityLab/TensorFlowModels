@@ -240,15 +240,10 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
             for anchor_id in range(tf.shape(anchors)[-1]):
                 index = tf.math.equal(anchors[box_id, anchor_id],mask)
                 if K.any(index):
-                    #tf.print(anchor_id, anchors[ box_id, anchor_id])
                     p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),dtype=tf.int32)
                     uid = 1
                     used = depth_track[y[box_id], x[box_id], p]
                     
-                    # tf.print(p.shape, p, y[box_id], x[box_id])
-                    # tf.print(used)
-                    
-
                     if anchor_id == 0:
                         # write the box to the update list
                         # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
@@ -349,7 +344,6 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breake
                     index = tf.math.equal(anchors[batch, box_id, anchor_id],
                                           mask)
                     if K.any(index):
-                        #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
                         p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
                                     dtype=tf.int32)
                         uid = 1

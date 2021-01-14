@@ -44,6 +44,7 @@ task:
       aug_rand_zoom: true
       aug_rand_hue: true
       seed: 10
+      dtype: float16
       use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
@@ -56,14 +57,15 @@ task:
     input_path: ''
     is_training: false
     parser:
-      image_h: 608
-      image_w: 608
+      image_h: 416
+      image_w: 416
       aug_rand_saturation: true
       aug_rand_brightness: true
       aug_rand_zoom: true
       aug_rand_hue: true
       shuffle_buffer_size: 10000
       use_tie_breaker: true
+      dtype: float16
     shuffle_buffer_size: 2
   weight_decay: 0.0005
   init_checkpoint: ''
@@ -73,7 +75,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 500 # 5063 #625
+  validation_steps: 2000 # 5063 #625
   steps_per_loop: 10000
   validation_interval: 10
   summary_interval: 10000

@@ -51,7 +51,7 @@ class ModelConfig(hyperparams.Config):
         #model_cfg = getattr(self.model, self.model.type)
         #model_kwargs = model_cfg.as_dict()
         model_kwargs = super().as_dict()
-        print(model_kwargs)
+        # print(model_kwargs)
         if self._boxes != None:
             model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
         else:
@@ -103,7 +103,7 @@ class ModelConfig(hyperparams.Config):
             return None
         boxes = []
         for box in self._boxes:
-            print(box)
+            # print(box)
             if isinstance(box, list) or isinstance(box, tuple):
                 boxes.append(box)
             elif isinstance(box, str):
@@ -119,13 +119,13 @@ class ModelConfig(hyperparams.Config):
                     boxes.append(f)
             elif isinstance(box, int):
                 raise IOError("unsupported input type, only strings or tuples")
-        print(boxes)
+        # print(boxes)
         return boxes
 
     def set_boxes(self, box_list):
         setter = []
         for value in box_list:
-            print(value)
+            # print(value)
             value = str(list(value))
             setter.append(value[1:-1])
         self._boxes = setter
@@ -144,7 +144,7 @@ class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
     fixed_size: bool = True
-    jitter_im: float = 0.1
+    jitter_im: float = 0.3
     jitter_boxes: float = 0.005
     min_level: int = 3
     max_level: int = 5
@@ -160,6 +160,7 @@ class Parser(hyperparams.Config):
     seed: int = 10
     shuffle_buffer_size: int = 10000
     use_tie_breaker: bool = True
+    dtype: str = "float16"
 
 
 @dataclasses.dataclass

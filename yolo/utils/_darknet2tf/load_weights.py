@@ -53,7 +53,7 @@ def get_darknet53_tf_format(net, only_weights=True):
                 weights.append(block.get_weights())
             else:
                 weights.append(interleve_weights(block))
-    print("converted/interleved weights for tensorflow format")
+    # print("converted/interleved weights for tensorflow format")
     return new_net, weights
 
 
@@ -203,11 +203,11 @@ def load_weights_v4head(model, net):
     for block in blocks:
         for layer in block:
             cfg = convs.pop(0)
-            print(cfg)  #, layer.input_shape)
+            #print(cfg)  #, layer.input_shape)
             layer.set_weights(cfg.get_weights())
-        print()
+        #print()
 
-    print(convs)
+    #print(convs)
 
 
 def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
