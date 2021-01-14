@@ -37,8 +37,8 @@ task:
     is_training: true
     parser:
       fixed_size: false
-      image_h: 608
-      image_w: 608
+      image_h: 416
+      image_w: 416
       aug_rand_saturation: true
       aug_rand_brightness: true
       aug_rand_zoom: true

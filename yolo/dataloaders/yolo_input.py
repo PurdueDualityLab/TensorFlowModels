@@ -241,19 +241,6 @@ class Parser(parser.Parser):
         best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, 0)
         area = preprocessing_ops.pad_max_instances(data["groundtruth_area"], self._max_num_instances, 0)
         is_crowd = preprocessing_ops.pad_max_instances(tf.cast(data["groundtruth_is_crowd"], tf.int32),self._max_num_instances, 0)
-        
-        
-        # labels = {
-        #     "source_id": data["source_id"],
-        #     "bbox": boxes,
-        #     "classes": classes,
-        #     "area": area,
-        #     "is_crowd": is_crowd,
-        #     "best_anchors": best_anchors,
-        #     "width": shape[1],
-        #     "height": shape[2],
-        #     "num_detections": tf.shape(data["groundtruth_classes"])[0],
-        # }
 
         labels = {
             "source_id": data["source_id"],

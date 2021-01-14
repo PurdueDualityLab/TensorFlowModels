@@ -151,14 +151,14 @@ def build_yolo_head(input_specs, model_config:yolo.Yolo , l2_regularization):
              norm_epsilon= model_config.norm_activation.norm_epsilon,
              kernel_regularizer= l2_regularization)
     head.build(input_specs)
-    print(head.masks, head.scale_xy)
+    # print(head.masks, head.scale_xy)
     return head
 
 
 def build_yolo(input_specs, model_config, l2_regularization):
-    print(model_config.as_dict())
-    print(input_specs)
-    print(l2_regularization)
+    # print(model_config.as_dict())
+    # print(input_specs)
+    # print(l2_regularization)
 
     backbone = factory.build_backbone(input_specs, model_config, l2_regularization)
     decoder = build_yolo_decoder(backbone.output_specs, model_config, l2_regularization)
