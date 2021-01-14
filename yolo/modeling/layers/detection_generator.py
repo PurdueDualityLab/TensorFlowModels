@@ -3,14 +3,9 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import sys
-
 from yolo.ops import loss_utils
 from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
-from yolo.ops import preprocessing_ops as pops
 from yolo.ops import nms_ops
 
 
@@ -111,7 +106,6 @@ class YoloLayer(ks.Model):
 
     mask = tf.cast(tf.ones_like(sub), dtype=tf.bool)
     mask = tf.reduce_any(mask, axis=(0, -1))
-    #mask = tf.reduce_any(mask, axis=0)
 
     # reduce the dimentions of the predictions to (batch size, max predictions, -1)
     box = tf.boolean_mask(box, mask, axis=1)
@@ -153,34 +147,23 @@ class YoloLayer(ks.Model):
           "confidence": nms.nmsed_scores,
           "num_dets": num_dets
       }
-    else:
+    
+    boxes, classifs, confidence = nms_ops.nms(
+        boxes,
+        classifs,
+        confidence,
+        self._max_boxes,
+        2.5,
+        0.45,
+        sorted=False,
+        one_hot=True)
 
-      boxes, classifs, confidence = nms_ops.nms(
-          boxes,
-          classifs,
-          confidence,
-          self._max_boxes,
-          2.5,
-          0.45,
-          sorted=False,
-          one_hot=True)
-      #confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs, self._max_boxes)
-
-      return {
-          "bbox": boxes,
-          "classes": classifs,
-          "confidence": confidence,
-          "num_dets": num_dets
-      }
-
-      # confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs, self._max_boxes)
-
-      # return {
-      #     "bbox": boxes,
-      #     "classes": tf.math.argmax(classifs, axis = -1),
-      #     "confidence": confidence,
-      #     "num_dets": num_dets
-      # }
+    return {
+        "bbox": boxes,
+        "classes": classifs,
+        "confidence": confidence,
+        "num_dets": num_dets
+    }
 
   @property
   def losses(self):
@@ -227,7 +210,7 @@ class YoloGTFilter(ks.Model):
     data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
 
     # compute the true box output values
-    ubox, obns, classifics = tf.split(data, [4, 1, -1], axis=-1)
+    _, obns, classifics = tf.split(data, [4, 1, -1], axis=-1)
     scaled = tf.shape(classifics)[-1]
     objectness = tf.squeeze(obns, axis=-1)
     box = box_utils.xcycwh_to_yxyx(boxes)
@@ -237,7 +220,6 @@ class YoloGTFilter(ks.Model):
 
     mask = tf.cast(tf.ones_like(sub), dtype=tf.bool)
     mask = tf.reduce_any(mask, axis=(0, -1))
-    #mask = tf.reduce_any(mask, axis=0)
 
     # reduce the dimentions of the predictions to (batch size, max predictions, -1)
     box = tf.boolean_mask(box, mask, axis=1)
@@ -279,19 +261,16 @@ class YoloGTFilter(ks.Model):
           "confidence": nms.nmsed_scores,
           "num_dets": num_dets
       }
-    else:
 
-      #boxes, classifs, confidence = nms_ops.nms(boxes, classifs, confidence, self._max_boxes, 2.5, 0.45, sorted = False, one_hot = True)
+    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes,
+                                                    classifs, self._max_boxes)
 
-      confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes,
-                                                      classifs, self._max_boxes)
-
-      return {
-          "bbox": boxes,
-          "classes": tf.math.argmax(classifs, axis=-1),
-          "confidence": confidence,
-          "num_dets": num_dets
-      }
+    return {
+        "bbox": boxes,
+        "classes": tf.math.argmax(classifs, axis=-1),
+        "confidence": confidence,
+        "num_dets": num_dets
+    }
 
   @property
   def losses(self):

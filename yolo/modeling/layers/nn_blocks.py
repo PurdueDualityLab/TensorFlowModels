@@ -91,13 +91,13 @@ class ConvBN(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
-    super(ConvBN, self).__init__(**kwargs)
+    super().__init__(**kwargs)
 
   def build(self, input_shape):
-    kernel_size = self._kernel_size if type(
-        self._kernel_size) == int else self._kernel_size[0]
-    dilation_rate = self._dilation_rate if type(
-        self._dilation_rate) == int else self._dilation_rate[0]
+    kernel_size = self._kernel_size if isinstance(
+        self._kernel_size, int) else self._kernel_size[0]
+    dilation_rate = self._dilation_rate if isinstance(
+        self._dilation_rate, int) else self._dilation_rate[0]
     if self._padding == "same" and kernel_size != 1:
       padding = dilation_rate * (kernel_size - 1)
       left_shift = padding // 2
@@ -167,7 +167,7 @@ class ConvBN(tf.keras.layers.Layer):
         "activation": self._activation,
         "leaky_alpha": self._leaky_alpha
     }
-    layer_config.update(super(ConvBN, self).get_config())
+    layer_config.update(super().get_config())
     return layer_config
 
   def __repr__(self):
@@ -702,7 +702,7 @@ class CSPStack(tf.keras.layers.Layer):
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-    if model_to_wrap != None:
+    if model_to_wrap is not None:
       if isinstance(model_to_wrap, Callable):
         self._model_to_wrap = [model_to_wrap]
       elif isinstance(model_to_wrap, List):
@@ -730,7 +730,6 @@ class CSPStack(tf.keras.layers.Layer):
     }
     self._route = CSPRoute(downsample=self._downsample, **_dark_conv_args)
     self._connect = CSPConnect(**_dark_conv_args)
-    return
 
   def call(self, inputs):
     x, x_route = self._route(inputs)

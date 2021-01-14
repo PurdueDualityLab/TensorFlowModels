@@ -13,16 +13,16 @@ DarkNets Are used mainly for Object detection in:
     YOLOv4: Optimal Speed and Accuracy of Object Detection. arXiv:2004.10934
 """
 
+import collections
 import tensorflow as tf
 import tensorflow.keras as ks
-import collections
 
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
 
 
 # builder required classes
-class BlockConfig(object):
+class BlockConfig:
   '''
     get layer config to make code more readable
     Args:
@@ -333,7 +333,7 @@ class Darknet(ks.Model):
     endpoints = collections.OrderedDict()
     stack_outputs = [inputs]
     for i, config in enumerate(net):
-      if config.stack == None:
+      if config.stack is None:
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
@@ -353,19 +353,19 @@ class Darknet(ks.Model):
         x = self._tiny_stack(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
-      if (config.is_output and self._min_size == None):
+      if (config.is_output and self._min_size is None):
         endpoints[str(config.output_name)] = x
-      elif self._min_size != None and config.output_name >= self._min_size and config.output_name <= self._max_size:
+      elif self._min_size is not None and config.output_name >= self._min_size and \
+       config.output_name <= self._max_size:
         endpoints[str(config.output_name)] = x
 
     self._output_specs = {l: endpoints[l].get_shape() for l in endpoints.keys()}
     return endpoints
 
   def _get_activation(self, activation):
-    if self._activation == None:
+    if self._activation is None:
       return activation
-    else:
-      return self._activation
+    return self._activation
 
   def _csp_stack(self, inputs, config, name):
     if config.bottleneck:
@@ -497,7 +497,6 @@ def build_darknet(
     model_config,
     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
 
-  backbone_type = model_config.backbone.type
   backbone_cfg = model_config.backbone.get()
   norm_activation_config = model_config.norm_activation
   print(backbone_cfg)

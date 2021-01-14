@@ -50,8 +50,7 @@ class YoloHead(tf.keras.layers.Layer):
         kernel_regularizer=self._kernel_regularizer,
         bias_regularizer=self._bias_regularizer)
 
-    super(YoloHead, self).__init__(**kwargs)
-    return
+    super().__init__(**kwargs)
 
   def build(self, inputs):
     self.key_list = inputs.keys()
@@ -77,7 +76,7 @@ class YoloHead(tf.keras.layers.Layer):
 
   @property
   def num_boxes(self):
-    if self._min_level == None or self._max_level == None:
+    if self._min_level is None or self._max_level is None:
       raise Exception(
           "model has to be built before number of boxes can be determined")
     return (self._max_level - self._min_level + 1) * self._boxes_per_level
