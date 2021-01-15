@@ -21,7 +21,6 @@ from queue import Queue
 import urllib.request
 
 
-
 app = Flask(__name__)
 
 class dualQue(object):
