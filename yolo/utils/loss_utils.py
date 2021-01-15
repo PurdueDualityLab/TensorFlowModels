@@ -8,7 +8,7 @@ def parse_yolo_box_predictions(unscaled_box,
                                anchor_grid,
                                grid_points,
                                scale_x_y=1.0):
-  #with tf.name_scope("decode_box_predictions_yolo"):
+  # with tf.name_scope("decode_box_predictions_yolo"):
   pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (
       scale_x_y - 1)
   pred_wh = unscaled_box[..., 2:4]
@@ -24,18 +24,18 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
                     use_tie_breaker):
   """
     convert ground truth for use in loss functions
-    Args: 
+    Args:
         y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total. 
+        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total.
         size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
-    
+
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-  boxes = tf.cast(y_true["bbox"], dtype)
+  boxes = tf.cast(y_true['bbox'], dtype)
   classes = tf.one_hot(
-      tf.cast(y_true["classes"], dtype=tf.int32), depth=classes, dtype=dtype)
-  anchors = tf.cast(y_true["best_anchors"], dtype)
+      tf.cast(y_true['classes'], dtype=tf.int32), depth=classes, dtype=dtype)
+  anchors = tf.cast(y_true['best_anchors'], dtype)
 
   batches = tf.shape(boxes)[0]
   num_boxes = tf.shape(boxes)[1]
@@ -100,7 +100,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
         if K.any(index):
-          #tf.(0, anchors[batch, box_id, 0])
+          # tf.(0, anchors[batch, box_id, 0])
           p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
           update_index = update_index.write(
               i, [batch, y[batch, box_id], x[batch, box_id], p])
@@ -120,7 +120,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
 @tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-  with tf.name_scope("center_grid"):
+  with tf.name_scope('center_grid'):
     x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
     x_y = K.stack([x_left, y_left], axis=-1)
     x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
@@ -131,7 +131,7 @@ def _build_grid_points(lwidth, lheight, num, dtype):
 
 @tf.function(experimental_relax_shapes=True)
 def _build_anchor_grid(width, height, anchors, num, dtype):
-  with tf.name_scope("anchor_grid"):
+  with tf.name_scope('anchor_grid'):
     """ get the transformed anchor boxes for each dimention """
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, -1])
@@ -150,12 +150,12 @@ class GridGenerator(object):
                low_memory=True,
                reset=False):
     self.dtype = tf.keras.backend.floatx()
-    if masks != None:
+    if masks is not None:
       self._num = len(masks)
     else:
       self._num = tf.shape(anchors)[0]
 
-    if masks != None:
+    if masks is not None:
       anchors = [anchors[mask] for mask in masks]
 
     self._low_memory = low_memory
@@ -170,7 +170,7 @@ class GridGenerator(object):
 
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, width, height, batch_size, dtype=None):
-    if dtype == None:
+    if dtype is None:
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype

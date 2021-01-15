@@ -12,7 +12,7 @@ class FPNTail(tf.keras.layers.Layer):
                activation="leaky",
                use_sync_bn=False,
                kernel_regularizer=None,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                bias_regularizer=None,
                norm_epsilon=0.001,
                norm_momentum=0.99,
@@ -68,7 +68,7 @@ class FPNTail(tf.keras.layers.Layer):
       return x_route
 
 
-@tf.keras.utils.register_keras_serializable(package='yolo')
+@tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloFPN(tf.keras.Model):
 
   def __init__(self,
@@ -77,7 +77,7 @@ class YoloFPN(tf.keras.Model):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
@@ -160,7 +160,7 @@ class YoloFPN(tf.keras.Model):
     return outputs
 
 
-@tf.keras.utils.register_keras_serializable(package='yolo')
+@tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloRoutedDecoder(tf.keras.Model):
 
   def __init__(self,
@@ -171,7 +171,7 @@ class YoloRoutedDecoder(tf.keras.Model):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
@@ -246,7 +246,7 @@ class YoloRoutedDecoder(tf.keras.Model):
     return outputs
 
 
-@tf.keras.utils.register_keras_serializable(package='yolo')
+@tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloFPNDecoder(tf.keras.Model):
 
   def __init__(self,
@@ -257,7 +257,7 @@ class YoloFPNDecoder(tf.keras.Model):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
@@ -332,7 +332,7 @@ class YoloFPNDecoder(tf.keras.Model):
     return outputs
 
 
-@tf.keras.utils.register_keras_serializable(package='yolo')
+@tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloDecoder(tf.keras.Model):
 
   def __init__(self,
@@ -345,7 +345,7 @@ class YoloDecoder(tf.keras.Model):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):

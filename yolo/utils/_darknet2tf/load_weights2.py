@@ -12,14 +12,13 @@ def split_converter(lst, i, j=None):
 def load_weights(convs, layers):
   # min_key = min(layers.keys())
   # max_key = max(layers.keys())
-  keys = list(layers.keys())
-  keys.sort()
-  for i in keys:  #range(min_key, max_key + 1):
+  keys = sorted(layers.keys())
+  for i in keys:  # range(min_key, max_key + 1):
     try:
       cfg = convs.pop(0)
       # print(cfg.c, cfg.filters, layers[i]._filters)
       layers[i].set_weights(cfg.get_weights())
-    except:
+    except BaseException:
       print(f"an error has occured, {layers[i].name}, {i}")
 
 
@@ -65,7 +64,7 @@ def ishead(out_conv, layer):
   try:
     if layer.filters == out_conv:
       return True
-  except:
+  except BaseException:
     if layer._filters == out_conv:
       return True
   return False
@@ -111,7 +110,7 @@ def load_head(model, net, out_conv=255):
   load_weights(convs, layers)
   try:
     load_weights(cfg_heads, heads)
-  except:
+  except BaseException:
     print(heads, cfg_heads)
   return cfg_heads
 
@@ -121,14 +120,14 @@ def load_weights_prediction_layers(convs, model):
   try:
     i = 0
     for sublayer in model.submodules:
-      if ('conv_bn' in sublayer.name):
+      if ("conv_bn" in sublayer.name):
         # print(sublayer, convs[i])
         sublayer.set_weights(convs[i].get_weights())
         i += 1
-  except:
+  except BaseException:
     i = len(convs) - 1
     for sublayer in model.submodules:
-      if ('conv_bn' in sublayer.name):
+      if ("conv_bn" in sublayer.name):
         # print(sublayer, convs[i])
         sublayer.set_weights(convs[i].get_weights())
         i -= 1

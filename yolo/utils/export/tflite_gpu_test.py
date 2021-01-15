@@ -56,9 +56,9 @@ def TfLiteModel(image,
   # print(inter_out_details)
   # print(output_details)
 
-  input_shape = input_details[0]['shape']
+  input_shape = input_details[0]["shape"]
   input_data = resize_input_image(
-      image, input_shape, normalize=True, dtype=input_details[0]['dtype'])
+      image, input_shape, normalize=True, dtype=input_details[0]["dtype"])
 
   process.set_tensor(input_details[0]["index"], input_data)
   process.invoke()
@@ -68,10 +68,10 @@ def TfLiteModel(image,
   filters.set_tensor(inter_in_details[0]["index"], inter2)
   filters.set_tensor(inter_in_details[1]["index"], inter1)
   filters.invoke()
-  boxes = filters.get_tensor(output_details[0]['index'])
-  classes = filters.get_tensor(output_details[1]['index'])
-  confidences = filters.get_tensor(output_details[2]['index'])
-  num_dets = filters.get_tensor(output_details[3]['index'])
+  boxes = filters.get_tensor(output_details[0]["index"])
+  classes = filters.get_tensor(output_details[1]["index"])
+  confidences = filters.get_tensor(output_details[2]["index"])
+  num_dets = filters.get_tensor(output_details[3]["index"])
 
   pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
 
@@ -81,8 +81,8 @@ def TfLiteModel(image,
   k = cv2.waitKey(0)
   if k == 27:  # wait for ESC key to exit
     cv2.destroyAllWindows()
-  elif k == ord('s'):  # wait for 's' key to save and exit
-    cv2.imwrite('messigray.png', pimage)
+  elif k == ord("s"):  # wait for 's' key to save and exit
+    cv2.imwrite("messigray.png", pimage)
     cv2.destroyAllWindows()
   return
 
@@ -110,9 +110,9 @@ def TfLiteModelLarge(image,
   # print(inter_out_details)
   # print(output_details)
 
-  input_shape = input_details[0]['shape']
+  input_shape = input_details[0]["shape"]
   input_data = resize_input_image(
-      image, input_shape, normalize=True, dtype=input_details[0]['dtype'])
+      image, input_shape, normalize=True, dtype=input_details[0]["dtype"])
 
   process.set_tensor(input_details[0]["index"], input_data)
   process.invoke()
@@ -124,10 +124,10 @@ def TfLiteModelLarge(image,
   filters.set_tensor(inter_in_details[1]["index"], inter2)
   filters.set_tensor(inter_in_details[2]["index"], inter1)
   filters.invoke()
-  boxes = filters.get_tensor(output_details[0]['index'])
-  classes = filters.get_tensor(output_details[1]['index'])
-  confidences = filters.get_tensor(output_details[2]['index'])
-  num_dets = filters.get_tensor(output_details[3]['index'])
+  boxes = filters.get_tensor(output_details[0]["index"])
+  classes = filters.get_tensor(output_details[1]["index"])
+  confidences = filters.get_tensor(output_details[2]["index"])
+  num_dets = filters.get_tensor(output_details[3]["index"])
 
   pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
 
@@ -137,8 +137,8 @@ def TfLiteModelLarge(image,
   k = cv2.waitKey(0)
   if k == 27:  # wait for ESC key to exit
     cv2.destroyAllWindows()
-  elif k == ord('s'):  # wait for 's' key to save and exit
-    cv2.imwrite('messigray.png', pimage)
+  elif k == ord("s"):  # wait for 's' key to save and exit
+    cv2.imwrite("messigray.png", pimage)
     cv2.destroyAllWindows()
   return
 
@@ -147,6 +147,6 @@ if __name__ == "__main__":
   image = url_to_image(
       "https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg"
   )
-  #TfLiteModel(image)
+  # TfLiteModel(image)
   TfLiteModelLarge(image)
-  #print_mod(model_name="detect.tflite")
+  # print_mod(model_name="detect.tflite")

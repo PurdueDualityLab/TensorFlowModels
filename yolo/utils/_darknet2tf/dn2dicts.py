@@ -22,16 +22,16 @@ def _parseValue(key, val):
   """
     Parse non-string literals found in darknet config files
     """
-  if ',' in val:
-    vals = val.split(',')
+  if "," in val:
+    vals = val.split(",")
     raw_list = tuple(_parseValue(key, v) for v in vals)
-    if key == 'anchors':
+    if key == "anchors":
       # Group the anchors list into pairs
       # https://docs.python.org/3.10/library/functions.html#zip
       raw_list = list(zip(*[iter(raw_list)] * 2, strict=True))
     return raw_list
   else:
-    if '.' in val:
+    if "." in val:
       try:
         return float(val.strip())
       except ValueError:
@@ -56,7 +56,7 @@ class multidict(collections.OrderedDict):
     if isinstance(val, dict):
       # This should only happen at the top-most level
       self._unique += 1
-      val['_type'] = key
+      val["_type"] = key
       key = self._unique
     elif isinstance(val, str):
       val = _parseValue(key, val)
@@ -98,7 +98,7 @@ class DNConfigParser(configparser.RawConfigParser):
 def convertConfigFile(configfile):
   parser = DNConfigParser()
   if isinstance(configfile, io.IOBase):
-    if hasattr(configfile, 'name'):
+    if hasattr(configfile, "name"):
       parser.read_file(configfile, source=configfile.name)
     else:
       parser.read_file(configfile)

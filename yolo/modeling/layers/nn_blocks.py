@@ -16,7 +16,7 @@ class Identity(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class ConvBN(tf.keras.layers.Layer):
-  '''
+  """
     Modified Convolution layer to match that of the DarkNet Library. The Layer is a standards combination of Conv BatchNorm Activation,
     however, the use of bias in the conv is determined by the use of batch normalization.
     Cross Stage Partial networks (CSPNets) were proposed in:
@@ -42,7 +42,7 @@ class ConvBN(tf.keras.layers.Layer):
         if None activation is replaced by linear
       leaky_alpha: float to use as alpha if activation function is leaky
       **kwargs: Keyword Arguments
-    '''
+    """
 
   def __init__(
       self,
@@ -94,11 +94,11 @@ class ConvBN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    kernel_size = self._kernel_size if isinstance(
-        self._kernel_size, int) else self._kernel_size[0]
+    kernel_size = self._kernel_size if isinstance(self._kernel_size,
+                                                  int) else self._kernel_size[0]
     dilation_rate = self._dilation_rate if isinstance(
         self._dilation_rate, int) else self._dilation_rate[0]
-    if self._padding == "same" and kernel_size != 1:
+    if self._padding == 'same' and kernel_size != 1:
       padding = dilation_rate * (kernel_size - 1)
       left_shift = padding // 2
       self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
@@ -112,7 +112,7 @@ class ConvBN(tf.keras.layers.Layer):
         filters=self._filters,
         kernel_size=self._kernel_size,
         strides=self._strides,
-        padding="valid",
+        padding='valid',
         dilation_rate=self._dilation_rate,
         use_bias=use_bias,
         kernel_initializer=self._kernel_initializer,
@@ -136,7 +136,7 @@ class ConvBN(tf.keras.layers.Layer):
 
     if self._activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
-    elif self._activation == "mish":
+    elif self._activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
@@ -151,21 +151,21 @@ class ConvBN(tf.keras.layers.Layer):
   def get_config(self):
     # used to store/share parameters to reconstruct the model
     layer_config = {
-        "filters": self._filters,
-        "kernel_size": self._kernel_size,
-        "strides": self._strides,
-        "padding": self._padding,
-        "dilation_rate": self._dilation_rate,
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "kernel_regularizer": self._kernel_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_moment": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._activation,
-        "leaky_alpha": self._leaky_alpha
+        'filters': self._filters,
+        'kernel_size': self._kernel_size,
+        'strides': self._strides,
+        'padding': self._padding,
+        'dilation_rate': self._dilation_rate,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'kernel_regularizer': self._kernel_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_moment': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._activation,
+        'leaky_alpha': self._leaky_alpha
     }
     layer_config.update(super().get_config())
     return layer_config
@@ -176,7 +176,7 @@ class ConvBN(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class DarkResidual(tf.keras.layers.Layer):
-  '''
+  """
   DarkNet block with Residual connection for Yolo v3 Backbone
   Args:
     filters: integer for output depth, or the number of features to learn
@@ -196,7 +196,7 @@ class DarkResidual(tf.keras.layers.Layer):
     downsample: boolean for if image input is larger than layer output, set downsample to True
       so the dimensions are forced to match
     **kwargs: Keyword Arguments
-  '''
+  """
 
   def __init__(self,
                filters=1,
@@ -241,16 +241,16 @@ class DarkResidual(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._conv_activation,
-        "kernel_regularizer": self._kernel_regularizer,
-        "leaky_alpha": self._leaky_alpha
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._conv_activation,
+        'kernel_regularizer': self._kernel_regularizer,
+        'leaky_alpha': self._leaky_alpha
     }
     if self._downsample:
       self._dconv = ConvBN(
@@ -279,7 +279,7 @@ class DarkResidual(tf.keras.layers.Layer):
     self._shortcut = tf.keras.layers.Add()
     if self._sc_activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
-    elif self._sc_activation == "mish":
+    elif self._sc_activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
       self._activation_fn = tf_utils.get_activation(self._sc_activation)
@@ -295,18 +295,18 @@ class DarkResidual(tf.keras.layers.Layer):
   def get_config(self):
     # used to store/share parameters to reconstruct the model
     layer_config = {
-        "filters": self._filters,
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "kernel_regularizer": self._kernel_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_moment": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._conv_activation,
-        "leaky_alpha": self._leaky_alpha,
-        "sc_activation": self._sc_activation,
-        "downsample": self._downsample
+        'filters': self._filters,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'kernel_regularizer': self._kernel_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_moment': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._conv_activation,
+        'leaky_alpha': self._leaky_alpha,
+        'sc_activation': self._sc_activation,
+        'downsample': self._downsample
     }
     layer_config.update(super().get_config())
     return layer_config
@@ -383,16 +383,16 @@ class CSPTiny(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._conv_activation,
-        "kernel_regularizer": self._kernel_regularizer,
-        "leaky_alpha": self._leaky_alpha
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._conv_activation,
+        'kernel_regularizer': self._kernel_regularizer,
+        'leaky_alpha': self._leaky_alpha
     }
     self._convlayer1 = ConvBN(
         filters=self._filters,
@@ -432,7 +432,7 @@ class CSPTiny(tf.keras.layers.Layer):
         **_dark_conv_args)
 
     self._maxpool = tf.keras.layers.MaxPool2D(
-        pool_size=2, strides=2, padding="same", data_format=None)
+        pool_size=2, strides=2, padding='same', data_format=None)
 
     super().build(input_shape)
 
@@ -484,7 +484,7 @@ class CSPRoute(tf.keras.layers.Layer):
   def __init__(self,
                filters,
                filter_scale=2,
-               activation="mish",
+               activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -497,12 +497,12 @@ class CSPRoute(tf.keras.layers.Layer):
                **kwargs):
 
     super().__init__(**kwargs)
-    #layer params
+    # layer params
     self._filters = filters
     self._filter_scale = filter_scale
     self._activation = activation
 
-    #convoultion params
+    # convoultion params
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
@@ -515,15 +515,15 @@ class CSPRoute(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._activation,
-        "kernel_regularizer": self._kernel_regularizer,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._activation,
+        'kernel_regularizer': self._kernel_regularizer,
     }
     if self._downsample:
       self._conv1 = ConvBN(
@@ -583,7 +583,7 @@ class CSPConnect(tf.keras.layers.Layer):
   def __init__(self,
                filters,
                filter_scale=2,
-               activation="mish",
+               activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -595,12 +595,12 @@ class CSPConnect(tf.keras.layers.Layer):
                **kwargs):
 
     super().__init__(**kwargs)
-    #layer params
+    # layer params
     self._filters = filters
     self._filter_scale = filter_scale
     self._activation = activation
 
-    #convoultion params
+    # convoultion params
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
@@ -612,15 +612,15 @@ class CSPConnect(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._activation,
-        "kernel_regularizer": self._kernel_regularizer,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._activation,
+        'kernel_regularizer': self._kernel_regularizer,
     }
     self._conv1 = ConvBN(
         filters=self._filters // self._filter_scale,
@@ -673,7 +673,7 @@ class CSPStack(tf.keras.layers.Layer):
                filters,
                model_to_wrap=None,
                filter_scale=2,
-               activation="mish",
+               activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -686,13 +686,13 @@ class CSPStack(tf.keras.layers.Layer):
                **kwargs):
 
     super().__init__(**kwargs)
-    #layer params
+    # layer params
     self._filters = filters
     self._filter_scale = filter_scale
     self._activation = activation
     self._downsample = downsample
 
-    #convoultion params
+    # convoultion params
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
@@ -709,24 +709,24 @@ class CSPStack(tf.keras.layers.Layer):
         self._model_to_wrap = model_to_wrap
       else:
         raise Exception(
-            "the input to the CSPStack must be a list of layers that we can iterate through, or \n a callable"
+            'the input to the CSPStack must be a list of layers that we can iterate through, or \n a callable'
         )
     else:
       self._model_to_wrap = []
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "filters": self._filters,
-        "filter_scale": self._filter_scale,
-        "activation": self._activation,
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "kernel_regularizer": self._kernel_regularizer,
+        'filters': self._filters,
+        'filter_scale': self._filter_scale,
+        'activation': self._activation,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'kernel_regularizer': self._kernel_regularizer,
     }
     self._route = CSPRoute(downsample=self._downsample, **_dark_conv_args)
     self._connect = CSPConnect(**_dark_conv_args)
@@ -785,16 +785,16 @@ class RouteMerge(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_bn": self._use_bn,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._conv_activation,
-        "kernel_regularizer": self._kernel_regularizer,
-        "leaky_alpha": self._leaky_alpha,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_bn': self._use_bn,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._conv_activation,
+        'kernel_regularizer': self._kernel_regularizer,
+        'leaky_alpha': self._leaky_alpha,
     }
     if self._downsample:
       self._conv = ConvBN(
@@ -836,7 +836,7 @@ class SPP(tf.keras.layers.Layer):
     self._sizes = list(reversed(sizes))
     # print(self._sizes)
     if len(sizes) == 0:
-      raise ValueError("More than one maxpool should be specified in SSP block")
+      raise ValueError('More than one maxpool should be specified in SSP block')
     super().__init__(**kwargs)
     return
 
@@ -862,7 +862,7 @@ class SPP(tf.keras.layers.Layer):
     return concat_output
 
   def get_config(self):
-    layer_config = {"sizes": self._sizes}
+    layer_config = {'sizes': self._sizes}
     layer_config.update(super().get_config())
     return layer_config
 
@@ -942,7 +942,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._repetitions = repetitions // 2
     self._lim = repetitions
     self._insert_spp = insert_spp
-    self._spp_keys = spp_keys if spp_keys != None else [5, 9, 13]
+    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
 
     self.layer_list = self._get_layer_list()
     # print(self.layer_list)
@@ -965,14 +965,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         filters=filters // 2,
         kernel_size=(1, 1),
         strides=(1, 1),
-        padding="same",
+        padding='same',
         use_bn=True,
         **kwargs)
     x2 = ConvBN(
         filters=filters,
         kernel_size=(3, 3),
         strides=(1, 1),
-        padding="same",
+        padding='same',
         use_bn=True,
         **kwargs)
     return [x1, x2]
@@ -982,7 +982,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         filters=filters // 2,
         kernel_size=(1, 1),
         strides=(1, 1),
-        padding="same",
+        padding='same',
         use_bn=True,
         **kwargs)
     # repalce with spp
@@ -991,15 +991,15 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     _dark_conv_args = {
-        "kernel_initializer": self._kernel_initializer,
-        "bias_initializer": self._bias_initializer,
-        "bias_regularizer": self._bias_regularizer,
-        "use_sync_bn": self._use_sync_bn,
-        "norm_momentum": self._norm_moment,
-        "norm_epsilon": self._norm_epsilon,
-        "activation": self._activation,
-        "kernel_regularizer": self._kernel_regularizer,
-        "leaky_alpha": self._leaky_alpha,
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_moment,
+        'norm_epsilon': self._norm_epsilon,
+        'activation': self._activation,
+        'kernel_regularizer': self._kernel_regularizer,
+        'leaky_alpha': self._leaky_alpha,
     }
     self.layers = []
     for layer in self.layer_list:
@@ -1013,7 +1013,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
                 filters=self._filters,
                 kernel_size=(3, 3),
                 strides=(1, 1),
-                padding="same",
+                padding='same',
                 use_bn=True,
                 **_dark_conv_args))
     super().build(input_shape)

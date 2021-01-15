@@ -96,7 +96,7 @@ class CSPStackTest(tf.test.TestCase, parameterized.TestCase):
 
   def build_layer(self, layer_type, filters, filter_scale, count, stack_type,
                   downsample):
-    if stack_type != None:
+    if stack_type is not None:
       layers = []
       if layer_type == "residual":
         for _ in range(count):

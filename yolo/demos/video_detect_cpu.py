@@ -1,4 +1,13 @@
 #### ARGUMENT PARSER ####
+from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names, get_draw_fn
+import tensorflow.keras.backend as K
+import tensorflow.keras as ks
+import tensorflow as tf
+import colorsys
+import datetime
+import numpy as np
+import time
+import cv2
 from absl import app, flags
 from absl.flags import argparse_flags
 import sys
@@ -26,7 +35,7 @@ parser.add_argument(
 
 parser.add_argument(
     'vidpath',
-    default="",
+    default='',
     type=str,
     help='Path of the video stream to process. Defaults to the webcam.',
     nargs='?')
@@ -44,20 +53,7 @@ if __name__ == '__main__':
     exit()
 
 #### MAIN CODE ####
-
-import cv2
-import time
-
-import numpy as np
-import datetime
-import colorsys
-
-import tensorflow as tf
-import tensorflow.keras as ks
-import tensorflow.keras.backend as K
-
-from yolo.utils.testing_utils import support_windows, prep_gpu, build_model, draw_box, int_scale_boxes, gen_colors, get_coco_names, get_draw_fn
-'''Video Buffer using cv2'''
+"""Video Buffer using cv2"""
 
 
 def preprocess_fn(image, dtype=tf.float32):
@@ -133,7 +129,7 @@ def new_video_proc_rt(og_model_dir, rt_model_save_path, video_path):
   return
 
 
-def video_processor(model, version, vidpath, device="/CPU:0"):
+def video_processor(model, version, vidpath, device='/CPU:0'):
   img_array = []
 
   i = 0
@@ -146,15 +142,15 @@ def video_processor(model, version, vidpath, device="/CPU:0"):
       model = build_model(name=model, model_version=version)
       model.make_predict_function()
 
-  if hasattr(model, "predict"):
+  if hasattr(model, 'predict'):
     predfunc = model.predict
-    print("using pred function")
+    print('using pred function')
   else:
     predfunc = model
-    print("using call function")
+    print('using call function')
 
   colors = gen_colors(80)
-  label_names = get_coco_names(path="yolo/dataloaders/dataset_specs/coco.names")
+  label_names = get_coco_names(path='yolo/dataloaders/dataset_specs/coco.names')
   print(label_names)
 
   # output_writer = cv2.VideoWriter('yolo_output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), frame_count, (480, 640))  # change output file name if needed
@@ -174,7 +170,7 @@ def video_processor(model, version, vidpath, device="/CPU:0"):
   while cap.isOpened():
     success, image = cap.read()
 
-    #with tf.device(device):
+    # with tf.device(device):
     e = datetime.datetime.now()
     image = tf.cast(image, dtype=tf.float32)
     image = image / 255
@@ -182,20 +178,20 @@ def video_processor(model, version, vidpath, device="/CPU:0"):
 
     if t % 1 == 0:
       a = datetime.datetime.now()
-      #with tf.device(device):
+      # with tf.device(device):
       pimage = tf.expand_dims(image, axis=0)
       pimage = tf.image.resize(pimage, input_shape)
       pred = predfunc(pimage)
       b = datetime.datetime.now()
 
     image = image.numpy()
-    if pred != None:
+    if pred is not None:
       c = datetime.datetime.now()
-      boxes, classes = int_scale_boxes(pred["bbox"], pred["classes"], width,
+      boxes, classes = int_scale_boxes(pred['bbox'], pred['classes'], width,
                                        height)
       draw = get_draw_fn(colors, label_names, 'YOLO')
       draw_box(image, boxes[0].numpy(), classes[0].numpy(),
-               pred["confidence"][0], draw)
+               pred['confidence'][0], draw)
       d = datetime.datetime.now()
 
     cv2.imshow('frame', image)
@@ -217,11 +213,11 @@ def video_processor(model, version, vidpath, device="/CPU:0"):
 def print_opt(latency, fps):
   print(
       f"                                \rlatency:, \033[1;32;40m{latency * 1000} \033[0m ms",
-      end="\n")
+      end='\n')
   print(
-      "                                 \rfps: \033[1;34;40m%d\033[0m " % (fps),
-      end="\n")
-  print("\033[F\033[F\033[F", end="\n")
+      '                                 \rfps: \033[1;34;40m%d\033[0m ' % (fps),
+      end='\n')
+  print('\033[F\033[F\033[F', end='\n')
   return
 
 
@@ -262,18 +258,18 @@ def main2():
   prep_gpu()
 
   def func(inputs):
-    boxes = inputs["bbox"]
+    boxes = inputs['bbox']
     classifs = tf.one_hot(
-        inputs["classes"], axis=-1, dtype=tf.float32, depth=80)
+        inputs['classes'], axis=-1, dtype=tf.float32, depth=80)
     nms = tf.image.combined_non_max_suppression(
         tf.expand_dims(boxes, axis=2), classifs, 200, 200, 0.5, 0.5)
     return {
-        "bbox": nms.nmsed_boxes,
-        "classes": nms.nmsed_classes,
-        "confidence": nms.nmsed_scores,
+        'bbox': nms.nmsed_boxes,
+        'classes': nms.nmsed_classes,
+        'confidence': nms.nmsed_scores,
     }
 
-  name = "testing_weights/yolov4/full_models/v4_32"
+  name = 'testing_weights/yolov4/full_models/v4_32'
   new_name = f"{name}_tensorrt"
   model = trt.TensorRT(
       saved_model=new_name,
@@ -284,11 +280,11 @@ def main2():
   model.set_postprocessor_fn(func)
 
   support_windows()
-  video_processor(model, version=None, vidpath="testing_files/test2.mp4")
+  video_processor(model, version=None, vidpath='testing_files/test2.mp4')
 
   return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   app.run(main)
-  #main2()
+  # main2()

@@ -19,7 +19,7 @@ class VideoServer(object):
 
     print(f"frame dims: {self._cap.get(3)}, {self._cap.get(4)}")
     self._og_height = int(self._cap.get(4))
-    self._height = int(self._cap.get(4)) if disp_h == None else disp_h
+    self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
 
     self._wait_time = utils.get_wait_time(wait_time, 1)
@@ -81,7 +81,7 @@ class VideoServer(object):
         l += 1
         if time.time() - start - tick >= 1:
           tick += 1
-          #store the reading FPS so it can be printed clearly
+          # store the reading FPS so it can be printed clearly
           self._read_fps = l
           l = 0
         # sleep for default 0.01 seconds, to allow other functions the time to catch up or keep pace
@@ -103,7 +103,7 @@ class VideoServer(object):
     if not blocking:
       self._running = False
       self._cap.release()
-    if self._load_thread != None:
+    if self._load_thread is not None:
       self._load_thread.join()
     return
 
@@ -133,7 +133,7 @@ class VideoPlayer(object):
 
     print(f"frame dims: {self._cap.get(3)}, {self._cap.get(4)}")
     self._og_height = int(self._cap.get(4))
-    self._height = int(self._cap.get(4)) if disp_h == None else disp_h
+    self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
     return
 
@@ -182,7 +182,7 @@ class DisplayThread(object):
 
   def close(self):
     print()
-    if self._thread != None:
+    if self._thread is not None:
       self._thread.join()
     return
 
@@ -198,7 +198,7 @@ class DisplayThread(object):
         if success and type(frame) != type(None):
           cv2.imshow("frame", frame)
 
-          if cv2.waitKey(1) & 0xFF == ord('q'):
+          if cv2.waitKey(1) & 0xFF == ord("q"):
             break
           l += 1
           if time.time() - start - tick >= 1:

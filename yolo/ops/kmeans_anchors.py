@@ -61,10 +61,10 @@ class AnchorKMeans:
     for ds in dataset:
       for el in ds:
         if type(box_ls) == type(None):
-          box_ls = yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]
+          box_ls = yxyx_to_xcycwh(el['groundtruth_boxes'])[..., 2:]
         else:
           box_ls = tf.concat(
-              [box_ls, yxyx_to_xcycwh(el["groundtruth_boxes"])[..., 2:]],
+              [box_ls, yxyx_to_xcycwh(el['groundtruth_boxes'])[..., 2:]],
               axis=0)
     self._boxes = box_ls
 
@@ -90,7 +90,7 @@ class AnchorKMeans:
         clusters = tf.tensor_scatter_nd_update(clusters, [[i]], [hold])
       last = curr
       num_iters += 1
-      tf.print('k-Means box generation iteration: ', num_iters, end="\r")
+      tf.print('k-Means box generation iteration: ', num_iters, end='\r')
     return clusters
 
   def run_kmeans(self, max_iter=300):
@@ -105,8 +105,8 @@ class AnchorKMeans:
     return clusters, None
 
   def __call__(self, dataset, max_iter=300, image_width=416):
-    if image_width == None:
-      raise Warning("Using default width of 416 to generate bounding boxes")
+    if image_width is None:
+      raise Warning('Using default width of 416 to generate bounding boxes')
       image_width = 416
     self.get_box_from_dataset(dataset)
     clusters, _ = self.run_kmeans(max_iter=max_iter)
@@ -149,6 +149,6 @@ class BoxGenInputReader(input_reader.InputReader):
     boxes = kmeans_gen(dataset, image_width=image_width)
     del kmeans_gen  # free the memory
 
-    print("clusting complete -> default boxes used ::")
+    print('clusting complete -> default boxes used ::')
     print(boxes)
     return boxes

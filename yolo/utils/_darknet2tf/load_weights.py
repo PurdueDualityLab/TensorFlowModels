@@ -41,7 +41,7 @@ def get_darknet53_tf_format(net, only_weights=True):
   while len(net) != 0:
     blocks = []
     layer = net.pop(0)
-    while layer._type != "shortcut":
+    while layer._type != 'shortcut':
       blocks.append(layer)
       layer = net.pop(0)
     encoder.append(blocks)
@@ -53,14 +53,14 @@ def get_darknet53_tf_format(net, only_weights=True):
         weights.append(block.get_weights())
       else:
         weights.append(interleve_weights(block))
-  print("converted/interleved weights for tensorflow format")
+  print('converted/interleved weights for tensorflow format')
   return new_net, weights
 
 
 def get_tiny_tf_format(encoder):
   weights = []
   for layer in encoder:
-    if layer._type != "maxpool":
+    if layer._type != 'maxpool':
       weights.append(layer.get_weights())
   return encoder, weights
 
@@ -69,7 +69,7 @@ def get_tiny_tf_format(encoder):
 def print_layer_shape(layer):
   try:
     weights = layer.get_weights()
-  except:
+  except BaseException:
     weights = layer
   for item in weights:
     print(item.shape)
@@ -93,7 +93,7 @@ def set_darknet_weights_head(flat_head, weights_head):
         print(
             f"loaded weights for layer: head layer with depth {weight_depth}  -> name: {layer.name}",
             sep='      ',
-            end="\r")
+            end='\r')
         layer.set_weights(weight)
   return
 
@@ -107,7 +107,7 @@ def set_darknet_weights(model, weights_list, flat_model=None):
     print(
         f"loaded weights for layer: {i}  -> name: {layer.name}",
         sep='      ',
-        end="\r")
+        end='\r')
     layer.set_weights(weights)
   return
 
@@ -133,13 +133,13 @@ def get_decoder_weights(decoder):
 
   # get decoder weights and group them together
   for i, layer in enumerate(decoder):
-    if layer._type == "route" and decoder[i - 1]._type != 'maxpool':
+    if layer._type == 'route' and decoder[i - 1]._type != 'maxpool':
       layers.append(block)
       block = []
-    elif (layer._type == "route" and
-          decoder[i - 1]._type == "maxpool") or layer._type == "maxpool":
+    elif (layer._type == 'route' and
+          decoder[i - 1]._type == 'maxpool') or layer._type == 'maxpool':
       continue
-    elif layer._type == "convolutional":
+    elif layer._type == 'convolutional':
       block.append(layer)
     else:
       layers.append([])
@@ -154,7 +154,7 @@ def get_decoder_weights(decoder):
   head_weights = []
   head_layers = []
   for layer in (head):
-    if layer is not None and layer._type == "convolutional":
+    if layer is not None and layer._type == 'convolutional':
       head_weights.append(layer.get_weights())
       head_layers.append(layer)
 
@@ -204,18 +204,18 @@ def load_weights_v4head(model, net):
   for block in blocks:
     for layer in block:
       cfg = convs.pop(0)
-      #print(cfg)  #, layer.input_shape)
+      # print(cfg)  #, layer.input_shape)
       layer.set_weights(cfg.get_weights())
-    #print()
+    # print()
 
-  #print(convs)
+  # print(convs)
 
 
-def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
+def load_weights_dnBackbone(backbone, encoder, mtype='darknet53'):
   # get weights for backbone
-  if mtype == "DarkNet53":
+  if mtype == 'DarkNet53':
     encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
-  elif mtype == "DarkNetTiny":
+  elif mtype == 'DarkNetTiny':
     encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
   # set backbone weights

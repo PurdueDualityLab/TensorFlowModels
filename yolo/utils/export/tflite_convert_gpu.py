@@ -1,3 +1,5 @@
+import os
+import traceback as st
 import tensorflow as tf
 from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
@@ -5,9 +7,6 @@ from yolo.tasks.yolo import YoloTask
 from skimage import io
 import cv2
 prep_gpu()
-
-import traceback as st
-import os
 
 
 def conversion_top(model):
@@ -87,12 +86,12 @@ def get_model(model, input_size=[416, 416, 3], training=True):
       config = exp_cfg.YoloTask(
           model=exp_cfg.Yolo(
               _input_size=input_size,
-              base='v4tiny',
+              base="v4tiny",
               min_level=4,
               norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
               _boxes=[
-                  '(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)',
-                  '(344, 319)'
+                  "(10, 14)", "(23, 27)", "(37, 58)", "(81, 82)", "(135, 169)",
+                  "(344, 319)"
               ],
               #_boxes = ['(20, 28)', '(46, 54)', '(74, 116)', '(81, 82)', '(135, 169)', '(344, 319)'],
               #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
@@ -103,7 +102,7 @@ def get_model(model, input_size=[416, 416, 3], training=True):
       config = exp_cfg.YoloTask(
           model=exp_cfg.Yolo(
               _input_size=input_size,
-              base='v3',
+              base="v3",
               min_level=3,
               norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
               _boxes=[
@@ -138,13 +137,13 @@ def convert_tiny():
 
   try:
     tflite_model = converter.convert()
-  except:
+  except BaseException:
     print("here")
-    #st.print_exc()
+    # st.print_exc()
     import sys
     sys.exit()
 
-  with open(name, 'wb') as f:
+  with open(name, "wb") as f:
     f.write(tflite_model)
 
   pred = runner(image)
@@ -161,13 +160,13 @@ def convert_tiny():
 
   try:
     tflite_model = converter.convert()
-  except:
+  except BaseException:
     print("here")
-    #st.print_exc()
+    # st.print_exc()
     import sys
     sys.exit()
 
-  with open("detection_filter_2.tflite", 'wb') as f:
+  with open("detection_filter_2.tflite", "wb") as f:
     f.write(tflite_model)
 
   a = brunner(*inputs)
@@ -197,12 +196,12 @@ def convert_large(model="v3", input_size=[416, 416, 3]):
 
   try:
     tflite_model = converter.convert()
-  except:
+  except BaseException:
     import sys
     print("here")
     sys.exit()
 
-  with open(name, 'wb') as f:
+  with open(name, "wb") as f:
     f.write(tflite_model)
 
   pred = runner(image)
@@ -219,13 +218,13 @@ def convert_large(model="v3", input_size=[416, 416, 3]):
 
   try:
     tflite_model = converter.convert()
-  except:
+  except BaseException:
     print("here")
-    #st.print_exc()
+    # st.print_exc()
     import sys
     sys.exit()
 
-  with open(f"detect-filter3-{input_size[0]}.tflite", 'wb') as f:
+  with open(f"detect-filter3-{input_size[0]}.tflite", "wb") as f:
     f.write(tflite_model)
 
   a = brunner(*inputs)

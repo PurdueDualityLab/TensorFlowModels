@@ -64,7 +64,7 @@ class YoloTask(base_task.Task):
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
     decoder = tfds_coco_decoder.MSCOCODecoder()
-    '''
+    """
         decoder_cfg = params.decoder.get()
         if params.decoder.type == 'simple_decoder':
             decoder = tf_example_decoder.TfExampleDecoder(
@@ -75,7 +75,7 @@ class YoloTask(base_task.Task):
                 regenerate_source_id=decoder_cfg.regenerate_source_id)
         else:
             raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
-        '''
+        """
 
     model = self.task_config.model
 
@@ -127,7 +127,7 @@ class YoloTask(base_task.Task):
     loss_class = 0.0
     metric_dict = dict()
 
-    grid = labels["grid_form"]
+    grid = labels['grid_form']
     for key in outputs.keys():
       # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
       _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
@@ -140,14 +140,14 @@ class YoloTask(base_task.Task):
       metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
       metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
 
-    metric_dict["box_loss"] = loss_box
-    metric_dict["conf_loss"] = loss_conf
-    metric_dict["class_loss"] = loss_class
+    metric_dict['box_loss'] = loss_box
+    metric_dict['conf_loss'] = loss_conf
+    metric_dict['class_loss'] = loss_class
 
     return loss, metric_dict
 
   def build_metrics(self, training=True):
-    #return super().build_metrics(training=training)
+    # return super().build_metrics(training=training)
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
@@ -157,14 +157,14 @@ class YoloTask(base_task.Task):
     return []
 
   def train_step(self, inputs, model, optimizer, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
-      loss, metrics = self.build_losses(y_pred["raw_output"], label)
+      loss, metrics = self.build_losses(y_pred['raw_output'], label)
       scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -181,28 +181,28 @@ class YoloTask(base_task.Task):
                                             self.task_config.gradient_clip_norm)
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    #custom metrics
-    logs = {"loss": loss}
+    # custom metrics
+    logs = {'loss': loss}
     logs.update(metrics)
 
     #tf.print("loss: ", logs["loss"], end = "\n")
-    tf.print(logs, end="\n")
+    tf.print(logs, end='\n')
 
-    ret = "\033[F" * (len(logs.keys()) + 1)
-    tf.print(ret, end="\n")
+    ret = '\033[F' * (len(logs.keys()) + 1)
+    tf.print(ret, end='\n')
 
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
 
     # computer detivative and apply gradients
     y_pred = model(image, training=False)
-    loss, metrics = self.build_losses(y_pred["raw_output"], label)
+    loss, metrics = self.build_losses(y_pred['raw_output'], label)
 
     # #custom metrics
-    loss_metrics = {"loss": loss}
+    loss_metrics = {'loss': loss}
     loss_metrics.update(metrics)
     label['boxes'] = xcycwh_to_yxyx(label['bbox'])
     del label['bbox']
@@ -219,7 +219,7 @@ class YoloTask(base_task.Task):
     return loss_metrics
 
   def aggregate_logs(self, state=None, step_outputs=None):
-    #return super().aggregate_logs(state=state, step_outputs=step_outputs)
+    # return super().aggregate_logs(state=state, step_outputs=step_outputs)
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric
@@ -228,7 +228,7 @@ class YoloTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
-    #return super().reduce_aggregated_logsI(aggregated_logs)
+    # return super().reduce_aggregated_logsI(aggregated_logs)
     return self.coco_metric.result()
 
   @property
@@ -237,7 +237,7 @@ class YoloTask(base_task.Task):
 
   def _get_boxes(self, gen_boxes=True):
     # gen_boxes = params.is_training
-    if gen_boxes and self.task_config.model.boxes == None and not self._anchors_built:
+    if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
@@ -259,22 +259,22 @@ class YoloTask(base_task.Task):
   def _get_masks(self,
                  xy_exponential=False,
                  exp_base=2,
-                 xy_scale_base="default_value"):
+                 xy_scale_base='default_value'):
     start = 0
     boxes = {}
     path_scales = {}
     scale_x_y = {}
 
-    if xy_scale_base == "default_base":
+    if xy_scale_base == 'default_base':
       xy_scale_base = 0.05
       xy_scale_base = xy_scale_base / (
           self._boxes_per_level * (self._max_level - self._min_level + 1) - 1)
-    elif xy_scale_base == "default_value":
+    elif xy_scale_base == 'default_value':
       xy_scale_base = 0.00625
 
     params = self.task_config.model
 
-    if self._masks == None or self._path_scales == None or self._x_y_scales == None:
+    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
       for i in range(params.min_level, params.max_level + 1):
         boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
         path_scales[str(i)] = 2**i
@@ -302,39 +302,39 @@ class YoloTask(base_task.Task):
       weights_file = self.task_config.model.darknet_weights_file
       config_file = self.task_config.model.darknet_weights_cfg
 
-      if ("cache" not in weights_file and "cache" not in config_file):
+      if ('cache' not in weights_file and 'cache' not in config_file):
         list_encdec = DarkNetConverter.read(config_file, weights_file)
       else:
         import os
-        path = os.path.abspath("cache")
+        path = os.path.abspath('cache')
         if (not os.path.isdir(path)):
           os.mkdir(path)
 
         cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
         if not os.path.isfile(cfg):
-          download(config_file.split("/")[-1])
+          download(config_file.split('/')[-1])
 
         wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
         if not os.path.isfile(wgt):
-          download(weights_file.split("/")[-1])
+          download(weights_file.split('/')[-1])
 
         list_encdec = DarkNetConverter.read(cfg, wgt)
 
       splits = model.backbone._splits
-      if "neck_split" in splits.keys():
+      if 'neck_split' in splits.keys():
         encoder, neck, decoder = split_converter(list_encdec,
-                                                 splits["backbone_split"],
-                                                 splits["neck_split"])
+                                                 splits['backbone_split'],
+                                                 splits['neck_split'])
       else:
         encoder, decoder = split_converter(list_encdec,
-                                           splits["backbone_split"])
+                                           splits['backbone_split'])
         neck = None
 
       load_weights_backbone(model.backbone, encoder)
       model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck != None:
+        if neck is not None:
           load_weights_backbone(model.decoder.neck, neck)
           model.decoder.neck.trainable = False
         cfgheads = load_head(model.decoder.head, decoder)
@@ -366,7 +366,7 @@ class YoloTask(base_task.Task):
                    ckpt_dir_or_file)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   import matplotlib.pyplot as plt
   from yolo.utils.run_utils import prep_gpu
   prep_gpu()
@@ -386,7 +386,7 @@ if __name__ == "__main__":
 
     i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 0.0]])
 
-    i = tf.image.draw_bounding_boxes(i, preds["bbox"], [[0.0, 1.0, 0.0]])
+    i = tf.image.draw_bounding_boxes(i, preds['bbox'], [[0.0, 1.0, 0.0]])
     plt.imshow(i[0].numpy())
     plt.show()
 

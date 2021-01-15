@@ -15,7 +15,7 @@ def scale_image(image, resize=False, w=None, h=None):
     Returns:
         A Normalized Function.
     """
-  with tf.name_scope("scale_image"):
+  with tf.name_scope('scale_image'):
     image = tf.convert_to_tensor(image)
     if resize:
       image = tf.image.resize(image, size=(w, h))
@@ -25,7 +25,7 @@ def scale_image(image, resize=False, w=None, h=None):
 
 def resize_crop_filter(image, boxes, default_width, default_height,
                        target_width, target_height):
-  with tf.name_scope("resize_crop_filter"):
+  with tf.name_scope('resize_crop_filter'):
     image = tf.image.resize(image, (target_width, target_height))
     image = tf.image.resize_with_crop_or_pad(
         image, target_height=default_height, target_width=default_width)
@@ -56,7 +56,7 @@ def random_translate(image, box, t, seed=10):
 
 
 def translate_boxes(box, translate_x, translate_y):
-  with tf.name_scope("translate_boxs"):
+  with tf.name_scope('translate_boxs'):
     x = box[..., 0] + translate_x
     y = box[..., 1] + translate_y
     box = tf.stack([x, y, box[..., 2], box[..., 3]], axis=-1)
@@ -65,7 +65,7 @@ def translate_boxes(box, translate_x, translate_y):
 
 
 def translate_image(image, translate_x, translate_y):
-  with tf.name_scope("translate_image"):
+  with tf.name_scope('translate_image'):
     if (translate_x != 0 and translate_y != 0):
       image_jitter = tf.convert_to_tensor([translate_x, translate_y])
       image_jitter.set_shape([2])
@@ -78,7 +78,8 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
   dim1 = shape[pad_axis]
   take = tf.math.reduce_min([instances, dim1])
-  value, _ = tf.split(value, [take, -1], axis=pad_axis)  #value[:instances, ...]
+  value, _ = tf.split(
+      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
   pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
   nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
@@ -92,7 +93,7 @@ def fit_preserve_aspect_ratio(image,
                               height=None,
                               target_dim=None):
   if width is None or height is None:
-    shape = tf.shape(data["image"])
+    shape = tf.shape(data['image'])
     if tf.shape(shape)[0] == 4:
       width = shape[1]
       height = shape[2]
@@ -138,7 +139,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
     return:
         tf.Tensor: y_true with the anchor associated with each ground truth box known
     """
-  with tf.name_scope("get_anchor"):
+  with tf.name_scope('get_anchor'):
     width = tf.cast(width, dtype=tf.float32)
     height = tf.cast(height, dtype=tf.float32)
 
@@ -207,7 +208,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
   return tf.cast(iou_index, dtype=tf.float32)
 
 
-#@tf.function(experimental_relax_shapes=True)
+# @tf.function(experimental_relax_shapes=True)
 def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   """
     convert ground truth for use in loss functions
@@ -219,12 +220,12 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
     Return:
         tf.Tensor[] of shape [size, size, #of_anchors, 4, 1, num_classes]
     """
-  boxes = tf.cast(y_true["bbox"], dtype)
+  boxes = tf.cast(y_true['bbox'], dtype)
   classes = tf.one_hot(
-      tf.cast(y_true["classes"], dtype=tf.int32),
+      tf.cast(y_true['classes'], dtype=tf.int32),
       depth=num_classes,
       dtype=dtype)
-  anchors = tf.cast(y_true["best_anchors"], dtype)
+  anchors = tf.cast(y_true['best_anchors'], dtype)
 
   num_boxes = tf.shape(boxes)[0]
   len_masks = tf.shape(mask)[0]
@@ -281,7 +282,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
     else:
       index = tf.math.equal(anchors[box_id, 0], mask)
       if K.any(index):
-        #tf.(0, anchors[ box_id, 0])
+        # tf.(0, anchors[ box_id, 0])
         p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
         update_index = update_index.write(i, [y[box_id], x[box_id], p])
         value = K.concatenate([boxes[box_id], const, classes[box_id]])
@@ -296,7 +297,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   return full
 
 
-#@tf.function(experimental_relax_shapes=True)
+# @tf.function(experimental_relax_shapes=True)
 def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
                           use_tie_breaker):
   """
@@ -309,12 +310,12 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-  boxes = tf.cast(y_true["bbox"], dtype)
+  boxes = tf.cast(y_true['bbox'], dtype)
   classes = tf.one_hot(
-      tf.cast(y_true["classes"], dtype=tf.int32),
+      tf.cast(y_true['classes'], dtype=tf.int32),
       depth=num_classes,
       dtype=dtype)
-  anchors = tf.cast(y_true["best_anchors"], dtype)
+  anchors = tf.cast(y_true['best_anchors'], dtype)
 
   batches = tf.shape(boxes)[0]
   num_boxes = tf.shape(boxes)[1]
@@ -379,7 +380,7 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
         if K.any(index):
-          #tf.(0, anchors[batch, box_id, 0])
+          # tf.(0, anchors[batch, box_id, 0])
           p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
           update_index = update_index.write(
               i, [batch, y[batch, box_id], x[batch, box_id], p])

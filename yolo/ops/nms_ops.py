@@ -305,7 +305,7 @@ def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
   #iou = iou_ops.compute_iou(boxes, boxes, yxyx=True)
   mrange = tf.range(k)
   mask_x, mask_y = tf.meshgrid(
-      mrange, mrange)  #tf.one_hot(mrange, k, axis = -1, dtype = boxes.dtype)
+      mrange, mrange)  # tf.one_hot(mrange, k, axis = -1, dtype = boxes.dtype)
   #mask_diag = tf.expand_dims(tf.expand_dims(mask_x > mask_y, axis = 0), axis = 0)
   mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
 

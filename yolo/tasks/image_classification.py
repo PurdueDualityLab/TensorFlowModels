@@ -36,7 +36,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     num_classes = self.task_config.model.num_classes
     input_size = self.task_config.model.input_size
 
-    if params.tfds_name != None:
+    if params.tfds_name is not None:
       decoder = cli.Decoder()
     else:
       decoder = classification_input.Decoder()

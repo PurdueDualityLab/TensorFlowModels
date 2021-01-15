@@ -9,7 +9,7 @@ from official.vision.beta.configs import backbones
 @dataclasses.dataclass
 class DarkNet(hyperparams.Config):
   """DarkNet config."""
-  model_id: str = "darknet53"
+  model_id: str = 'darknet53'
   min_level: Optional[int] = None
   max_level: int = 5
 

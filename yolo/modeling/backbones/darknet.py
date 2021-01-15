@@ -23,7 +23,7 @@ from yolo.modeling.layers import nn_blocks
 
 # builder required classes
 class BlockConfig:
-  '''
+  """
     get layer config to make code more readable
     Args:
       layer: string layer name
@@ -39,7 +39,7 @@ class BlockConfig:
       route: integer for what level to route from to get the next input
       output_name: the name to use for this output
       is_output: is this layer an output in the default model
-  '''
+  """
 
   def __init__(self, layer, stack, reps, bottleneck, filters, pool_size,
                kernel_size, strides, padding, activation, route, output_name,
@@ -75,31 +75,31 @@ class layer_factory(object):
 
   def __init__(self):
     self._layer_dict = {
-        "ConvBN": (nn_blocks.ConvBN, self.ConvBN_config_todict),
-        "MaxPool": (tf.keras.layers.MaxPool2D, self.maxpool_config_todict)
+        'ConvBN': (nn_blocks.ConvBN, self.ConvBN_config_todict),
+        'MaxPool': (tf.keras.layers.MaxPool2D, self.maxpool_config_todict)
     }
 
   def ConvBN_config_todict(self, config, kwargs):
     dictvals = {
-        "filters": config.filters,
-        "kernel_size": config.kernel_size,
-        "strides": config.strides,
-        "padding": config.padding
+        'filters': config.filters,
+        'kernel_size': config.kernel_size,
+        'strides': config.strides,
+        'padding': config.padding
     }
     dictvals.update(kwargs)
     return dictvals
 
   def darktiny_config_todict(self, config, kwargs):
-    dictvals = {"filters": config.filters, "strides": config.strides}
+    dictvals = {'filters': config.filters, 'strides': config.strides}
     dictvals.update(kwargs)
     return dictvals
 
   def maxpool_config_todict(self, config, kwargs):
     return {
-        "pool_size": config.pool_size,
-        "strides": config.strides,
-        "padding": config.padding,
-        "name": kwargs["name"]
+        'pool_size': config.pool_size,
+        'strides': config.strides,
+        'padding': config.padding,
+        'name': kwargs['name']
     }
 
   def __call__(self, config, kwargs):
@@ -110,157 +110,157 @@ class layer_factory(object):
 
 # model configs
 LISTNAMES = [
-    "default_layer_name", "level_type", "number_of_layers_in_level",
-    "bottleneck", "filters", "kernal_size", "pool_size", "strides", "padding",
-    "default_activation", "route", "level/name", "is_output"
+    'default_layer_name', 'level_type', 'number_of_layers_in_level',
+    'bottleneck', 'filters', 'kernal_size', 'pool_size', 'strides', 'padding',
+    'default_activation', 'route', 'level/name', 'is_output'
 ]
 
 CSPDARKNET53 = {
-    "list_names":
+    'list_names':
         LISTNAMES,
-    "splits": {
-        "backbone_split": 106,
-        "neck_split": 138
+    'splits': {
+        'backbone_split': 106,
+        'neck_split': 138
     },
-    "backbone": [
+    'backbone': [
         [
-            "ConvBN", None, 1, False, 32, None, 3, 1, "same", "mish", -1, 0,
+            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 0,
             False
         ],
         [
-            "DarkRes", "csp", 1, True, 64, None, None, None, None, "mish", -1,
+            'DarkRes', 'csp', 1, True, 64, None, None, None, None, 'mish', -1,
             1, False
         ],
         [
-            "DarkRes", "csp", 2, False, 128, None, None, None, None, "mish", -1,
+            'DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1,
             2, False
         ],
         [
-            "DarkRes", "csp", 8, False, 256, None, None, None, None, "mish", -1,
+            'DarkRes', 'csp', 8, False, 256, None, None, None, None, 'mish', -1,
             3, True
         ],
         [
-            "DarkRes", "csp", 8, False, 512, None, None, None, None, "mish", -1,
+            'DarkRes', 'csp', 8, False, 512, None, None, None, None, 'mish', -1,
             4, True
         ],
         [
-            "DarkRes", "csp", 4, False, 1024, None, None, None, None, "mish",
+            'DarkRes', 'csp', 4, False, 1024, None, None, None, None, 'mish',
             -1, 5, True
         ],
     ]
 }
 
 DARKNET53 = {
-    "list_names":
+    'list_names':
         LISTNAMES,
-    "splits": {
-        "backbone_split": 76
+    'splits': {
+        'backbone_split': 76
     },
-    "backbone": [
+    'backbone': [
         [
-            "ConvBN", None, 1, False, 32, None, 3, 1, "same", "leaky", -1, 0,
+            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'leaky', -1, 0,
             False
         ],
         [
-            "DarkRes", "residual", 1, True, 64, None, None, None, None, "leaky",
+            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'leaky',
             -1, 1, False
         ],
         [
-            "DarkRes", "residual", 2, False, 128, None, None, None, None,
-            "leaky", -1, 2, False
+            'DarkRes', 'residual', 2, False, 128, None, None, None, None,
+            'leaky', -1, 2, False
         ],
         [
-            "DarkRes", "residual", 8, False, 256, None, None, None, None,
-            "leaky", -1, 3, True
+            'DarkRes', 'residual', 8, False, 256, None, None, None, None,
+            'leaky', -1, 3, True
         ],
         [
-            "DarkRes", "residual", 8, False, 512, None, None, None, None,
-            "leaky", -1, 4, True
+            'DarkRes', 'residual', 8, False, 512, None, None, None, None,
+            'leaky', -1, 4, True
         ],
         [
-            "DarkRes", "residual", 4, False, 1024, None, None, None, None,
-            "leaky", -1, 5, True
+            'DarkRes', 'residual', 4, False, 1024, None, None, None, None,
+            'leaky', -1, 5, True
         ],
     ]
 }
 
 CSPDARKNETTINY = {
-    "list_names":
+    'list_names':
         LISTNAMES,
-    "splits": {
-        "backbone_split": 28
+    'splits': {
+        'backbone_split': 28
     },
-    "backbone": [
+    'backbone': [
         [
-            "ConvBN", None, 1, False, 32, None, 3, 2, "same", "leaky", -1, 0,
+            'ConvBN', None, 1, False, 32, None, 3, 2, 'same', 'leaky', -1, 0,
             False
         ],
         [
-            "ConvBN", None, 1, False, 64, None, 3, 2, "same", "leaky", -1, 1,
+            'ConvBN', None, 1, False, 64, None, 3, 2, 'same', 'leaky', -1, 1,
             False
         ],
         [
-            "CSPTiny", "csp_tiny", 1, False, 64, None, 3, 2, "same", "leaky",
+            'CSPTiny', 'csp_tiny', 1, False, 64, None, 3, 2, 'same', 'leaky',
             -1, 2, False
         ],
         [
-            "CSPTiny", "csp_tiny", 1, False, 128, None, 3, 2, "same", "leaky",
+            'CSPTiny', 'csp_tiny', 1, False, 128, None, 3, 2, 'same', 'leaky',
             -1, 3, False
         ],
         [
-            "CSPTiny", "csp_tiny", 1, False, 256, None, 3, 2, "same", "leaky",
+            'CSPTiny', 'csp_tiny', 1, False, 256, None, 3, 2, 'same', 'leaky',
             -1, 4, True
         ],
         [
-            "ConvBN", None, 1, False, 512, None, 3, 1, "same", "leaky", -1, 5,
+            'ConvBN', None, 1, False, 512, None, 3, 1, 'same', 'leaky', -1, 5,
             True
         ],
     ]
 }
 
 DARKNETTINY = {
-    "list_names":
+    'list_names':
         LISTNAMES,
-    "splits": {
-        "backbone_split": 14
+    'splits': {
+        'backbone_split': 14
     },
-    "backbone": [
+    'backbone': [
         [
-            "ConvBN", None, 1, False, 16, None, 3, 1, "same", "leaky", -1, 0,
+            'ConvBN', None, 1, False, 16, None, 3, 1, 'same', 'leaky', -1, 0,
             False
         ],
         [
-            "DarkTiny", "tiny", 1, True, 32, None, 3, 2, "same", "leaky", -1, 1,
+            'DarkTiny', 'tiny', 1, True, 32, None, 3, 2, 'same', 'leaky', -1, 1,
             False
         ],
         [
-            "DarkTiny", "tiny", 1, True, 64, None, 3, 2, "same", "leaky", -1, 2,
+            'DarkTiny', 'tiny', 1, True, 64, None, 3, 2, 'same', 'leaky', -1, 2,
             False
         ],
         [
-            "DarkTiny", "tiny", 1, False, 128, None, 3, 2, "same", "leaky", -1,
+            'DarkTiny', 'tiny', 1, False, 128, None, 3, 2, 'same', 'leaky', -1,
             3, False
         ],
         [
-            "DarkTiny", "tiny", 1, False, 256, None, 3, 2, "same", "leaky", -1,
+            'DarkTiny', 'tiny', 1, False, 256, None, 3, 2, 'same', 'leaky', -1,
             4, True
         ],
         [
-            "DarkTiny", "tiny", 1, False, 512, None, 3, 2, "same", "leaky", -1,
+            'DarkTiny', 'tiny', 1, False, 512, None, 3, 2, 'same', 'leaky', -1,
             5, False
         ],
         [
-            "DarkTiny", "tiny", 1, False, 1024, None, 3, 1, "same", "leaky", -1,
+            'DarkTiny', 'tiny', 1, False, 1024, None, 3, 1, 'same', 'leaky', -1,
             5, True
         ],
     ]
 }
 
 BACKBONES = {
-    "darknettiny": DARKNETTINY,
-    "darknet53": DARKNET53,
-    "cspdarknet53": CSPDARKNET53,
-    "cspdarknettiny": CSPDARKNETTINY
+    'darknettiny': DARKNETTINY,
+    'darknet53': DARKNET53,
+    'cspdarknet53': CSPDARKNET53,
+    'cspdarknettiny': CSPDARKNETTINY
 }
 
 
@@ -269,7 +269,7 @@ class Darknet(ks.Model):
 
   def __init__(
       self,
-      model_id="darknet53",
+      model_id='darknet53',
       input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
       min_level=None,
       max_level=5,
@@ -303,14 +303,14 @@ class Darknet(ks.Model):
     self._kernel_regularizer = kernel_regularizer
 
     self._default_dict = {
-        "kernel_initializer": self._kernel_initializer,
-        "kernel_regularizer": self._kernel_regularizer,
-        "bias_regularizer": self._bias_regularizer,
-        "norm_momentum": self._norm_momentum,
-        "norm_epsilon": self._norm_epislon,
-        "use_sync_bn": self._use_sync_bn,
-        "activation": self._activation,
-        "name": None
+        'kernel_initializer': self._kernel_initializer,
+        'kernel_regularizer': self._kernel_regularizer,
+        'bias_regularizer': self._bias_regularizer,
+        'norm_momentum': self._norm_momentum,
+        'norm_epsilon': self._norm_epislon,
+        'use_sync_bn': self._use_sync_bn,
+        'activation': self._activation,
+        'name': None
     }
 
     inputs = ks.layers.Input(shape=self._input_shape.shape[1:])
@@ -337,19 +337,19 @@ class Darknet(ks.Model):
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
-      elif config.stack == "residual":
+      elif config.stack == 'residual':
         x = self._residual_stack(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
-      elif config.stack == "csp":
+      elif config.stack == 'csp':
         x = self._csp_stack(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
-      elif config.stack == "csp_tiny":
+      elif config.stack == 'csp_tiny':
         x_pass, x = self._csp_tiny_stack(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x_pass)
-      elif config.stack == "tiny":
+      elif config.stack == 'tiny':
         x = self._tiny_stack(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
         stack_outputs.append(x)
@@ -376,8 +376,8 @@ class Darknet(ks.Model):
       csp_filter_scale = 2
       residual_filter_scale = 1
       scale_filters = 2
-    self._default_dict["activation"] = self._get_activation(config.activation)
-    self._default_dict["name"] = f"{name}_csp_down"
+    self._default_dict['activation'] = self._get_activation(config.activation)
+    self._default_dict['name'] = f"{name}_csp_down"
     x, x_route = nn_blocks.CSPRoute(
         filters=config.filters,
         filter_scale=csp_filter_scale,
@@ -385,42 +385,42 @@ class Darknet(ks.Model):
         **self._default_dict)(
             inputs)
     for i in range(config.repetitions):
-      self._default_dict["name"] = f"{name}_{i}"
+      self._default_dict['name'] = f"{name}_{i}"
       x = nn_blocks.DarkResidual(
           filters=config.filters // scale_filters,
           filter_scale=residual_filter_scale,
           **self._default_dict)(
               x)
 
-    self._default_dict["name"] = f"{name}_csp_connect"
+    self._default_dict['name'] = f"{name}_csp_connect"
     output = nn_blocks.CSPConnect(
         filters=config.filters,
         filter_scale=csp_filter_scale,
         **self._default_dict)([x, x_route])
-    self._default_dict["activation"] = self._activation
-    self._default_dict["name"] = None
+    self._default_dict['activation'] = self._activation
+    self._default_dict['name'] = None
     return output
 
   def _csp_tiny_stack(self, inputs, config, name):
-    self._default_dict["activation"] = self._get_activation(config.activation)
-    self._default_dict["name"] = f"{name}_csp_tiny"
+    self._default_dict['activation'] = self._get_activation(config.activation)
+    self._default_dict['name'] = f"{name}_csp_tiny"
     x, x_route = nn_blocks.CSPTiny(
         filters=config.filters, **self._default_dict)(
             inputs)
-    self._default_dict["activation"] = self._activation
-    self._default_dict["name"] = None
+    self._default_dict['activation'] = self._activation
+    self._default_dict['name'] = None
     return x, x_route
 
   def _tiny_stack(self, inputs, config, name):
     x = tf.keras.layers.MaxPool2D(
         pool_size=2,
         strides=config.strides,
-        padding="same",
+        padding='same',
         data_format=None,
         name=f"{name}_tiny/pool")(
             inputs)
-    self._default_dict["activation"] = self._get_activation(config.activation)
-    self._default_dict["name"] = f"{name}_tiny/conv"
+    self._default_dict['activation'] = self._get_activation(config.activation)
+    self._default_dict['name'] = f"{name}_tiny/conv"
     x = nn_blocks.ConvBN(
         filters=config.filters,
         kernel_size=(3, 3),
@@ -428,43 +428,43 @@ class Darknet(ks.Model):
         padding='same',
         **self._default_dict)(
             x)
-    self._default_dict["activation"] = self._activation
-    self._default_dict["name"] = None
+    self._default_dict['activation'] = self._activation
+    self._default_dict['name'] = None
     return x
 
   def _residual_stack(self, inputs, config, name):
-    self._default_dict["activation"] = self._get_activation(config.activation)
-    self._default_dict["name"] = f"{name}_residual_down"
+    self._default_dict['activation'] = self._get_activation(config.activation)
+    self._default_dict['name'] = f"{name}_residual_down"
     x = nn_blocks.DarkResidual(
         filters=config.filters, downsample=True, **self._default_dict)(
             inputs)
     for i in range(config.repetitions - 1):
-      self._default_dict["name"] = f"{name}_{i}"
+      self._default_dict['name'] = f"{name}_{i}"
       x = nn_blocks.DarkResidual(
           filters=config.filters, **self._default_dict)(
               x)
-    self._default_dict["activation"] = self._activation
-    self._default_dict["name"] = None
+    self._default_dict['activation'] = self._activation
+    self._default_dict['name'] = None
     return x
 
   def _build_block(self, inputs, config, name):
     x = inputs
     i = 0
-    self._default_dict["activation"] = self._get_activation(config.activation)
+    self._default_dict['activation'] = self._get_activation(config.activation)
     while i < config.repetitions:
-      self._default_dict["name"] = f"{name}_{i}"
+      self._default_dict['name'] = f"{name}_{i}"
       layer = self._registry(config, self._default_dict)
       x = layer(x)
       i += 1
-    self._default_dict["activation"] = self._activation
-    self._default_dict["name"] = None
+    self._default_dict['activation'] = self._activation
+    self._default_dict['name'] = None
     return x
 
   @staticmethod
   def get_model_config(name):
     name = name.lower()
-    backbone = BACKBONES[name]["backbone"]
-    splits = BACKBONES[name]["splits"]
+    backbone = BACKBONES[name]['backbone']
+    splits = BACKBONES[name]['splits']
     return build_block_specs(backbone), splits
 
   @property
@@ -477,16 +477,16 @@ class Darknet(ks.Model):
 
   def get_config(self):
     layer_config = {
-        "model_id": self._model_name,
-        "min_level": self._min_size,
-        "max_level": self._max_size,
-        "kernel_initializer": self._kernel_initializer,
-        "kernel_regularizer": self._kernel_regularizer,
-        "bias_regularizer": self._bias_regularizer,
-        "norm_momentum": self._norm_momentum,
-        "norm_epsilon": self._norm_epislon,
-        "use_sync_bn": self._use_sync_bn,
-        "activation": self._activation
+        'model_id': self._model_name,
+        'min_level': self._min_size,
+        'max_level': self._max_size,
+        'kernel_initializer': self._kernel_initializer,
+        'kernel_regularizer': self._kernel_regularizer,
+        'bias_regularizer': self._bias_regularizer,
+        'norm_momentum': self._norm_momentum,
+        'norm_epsilon': self._norm_epislon,
+        'use_sync_bn': self._use_sync_bn,
+        'activation': self._activation
     }
     return layer_config
 

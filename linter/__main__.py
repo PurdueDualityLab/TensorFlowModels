@@ -54,7 +54,8 @@ args = parser.parse_args()
 files = args.files
 for i, file in enumerate(files):
   if os.path.isdir(file):
-    files[i] = glob.glob(os.path.join(file, '**', '*.py'), recursive=True)
+    files[i] = None
+    files.extend(glob.glob(os.path.join(file, '**', '*.py'), recursive=True))
   elif not os.path.exists(file):
     raise FileNotFoundError(file)
 
@@ -69,6 +70,8 @@ if args.noopts is not None:
 # The real linter starts here
 if len(opts) != 0:
   for file in files:
+    if file is None:
+      continue
     changed = False
     with open(file) as src_file:
       src = src_file.read()
@@ -76,7 +79,11 @@ if len(opts) != 0:
     if 'autopep8' in opts:
       old_src = src
       src = autopep8.fix_code(
-          src, options={'aggressive': args.autopep8_agression})
+          src,
+          options={
+              'aggressive': args.autopep8_agression,
+              'ignore': ['E1', 'W1', 'E501']
+          })
       changed |= (old_src != src)
       del old_src
 
@@ -93,4 +100,3 @@ if len(opts) != 0:
     if changed:
       with open(file, 'w') as src_file:
         src_file.write(src)
-    print(changed)

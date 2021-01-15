@@ -19,7 +19,7 @@ class YoloLayer(ks.Model):
                thresh=0.5,
                cls_thresh=0.5,
                ignore_thresh=0.7,
-               loss_type="ciou",
+               loss_type='ciou',
                use_tie_breaker=True,
                max_boxes=200,
                path_scale=None,
@@ -62,7 +62,7 @@ class YoloLayer(ks.Model):
                                  anchor_grid,
                                  grid_points,
                                  scale_x_y=1.0):
-    #with tf.name_scope("decode_box_predictions_yolo"):
+    # with tf.name_scope("decode_box_predictions_yolo"):
     ubxy, pred_wh = tf.split(unscaled_box, 2, axis=-1)
     pred_xy = tf.math.sigmoid(ubxy) * scale_x_y - 0.5 * (scale_x_y - 1)
     x, y = tf.split(pred_xy, 2, axis=-1)
@@ -73,7 +73,7 @@ class YoloLayer(ks.Model):
 
   def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
     shape = tf.shape(inputs)
-    #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
+    # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
     centers, anchors = generator(shape[1], shape[2], shape[0], dtype=data.dtype)
 
@@ -94,7 +94,7 @@ class YoloLayer(ks.Model):
     objectness = tf.expand_dims(tf.math.sigmoid(obns), axis=-1)
     scaled = tf.math.sigmoid(classifics) * objectness
 
-    #compute the mask of where objects have been located
+    # compute the mask of where objects have been located
     mask_check = tf.fill(
         tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
     sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
@@ -142,12 +142,12 @@ class YoloLayer(ks.Model):
           tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
           self._max_boxes, self._thresh, self._cls_thresh)
       return {
-          "bbox": nms.nmsed_boxes,
-          "classes": tf.cast(nms.nmsed_classes, tf.int32),
-          "confidence": nms.nmsed_scores,
-          "num_dets": num_dets
+          'bbox': nms.nmsed_boxes,
+          'classes': tf.cast(nms.nmsed_classes, tf.int32),
+          'confidence': nms.nmsed_scores,
+          'num_dets': num_dets
       }
-    
+
     boxes, classifs, confidence = nms_ops.nms(
         boxes,
         classifs,
@@ -159,10 +159,10 @@ class YoloLayer(ks.Model):
         one_hot=True)
 
     return {
-        "bbox": boxes,
-        "classes": classifs,
-        "confidence": confidence,
-        "num_dets": num_dets
+        'bbox': boxes,
+        'classes': classifs,
+        'confidence': confidence,
+        'num_dets': num_dets
     }
 
   @property
@@ -187,11 +187,11 @@ class YoloLayer(ks.Model):
 
   def get_config(self):
     return {
-        "masks": dict(self._masks),
-        "anchors": [list(a) for a in self._anchors],
-        "thresh": self._thresh,
-        "cls_thresh": self._cls_thresh,
-        "max_boxes": self._max_boxes,
+        'masks': dict(self._masks),
+        'anchors': [list(a) for a in self._anchors],
+        'thresh': self._thresh,
+        'cls_thresh': self._cls_thresh,
+        'max_boxes': self._max_boxes,
     }
 
 
@@ -206,7 +206,7 @@ class YoloGTFilter(ks.Model):
 
   def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
     shape = tf.shape(inputs)
-    #reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
+    # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
 
     # compute the true box output values
@@ -215,7 +215,7 @@ class YoloGTFilter(ks.Model):
     objectness = tf.squeeze(obns, axis=-1)
     box = box_utils.xcycwh_to_yxyx(boxes)
 
-    #compute the mask of where objects have been located
+    # compute the mask of where objects have been located
     num_dets = tf.reduce_sum(objectness, axis=(1, 2, 3))
 
     mask = tf.cast(tf.ones_like(sub), dtype=tf.bool)
@@ -256,20 +256,20 @@ class YoloGTFilter(ks.Model):
           tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
           self._max_boxes, self._thresh, self._cls_thresh)
       return {
-          "bbox": nms.nmsed_boxes,
-          "classes": tf.cast(nms.nmsed_classes, tf.int32),
-          "confidence": nms.nmsed_scores,
-          "num_dets": num_dets
+          'bbox': nms.nmsed_boxes,
+          'classes': tf.cast(nms.nmsed_classes, tf.int32),
+          'confidence': nms.nmsed_scores,
+          'num_dets': num_dets
       }
 
-    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes,
-                                                    classifs, self._max_boxes)
+    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs,
+                                                    self._max_boxes)
 
     return {
-        "bbox": boxes,
-        "classes": tf.math.argmax(classifs, axis=-1),
-        "confidence": confidence,
-        "num_dets": num_dets
+        'bbox': boxes,
+        'classes': tf.math.argmax(classifs, axis=-1),
+        'confidence': confidence,
+        'num_dets': num_dets
     }
 
   @property
@@ -294,9 +294,9 @@ class YoloGTFilter(ks.Model):
 
   def get_config(self):
     return {
-        "masks": dict(self._masks),
-        "anchors": [list(a) for a in self._anchors],
-        "thresh": self._thresh,
-        "cls_thresh": self._cls_thresh,
-        "max_boxes": self._max_boxes,
+        'masks': dict(self._masks),
+        'anchors': [list(a) for a in self._anchors],
+        'thresh': self._thresh,
+        'cls_thresh': self._cls_thresh,
+        'max_boxes': self._max_boxes,
     }

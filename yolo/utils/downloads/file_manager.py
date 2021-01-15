@@ -42,7 +42,7 @@ def get_size(path: Union[PathABC, io.IOBase]) -> int:
       path.seek(currentPos)
       return size
     else:
-      raise ValueError("IO object must be seekable in order to find the size.")
+      raise ValueError('IO object must be seekable in order to find the size.')
   else:
     return os.path.getsize(path)
 

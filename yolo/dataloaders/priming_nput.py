@@ -19,16 +19,16 @@ class Parser(parser.Parser):
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
-        Args:
-          output_size: `Tensor` or `list` for [height, width] of output image. The
-            output_size should be divided by the largest feature stride 2^max_level.
-          num_classes: `float`, number of classes.
-          aug_rand_zoom: `bool`, if True, augment training with random
-            zoom.
-          scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
-            scale.
-          seed: an `int` for the seed used by tf.random
-        """
+    Args:
+      output_size: `Tensor` or `list` for [height, width] of output image. The
+        output_size should be divided by the largest feature stride 2^max_level.
+      num_classes: `float`, number of classes.
+      aug_rand_zoom: `bool`, if True, augment training with random
+        zoom.
+      scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
+        scale.
+      seed: an `int` for the seed used by tf.random
+    """
     self._output_size = output_size
     self._aug_rand_zoom = aug_rand_zoom
     self._num_classes = num_classes
@@ -45,12 +45,12 @@ class Parser(parser.Parser):
 
   def _parse_train_data(self, decoded_tensors):
     """Generates images and labels that are usable for model training.
-         Args:
-           decoded_tensors: a dict of Tensors produced by the decoder.
-         Returns:
-           images: the image tensor.
-           labels: a dict of Tensors that contains labels.
-       """
+     Args:
+       decoded_tensors: a dict of Tensors produced by the decoder.
+     Returns:
+       images: the image tensor.
+       labels: a dict of Tensors that contains labels.
+    """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image = tf.cast(image, tf.float32)
     w = tf.cast(tf.shape(image)[0], tf.float32)
@@ -77,12 +77,12 @@ class Parser(parser.Parser):
 
   def _parse_eval_data(self, decoded_tensors):
     """Generates images and labels that are usable for model evaluation.
-        Args:
-          decoded_tensors: a dict of Tensors produced by the decoder.
-        Returns:
-          images: the image tensor.
-          labels: a dict of Tensors that contains labels.
-        """
+    Args:
+      decoded_tensors: a dict of Tensors produced by the decoder.
+    Returns:
+      images: the image tensor.
+      labels: a dict of Tensors that contains labels.
+    """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image = tf.cast(image, tf.float32)
     image = tf.image.resize_with_pad(

@@ -61,7 +61,7 @@ class Yolo_Loss(object):
     # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
     # if iou > self._iou_thresh then the network check the other anchors, so basically
     # checking anchor box 1 on prediction for anchor box 2
-    #self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
+    # self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
     self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
 
     self._loss_type = tf.cast(loss_type, tf.string)
@@ -133,7 +133,7 @@ class Yolo_Loss(object):
 
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, y_true, y_pred):
-    #1. generate and store constants and format output
+    # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
     y_pred = tf.cast(
@@ -145,7 +145,7 @@ class Yolo_Loss(object):
     fwidth = tf.cast(width, y_pred.dtype)
     fheight = tf.cast(height, y_pred.dtype)
 
-    #2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
+    # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
     pred_xy, pred_wh, pred_box = self._get_predicted_box(
         fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
     pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
@@ -153,12 +153,12 @@ class Yolo_Loss(object):
     pred_class = tf.math.sigmoid(y_pred[..., 5:])
     self.print_error(pred_box)
 
-    #3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
+    # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
     true_box = y_true[..., 0:4]
     true_conf = y_true[..., 4]
     true_class = y_true[..., 5:]
 
-    #5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == "giou":
       iou, giou = iou_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
@@ -184,19 +184,19 @@ class Yolo_Loss(object):
       loss_box = (loss_wh + loss_xy) * true_conf * scale
       #loss_box = tf.math.minimum(loss_box, self._max_value)
 
-    #6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     class_loss = self._cls_normalizer * tf.reduce_sum(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1)),
         axis=-1) * true_conf
 
-    #7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+    # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf)
     conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
 
-    #8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
+    # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.reduce_mean(
         tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype))
     conf_loss = tf.reduce_mean(
@@ -204,10 +204,10 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(
         tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype))
 
-    #9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
+    # 9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
     loss = class_loss + conf_loss + loss_box
 
-    #10. store values for use in metrics
+    # 10. store values for use in metrics
     recall50 = tf.reduce_mean(
         tf.math.divide_no_nan(
             tf.reduce_sum(

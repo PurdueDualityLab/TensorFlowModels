@@ -1,3 +1,5 @@
+from yolo.tasks import yolo
+from yolo.configs import yolo as yolocfg
 from official.core import input_reader
 from yolo.dataloaders import yolo_input as YOLO_Detection_Input
 from yolo.dataloaders.decoders import tfds_coco_decoder
@@ -46,17 +48,13 @@ class DataConfig(cfg.DataConfig):
   tfds_download: bool = True
 
 
-from yolo.configs import yolo as yolocfg
-from yolo.tasks import yolo
-
-
 def test_yolo_input_task():
-  with tf.device("/CPU:0"):
+  with tf.device('/CPU:0'):
     config = yolocfg.YoloTask(
         model=yolocfg.Yolo(
             base='v4',
             min_level=3,
-            norm_activation=yolocfg.common.NormActivation(activation="mish"),
+            norm_activation=yolocfg.common.NormActivation(activation='mish'),
             #norm_activation = yolocfg.common.NormActivation(activation="leaky"),
             #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
             #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
@@ -74,7 +72,7 @@ def test_yolo_input_task():
 
 
 def test_yolo_input():
-  with tf.device("/CPU:0"):
+  with tf.device('/CPU:0'):
     params = DataConfig(is_training=True)
     num_boxes = 9
 
@@ -110,7 +108,7 @@ def test_yolo_input():
   return dataset
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   dataset, dsp = test_yolo_input_task()
 
   for l, (i, j) in enumerate(dataset):

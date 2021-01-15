@@ -24,26 +24,26 @@ class Parser(parser.Parser):
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
-        Args:
-          output_size: `Tensor` or `list` for [height, width] of output image. The
-            output_size should be divided by the largest feature stride 2^max_level.
-          num_classes: `float`, number of classes.
-          aug_rand_saturation: `bool`, if True, augment training with random
-            saturation.
-          aug_rand_brightness: `bool`, if True, augment training with random
-            brightness.
-          aug_rand_zoom: `bool`, if True, augment training with random
-            zoom.
-          aug_rand_rotate: `bool`, if True, augment training with random
-            rotate.
-          aug_rand_hue: `bool`, if True, augment training with random
-            hue.
-          aug_rand_aspect: `bool`, if True, augment training with random
-            aspect.
-          scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
-            scale.
-          seed: an `int` for the seed used by tf.random
-        """
+    Args:
+      output_size: `Tensor` or `list` for [height, width] of output image. The
+        output_size should be divided by the largest feature stride 2^max_level.
+      num_classes: `float`, number of classes.
+      aug_rand_saturation: `bool`, if True, augment training with random
+        saturation.
+      aug_rand_brightness: `bool`, if True, augment training with random
+        brightness.
+      aug_rand_zoom: `bool`, if True, augment training with random
+        zoom.
+      aug_rand_rotate: `bool`, if True, augment training with random
+        rotate.
+      aug_rand_hue: `bool`, if True, augment training with random
+        hue.
+      aug_rand_aspect: `bool`, if True, augment training with random
+        aspect.
+      scale: 'list', `Tensor` or `list` for [low, high] of the bounds of the random
+        scale.
+      seed: an `int` for the seed used by tf.random
+    """
     self._output_size = output_size
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
@@ -65,12 +65,12 @@ class Parser(parser.Parser):
 
   def _parse_train_data(self, decoded_tensors):
     """Generates images and labels that are usable for model training.
-         Args:
-           decoded_tensors: a dict of Tensors produced by the decoder.
-         Returns:
-           images: the image tensor.
-           labels: a dict of Tensors that contains labels.
-        """
+     Args:
+       decoded_tensors: a dict of Tensors produced by the decoder.
+     Returns:
+       images: the image tensor.
+       labels: a dict of Tensors that contains labels.
+    """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image.set_shape((None, None, 3))
     image = tf.cast(image, tf.float32)
@@ -106,7 +106,7 @@ class Parser(parser.Parser):
                               dtype=tf.float32)
       deg = deg * 3.14 / 180.
       deg.set_shape(())
-      image = tfa.image.rotate(image, deg, interpolation="NEAREST")
+      image = tfa.image.rotate(image, deg, interpolation='NEAREST')
 
     if self._aug_rand_brightness:
       image = tf.image.random_brightness(image=image, max_delta=.75)
@@ -127,12 +127,12 @@ class Parser(parser.Parser):
 
   def _parse_eval_data(self, decoded_tensors):
     """Generates images and labels that are usable for model evaluation.
-        Args:
-          decoded_tensors: a dict of Tensors produced by the decoder.
-        Returns:
-          images: the image tensor.
-          labels: a dict of Tensors that contains labels.
-        """
+    Args:
+      decoded_tensors: a dict of Tensors produced by the decoder.
+    Returns:
+      images: the image tensor.
+      labels: a dict of Tensors that contains labels.
+    """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image.set_shape((None, None, 3))
     image = tf.cast(image, tf.float32)

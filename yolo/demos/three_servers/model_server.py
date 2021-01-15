@@ -29,7 +29,7 @@ class ModelServer(object):
                run_strat="/GPU:0",
                max_batch=5,
                wait_time=0.000001):
-    #support for ANSI cahracters in windows
+    # support for ANSI cahracters in windows
     support_windows()
     self._model = model
     self._timeout = 120000000
@@ -37,14 +37,14 @@ class ModelServer(object):
     self._device = utils.get_device(run_strat)
 
     # steps to take before loading into model
-    self._preprocess_fn = preprocess_fn if preprocess_fn != None else self._pre
+    self._preprocess_fn = preprocess_fn if preprocess_fn is not None else self._pre
     self._process_fn = utils.get_run_fn(model)
     # what you want me to send back
-    self._postprocess_fn = postprocess_fn if postprocess_fn != None else self._post
+    self._postprocess_fn = postprocess_fn if postprocess_fn is not None else self._post
 
     self._pdims = process_dims
     self._max_batch = max_batch
-    self._dynamic_wt = wait_time == 'dynamic'
+    self._dynamic_wt = wait_time == "dynamic"
     if not self._dynamic_wt:
       self._wait_time = utils.get_wait_time(wait_time, max_batch)
     else:
@@ -191,9 +191,9 @@ class ModelServer(object):
 
   def close(self):
     self._running = False
-    if self._thread != None:
+    if self._thread is not None:
       self._thread.join()
-    if self._clear_thread != None:
+    if self._clear_thread is not None:
       self._clear_thread.join()
     return
 
@@ -277,7 +277,7 @@ if __name__ == "__main__":
       saved_model=new_name,
       save_new_path=new_name,
       max_workspace_size_bytes=4000000000,
-      max_batch_size=5)  #, precision_mode="INT8", use_calibration=True)
+      max_batch_size=5)  # , precision_mode="INT8", use_calibration=True)
   model.compile()
   model.summary()
   model.set_postprocessor_fn(func)
@@ -305,7 +305,7 @@ if __name__ == "__main__":
   try:
     while (video.running and display.running):
       frame = video.get()
-      if type(frame) != type(None):
+      if not isinstance(frame, type(None)):
         while not server.put(frame):
           time.sleep(server.wait_time)
       time.sleep(server.wait_time)

@@ -34,11 +34,11 @@ def read_file(full_net, config, weights=None):
     bytes_read += 12
 
     if ((major * 10 + minor) >= 2):
-      print("64 seen")
+      print('64 seen')
       iseen = read_n_long(1, weights, unsigned=True)[0]
       bytes_read += 8
     else:
-      print("32 seen")
+      print('32 seen')
       iseen = read_n_int(1, weights, unsigned=True)[0]
       bytes_read += 4
 
@@ -66,7 +66,7 @@ def read_weights(full_net, config_file, weights_file):
 
   size = get_size(weights_file)
   with open_if_not_open(config_file) as config, \
-      open_if_not_open(weights_file, "rb") as weights:
+      open_if_not_open(weights_file, 'rb') as weights:
     config = convertConfigFile(config)
     bytes_read = read_file(full_net, config, weights)
     print('full net: ')

@@ -38,18 +38,18 @@ class Config(ABC):
   @property
   @abstractmethod
   def shape(self) -> Tuple[int, int, int]:
-    '''
+    """
         Output shape of the layer. The output must be a 3-tuple of ints
         corresponding to the the width, height, and number of channels of the
         output.
 
         Returns:
           A tuple corresponding to the output shape of the layer.
-        '''
+        """
     return
 
   def load_weights(self, files) -> int:
-    '''
+    """
         Load the weights for the current layer from a file.
 
         Arguments:
@@ -57,30 +57,30 @@ class Config(ABC):
 
         Returns:
           the number of bytes read.
-        '''
+        """
     return 0
 
   def get_weights(self) -> list:
-    '''
+    """
         Returns:
           a list of Numpy arrays consisting of all of the weights that
           were loaded from the weights file
-        '''
+        """
     return []
 
   @classmethod
-  def from_dict(clz, net, layer_dict) -> "Config":
-    '''
+  def from_dict(clz, net, layer_dict) -> 'Config':
+    """
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
-        '''
+        """
     if 'w' not in layer_dict:
       prevlayer = net[-1]
       l = {
-          "w": prevlayer.shape[0],
-          "h": prevlayer.shape[1],
-          "c": prevlayer.shape[2],
+          'w': prevlayer.shape[0],
+          'h': prevlayer.shape[1],
+          'c': prevlayer.shape[2],
           **layer_dict
       }
     else:
@@ -115,9 +115,9 @@ class _LayerBuilder(dict):
       raise KeyError(f"Unknown layer type: {key}") from e
 
   def register(self, *layer_types: str):
-    '''
+    """
         Register a parser node (layer) class with the layer builder.
-        '''
+        """
 
     def decorator(clz):
       for layer_type in layer_types:
@@ -186,12 +186,12 @@ class convCFG(Config):
 
   def get_weights(self, printing=False):
     if printing:
-      print("[weights, biases, biases, scales, rolling_mean, rolling_variance]")
+      print('[weights, biases, biases, scales, rolling_mean, rolling_variance]')
     if self.batch_normalize:
       return [
           self.weights,
-          self.scales,  #gamma
-          self.biases,  #beta
+          self.scales,  # gamma
+          self.biases,  # beta
           self.rolling_mean,
           self.rolling_variance
       ]
@@ -229,23 +229,23 @@ class shortcutCFG(Config):
 
   @classmethod
   def from_dict(clz, net, layer_dict):
-    '''
+    """
         Create a layer instance from the previous layer and a dictionary
         containing all of the parameters for the DarkNet layer. This is how
         linking is done by the parser.
-        '''
+        """
     _from = layer_dict['from']
     if not isinstance(_from, tuple):
       _from = (_from,)
 
     prevlayer = net[-1]
     l = {
-        "_type": layer_dict['_type'],
-        "w": prevlayer.shape[0],
-        "h": prevlayer.shape[1],
-        "c": prevlayer.shape[2],
-        "_from": _from,
-        "activation": layer_dict['activation'],
+        '_type': layer_dict['_type'],
+        'w': prevlayer.shape[0],
+        'h': prevlayer.shape[1],
+        'c': prevlayer.shape[2],
+        '_from': _from,
+        'activation': layer_dict['activation'],
     }
     return clz(**l)
 
@@ -296,14 +296,14 @@ class routeCFG(Config):
       layers = (layers,)
     assert c % layer_dict.get(
         'groups',
-        1) == 0, "The number of channels must evenly divide among the groups."
+        1) == 0, 'The number of channels must evenly divide among the groups.'
 
     # Create layer
     l = layer_dict.copy()
-    l["w"] = w
-    l["h"] = h
-    l["c"] = c
-    l["layers"] = layers
+    l['w'] = w
+    l['h'] = h
+    l['c'] = c
+    l['layers'] = layers
     return clz(**l)
 
   def to_tf(self, tensors):
@@ -340,12 +340,12 @@ class netCFG(Config):
   def from_dict(clz, net, layer_dict):
     assert len(
         net.data
-    ) == 0, "A [net] section cannot occour in the middle of a DarkNet model"
+    ) == 0, 'A [net] section cannot occour in the middle of a DarkNet model'
     l = {
-        "_type": layer_dict["_type"],
-        "w": layer_dict["width"],
-        "h": layer_dict["height"],
-        "c": layer_dict["channels"]
+        '_type': layer_dict['_type'],
+        'w': layer_dict['width'],
+        'h': layer_dict['height'],
+        'c': layer_dict['channels']
     }
     return clz(**l)
 
@@ -374,12 +374,12 @@ class yoloCFG(Config):
   def from_dict(clz, net, layer_dict):
     prevlayer = net[-1]
     l = {
-        "_type": layer_dict['_type'],
-        "mask": layer_dict['mask'],
-        "anchors": layer_dict['anchors'],
-        "w": prevlayer.shape[0],
-        "h": prevlayer.shape[1],
-        "c": prevlayer.shape[2]
+        '_type': layer_dict['_type'],
+        'mask': layer_dict['mask'],
+        'anchors': layer_dict['anchors'],
+        'w': prevlayer.shape[0],
+        'h': prevlayer.shape[1],
+        'c': prevlayer.shape[2]
     }
     return clz(**l)
 
@@ -423,7 +423,7 @@ class maxpoolCFG(Config):
     #print((self.w//self.stride, self.h//self.stride, self.c))
     return (
         self.w // self.stride, self.h // self.stride, self.c
-    )  #((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+    )  # ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
   def to_tf(self, tensors):
     #from tensorflow.nn import max_pool2d
@@ -436,22 +436,22 @@ class maxpoolCFG(Config):
 
 
 def len_width(n, f, p, s):
-  '''
+  """
     n: height or width
     f: kernels height or width
     p: padding
     s: strides height or width
-    '''
+    """
   return int(((n + 2 * p - f) / s) + 1)
 
 
 def len_width_up(n, f, p, s):
-  '''
+  """
     n: height or width
     f: kernels height or width
     p: padding
     s: strides height or width
-    '''
+    """
   return int(((n - 1) * s - 2 * p + (f - 1)) + 1)
 
 
@@ -487,11 +487,11 @@ def get_primitive_tf_layer_name(var, piece=3):
   while True:
     try:
       name, count = token.rsplit('_', 1)
-    except:
+    except BaseException:
       break
     try:
       cid.append(int(count))
-    except:
+    except BaseException:
       break
     else:
       token = name

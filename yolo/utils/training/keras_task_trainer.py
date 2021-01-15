@@ -25,7 +25,7 @@ class Trainer(tf.keras.Model):
     return
 
   def train_step(self, inputs):
-    #get the data point
+    # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
@@ -49,7 +49,7 @@ class Trainer(tf.keras.Model):
                                             self.task_config.gradient_clip_norm)
     self.optimizer.apply_gradients(zip(gradients, train_vars))
 
-    #custom metrics
+    # custom metrics
     logs = {"loss": loss}
     logs.update(metrics)
     return logs
@@ -134,14 +134,14 @@ if __name__ == "__main__":
 
   config = exp_cfg.YoloTask(
       model=exp_cfg.Yolo(
-          base='v4',
+          base="v4",
           min_level=3,
           norm_activation=exp_cfg.common.NormActivation(activation="mish"),
           #norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
           #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
           _boxes=[
-              '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-              '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
+              "(12, 16)", "(19, 36)", "(40, 28)", "(36, 75)", "(76, 55)",
+              "(72, 146)", "(142, 110)", "(192, 243)", "(459, 401)"
           ],
           filter=exp_cfg.YoloLossLayer(use_nms=True)),
       darknet_load_decoder=False)
@@ -168,7 +168,7 @@ if __name__ == "__main__":
   # TODO: negative box loss error in ciou
   optimizer = Trainer.fit_optimizer(tf.keras.optimizers.SGD())
 
-  start = datetime.datetime.now()  #time.time()
+  start = datetime.datetime.now()  # time.time()
   try:
     trainer.train(
         train, test, optimizer=optimizer, epochs=EPOCHS, callbacks=callbacks)

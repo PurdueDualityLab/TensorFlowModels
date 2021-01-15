@@ -39,7 +39,7 @@ def get_darknet53_tf_format(net, only_weights=True):
   while len(net) != 0:
     blocks = []
     layer = net.pop(0)
-    while layer._type != "shortcut":
+    while layer._type != 'shortcut':
       blocks.append(layer)
       layer = net.pop(0)
     encoder.append(blocks)
@@ -58,16 +58,16 @@ def get_darknet53_tf_format(net, only_weights=True):
 def get_tiny_tf_format(encoder):
   weights = []
   for layer in encoder:
-    if layer._type != "maxpool":
+    if layer._type != 'maxpool':
       weights.append(layer.get_weights())
   return encoder, weights
 
 
-def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):
+def load_weights_dnBackbone(backbone, encoder, mtype='darknet53'):
   # get weights for backbone
-  if mtype == "darknet53":
+  if mtype == 'darknet53':
     encoder, weights_encoder = get_darknet53_tf_format(encoder[:])
-  elif mtype == "darknet_tiny":
+  elif mtype == 'darknet_tiny':
     encoder, weights_encoder = get_tiny_tf_format(encoder[:])
 
   # set backbone weights
@@ -112,7 +112,7 @@ def load_weights_dnHead(head, decoder, v4=True):
 def print_layer_shape(layer):
   try:
     weights = layer.get_weights()
-  except:
+  except BaseException:
     weights = layer
   for item in weights:
     print(item.shape)
@@ -138,7 +138,7 @@ def set_darknet_weights_head(flat_head, weights_head):
         print(
             f"loaded weights for layer: head layer with depth {weight_depth}  -> name: {layer.name}",
             sep='      ',
-            end="\r")
+            end='\r')
         layer.set_weights(weight)
   return
 
@@ -175,19 +175,19 @@ def get_decoder_weights(decoder):
 
   # get decoder weights and group them together
   for i, layer in enumerate(decoder):
-    if layer._type == "route" and len(
+    if layer._type == 'route' and len(
         layer.layers) >= 2 and decoder[i - 1]._type != 'maxpool':
       layers.append([])
       layers.append(block)
       block = []
-    elif layer._type == "route" and decoder[i - 1]._type != 'maxpool':
+    elif layer._type == 'route' and decoder[i - 1]._type != 'maxpool':
       layers.append(block)
       block = []
-    elif (layer._type == "route" and
-          decoder[i - 1]._type == "maxpool") or layer._type == "maxpool":
+    elif (layer._type == 'route' and
+          decoder[i - 1]._type == 'maxpool') or layer._type == 'maxpool':
       # made only for spp
       continue
-    elif layer._type == "convolutional":
+    elif layer._type == 'convolutional':
       block.append(layer)
     # else:
     #     # if you upsample
@@ -204,7 +204,7 @@ def get_decoder_weights(decoder):
   head_weights = []
   head_layers = []
   for layer in (head):
-    if layer is not None and layer._type == "convolutional":
+    if layer is not None and layer._type == 'convolutional':
       head_weights.append(layer.get_weights())
       head_layers.append(layer)
 

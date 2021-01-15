@@ -26,15 +26,15 @@ class LearningRateScheduler(ks.callbacks.Callback):
     logs = logs or {}
     logs['lr'] = K.get_value(self.model.optimizer.lr)
     logs['batch_step'] = self._batches
-    string = ["%s: %0.5f\t" % (key, logs[key]) for key in logs.keys()]
-    print("".join(string), end="\r", flush=True)
+    string = ['%s: %0.5f\t' % (key, logs[key]) for key in logs.keys()]
+    print(''.join(string), end='\r', flush=True)
 
   def on_epoch_end(self, batch, logs=None):
     logs = logs or {}
     logs['lr'] = K.get_value(self.model.optimizer.lr)
     logs['batch_step'] = self._batches
     try:
-      string = ["%s: %0.5f\t" % (key, logs[key]) for key in logs.keys()]
-      print("\n", "".join(string), end="\n\n", flush=True)
+      string = ['%s: %0.5f\t' % (key, logs[key]) for key in logs.keys()]
+      print('\n', ''.join(string), end='\n\n', flush=True)
     except Exception as e:
       print(e)

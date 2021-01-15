@@ -25,7 +25,7 @@ class TensorRT(object):
     self._batch_size = max_batch_size
     self._image_shape = image_shape
     self._use_calibration_fn = use_calibration
-    if self._model_save_path == None:
+    if self._model_save_path is None:
       raise Exception("model save path not specified")
     self._params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(
         precision_mode=precision_mode,
@@ -98,9 +98,9 @@ class TensorRT(object):
 
   @tf.function
   def predict(self, mod_inputs):
-    if self._model == None:
+    if self._model is None:
       raise Exception("Compile the Model first")
-    if self._processor != None:
+    if self._processor is not None:
       return self._postprocess(self._compute(mod_inputs))
     else:
       return self._compute(mod_inputs)
@@ -119,16 +119,16 @@ class TensorRT(object):
       return tf.concat([outputs, new], axis=0)
 
   def __call__(self, mod_inputs):
-    if self._model == None:
+    if self._model is None:
       raise Exception("Compile the Model first")
-    if self._processor != None:
+    if self._processor is not None:
       return self._postprocess(self._model(mod_inputs))
     else:
       return self._model(mod_inputs)
 
   @property
   def outputs():
-    if self._model == None:
+    if self._model is None:
       raise Exception("Compile the Model first")
     a = self._model.outputs
     b = self._model.output_shapes
@@ -149,13 +149,13 @@ if __name__ == "__main__":
         "confidence": nms.nmsed_scores,
     }
 
-  name = "testing_weights/yolov4/full_models/v4_32"  #load_model()
+  name = "testing_weights/yolov4/full_models/v4_32"  # load_model()
   new_name = f"{name}_tensorrt"
   model = TensorRT(
       saved_model=new_name,
       save_new_path=new_name,
       max_workspace_size_bytes=4000000000)
-  #model.convertModel()
+  # model.convertModel()
   model.compile()
   model.summary()
   model.set_postprocessor_fn(func)

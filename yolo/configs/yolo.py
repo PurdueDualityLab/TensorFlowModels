@@ -48,15 +48,15 @@ class ModelConfig(hyperparams.Config):
   def input_size(self, input_size):
     self._input_size = input_size
 
-  def as_dict(self):  #get_build_model_dict(self):
+  def as_dict(self):  # get_build_model_dict(self):
     #model_cfg = getattr(self.model, self.model.type)
     #model_kwargs = model_cfg.as_dict()
     model_kwargs = super().as_dict()
     # print(model_kwargs)
     if self._boxes is not None:
-      model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
+      model_kwargs.update({'_boxes': [str(b) for b in self.boxes]})
     else:
-      model_kwargs.update({"_boxes": None})
+      model_kwargs.update({'_boxes': None})
 
     return model_kwargs
 
@@ -110,16 +110,16 @@ class ModelConfig(hyperparams.Config):
       elif isinstance(box, str):
         if box[0] == '(' or box[0] == '[':
           f = []
-          for b in box[1:-1].split(","):
+          for b in box[1:-1].split(','):
             f.append(float(b.strip()))
           boxes.append(f)
         else:
           f = []
-          for b in box.split(","):
+          for b in box.split(','):
             f.append(float(b.strip()))
           boxes.append(f)
       elif isinstance(box, int):
-        raise IOError("unsupported input type, only strings or tuples")
+        raise IOError('unsupported input type, only strings or tuples')
     # print(boxes)
     return boxes
 
@@ -197,7 +197,7 @@ class YoloLossLayer(hyperparams.Config):
   iou_thresh: float = 0.45
   class_thresh: float = 0.45
   ignore_thresh: float = 0.7
-  loss_type: str = "ciou"
+  loss_type: str = 'ciou'
   max_boxes: int = 200
   anchor_generation_scale: int = 416
   use_nms: bool = False
@@ -206,10 +206,10 @@ class YoloLossLayer(hyperparams.Config):
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
   backbone: backbones.Backbone = backbones.Backbone(
-      type="darknet", darknet=backbones.DarkNet(model_id="cspdarknet53"))
-  decoder: YoloDecoder = YoloDecoder(version="v3", type="regular")
-  darknet_weights_file: str = "yolov3.weights"
-  darknet_weights_cfg: str = "yolov3.cfg"
+      type='darknet', darknet=backbones.DarkNet(model_id='cspdarknet53'))
+  decoder: YoloDecoder = YoloDecoder(version='v3', type='regular')
+  darknet_weights_file: str = 'yolov3.weights'
+  darknet_weights_cfg: str = 'yolov3.cfg'
   activation: str = 'mish'
 
 
@@ -223,11 +223,11 @@ class Yolo(ModelConfig):
   base: Union[str, YoloBase] = YoloBase()
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
-      activation="leaky",
+      activation='leaky',
       use_sync_bn=False,
       norm_momentum=0.99,
       norm_epsilon=0.001)
-  decoder_activation: str = "leaky"
+  decoder_activation: str = 'leaky'
   _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: [
       '(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'
   ])
@@ -240,47 +240,47 @@ class Yolo(ModelConfig):
       'v3':
           YoloBase(
               backbone=backbones.Backbone(
-                  type="darknet",
-                  darknet=backbones.DarkNet(model_id="darknet53")),
-              decoder=YoloDecoder(version="v3", type="regular"),
-              darknet_weights_file="cache://yolov3.weights",
-              darknet_weights_cfg="cache://yolov3.cfg",
+                  type='darknet',
+                  darknet=backbones.DarkNet(model_id='darknet53')),
+              decoder=YoloDecoder(version='v3', type='regular'),
+              darknet_weights_file='cache://yolov3.weights',
+              darknet_weights_cfg='cache://yolov3.cfg',
               activation='leaky'),
       'v3spp':
           YoloBase(
               backbone=backbones.Backbone(
-                  type="darknet",
-                  darknet=backbones.DarkNet(model_id="darknet53")),
-              decoder=YoloDecoder(version="v3", type="spp"),
-              darknet_weights_file="cache://yolov3-spp.weights",
-              darknet_weights_cfg="cache://yolov3-spp.cfg",
+                  type='darknet',
+                  darknet=backbones.DarkNet(model_id='darknet53')),
+              decoder=YoloDecoder(version='v3', type='spp'),
+              darknet_weights_file='cache://yolov3-spp.weights',
+              darknet_weights_cfg='cache://yolov3-spp.cfg',
               activation='leaky'),
       'v3tiny':
           YoloBase(
               backbone=backbones.Backbone(
-                  type="darknet",
-                  darknet=backbones.DarkNet(model_id="darknettiny")),
-              decoder=YoloDecoder(version="v3", type="tiny"),
-              darknet_weights_file="cache://yolov3-tiny.weights",
-              darknet_weights_cfg="cache://yolov3-tiny.cfg",
+                  type='darknet',
+                  darknet=backbones.DarkNet(model_id='darknettiny')),
+              decoder=YoloDecoder(version='v3', type='tiny'),
+              darknet_weights_file='cache://yolov3-tiny.weights',
+              darknet_weights_cfg='cache://yolov3-tiny.cfg',
               activation='leaky'),
       'v4':
           YoloBase(
               backbone=backbones.Backbone(
-                  type="darknet",
-                  darknet=backbones.DarkNet(model_id="cspdarknet53")),
-              decoder=YoloDecoder(version="v4", type="regular"),
-              darknet_weights_file="cache://yolov4.weights",
-              darknet_weights_cfg="cache://yolov4.cfg",
+                  type='darknet',
+                  darknet=backbones.DarkNet(model_id='cspdarknet53')),
+              decoder=YoloDecoder(version='v4', type='regular'),
+              darknet_weights_file='cache://yolov4.weights',
+              darknet_weights_cfg='cache://yolov4.cfg',
               activation='mish'),
       'v4tiny':
           YoloBase(
               backbone=backbones.Backbone(
-                  type="darknet",
-                  darknet=backbones.DarkNet(model_id="cspdarknettiny")),
-              decoder=YoloDecoder(version="v4", type="tiny"),
-              darknet_weights_file="cache://yolov4-tiny.weights",
-              darknet_weights_cfg="cache://yolov4-tiny.cfg",
+                  type='darknet',
+                  darknet=backbones.DarkNet(model_id='cspdarknettiny')),
+              decoder=YoloDecoder(version='v4', type='tiny'),
+              darknet_weights_file='cache://yolov4-tiny.weights',
+              darknet_weights_cfg='cache://yolov4-tiny.cfg',
               activation='leaky'
           ),  # TODO: fix activation for v4 tiny and all v3 models
   }
@@ -292,7 +292,7 @@ class Yolo(ModelConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-  model: Yolo = Yolo(base="v4tiny")
+  model: Yolo = Yolo(base='v4tiny')
   train_data: DataConfig = DataConfig(is_training=True)
   validation_data: DataConfig = DataConfig(is_training=False)
   weight_decay: float = 5e-4
@@ -324,14 +324,14 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
           num_gpus=2),
       task=YoloTask(
           model=Yolo(base='v4'),
-          train_data=DataConfig(  #input_path=os.path.join(
-              #COCO_INPUT_PATH_BASE, 'train*'),
+          train_data=DataConfig(  # input_path=os.path.join(
+              # COCO_INPUT_PATH_BASE, 'train*'),
               is_training=True,
               global_batch_size=train_batch_size,
               parser=Parser(),
               shuffle_buffer_size=2),
           validation_data=DataConfig(
-              #input_path=os.path.join(COCO_INPUT_PATH_BASE,
+              # input_path=os.path.join(COCO_INPUT_PATH_BASE,
               #                        'val*'),
               is_training=False,
               global_batch_size=eval_batch_size,
@@ -380,6 +380,6 @@ def yolo_v4_coco() -> cfg.ExperimentConfig:
   return config
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   config = YoloTask()
   print(config)

@@ -46,7 +46,7 @@ class UDPServer(object):
 
   def get_file(self, sock):
     sock.sendto(b"GET", (self._address, self._PORT))
-    data = b''
+    data = b""
     while (True):
       seg, addr = s.recvfrom(MAX_DGRAM_SIZE)
       if struct.unpack("B", seg[0:1])[0] > 1:
@@ -58,9 +58,9 @@ class UDPServer(object):
 
   def stop(self):
     self._running = False
-    if self._thread != None:
+    if self._thread is not None:
       self._thread.join()
-    if self._socket != None:
+    if self._socket is not None:
       self._socket.close()
     return
 
@@ -136,7 +136,7 @@ class UDPPacket(object):
 
   @staticmethod
   def reconstruct(packet_list):
-    if len(packet_list) < 0 and packet_list == None:
+    if len(packet_list) < 0 and packet_list is None:
       return None
     num_packets = packet_list[-1].num_packets
     if len(packet_list) < num_packets:
@@ -177,10 +177,10 @@ if __name__ == "__main__":
   print(pack[3].num_packets)
   #del pack[2]
 
-  #print(pack)
+  # print(pack)
   pack[0], pack[2] = pack[2], pack[0]
   pack[0], pack[3] = pack[3], pack[0]
-  #print(UDPPacket.decode_bytes(pack[2].bytes).num_packets)
+  # print(UDPPacket.decode_bytes(pack[2].bytes).num_packets)
 
   image = UDPPacket.reconstruct(pack)
   image = tf.io.decode_jpeg(image)

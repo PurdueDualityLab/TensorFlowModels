@@ -18,7 +18,7 @@ def compute_iou(box1, box2, yxyx=False):
         iou: a `Tensor` who represents the intersection over union.
     """
   # get box corners
-  with tf.name_scope("iou"):
+  with tf.name_scope('iou'):
     if not yxyx:
       box1 = box_utils.xcycwh_to_yxyx(box1)
       box2 = box_utils.xcycwh_to_yxyx(box2)
@@ -30,14 +30,14 @@ def compute_iou(box1, box2, yxyx=False):
     intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
                                    tf.zeros_like(intersect_mins))
     intersection = tf.reduce_prod(
-        intersect_wh, axis=-1)  #intersect_wh[..., 0] * intersect_wh[..., 1]
+        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
 
     box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
     iou = intersection / (union + 1e-7
-                         )  #tf.math.divide_no_nan(intersection, union)
+                         )  # tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
   return iou
 
@@ -52,7 +52,7 @@ def compute_giou(box1, box2):
     Returns:
         iou: a `Tensor` who represents the generalized intersection over union.
     """
-  with tf.name_scope("giou"):
+  with tf.name_scope('giou'):
     # get box corners
     box1 = box_utils.xcycwh_to_yxyx(box1)
     box2 = box_utils.xcycwh_to_yxyx(box2)
@@ -93,7 +93,7 @@ def compute_diou(box1, box2):
     Returns:
         iou: a `Tensor` who represents the distance intersection over union.
     """
-  with tf.name_scope("diou"):
+  with tf.name_scope('diou'):
     # compute center distance
     dist = box_utils.center_distance(box1[..., 0:2], box2[..., 0:2])
 
@@ -138,8 +138,8 @@ def compute_ciou(box1, box2):
     Returns:
         iou: a `Tensor` who represents the complete intersection over union.
     """
-  with tf.name_scope("ciou"):
-    #compute DIOU and IOU
+  with tf.name_scope('ciou'):
+    # compute DIOU and IOU
     iou, diou = compute_diou(box1, box2)
 
     # computer aspect ratio consistency

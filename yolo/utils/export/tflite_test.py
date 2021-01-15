@@ -50,16 +50,16 @@ def TfLiteModel(image, model_name="detect.tflite"):
   for i in output_details:
     print(i)
 
-  input_shape = input_details[0]['shape']
+  input_shape = input_details[0]["shape"]
   input_data = resize_input_image(
-      image, input_shape, normalize=True, dtype=input_details[0]['dtype'])
-  interpreter.set_tensor(input_details[0]['index'], input_data)
+      image, input_shape, normalize=True, dtype=input_details[0]["dtype"])
+  interpreter.set_tensor(input_details[0]["index"], input_data)
   interpreter.invoke()
 
-  boxes = interpreter.get_tensor(output_details[0]['index'])
-  classes = interpreter.get_tensor(output_details[1]['index'])
-  confidences = interpreter.get_tensor(output_details[2]['index'])
-  num_dets = interpreter.get_tensor(output_details[3]['index'])
+  boxes = interpreter.get_tensor(output_details[0]["index"])
+  classes = interpreter.get_tensor(output_details[1]["index"])
+  confidences = interpreter.get_tensor(output_details[2]["index"])
+  num_dets = interpreter.get_tensor(output_details[3]["index"])
   pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
 
   print(num_dets)
@@ -68,8 +68,8 @@ def TfLiteModel(image, model_name="detect.tflite"):
   k = cv2.waitKey(0)
   if k == 27:  # wait for ESC key to exit
     cv2.destroyAllWindows()
-  elif k == ord('s'):  # wait for 's' key to save and exit
-    cv2.imwrite('messigray.png', pimage)
+  elif k == ord("s"):  # wait for 's' key to save and exit
+    cv2.imwrite("messigray.png", pimage)
     cv2.destroyAllWindows()
   return
 
@@ -101,4 +101,4 @@ if __name__ == "__main__":
       "https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg"
   )
   TfLiteModel(image, model_name="detect.tflite")
-  #print_mod(model_name="detect.tflite")
+  # print_mod(model_name="detect.tflite")

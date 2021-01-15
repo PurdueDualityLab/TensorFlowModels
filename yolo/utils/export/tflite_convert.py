@@ -1,3 +1,5 @@
+import os
+import traceback as st
 import tensorflow as tf
 from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
@@ -5,9 +7,6 @@ from yolo.tasks.yolo import YoloTask
 from skimage import io
 import cv2
 prep_gpu()
-
-import traceback as st
-import os
 
 
 def create_metadata(model_file_name, label_map_file_name, num_labels):
@@ -19,22 +18,22 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
 
   # Creates model info.
   model_meta = _metadata_fb.ModelMetadataT()
-  model_meta.name = "MobileNetV1 image classifier"
-  model_meta.description = ("Identify the most prominent object in the "
-                            "image from a set of 1,001 categories such as "
-                            "trees, animals, food, vehicles, person etc.")
-  model_meta.version = "v1"
-  model_meta.author = "TensorFlow"
-  model_meta.license = ("Apache License. Version 2.0 "
-                        "http://www.apache.org/licenses/LICENSE-2.0.")
+  model_meta.name = 'MobileNetV1 image classifier'
+  model_meta.description = ('Identify the most prominent object in the '
+                            'image from a set of 1,001 categories such as '
+                            'trees, animals, food, vehicles, person etc.')
+  model_meta.version = 'v1'
+  model_meta.author = 'TensorFlow'
+  model_meta.license = ('Apache License. Version 2.0 '
+                        'http://www.apache.org/licenses/LICENSE-2.0.')
 
   # Creates input info.
   input_meta = _metadata_fb.TensorMetadataT()
-  input_meta.name = "image"
+  input_meta.name = 'image'
   input_meta.description = (
-      "Input image to be classified. The expected image is {0} x {1}, with "
-      "three channels (red, blue, and green) per pixel. Each value in the "
-      "tensor is a single byte between 0 and 255.".format(416, 416))
+      'Input image to be classified. The expected image is {0} x {1}, with '
+      'three channels (red, blue, and green) per pixel. Each value in the '
+      'tensor is a single byte between 0 and 255.'.format(416, 416))
   input_meta.content = _metadata_fb.ContentT()
   input_meta.content.contentProperties = _metadata_fb.ImagePropertiesT()
   input_meta.content.contentProperties.colorSpace = (
@@ -55,8 +54,8 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
 
   # Creates output info.
   bbox_meta = _metadata_fb.TensorMetadataT()
-  bbox_meta.name = "bbox"
-  bbox_meta.description = "."
+  bbox_meta.name = 'bbox'
+  bbox_meta.description = '.'
   bbox_meta.content = _metadata_fb.ContentT()
   bbox_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
   bbox_meta.content.contentPropertiesType = (
@@ -67,8 +66,8 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
   bbox_meta.stats = bbox_stats
 
   classes_meta = _metadata_fb.TensorMetadataT()
-  classes_meta.name = "classes"
-  classes_meta.description = "."
+  classes_meta.name = 'classes'
+  classes_meta.description = '.'
   classes_meta.content = _metadata_fb.ContentT()
   classes_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
   classes_meta.content.contentPropertiesType = (
@@ -79,13 +78,13 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
   classes_meta.stats = classes_stats
   label_file = _metadata_fb.AssociatedFileT()
   label_file.name = os.path.basename(label_map_file_name)
-  label_file.description = "Labels for objects that the model can recognize."
+  label_file.description = 'Labels for objects that the model can recognize.'
   label_file.type = _metadata_fb.AssociatedFileType.TENSOR_AXIS_LABELS
   classes_meta.associatedFiles = [label_file]
 
   confidence_meta = _metadata_fb.TensorMetadataT()
-  confidence_meta.name = "confidence"
-  confidence_meta.description = "."
+  confidence_meta.name = 'confidence'
+  confidence_meta.description = '.'
   confidence_meta.content = _metadata_fb.ContentT()
   confidence_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
   confidence_meta.content.contentPropertiesType = (
@@ -96,8 +95,8 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
   confidence_meta.stats = confidence_stats
 
   num_dets_meta = _metadata_fb.TensorMetadataT()
-  num_dets_meta.name = "num_dets"
-  num_dets_meta.description = "."
+  num_dets_meta.name = 'num_dets'
+  num_dets_meta.description = '.'
   num_dets_meta.content = _metadata_fb.ContentT()
   num_dets_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
   num_dets_meta.content.contentPropertiesType = (
@@ -108,8 +107,8 @@ def create_metadata(model_file_name, label_map_file_name, num_labels):
   num_dets_meta.stats = num_dets_stats
 
   raw_output_meta = _metadata_fb.TensorMetadataT()
-  raw_output_meta.name = "raw_output"
-  raw_output_meta.description = "."
+  raw_output_meta.name = 'raw_output'
+  raw_output_meta.description = '.'
   raw_output_meta.content = _metadata_fb.ContentT()
   raw_output_meta.content.content_properties = _metadata_fb.FeaturePropertiesT()
   raw_output_meta.content.contentPropertiesType = (
@@ -137,15 +136,15 @@ def conversion(model):
 
   @tf.function
   def run(image):
-    with tf.device("cpu:0"):
+    with tf.device('cpu:0'):
       image = tf.cast(image, tf.float32)
       image = image / tf.fill(tf.shape(image), 255.0)
       pred = model.call(image, training=False)
       pred = {
-          "bbox": tf.cast(pred["bbox"], tf.float32),
-          "classes": tf.cast(pred["classes"], tf.float32),
-          "confidence": tf.cast(pred["confidence"], tf.float32),
-          "num_dets": tf.cast(pred["num_dets"], tf.float32)
+          'bbox': tf.cast(pred['bbox'], tf.float32),
+          'classes': tf.cast(pred['classes'], tf.float32),
+          'confidence': tf.cast(pred['confidence'], tf.float32),
+          'num_dets': tf.cast(pred['num_dets'], tf.float32)
       }
     return pred
 
@@ -154,13 +153,13 @@ def conversion(model):
 
 def get_rep_data():
   import tensorflow_datasets as tfds
-  dataset = tfds.load("coco", split="train", shuffle_files=True)
+  dataset = tfds.load('coco', split='train', shuffle_files=True)
   dataset = dataset.take(100)
 
   def representative_dataset():
     for data in dataset:
       data = tf.cast(
-          tf.expand_dims(tf.image.resize(data["image"], (416, 416)), axis=0),
+          tf.expand_dims(tf.image.resize(data['image'], (416, 416)), axis=0),
           tf.uint8)
       yield [data]
 
@@ -173,7 +172,7 @@ def url_to_image(url):
 
 
 def uniary_convert():
-  with tf.device("gpu:0"):
+  with tf.device('gpu:0'):
     model = None
     input_size = [416, 416, 3]
     # config = exp_cfg.YoloTask(
@@ -192,10 +191,10 @@ def uniary_convert():
             _input_size=input_size,
             base='v3',
             min_level=3,
-            norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
+            norm_activation=exp_cfg.common.NormActivation(activation='leaky'),
             _boxes=[
-                "(10, 13)", "(16, 30)", "(33, 23)", "(30, 61)", "(62, 45)",
-                "(59, 119)", "(116, 90)", "(156, 198)", "(373, 326)"
+                '(10, 13)', '(16, 30)', '(33, 23)', '(30, 61)', '(62, 45)',
+                '(59, 119)', '(116, 90)', '(156, 198)', '(373, 326)'
             ],
             filter=exp_cfg.YoloLossLayer(use_nms=False)))
     task = YoloTask(config)
@@ -205,7 +204,7 @@ def uniary_convert():
     model(tf.ones((1, 416, 416, 3), dtype=tf.float32), training=False)
 
     image = url_to_image(
-        "https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg"
+        'https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg'
     )
     image = cv2.resize(image, (416, 416))
     image = tf.expand_dims(image, axis=0)
@@ -220,9 +219,9 @@ def uniary_convert():
 
     try:
       tflite_model = converter.convert()
-    except:
-      print("here")
-      #st.print_exc()
+    except BaseException:
+      print('here')
+      # st.print_exc()
       import sys
       sys.exit()
 
@@ -230,7 +229,7 @@ def uniary_convert():
       f.write(tflite_model)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   uniary_convert()
 
   # with open("saved_models/v4/tiny_no_nms/label_map.txt", 'w') as label_map:

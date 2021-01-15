@@ -26,13 +26,13 @@ def get_device(policy):
 
 
 def get_wait_time(wait_time, batch_size):
-  if wait_time == None:
+  if wait_time is None:
     return 0.001 * batch_size
   return wait_time
 
 
 def set_policy(policy_name):
-  if policy_name == None:
+  if policy_name is None:
     return tf.float32
   from tensorflow.keras.mixed_precision import experimental as mixed_precision
   policy = mixed_precision.Policy(policy_name)
@@ -45,10 +45,10 @@ def get_run_fn(model, signature="serving_default") -> Callable:
   if ("saved_model" in str(type(model))):
     try:
       return model.signatures[signature]
-    except:
+    except BaseException:
       print("WARNING: signature not found in model")
       return model
-  elif (hasattr(model, 'predict')):
+  elif (hasattr(model, "predict")):
     return model.predict
   else:
     return model
@@ -73,7 +73,7 @@ def clear_buffer(s):
   while True:
     seg, addr = s.recvfrom(2**16)
     print(seg[0])
-    if struct.unpack('B', seg[0:1])[0] == 1:
+    if struct.unpack("B", seg[0:1])[0] == 1:
       print("finish emptying buffer")
       break
 
@@ -114,7 +114,7 @@ def get_draw_fn(self, colors, label_names, display_name):
     cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes], 1)
     return True
 
-  if display_name or label_names == None:
+  if display_name or label_names is None:
     return draw_box_name
   else:
     return draw_box
@@ -137,7 +137,7 @@ def get_draw_fn(colors, label_names, display_name):
     cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes], 1)
     return True
 
-  if display_name or label_names == None:
+  if display_name or label_names is None:
     return draw_box_name
   else:
     return draw_box
@@ -187,7 +187,7 @@ class DrawBoxes(object):
                     1)
       return True
 
-    if display_name and label_names != None:
+    if display_name and label_names is not None:
       return draw_box_name
     else:
       return draw_box
@@ -226,7 +226,7 @@ class DrawBoxes(object):
       boxes = boxes.numpy()
     if hasattr(classes, "numpy"):
       classes = classes.numpy()
-    if type(conf) != type(None) and hasattr(conf, "numpy"):
+    if not isinstance(conf, type(None)) and hasattr(conf, "numpy"):
       conf = conf.numpy()
 
     if not isinstance(image, list):

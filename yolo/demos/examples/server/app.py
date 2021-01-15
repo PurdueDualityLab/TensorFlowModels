@@ -1,7 +1,7 @@
 from yolo.utils.run_utils import prep_gpu
 try:
   prep_gpu()
-except:
+except BaseException:
   print("GPU's already prepped")
 
 from flask import Flask, request, jsonify
@@ -19,7 +19,6 @@ from yolo.utils.demos import utils
 from yolo.utils.demos import coco
 from queue import Queue
 import urllib.request
-
 
 app = Flask(__name__)
 
@@ -48,13 +47,13 @@ def build_model(version):
   if version == "v4":
     config = exp_cfg.YoloTask(
         model=exp_cfg.Yolo(
-            base='v4',
+            base="v4",
             min_level=3,
             norm_activation=exp_cfg.common.NormActivation(activation="mish"),
             #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
             _boxes=[
-                '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-                '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
+                "(12, 16)", "(19, 36)", "(40, 28)", "(36, 75)", "(76, 55)",
+                "(72, 146)", "(142, 110)", "(192, 243)", "(459, 401)"
             ],
         ))
   elif "tiny" in version:
@@ -64,8 +63,8 @@ def build_model(version):
             min_level=4,
             norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
             _boxes=[
-                '(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)',
-                '(344, 319)'
+                "(10, 14)", "(23, 27)", "(37, 58)", "(81, 82)", "(135, 169)",
+                "(344, 319)"
             ],
             #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
         ))
@@ -77,8 +76,8 @@ def build_model(version):
             norm_activation=exp_cfg.common.NormActivation(activation="leaky"),
             #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
             _boxes=[
-                '(10, 13)', '(16, 30)', '(33, 23)', '(30, 61)', '(62, 45)',
-                '(59, 119)', '(116, 90)', '(156, 198)', '(373, 326)'
+                "(10, 13)", "(16, 30)", "(33, 23)", "(30, 61)", "(62, 45)",
+                "(59, 119)", "(116, 90)", "(156, 198)", "(373, 326)"
             ],
         ))
 
@@ -121,9 +120,9 @@ class ServerAttr(object):
     if np.max(f) <= 1:
       f = (f * 255).astype(np.uint8)
     f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
-    f = cv2.imencode('.jpg', f)[1].tostring()
-    f = base64.b64encode(f).decode('utf-8')
-    b64_src = 'data:image/jpg;base64,'
+    f = cv2.imencode(".jpg", f)[1].tostring()
+    f = base64.b64encode(f).decode("utf-8")
+    b64_src = "data:image/jpg;base64,"
     f = b64_src + f
     return f
 
@@ -134,9 +133,9 @@ class ServerAttr(object):
       if np.max(f) <= 1:
         f = (f * 255).astype(np.uint8)
       f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
-      f = cv2.imencode('.jpg', f)[1].tostring()
-      f = base64.b64encode(f).decode('utf-8')
-      b64_src = 'data:image/jpg;base64,'
+      f = cv2.imencode(".jpg", f)[1].tostring()
+      f = base64.b64encode(f).decode("utf-8")
+      b64_src = "data:image/jpg;base64,"
       f = b64_src + f
       fl.append(f)
     return fl
@@ -159,7 +158,7 @@ def init():
   return "<h1>hello world</h1>"
 
 
-@app.route("/set/<version>", methods=['POST'])
+@app.route("/set/<version>", methods=["POST"])
 def hello_model(version):
   """
     get attr for model version
@@ -168,24 +167,24 @@ def hello_model(version):
   return f"<h1>{version}</h1>"
 
 
-@app.route("/close", methods=['POST'])
+@app.route("/close", methods=["POST"])
 def close_model():
   MODEL.close_model()
   return f"<h1>closed</h1>"
 
 
-@app.route("/send_frame", methods=['POST'])
+@app.route("/send_frame", methods=["POST"])
 def send_frame():
   try:
     print("decoding image", request)
-    data_url = request.values['frame']
+    data_url = request.values["frame"]
     data = not MODEL.put(data_url)
     return jsonify({"dropped": data})
-  except:
+  except BaseException:
     return jsonify({"dropped": True})
 
 
-@app.route("/get_frame", methods=['GET'])
+@app.route("/get_frame", methods=["GET"])
 def get_frame():
   print("getting image")
   try:
@@ -194,27 +193,27 @@ def get_frame():
       return jsonify({"frame": "null"})
     else:
       return jsonify({"frame": frame})
-  except:
+  except BaseException:
     return jsonify({"frame": "null"})
 
 
-@app.route("/getall_frames", methods=['GET'])
+@app.route("/getall_frames", methods=["GET"])
 def getall_frames():
   print("getting image")
   try:
     frame = MODEL.getall()
     return jsonify({"frames": frame})
-  except:
+  except BaseException:
     return jsonify({"frames": "null"})
 
 
 @app.after_request
 def after_request(response):
   print("log: setting cors", file=sys.stderr)
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers',
-                       'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+  response.headers.add("Access-Control-Allow-Origin", "*")
+  response.headers.add("Access-Control-Allow-Headers",
+                       "Content-Type,Authorization")
+  response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE")
   return response
 
 

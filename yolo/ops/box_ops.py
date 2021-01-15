@@ -14,7 +14,7 @@ def yxyx_to_xcycwh(box: tf.Tensor):
     Returns:
       box: a `Tensor` whose shape is the same as `box` in new format.
     """
-  with tf.name_scope("yxyx_to_xcycwh"):
+  with tf.name_scope('yxyx_to_xcycwh'):
     ymin, xmin, ymax, xmax = tf.split(box, 4, axis=-1)
     x_center = (xmax + xmin) / 2
     y_center = (ymax + ymin) / 2
@@ -32,7 +32,7 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
     Returns:
       box: a `Tensor` whose shape is the same as `box` in new format.
     """
-  with tf.name_scope("xcycwh_to_yxyx"):
+  with tf.name_scope('xcycwh_to_yxyx'):
     xy, wh = tf.split(box, 2, axis=-1)
     xy_min = xy - wh / 2
     xy_max = xy + wh / 2
@@ -52,7 +52,7 @@ def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
     Returns:
       box: a `Tensor` whose shape is the same as `box` in new format.
     """
-  with tf.name_scope("xcycwh_to_yxyx"):
+  with tf.name_scope('xcycwh_to_yxyx'):
     xy, wh = tf.split(box, 2, axis=-1)
     xy_min = xy - wh / 2
     xy_max = xy + wh / 2
@@ -73,7 +73,7 @@ def get_area(box: Union[tf.Tensor, Tuple],
     Returns:
       area: a `Tensor` whose value represents the area of the box.
     """
-  with tf.name_scope("box_area"):
+  with tf.name_scope('box_area'):
     if use_tuple:
       area = get_area_tuple(box=box, xywh=xywh)
     else:
@@ -89,7 +89,7 @@ def get_area_tensor(box: tf.Tensor, xywh: bool = False):
     Returns:
       area: a `Tensor` whose value represents the area of the box.
     """
-  with tf.name_scope("tensor_area"):
+  with tf.name_scope('tensor_area'):
     if xywh:
       area = tf.reduce_prod(box[..., 2:4], axis=-1)
     else:
@@ -105,7 +105,7 @@ def get_area_tuple(box: Tuple, xywh: bool = False):
     Returns:
       area: a `Tensor` whose value represents the area of the box.
     """
-  with tf.name_scope("tuple_area"):
+  with tf.name_scope('tuple_area'):
     if xywh:
       area = tf.reduce_prod(box[1], axis=-1)
     else:
@@ -122,7 +122,7 @@ def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
       dist: a `Tensor` whose value represents the squared distance
         between center_1 and center_2.
     """
-  with tf.name_scope("center_distance"):
+  with tf.name_scope('center_distance'):
     dist = (center_1[..., 0] - center_2[..., 0])**2 + (center_1[..., 1] -
                                                        center_2[..., 1])**2
   return dist

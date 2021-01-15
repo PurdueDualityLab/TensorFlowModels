@@ -13,7 +13,7 @@ class YoloHead(tf.keras.layers.Layer):
                xy_scale_base="default_value",
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='glorot_uniform',
+               kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):

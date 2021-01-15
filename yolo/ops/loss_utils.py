@@ -15,10 +15,10 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
     Return:
       tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-  boxes = tf.cast(y_true["bbox"], dtype)
+  boxes = tf.cast(y_true['bbox'], dtype)
   classes = tf.one_hot(
-      tf.cast(y_true["classes"], dtype=tf.int32), depth=classes, dtype=dtype)
-  anchors = tf.cast(y_true["best_anchors"], dtype)
+      tf.cast(y_true['classes'], dtype=tf.int32), depth=classes, dtype=dtype)
+  anchors = tf.cast(y_true['best_anchors'], dtype)
 
   batches = tf.shape(boxes)[0]
   num_boxes = tf.shape(boxes)[1]
@@ -83,7 +83,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
         if K.any(index):
-          #tf.(0, anchors[batch, box_id, 0])
+          # tf.(0, anchors[batch, box_id, 0])
           p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
           update_index = update_index.write(
               i, [batch, y[batch, box_id], x[batch, box_id], p])
@@ -103,7 +103,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
 @tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-  with tf.name_scope("center_grid"):
+  with tf.name_scope('center_grid'):
     y = tf.range(0, lheight)
     x = tf.range(0, lwidth)
     #x_left, y_left = tf.meshgrid(y, x)
@@ -120,7 +120,7 @@ def _build_grid_points(lwidth, lheight, num, dtype):
 
 @tf.function(experimental_relax_shapes=True)
 def _build_anchor_grid(width, height, anchors, num, dtype):
-  with tf.name_scope("anchor_grid"):
+  with tf.name_scope('anchor_grid'):
     """ get the transformed anchor boxes for each dimention """
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, -1])
