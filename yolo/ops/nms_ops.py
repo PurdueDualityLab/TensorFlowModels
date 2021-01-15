@@ -29,8 +29,9 @@ def _cross_suppression(boxes, box_slice, iou_threshold, inner_idx):
                        [batch_size, NMS_TILE_SIZE, 4])
   iou = box_ops.bbox_overlap(new_slice, box_slice)
   ret_slice = tf.expand_dims(
-      tf.cast( tf.logical_not(tf.reduce_any(iou < iou_threshold, [1])), box_slice.dtype),
-      2) * box_slice
+      tf.cast(
+          tf.logical_not(tf.reduce_any(iou < iou_threshold, [1])),
+          box_slice.dtype), 2) * box_slice
   return boxes, ret_slice, iou_threshold, inner_idx + 1
 
 
@@ -89,10 +90,7 @@ def _suppression_loop_body(boxes, iou_threshold, output_size, idx):
   return boxes, iou_threshold, output_size, idx + 1
 
 
-def sorted_non_max_suppression_padded(scores,
-                                      boxes,
-                                      classes,
-                                      max_output_size,
+def sorted_non_max_suppression_padded(scores, boxes, classes, max_output_size,
                                       iou_threshold):
   """A wrapper that handles non-maximum suppression.
 
@@ -163,19 +161,18 @@ def sorted_non_max_suppression_padded(scores,
         idx < num_boxes // NMS_TILE_SIZE)
 
   selected_boxes, _, output_size, _ = tf.while_loop(
-      _loop_cond, _suppression_loop_body, [
-          boxes, iou_threshold,
-          tf.zeros([batch_size], tf.int32),
-          tf.constant(0)
-      ])
+      _loop_cond, _suppression_loop_body,
+      [boxes, iou_threshold,
+       tf.zeros([batch_size], tf.int32),
+       tf.constant(0)])
   idx = num_boxes - tf.cast(
       tf.nn.top_k(
           tf.cast(tf.reduce_any(selected_boxes > 0, [2]), tf.int32) *
           tf.expand_dims(tf.range(num_boxes, 0, -1), 0), max_output_size)[0],
       tf.int32)
   idx = tf.minimum(idx, num_boxes - 1)
-  idx = tf.reshape(
-      idx + tf.reshape(tf.range(batch_size) * num_boxes, [-1, 1]), [-1])
+  idx = tf.reshape(idx + tf.reshape(tf.range(batch_size) * num_boxes, [-1, 1]),
+                   [-1])
   boxes = tf.reshape(
       tf.gather(tf.reshape(boxes, [-1, 4]), idx),
       [batch_size, max_output_size, 4])
@@ -197,210 +194,230 @@ def sorted_non_max_suppression_padded(scores,
   return scores, boxes, classes
 
 
-
 def sort_drop(objectness, box, classificationsi, k):
-    objectness, ind = tf.math.top_k(objectness, k = k)
-    ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0, tf.shape(objectness)[0]), axis = -1)
-    bind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis = -1)
-    
-    box = tf.gather_nd(box, bind)
-    classifications = tf.gather_nd(classificationsi, bind)
-    
-    bsize = tf.shape(ind)[0]
-    box = tf.reshape(box, [bsize, k, -1])
-    classifications = tf.reshape(classifications, [bsize, k, -1])
-    return objectness, box, classifications
+  objectness, ind = tf.math.top_k(objectness, k=k)
+  ind_m = tf.ones_like(ind) * tf.expand_dims(
+      tf.range(0,
+               tf.shape(objectness)[0]), axis=-1)
+  bind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis=-1)
+
+  box = tf.gather_nd(box, bind)
+  classifications = tf.gather_nd(classificationsi, bind)
+
+  bsize = tf.shape(ind)[0]
+  box = tf.reshape(box, [bsize, k, -1])
+  classifications = tf.reshape(classifications, [bsize, k, -1])
+  return objectness, box, classifications
 
 
 def update_mask(mask, parent, child):
-    mask = tf.cast(mask, child.dtype)
-    return (1 - mask) * parent + mask * child
+  mask = tf.cast(mask, child.dtype)
+  return (1 - mask) * parent + mask * child
+
 
 def add_mask(mask, parent, child):
-    mask = tf.cast(mask, child.dtype)
-    return parent + child * mask
+  mask = tf.cast(mask, child.dtype)
+  return parent + child * mask
 
 
 # very very slow
 def _nms(boxes, classif, confid, k, class_thresh, iou_thresh):
-    batch_size = tf.shape(boxes)[0]
-    classes = tf.cast(classif, dtype = boxes.dtype)
-    confidence = tf.cast(confid, dtype = boxes.dtype)
+  batch_size = tf.shape(boxes)[0]
+  classes = tf.cast(classif, dtype=boxes.dtype)
+  confidence = tf.cast(confid, dtype=boxes.dtype)
 
-    # u_box = tf.zeros_like(boxes)
-    # u_class = tf.zeros_like(classes)
-    # u_conf = tf.zeros_like(confidence)
+  # u_box = tf.zeros_like(boxes)
+  # u_class = tf.zeros_like(classes)
+  # u_conf = tf.zeros_like(confidence)
 
-    #box_thresh = tf.cast(tf.ones_like(confidence) - tf.math.ceil(confidence), tf.bool)
-    box_thresh = tf.cast(tf.math.ceil(confidence), tf.bool)
-    lim = tf.reduce_sum(tf.cast(tf.reduce_any(box_thresh, axis = 0), tf.int32))
+  #box_thresh = tf.cast(tf.ones_like(confidence) - tf.math.ceil(confidence), tf.bool)
+  box_thresh = tf.cast(tf.math.ceil(confidence), tf.bool)
+  lim = tf.reduce_sum(tf.cast(tf.reduce_any(box_thresh, axis=0), tf.int32))
 
-    #box_thresh = tf.cast(tf.math.ceil(confidence), tf.bool)
+  #box_thresh = tf.cast(tf.math.ceil(confidence), tf.bool)
 
-    i = 0 
-    added_boxes = 0
-    
+  i = 0
+  added_boxes = 0
+
+  tiledID = tf.repeat(tf.convert_to_tensor([added_boxes]), [batch_size])
+  mask = tf.one_hot(tiledID, k, dtype=boxes.dtype, axis=-1)
+
+  u_conf = confidence * mask
+  u_class = classes * mask
+  u_box = boxes * tf.expand_dims(mask, axis=-1)
+  one_mask = mask
+
+  one_mask = tf.cast(one_mask, tf.bool)
+
+  i += 1
+  added_boxes += 1
+
+  # using continue gives off performance jitters
+  while (i < lim):
+
     tiledID = tf.repeat(tf.convert_to_tensor([added_boxes]), [batch_size])
-    mask = tf.one_hot(tiledID, k, dtype = boxes.dtype, axis = -1)
+    mask = tf.one_hot(tiledID, k, dtype=u_box.dtype, axis=-1)
 
-    u_conf = confidence * mask
-    u_class = classes * mask
-    u_box = boxes * tf.expand_dims(mask, axis = -1)
-    one_mask = mask
+    conf = confidence * mask
+    clas = classes * mask
+    boxs = boxes * tf.expand_dims(mask, axis=-1)
+    boxs = tf.expand_dims(tf.reduce_max(boxs, axis=1), axis=1)
 
-    one_mask = tf.cast(one_mask, tf.bool)
-    
+    conf_mask = tf.cast(conf > class_thresh, dtype=boxes.dtype)
+
+    # the issue is here along with the mask, we need to select the box..
+    iou = iou_ops.compute_iou(u_box, boxs, yxyx=True)
+
+    iou_mask = iou <= iou_thresh
+    class_mask = tf.logical_and(clas == u_class, one_mask)
+
+    plus_mask = tf.reduce_all(iou_mask, axis=-1)
+    plus_mult = tf.expand_dims(tf.cast(plus_mask, boxes.dtype), axis=-1)
+    plus_mask = (plus_mult * conf_mask)
+
+    change_mask = tf.logical_and(tf.logical_not(iou_mask), one_mask)
+    change_mask = tf.logical_and(change_mask, class_mask)
+    change_mask = tf.logical_and(change_mask,
+                                 tf.logical_and(conf > conf_mask, one_mask))
+
+    u_box = update_mask(tf.expand_dims(change_mask, axis=-1), u_box, boxs)
+    u_class = update_mask(change_mask, u_class, clas)
+    u_conf = update_mask(change_mask, u_conf, conf)
+
+    u_box = add_mask(tf.expand_dims(plus_mask, axis=-1), u_box, boxs)
+    u_class = add_mask(plus_mask, u_class, clas)
+    u_conf = add_mask(plus_mask, u_conf, conf)
+
+    if tf.reduce_any(tf.cast(plus_mask, tf.bool)):
+      added_boxes += 1
+      one_mask = tf.logical_or(one_mask, tf.cast(mask, tf.bool))
+
     i += 1
-    added_boxes += 1
 
+  u_class = tf.cast(u_class, classif.dtype)
+  u_conf = tf.cast(u_conf, confid.dtype)
 
-    # using continue gives off performance jitters
-    while(i < lim):
+  return u_box, u_class, u_conf
 
-        tiledID = tf.repeat(tf.convert_to_tensor([added_boxes]), [batch_size])
-        mask = tf.one_hot(tiledID, k, dtype = u_box.dtype, axis = -1)
-
-        conf = confidence * mask
-        clas = classes * mask
-        boxs = boxes * tf.expand_dims(mask, axis = -1)
-        boxs = tf.expand_dims(tf.reduce_max(boxs, axis = 1), axis = 1)
-            
-
-        conf_mask = tf.cast(conf > class_thresh, dtype = boxes.dtype)
-
-        # the issue is here along with the mask, we need to select the box.. 
-        iou = iou_ops.compute_iou(u_box, boxs, yxyx=True)
-        
-        iou_mask = iou <= iou_thresh
-        class_mask = tf.logical_and(clas == u_class, one_mask)
-
-        plus_mask = tf.reduce_all(iou_mask, axis = -1)
-        plus_mult = tf.expand_dims(tf.cast(plus_mask, boxes.dtype), axis = -1)
-        plus_mask = (plus_mult * conf_mask)
-
-        change_mask = tf.logical_and(tf.logical_not(iou_mask), one_mask)
-        change_mask = tf.logical_and(change_mask, class_mask)
-        change_mask = tf.logical_and(change_mask, tf.logical_and(conf > conf_mask, one_mask))
-
-        u_box = update_mask(tf.expand_dims(change_mask, axis = -1), u_box, boxs)
-        u_class = update_mask(change_mask, u_class, clas)
-        u_conf = update_mask(change_mask, u_conf, conf)
-
-        u_box = add_mask(tf.expand_dims(plus_mask, axis = -1), u_box, boxs)
-        u_class = add_mask(plus_mask, u_class, clas)
-        u_conf = add_mask(plus_mask, u_conf, conf)
-
-
-        if tf.reduce_any(tf.cast(plus_mask, tf.bool)):
-            added_boxes += 1
-            one_mask = tf.logical_or(one_mask, tf.cast(mask, tf.bool))
-
-        i += 1  
-        
-    u_class = tf.cast(u_class, classif.dtype)
-    u_conf = tf.cast(u_conf, confid.dtype)
-    
-    return u_box, u_class, u_conf
 
 def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
 
-    #iou = iou_ops.compute_iou(boxes, boxes, yxyx=True) 
-    mrange = tf.range(k)
-    mask_x, mask_y = tf.meshgrid(mrange, mrange) #tf.one_hot(mrange, k, axis = -1, dtype = boxes.dtype)
-    #mask_diag = tf.expand_dims(tf.expand_dims(mask_x > mask_y, axis = 0), axis = 0)
-    mask_diag = tf.expand_dims(mask_x > mask_y, axis = 0)
+  #iou = iou_ops.compute_iou(boxes, boxes, yxyx=True)
+  mrange = tf.range(k)
+  mask_x, mask_y = tf.meshgrid(
+      mrange, mrange)  #tf.one_hot(mrange, k, axis = -1, dtype = boxes.dtype)
+  #mask_diag = tf.expand_dims(tf.expand_dims(mask_x > mask_y, axis = 0), axis = 0)
+  mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
 
-    boxes_i = tf.expand_dims(boxes, axis = -2)
-    boxes_i = tf.repeat(boxes_i, [k], axis = -2)
-    boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
-    
-    iou = iou_ops.compute_iou(boxes_i, boxes_t)
-    # duplicate boxes
-    iou_mask = iou >= iou_thresh
-    iou_mask = tf.logical_and(mask_diag, iou_mask)
-    
-    iou *= tf.cast(iou_mask, iou.dtype)
-   
-    iou_test = 1 - tf.cast(tf.reduce_any(iou_mask, axis = -2), boxes.dtype)
-    #iou_mean = tf.reduce_mean(iou_sum)
+  boxes_i = tf.expand_dims(boxes, axis=-2)
+  boxes_i = tf.repeat(boxes_i, [k], axis=-2)
+  boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
 
-    boxes *= tf.expand_dims(iou_test, axis = -1)
-    classes *= tf.cast(iou_test, classes.dtype)
-    confidence *= tf.cast(iou_test, confidence.dtype)
+  iou = iou_ops.compute_iou(boxes_i, boxes_t)
+  # duplicate boxes
+  iou_mask = iou >= iou_thresh
+  iou_mask = tf.logical_and(mask_diag, iou_mask)
 
-    return boxes, classes, confidence
+  iou *= tf.cast(iou_mask, iou.dtype)
+
+  iou_test = 1 - tf.cast(tf.reduce_any(iou_mask, axis=-2), boxes.dtype)
+  #iou_mean = tf.reduce_mean(iou_sum)
+
+  boxes *= tf.expand_dims(iou_test, axis=-1)
+  classes *= tf.cast(iou_test, classes.dtype)
+  confidence *= tf.cast(iou_test, confidence.dtype)
+
+  return boxes, classes, confidence
+
 
 def segment_nms2(boxes, classes, confidence, k, class_thresh, iou_thresh):
-    mrange = tf.range(k)
-    mask_x = tf.repeat(tf.transpose(tf.expand_dims(mrange, axis = -1), perm=[1, 0]), [k], axis = 0)
-    mask_y = tf.repeat(tf.expand_dims(mrange, axis = -1), [k], axis = 1)
-    mask_diag = tf.expand_dims(mask_x > mask_y, axis = 0)
+  mrange = tf.range(k)
+  mask_x = tf.repeat(
+      tf.transpose(tf.expand_dims(mrange, axis=-1), perm=[1, 0]), [k], axis=0)
+  mask_y = tf.repeat(tf.expand_dims(mrange, axis=-1), [k], axis=1)
+  mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
 
-    boxes_i = tf.expand_dims(boxes, axis = -2)
-    boxes_i = tf.repeat(boxes_i, [k], axis = -2)
-    boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
-    iou = iou_ops.compute_iou(boxes_i, boxes_t)
-    
-    # duplicate boxes
-    iou_mask = iou >= iou_thresh
-    iou_mask = tf.logical_and(mask_diag, iou_mask)
-    iou *= tf.cast(iou_mask, iou.dtype)
+  boxes_i = tf.expand_dims(boxes, axis=-2)
+  boxes_i = tf.repeat(boxes_i, [k], axis=-2)
+  boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
+  iou = iou_ops.compute_iou(boxes_i, boxes_t)
 
-    can_suppress_others = 1 - tf.cast(tf.reduce_any(iou_mask, axis = -2), boxes.dtype)
+  # duplicate boxes
+  iou_mask = iou >= iou_thresh
+  iou_mask = tf.logical_and(mask_diag, iou_mask)
+  iou *= tf.cast(iou_mask, iou.dtype)
 
-    iou_sum = tf.reduce_sum(iou, [1])
+  can_suppress_others = 1 - tf.cast(
+      tf.reduce_any(iou_mask, axis=-2), boxes.dtype)
 
-    # what we missed, whe does this work
-    
-    
-    # option 1
-    can_suppress_others = tf.expand_dims(can_suppress_others, axis = -1)
-    supressed_i = can_suppress_others * iou
-    supressed = tf.reduce_max(supressed_i, -2) <= 0.5
-    raw = tf.cast(supressed, boxes.dtype)
-    
-    # option 2
-    # raw = tf.cast(can_suppress_others, boxes.dtype)
-   
-    # option 3
-    # can_suppress_others = tf.expand_dims(can_suppress_others, axis = -1)
-    # supressed_i = can_suppress_others * iou
-    # iou = iou_sum - tf.reduce_sum(supressed_i, [1])
-    # raw = tf.cast(iou <= 0 , boxes.dtype)
+  iou_sum = tf.reduce_sum(iou, [1])
 
-     # tf.print(tf.shape(raw))
+  # what we missed, whe does this work
 
-    boxes *= tf.expand_dims(raw, axis = -1)
-    confidence *= tf.cast(raw, confidence.dtype)
-    classes *= tf.cast(raw, classes.dtype)
+  # option 1
+  can_suppress_others = tf.expand_dims(can_suppress_others, axis=-1)
+  supressed_i = can_suppress_others * iou
+  supressed = tf.reduce_max(supressed_i, -2) <= 0.5
+  raw = tf.cast(supressed, boxes.dtype)
 
-    return boxes, classes, confidence
+  # option 2
+  # raw = tf.cast(can_suppress_others, boxes.dtype)
 
-def nms(boxes, classes, confidence, k, class_thresh, iou_thresh, sorted = False, one_hot = True):
-    if one_hot:
-        confidence = tf.reduce_max(classes, axis = -1)
-        classes = tf.cast(tf.argmax(classes, axis = -1), tf.float32)
-    
+  # option 3
+  # can_suppress_others = tf.expand_dims(can_suppress_others, axis = -1)
+  # supressed_i = can_suppress_others * iou
+  # iou = iou_sum - tf.reduce_sum(supressed_i, [1])
+  # raw = tf.cast(iou <= 0 , boxes.dtype)
 
-    if not sorted:
-        confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
-        classes = tf.squeeze(classes, axis = -1)
+  # tf.print(tf.shape(raw))
 
-    #box_l, class_l, conf_l = _nms(boxes, classes, confidence, k, class_thresh, iou_thresh)
-    box_l, class_l, conf_l = segment_nms2(boxes, classes, confidence, k, class_thresh, iou_thresh)
-    conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)
-    class_l = tf.squeeze(class_l, axis = -1)
+  boxes *= tf.expand_dims(raw, axis=-1)
+  confidence *= tf.cast(raw, confidence.dtype)
+  classes *= tf.cast(raw, classes.dtype)
 
-    return box_l, class_l, conf_l
+  return boxes, classes, confidence
 
-def nms2(boxes, classes, confidence, k, class_thresh, iou_thresh, sorted = False, one_hot = True):
-    if not sorted:
-        confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
-    
-    if one_hot:
-        confidence = tf.reduce_max(classes, axis = -1)
-        classes = tf.argmax(classes, axis = -1)
 
-    scores, boxes, classes = sorted_non_max_suppression_padded(confidence, boxes, classes, k, iou_thresh)
-    return  boxes, classes, scores
+def nms(boxes,
+        classes,
+        confidence,
+        k,
+        class_thresh,
+        iou_thresh,
+        sorted=False,
+        one_hot=True):
+  if one_hot:
+    confidence = tf.reduce_max(classes, axis=-1)
+    classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
 
+  if not sorted:
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+    classes = tf.squeeze(classes, axis=-1)
+
+  #box_l, class_l, conf_l = _nms(boxes, classes, confidence, k, class_thresh, iou_thresh)
+  box_l, class_l, conf_l = segment_nms2(boxes, classes, confidence, k,
+                                        class_thresh, iou_thresh)
+  conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)
+  class_l = tf.squeeze(class_l, axis=-1)
+
+  return box_l, class_l, conf_l
+
+
+def nms2(boxes,
+         classes,
+         confidence,
+         k,
+         class_thresh,
+         iou_thresh,
+         sorted=False,
+         one_hot=True):
+  if not sorted:
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+
+  if one_hot:
+    confidence = tf.reduce_max(classes, axis=-1)
+    classes = tf.argmax(classes, axis=-1)
+
+  scores, boxes, classes = sorted_non_max_suppression_padded(
+      confidence, boxes, classes, k, iou_thresh)
+  return boxes, classes, scores
