@@ -35,10 +35,10 @@ class Yolo(ks.Model):
     raw_predictions = self._head(decoded_maps)
     if training:
       return {"raw_output": raw_predictions}
-
-    predictions = self._filter(raw_predictions)
-    predictions.update({"raw_output": raw_predictions})
-    return predictions
+    else:
+      predictions = self._filter(raw_predictions)
+      predictions.update({"raw_output": raw_predictions})
+      return predictions
 
   @property
   def backbone(self):
@@ -134,17 +134,16 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   return model
 
 
-def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
-                      xy_scales, path_scales):
+def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder):
   model = YoloLayer(
-      masks=masks,
+      masks=decoder.masks,
       classes=model_config.num_classes,
       anchors=model_config.boxes,
       thresh=model_config.filter.iou_thresh,
       cls_thresh=model_config.filter.class_thresh,
       max_boxes=model_config.filter.max_boxes,
-      path_scale=path_scales,
-      scale_xy=xy_scales,
+      path_scale=decoder.path_scales,
+      scale_xy=decoder.scale_xy,
       use_nms=model_config.filter.use_nms,
       loss_type=model_config.filter.loss_type,
       ignore_thresh=model_config.filter.ignore_thresh)
@@ -160,21 +159,21 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization)
   head.build(input_specs)
+  # print(head.masks, head.scale_xy)
   return head
 
 
-def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
-               path_scales):
-  print(model_config.as_dict())
-  print(input_specs)
-  print(l2_regularization)
+def build_yolo(input_specs, model_config, l2_regularization):
+  # print(model_config.as_dict())
+  # print(input_specs)
+  # print(l2_regularization)
 
   backbone = factory.build_backbone(input_specs, model_config,
                                     l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(backbone.output_specs, model_config, l2_regularization)
-  filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
+  filter = build_yolo_filter(model_config, head)
 
   model = Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
   model.build(input_specs.shape)

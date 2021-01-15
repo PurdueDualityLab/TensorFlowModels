@@ -20,7 +20,6 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
       tf.cast(y_true["classes"], dtype=tf.int32), depth=classes, dtype=dtype)
   anchors = tf.cast(y_true["best_anchors"], dtype)
 
-  tf.print(boxes.shape)
   batches = tf.shape(boxes)[0]
   num_boxes = tf.shape(boxes)[1]
   len_masks = tf.shape(mask)[0]
@@ -51,7 +50,7 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
         for anchor_id in range(tf.shape(anchors)[-1]):
           index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
           if K.any(index):
-            #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
+
             p = tf.cast(
                 K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
             uid = 1
@@ -108,12 +107,10 @@ def _build_grid_points(lwidth, lheight, num, dtype):
     y = tf.range(0, lheight)
     x = tf.range(0, lwidth)
     #x_left, y_left = tf.meshgrid(y, x)
-    # tf.print(y_left)
+
     x_left = tf.repeat(
         tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth], axis=0)
     y_left = tf.repeat(tf.expand_dims(x, axis=-1), [lheight], axis=1)
-    # tf.print(_x_left, tf.shape(x_left), tf.shape(_x_left))
-    # tf.print(_y_left, tf.shape(y_left), tf.shape(_y_left))
     x_y = K.stack([x_left, y_left], axis=-1)
     x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
     x_y = tf.expand_dims(
@@ -136,12 +133,12 @@ class GridGenerator(object):
 
   def __init__(self, anchors, masks=None, scale_anchors=None):
     self.dtype = tf.keras.backend.floatx()
-    if masks != None:
+    if masks is not None:
       self._num = len(masks)
     else:
       self._num = tf.shape(anchors)[0]
 
-    if masks != None:
+    if masks is not None:
       anchors = [anchors[mask] for mask in masks]
 
     self._scale_anchors = scale_anchors
@@ -154,7 +151,7 @@ class GridGenerator(object):
 
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, width, height, batch_size, dtype=None):
-    if dtype == None:
+    if dtype is None:
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype

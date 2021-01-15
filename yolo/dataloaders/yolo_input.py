@@ -16,30 +16,29 @@ from yolo.ops import loss_utils as loss_ops
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
-  def __init__(
-      self,
-      image_w=416,
-      image_h=416,
-      num_classes=80,
-      fixed_size=False,
-      jitter_im=0.1,
-      jitter_boxes=0.005,
-      use_tie_breaker=True,
-      min_level=3,
-      max_level=5,
-      masks=None,
-      max_process_size=608,
-      min_process_size=320,
-      max_num_instances=200,
-      random_flip=True,
-      pct_rand=0.5,
-      aug_rand_saturation=True,
-      aug_rand_brightness=True,
-      aug_rand_zoom=True,
-      aug_rand_hue=True,
-      anchors=None,
-      seed=10,
-  ):
+  def __init__(self,
+               image_w=416,
+               image_h=416,
+               num_classes=80,
+               fixed_size=False,
+               jitter_im=0.1,
+               jitter_boxes=0.005,
+               use_tie_breaker=True,
+               min_level=3,
+               max_level=5,
+               masks=None,
+               max_process_size=608,
+               min_process_size=320,
+               max_num_instances=200,
+               random_flip=True,
+               pct_rand=0.5,
+               aug_rand_saturation=True,
+               aug_rand_brightness=True,
+               aug_rand_zoom=True,
+               aug_rand_hue=True,
+               anchors=None,
+               seed=10,
+               dtype="float16"):
     """Initializes parameters for parsing annotations in the dataset.
         Args:
           image_w: a `Tensor` or `int` for width of input image.
@@ -72,9 +71,6 @@ class Parser(parser.Parser):
     self._net_down_scale = 2**max_level
 
     self._num_classes = num_classes
-    self._key_dict = {f"{key}": key for key in range(min_level, max_level + 1)}
-    print(self._key_dict)
-
     self._image_w = (image_w // self._net_down_scale) * self._net_down_scale
     self._image_h = self._image_w if image_h == None else (
         image_h // self._net_down_scale) * self._net_down_scale
@@ -100,14 +96,21 @@ class Parser(parser.Parser):
     self._aug_rand_zoom = aug_rand_zoom
     self._aug_rand_hue = aug_rand_hue
 
-    self._builder = preprocessing_ops.GTBuilder(self._num_classes,
-                                                self._use_tie_breaker)
-
     self._seed = seed
+
+    if dtype == "float16":
+      self._dtype = tf.float16
+    elif dtype == "bfloat16":
+      self._dtype = tf.bfloat16
+    elif dtype == "float32":
+      self._dtype = tf.float32
+    else:
+      raise Exception(
+          "Unsupported datatype used in parser only {float16, bfloat16, or float32}"
+      )
 
   def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False):
     mask = self._masks
-    print(raw_true["bbox"].dtype)
     for key in self._masks.keys():
       if not batch:
         mask[key] = preprocessing_ops.build_grided_gt(
@@ -117,11 +120,8 @@ class Parser(parser.Parser):
         mask[key] = preprocessing_ops.build_batch_grided_gt(
             raw_true, self._masks[key], width // 2**int(key), self._num_classes,
             raw_true["bbox"].dtype, use_tie_breaker)
-      # tf.print(key, "  ", tf.shape(mask[key]))
-      # width_ = width//(2 ** int(key))
-      # dtype = raw_true["bbox"].dtype
-      # mask[key] = self._builder.gt(raw_true, self._masks[key], width_, dtype)
 
+      mask[key] = tf.cast(mask[key], self._dtype)
     return mask
 
   def _parse_train_data(self, data):
@@ -135,21 +135,19 @@ class Parser(parser.Parser):
 
     shape = tf.shape(data["image"])
     image = data["image"] / 255
-    image = tf.image.resize(image,
-                            (self._max_process_size, self._max_process_size))
-    if self._aug_rand_brightness:
-      image = tf.image.random_brightness(
-          image=image, max_delta=.1)  # Brightness
-    if self._aug_rand_saturation:
-      image = tf.image.random_saturation(
-          image=image, lower=0.75, upper=1.25)  # Saturation
-    if self._aug_rand_hue:
-      image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
-    image = tf.clip_by_value(image, 0.0, 1.0)
     boxes = data['groundtruth_boxes']
+    width = shape[0]
+    height = shape[1]
+
+    image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
+        image,
+        boxes,
+        width=width,
+        height=height,
+        target_dim=self._max_process_size)
+
     image_shape = tf.shape(image)[:2]
 
-    self._random_flip = False
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
@@ -186,7 +184,17 @@ class Parser(parser.Parser):
           default_height=self._image_h,
           target_width=randscale * self._net_down_scale,
           target_height=randscale * self._net_down_scale)
+    image = tf.image.resize(image, (416, 416), preserve_aspect_ratio=False)
 
+    if self._aug_rand_brightness:
+      image = tf.image.random_brightness(
+          image=image, max_delta=.1)  # Brightness
+    if self._aug_rand_saturation:
+      image = tf.image.random_saturation(
+          image=image, lower=0.75, upper=1.25)  # Saturation
+    if self._aug_rand_hue:
+      image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
+    image = tf.clip_by_value(image, 0.0, 1.0)
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
 
@@ -205,13 +213,13 @@ class Parser(parser.Parser):
 
     labels = {
         "source_id": data["source_id"],
-        "bbox": boxes,
-        "classes": classes,
-        "area": area,
+        "bbox": tf.cast(boxes, self._dtype),
+        "classes": tf.cast(classes, self._dtype),
+        "area": tf.cast(area, self._dtype),
         "is_crowd": is_crowd,
-        "best_anchors": best_anchors,
-        "width": shape[1],
-        "height": shape[2],
+        "best_anchors": tf.cast(best_anchors, self._dtype),
+        "width": width,
+        "height": height,
         "num_detections": tf.shape(data["groundtruth_classes"])[0],
     }
 
@@ -233,9 +241,14 @@ class Parser(parser.Parser):
         """
 
     shape = tf.shape(data["image"])
-    image = preprocessing_ops.scale_image(
-        data["image"], resize=True, w=self._image_w, h=self._image_h)
-    boxes = box_utils.yxyx_to_xcycwh(data["groundtruth_boxes"])
+    image = data["image"] / 255
+    boxes = data['groundtruth_boxes']
+    width = shape[0]
+    height = shape[1]
+
+    image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
+        image, boxes, width=width, height=height, target_dim=self._image_w)
+    boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
@@ -254,13 +267,13 @@ class Parser(parser.Parser):
 
     labels = {
         "source_id": data["source_id"],
-        "bbox": boxes,
-        "classes": classes,
-        "area": area,
+        "bbox": tf.cast(boxes, self._dtype),
+        "classes": tf.cast(classes, self._dtype),
+        "area": tf.cast(area, self._dtype),
         "is_crowd": is_crowd,
-        "best_anchors": best_anchors,
-        "width": shape[1],
-        "height": shape[2],
+        "best_anchors": tf.cast(best_anchors, self._dtype),
+        "width": width,
+        "height": height,
         "num_detections": tf.shape(data["groundtruth_classes"])[0],
     }
 

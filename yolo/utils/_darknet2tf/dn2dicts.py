@@ -99,7 +99,6 @@ def convertConfigFile(configfile):
   parser = DNConfigParser()
   if isinstance(configfile, io.IOBase):
     if hasattr(configfile, 'name'):
-      print(configfile.name)
       parser.read_file(configfile, source=configfile.name)
     else:
       parser.read_file(configfile)

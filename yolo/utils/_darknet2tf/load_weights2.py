@@ -17,7 +17,7 @@ def load_weights(convs, layers):
   for i in keys:  #range(min_key, max_key + 1):
     try:
       cfg = convs.pop(0)
-      print(cfg.c, cfg.filters, layers[i]._filters)
+      # print(cfg.c, cfg.filters, layers[i]._filters)
       layers[i].set_weights(cfg.get_weights())
     except:
       print(f"an error has occured, {layers[i].name}, {i}")
@@ -40,7 +40,7 @@ def load_weights_backbone(model, net):
       else:
         base_key += 1
         layers[base_key + alternate] = layer
-      print(base_key + alternate, layer.name)
+      # print(base_key + alternate, layer.name)
       base_key += 1
     else:
       #base_key = max(layers.keys())
@@ -51,7 +51,7 @@ def load_weights_backbone(model, net):
           else:
             key = int(sublayer.name.split("_")[-1])
           layers[key + base_key] = sublayer
-          print(key + base_key, sublayer.name)
+          # print(key + base_key, sublayer.name)
           if key > alternate:
             alternate = key
       #alternate += 1
@@ -61,7 +61,7 @@ def load_weights_backbone(model, net):
 
 
 def ishead(out_conv, layer):
-  print(out_conv, layer)
+  # print(out_conv, layer)
   try:
     if layer.filters == out_conv:
       return True
@@ -106,7 +106,7 @@ def load_head(model, net, out_conv=255):
             heads[key] = sublayer
           else:
             layers[key] = sublayer
-          print(key, sublayer.name)
+          # print(key, sublayer.name)
 
   load_weights(convs, layers)
   try:
@@ -117,19 +117,19 @@ def load_head(model, net, out_conv=255):
 
 
 def load_weights_prediction_layers(convs, model):
-  print(convs)
+  # print(convs)
   try:
     i = 0
     for sublayer in model.submodules:
       if ('conv_bn' in sublayer.name):
-        print(sublayer, convs[i])
+        # print(sublayer, convs[i])
         sublayer.set_weights(convs[i].get_weights())
         i += 1
   except:
     i = len(convs) - 1
     for sublayer in model.submodules:
       if ('conv_bn' in sublayer.name):
-        print(sublayer, convs[i])
+        # print(sublayer, convs[i])
         sublayer.set_weights(convs[i].get_weights())
         i -= 1
   return
@@ -151,7 +151,7 @@ def load_weights_v4head(model, net, remap):
         key = int(layer.name.split("_")[-1])
       layers[key] = layer
       base_key += 1
-      print(base_key, layer.name)
+      # print(base_key, layer.name)
     else:
       for sublayer in layer.submodules:
         if isinstance(sublayer, ConvBN):
@@ -160,4 +160,4 @@ def load_weights_v4head(model, net, remap):
           else:
             key = int(sublayer.name.split("_")[-1]) + base_key
           layers[key] = sublayer
-          print(key, sublayer.name)
+          # print(key, sublayer.name)

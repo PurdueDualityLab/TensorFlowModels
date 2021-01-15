@@ -12,7 +12,6 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
-   
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
@@ -45,6 +44,7 @@ task:
       aug_rand_zoom: true
       aug_rand_hue: true
       seed: 10
+      dtype: float16
       use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
@@ -65,6 +65,7 @@ task:
       aug_rand_hue: true
       shuffle_buffer_size: 10000
       use_tie_breaker: true
+      dtype: float16
     shuffle_buffer_size: 2
   weight_decay: 0.0005
   init_checkpoint: ''
@@ -74,7 +75,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 1000 # 5063 #625
+  validation_steps: 2000 # 5063 #625
   steps_per_loop: 10000
   validation_interval: 10
   summary_interval: 10000

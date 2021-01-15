@@ -99,7 +99,7 @@ def set_darknet_weights_head(flat_head, weights_head):
 
 
 def set_darknet_weights(model, weights_list, flat_model=None):
-  if flat_model == None:
+  if flat_model is None:
     zip_fill = flatten_model(model)
   else:
     zip_fill = flat_model
@@ -154,7 +154,7 @@ def get_decoder_weights(decoder):
   head_weights = []
   head_layers = []
   for layer in (head):
-    if layer != None and layer._type == "convolutional":
+    if layer is not None and layer._type == "convolutional":
       head_weights.append(layer.get_weights())
       head_layers.append(layer)
 
@@ -204,11 +204,11 @@ def load_weights_v4head(model, net):
   for block in blocks:
     for layer in block:
       cfg = convs.pop(0)
-      print(cfg)  #, layer.input_shape)
+      #print(cfg)  #, layer.input_shape)
       layer.set_weights(cfg.get_weights())
-    print()
+    #print()
 
-  print(convs)
+  #print(convs)
 
 
 def load_weights_dnBackbone(backbone, encoder, mtype="darknet53"):

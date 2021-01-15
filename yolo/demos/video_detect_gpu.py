@@ -100,7 +100,7 @@ class FastVideo(object):
     print(self._cap.get(3), self._cap.get(4))
 
     self._preprocess_function = preprocess_function
-    self._height = int(self._cap.get(4)) if disp_h == None else disp_h
+    self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._og_height = int(self._cap.get(4))
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
     self._classes = classes
@@ -110,7 +110,7 @@ class FastVideo(object):
     self._model = model
 
     # fast but as close to one 2 one as possible
-    if max_batch == None:
+    if max_batch is None:
       if file_name == 0:
         self._batch_size = 5  # 40 fps more conistent frame to frame
       else:
@@ -130,7 +130,7 @@ class FastVideo(object):
 
     self._colors = gen_colors(self._classes)
 
-    if labels == None:
+    if labels is None:
       self._labels = get_coco_names(
           path="yolo/dataloaders/dataset_specs/coco.names")
     else:
@@ -179,7 +179,7 @@ class FastVideo(object):
     tick = 0
     timeout = 0
     process_device = self._pre_process_device
-    if self._preprocess_function == None:
+    if self._preprocess_function is None:
       preprocess = self._preprocess
     else:
       preprocess = self._preprocess_function
@@ -233,8 +233,8 @@ class FastVideo(object):
 
   def display(self):
     """
-    display the processed images in a thread, for models expected output format see tf.image.combined_non_max_suppression
-    https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression
+        display the processed images in a thread, for models expected output format see tf.image.combined_non_max_suppression
+        https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression
         """
     # init the starting variables to calculate FPS
     try:
@@ -294,7 +294,7 @@ class FastVideo(object):
     print(f"capture (width, height): ({self._width},{self._height})")
     print(f"Yolo Possible classes: {self._classes}")
 
-    if self._preprocess_function == None:
+    if self._preprocess_function is None:
       preprocess = self._preprocess
     else:
       preprocess = self._preprocess_function
@@ -390,7 +390,6 @@ class FastVideo(object):
 
         #print everything
         self.print_opt()
-        #self._prev_display_fps = self._display_fps * 0.4 + 0.6 * self._prev_display_fps
         if not self._running:
           raise
 
@@ -516,7 +515,7 @@ if __name__ == "__main__":
               '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
               '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
           ],
-          filter=exp_cfg.YoloLossLayer(use_nms=True)))
+          filter=exp_cfg.YoloLossLayer(use_nms=False)))
 
   # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3',
   #                     min_level=3,
@@ -529,19 +528,6 @@ if __name__ == "__main__":
   #                     ))
   task = YoloTask(config)
   model = task.build_model()
-  # #model.load_weights("v4tiny_logs/ckpt-31000")
-
-  # optimizer = tf.keras.mixed_precision.experimental.LossScaleOptimizer(tf.keras.optimizers.SGD(), "dynamic")
-
-  # ckpt = tf.train.Checkpoint(model = model, optimizer = optimizer)
-  # status = ckpt.restore(tf.train.latest_checkpoint("yolov4-logs")).expect_partial()
-  # print(dir(status))
-
-  # manager = tf.train.CheckpointManager(ckpt, "v4tiny_logs", 3)
-  # manager.restore_or_initialize()
-  # print(dir(manager))
-  # status.assert_consumed()
-
   task.initialize(model)
 
   # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
@@ -565,7 +551,7 @@ if __name__ == "__main__":
   # model.set_postprocessor_fn(func)
 
   cap = FastVideo(
-      "videos/nyc2.mp4",
+      0,
       model=model,
       process_width=416,
       process_height=416,

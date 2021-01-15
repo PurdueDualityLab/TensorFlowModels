@@ -20,6 +20,7 @@ from yolo.utils.demos import coco
 from queue import Queue
 import urllib.request
 
+
 app = Flask(__name__)
 
 

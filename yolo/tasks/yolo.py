@@ -57,8 +57,7 @@ class YoloTask(base_task.Task):
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
 
-    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
-                               masks, xy_scales, path_scales)
+    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
     self._loss_dict = losses
     return model
 
@@ -83,7 +82,6 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    print(masks, path_scales, xy_scales)
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
         image_h=params.parser.image_h,
@@ -105,6 +103,7 @@ class YoloTask(base_task.Task):
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,
         aug_rand_hue=params.parser.aug_rand_hue,
+        dtype=params.dtype,
         anchors=anchors)
 
     if params.is_training:
@@ -166,7 +165,6 @@ class YoloTask(base_task.Task):
       # cast to float32
       y_pred = model(image, training=True)
       loss, metrics = self.build_losses(y_pred["raw_output"], label)
-      tf.print("loss: ", loss, end="\r")
       scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -186,6 +184,13 @@ class YoloTask(base_task.Task):
     #custom metrics
     logs = {"loss": loss}
     logs.update(metrics)
+
+    #tf.print("loss: ", logs["loss"], end = "\n")
+    tf.print(logs, end="\n")
+
+    ret = "\033[F" * (len(logs.keys()) + 1)
+    tf.print(ret, end="\n")
+
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
@@ -374,12 +379,10 @@ if __name__ == "__main__":
 
   train_data = task.build_inputs(config.train_data)
   # test_data = task.build_inputs(config.task.validation_data)
-  # print(task.anchors)
 
   for l, (i, j) in enumerate(train_data):
     preds = model(i, training=False)
     boxes = xcycwh_to_yxyx(j['bbox'])
-    #print(task.build_losses(preds["raw_output"], j)[0])
 
     i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 0.0]])
 

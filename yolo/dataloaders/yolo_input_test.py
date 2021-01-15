@@ -114,29 +114,11 @@ if __name__ == "__main__":
   dataset, dsp = test_yolo_input_task()
 
   for l, (i, j) in enumerate(dataset):
-    # print(i.shape)
-    # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
 
-    # print(j.keys())
-    # print(tf.shape(j["grid_form"]['5']))
-    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
-    #     plt.imshow(i[0].numpy())
-    #     plt.show()
+    boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
+    i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
+    plt.imshow(i[0].numpy())
+    plt.show()
 
-    print(l)
-    if l > 100:
-      break
-
-  for l, (i, j) in enumerate(dsp):
-    # print(i.shape)
-    # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-
-    # print(j.keys())
-    # print(tf.shape(j["grid_form"]['5']))
-    #     i = tf.image.draw_bounding_boxes(i,boxes, [[1.0, 0.0, 1.0]])
-    #     plt.imshow(i[0].numpy())
-    #     plt.show()
-
-    print(l)
-    if l > 100:
+    if l > 30:
       break

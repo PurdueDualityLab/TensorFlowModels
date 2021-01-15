@@ -39,7 +39,7 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def input_size(self):
-    if self._input_size == None:
+    if self._input_size is not None:
       return [None, None, 3]
     else:
       return self._input_size
@@ -52,8 +52,8 @@ class ModelConfig(hyperparams.Config):
     #model_cfg = getattr(self.model, self.model.type)
     #model_kwargs = model_cfg.as_dict()
     model_kwargs = super().as_dict()
-    print(model_kwargs)
-    if self._boxes != None:
+    # print(model_kwargs)
+    if self._boxes is not None:
       model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
     else:
       model_kwargs.update({"_boxes": None})
@@ -100,11 +100,11 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def boxes(self):
-    if self._boxes == None:
+    if self._boxes is None:
       return None
     boxes = []
     for box in self._boxes:
-      print(box)
+      # print(box)
       if isinstance(box, list) or isinstance(box, tuple):
         boxes.append(box)
       elif isinstance(box, str):
@@ -120,13 +120,13 @@ class ModelConfig(hyperparams.Config):
           boxes.append(f)
       elif isinstance(box, int):
         raise IOError("unsupported input type, only strings or tuples")
-    print(boxes)
+    # print(boxes)
     return boxes
 
   def set_boxes(self, box_list):
     setter = []
     for value in box_list:
-      print(value)
+      # print(value)
       value = str(list(value))
       setter.append(value[1:-1])
     self._boxes = setter
@@ -172,7 +172,7 @@ class DataConfig(cfg.DataConfig):
   tfds_split: str = 'train'
   global_batch_size: int = 2
   is_training: bool = True
-  dtype: str = 'float16'
+  dtype: str = 'float32'
   decoder = None
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
