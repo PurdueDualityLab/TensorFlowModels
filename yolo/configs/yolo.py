@@ -144,7 +144,7 @@ class Parser(hyperparams.Config):
     image_w: int = 416
     image_h: int = 416
     fixed_size: bool = True
-    jitter_im: float = 0.3
+    jitter_im: float = 0.1
     jitter_boxes: float = 0.005
     min_level: int = 3
     max_level: int = 5
@@ -160,7 +160,6 @@ class Parser(hyperparams.Config):
     seed: int = 10
     shuffle_buffer_size: int = 10000
     use_tie_breaker: bool = True
-    dtype: str = "float16"
 
 
 @dataclasses.dataclass
@@ -171,7 +170,7 @@ class DataConfig(cfg.DataConfig):
     tfds_split: str = 'train'
     global_batch_size: int = 2
     is_training: bool = True
-    dtype: str = 'float16'
+    dtype: str = 'float32'
     decoder = None
     parser: Parser = Parser()
     shuffle_buffer_size: int = 10000

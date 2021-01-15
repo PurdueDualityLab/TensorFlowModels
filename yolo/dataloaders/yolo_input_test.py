@@ -110,5 +110,5 @@ if __name__ == "__main__":
         plt.imshow(i[0].numpy())
         plt.show()
 
-        if l > 10:
+        if l > 30:
             break

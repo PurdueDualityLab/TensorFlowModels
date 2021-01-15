@@ -142,15 +142,7 @@ class Parser(parser.Parser):
 
         image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(image, boxes, width = width, height = height, target_dim = self._max_process_size)
 
-        if self._aug_rand_brightness:
-            image = tf.image.random_brightness(image=image,
-                                               max_delta=.1)  # Brightness
-        if self._aug_rand_saturation:
-            image = tf.image.random_saturation(image=image, lower=0.75,
-                                               upper=1.25)  # Saturation
-        if self._aug_rand_hue:
-            image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
-        image = tf.clip_by_value(image, 0.0, 1.0)
+
         image_shape = tf.shape(image)[:2]
 
         if self._random_flip:
@@ -189,6 +181,15 @@ class Parser(parser.Parser):
                                                                 target_height=randscale * self._net_down_scale)
         image = tf.image.resize(image, (416,416), preserve_aspect_ratio=False)
 
+        if self._aug_rand_brightness:
+            image = tf.image.random_brightness(image=image,
+                                               max_delta=.1)  # Brightness
+        if self._aug_rand_saturation:
+            image = tf.image.random_saturation(image=image, lower=0.75,
+                                               upper=1.25)  # Saturation
+        if self._aug_rand_hue:
+            image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
+        image = tf.clip_by_value(image, 0.0, 1.0)
         best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width = self._image_w, height = self._image_h)
 
         #padding

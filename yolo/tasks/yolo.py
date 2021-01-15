@@ -104,7 +104,7 @@ class YoloTask(base_task.Task):
                     aug_rand_brightness=params.parser.aug_rand_brightness,
                     aug_rand_zoom=params.parser.aug_rand_zoom,
                     aug_rand_hue=params.parser.aug_rand_hue,
-                    dtype = params.parser.dtype,
+                    dtype = params.dtype,
                     anchors = anchors)
 
         if params.is_training:
