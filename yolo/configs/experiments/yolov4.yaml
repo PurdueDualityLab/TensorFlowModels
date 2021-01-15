@@ -36,7 +36,7 @@ task:
     input_path: ''
     is_training: true
     parser:
-      fixed_size: false
+      fixed_size: true
       image_h: 416
       image_w: 416
       aug_rand_saturation: true
