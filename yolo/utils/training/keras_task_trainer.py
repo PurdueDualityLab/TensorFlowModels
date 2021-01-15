@@ -122,7 +122,6 @@ class Trainer(tf.keras.Model):
 
 
 if __name__ == "__main__":
-  import time
   import datetime
   from yolo.utils.run_utils import prep_gpu
   prep_gpu()

@@ -1,12 +1,5 @@
 from absl.testing import parameterized
 import tensorflow as tf
-import numpy as np
-
-try:
-  from importlib import resources as importlib_resources
-except BaseException:
-  # Shim for Python 3.6 and older
-  import importlib_resources
 
 from yolo import DarkNet53
 

@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 from skimage import io
 import cv2
 # from yolo.utils.run_utils import prep_gpu

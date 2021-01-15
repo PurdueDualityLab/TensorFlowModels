@@ -1,21 +1,13 @@
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-import official.core.base_task as task
-import official.core.input_reader as dataset
-
 from absl import logging
-import tensorflow as tf
 from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
-from official.vision import keras_cv
 from yolo.configs import yolo as exp_cfg
 
-from official.vision.beta.dataloaders import tf_example_decoder
-from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
-from official.vision.beta.modeling import factory
 
 from yolo.dataloaders import yolo_input
 from yolo.dataloaders.decoders import tfds_coco_decoder
@@ -373,12 +365,12 @@ if __name__ == '__main__':
 
   config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3'))
   task = YoloTask(config)
-  model = task.build_model()
+  model = base_task.build_model()
   model.summary()
-  task.initialize(model)
+  base_task.initialize(model)
 
-  train_data = task.build_inputs(config.train_data)
-  # test_data = task.build_inputs(config.task.validation_data)
+  train_data = base_task.build_inputs(config.train_data)
+  # test_data = base_task.build_inputs(config.task.validation_data)
 
   for l, (i, j) in enumerate(train_data):
     preds = model(i, training=False)

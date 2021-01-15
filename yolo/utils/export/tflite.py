@@ -1,5 +1,4 @@
 import tensorflow as tf
-from yolo.utils.run_utils import prep_gpu
 
 
 class tflite(object):

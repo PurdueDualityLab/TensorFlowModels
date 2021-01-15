@@ -12,69 +12,69 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
 
-from typing import Tuple, Sequence, List
+from typing import Tuple, List
 
 
 class Config(ABC):
   """
-    The base class for all layers that are used by the parser. Each subclass
-    defines a new layer type. Most nodes correspond to distinct layers that
-    appear in the final network. [net] corresponds to the input to the model.
+  The base class for all layers that are used by the parser. Each subclass
+  defines a new layer type. Most nodes correspond to distinct layers that
+  appear in the final network. [net] corresponds to the input to the model.
 
-    Each subclass must be a @dataclass and must have the following fields:
-    ```{python}
-      _type: str = None
-      w: int = field(init=True, repr=True, default=0)
-      h: int = field(init=True, repr=True, default=0)
-      c: int = field(init=True, repr=True, default=0)
-    ```
+  Each subclass must be a @dataclass and must have the following fields:
+  ```{python}
+    _type: str = None
+    w: int = field(init=True, repr=True, default=0)
+    h: int = field(init=True, repr=True, default=0)
+    c: int = field(init=True, repr=True, default=0)
+  ```
 
-    These fields are used when linking different layers together, but weren't
-    included in the Config class due to limitations in the dataclasses package.
-    (w, h, c) will correspond to the different input dimensions of a DarkNet
-    layer: the width, height, and number of channels.
-    """
+  These fields are used when linking different layers together, but weren't
+  included in the Config class due to limitations in the dataclasses package.
+  (w, h, c) will correspond to the different input dimensions of a DarkNet
+  layer: the width, height, and number of channels.
+  """
 
   @property
   @abstractmethod
   def shape(self) -> Tuple[int, int, int]:
     """
-        Output shape of the layer. The output must be a 3-tuple of ints
-        corresponding to the the width, height, and number of channels of the
-        output.
+    Output shape of the layer. The output must be a 3-tuple of ints
+    corresponding to the the width, height, and number of channels of the
+    output.
 
-        Returns:
-          A tuple corresponding to the output shape of the layer.
-        """
+    Returns:
+      A tuple corresponding to the output shape of the layer.
+    """
     return
 
   def load_weights(self, files) -> int:
     """
-        Load the weights for the current layer from a file.
+    Load the weights for the current layer from a file.
 
-        Arguments:
-          files: Open IO object for the DarkNet weights file
+    Arguments:
+      files: Open IO object for the DarkNet weights file
 
-        Returns:
-          the number of bytes read.
-        """
+    Returns:
+      the number of bytes read.
+    """
     return 0
 
   def get_weights(self) -> list:
     """
-        Returns:
-          a list of Numpy arrays consisting of all of the weights that
-          were loaded from the weights file
-        """
+    Returns:
+      a list of Numpy arrays consisting of all of the weights that
+      were loaded from the weights file
+    """
     return []
 
   @classmethod
   def from_dict(clz, net, layer_dict) -> 'Config':
     """
-        Create a layer instance from the previous layer and a dictionary
-        containing all of the parameters for the DarkNet layer. This is how
-        linking is done by the parser.
-        """
+    Create a layer instance from the previous layer and a dictionary
+    containing all of the parameters for the DarkNet layer. This is how
+    linking is done by the parser.
+    """
     if 'w' not in layer_dict:
       prevlayer = net[-1]
       l = {
@@ -90,23 +90,23 @@ class Config(ABC):
   @abstractmethod
   def to_tf(self, tensors):
     """
-        Convert the DarkNet configuration object to a tensor given the previous
-        tensors that occoured in the network. This function should also return
-        a Keras layer if it has weights.
+    Convert the DarkNet configuration object to a tensor given the previous
+    tensors that occoured in the network. This function should also return
+    a Keras layer if it has weights.
 
-        Returns:
-          if weights: a tuple consisting of the output tensor and Keras layer
-          if no weights: the output tensor
-        """
+    Returns:
+      if weights: a tuple consisting of the output tensor and Keras layer
+      if no weights: the output tensor
+    """
     return None
 
 
 class _LayerBuilder(dict):
   """
-    This class defines a registry for the layer builder in the DarkNet weight
-    parser. It allows for syntactic sugar when registering Config subclasses to
-    the parser.
-    """
+  This class defines a registry for the layer builder in the DarkNet weight
+  parser. It allows for syntactic sugar when registering Config subclasses to
+  the parser.
+  """
 
   def __getitem__(self, key):
     try:
@@ -199,7 +199,7 @@ class convCFG(Config):
       return [self.weights, self.biases]
 
   def to_tf(self, tensors):
-    from yolo.modeling.layers import DarkConv
+    from yolo.modeling.layers.nn_blocks import DarkConv
     layer = DarkConv(
         filters=self.filters,
         kernel_size=(self.size, self.size),

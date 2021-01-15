@@ -1,5 +1,4 @@
 import tensorflow.keras as ks
-import numpy as np
 
 
 class HistoryFull(ks.callbacks.Callback):

@@ -20,8 +20,8 @@ if sys.version_info < (3, 10):
 
 def _parseValue(key, val):
   """
-    Parse non-string literals found in darknet config files
-    """
+  Parse non-string literals found in darknet config files
+  """
   if "," in val:
     vals = val.split(",")
     raw_list = tuple(_parseValue(key, v) for v in vals)
@@ -45,11 +45,11 @@ def _parseValue(key, val):
 
 class multidict(collections.OrderedDict):
   """
-    A dict subclass that allows for multiple sections in a config file to share
-    names.
+  A dict subclass that allows for multiple sections in a config file to share
+  names.
 
-    From: https://stackoverflow.com/a/9888814
-    """
+  From: https://stackoverflow.com/a/9888814
+  """
   _unique = 0  # class variable
 
   def __setitem__(self, key, val):
@@ -70,11 +70,11 @@ class DNConfigParser(configparser.RawConfigParser):
 
   def as_list(self) -> List[Dict[str, str]]:
     """
-        Converts a ConfigParser object into a dictionary.
+    Converts a ConfigParser object into a dictionary.
 
-        The resulting dictionary has sections as keys which point to a dict of the
-        sections options as key => value pairs.
-        """
+    The resulting dictionary has sections as keys which point to a dict of the
+    sections options as key => value pairs.
+    """
     the_list = []
     for section in self.sections():
       the_list.append(dict(self.items(section)))
@@ -82,13 +82,13 @@ class DNConfigParser(configparser.RawConfigParser):
 
   def as_dict(self) -> Dict[str, Dict[str, str]]:
     """
-        Converts a ConfigParser object into a dictionary.
+    Converts a ConfigParser object into a dictionary.
 
-        The resulting dictionary has sections as keys which point to a dict of the
-        sections options as key => value pairs.
+    The resulting dictionary has sections as keys which point to a dict of the
+    sections options as key => value pairs.
 
-        https://stackoverflow.com/a/23944270
-        """
+    https://stackoverflow.com/a/23944270
+    """
     the_dict = {}
     for section in self.sections():
       the_dict[section] = dict(self.items(section))

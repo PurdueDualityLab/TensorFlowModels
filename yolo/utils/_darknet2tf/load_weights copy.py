@@ -4,7 +4,7 @@ format into TensorFlow layers
 """
 import itertools
 from tensorflow import keras as ks
-from yolo.modeling.building_blocks import DarkConv
+from yolo.modeling.layers.nn_blocks import DarkConv  # pylint: disable=unused-import
 
 
 def split_converter(lst, i, j=None):

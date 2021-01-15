@@ -4,7 +4,6 @@ from tensorflow.keras import backend as K
 
 from yolo.ops import iou_ops
 from yolo.ops.loss_utils import GridGenerator
-from yolo.ops.loss_utils import build_grided_gt
 
 
 class Yolo_Loss(object):

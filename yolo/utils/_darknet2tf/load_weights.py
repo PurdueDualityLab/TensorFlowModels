@@ -4,7 +4,6 @@ format into TensorFlow layers
 """
 import itertools
 from tensorflow import keras as ks
-from collections import defaultdict
 from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
 

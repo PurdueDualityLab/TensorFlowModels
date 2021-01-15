@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
-from . import main, _parser
-import sys
-from absl import app
-from . import DarkNetConverter
-"Convert a DarkNet config file and weights into a TensorFlow model"
-
-from absl import flags as _flags
-from absl.flags import argparse_flags as _argparse_flags
-
+# !/usr/bin/env python3
 import argparse as _argparse
+from absl.flags import argparse_flags as _argparse_flags
+from absl import flags as _flags
+from . import DarkNetConverter
+from absl import app
+import sys
+from . import main, _parser
+
+"Convert a DarkNet config file and weights into a TensorFlow model"
 
 _flags.DEFINE_boolean("weights_only", False,
                       "Save only the weights and not the entire model.")
@@ -32,7 +31,7 @@ def _makeParser(parser):
 
 
 def main(argv, args=None):
-  from ..file_manager import download
+  from yolo.utils.downloads.file_manager import download
   import os
 
   if args is None:

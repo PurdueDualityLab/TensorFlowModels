@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 "Number the blocks in a DarkNet config file"
 
-from absl import app, flags
+from absl import app
 from absl.flags import argparse_flags
 import argparse
+
+from yolo.utils.downloads import file_manager
 
 
 def _makeParser(parser):
@@ -35,8 +37,7 @@ def main(argv, args=None):
 
   filename = args.filename
   if filename is None:
-    from ..file_manager import download
-    with open(download("yolov3.cfg")) as file:
+    with open(file_manager.download("yolov3.cfg")) as file:
       numberConfig(file)
   else:
     numberConfig(filename)

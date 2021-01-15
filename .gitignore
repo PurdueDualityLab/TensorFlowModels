@@ -12,7 +12,7 @@ yolov4-eval
 
 
 # lfs safe in case the demo is run and someone tries to push
-# if critical update needs to be made, then comment the 3 lines bellow or the 
+# if critical update needs to be made, then comment the 3 lines bellow or the
 # demo folder coralating to version of the app that is being changed
 yolo/demos/examples/android
 yolo/demos/examples/ios
@@ -31,7 +31,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
+# downloads/
 eggs/
 .eggs/
 lib/

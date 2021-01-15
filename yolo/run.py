@@ -9,7 +9,6 @@ except BaseException:
 from absl import app
 from absl import flags
 import gin
-import sys
 
 from official.core import train_utils
 # pylint: disable=unused-import
@@ -18,22 +17,10 @@ from yolo.common import registry_imports
 from official.common import distribute_utils
 from official.common import flags as tfm_flags
 from official.core import task_factory
-from official.core import train_lib
 from official.modeling import performance
-
-import copy
-import json
-import os
-from typing import Any, Mapping, Tuple
 
 # Import libraries
 from absl import logging
-import orbit
-import tensorflow as tf
-
-from official.core import train_utils
-from official.core import base_task
-from official.core import config_definitions
 
 FLAGS = flags.FLAGS
 """

@@ -1,11 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
-from tensorflow_addons.image import utils as img_utils
 import tensorflow.keras.backend as K
-from yolo.ops.iou_ops import *
-from yolo.ops import box_ops as box_utils
-
-from official.vision.beta.ops import preprocess_ops
+from yolo.ops import box_ops, iou_ops
 
 
 def scale_image(image, resize=False, w=None, h=None):
@@ -110,7 +106,7 @@ def fit_preserve_aspect_ratio(image,
   image = tf.image.pad_to_bounding_box(image, pad_width // 2, pad_height // 2,
                                        clipper, clipper)
 
-  boxes = box_utils.yxyx_to_xcycwh(boxes)
+  boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
 
   y *= tf.cast(width / clipper, tf.float32)
@@ -124,7 +120,7 @@ def fit_preserve_aspect_ratio(image,
 
   boxes = tf.concat([x, y, w, h], axis=-1)
 
-  boxes = box_utils.xcycwh_to_yxyx(boxes)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
   image = tf.image.resize(image, (target_dim, target_dim))
   return image, boxes
 
@@ -171,7 +167,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
 
     # compute intersection over union of the boxes, and take the argmax of comuted iou for each box.
     # thus each box is associated with the largest interection over union
-    iou_raw = compute_iou(truth_comp, anchors)
+    iou_raw = iou_ops.compute_iou(truth_comp, anchors)
 
     gt_mask = tf.cast(iou_raw > 0.213, dtype=iou_raw.dtype)
 

@@ -1,6 +1,5 @@
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
-import numpy as np
 
 
 class LearningRateScheduler(ks.callbacks.Callback):

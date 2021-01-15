@@ -1,5 +1,3 @@
-import os
-import traceback as st
 import tensorflow as tf
 from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg

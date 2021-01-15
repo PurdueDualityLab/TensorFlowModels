@@ -23,7 +23,6 @@ except BaseException:
 from absl import app
 from absl import flags
 import gin
-import sys
 
 from official.core import train_utils
 # pylint: disable=unused-import

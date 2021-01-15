@@ -1,4 +1,3 @@
-from collections import defaultdict
 from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
 

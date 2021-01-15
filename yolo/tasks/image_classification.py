@@ -1,4 +1,4 @@
-# Lint as: python3
+  # Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +15,11 @@
 # ==============================================================================
 """Image classification task definition."""
 import tensorflow as tf
-from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
-from official.modeling import tf_utils
 from yolo.configs import darknet_classification as exp_cfg
 from yolo.dataloaders.decoders import classification_tfds_decoder as cli
 from yolo.dataloaders import classification_input
-from official.vision.beta.modeling import factory
 from official.vision.beta.tasks import image_classification
 
 

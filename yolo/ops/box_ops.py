@@ -2,8 +2,7 @@
 
 # import libraries
 import tensorflow as tf
-import math
-from typing import *
+from typing import Tuple, Union
 
 
 def yxyx_to_xcycwh(box: tf.Tensor):
