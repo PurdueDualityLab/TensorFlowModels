@@ -386,7 +386,7 @@ class FastVideo(object):
                         self._prev_display_fps = self._display_fps * 0.1 + 0.9 * self._prev_display_fps
 
                 #print everything
-                #self.print_opt()
+                self.print_opt()
                 #self._prev_display_fps = self._display_fps * 0.4 + 0.6 * self._prev_display_fps
                 if not self._running:
                     raise

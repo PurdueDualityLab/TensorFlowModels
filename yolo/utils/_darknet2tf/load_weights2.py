@@ -20,7 +20,7 @@ def load_weights(convs, layers):
             # print(cfg.c, cfg.filters, layers[i]._filters)
             layers[i].set_weights(cfg.get_weights())
         except:
-            # print(f"an error has occured, {layers[i].name}, {i}")
+            print(f"an error has occured, {layers[i].name}, {i}")
 
 
 def load_weights_backbone(model, net):
