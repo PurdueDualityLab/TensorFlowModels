@@ -39,7 +39,7 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def input_size(self):
-    if self._input_size == None:
+    if self._input_size is not None:
       return [None, None, 3]
     else:
       return self._input_size
@@ -53,7 +53,7 @@ class ModelConfig(hyperparams.Config):
     #model_kwargs = model_cfg.as_dict()
     model_kwargs = super().as_dict()
     # print(model_kwargs)
-    if self._boxes != None:
+    if self._boxes is not None:
       model_kwargs.update({"_boxes": [str(b) for b in self.boxes]})
     else:
       model_kwargs.update({"_boxes": None})
@@ -100,7 +100,7 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def boxes(self):
-    if self._boxes == None:
+    if self._boxes is None:
       return None
     boxes = []
     for box in self._boxes:

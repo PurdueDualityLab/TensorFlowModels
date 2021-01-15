@@ -41,32 +41,32 @@ class Parser(parser.Parser):
                dtype="float16"):
     """Initializes parameters for parsing annotations in the dataset.
         Args:
-            image_w: a `Tensor` or `int` for width of input image.
-            image_h: a `Tensor` or `int` for height of input image.
-            num_classes: a `Tensor` or `int` for the number of classes.
-            fixed_size: a `bool` if True all output images have the same size.
-            jitter_im: a `float` that is the maximum jitter applied to the image for
-                data augmentation during training.
-            jitter_boxes: a `float` that is the maximum jitter applied to the bounding
-                box for data augmentation during training.
-            net_down_scale: an `int` that down scales the image width and height to the
-                closest multiple of net_down_scale.
-            max_process_size: an `int` for maximum image width and height.
-            min_process_size: an `int` for minimum image width and height ,
-            max_num_instances: an `int` number of maximum number of instances in an image.
-            random_flip: a `bool` if True, augment training with random horizontal flip.
-            pct_rand: an `int` that prevents do_scale from becoming larger than 1-pct_rand.
-            masks: a `Tensor`, `List` or `numpy.ndarrray` for anchor masks.
-            aug_rand_saturation: `bool`, if True, augment training with random
-                saturation.
-            aug_rand_brightness: `bool`, if True, augment training with random
-                brightness.
-            aug_rand_zoom: `bool`, if True, augment training with random
-                zoom.
-            aug_rand_hue: `bool`, if True, augment training with random
-                hue.
-            anchors: a `Tensor`, `List` or `numpy.ndarrray` for bounding box priors.
-            seed: an `int` for the seed used by tf.random
+          image_w: a `Tensor` or `int` for width of input image.
+          image_h: a `Tensor` or `int` for height of input image.
+          num_classes: a `Tensor` or `int` for the number of classes.
+          fixed_size: a `bool` if True all output images have the same size.
+          jitter_im: a `float` that is the maximum jitter applied to the image for
+            data augmentation during training.
+          jitter_boxes: a `float` that is the maximum jitter applied to the bounding
+            box for data augmentation during training.
+          net_down_scale: an `int` that down scales the image width and height to the
+            closest multiple of net_down_scale.
+          max_process_size: an `int` for maximum image width and height.
+          min_process_size: an `int` for minimum image width and height ,
+          max_num_instances: an `int` number of maximum number of instances in an image.
+          random_flip: a `bool` if True, augment training with random horizontal flip.
+          pct_rand: an `int` that prevents do_scale from becoming larger than 1-pct_rand.
+          masks: a `Tensor`, `List` or `numpy.ndarrray` for anchor masks.
+          aug_rand_saturation: `bool`, if True, augment training with random
+            saturation.
+          aug_rand_brightness: `bool`, if True, augment training with random
+            brightness.
+          aug_rand_zoom: `bool`, if True, augment training with random
+            zoom.
+          aug_rand_hue: `bool`, if True, augment training with random
+            hue.
+          anchors: a `Tensor`, `List` or `numpy.ndarrray` for bounding box priors.
+          seed: an `int` for the seed used by tf.random
         """
     self._net_down_scale = 2**max_level
 
@@ -127,10 +127,10 @@ class Parser(parser.Parser):
   def _parse_train_data(self, data):
     """Generates images and labels that are usable for model training.
         Args:
-            data: a dict of Tensors produced by the decoder.
+          data: a dict of Tensors produced by the decoder.
         Returns:
-            images: the image tensor.
-            labels: a dict of Tensors that contains labels.
+          images: the image tensor.
+          labels: a dict of Tensors that contains labels.
         """
 
     shape = tf.shape(data["image"])
@@ -234,10 +234,10 @@ class Parser(parser.Parser):
   def _parse_eval_data(self, data):
     """Generates images and labels that are usable for model training.
         Args:
-            data: a dict of Tensors produced by the decoder.
+          data: a dict of Tensors produced by the decoder.
         Returns:
-            images: the image tensor.
-            labels: a dict of Tensors that contains labels.
+          images: the image tensor.
+          labels: a dict of Tensors that contains labels.
         """
 
     shape = tf.shape(data["image"])

@@ -1,13 +1,18 @@
 """Backbones configurations."""
 # Import libraries
 import dataclasses
+from typing import Optional
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
+
 
 @dataclasses.dataclass
 class DarkNet(hyperparams.Config):
   """DarkNet config."""
   model_id: str = "darknet53"
+  min_level: Optional[int] = None
+  max_level: int = 5
+
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

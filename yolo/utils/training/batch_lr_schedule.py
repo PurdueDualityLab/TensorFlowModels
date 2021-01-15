@@ -1,8 +1,10 @@
-import tensorflow.keras as ks 
+import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 import numpy as np
 
+
 class LearningRateScheduler(ks.callbacks.Callback):
+
   def __init__(self, schedule, verbose=0):
     super(LearningRateScheduler, self).__init__()
     self.schedule = schedule
@@ -16,14 +18,16 @@ class LearningRateScheduler(ks.callbacks.Callback):
     self._batches = global_step
     K.set_value(self.model.optimizer.lr, K.get_value(lr))
     if self.verbose > 0:
-      print('\nEpoch %05d: LearningRateScheduler reducing learning rate to %s.' % (self._batches + 1, lr))
+      print(
+          '\nEpoch %05d: LearningRateScheduler reducing learning rate to %s.' %
+          (self._batches + 1, lr))
 
   def on_train_batch_end(self, batch, logs=None):
     logs = logs or {}
     logs['lr'] = K.get_value(self.model.optimizer.lr)
     logs['batch_step'] = self._batches
     string = ["%s: %0.5f\t" % (key, logs[key]) for key in logs.keys()]
-    print("".join(string) , end = "\r", flush = True)
+    print("".join(string), end="\r", flush=True)
 
   def on_epoch_end(self, batch, logs=None):
     logs = logs or {}
@@ -31,7 +35,6 @@ class LearningRateScheduler(ks.callbacks.Callback):
     logs['batch_step'] = self._batches
     try:
       string = ["%s: %0.5f\t" % (key, logs[key]) for key in logs.keys()]
-      print("\n", "".join(string) , end = "\n\n", flush = True)
+      print("\n", "".join(string), end="\n\n", flush=True)
     except Exception as e:
-      print(e) 
-    
+      print(e)

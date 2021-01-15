@@ -49,11 +49,11 @@ def get_darknet53_tf_format(net, only_weights=True):
   weights = []
   if only_weights:
     for block in new_net:
-      if type(block) != list:
+      if isinstance(block, list):
         weights.append(block.get_weights())
       else:
         weights.append(interleve_weights(block))
-  # print("converted/interleved weights for tensorflow format")
+  print("converted/interleved weights for tensorflow format")
   return new_net, weights
 
 
@@ -99,7 +99,7 @@ def set_darknet_weights_head(flat_head, weights_head):
 
 
 def set_darknet_weights(model, weights_list, flat_model=None):
-  if flat_model == None:
+  if flat_model is None:
     zip_fill = flatten_model(model)
   else:
     zip_fill = flat_model
@@ -154,7 +154,7 @@ def get_decoder_weights(decoder):
   head_weights = []
   head_layers = []
   for layer in (head):
-    if layer != None and layer._type == "convolutional":
+    if layer is not None and layer._type == "convolutional":
       head_weights.append(layer.get_weights())
       head_layers.append(layer)
 

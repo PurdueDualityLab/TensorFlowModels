@@ -22,7 +22,7 @@ class FPNTail(tf.keras.layers.Layer):
     self._upsample = upsample
     self._upsample_size = upsample_size
 
-    self._activation = "leaky" if activation == None else activation
+    self._activation = "leaky" if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -57,7 +57,6 @@ class FPNTail(tf.keras.layers.Layer):
           **self._base_config)
       self._upsampling_block = tf.keras.layers.UpSampling2D(
           size=self._upsample_size)
-    return
 
   def call(self, inputs):
     x_route = self._route_conv(inputs)
@@ -86,7 +85,7 @@ class YoloFPN(tf.keras.Model):
     super().__init__(**kwargs)
     self._fpn_path_len = fpn_path_len
 
-    self._activation = "leaky" if activation == None else activation
+    self._activation = "leaky" if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -102,7 +101,6 @@ class YoloFPN(tf.keras.Model):
         bias_regularizer=self._bias_regularizer,
         norm_epsilon=self._norm_epsilon,
         norm_momentum=self._norm_momentum)
-    return
 
   def get_raw_depths(self, minimum_depth):
     depths = []
@@ -178,11 +176,11 @@ class YoloRoutedDecoder(tf.keras.Model):
                bias_regularizer=None,
                **kwargs):
     super().__init__(**kwargs)
-    self._max_level_process_len = path_process_len if max_level_process_len == None else max_level_process_len
+    self._max_level_process_len = path_process_len if max_level_process_len is None else max_level_process_len
     self._path_process_len = path_process_len
     self._embed_spp = embed_spp
 
-    self._activation = "leaky" if activation == None else activation
+    self._activation = "leaky" if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -265,11 +263,11 @@ class YoloFPNDecoder(tf.keras.Model):
                **kwargs):
     super().__init__(**kwargs)
     self._path_process_len = path_process_len
-    self._max_level_process_len = 1 if max_level_process_len == None else max_level_process_len
+    self._max_level_process_len = 1 if max_level_process_len is None else max_level_process_len
 
     self._embed_spp = embed_spp
 
-    self._activation = "leaky" if activation == None else activation
+    self._activation = "leaky" if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -321,7 +319,6 @@ class YoloFPNDecoder(tf.keras.Model):
             repetitions=self._path_process_len,
             insert_spp=False,
             **self._base_config)
-    return
 
   def call(self, inputs, training=False):
     outputs = dict()
@@ -359,7 +356,7 @@ class YoloDecoder(tf.keras.Model):
     self._max_level_process_len = max_level_process_len
     self._embed_spp = embed_spp
 
-    self._activation = "leaky" if activation == None else activation
+    self._activation = "leaky" if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon

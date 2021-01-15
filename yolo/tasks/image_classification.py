@@ -21,7 +21,7 @@ from official.core import task_factory
 from official.modeling import tf_utils
 from yolo.configs import darknet_classification as exp_cfg
 from yolo.dataloaders.decoders import classification_tfds_decoder as cli
-from official.vision.beta.dataloaders import classification_input
+from yolo.dataloaders import classification_input
 from official.vision.beta.modeling import factory
 from official.vision.beta.tasks import image_classification
 
@@ -29,20 +29,31 @@ from official.vision.beta.tasks import image_classification
 @task_factory.register_task_cls(exp_cfg.ImageClassificationTask)
 class ImageClassificationTask(image_classification.ImageClassificationTask):
   """A task for image classification."""
+
   def build_inputs(self, params, input_context=None):
     """Builds classification input."""
 
     num_classes = self.task_config.model.num_classes
     input_size = self.task_config.model.input_size
 
-    if params.tfds_name != None: 
+    if params.tfds_name != None:
       decoder = cli.Decoder()
     else:
       decoder = classification_input.Decoder()
-      
+
     parser = classification_input.Parser(
         output_size=input_size[:2],
         num_classes=num_classes,
+        aug_rand_saturation=params.parser.aug_rand or
+        params.parser.aug_rand_saturation,
+        aug_rand_brightness=params.parser.aug_rand or
+        params.parser.aug_rand_brightness,
+        aug_rand_zoom=params.parser.aug_rand or params.parser.aug_rand_zoom,
+        aug_rand_rotate=params.parser.aug_rand or params.parser.aug_rand_rotate,
+        aug_rand_hue=params.parser.aug_rand or params.parser.aug_rand_hue,
+        aug_rand_aspect=params.parser.aug_rand or params.parser.aug_rand_aspect,
+        scale=params.parser.scale,
+        seed=params.parser.seed,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
@@ -73,8 +84,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       outputs = model(features, training=True)
       # Casting output layer as float32 is necessary when mixed_precision is
       # mixed_float16 or mixed_bfloat16 to ensure output is casted as float32.
-      outputs = tf.nest.map_structure(
-          lambda x: tf.cast(x, tf.float32), outputs)
+      outputs = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), outputs)
 
       # Computes per-replica loss.
       loss = self.build_losses(
@@ -85,22 +95,22 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
 
       # For mixed_precision policy, when LossScaleOptimizer is used, loss is
       # scaled for numerical stability.
-      if isinstance(
-          optimizer, tf.keras.mixed_precision.experimental.LossScaleOptimizer):
+      if isinstance(optimizer,
+                    tf.keras.mixed_precision.experimental.LossScaleOptimizer):
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
 
     tvars = model.trainable_variables
     grads = tape.gradient(scaled_loss, tvars)
     # Scales back gradient before apply_gradients when LossScaleOptimizer is
     # used.
-    if isinstance(
-        optimizer, tf.keras.mixed_precision.experimental.LossScaleOptimizer):
+    if isinstance(optimizer,
+                  tf.keras.mixed_precision.experimental.LossScaleOptimizer):
       grads = optimizer.get_unscaled_gradients(grads)
 
     # Apply gradient clipping.
     if self.task_config.gradient_clip_norm > 0:
-      grads, _ = tf.clip_by_global_norm(
-          grads, self.task_config.gradient_clip_norm)
+      grads, _ = tf.clip_by_global_norm(grads,
+                                        self.task_config.gradient_clip_norm)
     optimizer.apply_gradients(list(zip(grads, tvars)))
 
     logs = {self.loss: loss}

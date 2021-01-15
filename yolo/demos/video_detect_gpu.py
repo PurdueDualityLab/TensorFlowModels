@@ -23,40 +23,40 @@ from yolo.utils.demos import utils
 
 class FastVideo(object):
   """
-    program for faster object detection in TensorFlow. Algorithm was tested on RTX 2070 Super with Intel Core i5-4500k CPU. The first 2-3 seconds of 
-    the video diplayed may be too fast or too slow as the algorithem is designed to converge to the most optimal FPS based on the input source. This also 
-    may only be noticeable on webcam input. Think of it as configuration time, or the set up time. This algorithem requires GPU to work correctly. 
+    program for faster object detection in TensorFlow. Algorithm was tested on RTX 2070 Super with Intel Core i5-4500k CPU. The first 2-3 seconds of
+    the video diplayed may be too fast or too slow as the algorithem is designed to converge to the most optimal FPS based on the input source. This also
+    may only be noticeable on webcam input. Think of it as configuration time, or the set up time. This algorithem requires GPU to work correctly.
 
     using a default model:
-        cap = BufferVideo("test.mp4", model = "regular", process_width=416, process_height=416)
-        cap.run()
-    
+      cap = BufferVideo("test.mp4", model = "regular", process_width=416, process_height=416)
+      cap.run()
+
     using a non-default model:
-        prep_gpu()
-        with tf.device("/GPU:0"):
-            model = build_model(name = "regular", w = 416, h = 416) 
-        cap = BufferVideo(0, model = model, process_width=416, process_height=416)
-        cap.run()
+      prep_gpu()
+      with tf.device("/GPU:0"):
+        model = build_model(name = "regular", w = 416, h = 416)
+      cap = BufferVideo(0, model = model, process_width=416, process_height=416)
+      cap.run()
 
 
-    Args: 
-        file_name: a string for the video file you would like tensorflow to process, or an integer for the webcam youd would like to use 
-        model: a string in {"regular", "tiny", "spp"} for the yolo model you would like to use. if None, regular will be used as defualt. 
-               if a non standard model is used, you may also pass in a regular keras model, but the implemented error checking is not garunteed to function 
-        preprocess_function: python function to preprocess images input into the model, if none out default preprocessing function is used 
+    Args:
+        file_name: a string for the video file you would like tensorflow to process, or an integer for the webcam youd would like to use
+        model: a string in {"regular", "tiny", "spp"} for the yolo model you would like to use. if None, regular will be used as defualt.
+          if a non standard model is used, you may also pass in a regular keras model, but the implemented error checking is not garunteed to function
+        preprocess_function: python function to preprocess images input into the model, if none out default preprocessing function is used
         process_width: the integer width that the model should reshape the input to prior to input, 416 by default
-        process_height: the integer height that the model should reshape the input to prior to input, 416 by default 
+        process_height: the integer height that the model should reshape the input to prior to input, 416 by default
         classes: integer number of possible classes that could be predicted, if none is provided, 80 will be used as the default from the COCO dataset
-        labels: a List[string] of the name of the class associated with each neural net prediction, if nothing is provided, the default COCO labels will be used 
-        preprocess_with_gpu: boolean for wether you would like to do the pre processing on the gpu or cpu. some devices lack the memory capability to 
-                             run 2 piplines on one graphics device, so the default is set to the CPU, but the program could work faster by using the GPU, 
-                             by about 2 to 3 fps at high resolutions (1080p or higher)
-        gpu_device: string for the device you would like to use to run the model, if the model you pass in is not standard make sure you prep 
-                    the model on the same device that you pass in, by default /GPU:0
+        labels: a List[string] of the name of the class associated with each neural net prediction, if nothing is provided, the default COCO labels will be used
+        preprocess_with_gpu: boolean for wether you would like to do the pre processing on the gpu or cpu. some devices lack the memory capability to
+          run 2 piplines on one graphics device, so the default is set to the CPU, but the program could work faster by using the GPU,
+          by about 2 to 3 fps at high resolutions (1080p or higher)
+        gpu_device: string for the device you would like to use to run the model, if the model you pass in is not standard make sure you prep
+          the model on the same device that you pass in, by default /GPU:0
         preprocess_gpu: the gpu device you would like to use to preprocess the image if you have multiple. by default use the first /GPU:0
 
-    Raises: 
-        IOError: the video file you would like to use is not found 
+    Raises:
+        IOError: the video file you would like to use is not found
         Exception: the model you input is a string and is not in the list of supported models
 
     """
@@ -100,7 +100,7 @@ class FastVideo(object):
     print(self._cap.get(3), self._cap.get(4))
 
     self._preprocess_function = preprocess_function
-    self._height = int(self._cap.get(4)) if disp_h == None else disp_h
+    self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._og_height = int(self._cap.get(4))
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
     self._classes = classes
@@ -110,7 +110,7 @@ class FastVideo(object):
     self._model = model
 
     # fast but as close to one 2 one as possible
-    if max_batch == None:
+    if max_batch is None:
       if file_name == 0:
         self._batch_size = 5  # 40 fps more conistent frame to frame
       else:
@@ -130,7 +130,7 @@ class FastVideo(object):
 
     self._colors = gen_colors(self._classes)
 
-    if labels == None:
+    if labels is None:
       self._labels = get_coco_names(
           path="yolo/dataloaders/dataset_specs/coco.names")
     else:
@@ -179,7 +179,7 @@ class FastVideo(object):
     tick = 0
     timeout = 0
     process_device = self._pre_process_device
-    if self._preprocess_function == None:
+    if self._preprocess_function is None:
       preprocess = self._preprocess
     else:
       preprocess = self._preprocess_function
@@ -232,7 +232,7 @@ class FastVideo(object):
     return
 
   def display(self):
-    """ 
+    """
         display the processed images in a thread, for models expected output format see tf.image.combined_non_max_suppression
         https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression
         """
@@ -294,7 +294,7 @@ class FastVideo(object):
     print(f"capture (width, height): ({self._width},{self._height})")
     print(f"Yolo Possible classes: {self._classes}")
 
-    if self._preprocess_function == None:
+    if self._preprocess_function is None:
       preprocess = self._preprocess
     else:
       preprocess = self._preprocess_function

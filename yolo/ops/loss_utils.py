@@ -7,13 +7,13 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
                     use_tie_breaker):
   """
     convert ground truth for use in loss functions
-    Args: 
-        y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total. 
-        size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
-    
+    Args:
+      y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
+      mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total.
+      size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
+
     Return:
-        tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
+      tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
   boxes = tf.cast(y_true["bbox"], dtype)
   classes = tf.one_hot(
@@ -133,12 +133,12 @@ class GridGenerator(object):
 
   def __init__(self, anchors, masks=None, scale_anchors=None):
     self.dtype = tf.keras.backend.floatx()
-    if masks != None:
+    if masks is not None:
       self._num = len(masks)
     else:
       self._num = tf.shape(anchors)[0]
 
-    if masks != None:
+    if masks is not None:
       anchors = [anchors[mask] for mask in masks]
 
     self._scale_anchors = scale_anchors
@@ -151,7 +151,7 @@ class GridGenerator(object):
 
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, width, height, batch_size, dtype=None):
-    if dtype == None:
+    if dtype is None:
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype

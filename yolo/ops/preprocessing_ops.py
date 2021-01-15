@@ -211,11 +211,11 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
 def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   """
     convert ground truth for use in loss functions
-    Args: 
+    Args:
         y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total. 
+        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total.
         size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
-    
+
     Return:
         tf.Tensor[] of shape [size, size, #of_anchors, 4, 1, num_classes]
     """
@@ -301,11 +301,11 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
                           use_tie_breaker):
   """
     convert ground truth for use in loss functions
-    Args: 
+    Args:
         y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total. 
+        mask: list of the anchor boxes choresponding to the output, ex. [1, 2, 3] tells this layer to predict only the first 3 anchors in the total.
         size: the dimensions of this output, for regular, it progresses from 13, to 26, to 52
-    
+
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """

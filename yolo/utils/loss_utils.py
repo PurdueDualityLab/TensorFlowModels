@@ -8,21 +8,21 @@ def parse_yolo_box_predictions(unscaled_box,
                                anchor_grid,
                                grid_points,
                                scale_x_y=1.0):
-    #with tf.name_scope("decode_box_predictions_yolo"):
-    pred_xy = tf.math.sigmoid(
-        unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
-    pred_wh = unscaled_box[..., 2:4]
-    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
-                      axis=-1) + grid_points
-    box_wh = tf.math.exp(pred_wh) * anchor_grid
-    pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-    return pred_xy, pred_wh, pred_box
+  #with tf.name_scope("decode_box_predictions_yolo"):
+  pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (
+      scale_x_y - 1)
+  pred_wh = unscaled_box[..., 2:4]
+  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
+                    axis=-1) + grid_points
+  box_wh = tf.math.exp(pred_wh) * anchor_grid
+  pred_box = K.concatenate([box_xy, box_wh], axis=-1)
+  return pred_xy, pred_wh, pred_box
 
 
 @tf.function(experimental_relax_shapes=True)
 def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
                     use_tie_breaker):
-    """
+  """
     convert ground truth for use in loss functions
     Args: 
         y_true: tf.Tensor[] ground truth [box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
@@ -32,160 +32,153 @@ def build_grided_gt(y_true, mask, size, classes, true_shape, dtype,
     Return:
         tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
     """
-    boxes = tf.cast(y_true["bbox"], dtype)
-    classes = tf.one_hot(tf.cast(y_true["classes"], dtype=tf.int32),
-                         depth=classes,
-                         dtype=dtype)
-    anchors = tf.cast(y_true["best_anchors"], dtype)
+  boxes = tf.cast(y_true["bbox"], dtype)
+  classes = tf.one_hot(
+      tf.cast(y_true["classes"], dtype=tf.int32), depth=classes, dtype=dtype)
+  anchors = tf.cast(y_true["best_anchors"], dtype)
 
-    batches = tf.shape(boxes)[0]
-    num_boxes = tf.shape(boxes)[1]
-    len_masks = tf.shape(mask)[0]
+  batches = tf.shape(boxes)[0]
+  num_boxes = tf.shape(boxes)[1]
+  len_masks = tf.shape(mask)[0]
 
-    full = tf.zeros([batches, size, size, len_masks, true_shape[-1]],
-                    dtype=dtype)
-    depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
+  full = tf.zeros([batches, size, size, len_masks, true_shape[-1]], dtype=dtype)
+  depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
 
-    x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)
-    y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype), dtype=tf.int32)
+  x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)
+  y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype), dtype=tf.int32)
 
-    anchors = tf.repeat(tf.expand_dims(anchors, axis=-1), len_masks, axis=-1)
+  anchors = tf.repeat(tf.expand_dims(anchors, axis=-1), len_masks, axis=-1)
 
-    update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-    update = tf.TensorArray(dtype, size=0, dynamic_size=True)
-    const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
-    mask = tf.cast(mask, dtype=dtype)
+  update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
+  update = tf.TensorArray(dtype, size=0, dynamic_size=True)
+  const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
+  mask = tf.cast(mask, dtype=dtype)
 
-    i = 0
-    anchor_id = 0
-    for batch in range(batches):
-        for box_id in range(num_boxes):
-            if K.all(tf.math.equal(boxes[batch, box_id, 2:4], 0)):
-                continue
-            if K.any(tf.math.less(boxes[batch, box_id, 0:2], 0.0)) or K.any(
-                    tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
-                continue
-            if use_tie_breaker:
-                for anchor_id in range(tf.shape(anchors)[-1]):
-                    index = tf.math.equal(anchors[batch, box_id, anchor_id],
-                                          mask)
-                    if K.any(index):
-                        #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
-                        p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
-                                    dtype=tf.int32)
-                        uid = 1
+  i = 0
+  anchor_id = 0
+  for batch in range(batches):
+    for box_id in range(num_boxes):
+      if K.all(tf.math.equal(boxes[batch, box_id, 2:4], 0)):
+        continue
+      if K.any(tf.math.less(boxes[batch, box_id, 0:2], 0.0)) or K.any(
+          tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
+        continue
+      if use_tie_breaker:
+        for anchor_id in range(tf.shape(anchors)[-1]):
+          index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
+          if K.any(index):
+            #tf.print(anchor_id, anchors[batch, box_id, anchor_id])
+            p = tf.cast(
+                K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
+            uid = 1
 
-                        used = depth_track[batch, y[batch, box_id],
-                                           x[batch, box_id], p]
-                        if anchor_id == 0:
-                            # write the box to the update list
-                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
-                            """peculiar"""
-                            update_index = update_index.write(
-                                i,
-                                [batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([
-                                boxes[batch, box_id], const, classes[batch,
-                                                                     box_id]
-                            ])
-                            update = update.write(i, value)
-                        elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
-                            uid = 2
-                            # write the box to the update list
-                            # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
-                            """peculiar"""
-                            update_index = update_index.write(
-                                i,
-                                [batch, y[batch, box_id], x[batch, box_id], p])
-                            value = K.concatenate([
-                                boxes[batch, box_id], const, classes[batch,
-                                                                     box_id]
-                            ])
-                            update = update.write(i, value)
+            used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
+            if anchor_id == 0:
+              # write the box to the update list
+              # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
+              """peculiar"""
+              update_index = update_index.write(
+                  i, [batch, y[batch, box_id], x[batch, box_id], p])
+              value = K.concatenate(
+                  [boxes[batch, box_id], const, classes[batch, box_id]])
+              update = update.write(i, value)
+            elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
+              uid = 2
+              # write the box to the update list
+              # the boxes output from yolo are for some reason have the x and y indexes swapped for some reason, I am not sure why
+              """peculiar"""
+              update_index = update_index.write(
+                  i, [batch, y[batch, box_id], x[batch, box_id], p])
+              value = K.concatenate(
+                  [boxes[batch, box_id], const, classes[batch, box_id]])
+              update = update.write(i, value)
 
-                        depth_track = tf.tensor_scatter_nd_update(
-                            depth_track,
-                            [(batch, y[batch, box_id], x[batch, box_id], p)],
-                            [uid])
-                        i += 1
-            else:
-                index = tf.math.equal(anchors[batch, box_id, 0], mask)
-                if K.any(index):
-                    #tf.(0, anchors[batch, box_id, 0])
-                    p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)),
-                                dtype=tf.int32)
-                    update_index = update_index.write(
-                        i, [batch, y[batch, box_id], x[batch, box_id], p])
-                    value = K.concatenate(
-                        [boxes[batch, box_id], const, classes[batch, box_id]])
-                    update = update.write(i, value)
-                    i += 1
+            depth_track = tf.tensor_scatter_nd_update(
+                depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)],
+                [uid])
+            i += 1
+      else:
+        index = tf.math.equal(anchors[batch, box_id, 0], mask)
+        if K.any(index):
+          #tf.(0, anchors[batch, box_id, 0])
+          p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
+          update_index = update_index.write(
+              i, [batch, y[batch, box_id], x[batch, box_id], p])
+          value = K.concatenate(
+              [boxes[batch, box_id], const, classes[batch, box_id]])
+          update = update.write(i, value)
+          i += 1
 
-    # if the size of the update list is not 0, do an update, other wise, no boxes and pass an empty grid
-    if tf.math.greater(update_index.size(), 0):
-        update_index = update_index.stack()
-        update = update.stack()
-        full = tf.tensor_scatter_nd_add(full, update_index, update)
-    return full
+  # if the size of the update list is not 0, do an update, other wise, no boxes and pass an empty grid
+  if tf.math.greater(update_index.size(), 0):
+    update_index = update_index.stack()
+    update = update.stack()
+    full = tf.tensor_scatter_nd_add(full, update_index, update)
+  return full
 
 
 @tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
-    """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-    with tf.name_scope("center_grid"):
-        x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
-        x_y = K.stack([x_left, y_left], axis=-1)
-        x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
-        x_y = tf.expand_dims(tf.repeat(tf.expand_dims(x_y, axis=-2),num,axis=-2),axis=0)
-    return x_y
+  """ generate a grid that is used to detemine the relative centers of the bounding boxs """
+  with tf.name_scope("center_grid"):
+    x_left, y_left = tf.meshgrid(tf.range(0, lheight), tf.range(0, lwidth))
+    x_y = K.stack([x_left, y_left], axis=-1)
+    x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
+    x_y = tf.expand_dims(
+        tf.repeat(tf.expand_dims(x_y, axis=-2), num, axis=-2), axis=0)
+  return x_y
 
 
 @tf.function(experimental_relax_shapes=True)
 def _build_anchor_grid(width, height, anchors, num, dtype):
-    with tf.name_scope("anchor_grid"):
-        """ get the transformed anchor boxes for each dimention """
-        anchors = tf.cast(anchors, dtype=dtype)
-        anchors = tf.reshape(anchors, [1, -1])
-        anchors = tf.repeat(anchors, width * height, axis=0)
-        anchors = tf.reshape(anchors, [1, width, height, num, -1])
-    return anchors
+  with tf.name_scope("anchor_grid"):
+    """ get the transformed anchor boxes for each dimention """
+    anchors = tf.cast(anchors, dtype=dtype)
+    anchors = tf.reshape(anchors, [1, -1])
+    anchors = tf.repeat(anchors, width * height, axis=0)
+    anchors = tf.reshape(anchors, [1, width, height, num, -1])
+  return anchors
 
 
 class GridGenerator(object):
-    def __init__(self,
-                 anchors,
-                 masks=None,
-                 scale_anchors=None,
-                 name=None,
-                 low_memory=True,
-                 reset=False):
-        self.dtype = tf.keras.backend.floatx()
-        if masks != None:
-            self._num = len(masks)
-        else:
-            self._num = tf.shape(anchors)[0]
 
-        if masks != None:
-            anchors = [anchors[mask] for mask in masks]
-        
-        self._low_memory = low_memory
+  def __init__(self,
+               anchors,
+               masks=None,
+               scale_anchors=None,
+               name=None,
+               low_memory=True,
+               reset=False):
+    self.dtype = tf.keras.backend.floatx()
+    if masks != None:
+      self._num = len(masks)
+    else:
+      self._num = tf.shape(anchors)[0]
 
-        self._scale_anchors = scale_anchors
-        self._anchors = tf.convert_to_tensor(anchors)
-        return
+    if masks != None:
+      anchors = [anchors[mask] for mask in masks]
 
-    @tf.function(experimental_relax_shapes=True)
-    def _extend_batch(self, grid, batch_size):
-        return tf.repeat(grid, batch_size, axis=0)
+    self._low_memory = low_memory
 
-    @tf.function(experimental_relax_shapes=True)
-    def __call__(self, width, height, batch_size, dtype=None):
-        if dtype == None:
-            self.dtype = tf.keras.backend.floatx()
-        else:
-            self.dtype = dtype
-        grid_points = _build_grid_points(width, height, self._num, self.dtype)
-        anchor_grid = _build_anchor_grid(width, height, tf.cast(self._anchors, self.dtype) / tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
-        grid_points = self._extend_batch(grid_points, batch_size)
-        anchor_grid = self._extend_batch(anchor_grid, batch_size)
-        return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
+    self._scale_anchors = scale_anchors
+    self._anchors = tf.convert_to_tensor(anchors)
+    return
+
+  @tf.function(experimental_relax_shapes=True)
+  def _extend_batch(self, grid, batch_size):
+    return tf.repeat(grid, batch_size, axis=0)
+
+  @tf.function(experimental_relax_shapes=True)
+  def __call__(self, width, height, batch_size, dtype=None):
+    if dtype == None:
+      self.dtype = tf.keras.backend.floatx()
+    else:
+      self.dtype = dtype
+    grid_points = _build_grid_points(width, height, self._num, self.dtype)
+    anchor_grid = _build_anchor_grid(
+        width, height,
+        tf.cast(self._anchors, self.dtype) /
+        tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
+    grid_points = self._extend_batch(grid_points, batch_size)
+    anchor_grid = self._extend_batch(anchor_grid, batch_size)
+    return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)

@@ -22,14 +22,12 @@ class Yolo(ks.Model):
     self._decoder = decoder
     self._head = head
     self._filter = filter
-    return
 
   def build(self, input_shape):
     self._backbone.build(input_shape)
     nshape = self._backbone.output_shape
     self._decoder.build(nshape)
     super().build(input_shape)
-    return
 
   def call(self, inputs, training=False):
     maps = self._backbone(inputs)
@@ -67,7 +65,7 @@ from yolo.configs import yolo
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
-  if model_config.decoder.version == None:  #custom yolo
+  if model_config.decoder.version is None:  #custom yolo
     model = YoloDecoder(
         embed_spp=model_config.decoder.embed_spp,
         embed_fpn=model_config.decoder.embed_fpn,
@@ -83,7 +81,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
     model.build(input_specs)
     return model
 
-  if model_config.decoder.type == None or model_config.decoder.type == "regular":  # defaut regular
+  if model_config.decoder.type is None or model_config.decoder.type == "regular":  # defaut regular
     if model_config.decoder.version == "v4":
       model = YoloDecoder(
           embed_spp=False,
