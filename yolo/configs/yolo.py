@@ -39,7 +39,7 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def input_size(self):
-    if self._input_size is not None:
+    if self._input_size is None:
       return [None, None, 3]
     else:
       return self._input_size

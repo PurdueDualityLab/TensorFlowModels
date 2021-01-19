@@ -18,64 +18,261 @@ from yolo.ops.box_ops import xcycwh_to_yxyx
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
   """A single-replica view of training procedure.
-    RetinaNet task provides artifacts for training/evalution procedures, including
-    loading/iterating over Datasets, initializing the model, calculating the loss,
-    post-processing, and customized metrics with reduction.
+  RetinaNet task provides artifacts for training/evalution procedures, including
+  loading/iterating over Datasets, initializing the model, calculating the loss,
+  post-processing, and customized metrics with reduction.
+  """
+
+  def __init__(self, params, logging_dir: str = None):
+    super().__init__(params, logging_dir)
+    self._loss_dict = None
+    self._num_boxes = None
+    self._anchors_built = False
+
+    self._masks = None
+    self._path_scales = None
+    self._x_y_scales = None
+    return
+
+  def build_model(self):
+    """get an instance of Yolo v3 or v4"""
+    from yolo.modeling.Yolo import build_yolo
+    params = self.task_config.train_data
+    model_base_cfg = self.task_config.model
+    l2_weight_decay = self.task_config.weight_decay / 2.0
+
+    masks, path_scales, xy_scales = self._get_masks()
+    self._get_boxes(gen_boxes=params.is_training)
+
+    input_specs = tf.keras.layers.InputSpec(shape=[None] +
+                                            model_base_cfg.input_size)
+    l2_regularizer = (
+        tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
+
+    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
+                               masks, xy_scales, path_scales)
+    self._loss_dict = losses
+    return model
+
+  def build_inputs(self, params, input_context=None):
+    """Build input dataset."""
+    decoder = tfds_coco_decoder.MSCOCODecoder()
+    """
+    decoder_cfg = params.decoder.get()
+    if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    else:
+        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
     """
 
-        model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer, masks, xy_scales, path_scales)
-        self._loss_dict = losses
-        return model
+    model = self.task_config.model
 
+    masks, path_scales, xy_scales = self._get_masks()
+    anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    def build_inputs(self, params, input_context=None):
-        """Build input dataset."""
-        decoder = tfds_coco_decoder.MSCOCODecoder()
-        '''
-        decoder_cfg = params.decoder.get()
-        if params.decoder.type == 'simple_decoder':
-            decoder = tf_example_decoder.TfExampleDecoder(
-                regenerate_source_id=decoder_cfg.regenerate_source_id)
-        elif params.decoder.type == 'label_map_decoder':
-            decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
-                label_map=decoder_cfg.label_map,
-                regenerate_source_id=decoder_cfg.regenerate_source_id)
-        else:
-            raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
-        '''
+    print(masks, path_scales, xy_scales)
+    parser = yolo_input.Parser(
+        image_w=params.parser.image_w,
+        image_h=params.parser.image_h,
+        num_classes=model.num_classes,
+        min_level=model.min_level,
+        max_level=model.max_level,
+        fixed_size=params.parser.fixed_size,
+        jitter_im=params.parser.jitter_im,
+        jitter_boxes=params.parser.jitter_boxes,
+        masks=masks,
+        use_tie_breaker=params.parser.use_tie_breaker,
+        min_process_size=params.parser.min_process_size,
+        max_process_size=params.parser.max_process_size,
+        max_num_instances=params.parser.max_num_instances,
+        random_flip=params.parser.random_flip,
+        pct_rand=params.parser.pct_rand,
+        seed=params.parser.seed,
+        aug_rand_saturation=params.parser.aug_rand_saturation,
+        aug_rand_brightness=params.parser.aug_rand_brightness,
+        aug_rand_zoom=params.parser.aug_rand_zoom,
+        aug_rand_hue=params.parser.aug_rand_hue,
+        anchors=anchors)
 
+    if params.is_training:
+      post_process_fn = parser.postprocess_fn()
+    else:
+      post_process_fn = None
 
-        model = self.task_config.model
+    reader = input_reader.InputReader(
+        params,
+        dataset_fn=tf.data.TFRecordDataset,
+        decoder_fn=decoder.decode,
+        parser_fn=parser.parse_fn(params.is_training),
+        postprocess_fn=post_process_fn)
+    dataset = reader.read(input_context=input_context)
+    return dataset
 
-        masks, path_scales, xy_scales = self._get_masks()
-        anchors = self._get_boxes(gen_boxes=params.is_training)
+  def build_losses(self, outputs, labels, aux_losses=None):
+    loss = 0.0
+    loss_box = 0.0
+    loss_conf = 0.0
+    loss_class = 0.0
+    metric_dict = dict()
 
-        print(masks, path_scales, xy_scales)
-        parser = yolo_input.Parser(
-                    image_w=params.parser.image_w,
-                    image_h=params.parser.image_h,
-                    num_classes=model.num_classes,
-                    min_level=model.min_level,
-                    max_level=model.max_level,
-                    fixed_size=params.parser.fixed_size,
-                    jitter_im=params.parser.jitter_im,
-                    jitter_boxes=params.parser.jitter_boxes,
-                    masks = masks,
-                    use_tie_breaker = params.parser.use_tie_breaker,
-                    min_process_size=params.parser.min_process_size,
-                    max_process_size=params.parser.max_process_size,
-                    max_num_instances = params.parser.max_num_instances,
-                    random_flip = params.parser.random_flip,
-                    pct_rand=params.parser.pct_rand,
-                    seed = params.parser.seed,
-                    aug_rand_saturation=params.parser.aug_rand_saturation,
-                    aug_rand_brightness=params.parser.aug_rand_brightness,
-                    aug_rand_zoom=params.parser.aug_rand_zoom,
-                    aug_rand_hue=params.parser.aug_rand_hue,
-                    anchors = anchors)
+    grid = labels['grid_form']
+    for key in outputs.keys():
+      # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
+      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+          key](grid[key], outputs[key])
+      #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
+      loss += _loss
+      loss_box += _loss_box
+      loss_conf += _loss_conf
+      loss_class += _loss_class
+      metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
+      metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
 
-        if params.is_training:
-            post_process_fn = parser.postprocess_fn()
+    metric_dict['box_loss'] = loss_box
+    metric_dict['conf_loss'] = loss_conf
+    metric_dict['class_loss'] = loss_class
+
+    return loss, metric_dict
+
+  def build_metrics(self, training=True):
+    #return super().build_metrics(training=training)
+    if not training:
+      self.coco_metric = coco_evaluator.COCOEvaluator(
+          annotation_file=self.task_config.annotation_file,
+          include_mask=False,
+          need_rescale_bboxes=False,
+          per_category_metrics=self._task_config.per_category_metrics)
+    return []
+
+  def train_step(self, inputs, model, optimizer, metrics=None):
+    #get the data point
+    image, label = inputs
+    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    with tf.GradientTape() as tape:
+      # compute a prediction
+      # cast to float32
+      y_pred = model(image, training=True)
+      loss, metrics = self.build_losses(y_pred['raw_output'], label)
+      scaled_loss = loss / num_replicas
+
+      # scale the loss for numerical stability
+      if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+        scaled_loss = optimizer.get_scaled_loss(scaled_loss)
+    # compute the gradient
+    train_vars = model.trainable_variables
+    gradients = tape.gradient(scaled_loss, train_vars)
+    # get unscaled loss if the scaled_loss was used
+    if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+      gradients = optimizer.get_unscaled_gradients(gradients)
+    if self.task_config.gradient_clip_norm > 0.0:
+      gradients, _ = tf.clip_by_global_norm(gradients,
+                                            self.task_config.gradient_clip_norm)
+    optimizer.apply_gradients(zip(gradients, train_vars))
+
+    #custom metrics
+    logs = {'loss': loss}
+    logs.update(metrics)
+
+    #tf.print("loss: ", logs["loss"], end = "\n")
+    tf.print(logs, end='\n')
+
+    ret = '\033[F' * (len(logs.keys()) + 1)
+    tf.print(ret, end='\n')
+
+    return logs
+
+  def validation_step(self, inputs, model, metrics=None):
+    #get the data point
+    image, label = inputs
+
+    # computer detivative and apply gradients
+    y_pred = model(image, training=False)
+    loss, metrics = self.build_losses(y_pred['raw_output'], label)
+
+    # #custom metrics
+    loss_metrics = {'loss': loss}
+    loss_metrics.update(metrics)
+    label['boxes'] = xcycwh_to_yxyx(label['bbox'])
+    del label['bbox']
+
+    coco_model_outputs = {
+        'detection_boxes': y_pred['bbox'],
+        'detection_scores': y_pred['confidence'],
+        'detection_classes': y_pred['classes'],
+        'num_detections': tf.shape(y_pred['bbox'])[:-1],
+        'source_id': label['source_id'],
+    }
+
+    loss_metrics.update({self.coco_metric.name: (label, coco_model_outputs)})
+    return loss_metrics
+
+  def aggregate_logs(self, state=None, step_outputs=None):
+    #return super().aggregate_logs(state=state, step_outputs=step_outputs)
+    if not state:
+      self.coco_metric.reset_states()
+      state = self.coco_metric
+    self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
+                                  step_outputs[self.coco_metric.name][1])
+    return state
+
+  def reduce_aggregated_logs(self, aggregated_logs):
+    #return super().reduce_aggregated_logsI(aggregated_logs)
+    return self.coco_metric.result()
+
+  @property
+  def anchors(self):
+    return self.task_config.model.boxes
+
+  def _get_boxes(self, gen_boxes=True):
+    # gen_boxes = params.is_training
+    if gen_boxes and self.task_config.model.boxes == None and not self._anchors_built:
+      # must save the boxes!
+      model_base_cfg = self.task_config.model
+      self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
+                         1) * model_base_cfg.boxes_per_scale
+      decoder = tfds_coco_decoder.MSCOCODecoder()
+      reader = BoxGenInputReader(
+          params,
+          dataset_fn=tf.data.TFRecordDataset,
+          decoder_fn=decoder.decode,
+          parser_fn=None)
+      anchors = reader.read(
+          k=9, image_width=params.parser.image_w, input_context=input_context)
+      self.task_config.model.set_boxes(anchors)
+      self._anchors_built = True
+      del reader
+
+    return self.task_config.model.boxes
+
+  def _get_masks(self,
+                 xy_exponential=False,
+                 exp_base=2,
+                 xy_scale_base='default_value'):
+    start = 0
+    boxes = {}
+    path_scales = {}
+    scale_x_y = {}
+
+    if xy_scale_base == 'default_base':
+      xy_scale_base = 0.05
+      xy_scale_base = xy_scale_base / (
+          self._boxes_per_level * (self._max_level - self._min_level + 1) - 1)
+    elif xy_scale_base == 'default_value':
+      xy_scale_base = 0.00625
+
+    params = self.task_config.model
+
+    if self._masks == None or self._path_scales == None or self._x_y_scales == None:
+      for i in range(params.min_level, params.max_level + 1):
+        boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
+        path_scales[str(i)] = 2**i
+        if xy_exponential:
+          scale_x_y[str(i)] = 1.0 + xy_scale_base * (exp_base**i)
         else:
           scale_x_y[str(i)] = 1.0
         start += params.boxes_per_scale
@@ -130,7 +327,7 @@ class YoloTask(base_task.Task):
       model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck is not None:
+        if neck != None:
           load_weights_backbone(model.decoder.neck, neck)
           model.decoder.neck.trainable = False
         cfgheads = load_head(model.decoder.head, decoder)
@@ -169,12 +366,12 @@ if __name__ == '__main__':
 
   config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3'))
   task = YoloTask(config)
-  model = base_task.build_model()
+  model = task.build_model()
   model.summary()
-  base_task.initialize(model)
+  task.initialize(model)
 
-  train_data = base_task.build_inputs(config.train_data)
-  # test_data = base_task.build_inputs(config.task.validation_data)
+  train_data = task.build_inputs(config.train_data)
+  # test_data = task.build_inputs(config.task.validation_data)
 
   for l, (i, j) in enumerate(train_data):
     preds = model(i, training=False)
