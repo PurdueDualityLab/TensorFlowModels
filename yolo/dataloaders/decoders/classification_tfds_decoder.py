@@ -31,6 +31,7 @@ class Decoder(decoder.Decoder):
     # this is not the best solution, but we encode the image because the parser only works with string encoded jpegs.
     # the simple solution is to decode the image to a tensor in the deccoder and to have the parser operate on uint8
     # tensors rather than tensor strings, or to have the parser function differently based on the input type.
+
     sample_dict = {
         'image/encoded':
             tf.io.encode_jpeg(serialized_example['image'], quality=100),
