@@ -86,3 +86,7 @@ if __name__ == '__main__':
   b = datetime.datetime.now()
 
   print('\n\n\n\n\n\n\n {b - a}')
+
+
+# use the OD
+# https://github.com/tensorflow/models/blob/master/research/object_detection/metrics/coco_evaluation.py
