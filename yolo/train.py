@@ -37,6 +37,10 @@ from official.modeling import performance
 
 
 FLAGS = flags.FLAGS
+'''
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64
+'''
+
 
 '''
 python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=yolo/configs/experiments/darknet53.yaml

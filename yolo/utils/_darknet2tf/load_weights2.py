@@ -12,12 +12,12 @@ def load_weights(convs, layers):
   # min_key = min(layers.keys())
   # max_key = max(layers.keys())
   keys = sorted(layers.keys())
-  print (layers)
+  #print (layers)
 
   for i in keys:  # range(min_key, max_key + 1):
     try:
       cfg = convs.pop(0)
-      print(cfg.c, cfg.filters, layers[i]._filters)
+      #print(cfg.c, cfg.filters, layers[i]._filters)
       layers[i].set_weights(cfg.get_weights())
     except BaseException as e:
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
@@ -33,14 +33,14 @@ def load_weights_backbone(model, net):
   key = 0
   for layer in model.layers:
     # non sub module conv blocks
-    print(layer.name)
+    #print(layer.name)
     if isinstance(layer, ConvBN):
       layers[key] = layer
       key += 1
     else:
       for sublayer in layer.submodules:
         if isinstance(sublayer, ConvBN):
-          print(sublayer.name)
+          #print(sublayer.name)
           layers[key] = sublayer
           key += 1
 
