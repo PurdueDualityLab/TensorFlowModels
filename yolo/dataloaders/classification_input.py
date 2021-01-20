@@ -121,8 +121,8 @@ class Parser(parser.Parser):
     image = tf.clip_by_value(image, 0, 1)
     image = tf.image.convert_image_dtype(image, self._dtype)
 
-    label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
-
+    # label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+    label = decoded_tensors['image/class/label']
     return image, label
 
   def _parse_eval_data(self, decoded_tensors):
