@@ -1,6 +1,8 @@
 runtime:
   distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float32'
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
+  num_gpus: 2
 task:
   model:
     num_classes: 1001
@@ -8,7 +10,7 @@ task:
     backbone:
       type: 'darknet'
       darknet:
-        model_id: 'darknet53'
+        model_id: 'cspdarknet53'
     norm_activation:
       activation: 'mish'
   losses:
