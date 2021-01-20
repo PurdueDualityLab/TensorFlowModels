@@ -16,14 +16,18 @@ task:
     one_hot: True
     label_smoothing: 0.1
   train_data:
-    input_path: 'imagenet-2012-tfrecord/train*'
+    tfds_name: imagenet2012
+    tfds_split: train
+    #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
     parser:
       aug_rand: true
   validation_data:
-    input_path: 'imagenet-2012-tfrecord/valid*'
+    tfds_name: imagenet2012
+    tfds_split: validation
+    #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
