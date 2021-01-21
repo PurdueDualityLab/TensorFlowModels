@@ -43,7 +43,7 @@ def _cross_suppression(boxes, box_slice, iou_threshold, inner_idx):
                        [batch_size, NMS_TILE_SIZE, 4])
   iou = box_ops.bbox_overlap(new_slice, box_slice)
   ret_slice = tf.expand_dims(
-      tf.cast( tf.logical_not(tf.reduce_any(iou < iou_threshold, [1])), box_slice.dtype),
+      tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype),
       2) * box_slice
   return boxes, ret_slice, iou_threshold, inner_idx + 1
 
@@ -105,7 +105,6 @@ def _suppression_loop_body(boxes, iou_threshold, output_size, idx):
 
 def sorted_non_max_suppression_padded(scores,
                                       boxes,
-                                      classes,
                                       max_output_size,
                                       iou_threshold):
   """A wrapper that handles non-maximum suppression.
@@ -167,8 +166,6 @@ def sorted_non_max_suppression_padded(scores,
   boxes = tf.pad(tf.cast(boxes, tf.float32), [[0, 0], [0, pad], [0, 0]])
   scores = tf.pad(
       tf.cast(scores, tf.float32), [[0, 0], [0, pad]], constant_values=-1)
-  classes = tf.pad(
-      tf.cast(classes, tf.float32), [[0, 0], [0, pad]], constant_values=-1)
   num_boxes += pad
 
   def _loop_cond(unused_boxes, unused_threshold, output_size, idx):
@@ -202,10 +199,4 @@ def sorted_non_max_suppression_padded(scores,
   scores = scores * tf.cast(
       tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
           output_size, [-1, 1]), scores.dtype)
-  classes = tf.reshape(
-      tf.gather(tf.reshape(classes, [-1, 1]), idx),
-      [batch_size, max_output_size])
-  classes = classes * tf.cast(
-      tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
-          output_size, [-1, 1]), classes.dtype)
-  return scores, boxes, classes
+  return scores, boxes
