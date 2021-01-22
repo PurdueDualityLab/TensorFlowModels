@@ -76,7 +76,7 @@ def compute_giou(box1, box2):
     # find the smallest box to encompase both box1 and box2
     c_mins = tf.math.minimum(box1[..., 0:2], box2[..., 0:2])
     c_maxes = tf.math.maximum(box1[..., 2:4], box2[..., 2:4])
-    c = box_utils.get_area((c_mins, c_maxes), use_tuple=True)
+    c = tf.math.abs(tf.reduce_prod(c_mins[1] - c_maxes[0], axis=-1))
 
     # compute giou
     giou = iou - tf.math.divide_no_nan((c - union), c)

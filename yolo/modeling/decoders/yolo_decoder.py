@@ -400,3 +400,17 @@ class YoloDecoder(tf.keras.Model):
   @property
   def head(self):
     return self._decoder
+
+
+  def get_config(self):
+    config = dict(
+      embed_fpn=self._embed_fpn,
+      fpn_path_len=self._fpn_path_len,
+      **self._decoder_config
+    )
+
+    return config
+  
+  @classmethod
+  def from_config(cls, config, custom_objects=None):
+    return cls(**config)

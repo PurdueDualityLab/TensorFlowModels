@@ -61,57 +61,6 @@ def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
   return box
 
 
-def get_area(box: Union[tf.Tensor, Tuple],
-             xywh: bool = False,
-             use_tuple: bool = False):
-  """Calculates the area of the box.
-    Args:
-      box: a `Tensor` whose last dimension is 4.
-      xywh: a `bool` who flags the format of the box.
-      use_tuple: a `bool` that flags the type of box.
-    Returns:
-      area: a `Tensor` whose value represents the area of the box.
-    """
-  with tf.name_scope('box_area'):
-    if use_tuple:
-      area = get_area_tuple(box=box, xywh=xywh)
-    else:
-      area = get_area_tensor(box=box, xywh=xywh)
-  return area
-
-
-def get_area_tensor(box: tf.Tensor, xywh: bool = False):
-  """Calculates the area of the box.
-    Args:
-      box: a `Tensor` whose last dimension is 4.
-      xywh: a `bool` who flags the format of the box.
-    Returns:
-      area: a `Tensor` whose value represents the area of the box.
-    """
-  with tf.name_scope('tensor_area'):
-    if xywh:
-      area = tf.reduce_prod(box[..., 2:4], axis=-1)
-    else:
-      area = tf.math.abs(tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1))
-  return area
-
-
-def get_area_tuple(box: Tuple, xywh: bool = False):
-  """Calculates the area of the box.
-    Args:
-      box: a `Tuple` whose last dimension is 4.
-      xywh: a `bool` who flags the format of the box.
-    Returns:
-      area: a `Tensor` whose value represents the area of the box.
-    """
-  with tf.name_scope('tuple_area'):
-    if xywh:
-      area = tf.reduce_prod(box[1], axis=-1)
-    else:
-      area = tf.math.abs(tf.reduce_prod(box[1] - box[0], axis=-1))
-  return area
-
-
 def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
   """Calculates the squared distance between two points.
     Args:

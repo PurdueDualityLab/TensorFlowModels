@@ -38,7 +38,7 @@ class YoloLayer(ks.Model):
     self._use_tie_breaker = use_tie_breaker
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
-    self._path_scale = path_scale
+    self._path_scale = path_scale or {key: 2 ** int(key) for key, _ in masks.items()} 
     self._use_nms = use_nms
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
     self._generator = {}

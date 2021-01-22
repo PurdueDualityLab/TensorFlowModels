@@ -204,7 +204,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
   return tf.cast(iou_index, dtype=tf.float32)
 
 
-# @tf.function(experimental_relax_shapes=True)
 def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   """
     convert ground truth for use in loss functions
@@ -293,7 +292,6 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   return full
 
 
-# @tf.function(experimental_relax_shapes=True)
 def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
                           use_tie_breaker):
   """

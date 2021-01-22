@@ -123,8 +123,7 @@ class YoloTask(base_task.Task):
     grid = labels['grid_form']
     for key in outputs.keys():
       # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
-      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
-          key](grid[key], outputs[key])
+      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key], outputs[key])
       #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
       loss += _loss
       loss_box += _loss_box
