@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
-from yolo.ops import box_ops, iou_ops
+from yolo.ops import box_ops
 
 
 def scale_image(image, resize=False, w=None, h=None):
@@ -167,7 +167,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
 
     # compute intersection over union of the boxes, and take the argmax of comuted iou for each box.
     # thus each box is associated with the largest interection over union
-    iou_raw = iou_ops.compute_iou(truth_comp, anchors)
+    iou_raw = box_ops.compute_iou(truth_comp, anchors)
 
     gt_mask = tf.cast(iou_raw > 0.213, dtype=iou_raw.dtype)
 

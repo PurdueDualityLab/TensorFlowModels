@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from yolo.ops.iou_ops import compute_iou
+from yolo.ops.box_ops import compute_iou
 from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
 

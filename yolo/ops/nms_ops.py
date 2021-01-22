@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from yolo.ops import iou_ops
+
 
 from official.vision.beta.ops import box_ops
 
@@ -191,7 +191,7 @@ def sorted_non_max_suppression_padded(scores, boxes, classes, max_output_size,
           output_size, [-1, 1]), classes.dtype)
   return scores, boxes, classes
 
-
+from yolo.ops import box_ops
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
   ind_m = tf.ones_like(ind) * tf.expand_dims(
@@ -264,7 +264,7 @@ def _nms(boxes, classif, confid, k, class_thresh, iou_thresh):
     conf_mask = tf.cast(conf > class_thresh, dtype=boxes.dtype)
 
     # the issue is here along with the mask, we need to select the box..
-    iou = iou_ops.compute_iou(u_box, boxs, yxyx=True)
+    iou = box_ops.compute_iou(u_box, boxs, yxyx=True)
 
     iou_mask = iou <= iou_thresh
     class_mask = tf.logical_and(clas == u_class, one_mask)
@@ -300,7 +300,7 @@ def _nms(boxes, classif, confid, k, class_thresh, iou_thresh):
 
 def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
 
-  #iou = iou_ops.compute_iou(boxes, boxes, yxyx=True)
+  #iou = box_ops.compute_iou(boxes, boxes, yxyx=True)
   mrange = tf.range(k)
   mask_x, mask_y = tf.meshgrid(
       mrange, mrange)  # tf.one_hot(mrange, k, axis = -1, dtype = boxes.dtype)
@@ -311,7 +311,7 @@ def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
   boxes_i = tf.repeat(boxes_i, [k], axis=-2)
   boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
 
-  iou = iou_ops.compute_iou(boxes_i, boxes_t)
+  iou = box_ops.compute_iou(boxes_i, boxes_t)
   # duplicate boxes
   iou_mask = iou >= iou_thresh
   iou_mask = tf.logical_and(mask_diag, iou_mask)
@@ -338,7 +338,7 @@ def segment_nms2(boxes, classes, confidence, k, class_thresh, iou_thresh):
   boxes_i = tf.expand_dims(boxes, axis=-2)
   boxes_i = tf.repeat(boxes_i, [k], axis=-2)
   boxes_t = tf.transpose(boxes_i, perm=(0, 2, 1, 3))
-  iou = iou_ops.compute_iou(boxes_i, boxes_t)
+  iou = box_ops.compute_iou(boxes_i, boxes_t)
 
   # duplicate boxes
   iou_mask = iou >= iou_thresh

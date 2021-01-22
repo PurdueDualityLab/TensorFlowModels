@@ -122,7 +122,6 @@ class ConvBN(tf.keras.layers.Layer):
 
     if self._use_bn:
       if self._use_sync_bn:
-        print(self._use_sync_bn)
         self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
@@ -202,6 +201,7 @@ class DarkResidual(tf.keras.layers.Layer):
   def __init__(self,
                filters=1,
                filter_scale=2,
+               dilation_rate = 1, 
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                kernel_regularizer=None,
@@ -232,6 +232,7 @@ class DarkResidual(tf.keras.layers.Layer):
     # normal params
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
+    self._dilation_rate = dilation_rate
 
     # activation params
     self._conv_activation = activation
@@ -258,6 +259,7 @@ class DarkResidual(tf.keras.layers.Layer):
           filters=self._filters,
           kernel_size=(3, 3),
           strides=(2, 2),
+          dilation_rate=self._dilation_rate,
           padding='same',
           **_dark_conv_args)
     else:
@@ -274,6 +276,7 @@ class DarkResidual(tf.keras.layers.Layer):
         filters=self._filters,
         kernel_size=(3, 3),
         strides=(1, 1),
+        dilation_rate=self._dilation_rate,
         padding='same',
         **_dark_conv_args)
 
@@ -300,6 +303,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'kernel_regularizer': self._kernel_regularizer,
+        "dilation_rate":self._dilation_rate, 
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
         'norm_moment': self._norm_moment,
@@ -432,8 +436,9 @@ class CSPTiny(tf.keras.layers.Layer):
         padding='same',
         **_dark_conv_args)
 
-    self._maxpool = tf.keras.layers.MaxPool2D(
-        pool_size=2, strides=2, padding='same', data_format=None)
+    if self._downsample:
+      self._maxpool = tf.keras.layers.MaxPool2D(
+          pool_size=2, strides=2, padding='same', data_format=None)
 
     super().build(input_shape)
 
