@@ -127,8 +127,8 @@ class MSCOCODecoder(decoder.Decoder):
       decoded_tensors.update({
           'groundtruth_semantic_mask': semantic_mask,
           'groundtruth_instance_id': pantopic_id,
-          'groundtruth_instance_masks_png': parsed_tensors["panoptic_image/filename"],
-          'groundtruth_instance_raw_mask': parsed_tensors["panoptic_image"],
+          'groundtruth_pantopic_mask_png': parsed_tensors["panoptic_image/filename"],
+          'groundtruth_pantopic_mask': parsed_tensors["panoptic_image"],
       })
     # tf.print(decoded_tensors)
     return decoded_tensors
