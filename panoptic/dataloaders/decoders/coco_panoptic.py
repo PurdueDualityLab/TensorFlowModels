@@ -16,6 +16,7 @@ val = val.map(decoder.decode)
 lim = 10
 for i, sample in enumerate(val):
   fig, axe = plt.subplots(1, 3)
+  
   axe[0].imshow(sample["groundtruth_semantic_mask"])
   axe[1].imshow(sample["groundtruth_instance_id"] % 256)
 
@@ -24,6 +25,9 @@ for i, sample in enumerate(val):
   results = {"classes": sample["groundtruth_classes"], "bbox":sample['groundtruth_boxes']}
   image = drawer(image, results)
   axe[2].imshow(image)
+
+  fig.set_size_inches(18.5, 10.5, forward=True)
+  plt.tight_layout()
   plt.show()
   if i > (lim + 1):
     break
