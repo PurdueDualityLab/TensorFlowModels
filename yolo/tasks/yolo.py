@@ -32,6 +32,7 @@ class YoloTask(base_task.Task):
     self._masks = None
     self._path_scales = None
     self._x_y_scales = None
+    self.coco_metric = None
     return
 
   def build_model(self):
