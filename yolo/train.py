@@ -47,6 +47,10 @@ python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification 
 '''
 
 '''
+python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=yolo/configs/experiments/dilated_darknet53.yaml
+'''
+
+'''
 python3 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=training_dir --config_file=yolo/configs/experiments/yolov4.yaml
 '''
 def main(_):

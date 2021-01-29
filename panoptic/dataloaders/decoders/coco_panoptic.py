@@ -31,26 +31,3 @@ for i, sample in enumerate(val):
   plt.show()
   if i > (lim + 1):
     break
-
-# import json
-
-# path = "/media/vbanna/DATA_SHARE/Research/TensorFlowModelGardeners/panoptic/dataloaders/specs/coco_panoptic.json"
-# file = open(path, 'r')
-# file = json.load(file)
-
-
-# things = []
-# stuff = []
-
-# things_names = []
-# stuff_names = []
-
-# for key in file:
-#   if key["isthing"] == 1:
-#     things.append(key["id"])
-#     things_names.append(key["name"])
-#   else:
-#     stuff.append(key["id"])
-#     stuff_names.append(key["name"])
-  
-# print(things)

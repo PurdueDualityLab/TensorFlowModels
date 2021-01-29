@@ -506,6 +506,7 @@ if __name__ == '__main__':
 
   config = exp_cfg.YoloTask(
       model=exp_cfg.Yolo(
+          _input_size=[416, 416, 3],
           base='v4',
           min_level=3,
           norm_activation=exp_cfg.common.NormActivation(activation='mish', use_sync_bn=False),
@@ -516,6 +517,7 @@ if __name__ == '__main__':
               '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
               '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
           ],
+          dilate=True,
           filter=exp_cfg.YoloLossLayer(use_nms=False)))
 
   # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny',

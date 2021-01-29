@@ -219,6 +219,7 @@ class Yolo(ModelConfig):
   max_level: int = 5
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
+  dilate:bool = False
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
@@ -297,7 +298,7 @@ class YoloTask(cfg.TaskConfig):
   annotation_file: Optional[str] = None
   gradient_clip_norm: float = 0.0
   per_category_metrics: bool = False
-
+  
   load_darknet_weights: bool = True
   darknet_load_decoder: bool = True
 

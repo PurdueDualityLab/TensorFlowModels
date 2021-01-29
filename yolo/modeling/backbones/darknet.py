@@ -20,7 +20,6 @@ import tensorflow.keras as ks
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
 
-
 # builder required classes
 class BlockConfig:
   """
@@ -41,8 +40,8 @@ class BlockConfig:
       is_output: is this layer an output in the default model
   """
 
-  def __init__(self, layer, stack, reps, bottleneck, filters, pool_size,
-               kernel_size, strides, padding, activation, route, output_name,
+  def __init__(self, layer, stack, reps, bottleneck, filters, pool_size, 
+               kernel_size, strides, padding, activation, route, dilation_rate, output_name,
                is_output):
     self.layer = layer
     self.stack = stack
@@ -55,6 +54,7 @@ class BlockConfig:
     self.padding = padding
     self.activation = activation
     self.route = route
+    self.dilation_rate = dilation_rate
     self.output_name = output_name
     self.is_output = is_output
 
@@ -112,7 +112,7 @@ class layer_factory(object):
 LISTNAMES = [
     'default_layer_name', 'level_type', 'number_of_layers_in_level',
     'bottleneck', 'filters', 'kernal_size', 'pool_size', 'strides', 'padding',
-    'default_activation', 'route', 'level/name', 'is_output'
+    'default_activation', 'route', "dialation", 'level/name', 'is_output'
 ]
 
 CSPDARKNET53 = {
@@ -123,30 +123,12 @@ CSPDARKNET53 = {
         'neck_split': 138
     },
     'backbone': [
-        [
-            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 0,
-            False
-        ],
-        [
-            'DarkRes', 'csp', 1, True, 64, None, None, None, None, 'mish', -1,
-            1, False
-        ],
-        [
-            'DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1,
-            2, False
-        ],
-        [
-            'DarkRes', 'csp', 8, False, 256, None, None, None, None, 'mish', -1,
-            3, True
-        ],
-        [
-            'DarkRes', 'csp', 8, False, 512, None, None, None, None, 'mish', -1,
-            4, True
-        ],
-        [
-            'DarkRes', 'csp', 4, False, 1024, None, None, None, None, 'mish',
-            -1, 5, True
-        ],
+        ['ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 1, 0, False],
+        ['DarkRes', 'csp', 1, True, 64, None, None, None, None, 'mish', -1, 1, 1, False],
+        ['DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1, 1, 2, False],
+        ['DarkRes', 'csp', 8, False, 256, None, None, None, None, 'mish', -1, 1, 3, True],
+        ['DarkRes', 'csp', 8, False, 512, None, None, None, None, 'mish', -1, 2, 4, True],
+        ['DarkRes', 'csp', 4, False, 1024, None, None, None, None, 'mish', -1, 4, 5, True],
     ]
 }
 
@@ -157,30 +139,12 @@ DARKNET53 = {
         'backbone_split': 76
     },
     'backbone': [
-        [
-            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'leaky', -1, 0,
-            False
-        ],
-        [
-            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'leaky',
-            -1, 1, False
-        ],
-        [
-            'DarkRes', 'residual', 2, False, 128, None, None, None, None,
-            'leaky', -1, 2, False
-        ],
-        [
-            'DarkRes', 'residual', 8, False, 256, None, None, None, None,
-            'leaky', -1, 3, True
-        ],
-        [
-            'DarkRes', 'residual', 8, False, 512, None, None, None, None,
-            'leaky', -1, 4, True
-        ],
-        [
-            'DarkRes', 'residual', 4, False, 1024, None, None, None, None,
-            'leaky', -1, 5, True
-        ],
+        ['ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'leaky', -1, 1, 0, False],
+        ['DarkRes', 'residual', 1, True, 64, None, None, None, None, 'leaky', -1, 1, 1, False],
+        ['DarkRes', 'residual', 2, False, 128, None, None, None, None,'leaky', -1, 1, 2, False],
+        ['DarkRes', 'residual', 8, False, 256, None, None, None, None,'leaky', -1, 1, 3, True],
+        ['DarkRes', 'residual', 8, False, 512, None, None, None, None,'leaky', -1, 2, 4, True],
+        ['DarkRes', 'residual', 4, False, 1024, None, None, None, None,'leaky', -1, 4, 5, True],
     ]
 }
 
@@ -192,27 +156,27 @@ CSPDARKNETTINY = {
     },
     'backbone': [
         [
-            'ConvBN', None, 1, False, 32, None, 3, 2, 'same', 'leaky', -1, 0,
+            'ConvBN', None, 1, False, 32, None, 3, 2, 'same', 'leaky', -1, 1, 0,
             False
         ],
         [
-            'ConvBN', None, 1, False, 64, None, 3, 2, 'same', 'leaky', -1, 1,
+            'ConvBN', None, 1, False, 64, None, 3, 2, 'same', 'leaky', -1, 1, 1,
             False
         ],
         [
             'CSPTiny', 'csp_tiny', 1, False, 64, None, 3, 2, 'same', 'leaky',
-            -1, 2, False
+            -1, 1, 2, False
         ],
         [
             'CSPTiny', 'csp_tiny', 1, False, 128, None, 3, 2, 'same', 'leaky',
-            -1, 3, False
+            -1, 1, 3, False
         ],
         [
             'CSPTiny', 'csp_tiny', 1, False, 256, None, 3, 2, 'same', 'leaky',
-            -1, 4, True
+            -1, 1, 4, True
         ],
         [
-            'ConvBN', None, 1, False, 512, None, 3, 1, 'same', 'leaky', -1, 5,
+            'ConvBN', None, 1, False, 512, None, 3, 1, 'same', 'leaky', -1, 1, 5,
             True
         ],
     ]
@@ -226,31 +190,31 @@ DARKNETTINY = {
     },
     'backbone': [
         [
-            'ConvBN', None, 1, False, 16, None, 3, 1, 'same', 'leaky', -1, 0,
+            'ConvBN', None, 1, False, 16, None, 3, 1, 'same', 'leaky', -1, 1,0,
             False
         ],
         [
-            'DarkTiny', 'tiny', 1, True, 32, None, 3, 2, 'same', 'leaky', -1, 1,
+            'DarkTiny', 'tiny', 1, True, 32, None, 3, 2, 'same', 'leaky', -1, 1,1,
             False
         ],
         [
-            'DarkTiny', 'tiny', 1, True, 64, None, 3, 2, 'same', 'leaky', -1, 2,
+            'DarkTiny', 'tiny', 1, True, 64, None, 3, 2, 'same', 'leaky', -1, 1,2,
             False
         ],
         [
-            'DarkTiny', 'tiny', 1, False, 128, None, 3, 2, 'same', 'leaky', -1,
+            'DarkTiny', 'tiny', 1, False, 128, None, 3, 2, 'same', 'leaky', -1,1,
             3, False
         ],
         [
-            'DarkTiny', 'tiny', 1, False, 256, None, 3, 2, 'same', 'leaky', -1,
+            'DarkTiny', 'tiny', 1, False, 256, None, 3, 2, 'same', 'leaky', -1,1,
             4, True
         ],
         [
-            'DarkTiny', 'tiny', 1, False, 512, None, 3, 2, 'same', 'leaky', -1,
+            'DarkTiny', 'tiny', 1, False, 512, None, 3, 2, 'same', 'leaky', -1,1,
             5, False
         ],
         [
-            'DarkTiny', 'tiny', 1, False, 1024, None, 3, 1, 'same', 'leaky', -1,
+            'DarkTiny', 'tiny', 1, False, 1024, None, 3, 1, 'same', 'leaky', -1,1,
             5, True
         ],
     ]
@@ -277,6 +241,7 @@ class Darknet(ks.Model):
       use_sync_bn=False,
       norm_momentum=0.99,
       norm_epsilon=0.001,
+      dilate = False, 
       kernel_initializer='glorot_uniform',
       kernel_regularizer=None,
       bias_regularizer=None,
@@ -301,6 +266,7 @@ class Darknet(ks.Model):
     self._use_sync_bn = use_sync_bn
     self._activation = activation
     self._kernel_regularizer = kernel_regularizer
+    self._dilate = dilate
 
     self._default_dict = {
         'kernel_initializer': self._kernel_initializer,
@@ -310,6 +276,7 @@ class Darknet(ks.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
+        "dilation_rate": 1, 
         'name': None
     }
 
@@ -378,19 +345,39 @@ class Darknet(ks.Model):
       scale_filters = 2
     self._default_dict['activation'] = self._get_activation(config.activation)
     self._default_dict['name'] = f"{name}_csp_down"
+    if self._dilate:
+      self._default_dict["dilation_rate"] = config.dilation_rate
+      #config.repetitions += 1
+    else:
+      self._default_dict["dilation_rate"] = 1
+      #config.repetitions += 1
+
+    # swap/add dialation 
     x, x_route = nn_blocks.CSPRoute(
         filters=config.filters,
         filter_scale=csp_filter_scale,
         downsample=True,
         **self._default_dict)(
             inputs)
-    for i in range(config.repetitions):
+    
+    #print(config.repetitions - self._default_dict["dilation_rate"]//2)
+    dilated_reps = config.repetitions - self._default_dict["dilation_rate"]//2
+    for i in range(dilated_reps):
       self._default_dict['name'] = f"{name}_{i}"
       x = nn_blocks.DarkResidual(
           filters=config.filters // scale_filters,
           filter_scale=residual_filter_scale,
           **self._default_dict)(
               x)
+    
+    for i in range(dilated_reps, config.repetitions):
+      self._default_dict["dilation_rate"] = self._default_dict["dilation_rate"]//2
+      self._default_dict['name'] = f"{name}_{i}_degrided_{self._default_dict['dilation_rate']}"
+      x = nn_blocks.DarkResidual(
+          filters=config.filters // scale_filters,
+          filter_scale=residual_filter_scale,
+          **self._default_dict)(x)
+    
 
     self._default_dict['name'] = f"{name}_csp_connect"
     output = nn_blocks.CSPConnect(
@@ -435,16 +422,33 @@ class Darknet(ks.Model):
   def _residual_stack(self, inputs, config, name):
     self._default_dict['activation'] = self._get_activation(config.activation)
     self._default_dict['name'] = f"{name}_residual_down"
+    if self._dilate:
+      self._default_dict["dilation_rate"] = config.dilation_rate
+      if config.repetitions < 8:
+        config.repetitions += 2
+    else:
+      self._default_dict["dilation_rate"] = 1
+    
     x = nn_blocks.DarkResidual(
         filters=config.filters, downsample=True, **self._default_dict)(
             inputs)
-    for i in range(config.repetitions - 1):
+    
+    dilated_reps = config.repetitions - self._default_dict["dilation_rate"]//2 - 1
+    for i in range(dilated_reps):
       self._default_dict['name'] = f"{name}_{i}"
       x = nn_blocks.DarkResidual(
           filters=config.filters, **self._default_dict)(
               x)
+
+    for i in range(dilated_reps, config.repetitions - 1):
+      self._default_dict["dilation_rate"] = self._default_dict["dilation_rate"]//2
+      self._default_dict['name'] = f"{name}_{i}_degrided_{self._default_dict['dilation_rate']}"
+      x = nn_blocks.DarkResidual(
+          filters=config.filters,**self._default_dict)(x)
+    
     self._default_dict['activation'] = self._activation
     self._default_dict['name'] = None
+    self._default_dict["dilation_rate"] = 1
     return x
 
   def _build_block(self, inputs, config, name):
@@ -491,6 +495,7 @@ class Darknet(ks.Model):
     return layer_config
 
 
+
 @factory.register_backbone_builder('darknet')
 def build_darknet(
     input_specs: tf.keras.layers.InputSpec,
@@ -505,6 +510,7 @@ def build_darknet(
       min_level=model_config.min_level,
       max_level=model_config.max_level,
       input_shape=input_specs,
+      dilate=model_config.dilate, 
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,
