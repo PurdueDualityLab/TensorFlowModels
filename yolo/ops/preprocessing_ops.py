@@ -18,24 +18,40 @@ def scale_image(image, resize=False, w=None, h=None):
     image = image / 255
   return image
 
-
-
-
-
 def random_translate(image, box, t, seed=10):
   t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
   t_y = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
+
+  
   box = translate_boxes(box, t_x, t_y)
   image = translate_image(image, t_x, t_y)
+  
   return image, box
 
 
 def translate_boxes(box, translate_x, translate_y):
   with tf.name_scope('translate_boxs'):
-    x = box[..., 0] + translate_x
-    y = box[..., 1] + translate_y
-    box = tf.stack([x, y, box[..., 2], box[..., 3]], axis=-1)
-    box.set_shape([None, 4])
+    box = box_ops.yxyx_to_xcycwh(box)
+    x, y, w, h = tf.split(box, 4, axis = -1)
+    x = x + translate_x
+    y = y + translate_y
+
+    x_mask_lower = x >= 0
+    y_mask_lower = y >= 0
+    x_mask_upper = x < 1
+    y_mask_upper = y < 1
+
+    x_mask = tf.math.logical_and(x_mask_lower, x_mask_upper)
+    y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
+    mask = tf.math.logical_and(x_mask, y_mask)
+
+    x = tf.boolean_mask(x, mask)
+    y = tf.boolean_mask(y, mask)
+    w = tf.boolean_mask(w, mask)
+    h = tf.boolean_mask(h, mask)
+
+    box = tf.stack([x, y, w, h], axis=-1)
+    box = box_ops.xcycwh_to_yxyx(box)
   return box
 
 
@@ -61,26 +77,107 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   value = tf.concat([value, pad_tensor], axis=pad_axis)
   return value
 
-def resize_crop_filter(image, boxes, default_width, default_height, target_width, target_height):
+def resize_crop_filter(image, boxes, default_width, default_height, target_width, target_height, randomize = False):
   with tf.name_scope('resize_crop_filter'):
     image = tf.image.resize(image, (target_width, target_height))
-    image = tf.image.resize_with_crop_or_pad(image, target_height=default_height, target_width=default_width)
 
-    default_width = tf.cast(default_width, boxes.dtype)
-    default_height = tf.cast(default_height, boxes.dtype)
-    target_width = tf.cast(target_width, boxes.dtype)
-    target_height = tf.cast(target_height, boxes.dtype)
+    if default_width > target_width:
+      dx = (default_width - target_width)//2
+      dy = (default_height - target_height)//2
 
-    aspect_change_width = target_width / default_width
-    aspect_change_height = target_height / default_height
+      if randomize:
+        dx = tf.random.uniform([], minval = 0, maxval = dx * 2, dtype = tf.int32)
+        dy = tf.random.uniform([], minval = 0, maxval = dy * 2, dtype = tf.int32)
 
-    x, y, width, height = tf.split(boxes, 4, axis=-1)
-    x = (x - 0.5) * target_width / default_width + 0.5
-    y = (y - 0.5) * target_height / default_height + 0.5
-    width = width * aspect_change_width
-    height = height * aspect_change_height
-    boxes = tf.concat([x, y, width, height], axis=-1)
+      image, boxes = pad_filter_to_bbox(image, boxes, default_width, default_height, dx, dy)
+    else:
+      dx = (target_width - default_width)//2
+      dy = (target_height - default_height)//2
+
+      if randomize:
+        dx = tf.random.uniform([], minval = 0, maxval = dx * 2, dtype = tf.int32)
+        dy = tf.random.uniform([], minval = 0, maxval = dy * 2, dtype = tf.int32)
+
+      image, boxes = crop_filter_to_bbox(image, boxes, default_width, default_height, dx, dy, fix = False)
   return image, boxes
+
+def crop_filter_to_bbox(image, boxes, target_width, target_height, offset_width, offset_height, fix = False):
+  with tf.name_scope('resize_crop_filter'):
+    shape = tf.shape(image)
+
+    if tf.shape(shape)[0] == 4:
+      height = shape[1]
+      width = shape[2]
+    else: # tf.shape(shape)[0] == 3:
+      height = shape[0]
+      width = shape[1] 
+    
+    image = tf.image.crop_to_bounding_box(image, offset_height, offset_width, target_height, target_width)
+    if fix: 
+      image = tf.image.pad_to_bounding_box(image, offset_height, offset_width, height, width)
+
+    x_lower_bound = offset_width/width
+    y_lower_bound = offset_height/height
+
+    x_upper_bound = (offset_width + target_width)/width
+    y_upper_bound = (offset_height + target_height)/height
+
+
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis = -1)
+
+    x_mask_lower = x > x_lower_bound
+    y_mask_lower = y > y_lower_bound
+    x_mask_upper = x < x_upper_bound
+    y_mask_upper = y < y_upper_bound
+
+    x_mask = tf.math.logical_and(x_mask_lower, x_mask_upper)
+    y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
+    mask = tf.math.logical_and(x_mask, y_mask)
+
+    x = tf.boolean_mask(x, mask)
+    y = tf.boolean_mask(y, mask)
+    w = tf.boolean_mask(w, mask)
+    h = tf.boolean_mask(h, mask)
+
+    if not fix:
+      x = (x - x_lower_bound) * tf.cast(width/target_width, x.dtype) 
+      y = (y - y_lower_bound) * tf.cast(height/target_height, y.dtype) 
+      w = w * tf.cast(width/target_width, w.dtype)
+      h = h * tf.cast(height/target_height, h.dtype)
+
+    boxes = tf.cast(tf.stack([x, y, w, h], axis = -1), boxes.dtype)
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+  return image, boxes
+
+def pad_filter_to_bbox(image, boxes, target_width, target_height, offset_width, offset_height):
+  with tf.name_scope('resize_crop_filter'):
+    shape = tf.shape(image)
+
+    if tf.shape(shape)[0] == 4:
+      height = shape[1]
+      width = shape[2]
+    else: # tf.shape(shape)[0] == 3:
+      height = shape[0]
+      width = shape[1] 
+    
+    image = tf.image.pad_to_bounding_box(image, offset_height, offset_width, target_height, target_width)
+
+    x_lower_bound = tf.cast(offset_width/width, tf.float32)
+    y_lower_bound = tf.cast(offset_height/height, tf.float32)
+
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis = -1)
+
+    x = (x + x_lower_bound) * tf.cast(width/target_width, x.dtype) 
+    y = (y + y_lower_bound) * tf.cast(height/target_height, y.dtype) 
+    w = w * tf.cast(width/target_width, w.dtype)
+    h = h * tf.cast(height/target_height, h.dtype)
+
+    boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+  return image, boxes
+
 
 def fit_preserve_aspect_ratio(image,
                               boxes,
