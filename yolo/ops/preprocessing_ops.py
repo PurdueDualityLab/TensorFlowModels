@@ -132,12 +132,12 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
     y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
     mask = tf.math.logical_and(x_mask, y_mask)
 
-    # x = tf.ragged.boolean_mask(x, mask).to_tensor()
-    # y = tf.ragged.boolean_mask(y, mask).to_tensor()
-    # w = tf.ragged.boolean_mask(w, mask).to_tensor()
-    # h = tf.ragged.boolean_mask(h, mask).to_tensor()
-    # classes = tf.ragged.boolean_mask(tf.expand_dims(classes, axis = -1), mask).to_tensor()
-    # classes = tf.squeeze(classes, axis = -1)
+
+    # k = tf.shape(classes)[-1]
+    # tf.print(k)
+    # mask_ = tf.cast(mask, tf.int32)
+    # val, ind = tf.math.top_k(mask_, k = k)
+    # tf.print(ind)
 
     x = tf.boolean_mask(x, mask)
     y = tf.boolean_mask(y, mask)

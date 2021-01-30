@@ -227,14 +227,10 @@ class Parser(parser.Parser):
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
 
-    # boxes = box_utils.xcycwh_to_yxyx(boxes)
     # padding
-    boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
-                                                     self._max_num_instances, 0)
-    classes = preprocess_ops.clip_or_pad_to_fixed_size(
-        data['groundtruth_classes'], self._max_num_instances, -1)
-    best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(
-        best_anchors, self._max_num_instances, 0)
+    boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,self._max_num_instances, 0)
+    classes = preprocess_ops.clip_or_pad_to_fixed_size(classes, self._max_num_instances, -1)
+    best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
     # area = preprocess_ops.clip_or_pad_to_fixed_size(data['groundtruth_area'],
     #                                                 self._max_num_instances, 0)
     # is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
