@@ -389,3 +389,90 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
     update = update.stack()
     full = tf.tensor_scatter_nd_add(full, update_index, update)
   return full
+
+
+# @tf.function
+# def gaussian_filter2d(
+#     image: TensorLike,
+#     filter_shape: Union[List[int], Tuple[int], int] = [3, 3],
+#     sigma: Union[List[float], Tuple[float], float] = 1.0,
+#     padding: str = "REFLECT",
+#     constant_values: TensorLike = 0,
+#     name: Optional[str] = None,
+# ) -> TensorLike:
+#     """Perform Gaussian blur on image(s).
+
+#     Args:
+#       image: Either a 2-D `Tensor` of shape `[height, width]`,
+#         a 3-D `Tensor` of shape `[height, width, channels]`,
+#         or a 4-D `Tensor` of shape `[batch_size, height, width, channels]`.
+#       filter_shape: An `integer` or `tuple`/`list` of 2 integers, specifying
+#         the height and width of the 2-D gaussian filter. Can be a single
+#         integer to specify the same value for all spatial dimensions.
+#       sigma: A `float` or `tuple`/`list` of 2 floats, specifying
+#         the standard deviation in x and y direction the 2-D gaussian filter.
+#         Can be a single float to specify the same value for all spatial
+#         dimensions.
+#       padding: A `string`, one of "REFLECT", "CONSTANT", or "SYMMETRIC".
+#         The type of padding algorithm to use, which is compatible with
+#         `mode` argument in `tf.pad`. For more details, please refer to
+#         https://www.tensorflow.org/api_docs/python/tf/pad.
+#       constant_values: A `scalar`, the pad value to use in "CONSTANT"
+#         padding mode.
+#       name: A name for this operation (optional).
+#     Returns:
+#       2-D, 3-D or 4-D `Tensor` of the same dtype as input.
+#     Raises:
+#       ValueError: If `image` is not 2, 3 or 4-dimensional,
+#         if `padding` is other than "REFLECT", "CONSTANT" or "SYMMETRIC",
+#         if `filter_shape` is invalid,
+#         or if `sigma` is invalid.
+#     """
+#     with tf.name_scope(name or "gaussian_filter2d"):
+#         if isinstance(sigma, (list, tuple)):
+#             if len(sigma) != 2:
+#                 raise ValueError("sigma should be a float or a tuple/list of 2 floats")
+#         else:
+#             sigma = (sigma,) * 2
+
+#         if tf.reduce_anya(tf.convert_to_tensor(sigma)):
+#             raise ValueError("sigma should be greater than or equal to 0.")
+
+#         image = tf.convert_to_tensor(image, name="image")
+#         sigma = tf.convert_to_tensor(sigma, name="sigma")
+
+#         original_ndims = img_utils.get_ndims(image)
+#         image = img_utils.to_4D_image(image)
+
+#         # Keep the precision if it's float;
+#         # otherwise, convert to float32 for computing.
+#         orig_dtype = image.dtype
+#         if not image.dtype.is_floating:
+#             image = tf.cast(image, tf.float32)
+
+#         channels = tf.shape(image)[3]
+#         filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
+
+#         sigma = tf.cast(sigma, image.dtype)
+#         gaussian_kernel_x = _get_gaussian_kernel(sigma[1], filter_shape[1])
+#         gaussian_kernel_x = gaussian_kernel_x[tf.newaxis, :]
+
+#         gaussian_kernel_y = _get_gaussian_kernel(sigma[0], filter_shape[0])
+#         gaussian_kernel_y = gaussian_kernel_y[:, tf.newaxis]
+
+#         gaussian_kernel_2d = _get_gaussian_kernel_2d(
+#             gaussian_kernel_y, gaussian_kernel_x
+#         )
+#         gaussian_kernel_2d = gaussian_kernel_2d[:, :, tf.newaxis, tf.newaxis]
+#         gaussian_kernel_2d = tf.tile(gaussian_kernel_2d, [1, 1, channels, 1])
+
+#         image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
+
+#         output = tf.nn.depthwise_conv2d(
+#             input=image,
+#             filter=gaussian_kernel_2d,
+#             strides=(1, 1, 1, 1),
+#             padding="VALID",
+#         )
+#         output = img_utils.from_4D_image(output, original_ndims)
+#         return tf.cast(output, orig_dtype)

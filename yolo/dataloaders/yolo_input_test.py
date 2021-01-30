@@ -31,6 +31,7 @@ class Parser(hyperparams.Config):
   aug_rand_hue: bool = True
   seed: int = 10
   shuffle_buffer_size: int = 10000
+  dtype = 'float32'
 
 
 @dataclasses.dataclass
@@ -118,5 +119,5 @@ if __name__ == '__main__':
     plt.imshow(i[0].numpy())
     plt.show()
 
-    if l > 30:
+    if l > 10:
       break

@@ -77,6 +77,25 @@ class Parser(parser.Parser):
     w = tf.cast(tf.shape(image)[0], tf.float32)
     h = tf.cast(tf.shape(image)[1], tf.int32)
 
+
+    image /255
+    do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
+    if do_blur > 0.5:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 9)
+
+    if self._aug_rand_brightness:
+      delta = tf.random.uniform([], minval= -0.6,maxval=0.6, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_brightness(image, delta)
+    if self._aug_rand_saturation:
+      delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_saturation(image, delta)
+    if self._aug_rand_hue:
+      delta = tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_hue(image, delta)  # Hue
+
+    image = tf.clip_by_value(image, 0.0, 1.0)
+    image = tf.image.convert_image_dtype(image, self._dtype)
+
     if self._aug_rand_aspect:
       aspect = tf.random.uniform(
           [], minval=3, maxval=5, seed=self._seed, dtype=tf.float32) / 4.
@@ -108,18 +127,6 @@ class Parser(parser.Parser):
       deg.set_shape(())
       image = tfa.image.rotate(image, deg, interpolation='NEAREST')
 
-    if self._aug_rand_brightness:
-      image = tf.image.random_brightness(image=image, max_delta=.75)
-
-    if self._aug_rand_saturation:
-      image = tf.image.random_saturation(image=image, lower=0.75, upper=1.25)
-
-    if self._aug_rand_hue:
-      image = tf.image.random_hue(image=image, max_delta=.1)
-
-    image = image / 255
-    image = tf.clip_by_value(image, 0, 1)
-    image = tf.image.convert_image_dtype(image, self._dtype)
 
     # label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
     label = decoded_tensors['image/class/label']

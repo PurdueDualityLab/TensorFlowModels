@@ -5,6 +5,7 @@ into (image, labels) tuple for RetinaNet.
 
 # Import libraries
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
@@ -38,7 +39,7 @@ class Parser(parser.Parser):
                aug_rand_hue=True,
                anchors=None,
                seed=10,
-               dtype='float16'):
+               dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       image_w: a `Tensor` or `int` for width of input image.
@@ -134,11 +135,34 @@ class Parser(parser.Parser):
         """
 
     shape = tf.shape(data['image'])
-    image = data['image'] / 255
+    image = data['image']/255 
+    
+    #/ 255
     boxes = data['groundtruth_boxes']
     width = shape[0]
     height = shape[1]
 
+    do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
+    if do_blur > 0.4:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
+    if do_blur > 0.6:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
+    elif do_blur > 0.7:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 10)
+    elif do_blur > 0.9:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 12)
+
+    if self._aug_rand_brightness:
+      delta = tf.random.uniform([], minval= -0.6,maxval=0.6, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_brightness(image, delta)
+    if self._aug_rand_saturation:
+      delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_saturation(image, delta)
+    if self._aug_rand_hue:
+      delta = tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
+      image = tf.image.adjust_hue(image, delta)  # Hue
+
+    image = tf.clip_by_value(image, 0.0, 1.0)
     image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
         image,
         boxes,
@@ -184,17 +208,9 @@ class Parser(parser.Parser):
           default_height=self._image_h,
           target_width=randscale * self._net_down_scale,
           target_height=randscale * self._net_down_scale)
-    image = tf.image.resize(image, (416, 416), preserve_aspect_ratio=False)
+    image = tf.image.resize(image, (self._image_w, self._image_h), preserve_aspect_ratio=False)
 
-    if self._aug_rand_brightness:
-      image = tf.image.random_brightness(
-          image=image, max_delta=.1)  # Brightness
-    if self._aug_rand_saturation:
-      image = tf.image.random_saturation(
-          image=image, lower=0.75, upper=1.25)  # Saturation
-    if self._aug_rand_hue:
-      image = tf.image.random_hue(image=image, max_delta=.3)  # Hue
-    image = tf.clip_by_value(image, 0.0, 1.0)
+
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
 
