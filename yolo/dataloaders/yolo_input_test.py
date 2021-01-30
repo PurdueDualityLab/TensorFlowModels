@@ -143,44 +143,46 @@ def test_pipeline():
       break
 
 if __name__ == '__main__':
-  # test_pipeline()
-  from yolo.ops import preprocessing_ops as po
-  dataset, dsp = test_yolo_input_task()
+  test_pipeline()
+  # from yolo.ops import preprocessing_ops as po
+  # dataset, dsp = test_yolo_input_task()
 
-  images = []
-  box_list = []
-  class_list = []
+  # images = []
+  # box_list = []
+  # class_list = []
   
 
-  for l, (image, sample) in enumerate(dataset):
-    box_list.append(sample['bbox'][0])
-    class_list.append(sample['classes'][0])
-    images.append(image[0])
+  # for l, (image, sample) in enumerate(dataset):
+  #   box_list.append(sample['bbox'])
+  #   class_list.append(sample['classes'])
+  #   images.append(image)
 
-
-    if l > 2:
-      break
+  #   if l > 2:
+  #     break
   
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  # drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
 
-  image1 = images[-1]
-  box1 = box_list[-1]
-  class1 = class_list[-1]
+  # image1 = images[-1]
+  # box1 = box_list[-1]
+  # class1 = class_list[-1]
   
-  for image, boxes, classes in zip(images, box_list, class_list):
-    image, boxes, classes = po.cut_out(image, boxes, classes, 120, 120, 30, 30)
-    image_, boxes_, classes_ = po.crop_filter_to_bbox(image1, box1, class1, 120, 120, 30, 30, fix=True)
+  # for image, boxes, classes in zip(images, box_list, class_list):
+  #   image, boxes, classes = po.cut_out(image, boxes, classes, 120, 120, 30, 30)
+  #   #image_, boxes_, classes_ = po.crop_filter_to_bbox(image1, box1, class1, 120, 120, 30, 30, fix=True)
 
 
-    image = image + image_
+  #   #image = image + image_
 
-    sample = {
-      'bbox': boxes, 
-      'classes': classes
-    }
+  #   sample = {
+  #     'bbox': boxes, 
+  #     'classes': classes
+  #   }
     
-    image = drawer(image, sample)
+  #   image = drawer(image, sample)
 
-    plt.imshow(image)
-    plt.show()
+  #   plt.imshow(image[0])
+  #   plt.show()
+  #   plt.imshow(image[1])
+  #   plt.show()
+  
   

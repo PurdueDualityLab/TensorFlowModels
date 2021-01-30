@@ -205,7 +205,6 @@ class Parser(parser.Parser):
       boxes = box_ops.normalize_boxes(boxes, image_shape)
 
     if self._aug_rand_zoom:
-      randscale = 10
       image, boxes, classes = preprocessing_ops.resize_crop_filter(
           image,
           boxes,

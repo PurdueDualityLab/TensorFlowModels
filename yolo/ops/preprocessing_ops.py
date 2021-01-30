@@ -87,7 +87,7 @@ def resize_crop_filter(image, boxes, classes, default_width, default_height, tar
         dy = tf.random.uniform([], minval = 0, maxval = dy * 2, dtype = tf.int32)
 
       image, boxes, classes = pad_filter_to_bbox(image, boxes, classes, default_width, default_height, dx, dy)
-    else:
+    elif default_width < target_width:
       dx = (target_width - default_width)//2
       dy = (target_height - default_height)//2
 
@@ -132,11 +132,17 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
     y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
     mask = tf.math.logical_and(x_mask, y_mask)
 
+    # x = tf.ragged.boolean_mask(x, mask).to_tensor()
+    # y = tf.ragged.boolean_mask(y, mask).to_tensor()
+    # w = tf.ragged.boolean_mask(w, mask).to_tensor()
+    # h = tf.ragged.boolean_mask(h, mask).to_tensor()
+    # classes = tf.ragged.boolean_mask(tf.expand_dims(classes, axis = -1), mask).to_tensor()
+    # classes = tf.squeeze(classes, axis = -1)
+
     x = tf.boolean_mask(x, mask)
     y = tf.boolean_mask(y, mask)
     w = tf.boolean_mask(w, mask)
     h = tf.boolean_mask(h, mask)
-
     classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
 
     if not fix:
@@ -182,23 +188,26 @@ def cut_out(image_full, boxes, classes, target_width, target_height, offset_widt
   y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
   mask = tf.math.logical_not(tf.math.logical_and(x_mask, y_mask))
 
-  x = tf.boolean_mask(x, mask)
-  y = tf.boolean_mask(y, mask)
-  w = tf.boolean_mask(w, mask)
-  h = tf.boolean_mask(h, mask)
-  classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
+  x = tf.ragged.boolean_mask(x, mask).to_tensor()
+  y = tf.ragged.boolean_mask(y, mask).to_tensor()
+  w = tf.ragged.boolean_mask(w, mask).to_tensor()
+  h = tf.ragged.boolean_mask(h, mask).to_tensor()
+  classes = tf.ragged.boolean_mask(tf.expand_dims(classes, axis = -1), mask).to_tensor()
+  classes = tf.squeeze(classes, axis = -1)
 
-
-  boxes = tf.cast(tf.stack([x, y, w, h], axis = -1), boxes.dtype)
+  boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
   boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  tf.print(tf.shape(classes))
 
   image_full *= image_crop
   return image_full, boxes, classes
 
-# def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2):
-#   with tf.name_scope('cutmix'):
-    
-#   return image, boxes
+def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2, target_width, target_height, offset_width, offset_height):
+  with tf.name_scope('cutmix'):
+    image, boxes, classes = po.cut_out(image_mask, boxes2, classes2, 120, 120, 30, 30)
+    image_, boxes_, classes_ = po.crop_filter_to_bbox(image1, box1, class1, 120, 120, 30, 30, fix=True)
+  return image, boxes, crop
 
 
 def pad_filter_to_bbox(image, boxes, classes, target_width, target_height, offset_width, offset_height):
