@@ -132,7 +132,7 @@ if __name__ == '__main__':
     axe[2].imshow(obj4[0].numpy())
     axe[3].imshow(obj5[0].numpy())
 
-    fig.set_size_inches(18.5, 10.5, forward=True)
+    fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
 

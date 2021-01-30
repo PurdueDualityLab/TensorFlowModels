@@ -28,7 +28,6 @@ def random_translate(image, box, t, seed=10):
   
   return image, box
 
-
 def translate_boxes(box, translate_x, translate_y):
   with tf.name_scope('translate_boxs'):
     box = box_ops.yxyx_to_xcycwh(box)

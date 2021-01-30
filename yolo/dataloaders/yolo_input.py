@@ -161,6 +161,13 @@ class Parser(parser.Parser):
     if self._aug_rand_hue:
       delta = tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_hue(image, delta)  # Hue
+    
+    do_gauss_noise = tf.random.uniform([], minval= 0, maxval=1, seed=self._seed, dtype=tf.float32)
+    if do_gauss_noise > 0.5:
+      stddev = tf.random.uniform([], minval= 0.1, maxval=0.9, seed=self._seed, dtype=tf.float32)
+      noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
+      image += noise 
+      image = tf.clip_by_value(image, 0.0, 1.0)
 
     
     image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
@@ -211,7 +218,7 @@ class Parser(parser.Parser):
     
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     image = tf.image.resize(image, (self._image_w, self._image_h), preserve_aspect_ratio=False)
-    image = tf.clip_by_value(image, 0.0, 1.0-1e-16)
+    image = tf.clip_by_value(image, 0.0, 1.0)
 
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
