@@ -198,7 +198,7 @@ class YoloTask(base_task.Task):
     # #custom metrics
     loss_metrics = {'loss': loss}
     loss_metrics.update(metrics)
-    label['boxes'] = xcycwh_to_yxyx(label['bbox'])
+    label['boxes'] = label['bbox']
     del label['bbox']
 
     coco_model_outputs = {

@@ -228,6 +228,7 @@ class Parser(parser.Parser):
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
 
+    # boxes = box_utils.xcycwh_to_yxyx(boxes)
     # padding
     boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
                                                      self._max_num_instances, 0)
@@ -255,6 +256,9 @@ class Parser(parser.Parser):
       grid = self._build_grid(
           labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
       labels.update({'grid_form': grid})
+      labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+
+
 
     return image, labels
 
@@ -294,6 +298,7 @@ class Parser(parser.Parser):
         tf.cast(data['groundtruth_is_crowd'], tf.int32),
         self._max_num_instances, 0)
 
+    
     labels = {
         'source_id': data['source_id'],
         'bbox': tf.cast(boxes, self._dtype),
@@ -313,6 +318,7 @@ class Parser(parser.Parser):
         batch=False,
         use_tie_breaker=self._use_tie_breaker)
     labels.update({'grid_form': grid})
+    labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     return image, labels
 
   def _postprocess_fn(self, image, label):
@@ -332,6 +338,7 @@ class Parser(parser.Parser):
     grid = self._build_grid(
         label, width, batch=True, use_tie_breaker=self._use_tie_breaker)
     label.update({'grid_form': grid})
+    label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
     return image, label
 
   def postprocess_fn(self):
