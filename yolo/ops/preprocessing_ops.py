@@ -46,7 +46,7 @@ def translate_boxes(box, classes, translate_x, translate_y):
     w = tf.boolean_mask(w, mask)
     h = tf.boolean_mask(h, mask)
     classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
-    
+
     box = tf.stack([x, y, w, h], axis=-1)
     box = box_ops.xcycwh_to_yxyx(box)
   return box, classes
@@ -138,7 +138,6 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
     h = tf.boolean_mask(h, mask)
 
     classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
-    tf.print(tf.shape(classes))
 
     if not fix:
       x = (x - x_lower_bound) * tf.cast(width/target_width, x.dtype) 
