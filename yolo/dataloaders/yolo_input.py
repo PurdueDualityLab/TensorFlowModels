@@ -223,6 +223,7 @@ class Parser(parser.Parser):
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     image = tf.image.resize(image, (self._image_w, self._image_h), preserve_aspect_ratio=False)
     image = tf.clip_by_value(image, 0.0, 1.0)
+    num_dets = tf.shape(classes)[0]
 
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
@@ -244,12 +245,10 @@ class Parser(parser.Parser):
         'source_id': data['source_id'],
         'bbox': tf.cast(boxes, self._dtype),
         'classes': tf.cast(classes, self._dtype),
-        # 'area': tf.cast(area, self._dtype),
-        # 'is_crowd': is_crowd,
         'best_anchors': tf.cast(best_anchors, self._dtype),
         'width': width,
         'height': height,
-        'num_detections': tf.shape(data['groundtruth_classes'])[0],
+        'num_detections': num_dets,
     }
 
     if self._fixed_size:

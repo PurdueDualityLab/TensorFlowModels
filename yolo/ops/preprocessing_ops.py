@@ -150,6 +150,15 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
   return image, boxes, classes
 
 def cut_out(image_full, boxes, classes, target_width, target_height, offset_width, offset_height):
+  shape = tf.shape(image_full)
+
+  if tf.shape(shape)[0] == 4:
+    width = shape[1]
+    height = shape[2]
+  else: # tf.shape(shape)[0] == 3:
+    width = shape[0]
+    height = shape[1] 
+  
   image_crop = tf.image.crop_to_bounding_box(image_full, offset_height, offset_width, target_height, target_width) + 1
   image_crop = tf.ones_like(image_crop)
   image_crop = tf.image.pad_to_bounding_box(image_crop, offset_height, offset_width, height, width)
@@ -177,12 +186,14 @@ def cut_out(image_full, boxes, classes, target_width, target_height, offset_widt
   y = tf.boolean_mask(y, mask)
   w = tf.boolean_mask(w, mask)
   h = tf.boolean_mask(h, mask)
+  classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
+
 
   boxes = tf.cast(tf.stack([x, y, w, h], axis = -1), boxes.dtype)
   boxes = box_ops.xcycwh_to_yxyx(boxes)
 
   image_full *= image_crop
-  return image_full, boxes
+  return image_full, boxes, classes
 
 # def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2):
 #   with tf.name_scope('cutmix'):
@@ -424,7 +435,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   if tf.math.greater(update_index.size(), 0):
     update_index = update_index.stack()
     update = update.stack()
-    full = tf.tensor_scatter_nd_add(full, update_index, update)
+    full = tf.tensor_scatter_nd_update(full, update_index, update)
   return full
 
 
@@ -523,5 +534,5 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
   if tf.math.greater(update_index.size(), 0):
     update_index = update_index.stack()
     update = update.stack()
-    full = tf.tensor_scatter_nd_add(full, update_index, update)
+    full = tf.tensor_scatter_nd_update(full, update_index, update)
   return full
