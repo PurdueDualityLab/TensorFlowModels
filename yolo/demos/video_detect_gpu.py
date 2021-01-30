@@ -517,7 +517,7 @@ if __name__ == '__main__':
               '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
               '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
           ],
-          dilate=True,
+          dilate=False,
           filter=exp_cfg.YoloLossLayer(use_nms=False)))
 
   # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny',
@@ -564,7 +564,7 @@ if __name__ == '__main__':
   # model.set_postprocessor_fn(func)
 
   cap = FastVideo(
-      0,
+      "videos/nyc.mp4",
       model=model,
       process_width=416,
       process_height=416,

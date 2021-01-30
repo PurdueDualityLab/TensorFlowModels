@@ -142,7 +142,7 @@ class YoloLayer(ks.Model):
       classifs = tf.cast(classifs, dtype=tf.float32)
       nms = tf.image.combined_non_max_suppression(
           tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
-          self._max_boxes, 0.6, 0.6)#self._thresh, self._cls_thresh)
+          self._max_boxes, 0.6, 0.45)#self._thresh, self._cls_thresh)
       return {
           'bbox': nms.nmsed_boxes,
           'classes': tf.cast(nms.nmsed_classes, tf.int32),
@@ -150,13 +150,13 @@ class YoloLayer(ks.Model):
           'num_dets': num_dets
       }
 
-    boxes, classifs, confidence = nms_ops.nms(
+    boxes, classifs, confidence = nms_ops.nms2(
         boxes,
         classifs,
         confidence,
         self._max_boxes,
         2.5,
-        0.45,
+        0.6,
         sorted=False,
         one_hot=True)
 

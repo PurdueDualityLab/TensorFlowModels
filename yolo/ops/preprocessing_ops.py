@@ -21,11 +21,8 @@ def scale_image(image, resize=False, w=None, h=None):
 def random_translate(image, box, t, seed=10):
   t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
   t_y = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
-
-  
   box = translate_boxes(box, t_x, t_y)
   image = translate_image(image, t_x, t_y)
-  
   return image, box
 
 def translate_boxes(box, translate_x, translate_y):

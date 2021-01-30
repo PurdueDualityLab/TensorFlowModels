@@ -23,7 +23,7 @@ task:
       ignore_thresh: 0.7
       loss_type: ciou
       max_boxes: 200
-      use_nms: true
+      use_nms: false
   train_data:
     global_batch_size: 32 # 64 batch size
     shuffle_buffer_size: 200

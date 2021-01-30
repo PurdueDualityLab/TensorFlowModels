@@ -136,5 +136,5 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
 
-    if l > 10:
+    if l > 30:
       break
