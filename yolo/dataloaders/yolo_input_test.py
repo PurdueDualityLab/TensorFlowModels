@@ -110,13 +110,17 @@ def test_yolo_input():
     dataset = reader.read(input_context=None)
   return dataset
 
+
+from yolo.utils.demos import utils, coco
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
 
+  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   for l, (i, j) in enumerate(dataset):
 
     boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-    i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
+    j["bbox"] = boxes
+    i = drawer(i, j)#tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
 
     gt = j["grid_form"]
 
@@ -126,7 +130,7 @@ def test_pipeline():
 
     fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(i[0].numpy())
+    axe[0].imshow(i[0])
     axe[1].imshow(obj3[0].numpy())
     axe[2].imshow(obj4[0].numpy())
     axe[3].imshow(obj5[0].numpy())
@@ -147,6 +151,7 @@ if __name__ == '__main__':
   # box_list = []
 
   # for l, (image, sample) in enumerate(dataset):
+  #   boxes = box_ops.xcycwh_to_yxyx(sample['bbox'])
   #   boxes = box_ops.xcycwh_to_yxyx(sample['bbox'])
   #   images.append(image)
 

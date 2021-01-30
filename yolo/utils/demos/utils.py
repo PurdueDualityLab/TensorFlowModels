@@ -206,7 +206,12 @@ class DrawBoxes(object):
 
     boxes = results["bbox"]
     classes = results["classes"]
-    conf = results["confidence"]
+
+    try:
+      conf = results["confidence"]
+    except:
+      conf = results["classes"]
+      
     if not isinstance(image, list):
       ndims = len(image.shape)
       if ndims == 4:

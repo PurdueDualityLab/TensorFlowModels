@@ -149,7 +149,7 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
     boxes = box_ops.xcycwh_to_yxyx(boxes)
   return image, boxes, classes
 
-def cut_out(image_full, target_width, target_height, offset_width, offset_height):
+def cut_out(image_full, boxes, classes, target_width, target_height, offset_width, offset_height):
   image_crop = tf.image.crop_to_bounding_box(image_full, offset_height, offset_width, target_height, target_width) + 1
   image_crop = tf.ones_like(image_crop)
   image_crop = tf.image.pad_to_bounding_box(image_crop, offset_height, offset_width, height, width)
@@ -184,7 +184,7 @@ def cut_out(image_full, target_width, target_height, offset_width, offset_height
   image_full *= image_crop
   return image_full, boxes
 
-# def cutmix_1(image_to_crop, boxes1, image_mask, boxes2):
+# def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2):
 #   with tf.name_scope('cutmix'):
     
 #   return image, boxes
