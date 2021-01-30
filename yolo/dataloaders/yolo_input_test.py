@@ -110,8 +110,7 @@ def test_yolo_input():
     dataset = reader.read(input_context=None)
   return dataset
 
-
-if __name__ == '__main__':
+def test_pipeline():
   dataset, dsp = test_yolo_input_task()
 
   for l, (i, j) in enumerate(dataset):
@@ -138,3 +137,23 @@ if __name__ == '__main__':
 
     if l > 30:
       break
+
+if __name__ == '__main__':
+  test_pipeline()
+  # from yolo.ops import preprocessing_ops as po
+  # dataset, dsp = test_yolo_input_task()
+
+  # images = []
+  # box_list = []
+
+  # for l, (image, sample) in enumerate(dataset):
+  #   boxes = box_ops.xcycwh_to_yxyx(sample['bbox'])
+  #   images.append(image)
+
+  #   box_list.append(boxes)
+
+  #   if l > 2:
+  #     break
+
+
+  

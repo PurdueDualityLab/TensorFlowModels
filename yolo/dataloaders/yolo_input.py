@@ -139,6 +139,7 @@ class Parser(parser.Parser):
     
     #/ 255
     boxes = data['groundtruth_boxes']
+    classes = data['groundtruth_classes']
     width = shape[0]
     height = shape[1]
 
@@ -203,9 +204,10 @@ class Parser(parser.Parser):
 
     if self._aug_rand_zoom:
       randscale = 10
-      image, boxes = preprocessing_ops.resize_crop_filter(
+      image, boxes, classes = preprocessing_ops.resize_crop_filter(
           image,
           boxes,
+          classes, 
           default_width=self._image_w,
           default_height=self._image_h,
           target_width=randscale * self._net_down_scale,
@@ -213,8 +215,8 @@ class Parser(parser.Parser):
           randomize = True)
 
     if self._jitter_im != 0.0:
-      image, boxes = preprocessing_ops.random_translate(
-          image, boxes, self._jitter_im, seed=self._seed)
+      image, boxes, classes = preprocessing_ops.random_translate(
+          image, boxes, classes, self._jitter_im, seed=self._seed)
     
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     image = tf.image.resize(image, (self._image_w, self._image_h), preserve_aspect_ratio=False)
@@ -230,18 +232,18 @@ class Parser(parser.Parser):
         data['groundtruth_classes'], self._max_num_instances, -1)
     best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(
         best_anchors, self._max_num_instances, 0)
-    area = preprocess_ops.clip_or_pad_to_fixed_size(data['groundtruth_area'],
-                                                    self._max_num_instances, 0)
-    is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
-        tf.cast(data['groundtruth_is_crowd'], tf.int32),
-        self._max_num_instances, 0)
+    # area = preprocess_ops.clip_or_pad_to_fixed_size(data['groundtruth_area'],
+    #                                                 self._max_num_instances, 0)
+    # is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
+    #     tf.cast(data['groundtruth_is_crowd'], tf.int32),
+    #     self._max_num_instances, 0)
 
     labels = {
         'source_id': data['source_id'],
         'bbox': tf.cast(boxes, self._dtype),
         'classes': tf.cast(classes, self._dtype),
-        'area': tf.cast(area, self._dtype),
-        'is_crowd': is_crowd,
+        # 'area': tf.cast(area, self._dtype),
+        # 'is_crowd': is_crowd,
         'best_anchors': tf.cast(best_anchors, self._dtype),
         'width': width,
         'height': height,
