@@ -67,6 +67,8 @@ def test_yolo_input_task():
     task = yolo.YoloTask(config)
 
     # loading both causes issues, but oen at a time is not issue, why?
+    config.train_data.parser.dtype = "float32"
+    config.validation_data.parser.dtype = "float32"
     train_data = task.build_inputs(config.train_data)
     test_data = task.build_inputs(config.validation_data)
   return train_data, test_data
@@ -116,7 +118,22 @@ if __name__ == '__main__':
 
     boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
-    plt.imshow(i[0].numpy())
+
+    gt = j["grid_form"]
+
+    obj3 = gt["3"][..., 4]
+    obj4 = gt["4"][..., 4]
+    obj5 = gt["5"][..., 4]
+
+    fig, axe = plt.subplots(1, 4)
+
+    axe[0].imshow(i[0].numpy())
+    axe[1].imshow(obj3[0].numpy())
+    axe[2].imshow(obj4[0].numpy())
+    axe[3].imshow(obj5[0].numpy())
+
+    fig.set_size_inches(18.5, 10.5, forward=True)
+    plt.tight_layout()
     plt.show()
 
     if l > 10:

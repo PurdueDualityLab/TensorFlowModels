@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   seed: int = 10
   shuffle_buffer_size: int = 10000
   use_tie_breaker: bool = True
-  dtype: str = "float32"
+  dtype: str = "float16"
 
 
 @dataclasses.dataclass
