@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
+from official.vision.beta.ops import preprocess_ops
 
 def shift_zeros(data, mask, axis = -2):
   zeros = tf.zeros_like(data)
@@ -241,6 +242,90 @@ def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2, targ
 
   return image, boxes, classes
 
+def cutmix_batch(image, boxes, classes, target_width, target_height, offset_width, offset_height):
+  with tf.name_scope('cutmix_batch'):
+
+    image_, boxes_, classes_ = cut_out(image, boxes, classes, target_width, target_height, offset_width, offset_height)
+    image__, boxes__, classes__ = crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offset_width, offset_height, fix=True)
+
+    mix = tf.random.uniform([], minval = 0, maxval = 1)
+    if mix > 0.5: 
+      i_split1, i_split2 = tf.split(image__, 2, axis = 0)
+      b_split1, b_split2 = tf.split(boxes__, 2, axis = 0)
+      c_split1, c_split2 = tf.split(classes__, 2, axis = 0)
+
+      image__ = tf.concat([i_split2, i_split1], axis = 0)
+      boxes__ = tf.concat([b_split2, b_split1], axis = 0)
+      classes__ = tf.concat([c_split2, c_split1], axis = 0)
+
+    image = image_ + image__
+    boxes = tf.concat([boxes_, boxes__], axis = -2)
+    classes = tf.concat([classes_, classes__], axis = -1)
+
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(boxes, 4, axis = -1)
+  
+    mask = x > 0
+    x = shift_zeros(x, mask) #tf.boolean_mask(x, mask)
+    y = shift_zeros(y, mask) #tf.boolean_mask(y, mask)
+    w = shift_zeros(w, mask) #tf.boolean_mask(w, mask)
+    h = shift_zeros(h, mask) #tf.boolean_mask(h, mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis = -1), mask)
+    classes = tf.squeeze(classes, axis = -1)
+
+    boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+    x = tf.squeeze(x, axis = -1)
+    classes = tf.where(x == 0, -1, classes)
+
+    num_detections = tf.reduce_sum(tf.cast(x > 0, tf.int32), axis = -1)
+
+  return image, boxes, classes, num_detections
+
+def randomized_cutmix_batch(image, boxes, classes):
+  shape = tf.shape(image)
+
+  width = shape[1]
+  height = shape[2]
+
+  w_limit = 3 * width//4
+  h_limit = 3 * height//4
+
+  twidth = tf.random.uniform([], minval = width//4, maxval = w_limit, dtype = tf.int32)
+  theight = tf.random.uniform([], minval = height//4, maxval = h_limit, dtype = tf.int32)
+
+  owidth = tf.random.uniform([], minval = 0, maxval = width - twidth, dtype = tf.int32)
+  oheight = tf.random.uniform([], minval = 0, maxval = height - theight, dtype = tf.int32)
+
+  image, boxes, classes, num_detections = cutmix_batch(image, boxes, classes, twidth, theight, owidth, oheight)
+  return image, boxes, classes, num_detections
+
+def randomized_mosiac_batch(image, boxes, classes):
+  # this is not how it is really done
+  mix = tf.random.uniform([], maxval = 1, dtype = tf.int32)
+  if mix == 1: 
+    i1, i2, i3, i4 = tf.split(image, 4, axis = 0)
+    b1, b2, b3, b4 = tf.split(boxes, 2, axis = 0)
+    c1, c2, c3, c4 = tf.split(classes, 2, axis = 0)
+
+    image = tf.concat([i1, i3, i2, i4], axis = 0)
+    boxes = tf.concat([b1, b3, b2, b4], axis = 0)
+    classes = tf.concat([b1, b3, b2, b4], axis = 0)    
+
+  i_split1, i_split2 = tf.split(image, 2, axis = 0)
+  b_split1, b_split2 = tf.split(boxes, 2, axis = 0)
+  c_split1, c_split2 = tf.split(classes, 2, axis = 0)
+
+  
+  i_split1, b_split1, c_split1, _ = randomized_cutmix_batch(i_split1, b_split1, c_split1)
+  i_split2, b_split2, c_split2, _ = randomized_cutmix_batch(i_split2, b_split2, c_split2)
+  image = tf.concat([i_split2, i_split1], axis = 0)
+  boxes = tf.concat([b_split2, b_split1], axis = 0)
+  classes = tf.concat([c_split2, c_split1], axis = 0)
+  image, boxes, classes, num_detections = randomized_cutmix_batch(image, boxes, classes)
+
+  return image, boxes, classes, num_detections
 
 def pad_filter_to_bbox(image, boxes, classes, target_width, target_height, offset_width, offset_height):
   with tf.name_scope('resize_crop_filter'):

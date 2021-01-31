@@ -147,43 +147,33 @@ if __name__ == '__main__':
   from yolo.ops import preprocessing_ops as po
   dataset, dsp = test_yolo_input_task()
 
-  images = []
-  box_list = []
-  class_list = []
-  
+  dataset = dataset.unbatch()
+  dataset = dataset.batch(4)
+  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1) 
 
   for l, (image, sample) in enumerate(dataset):
-    box_list.append(sample['bbox'])
-    class_list.append(sample['classes'])
-    images.append(image)
 
-    if l > 2:
-      break
-  
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
-
-  image1 = images[-1]
-  box1 = box_list[-1]
-  class1 = class_list[-1]
-  
-  for image, boxes, classes in zip(images, box_list, class_list):
-    image, boxes, classes = po.cutmix_1(image, boxes, classes, image1, box1, class1, 240, 240, 30, 30)
-    #image_, boxes_, classes_ = po.crop_filter_to_bbox(image1, box1, class1, 120, 120, 30, 30, fix=True)
-
-    tf.print(boxes)
-
-    #image = image + image_
-
+    image, boxes, classes, num_instances = po.randomized_mosiac_batch(image, sample['bbox'], sample['classes'])
+    
+    print(num_instances, tf.shape(boxes))
     sample = {
       'bbox': boxes, 
       'classes': classes
     }
-    
-    image = drawer(image, sample)
 
-    plt.imshow(image[0])
+    image = drawer(image, sample)
+    fig, axe = plt.subplots(1, 4)
+
+    axe[0].imshow(image[0])
+    axe[1].imshow(image[1])
+    axe[2].imshow(image[2])
+    axe[3].imshow(image[3])
+
+    fig.set_size_inches(18.5, 6.5, forward=True)
+    plt.tight_layout()
     plt.show()
-    plt.imshow(image[1])
-    plt.show()
+    if l > 2:
+      break
+
   
   
