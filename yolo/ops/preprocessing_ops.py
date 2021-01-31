@@ -3,6 +3,21 @@ import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 
+def shift_zeros(data, mask, axis = -2):
+  zeros = tf.zeros_like(data)
+  
+  data_flat = tf.boolean_mask(data, mask)
+  nonzero_lens = tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=-2)
+  nonzero_mask = tf.sequence_mask(nonzero_lens, maxlen=tf.shape(mask)[-2])
+  perm1 = tf.range(0, tf.shape(tf.shape(data))[0] - 2)
+  perm2 = tf.roll(tf.range(tf.shape(tf.shape(data))[0] - 2, tf.shape(tf.shape(data))[0]), 1, axis = -1)
+
+  perm = tf.concat([perm1, perm2], axis = -1)
+  nonzero_mask = tf.transpose(nonzero_mask, perm = perm)
+  inds = tf.cast(tf.where(nonzero_mask), dtype=tf.int32)
+  nonzero_data = tf.tensor_scatter_nd_update(zeros, tf.cast(tf.where(nonzero_mask), dtype=tf.int32),  data_flat)
+
+  return nonzero_data 
 
 def scale_image(image, resize=False, w=None, h=None):
   """Image Normalization.
@@ -41,13 +56,14 @@ def translate_boxes(box, classes, translate_x, translate_y):
     y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
     mask = tf.math.logical_and(x_mask, y_mask)
 
-    x = tf.boolean_mask(x, mask)
-    y = tf.boolean_mask(y, mask)
-    w = tf.boolean_mask(w, mask)
-    h = tf.boolean_mask(h, mask)
-    classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
+    x = shift_zeros(x, mask) #tf.boolean_mask(x, mask)
+    y = shift_zeros(y, mask) #tf.boolean_mask(y, mask)
+    w = shift_zeros(w, mask) #tf.boolean_mask(w, mask)
+    h = shift_zeros(h, mask) #tf.boolean_mask(h, mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis = -1), mask)
+    classes = tf.squeeze(classes, axis = -1)
 
-    box = tf.stack([x, y, w, h], axis=-1)
+    box = tf.concat([x, y, w, h], axis=-1)
     box = box_ops.xcycwh_to_yxyx(box)
   return box, classes
 
@@ -98,6 +114,9 @@ def resize_crop_filter(image, boxes, classes, default_width, default_height, tar
       image, boxes, classes = crop_filter_to_bbox(image, boxes, classes, default_width, default_height, dx, dy, fix = False)
   return image, boxes, classes
 
+
+
+
 def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offset_width, offset_height, fix = False):
   with tf.name_scope('resize_crop_filter'):
     shape = tf.shape(image)
@@ -130,20 +149,16 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
 
     x_mask = tf.math.logical_and(x_mask_lower, x_mask_upper)
     y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
+    
     mask = tf.math.logical_and(x_mask, y_mask)
 
+    x = shift_zeros(x, mask) #tf.boolean_mask(x, mask)
+    y = shift_zeros(y, mask) #tf.boolean_mask(y, mask)
+    w = shift_zeros(w, mask) #tf.boolean_mask(w, mask)
+    h = shift_zeros(h, mask) #tf.boolean_mask(h, mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis = -1), mask)
+    classes = tf.squeeze(classes, axis = -1)
 
-    # k = tf.shape(classes)[-1]
-    # tf.print(k)
-    # mask_ = tf.cast(mask, tf.int32)
-    # val, ind = tf.math.top_k(mask_, k = k)
-    # tf.print(ind)
-
-    x = tf.boolean_mask(x, mask)
-    y = tf.boolean_mask(y, mask)
-    w = tf.boolean_mask(w, mask)
-    h = tf.boolean_mask(h, mask)
-    classes = tf.boolean_mask(tf.expand_dims(classes, axis = -1), mask)
 
     if not fix:
       x = (x - x_lower_bound) * tf.cast(width/target_width, x.dtype) 
@@ -151,7 +166,7 @@ def crop_filter_to_bbox(image, boxes, classes, target_width, target_height, offs
       w = w * tf.cast(width/target_width, w.dtype)
       h = h * tf.cast(height/target_height, h.dtype)
 
-    boxes = tf.cast(tf.stack([x, y, w, h], axis = -1), boxes.dtype)
+    boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
     boxes = box_ops.xcycwh_to_yxyx(boxes)
   return image, boxes, classes
 
@@ -177,6 +192,7 @@ def cut_out(image_full, boxes, classes, target_width, target_height, offset_widt
   y_upper_bound = (offset_height + target_height)/height
 
   boxes = box_ops.yxyx_to_xcycwh(boxes)
+  
   x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis = -1)
 
   x_mask_lower = x > x_lower_bound
@@ -188,26 +204,42 @@ def cut_out(image_full, boxes, classes, target_width, target_height, offset_widt
   y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
   mask = tf.math.logical_not(tf.math.logical_and(x_mask, y_mask))
 
-  x = tf.ragged.boolean_mask(x, mask).to_tensor()
-  y = tf.ragged.boolean_mask(y, mask).to_tensor()
-  w = tf.ragged.boolean_mask(w, mask).to_tensor()
-  h = tf.ragged.boolean_mask(h, mask).to_tensor()
-  classes = tf.ragged.boolean_mask(tf.expand_dims(classes, axis = -1), mask).to_tensor()
+  x = shift_zeros(x, mask) #tf.boolean_mask(x, mask)
+  y = shift_zeros(y, mask) #tf.boolean_mask(y, mask)
+  w = shift_zeros(w, mask) #tf.boolean_mask(w, mask)
+  h = shift_zeros(h, mask) #tf.boolean_mask(h, mask)
+  classes = shift_zeros(tf.expand_dims(classes, axis = -1), mask)
   classes = tf.squeeze(classes, axis = -1)
 
   boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
   boxes = box_ops.xcycwh_to_yxyx(boxes)
-
-  tf.print(tf.shape(classes))
 
   image_full *= image_crop
   return image_full, boxes, classes
 
 def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2, target_width, target_height, offset_width, offset_height):
   with tf.name_scope('cutmix'):
-    image, boxes, classes = po.cut_out(image_mask, boxes2, classes2, 120, 120, 30, 30)
-    image_, boxes_, classes_ = po.crop_filter_to_bbox(image1, box1, class1, 120, 120, 30, 30, fix=True)
-  return image, boxes, crop
+    image, boxes, classes = cut_out(image_mask, boxes2, classes2, target_width, target_height, offset_width, offset_height)
+    image_, boxes_, classes_ = crop_filter_to_bbox(image_to_crop, boxes1, classes1, target_width, target_height, offset_width, offset_height, fix=True)
+    image += image_
+    boxes = tf.concat([boxes, boxes_], axis = -2)
+    classes = tf.concat([classes, classes_], axis = -1)
+
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(boxes, 4, axis = -1)
+    
+    mask = x > 0
+    x = shift_zeros(x, mask) #tf.boolean_mask(x, mask)
+    y = shift_zeros(y, mask) #tf.boolean_mask(y, mask)
+    w = shift_zeros(w, mask) #tf.boolean_mask(w, mask)
+    h = shift_zeros(h, mask) #tf.boolean_mask(h, mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis = -1), mask)
+    classes = tf.squeeze(classes, axis = -1)
+
+    boxes = tf.cast(tf.concat([x, y, w, h], axis = -1), boxes.dtype)
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  return image, boxes, classes
 
 
 def pad_filter_to_bbox(image, boxes, classes, target_width, target_height, offset_width, offset_height):
