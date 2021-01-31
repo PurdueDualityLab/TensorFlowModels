@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   model:
     base: v4
@@ -23,13 +23,13 @@ task:
       ignore_thresh: 0.7
       loss_type: ciou
       max_boxes: 200
-      use_nms: true
+      use_nms: false
   train_data:
     global_batch_size: 32 # 64 batch size 
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: train
     drop_remainder: true
     dtype: float16
@@ -47,7 +47,7 @@ task:
     global_batch_size: 4
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: validation
     dtype: float16
     input_path: ''
@@ -87,6 +87,6 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 2000 #learning rate rises from 0 to 0.0013 over 1000 steps
       
 

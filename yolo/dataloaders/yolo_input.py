@@ -154,7 +154,7 @@ class Parser(parser.Parser):
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 12)
 
     if self._aug_rand_brightness:
-      delta = tf.random.uniform([], minval= -0.6,maxval=0.6, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.5,maxval=0.5, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
       delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
@@ -164,10 +164,10 @@ class Parser(parser.Parser):
       image = tf.image.adjust_hue(image, delta)  # Hue
     
     do_gauss_noise = tf.random.uniform([], minval= 0, maxval=1, seed=self._seed, dtype=tf.float32)
-    if do_gauss_noise > 0.5:
-      stddev = tf.random.uniform([], minval= 0.0, maxval=120/255, seed=self._seed, dtype=tf.float32)
-    else:
-      stddev = tf.random.uniform([], minval= 0.0, maxval=40/255, seed=self._seed, dtype=tf.float32)
+    # if do_gauss_noise > 0.5:
+    #   stddev = tf.random.uniform([], minval= 0.0, maxval=120/255, seed=self._seed, dtype=tf.float32)
+    # else:
+    stddev = tf.random.uniform([], minval= 0.0, maxval=40/255, seed=self._seed, dtype=tf.float32)
     noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
@@ -285,7 +285,7 @@ class Parser(parser.Parser):
     boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,
                                                 0)
     classes = preprocessing_ops.pad_max_instances(data['groundtruth_classes'],
-                                                  self._max_num_instances, 0)
+                                                  self._max_num_instances, -1)
     best_anchors = preprocessing_ops.pad_max_instances(best_anchors,
                                                        self._max_num_instances,
                                                        0)
@@ -317,6 +317,26 @@ class Parser(parser.Parser):
     labels.update({'grid_form': grid})
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     return image, labels
+
+  def mosaic_fn(self, image, label):
+    image, boxes, classes, num_instances = preprocessing_ops.randomized_cutmix_split(image, label['bbox'], label['classes'])
+    best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width=self._image_w, height=self._image_h)
+    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,0)
+    classes = preprocess_ops.clip_or_pad_to_fixed_size(classes, self._max_num_instances, -1)
+    best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
+
+    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    label['bbox'] = boxes
+    label['classes'] = classes
+    label['best_anchors'] = best_anchors
+
+    del label["grid_form"]
+    
+    if self._fixed_size:
+      grid = self._build_grid(labels, self._image_w, batch=True, use_tie_breaker=self._use_tie_breaker)
+      labels.update({'grid_form': grid})
+      labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+    return image, label
 
   def _postprocess_fn(self, image, label):
     randscale = self._image_w // self._net_down_scale

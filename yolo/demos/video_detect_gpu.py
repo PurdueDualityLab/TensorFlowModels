@@ -506,7 +506,6 @@ if __name__ == '__main__':
 
   config = exp_cfg.YoloTask(
       model=exp_cfg.Yolo(
-          _input_size=[416, 416, 3],
           base='v4',
           min_level=3,
           norm_activation=exp_cfg.common.NormActivation(activation='mish', use_sync_bn=False),
@@ -531,14 +530,21 @@ if __name__ == '__main__':
   #                     ))
   task = YoloTask(config)
   model = task.build_model()
-  task.initialize(model)
+  # task.initialize(model)
     
-  # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-  # ckpt = tf.train.Checkpoint(model = model, optimizer = optimizer)
-  # status = ckpt.restore(tf.train.latest_checkpoint("training_dir"))#.expect_partial()
-  # print(dir(status))
+  optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+  ckpt = tf.train.Checkpoint(
+    model = model, 
+    optimizer = optimizer)
+  status = ckpt.restore(tf.train.latest_checkpoint("/media/vbanna/DATA_SHARE/Research/TensorFlowModelGardeners/yolo_dt8"))
   
-  # manager = tf.train.CheckpointManager(ckpt, "v4tiny_logs", 3)
+  # for _ in range(10):
+  #   optimizer.minimize(model.trainable_variables)
+  
+  status.expect_partial()
+  print(dir(status), status)
+  
+  # manager = tf.train.CheckpointManager(ckpt, "yolo-dt8", 3)
   # manager.restore_or_initialize()
   # print(dir(manager))
   # status.assert_consumed()

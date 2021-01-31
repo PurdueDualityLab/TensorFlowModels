@@ -143,37 +143,37 @@ def test_pipeline():
       break
 
 if __name__ == '__main__':
-  #test_pipeline()
-  from yolo.ops import preprocessing_ops as po
-  dataset, dsp = test_yolo_input_task()
+  test_pipeline()
+  # from yolo.ops import preprocessing_ops as po
+  # dataset, dsp = test_yolo_input_task()
 
-  dataset = dataset.unbatch()
-  dataset = dataset.batch(4)
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1) 
+  # dataset = dataset.unbatch()
+  # dataset = dataset.batch(4)
+  # drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1) 
 
-  for l, (image, sample) in enumerate(dataset):
+  # for l, (image, sample) in enumerate(dataset):
 
-    image, boxes, classes, num_instances = po.randomized_cutmix_split(image, sample['bbox'], sample['classes'])
+  #   image, boxes, classes, num_instances = po.randomized_cutmix_split(image, sample['bbox'], sample['classes'])
     
-    print(num_instances, tf.shape(boxes))
-    sample = {
-      'bbox': boxes, 
-      'classes': classes
-    }
+  #   # print(num_instances, tf.shape(boxes))
+  #   sample = {
+  #     'bbox': boxes, 
+  #     'classes': classes
+  #   }
 
-    image = drawer(image, sample)
-    fig, axe = plt.subplots(1, 4)
+  #   image = drawer(image, sample)
+  #   fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(image[0])
-    axe[1].imshow(image[1])
-    axe[2].imshow(image[2])
-    axe[3].imshow(image[3])
+  #   axe[0].imshow(image[0])
+  #   axe[1].imshow(image[1])
+  #   axe[2].imshow(image[2])
+  #   axe[3].imshow(image[3])
 
-    fig.set_size_inches(18.5, 6.5, forward=True)
-    plt.tight_layout()
-    plt.show()
-    if l > 10:
-      break
+  #   fig.set_size_inches(18.5, 6.5, forward=True)
+  #   plt.tight_layout()
+  #   plt.show()
+  #   if l > 10:
+  #     break
 
   
   
