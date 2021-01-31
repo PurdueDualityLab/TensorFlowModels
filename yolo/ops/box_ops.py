@@ -187,8 +187,7 @@ def compute_diou(box1, box2, yxyx = False):
     intersect_maxes = tf.math.minimum(b1ma, b2ma)
     intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
                                    tf.zeros_like(intersect_mins))
-    intersection = tf.reduce_prod(
-        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
+    intersection = tf.reduce_prod(intersect_wh, axis=-1)
 
     box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))

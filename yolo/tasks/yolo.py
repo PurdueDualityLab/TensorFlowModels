@@ -33,6 +33,7 @@ class YoloTask(base_task.Task):
     self._path_scales = None
     self._x_y_scales = None
     self.coco_metric = None
+    self._metric_names = []
     return
 
   def build_model(self):
@@ -142,13 +143,19 @@ class YoloTask(base_task.Task):
 
   def build_metrics(self, training=True):
     #return super().build_metrics(training=training)
+    metrics = []
+    metric_names = self._metric_names #['avg_iou_3','avg_iou_4','avg_iou_5','box_loss','class_loss','conf_loss','loss','recall50_3','recall50_4','recall50_5']
+    
+    for name in metric_names:
+      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+    
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
           include_mask=False,
           need_rescale_bboxes=False,
           per_category_metrics=self._task_config.per_category_metrics)
-    return []
+    return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
     #get the data point
@@ -158,7 +165,7 @@ class YoloTask(base_task.Task):
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
-      loss, metrics = self.build_losses(y_pred['raw_output'], label)
+      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
       scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -177,14 +184,16 @@ class YoloTask(base_task.Task):
 
     #custom metrics
     logs = {'loss': loss}
-    logs.update(metrics)
 
-    #tf.print("loss: ", logs["loss"], end = "\n")
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+    
     tf.print(logs, end='\n')
 
     ret = '\033[F' * (len(logs.keys()) + 1)
     tf.print(ret, end='\n')
-
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
@@ -193,11 +202,11 @@ class YoloTask(base_task.Task):
 
     # computer detivative and apply gradients
     y_pred = model(image, training=False)
-    loss, metrics = self.build_losses(y_pred['raw_output'], label)
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
 
     # #custom metrics
-    loss_metrics = {'loss': loss}
-    loss_metrics.update(metrics)
+    logs = {'loss': loss}
+    # loss_metrics.update(metrics)
     label['boxes'] = label['bbox']
     del label['bbox']
 
@@ -209,8 +218,13 @@ class YoloTask(base_task.Task):
         'source_id': label['source_id'],
     }
 
-    loss_metrics.update({self.coco_metric.name: (label, coco_model_outputs)})
-    return loss_metrics
+    logs.update({self.coco_metric.name: (label, coco_model_outputs)})
+
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+    return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
     #return super().aggregate_logs(state=state, step_outputs=step_outputs)
@@ -281,6 +295,16 @@ class YoloTask(base_task.Task):
       self._masks = boxes
       self._path_scales = path_scales
       self._x_y_scales = scale_x_y
+
+    metric_names = []
+    for key in self._masks.keys():
+      metric_names.append(f"recall50_{key}") 
+      metric_names.append(f"avg_iou_{key}")
+
+    metric_names.append('box_loss')
+    metric_names.append('conf_loss')
+    metric_names.append('class_loss')
+    self._metric_names = metric_names
 
     return self._masks, self._path_scales, self._x_y_scales
 
