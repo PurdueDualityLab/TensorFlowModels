@@ -149,6 +149,9 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       scale_xy=xy_scales,
       use_nms=model_config.filter.use_nms,
       loss_type=model_config.filter.loss_type,
+      iou_normalizer=model_config.filter.iou_normalizer, 
+      cls_normalizer=model_config.filter.cls_normalizer, 
+      obj_normalizer=model_config.filter.obj_normalizer,
       ignore_thresh=model_config.filter.ignore_thresh)
   return model
 

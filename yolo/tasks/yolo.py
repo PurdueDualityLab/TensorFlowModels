@@ -143,9 +143,8 @@ class YoloTask(base_task.Task):
     return loss, metric_dict
 
   def build_metrics(self, training=True):
-    #return super().build_metrics(training=training)
     metrics = []
-    metric_names = self._metric_names #['avg_iou_3','avg_iou_4','avg_iou_5','box_loss','class_loss','conf_loss','loss','recall50_3','recall50_4','recall50_5']
+    metric_names = self._metric_names 
     
     for name in metric_names:
       metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))

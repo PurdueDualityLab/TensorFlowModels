@@ -19,6 +19,7 @@ class Yolo_Loss(object):
                loss_type="ciou",
                iou_normalizer=1.0,
                cls_normalizer=1.0,
+               obj_normalizer=1.0, 
                scale_x_y=1.0,
                nms_kind="greedynms",
                beta_nms=0.6,
@@ -66,6 +67,7 @@ class Yolo_Loss(object):
     self._loss_type = tf.cast(loss_type, tf.string)
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
+    self._obj_normalizer = obj_normalizer
     self._scale_x_y = scale_x_y
     self._max_value = max_val
 
@@ -192,7 +194,7 @@ class Yolo_Loss(object):
 
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     bce = ks.losses.binary_crossentropy(K.expand_dims(true_conf, axis=-1), pred_conf)
-    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
+    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.reduce_mean(

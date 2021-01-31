@@ -200,6 +200,9 @@ class YoloLossLayer(hyperparams.Config):
   max_boxes: int = 200
   anchor_generation_scale: int = 416
   use_nms: bool = False
+  iou_normalizer: float = 1.0
+  cls_normalizer: float = 1.0
+  obj_normalizer: float = 1.0
 
 
 @dataclasses.dataclass
