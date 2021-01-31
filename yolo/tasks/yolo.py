@@ -138,6 +138,7 @@ class YoloTask(base_task.Task):
     metric_dict['box_loss'] = loss_box
     metric_dict['conf_loss'] = loss_conf
     metric_dict['class_loss'] = loss_class
+    metric_dict['total_loss'] = loss
 
     return loss, metric_dict
 
@@ -304,6 +305,7 @@ class YoloTask(base_task.Task):
     metric_names.append('box_loss')
     metric_names.append('conf_loss')
     metric_names.append('class_loss')
+    metric_names.append('total_loss')
     self._metric_names = metric_names
 
     return self._masks, self._path_scales, self._x_y_scales
