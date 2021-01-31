@@ -139,7 +139,7 @@ def test_pipeline():
     plt.tight_layout()
     plt.show()
 
-    if l >= 30:
+    if l >= 5:
       break
 
 if __name__ == '__main__':
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
-    if l > 10:
+    if l > 5:
       break
 
   
