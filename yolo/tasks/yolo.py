@@ -251,7 +251,7 @@ class YoloTask(base_task.Task):
     return self.task_config.model.boxes
 
   def _get_masks(self,
-                 xy_exponential=False,
+                 xy_exponential=True,
                  exp_base=2,
                  xy_scale_base='default_value'):
     start = 0

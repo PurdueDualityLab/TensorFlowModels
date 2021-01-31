@@ -150,7 +150,7 @@ class YoloLayer(ks.Model):
           'num_dets': num_dets
       }
 
-    boxes, classifs, confidence = nms_ops.nms2(
+    boxes, classifs, confidence = nms_ops.nms(
         boxes,
         classifs,
         confidence,

@@ -44,22 +44,22 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
   return box
 
 
-def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
-  """Converts boxes from x_center, y_center, width, height to xmin, ymin, xmax, ymax.
-    Args:
-      box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-        x_center, y_center, width, height.
-    Returns:
-      box: a `Tensor` whose shape is the same as `box` in new format.
-    """
-  with tf.name_scope('xcycwh_to_yxyx'):
-    xy, wh = tf.split(box, 2, axis=-1)
-    xy_min = xy - wh / 2
-    xy_max = xy + wh / 2
-    box = (xy_min, xy_max)
-    if not split_min_max:
-      box = tf.concat(box, axis=-1)
-  return box
+# def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
+#   """Converts boxes from x_center, y_center, width, height to xmin, ymin, xmax, ymax.
+#     Args:
+#       box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
+#         x_center, y_center, width, height.
+#     Returns:
+#       box: a `Tensor` whose shape is the same as `box` in new format.
+#     """
+#   with tf.name_scope('xcycwh_to_yxyx'):
+#     xy, wh = tf.split(box, 2, axis=-1)
+#     xy_min = xy - wh / 2
+#     xy_max = xy + wh / 2
+#     box = (xy_min, xy_max)
+#     if not split_min_max:
+#       box = tf.concat(box, axis=-1)
+#   return box
 
 
 def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
@@ -114,7 +114,7 @@ def compute_iou(box1, box2, yxyx=False):
   return iou
 
 
-def compute_giou(box1, box2):
+def compute_giou(box1, box2, yxyx = False):
   """Calculates the generalized intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -126,36 +126,39 @@ def compute_giou(box1, box2):
     """
   with tf.name_scope('giou'):
     # get box corners
-    box1 = xcycwh_to_yxyx(box1)
-    box2 = xcycwh_to_yxyx(box2)
+    if not yxyx:
+      box1 = xcycwh_to_yxyx(box1)
+      box2 = xcycwh_to_yxyx(box2)
 
     # compute IOU
-    intersect_mins = tf.math.maximum(box1[..., 0:2], box2[..., 0:2])
-    intersect_maxes = tf.math.minimum(box1[..., 2:4], box2[..., 2:4])
+    b1mi, b1ma = tf.split(box1, 2, axis=-1)
+    b2mi, b2ma = tf.split(box2, 2, axis=-1)
+    intersect_mins = tf.math.maximum(b1mi, b2mi)
+    intersect_maxes = tf.math.minimum(b1ma, b2ma)
     intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
                                    tf.zeros_like(intersect_mins))
-    intersection = intersect_wh[..., 0] * intersect_wh[..., 1]
+    intersection = tf.reduce_prod(
+        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
 
-    box1_area = tf.math.abs(
-        tf.reduce_prod(box1[..., 2:4] - box1[..., 0:2], axis=-1))
-    box2_area = tf.math.abs(
-        tf.reduce_prod(box2[..., 2:4] - box2[..., 0:2], axis=-1))
+    box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+    box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
     iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # find the smallest box to encompase both box1 and box2
-    c_mins = tf.math.minimum(box1[..., 0:2], box2[..., 0:2])
-    c_maxes = tf.math.maximum(box1[..., 2:4], box2[..., 2:4])
+    c_mins = tf.math.minimum(b1mi, b2mi)#box1[..., 0:2], box2[..., 0:2])
+    c_maxes = tf.math.maximum(b1ma, b2ma)#box1[..., 2:4], box2[..., 2:4])
     c = tf.math.abs(tf.reduce_prod(c_mins - c_maxes, axis=-1))
 
     # compute giou
-    giou = iou - tf.math.divide_no_nan((c - union), c)
+    regularization = tf.math.divide_no_nan((c - union), c)
+    giou = iou - regularization
   return iou, giou
 
 
-def compute_diou(box1, box2):
+def compute_diou(box1, box2, yxyx = False):
   """Calculates the distance intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -167,6 +170,10 @@ def compute_diou(box1, box2):
     """
   with tf.name_scope('diou'):
     # compute center distance
+    if yxyx:
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
+
     dist = center_distance(box1[..., 0:2], box2[..., 0:2])
 
     # get box corners
@@ -174,33 +181,34 @@ def compute_diou(box1, box2):
     box2 = xcycwh_to_yxyx(box2)
 
     # compute IOU
-    intersect_mins = tf.math.maximum(box1[..., 0:2], box2[..., 0:2])
-    intersect_maxes = tf.math.minimum(box1[..., 2:4], box2[..., 2:4])
+    b1mi, b1ma = tf.split(box1, 2, axis=-1)
+    b2mi, b2ma = tf.split(box2, 2, axis=-1)
+    intersect_mins = tf.math.maximum(b1mi, b2mi)
+    intersect_maxes = tf.math.minimum(b1ma, b2ma)
     intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
                                    tf.zeros_like(intersect_mins))
-    intersection = intersect_wh[..., 0] * intersect_wh[..., 1]
+    intersection = tf.reduce_prod(
+        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
 
-    box1_area = tf.math.abs(
-        tf.reduce_prod(box1[..., 2:4] - box1[..., 0:2], axis=-1))
-    box2_area = tf.math.abs(
-        tf.reduce_prod(box2[..., 2:4] - box2[..., 0:2], axis=-1))
+    box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+    box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
     iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # compute max diagnal of the smallest enclosing box
-    c_mins = tf.math.minimum(box1[..., 0:2], box2[..., 0:2])
-    c_maxes = tf.math.maximum(box1[..., 2:4], box2[..., 2:4])
+    c_mins = tf.math.minimum(b1mi, b2mi)#box1[..., 0:2], box2[..., 0:2])
+    c_maxes = tf.math.maximum(b1ma, b2ma)#box1[..., 2:4], box2[..., 2:4])
 
     diag_dist = tf.reduce_sum((c_maxes - c_mins)**2, axis=-1)
 
     regularization = tf.math.divide_no_nan(dist, diag_dist)
-    diou = iou + regularization
+    diou = iou - regularization
   return iou, diou
 
 
-def compute_ciou(box1, box2):
+def compute_ciou(box1, box2, yxyx = False):
   """Calculates the complete intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -212,7 +220,12 @@ def compute_ciou(box1, box2):
     """
   with tf.name_scope('ciou'):
     # compute DIOU and IOU
-    iou, diou = compute_diou(box1, box2)
+
+    iou, diou = compute_diou(box1, box2, yxyx = yxyx)
+
+    if yxyx:
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
 
     # computer aspect ratio consistency
     arcterm = (
@@ -222,5 +235,5 @@ def compute_ciou(box1, box2):
 
     # compute IOU regularization
     a = tf.math.divide_no_nan(v, ((1 - iou) + v))
-    ciou = diou + v * a
+    ciou = diou - v * a
   return iou, ciou
