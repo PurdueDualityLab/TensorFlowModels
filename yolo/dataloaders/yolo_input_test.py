@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
   for l, (image, sample) in enumerate(dataset):
 
-    image, boxes, classes, num_instances = po.randomized_mosiac_batch(image, sample['bbox'], sample['classes'])
+    image, boxes, classes, num_instances = po.randomized_cutmix_split(image, sample['bbox'], sample['classes'])
     
     print(num_instances, tf.shape(boxes))
     sample = {
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
-    if l > 2:
+    if l > 10:
       break
 
   

@@ -301,7 +301,7 @@ def randomized_cutmix_batch(image, boxes, classes):
   image, boxes, classes, num_detections = cutmix_batch(image, boxes, classes, twidth, theight, owidth, oheight)
   return image, boxes, classes, num_detections
 
-def randomized_mosiac_batch(image, boxes, classes):
+def randomized_cutmix_split(image, boxes, classes):
   # this is not how it is really done
   mix = tf.random.uniform([], maxval = 1, dtype = tf.int32)
   if mix == 1: 
@@ -318,12 +318,13 @@ def randomized_mosiac_batch(image, boxes, classes):
   c_split1, c_split2 = tf.split(classes, 2, axis = 0)
 
   
-  i_split1, b_split1, c_split1, _ = randomized_cutmix_batch(i_split1, b_split1, c_split1)
-  i_split2, b_split2, c_split2, _ = randomized_cutmix_batch(i_split2, b_split2, c_split2)
+  i_split1, b_split1, c_split1, num_dets1 = randomized_cutmix_batch(i_split1, b_split1, c_split1)
+  i_split2, b_split2, c_split2, num_dets2 = randomized_cutmix_batch(i_split2, b_split2, c_split2)
   image = tf.concat([i_split2, i_split1], axis = 0)
   boxes = tf.concat([b_split2, b_split1], axis = 0)
   classes = tf.concat([c_split2, c_split1], axis = 0)
-  image, boxes, classes, num_detections = randomized_cutmix_batch(image, boxes, classes)
+  num_detections = tf.concat([num_dets2, num_dets1], axis = 0)
+  #image, boxes, classes, num_detections = randomized_cutmix_batch(image, boxes, classes)
 
   return image, boxes, classes, num_detections
 
