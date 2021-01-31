@@ -195,12 +195,12 @@ class YoloDecoder(hyperparams.Config):
 class YoloLossLayer(hyperparams.Config):
   iou_thresh: float = 0.45
   class_thresh: float = 0.45
-  ignore_thresh: float = 0.7
+  ignore_thresh: float = 0.5
   loss_type: str = 'ciou'
   max_boxes: int = 200
   anchor_generation_scale: int = 416
   use_nms: bool = False
-  iou_normalizer: float = 1.0
+  iou_normalizer: float = 0.75
   cls_normalizer: float = 1.0
   obj_normalizer: float = 1.0
 
