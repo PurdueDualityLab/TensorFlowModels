@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   seed: int = 10
   shuffle_buffer_size: int = 10000
   use_tie_breaker: bool = True
-  dtype: str = "float16"
+  # dtype: str = "float16"
 
 
 @dataclasses.dataclass
@@ -171,7 +171,7 @@ class DataConfig(cfg.DataConfig):
   tfds_split: str = 'train'
   global_batch_size: int = 2
   is_training: bool = True
-  dtype: str = 'float32'
+  dtype: str = 'float16'
   decoder = None
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
