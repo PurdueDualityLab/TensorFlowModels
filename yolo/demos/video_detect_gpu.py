@@ -530,16 +530,16 @@ if __name__ == '__main__':
   #                     ))
   task = YoloTask(config)
   model = task.build_model()
-  task.initialize(model)
+  # task.initialize(model)
     
-  # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-  # ckpt = tf.train.Checkpoint(
-  #   model = model, 
-  #   optimizer = optimizer)
-  # status = ckpt.restore(tf.train.latest_checkpoint("/media/vbanna/DATA_SHARE/Research/TensorFlowModelGardeners/yolo_dt8"))
+  optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+  ckpt = tf.train.Checkpoint(
+    model = model, 
+    optimizer = optimizer)
+  status = ckpt.restore(tf.train.latest_checkpoint("/media/vbanna/DATA_SHARE/Research/TensorFlowModelGardeners/yolo_dt8_norm_iou"))
   
-  # status.expect_partial()
-  # print(dir(status), status)
+  status.expect_partial()
+  print(dir(status), status)
   
 
   # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
