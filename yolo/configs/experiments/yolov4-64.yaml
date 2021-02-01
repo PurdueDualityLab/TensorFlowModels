@@ -26,7 +26,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 32 # 64 batch size
+    global_batch_size: 64 # 64 batch size
     shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
@@ -83,9 +83,9 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [800000, 900000] # [400000, 450000]
+        boundaries: [400000, 450000] # [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.000325, 0.0000325, 0.00000325] #[0.0013, 0.00013, 0.000013]
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
@@ -94,4 +94,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 2000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
