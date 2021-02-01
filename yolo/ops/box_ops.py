@@ -44,24 +44,6 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
   return box
 
 
-# def xcycwh_to_xyxy(box: tf.Tensor, split_min_max: bool = False):
-#   """Converts boxes from x_center, y_center, width, height to xmin, ymin, xmax, ymax.
-#     Args:
-#       box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-#         x_center, y_center, width, height.
-#     Returns:
-#       box: a `Tensor` whose shape is the same as `box` in new format.
-#     """
-#   with tf.name_scope('xcycwh_to_yxyx'):
-#     xy, wh = tf.split(box, 2, axis=-1)
-#     xy_min = xy - wh / 2
-#     xy_max = xy + wh / 2
-#     box = (xy_min, xy_max)
-#     if not split_min_max:
-#       box = tf.concat(box, axis=-1)
-#   return box
-
-
 def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
   """Calculates the squared distance between two points.
     Args:
@@ -174,7 +156,8 @@ def compute_diou(box1, box2, yxyx = False):
       box1 = yxyx_to_xcycwh(box1)
       box2 = yxyx_to_xcycwh(box2)
 
-    dist = center_distance(box1[..., 0:2], box2[..., 0:2])
+    # dist = center_distance(box1[..., 0:2], box2[..., 0:2])
+    dist = tf.reduce_sum((box1[..., 0:2] - box2[..., 0:2])**2, axis=-1)
 
     # get box corners
     box1 = xcycwh_to_yxyx(box1)
