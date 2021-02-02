@@ -9,56 +9,7 @@ from typing import Dict, List
 
 if sys.version_info < (3, 10):
   # shim for Python 3.9 and older
-  # from more_itertools library
-  class UnequalIterablesError(ValueError):
-    def __init__(self, details=None):
-        msg = 'Iterables have different lengths'
-        if details is not None:
-            msg += (': index 0 has length {}; index {} has length {}').format(
-                *details
-            )
-
-        super().__init__(msg)
-
-  def zip_equal(*iterables):
-    """``zip`` the input *iterables* together, but raise
-    ``UnequalIterablesError`` if they aren't all the same length.
-        >>> it_1 = range(3)
-        >>> it_2 = iter('abc')
-        >>> list(zip_equal(it_1, it_2))
-        [(0, 'a'), (1, 'b'), (2, 'c')]
-        >>> it_1 = range(3)
-        >>> it_2 = iter('abcd')
-        >>> list(zip_equal(it_1, it_2)) # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-        ...
-        more_itertools.more.UnequalIterablesError: Iterables have different
-        lengths
-    """
-    # Check whether the iterables are all the same size.
-    try:
-        first_size = len(iterables[0])
-        for i, it in enumerate(iterables[1:], 1):
-            size = len(it)
-            if size != first_size:
-                break
-        else:
-            # If we didn't break out, we can use the built-in zip.
-            return zip(*iterables)
-
-        # If we did break out, there was a mismatch.
-        raise UnequalIterablesError(details=(first_size, i, size))
-    # If any one of the iterables didn't have a length, start reading
-    # them until one runs out.
-    except TypeError:
-        return _zip_equal_generator(iterables)
-
-  def _zip_equal_generator(iterables):
-      for combo in zip_longest(*iterables, fillvalue=_marker):
-          for val in combo:
-              if val is _marker:
-                  raise UnequalIterablesError()
-          yield combo
+  from more_itertools import zip_equal
 
   def zip(*iterables, strict=False):
     if strict:
