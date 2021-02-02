@@ -99,13 +99,9 @@ class Parser(parser.Parser):
       delta = tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_hue(image, delta)  # Hue
     
-    do_gauss_noise = tf.random.uniform([], minval= 0, maxval=1, seed=self._seed, dtype=tf.float32)
-    if do_gauss_noise > 0.5:
-      stddev = tf.random.uniform([], minval= 0.1, maxval=0.9, seed=self._seed, dtype=tf.float32)
-      noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
-      image += noise 
-      image = tf.clip_by_value(image, 0.0, 1.0)
-
+    stddev = tf.random.uniform([], minval= 0.0, maxval=40/255, seed=self._seed, dtype=tf.float32)
+    noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
+    image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
     image = tf.image.convert_image_dtype(image, self._dtype)
 

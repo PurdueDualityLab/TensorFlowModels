@@ -125,7 +125,7 @@ class ImageClassificationTask(base_task.Task):
 
   def build_metrics(self, training=True):
     """Gets streaming metrics for training/validation."""
-    k = self.task_config.evaluation.top_k
+    k = 5#self.task_config.evaluation.top_k
     if self.task_config.losses.one_hot:
       metrics = [
           tf.keras.metrics.CategoricalAccuracy(name='accuracy'),
