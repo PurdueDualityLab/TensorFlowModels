@@ -27,7 +27,6 @@ task:
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 64 # 64 batch size
-    shuffle_buffer_size: 200
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco

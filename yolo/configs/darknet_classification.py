@@ -27,21 +27,22 @@ class Parser(hyperparams.Config):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   input_path: str = ''
-  tfds_name: str = ''
+  tfds_name: str = 'imagenet2012'
   tfds_split: str = 'train'
+  tfds_data_dir: str = '/media/vbanna/DATA_SHARE/tfds'
   global_batch_size: int = 10
   is_training: bool = True
   dtype: str = 'float16'
   decoder = None
   parser: Parser = Parser()
-  shuffle_buffer_size: int = 10000
+  shuffle_buffer_size: int = 100
   tfds_download: bool = True
 
 
 @dataclasses.dataclass
 class ImageClassificationModel(hyperparams.Config):
   num_classes: int = 0
-  input_size: List[int] = dataclasses.field(default_factory=list)
+  input_size: List[int] = dataclasses.field(default_factory=lambda: [416, 416, 3])
   backbone: backbones.Backbone = backbones.Backbone(
       type='darknet', resnet=backbones.DarkNet())
   dropout_rate: float = 0.0

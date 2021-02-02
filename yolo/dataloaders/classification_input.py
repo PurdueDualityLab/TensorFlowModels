@@ -73,7 +73,7 @@ class Parser(parser.Parser):
     """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image.set_shape((None, None, 3))
-    image = tf.cast(image, tf.float32)
+    image = tf.cast(image, tf.float32)/255
     w = tf.cast(tf.shape(image)[0], tf.float32)
     h = tf.cast(tf.shape(image)[1], tf.int32)
 
@@ -90,20 +90,19 @@ class Parser(parser.Parser):
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 12)
 
     if self._aug_rand_brightness:
-      delta = tf.random.uniform([], minval= -0.6,maxval=0.6, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.5,maxval=0.5, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
       delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_hue:
-      delta = tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_hue(image, delta)  # Hue
     
     stddev = tf.random.uniform([], minval= 0.0, maxval=40/255, seed=self._seed, dtype=tf.float32)
     noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
-    image = tf.image.convert_image_dtype(image, self._dtype)
 
     if self._aug_rand_aspect:
       aspect = tf.random.uniform(
