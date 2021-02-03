@@ -1,15 +1,6 @@
 import tensorflow as tf
 
 from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock
-# from yolo.modeling.layers.nn_blocks import DarkResidual as ResidualBlock
-
-def ConvBNRelu2D(*args, **kwargs):
-  return tf.keras.layers.Conv2D(
-    *args,
-    activation='relu',
-    use_bias=True,
-    **kwargs
-  )
 
 class HourglassBlock(tf.keras.layers.Layer):
   def __init__(
@@ -66,7 +57,7 @@ class HourglassBlock(tf.keras.layers.Layer):
     return self.merge([up1, up2])
 
   def make_layer(self, k, inp_dim, out_dim, modules, **kwargs):
-    layers = [ResidualBlock(out_dim, 1, **kwargs)]
+    layers = [ResidualBlock(out_dim, 1, use_projection=True, **kwargs)]
     for _ in range(1, modules):
       layers.append(ResidualBlock(out_dim, 1, **kwargs))
     return tf.keras.Sequential(layers)
@@ -75,7 +66,7 @@ class HourglassBlock(tf.keras.layers.Layer):
       layers = []
       for _ in range(modules - 1):
           layers.append(ResidualBlock(inp_dim, 1, **kwargs)) # inp_dim is not a bug
-      layers.append(ResidualBlock(out_dim, 1, **kwargs))
+      layers.append(ResidualBlock(out_dim, 1, use_projection=True, **kwargs))
       return tf.keras.Sequential(layers)
 
   def make_up_layer(self, k, inp_dim, out_dim, modules, **kwargs):
@@ -91,7 +82,7 @@ class HourglassBlock(tf.keras.layers.Layer):
     return self.make_layer_revr(k, inp_dim, out_dim, modules, **kwargs)
 
   def make_pool_layer(self, dim):
-    return tf.identity #tf.keras.Sequential([]) # tf.keras.layers.MaxPool2D(strides=2)
+    return tf.keras.layers.MaxPool2D(strides=2) #tf.identity
 
   def make_unpool_layer(self, dim):
     return tf.keras.layers.UpSampling2D(2)
@@ -105,7 +96,4 @@ def test():
   n       = 5
   dims    = [256, 256, 384, 384, 384, 512]
   modules = [2, 2, 2, 2, 2, 4]
-  # n = 1
-  # dims = [384, 512]
-  # modules = [2, 4]
   return kp_module(n, dims, modules), tf.keras.Input((512, 512, 256))
