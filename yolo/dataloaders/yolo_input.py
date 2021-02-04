@@ -167,7 +167,6 @@ class Parser(parser.Parser):
     noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
-
     
     image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
         image,
@@ -201,7 +200,6 @@ class Parser(parser.Parser):
       boxes = box_ops.normalize_boxes(boxes, image_shape)
 
     if self._aug_rand_zoom:
-
       randscale = 15
       image, boxes, classes = preprocessing_ops.resize_crop_filter(
           image,
@@ -301,7 +299,7 @@ class Parser(parser.Parser):
         'best_anchors': tf.cast(best_anchors, self._dtype),
         'width': width,
         'height': height,
-        'num_detections': tf.shape(data['groundtruth_classes'])[0],
+        'num_detections': tf.shape(data['groundtruth_classes'])[0]
     }
 
     # if self._fixed_size:

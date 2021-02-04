@@ -24,9 +24,9 @@ task:
       loss_type: ciou
       max_boxes: 200
       use_nms: true
-      iou_normalizer: 0.56
+      iou_normalizer: 0.07
   train_data:
-    global_batch_size: 8 # 64 batch size 
+    global_batch_size: 4 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -43,7 +43,7 @@ task:
       use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
-    global_batch_size: 4
+    global_batch_size: 2
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco

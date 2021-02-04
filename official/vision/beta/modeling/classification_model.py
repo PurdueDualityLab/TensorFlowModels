@@ -88,7 +88,7 @@ class ClassificationModel(tf.keras.Model):
     if add_head_batch_norm:
       x = self._norm(axis=axis, momentum=norm_momentum, epsilon=norm_epsilon)(x)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.keras.layers.Dropout(dropout_rate)(x)
+    #x = tf.keras.layers.Dropout(dropout_rate)(x)
     x = tf.keras.layers.Dense(
         num_classes, kernel_initializer=kernel_initializer,
         kernel_regularizer=self._kernel_regularizer,

@@ -51,7 +51,11 @@ python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification 
 '''
 
 '''
-python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-dt-norm-iou --config_file=yolo/configs/experiments/yolov4-dt.yaml
+python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-dt-8 --config_file=yolo/configs/experiments/yolov4-dt.yaml
+'''
+
+'''
+python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-eval --config_file=yolo/configs/experiments/yolov4-eval.yaml
 '''
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
