@@ -7,14 +7,14 @@ from centernet.modeling.layers import nn_blocks
 # https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/large_hourglass.py
 from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock
 
+
 class HourglassBlockPyTorch(tf.keras.layers.Layer):
   """
   An CornerNet-style implementation of the hourglass block used in the
   Hourglass-104 backbone.
   """
-  def __init__(
-    self, dims, modules, k=0, **kwargs
-  ):
+
+  def __init__(self, dims, modules, k=0, **kwargs):
     """
     Initializes a block for the hourglass backbone. The first k entries of dims
     and modules are ignored.
@@ -27,13 +27,13 @@ class HourglassBlockPyTorch(tf.keras.layers.Layer):
     """
     super().__init__()
 
-    self.n   = len(dims) - 1
-    self.k   = k
+    self.n = len(dims) - 1
+    self.k = k
     self.modules = modules
     self.dims = dims
 
-    assert len(dims) == len(modules), "dims and modules lists must have the " \
-        "same length"
+    assert len(dims) == len(modules), 'dims and modules lists must have the ' \
+        'same length'
 
     self._kwargs = kwargs
 
@@ -49,33 +49,28 @@ class HourglassBlockPyTorch(tf.keras.layers.Layer):
     curr_dim = dims[k + 0]
     next_dim = dims[k + 1]
 
-    self.up1  = self.make_up_layer(
-      3, curr_dim, curr_dim, curr_mod, **kwargs
-    )
+    self.up1 = self.make_up_layer(3, curr_dim, curr_dim, curr_mod, **kwargs)
     self.max1 = self.make_pool_layer(curr_dim)
-    self.low1 = self.make_hg_layer(
-      3, curr_dim, next_dim, curr_mod, **kwargs
-    )
+    self.low1 = self.make_hg_layer(3, curr_dim, next_dim, curr_mod, **kwargs)
     self.low2 = type(self)(
       dims, modules, k=k+1, **kwargs
     ) if self.n - k > 1 else \
     self.make_low_layer(
       3, next_dim, next_dim, next_mod, **kwargs
     )
-    self.low3 = self.make_hg_layer_revr(
-      3, next_dim, curr_dim, curr_mod, **kwargs
-    )
-    self.up2  = self.make_unpool_layer(curr_dim)
+    self.low3 = self.make_hg_layer_revr(3, next_dim, curr_dim, curr_mod,
+                                        **kwargs)
+    self.up2 = self.make_unpool_layer(curr_dim)
 
     self.merge = self.make_merge_layer(curr_dim)
 
   def call(self, x):
-    up1  = self.up1(x)
+    up1 = self.up1(x)
     max1 = self.max1(x)
     low1 = self.low1(max1)
     low2 = self.low2(low1)
     low3 = self.low3(low2)
-    up2  = self.up2(low3)
+    up2 = self.up2(low3)
     return self.merge([up1, up2])
 
   def make_layer(self, k, inp_dim, out_dim, modules, **kwargs):
@@ -85,11 +80,11 @@ class HourglassBlockPyTorch(tf.keras.layers.Layer):
     return tf.keras.Sequential(layers)
 
   def make_layer_revr(self, k, inp_dim, out_dim, modules, **kwargs):
-      layers = []
-      for _ in range(modules - 1):
-          layers.append(ResidualBlock(inp_dim, 1, **kwargs)) # inp_dim is not a bug
-      layers.append(ResidualBlock(out_dim, 1, use_projection=True, **kwargs))
-      return tf.keras.Sequential(layers)
+    layers = []
+    for _ in range(modules - 1):
+      layers.append(ResidualBlock(inp_dim, 1, **kwargs))  # inp_dim is not a bug
+    layers.append(ResidualBlock(out_dim, 1, use_projection=True, **kwargs))
+    return tf.keras.Sequential(layers)
 
   def make_up_layer(self, k, inp_dim, out_dim, modules, **kwargs):
     return self.make_layer(k, inp_dim, out_dim, modules, **kwargs)
@@ -114,12 +109,14 @@ class HourglassBlockPyTorch(tf.keras.layers.Layer):
 
 
 class NNBlocksTest(parameterized.TestCase, tf.test.TestCase):
+
   def test_hourglass_block(self):
-    dims    = [256, 256, 384, 384, 384, 512]
+    dims = [256, 256, 384, 384, 384, 512]
     modules = [2, 2, 2, 2, 2, 4]
     model = nn_blocks.HourglassBlock(len(dims) - 1, dims, modules)
     test_input = tf.keras.Input((512, 512, 256))
     _ = model(test_input)
+
 
 if __name__ == '__main__':
   tf.test.main()

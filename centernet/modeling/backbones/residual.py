@@ -1,5 +1,5 @@
 # Copy and paste from official.vision.beta.modeling.layers.nn_blocks
-# because had trouble pip installing some dependencies that are not 
+# because had trouble pip installing some dependencies that are not
 # used for the residual block
 import tensorflow as tf
 from official.modeling import tf_utils
