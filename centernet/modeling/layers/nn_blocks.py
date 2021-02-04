@@ -1,108 +1,78 @@
 import tensorflow as tf
 
-from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock
+# from centernet.modeling.layers.nn_blocks import kp_module
+# from official.vision.beta.modeling.layers import official_nn_blocks
+from centernet.modeling.backbones import residual as official_nn_blocks
 
 class HourglassBlock(tf.keras.layers.Layer):
-  """
-  An CornerNet-style implementation of the hourglass block used in the
-  Hourglass-104 backbone.
-  """
-  def __init__(
-    self, dims, modules, k=0, **kwargs
-  ):
     """
-    Initializes a block for the hourglass backbone. The first k entries of dims
-    and modules are ignored.
-
-    Args:
-      dims: input sizes of residual blocks
-      modules: number of repetitions of the residual blocks in each hourglass
-        upsampling and downsampling
-      k: recursive parameter
+    Hourglass module
     """
-    super().__init__()
+    def __init__(self,
+                 order,
+                 filter_sizes,
+                 rep_sizes,
+                 strides=1,
+                 **kwargs):
+        """
+        Args:
+            order: integer, number of downsampling (and subsequent upsampling) steps
+            filter_sizes: list of filter sizes for Residual blocks
+            rep_sizes: list of residual block repetitions per down/upsample
+            strides: integer, stride parameter to the Residual block
+        """
+        self._order = order
+        self._filter_sizes = filter_sizes
+        self._rep_sizes = rep_sizes
+        self._strides = strides
 
-    self.n   = len(dims) - 1
-    self.k   = k
-    self.modules = modules
-    self.dims = dims
+        self._filters = filter_sizes[0]
+        self._reps = rep_sizes[0]
 
-    assert len(dims) == len(modules), "dims and modules lists must have the " \
-        "same length"
+        super().__init__()
 
-    self._kwargs = kwargs
+    def build(self, input_shape):
+        if self._order == 1:
+            # base case, residual block repetitions in most inner part of hourglass
+            blocks = [official_nn_blocks.ResidualBlock(filters=self._filters,
+                                    strides=self._strides,
+                                    use_projection=True) for _ in range(self._reps)]
+            self.blocks = tf.keras.Sequential(blocks)
 
-  def build(self, input_shape):
-    modules = self.modules
-    dims = self.dims
-    k = self.k
-    kwargs = self._kwargs
+        else:
+            # outer hourglass structures
+            main_block = [official_nn_blocks.ResidualBlock(filters=self._filters,
+                                        strides=self._strides,
+                                        use_projection=True) for _ in range(self._reps)]
+            side_block = [official_nn_blocks.ResidualBlock(filters=self._filters,
+                                        strides=self._strides,
+                                        use_projection=True) for _ in range(self._reps)]
+            self.pool = tf.keras.layers.MaxPool2D(pool_size=2)
 
-    curr_mod = modules[k]
-    next_mod = modules[k + 1]
+            # recursively define inner hourglasses
+            self.inner_hg = type(self)(order=self._order-1,
+                                       filter_sizes=self._filter_sizes[1:],
+                                       rep_sizes=self._rep_sizes[1:],
+                                       stride=self._strides)
+            end_block = [official_nn_blocks.ResidualBlock(filters=self._filters,
+                                       strides=self._strides,
+                                       use_projection=True) for _ in range(self._reps)]
+            self.upsample_layer = tf.keras.layers.UpSampling2D(size=2,
+                                                               interpolation='nearest')
 
-    curr_dim = dims[k + 0]
-    next_dim = dims[k + 1]
+            self.main_block = tf.keras.Sequential(main_block, name="Main_Block")
+            self.side_block = tf.keras.Sequential(side_block, name="Side_Block")
+            self.end_block = tf.keras.Sequential(end_block, name="End_Block")
+        super().build(input_shape)
 
-    self.up1  = self.make_up_layer(
-      3, curr_dim, curr_dim, curr_mod, **kwargs
-    )
-    self.max1 = self.make_pool_layer(curr_dim)
-    self.low1 = self.make_hg_layer(
-      3, curr_dim, next_dim, curr_mod, **kwargs
-    )
-    self.low2 = type(self)(
-      dims, modules, k=k+1, **kwargs
-    ) if self.n - k > 1 else \
-    self.make_low_layer(
-      3, next_dim, next_dim, next_mod, **kwargs
-    )
-    self.low3 = self.make_hg_layer_revr(
-      3, next_dim, curr_dim, curr_mod, **kwargs
-    )
-    self.up2  = self.make_unpool_layer(curr_dim)
+    def call(self, x):
+        if self._order == 1:
+            return self.blocks(x)
+        else:
+            x_pre_pooled = self.main_block(x)
+            x_side = self.side_block(x_pre_pooled)
+            x_pooled = self.pool(x_pre_pooled)
+            inner_output = self.inner_hg(x_pooled)
+            hg_output = self.end_block(inner_output)
 
-    self.merge = self.make_merge_layer(curr_dim)
-
-  def call(self, x):
-    up1  = self.up1(x)
-    max1 = self.max1(x)
-    low1 = self.low1(max1)
-    low2 = self.low2(low1)
-    low3 = self.low3(low2)
-    up2  = self.up2(low3)
-    return self.merge([up1, up2])
-
-  def make_layer(self, k, inp_dim, out_dim, modules, **kwargs):
-    layers = [ResidualBlock(out_dim, 1, use_projection=True, **kwargs)]
-    for _ in range(1, modules):
-      layers.append(ResidualBlock(out_dim, 1, **kwargs))
-    return tf.keras.Sequential(layers)
-
-  def make_layer_revr(self, k, inp_dim, out_dim, modules, **kwargs):
-      layers = []
-      for _ in range(modules - 1):
-          layers.append(ResidualBlock(inp_dim, 1, **kwargs)) # inp_dim is not a bug
-      layers.append(ResidualBlock(out_dim, 1, use_projection=True, **kwargs))
-      return tf.keras.Sequential(layers)
-
-  def make_up_layer(self, k, inp_dim, out_dim, modules, **kwargs):
-    return self.make_layer(k, inp_dim, out_dim, modules, **kwargs)
-
-  def make_low_layer(self, k, inp_dim, out_dim, modules, **kwargs):
-    return self.make_layer(k, inp_dim, out_dim, modules, **kwargs)
-
-  def make_hg_layer(self, k, inp_dim, out_dim, modules, **kwargs):
-    return self.make_layer(k, inp_dim, out_dim, modules, **kwargs)
-
-  def make_hg_layer_revr(self, k, inp_dim, out_dim, modules, **kwargs):
-    return self.make_layer_revr(k, inp_dim, out_dim, modules, **kwargs)
-
-  def make_pool_layer(self, dim):
-    return tf.keras.layers.MaxPool2D(strides=2)
-
-  def make_unpool_layer(self, dim):
-    return tf.keras.layers.UpSampling2D(2)
-
-  def make_merge_layer(self, dim):
-    return tf.keras.layers.Add()
+            return self.upsample_layer(hg_output) + x_side
