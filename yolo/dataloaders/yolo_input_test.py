@@ -22,10 +22,12 @@ def test_yolo_input_task():
             #norm_activation = yolocfg.common.NormActivation(activation="leaky"),
             #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
             #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-            _boxes=[
-                '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-                '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-            ],
+            _boxes =  ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)'], #, '(135, 169)'])
+
+            # _boxes=[
+            #     '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
+            #     '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
+            # ],
             filter=yolocfg.YoloLossLayer(use_nms=False)))
     task = yolo.YoloTask(config)
 
@@ -90,8 +92,8 @@ def test_pipeline():
       break
 
 if __name__ == '__main__':
-  # test_pipeline()
-  test_classification_pipeline()
+  test_pipeline()
+  # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
 

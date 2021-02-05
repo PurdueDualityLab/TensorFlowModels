@@ -155,9 +155,10 @@ class Yolo_Loss(object):
     self.print_error(pred_box)
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
-    true_box = y_true[..., 0:4]
-    true_conf = y_true[..., 4]
-    true_class = y_true[..., 5:]
+    true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis = -1)
+    true_class = tf.squeeze(true_class, axis = -1)
+    true_conf = tf.squeeze(true_conf, axis = -1)
+    true_class = tf.one_hot(tf.cast(true_class, tf.int32), depth = self._classes, axis = -1, dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == "giou":

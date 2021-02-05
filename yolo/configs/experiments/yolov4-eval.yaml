@@ -57,6 +57,7 @@ task:
     input_path: ''
     is_training: false
     parser:
+      fixed_size: true
       image_h: 512
       image_w: 512
       use_tie_breaker: true
