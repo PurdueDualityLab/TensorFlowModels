@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 class Parser(hyperparams.Config):
   image_w: int = 416
   image_h: int = 416
-  fixed_size: bool = False
+  fixed_size: bool = True
   jitter_im: float = 0.2
   jitter_boxes: float = 0.005
   min_process_size: int = 320
@@ -158,7 +158,6 @@ class Parser(hyperparams.Config):
   aug_rand_zoom: bool = True
   aug_rand_hue: bool = True
   seed: int = 10
-  shuffle_buffer_size: int = 10000
   use_tie_breaker: bool = True
   # dtype: str = "float16"
 

@@ -88,7 +88,7 @@ def test_pipeline():
     plt.tight_layout()
     plt.show()
 
-    if l >= 5:
+    if l >= 30:
       break
 
 if __name__ == '__main__':
