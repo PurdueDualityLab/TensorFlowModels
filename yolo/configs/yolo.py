@@ -159,7 +159,6 @@ class Parser(hyperparams.Config):
   aug_rand_hue: bool = True
   seed: int = 10
   use_tie_breaker: bool = True
-  # dtype: str = "float16"
 
 
 @dataclasses.dataclass
