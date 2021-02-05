@@ -88,7 +88,7 @@ class Parser(parser.Parser):
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 12)
 
     if self._aug_rand_brightness:
-      delta = tf.random.uniform([], minval= -0.4,maxval=0.4, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.3,maxval=0.3, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
       delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
