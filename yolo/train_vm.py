@@ -43,6 +43,11 @@ python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classificati
 '''
 
 '''
+python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_conv --config_file=yolo/configs/experiments/darknet_checkpoint_converge.yaml
+'''
+
+
+'''
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-2014-dt --config_file=yolo/configs/experiments/yolov4-dt.yaml
 '''
 def main(_):

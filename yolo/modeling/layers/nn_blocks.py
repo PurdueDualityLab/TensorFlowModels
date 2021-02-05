@@ -142,7 +142,7 @@ class ConvBN(tf.keras.layers.Layer):
       self._activation_fn = tf_utils.get_activation(self._activation) #tf.keras.layers.Activation(self._activation)
   
   def call(self, x):
-    x = self._zeropad(x)
+    #x = self._zeropad(x)
     x = self.conv(x)
     x = self.bn(x)
     x = self._activation_fn(x)
