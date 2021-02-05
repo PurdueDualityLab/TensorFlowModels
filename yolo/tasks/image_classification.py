@@ -27,6 +27,73 @@ from official.vision.beta.tasks import image_classification
 class ImageClassificationTask(image_classification.ImageClassificationTask):
   """A task for image classification."""
 
+  def initialize(self, model: tf.keras.Model):
+    if self.task_config.load_darknet_weights:
+      from yolo.utils import DarkNetConverter
+      from yolo.utils._darknet2tf.load_weights import split_converter
+      from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
+      from yolo.utils._darknet2tf.load_weights2 import load_weights_neck
+      from yolo.utils._darknet2tf.load_weights2 import load_head
+      from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
+      from yolo.utils.downloads.file_manager import download
+
+      weights_file = self.task_config.model.darknet_weights_file
+      config_file = self.task_config.model.darknet_weights_cfg
+
+      if ('cache' not in weights_file and 'cache' not in config_file):
+        list_encdec = DarkNetConverter.read(config_file, weights_file)
+      else:
+        import os
+        path = os.path.abspath('cache')
+        if (not os.path.isdir(path)):
+          os.mkdir(path)
+
+        cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
+        if not os.path.isfile(cfg):
+          download(config_file.split('/')[-1])
+
+        wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
+        if not os.path.isfile(wgt):
+          download(weights_file.split('/')[-1])
+
+        list_encdec = DarkNetConverter.read(cfg, wgt)
+
+      splits = model.backbone._splits
+      if 'neck_split' in splits.keys():
+        encoder, neck, decoder = split_converter(list_encdec,
+                                                 splits['backbone_split'],
+                                                 splits['neck_split'])
+      else:
+        encoder, decoder = split_converter(list_encdec,
+                                           splits['backbone_split'])
+        neck = None
+
+      load_weights_backbone(model.backbone, encoder)
+      model.backbone.trainable = True
+    else:
+      """Loading pretrained checkpoint."""
+      if not self.task_config.init_checkpoint:
+        return
+
+      ckpt_dir_or_file = self.task_config.init_checkpoint
+      if tf.io.gfile.isdir(ckpt_dir_or_file):
+        ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
+
+      # Restoring checkpoint.
+      if self.task_config.init_checkpoint_modules == 'all':
+        ckpt = tf.train.Checkpoint(**model.checkpoint_items)
+        status = ckpt.restore(ckpt_dir_or_file)
+        status.assert_consumed()
+      elif self.task_config.init_checkpoint_modules == 'backbone':
+        ckpt = tf.train.Checkpoint(backbone=model.backbone)
+        status = ckpt.restore(ckpt_dir_or_file)
+        status.expect_partial().assert_existing_objects_matched()
+      else:
+        assert "Only 'all' or 'backbone' can be used to initialize the model."
+
+      logging.info('Finished loading pretrained checkpoint from %s',
+                  ckpt_dir_or_file)
+
   def build_inputs(self, params, input_context=None):
     """Builds classification input."""
 

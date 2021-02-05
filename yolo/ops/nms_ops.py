@@ -27,9 +27,8 @@ def aggregated_comparitive_iou(boxes1, boxes2 = None, iou_type = "iou", xyxy = T
 
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
-  ind_m = tf.ones_like(ind) * tf.expand_dims(
-      tf.range(0,
-               tf.shape(objectness)[0]), axis=-1)
+
+  ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0,tf.shape(objectness)[0]), axis=-1)
   bind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis=-1)
 
   box = tf.gather_nd(box, bind)

@@ -16,8 +16,8 @@ class YoloLayer(ks.Model):
                masks,
                anchors,
                classes,
-               thresh=0.5,
-               cls_thresh=0.5,
+               thresh=0.45,
+               cls_thresh=0.45,
                ignore_thresh=0.7,
                loss_type='ciou',
                use_tie_breaker=True,
@@ -100,8 +100,7 @@ class YoloLayer(ks.Model):
     scaled = tf.math.sigmoid(classifics) * objectness
 
     # compute the mask of where objects have been located
-    mask_check = tf.fill(
-        tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
+    mask_check = tf.fill(tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
     sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
     num_dets = tf.reduce_sum(sub, axis=(1, 2, 3))
 
@@ -117,8 +116,8 @@ class YoloLayer(ks.Model):
     classifications = tf.boolean_mask(scaled, mask, axis=1)
     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
-    objectness, box, classifications = nms_ops.sort_drop(
-        objectness, box, classifications, self._max_boxes)
+    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+    #box, classifications, objectness = nms_ops.nms(box, classifications, objectness, self._max_boxes, 2.5,0.6, sorted=False, one_hot=True)
     return objectness, box, classifications, num_dets
 
   def call(self, inputs):
@@ -165,6 +164,8 @@ class YoloLayer(ks.Model):
         0.6,
         sorted=False,
         one_hot=True)
+    
+    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis = -1)
 
     return {
         'bbox': boxes,
@@ -206,108 +207,73 @@ class YoloLayer(ks.Model):
     }
 
 
-# @ks.utils.register_keras_serializable(package='yolo')
-# class YoloGTFilter(ks.Model):
+@ks.utils.register_keras_serializable(package='yolo')
+class YoloGTFilter(ks.Model):
 
-#   def __init__(self, max_boxes=200, **kwargs):
-#     super().__init__(**kwargs)
+  def __init__(self, masks, max_boxes=200,   **kwargs):
+    super().__init__(**kwargs)
 
-#     self._max_boxes = max_boxes
-#     return
+    self._max_boxes = max_boxes
+    self._keys = list(masks.keys())
+    self._masks = masks
+    self._len_masks = {}
+    self._len_keys = len(self._keys)
+    for key in self._keys:
+      self._len_masks[key] = len(self._masks[key])
+    return
 
-#   def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
-#     shape = tf.shape(inputs)
-#     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
-#     data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
+  def parse_prediction_path(self, inputs, len_mask):
+    shape = tf.shape(inputs)
+    # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
+    data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
 
-#     # compute the true box output values
-#     _, obns, classifics = tf.split(data, [4, 1, -1], axis=-1)
-#     scaled = tf.shape(classifics)[-1]
-#     objectness = tf.squeeze(obns, axis=-1)
-#     box = box_utils.xcycwh_to_yxyx(boxes)
+    # compute the true box output values
+    boxes, objectness, classifics = tf.split(data, [4, 1, -1], axis=-1)
+    #objectness = tf.squeeze(obns, axis=-1)
+    box = box_utils.xcycwh_to_yxyx(boxes)
 
-#     # compute the mask of where objects have been located
-#     num_dets = tf.reduce_sum(objectness, axis=(1, 2, 3))
+    mask = tf.cast(tf.ones_like(objectness), dtype=tf.bool)
+    mask = tf.reduce_any(mask, axis=(0, -1))
 
-#     mask = tf.cast(tf.ones_like(sub), dtype=tf.bool)
-#     mask = tf.reduce_any(mask, axis=(0, -1))
+    # reduce the dimentions of the predictions to (batch size, max predictions, -1)
+    box = tf.boolean_mask(box, mask, axis=1)
+    classifications = tf.boolean_mask(classifics, mask, axis=1)
+    #objectness = tf.boolean_mask(objectness, mask, axis=1)
+    objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
-#     # reduce the dimentions of the predictions to (batch size, max predictions, -1)
-#     box = tf.boolean_mask(box, mask, axis=1)
-#     classifications = tf.boolean_mask(scaled, mask, axis=1)
-#     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
+    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+    return objectness, box, classifications
 
-#     objectness, box, classifications = nms_ops.sort_drop(
-#         objectness, box, classifications, self._max_boxes)
-#     return objectness, box, classifications, num_dets
+  def call(self, inputs):
+    confidence, boxes, classifs = self.parse_prediction_path(inputs[str(self._keys[0])], self._len_masks[str(self._keys[0])])
+    i = 1
+    while i < self._len_keys:
+      key = self._keys[i]
+      conf, b, c = self.parse_prediction_path(inputs[str(key)], self._len_masks[str(key)])
+      boxes = K.concatenate([boxes, b], axis=1)
+      classifs = K.concatenate([classifs, c], axis=1)
+      confidence = K.concatenate([confidence, conf], axis=1)
+      i += 1
 
-#   def call(self, inputs):
-#     confidence, boxes, classifs, num_dets = self.parse_prediction_path(
-#         self._generator[self._keys[0]], self._len_mask[self._keys[0]],
-#         self._scale_xy[self._keys[0]], inputs[str(self._keys[0])])
-#     i = 1
-#     while i < self._len_keys:
-#       key = self._keys[i]
-#       conf, b, c, nd = self.parse_prediction_path(self._generator[key],
-#                                                   self._len_mask[key],
-#                                                   self._scale_xy[key],
-#                                                   inputs[str(key)])
-#       boxes = K.concatenate([boxes, b], axis=1)
-#       classifs = K.concatenate([classifs, c], axis=1)
-#       confidence = K.concatenate([confidence, conf], axis=1)
-#       num_dets += nd
-#       i += 1
+    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs, self._max_boxes)
+    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis = -1)
 
-#     num_dets = tf.cast(tf.squeeze(num_dets, axis=-1), tf.float32)
+    return {
+        'bbox': boxes,
+        'classes': tf.math.argmax(classifs, axis=-1),
+        'confidence': confidence,
+        'num_dets': num_dets
+    }
 
-#     if self._use_nms:
-#       boxes = tf.cast(boxes, dtype=tf.float32)
-#       classifs = tf.cast(classifs, dtype=tf.float32)
-#       nms = tf.image.combined_non_max_suppression(
-#           tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
-#           self._max_boxes, self._thresh, self._cls_thresh)
-#       return {
-#           'bbox': nms.nmsed_boxes,
-#           'classes': tf.cast(nms.nmsed_classes, tf.int32),
-#           'confidence': nms.nmsed_scores,
-#           'num_dets': num_dets
-#       }
+  @property
+  def key_dict(self):
+    return self._scale_xy
 
-#     confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs,
-#                                                     self._max_boxes)
-
-#     return {
-#         'bbox': boxes,
-#         'classes': tf.math.argmax(classifs, axis=-1),
-#         'confidence': confidence,
-#         'num_dets': num_dets
-#     }
-
-#   @property
-#   def losses(self):
-#     loss_dict = {}
-#     for key in self._keys:
-#       loss_dict[key] = Yolo_Loss(
-#           classes=self._classes,
-#           anchors=self._anchors,
-#           ignore_thresh=self._ignore_thresh,
-#           loss_type=self._loss_type,
-#           path_key=key,
-#           mask=self._masks[key],
-#           scale_anchors=self._path_scale[key],
-#           scale_x_y=self._scale_xy[key],
-#           use_tie_breaker=self._use_tie_breaker)
-#     return loss_dict
-
-#   @property
-#   def key_dict(self):
-#     return self._scale_xy
-
-#   def get_config(self):
-#     return {
-#         'masks': dict(self._masks),
-#         'anchors': [list(a) for a in self._anchors],
-#         'thresh': self._thresh,
-#         'cls_thresh': self._cls_thresh,
-#         'max_boxes': self._max_boxes,
-#     }
+  def get_config(self):
+    return {
+        'masks': dict(self._masks),
+        'anchors': [list(a) for a in self._anchors],
+        'thresh': self._thresh,
+        'cls_thresh': self._cls_thresh,
+        'max_boxes': self._max_boxes,
+    }

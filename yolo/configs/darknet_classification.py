@@ -52,6 +52,8 @@ class ImageClassificationModel(hyperparams.Config):
   min_level: Optional[int] = None
   max_level: int = 5
   dilate: bool = False
+  darknet_weights_file: str='cache://yolov4.weights'
+  darknet_weights_cfg: str='cache://yolov4.cfg'
 
 
 @dataclasses.dataclass
@@ -70,6 +72,8 @@ class ImageClassificationTask(cfg.TaskConfig):
   losses: Losses = Losses()
   gradient_clip_norm: float = 0.0
   logging_dir: str = None
+
+  load_darknet_weights: bool = True
 
 
 @exp_factory.register_config_factory('darknet_classification')

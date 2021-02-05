@@ -77,8 +77,6 @@ class Parser(parser.Parser):
     w = tf.cast(tf.shape(image)[0], tf.float32)
     h = tf.cast(tf.shape(image)[1], tf.int32)
 
-
-    image /255
     do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
     if do_blur > 0.4:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
@@ -156,6 +154,6 @@ class Parser(parser.Parser):
         target_width=self._output_size[0],
         target_height=self._output_size[1])  # Final Output Shape
     image = image / 255.  # Normalize
-    label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
-
+    #label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+    label = decoded_tensors['image/class/label']
     return image, label

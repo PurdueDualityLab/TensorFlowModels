@@ -5,7 +5,7 @@ runtime:
   num_gpus: 1
 task:
   model:
-    num_classes: 11
+    num_classes: 1001
     input_size: [256, 256, 3]
     backbone:
       type: 'darknet'
@@ -20,17 +20,17 @@ task:
     label_smoothing: 0.1
   train_data:
     tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
-    tfds_name: cifar10 #imagenet2012
+    tfds_name: imagenet2012
     tfds_split: train
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 8
+    global_batch_size: 16
     dtype: 'float16'
     parser:
       aug_rand: true
   validation_data:
     tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
-    tfds_name: cifar10 #imagenet2012
+    tfds_name: imagenet2012
     tfds_split: test
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
@@ -40,7 +40,7 @@ task:
     parser:
       aug_rand: true
 trainer:
-  train_steps: 75000 # epochs: 120
+  train_steps: 150000 # epochs: 120
   validation_steps: 800 # size of validation data
   validation_interval: 5000
   steps_per_loop: 10000

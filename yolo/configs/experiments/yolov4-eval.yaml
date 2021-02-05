@@ -24,6 +24,7 @@ task:
       loss_type: ciou
       max_boxes: 200
       use_nms: false
+      iou_normalizer: 0.07
   train_data:
     global_batch_size: 2 # 64 batch size
     shuffle_buffer_size: 200
@@ -44,7 +45,6 @@ task:
       aug_rand_zoom: true
       aug_rand_hue: true
       seed: 10
-      dtype: float16
       use_tie_breaker: true
     shuffle_buffer_size: 10000
   validation_data:
@@ -57,16 +57,11 @@ task:
     input_path: ''
     is_training: false
     parser:
-      image_h: 608
-      image_w: 608
-      aug_rand_saturation: true
-      aug_rand_brightness: true
-      aug_rand_zoom: true
-      aug_rand_hue: true
-      shuffle_buffer_size: 10000
+      fixed_size: true
+      image_h: 512
+      image_w: 512
       use_tie_breaker: true
-      dtype: float16
-    shuffle_buffer_size: 2
+    shuffle_buffer_size: 10000
   weight_decay: 0.0005
   init_checkpoint: ''
   annotation_file: null
@@ -77,7 +72,7 @@ trainer:
   train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
   validation_steps: 1000 # 5063 #625
   steps_per_loop: 10000
-  validation_interval: 10
+  validation_interval: 1
   summary_interval: 10000
   checkpoint_interval: 10000
   optimizer_config:
