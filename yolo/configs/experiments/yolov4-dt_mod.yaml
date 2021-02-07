@@ -35,7 +35,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 16 # 64 batch size 
+    global_batch_size: 8 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -73,7 +73,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 2002000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 4004000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 5063
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -83,9 +83,9 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [1600000, 1800000] # [400000, 450000]
+        boundaries: [3200000, 3600000] # [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.000325, 0.0000325, 0.00000325] #[0.0013, 0.00013, 0.000013]
+        values: [0.0001625, 0.00001625, 0.000001625] #[0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
