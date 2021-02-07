@@ -13,8 +13,8 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: cache://csdarknet53.cfg
-      darknet_weights_cfg: cache://csdarknet53.weights
+      darknet_weights_file: 'cache://csdarknet53.weights'
+      darknet_weights_cfg: 'cache://csdarknet53.cfg'
     num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: null
@@ -38,7 +38,7 @@ task:
     global_batch_size: 32 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: train
     drop_remainder: true
     dtype: float16
@@ -50,13 +50,12 @@ task:
       image_w: 416
       seed: 10
       use_tie_breaker: true
-      dtype: float16
     shuffle_buffer_size: 10000
   validation_data:
     global_batch_size: 8
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
     dtype: float16
     input_path: ''
@@ -66,7 +65,6 @@ task:
       image_w: 416
       fixed_size: true
       use_tie_breaker: true
-      dtype: float16
     shuffle_buffer_size: 10000
   weight_decay: 0.0005
   init_checkpoint: ''

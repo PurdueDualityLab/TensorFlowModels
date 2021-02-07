@@ -33,6 +33,9 @@ from official.modeling import performance
 
 
 FLAGS = flags.FLAGS
+'''
+scp -i ./jaeyounkim-purdue-1 cache.zip  purdue@34.105.118.198:~/
+'''
 
 '''
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
@@ -43,10 +46,11 @@ python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classificati
 '''
 
 '''
-python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_conv --config_file=yolo/configs/experiments/darknet_checkpoint_converge.yaml
+python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml
 '''
-
-
+'''
+python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-dt32_mod --config_file=yolo/configs/experiments/yolov4-dt32_mod.yaml
+'''
 '''
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-2014-dt --config_file=yolo/configs/experiments/yolov4-dt.yaml
 '''

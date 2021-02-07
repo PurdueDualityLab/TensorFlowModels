@@ -69,7 +69,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
         neck = None
 
       load_weights_backbone(model.backbone, encoder)
-      model.backbone.trainable = False
+      #model.backbone.trainable = False
 
       # if len(decoder) == 3:
       #   model.head.set_weights(decoder[-2].get_weights())
