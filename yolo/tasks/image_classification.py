@@ -60,7 +60,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
 
       splits = model.backbone._splits
       if 'neck_split' in splits.keys():
-        encoder, neck, decoder = split_converter(list_encdec,
+        encoder, decoder, _ = split_converter(list_encdec,
                                                  splits['backbone_split'],
                                                  splits['neck_split'])
       else:
@@ -69,7 +69,20 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
         neck = None
 
       load_weights_backbone(model.backbone, encoder)
-      model.backbone.trainable = True
+      model.backbone.trainable = False
+
+      # if len(decoder) == 3:
+      #   model.head.set_weights(decoder[-2].get_weights())
+      #   model.head.trainable = True
+      #   print("here")
+
+      # print(type(decoder[-2].get_weights()))
+      # print(type(model.head.get_weights()))
+
+      # for i, weight in enumerate(model.head.get_weights()):
+      #   print(decoder[-2].get_weights()[i])
+      #   print(weight)
+      #print(decoder, "model", tf.math.equal(tf.convert_to_tensor(model.get_weights()), tf.convert_to_tensor(decoder[-2].get_weights())))
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:
@@ -93,6 +106,8 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
 
       logging.info('Finished loading pretrained checkpoint from %s',
                   ckpt_dir_or_file)
+      # model.backbone.trainable = False
+      # model.head.trainable = False
 
   def build_inputs(self, params, input_context=None):
     """Builds classification input."""
@@ -146,6 +161,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
       outputs = model(features, training=True)
+      #tf.print(tf.argmax(outputs, axis = -1), tf.argmax(labels, axis = -1))
       # Casting output layer as float32 is necessary when mixed_precision is
       # mixed_float16 or mixed_bfloat16 to ensure output is casted as float32.
       outputs = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), outputs)

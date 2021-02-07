@@ -77,15 +77,16 @@ class Parser(parser.Parser):
     w = tf.cast(tf.shape(image)[0], tf.float32)
     h = tf.cast(tf.shape(image)[1], tf.int32)
 
+
     do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
-    if do_blur > 0.4:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
-    if do_blur > 0.6:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
+    if do_blur > 0.9:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 9, sigma = 25)
     elif do_blur > 0.7:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 10)
-    elif do_blur > 0.9:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 12)
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 7, sigma = 15)
+    elif do_blur > 0.6:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
+    elif do_blur > 0.4:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
 
     if self._aug_rand_brightness:
       delta = tf.random.uniform([], minval= -0.3,maxval=0.3, seed=self._seed, dtype=tf.float32)
@@ -97,7 +98,7 @@ class Parser(parser.Parser):
       delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_hue(image, delta)  # Hue
     
-    stddev = tf.random.uniform([], minval= 0.0, maxval=40/255, seed=self._seed, dtype=tf.float32)
+    stddev = tf.random.uniform([], minval= 0, maxval=40/255, seed=self._seed, dtype=tf.float32)
     noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
@@ -108,15 +109,6 @@ class Parser(parser.Parser):
       nh = tf.cast(w / aspect, dtype=tf.int32)
       nw = tf.cast(w, dtype=tf.int32)
       image = tf.image.resize(image, size=(nw, nh))
-
-    if self._aug_rand_zoom:
-      scale = tf.random.uniform([],
-                                minval=self._scale[0],
-                                maxval=self._scale[1],
-                                seed=self._seed,
-                                dtype=tf.int32)
-      image = tf.image.resize_with_crop_or_pad(
-          image, target_height=scale, target_width=scale)
 
     image = tf.image.resize_with_pad(
         image,
@@ -131,10 +123,24 @@ class Parser(parser.Parser):
                               dtype=tf.float32)
       deg = deg * 3.14 / 180.
       deg.set_shape(())
-      image = tfa.image.rotate(image, deg, interpolation='NEAREST')
+      image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
 
+    if self._aug_rand_zoom:
+      scale = tf.random.uniform([],
+                                minval=self._scale[0],
+                                maxval=self._scale[1],
+                                seed=self._seed,
+                                dtype=tf.int32)
+      if scale > self._output_size[0]:
+        image = tf.image.resize_with_crop_or_pad(
+            image, target_height=scale, target_width=scale)
+      else:
+        image = tf.image.random_crop(image, (scale, scale, 3))
 
-    # label = tf.one_hot(decoded_tensors['image/class/label'], self._num_classes)
+    image = tf.image.resize(
+      image,
+      (self._output_size[0], self._output_size[1]))
+
     label = decoded_tensors['image/class/label']
     return image, label
 

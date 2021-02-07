@@ -16,6 +16,7 @@
 
 # Import libraries
 import tensorflow as tf
+from yolo.modeling.layers import nn_blocks
 
 layers = tf.keras.layers
 
@@ -75,6 +76,20 @@ class ClassificationModel(tf.keras.Model):
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
     self._backbone = backbone
+    # self._head = tf.keras.layers.Dense(
+    #     num_classes, kernel_initializer=kernel_initializer,
+    #     kernel_regularizer=self._kernel_regularizer,
+    #     bias_regularizer=self._bias_regularizer)
+
+    #self._head = tf.keras.layers.Conv2D(num_classes, kernel_size=1, kernel_initializer=kernel_initializer, kernel_regularizer=self._kernel_regularizer, bias_regularizer=self._bias_regularizer)
+    
+    self._head = nn_blocks.ConvBN(filters = num_classes, kernel_size = 1, kernel_initializer=kernel_initializer, kernel_regularizer=self._kernel_regularizer, bias_regularizer=self._bias_regularizer, use_bn = False, activation=None)
+    
+    self._head2 = tf.keras.layers.Dense(
+        num_classes, kernel_initializer=kernel_initializer,
+        kernel_regularizer=self._kernel_regularizer,
+        bias_regularizer=self._bias_regularizer)
+
     if use_sync_bn:
       self._norm = tf.keras.layers.experimental.SyncBatchNormalization
     else:
@@ -87,13 +102,15 @@ class ClassificationModel(tf.keras.Model):
 
     if add_head_batch_norm:
       x = self._norm(axis=axis, momentum=norm_momentum, epsilon=norm_epsilon)(x)
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    # x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    # x = tf.expand_dims(x, axis = 1)
+    # x = tf.expand_dims(x, axis = 1)
     #x = tf.keras.layers.Dropout(dropout_rate)(x)
-    x = tf.keras.layers.Dense(
-        num_classes, kernel_initializer=kernel_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer)(
-            x)
+    x = tf.keras.layers.AveragePooling2D(pool_size=8)(x)
+    x = self._head(x)
+    x = tf.squeeze(x, axis = 1)
+    x = tf.squeeze(x, axis = 1)
+    #x = self._head2(x)
 
     super(ClassificationModel, self).__init__(
         inputs=inputs, outputs=x, **kwargs)
@@ -106,6 +123,10 @@ class ClassificationModel(tf.keras.Model):
   @property
   def backbone(self):
     return self._backbone
+
+  @property
+  def head(self):
+    return self._head
 
   def get_config(self):
     return self._config_dict

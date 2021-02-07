@@ -434,6 +434,77 @@ class maxpoolCFG(Config):
         padding='same')(
             tensors[-1])
 
+@layer_builder.register('upsample')
+@dataclass
+class upsampleCFG(Config):
+  _type: str = None
+  w: int = field(init=True, default=0)
+  h: int = field(init=True, default=0)
+  c: int = field(init=True, default=0)
+
+  stride: int = field(init=True, default=2)
+
+  @property
+  def shape(self):
+    return (self.stride * self.w, self.stride * self.h, self.c)
+
+  def to_tf(self, tensors):
+    from tensorflow.keras.layers import UpSampling2D
+    return UpSampling2D(size=(self.stride, self.stride))(tensors[-1])
+
+
+@layer_builder.register('avgpool')
+@dataclass
+class avgpoolCFG(Config):
+  _type: str = None
+  w: int = field(init=True, default=0)
+  h: int = field(init=True, default=0)
+  c: int = field(init=True, default=0)
+
+  stride: int = field(init=True, default=2)
+  size: int = field(init=True, default=2)
+
+  @property
+  def shape(self):
+    #pad = 0 if self.stride == 1 else 1
+    #print((self.w//self.stride, self.h//self.stride, self.c))
+    return (1,1, self.c)  # ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+
+  def to_tf(self, tensors):
+    #from tensorflow.nn import max_pool2d
+    from tensorflow.keras.layers import MaxPooling2D
+    return MaxPooling2D(
+        pool_size=(self.size, self.size),
+        strides=(self.stride, self.stride),
+        padding='same')(
+            tensors[-1])
+
+@layer_builder.register('softmax')
+@dataclass
+class softmaxCFG(Config):
+  _type: str = None
+  w: int = field(init=True, default=0)
+  h: int = field(init=True, default=0)
+  c: int = field(init=True, default=0)
+
+  groups: int = field(init=True, default=1)
+
+  @property
+  def shape(self):
+    pad = 0 if self.stride == 1 else 1
+    #print((self.w//self.stride, self.h//self.stride, self.c))
+    return (
+        self.w // self.stride, self.h // self.stride, self.c
+    )  # ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+
+  def to_tf(self, tensors):
+    #from tensorflow.nn import max_pool2d
+    from tensorflow.keras.layers import MaxPooling2D
+    return MaxPooling2D(
+        pool_size=(self.size, self.size),
+        strides=(self.stride, self.stride),
+        padding='same')(
+            tensors[-1])
 
 def len_width(n, f, p, s):
   """
