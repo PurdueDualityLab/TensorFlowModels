@@ -79,11 +79,11 @@ class Parser(parser.Parser):
 
 
     do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
+    # if do_blur > 0.9:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape = 9, sigma = 25)
     if do_blur > 0.9:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 9, sigma = 25)
-    elif do_blur > 0.7:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 7, sigma = 15)
-    elif do_blur > 0.6:
+    elif do_blur > 0.7:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
     elif do_blur > 0.4:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)

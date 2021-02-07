@@ -152,7 +152,6 @@ class Parser(parser.Parser):
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
     elif do_blur > 0.4:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
-    tf.print(do_blur)
 
     if self._aug_rand_brightness:
       delta = tf.random.uniform([], minval= -0.3,maxval=0.3, seed=self._seed, dtype=tf.float32)

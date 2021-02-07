@@ -59,6 +59,11 @@ python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_d
 '''
 
 '''
+python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_subdiv_custom --model_dir=../checkpoints/yolov4-dt32-subdiv --config_file=yolo/configs/experiments/yolov4-dt32-subdiv.yaml
+'''
+
+
+'''
 python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-eval --config_file=yolo/configs/experiments/yolov4-eval.yaml
 '''
 def main(_):
