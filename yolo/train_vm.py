@@ -47,11 +47,11 @@ python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classificati
 
 '''
 darknet debug: 
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log && tail -f darknet53.log
+nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log
 
 yolo debug: 
 
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-dt32_mod --config_file=yolo/configs/experiments/yolov4-dt32_mod.yaml  >> v4_yolo.log && tail -f v4_yolo.log
+nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-dt_mod --config_file=yolo/configs/experiments/yolov4-dt_mod.yaml  >> v4_yolo.log & tail -f v4_yolo.log
 
 '''
 '''
