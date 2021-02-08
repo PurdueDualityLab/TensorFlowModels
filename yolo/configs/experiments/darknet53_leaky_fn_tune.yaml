@@ -34,7 +34,7 @@ task:
     tfds_split: validation
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/valid*'
-    is_training: true
+    is_training: false
     global_batch_size: 128
     dtype: 'float16'
     drop_remainder: false
@@ -55,8 +55,8 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.0001
-        end_learning_rate: 0.00001
+        initial_learning_rate: 0.00001
+        end_learning_rate: 0.0000001
         power: 4.0
         decay_steps: 1199000
     warmup:
