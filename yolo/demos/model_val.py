@@ -35,39 +35,18 @@ if __name__ == "__main__":
 
     # pass in a all white image
     white_image = tf.fill([1, 608, 608, 3], 1.0)
-    output = model.predict(white_image)
+    # layers = list(model.backbone.layers)
+    output = model.backbone(white_image)
 
-    model.build([1, 608, 608, 3])
-    model.backbone.summary()
     # # raw output log
-    # raw_tensor = output["raw_output"]['3']
+    raw_tensor = output['5'] #["raw_output"]['5']
 
-    # with open("yolov4_raw_output.txt", "w") as fh:
-    #     for tensor in raw_tensor.numpy():
-    #         for w in tensor:
-    #             for h in w:
-    #                 for element in h:
-    #                     fh.write(f"{element:.6f}\n")
+    with open("yolov4_raw_output.txt", "w") as fh:
+      print(raw_tensor.shape)
+      for batch in range(raw_tensor.shape[0]):
+        for channels in range(raw_tensor.shape[3]):
+          for height in range(raw_tensor.shape[2]):
+            for width in range(raw_tensor.shape[1]):
+              element = raw_tensor[batch, height, width, channels]
+              fh.write(f"{element:.6f}\n")
 
-    # oshape = [1, 608, 608, 3]
-    # for layer in model.backbone.layers:
-    #   try:
-    #     for s in layer.submodules:
-    #       try:
-    #         oshape = s.compute_output_shape(oshape)
-    #         print(oshape)
-    #       except Exception as e:
-    #         print(e)
-    #   except:
-    #     print("nothing")
-    #   # try:
-      #   for j in layer.layers:
-      #     print(j)
-      # except:
-      #   print("no layers")
-    """
-    tf.print(raw_tensor,
-             output_stream="file://yolov4_raw_output.txt",
-             summarize=-1,
-             sep="\n", end="")
-    """

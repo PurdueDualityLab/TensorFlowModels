@@ -121,11 +121,11 @@ class YoloLayer(ks.Model):
     return objectness, box, classifications, num_dets
 
   def call(self, inputs):
-    #key = str(self._keys[0])
     key = self._keys[0]
     confidence, boxes, classifs, num_dets = self.parse_prediction_path(
         self._generator[key], self._len_mask[key],
         self._scale_xy[key], inputs[str(key)])
+
     i = 1
     while i < self._len_keys:
       key = self._keys[i]
