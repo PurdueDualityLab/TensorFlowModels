@@ -111,11 +111,11 @@ class ImageClassificationTask(base_task.Task):
       total_loss = tf.keras.losses.categorical_crossentropy(
           labels,
           model_outputs,
-          from_logits=True,
+          from_logits=False,
           label_smoothing=losses_config.label_smoothing)
     else:
       total_loss = tf.keras.losses.sparse_categorical_crossentropy(
-          labels, model_outputs, from_logits=True)
+          labels, model_outputs, from_logits=False)
 
     total_loss = tf_utils.safe_mean(total_loss)
     if aux_losses:

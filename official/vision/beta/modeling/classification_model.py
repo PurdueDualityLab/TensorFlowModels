@@ -108,6 +108,7 @@ class ClassificationModel(tf.keras.Model):
     #x = tf.keras.layers.Dropout(dropout_rate)(x)
     x = tf.keras.layers.AveragePooling2D(pool_size=8)(x)
     x = self._head(x)
+    x = tf.keras.activations.softmax(x, axis = -1)
     x = tf.squeeze(x, axis = 1)
     x = tf.squeeze(x, axis = 1)
     #x = self._head2(x)
