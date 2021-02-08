@@ -17,7 +17,7 @@ if __name__ == '__main__':
   tf.print('Made an hourglass!')
   out = hg(x_hg)
   tf.print('Hourglass module output shape:{} Expected shape:{}'.format(
-      hg.output_shape, hg_test_input_shape))
+      tf.shape(out), hg_test_input_shape))
 
   tf.print("Testing backbone")
   backbone = CenterNetBackbone(
@@ -37,6 +37,7 @@ if __name__ == '__main__':
   tf.print(tf.shape(out))
 
   tf.print('Made backbone!')
+
   tf.print('Backbone output shape: {} Expected shape: {}'.format(
-      backbone.output_shape, test_input_shape
-  ))
+      tf.shape(out), (bb_test_input_shape[0], bb_test_input_shape[1]//8, 
+                      bb_test_input_shape[2]//8, filter_sizes[0])))

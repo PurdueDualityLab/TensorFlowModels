@@ -95,6 +95,7 @@ class CenterNetBackbone(tf.keras.Model):
 
       all_heatmaps.append(x_hg)
 
+      # between hourglasses, we insert intermediate layers
       if i < self._n_stacks - 1:
         inter_hg_conv1 = self.inter_hg_convs1[i]
         inter_hg_conv2 = self.inter_hg_convs2[i]
@@ -104,4 +105,4 @@ class CenterNetBackbone(tf.keras.Model):
         x_inter = self.relu(x_inter)
         x_inter = res(x_inter)
 
-    return x_hg
+    return x_hg, all_heatmaps

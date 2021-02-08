@@ -56,16 +56,10 @@ class HourglassBlock(tf.keras.layers.Layer):
       self.pool = tf.keras.layers.MaxPool2D(pool_size=2)
 
       # recursively define inner hourglasses
-      if (self._order == 1):
-        self.inner_hg = HourglassBlockBase(
-          filters=self._filter_sizes[-1],
-          reps=self._rep_sizes[-1],
-          strides=self._strides)
-      else:
-        self.inner_hg = type(self)(
-          filter_sizes=self._filter_sizes[1:],
-          rep_sizes=self._rep_sizes[1:],
-          strides=self._strides)
+      self.inner_hg = type(self)(
+        filter_sizes=self._filter_sizes[1:],
+        rep_sizes=self._rep_sizes[1:],
+        strides=self._strides)
 
       # outer hourglass structures
       end_block = [
@@ -90,12 +84,3 @@ class HourglassBlock(tf.keras.layers.Layer):
       inner_output = self.inner_hg(x_pooled)
       hg_output = self.end_block(inner_output)
       return self.upsample_layer(hg_output) + x_side
-
-# Copied from YOLO (yolo/modeling/layers/nn_blocks)
-class Identity(tf.keras.layers.Layer):
-
-  def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-
-  def call(self, input):
-    return input
