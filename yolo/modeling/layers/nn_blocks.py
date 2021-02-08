@@ -182,9 +182,6 @@ class ConvBN(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
-  def __repr__(self):
-    return repr(self.get_config())
-
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class DarkResidual(tf.keras.layers.Layer):
