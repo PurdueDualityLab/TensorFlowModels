@@ -27,6 +27,7 @@ task:
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
+    shuffle_buffer_size: 10000
     parser:
       aug_rand: true
   validation_data:
@@ -38,6 +39,7 @@ task:
     global_batch_size: 128
     dtype: 'float16'
     drop_remainder: false
+    shuffle_buffer_size: 10000
     parser:
       aug_rand: false
 trainer:
