@@ -109,7 +109,8 @@ class Parser(parser.Parser):
       nh = tf.cast(w / aspect, dtype=tf.int32)
       nw = tf.cast(w, dtype=tf.int32)
       image = tf.image.resize(image, size=(nw, nh))
-
+    image = tf.image.random_flip_left_right(image, seed=self._seed)
+    
     image = tf.image.resize_with_pad(
         image,
         target_width=self._output_size[0],
@@ -117,11 +118,11 @@ class Parser(parser.Parser):
 
     if self._aug_rand_rotate:
       deg = tf.random.uniform([],
-                              minval=-30,
-                              maxval=30,
+                              minval=-7,
+                              maxval=7,
                               seed=self._seed,
                               dtype=tf.float32)
-      deg = deg * 3.14 / 180.
+      deg = deg * 3.14 / 360.
       deg.set_shape(())
       image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
 
@@ -136,6 +137,8 @@ class Parser(parser.Parser):
             image, target_height=scale, target_width=scale)
       else:
         image = tf.image.random_crop(image, (scale, scale, 3))
+
+    
 
     image = tf.image.resize(
       image,
