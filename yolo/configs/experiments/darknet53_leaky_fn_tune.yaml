@@ -25,7 +25,7 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 64
+    global_batch_size: 128
     dtype: 'float16'
     parser:
       aug_rand: true
@@ -35,7 +35,7 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
-    global_batch_size: 64
+    global_batch_size: 128
     dtype: 'float16'
     drop_remainder: false
     parser:
