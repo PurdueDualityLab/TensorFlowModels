@@ -25,16 +25,16 @@ class CenterNetBackbone(tf.keras.Model):
     self._downsample = downsample
     self._filter_sizes = filter_sizes
     self._rep_sizes = rep_sizes
-    
+
     super().__init__(**kwargs)
 
   def build(self, input_shape):
     # Create prelayers if downsampling input
     if self._downsample:
       self._pre_layers = tf.keras.Sequential([
-        nn_blocks.ConvBN(
-            filters=128, kernel_size=(7, 7), strides=(2, 2), 
-            padding='same', use_bn=True, activation='reLU'),
+        tf.keras.layers.Conv2D(
+            filters=128, kernel_size=(7, 7), strides=(2, 2),
+            padding='same', use_bias=True, activation='relu'),
         official_nn_blocks.ResidualBlock(
             filters=256, use_projection=True,
             strides=2)
@@ -49,23 +49,23 @@ class CenterNetBackbone(tf.keras.Model):
 
     # Create some intermediate and postlayers to generate the heatmaps (document and make cleaner later)
     inp_filters = self._filter_sizes[0]
-    
-    # cnvs 
-    self.post_hg_convs = [nn_blocks.ConvBN(
-                    filters=inp_filters, kernel_size=(3, 3), strides=(1, 1), 
-                    padding='same', use_bn=True, activation='reLU')
+
+    # cnvs
+    self.post_hg_convs = [tf.keras.layers.Conv2D(
+                    filters=inp_filters, kernel_size=(3, 3), strides=(1, 1),
+                    padding='same', use_bias=True, activation='relu')
                   for _ in range(self._n_stacks)
     ]
     #cnvs_
-    self.inter_hg_convs1 = [nn_blocks.ConvBN(
-                    filters=256, kernel_size=(1, 1), strides=(1, 1), 
-                    padding='same', use_bn=True, activation='linear')
+    self.inter_hg_convs1 = [tf.keras.layers.Conv2D(
+                    filters=256, kernel_size=(1, 1), strides=(1, 1),
+                    padding='same', use_bias=True, activation='linear')
                   for _ in range(self._n_stacks - 1)
     ]
     #inters_
-    self.inter_hg_convs2 = [nn_blocks.ConvBN(
-                    filters=inp_filters, kernel_size=(1, 1), strides=(1, 1), 
-                    padding='same', use_bn=True, activation='linear')
+    self.inter_hg_convs2 = [tf.keras.layers.Conv2D(
+                    filters=inp_filters, kernel_size=(1, 1), strides=(1, 1),
+                    padding='same', use_bias=True, activation='linear')
                   for _ in range(self._n_stacks - 1)
     ]
     # inters
