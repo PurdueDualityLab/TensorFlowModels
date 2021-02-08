@@ -11,7 +11,8 @@ class CenterNetBackbone(tf.keras.Model):
   def __init__(self,
                filter_sizes,
                rep_sizes,
-               n_stacks=2,
+               n_stacks,
+               strides,
                downsample=True,
                **kwargs):
     """
@@ -21,10 +22,11 @@ class CenterNetBackbone(tf.keras.Model):
         n_stacks: integer, number of hourglass modules in backbone
         pre_layers: tf.keras layer to process input before stacked hourglasses
     """
-    self._n_stacks = n_stacks
-    self._downsample = downsample
     self._filter_sizes = filter_sizes
     self._rep_sizes = rep_sizes
+    self._n_stacks = n_stacks
+    self._strides = strides
+    self._downsample = downsample
 
     super().__init__(**kwargs)
 
@@ -43,12 +45,12 @@ class CenterNetBackbone(tf.keras.Model):
     # Create hourglass stacks
     self.hgs = [
         nn_blocks.HourglassBlock(
-            filter_sizes=self._filter_sizes, rep_sizes=self._rep_sizes)
-        for _ in range(self._n_stacks)
+            filter_sizes=self._filter_sizes[n], rep_sizes=self._rep_sizes[n])
+        for n in range(self._n_stacks)
     ]
 
     # Create some intermediate and postlayers to generate the heatmaps (document and make cleaner later)
-    inp_filters = self._filter_sizes[0]
+    inp_filters = self._filter_sizes[0][0]
 
     # cnvs
     self.post_hg_convs = [tf.keras.layers.Conv2D(
