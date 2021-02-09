@@ -13,6 +13,12 @@ def ce_loss(y_true, y_pred, label_smoothing):
   loss = -tf.math.xlogy(y_true, y_pred + tf.keras.backend.epsilon())
   return tf.math.reduce_sum(loss, axis = -1)
 
+# def ce_loss(y_true, y_pred, label_smoothing):
+#   y_true = smooth_labels(y_true, y_pred, label_smoothing)\
+#   loss = -y_true * tf.math.log(y_pred + tf.keras.backend.epsilon())
+#   return tf.math.reduce_sum(loss, axis = -1)
+
+
 class CrossEntropyLoss(tf.keras.losses.Loss):
   """Wraps a loss function in the `Loss` class."""
 

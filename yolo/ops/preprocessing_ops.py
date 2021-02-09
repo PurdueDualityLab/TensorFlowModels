@@ -4,7 +4,18 @@ import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from official.vision.beta.ops import preprocess_ops
 
+def rand_uniform_strong(minval, maxval, dtype = tf.float32):
+  if minval > maxval:
+    minval, maxval = maxval, minval
+  return tf.random.uniform([], minval = minval, maxval = maxval, dtype = dtype)
 
+def rand_scale(val, dtype = tf.float32):
+  scale = rand_uniform_strong(1, val, dtype = dtype)
+  do_ret = tf.random.uniform([], minval = 0, maxval = 1, dtype=tf.int32)
+  if (do_ret == 1):
+    return scale 
+  return 1.0/scale
+  
 def shift_zeros(data, mask, axis=-2):
   zeros = tf.zeros_like(data)
 
