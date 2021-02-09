@@ -17,9 +17,9 @@ config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4',
                         #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
                         #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
                         _boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
-                        filter = exp_cfg.YoloLossLayer(use_nms=False)),
-                        load_darknet_weights = False,
-                        darknet_load_decoder = False) 
+                        filter = exp_cfg.YoloLossLayer(use_nms=False)))
+                        # load_darknet_weights = False,
+                        # darknet_load_decoder = False) 
 
 # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v3', 
 #                     min_level=3, 

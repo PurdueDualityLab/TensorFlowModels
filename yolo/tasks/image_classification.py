@@ -22,6 +22,8 @@ from yolo.dataloaders.decoders import classification_tfds_decoder as cli
 from yolo.dataloaders import classification_input
 from yolo.dataloaders import classification_vision
 from official.vision.beta.tasks import image_classification
+from yolo.losses import cross_entropy_loss
+from official.modeling import tf_utils
 
 
 @task_factory.register_task_cls(exp_cfg.ImageClassificationTask)
@@ -109,6 +111,35 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
                   ckpt_dir_or_file)
       # model.backbone.trainable = False
       # model.head.trainable = False
+
+  def build_losses(self, labels, model_outputs, aux_losses=None):
+    """Sparse categorical cross entropy loss.
+
+    Args:
+      labels: labels.
+      model_outputs: Output logits of the classifier.
+      aux_losses: auxiliarly loss tensors, i.e. `losses` in keras.Model.
+
+    Returns:
+      The total loss tensor.
+    """
+    losses_config = self.task_config.losses
+    if losses_config.one_hot:
+      # total_loss = tf.keras.losses.categorical_crossentropy(
+      #     labels,
+      #     model_outputs,
+      #     from_logits=False,
+      #     label_smoothing=losses_config.label_smoothing)
+      total_loss = cross_entropy_loss.ce_loss(labels, model_outputs, losses_config.label_smoothing)
+      #total_loss = tf.math.reduce_sum(total_loss)
+    else:
+      total_loss = tf.keras.losses.sparse_categorical_crossentropy(
+          labels, model_outputs, from_logits=False)
+    total_loss = tf_utils.safe_mean(total_loss)
+    if aux_losses:
+      total_loss += tf.add_n(aux_losses)
+
+    return total_loss
 
   def build_inputs(self, params, input_context=None):
     """Builds classification input."""

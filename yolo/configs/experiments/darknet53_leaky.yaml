@@ -13,6 +13,8 @@ task:
         model_id: 'cspdarknet53'
     norm_activation:
       activation: 'leaky'  
+    darknet_weights_file: 'cache://csdarknet53.weights'
+    darknet_weights_cfg: 'cache://csdarknet53.cfg'
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
@@ -53,8 +55,8 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.1
-        end_learning_rate: 0.001
+        initial_learning_rate: 0.001
+        end_learning_rate: 0.00001
         power: 4.0
         decay_steps: 1190000
     warmup:
