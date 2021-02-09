@@ -89,7 +89,7 @@ class Parser(parser.Parser):
     if self._augmenter is not None:
       image = self._augmenter.distort(image)
 
-    image = tf.image.random_flip_left_right(image, seed=self._seed)
+    image = tf.image.random_flip_left_right(image)
     image = tf.cast(image, tf.float32)/255
     image = tf.image.resize(image, (self._output_size[0], self._output_size[1]))
 

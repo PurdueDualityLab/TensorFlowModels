@@ -92,7 +92,7 @@ class Parser(parser.Parser):
       delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
-      delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= 0.5,maxval=1.1, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_hue:
       delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
@@ -110,6 +110,10 @@ class Parser(parser.Parser):
       nw = tf.cast(w, dtype=tf.int32)
       image = tf.image.resize(image, size=(nw, nh))
     image = tf.image.random_flip_left_right(image, seed=self._seed)
+
+    do_rand = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
+    if do_rand > 0.7:
+      image = 1.0 - image
 
     image = tf.image.resize_with_pad(
         image,
