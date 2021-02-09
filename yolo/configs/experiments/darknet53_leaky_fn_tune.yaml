@@ -25,7 +25,7 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 128
+    global_batch_size: 64
     dtype: 'float16'
     shuffle_buffer_size: 10000
     parser:
@@ -36,7 +36,7 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: false
-    global_batch_size: 128
+    global_batch_size: 64
     dtype: 'float16'
     drop_remainder: false
     shuffle_buffer_size: 10000
@@ -57,8 +57,8 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.00001
-        end_learning_rate: 0.00001
+        initial_learning_rate: 0.000005
+        end_learning_rate: 0.000005
         power: 4.0
         decay_steps: 1199000
     warmup:
