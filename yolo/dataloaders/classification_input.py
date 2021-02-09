@@ -111,6 +111,7 @@ class Parser(parser.Parser):
       image = tf.image.resize(image, size=(nw, nh))
     image = tf.image.random_flip_left_right(image, seed=self._seed)
 
+    # i added this to push to see if this helps it is not in the paper
     do_rand = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
     if do_rand > 0.7:
       image = 1.0 - image
