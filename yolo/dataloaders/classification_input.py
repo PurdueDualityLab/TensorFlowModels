@@ -6,7 +6,7 @@ import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
 from official.vision.beta.dataloaders import parser
-
+from official.vision.beta.ops import preprocess_ops
 
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -89,7 +89,7 @@ class Parser(parser.Parser):
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
 
     if self._aug_rand_brightness:
-      delta = tf.random.uniform([], minval= -0.3,maxval=0.3, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
       delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
@@ -110,7 +110,7 @@ class Parser(parser.Parser):
       nw = tf.cast(w, dtype=tf.int32)
       image = tf.image.resize(image, size=(nw, nh))
     image = tf.image.random_flip_left_right(image, seed=self._seed)
-    
+
     image = tf.image.resize_with_pad(
         image,
         target_width=self._output_size[0],

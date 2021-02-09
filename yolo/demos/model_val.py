@@ -36,10 +36,10 @@ if __name__ == "__main__":
     # pass in a all white image
     white_image = tf.fill([1, 608, 608, 3], 1.0)
     # layers = list(model.backbone.layers)
-    output = model.backbone(white_image)
+    output = model(white_image)
 
     # # raw output log
-    raw_tensor = output['5'] #["raw_output"]['5']
+    raw_tensor = output["raw_output"]['5']
 
     with open("yolov4_raw_output.txt", "w") as fh:
       print(raw_tensor.shape)

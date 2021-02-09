@@ -144,26 +144,24 @@ class Parser(parser.Parser):
     height = shape[1]
 
     do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
-    if do_blur > 0.9:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 9, sigma = 25)
-    elif do_blur > 0.7:
-      image = tfa.image.gaussian_filter2d(image, filter_shape = 7, sigma = 15)
+    if do_blur > 0.7:
+      image = tfa.image.gaussian_filter2d(image, filter_shape = 7, sigma = 9)
     elif do_blur > 0.6:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 6)
     elif do_blur > 0.4:
       image = tfa.image.gaussian_filter2d(image, filter_shape = 5, sigma = 3)
 
     if self._aug_rand_brightness:
-      delta = tf.random.uniform([], minval= -0.3,maxval=0.3, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.15, maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_brightness(image, delta)
     if self._aug_rand_saturation:
-      delta = tf.random.uniform([], minval= 0.1,maxval=1.5, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= 0.1, maxval=1.5, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_hue:
-      delta = tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
+      delta = tf.random.uniform([], minval= -0.15, maxval=0.15, seed=self._seed, dtype=tf.float32)
       image = tf.image.adjust_hue(image, delta)  # Hue
     
-    stddev = tf.random.uniform([], minval= 0, maxval=40/255, seed=self._seed, dtype=tf.float32)
+    stddev = tf.random.uniform([], minval= 0, maxval= 40/255, seed=self._seed, dtype=tf.float32)
     noise = tf.random.normal(shape = tf.shape(image), mean = 0.0, stddev = stddev, seed=self._seed)
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
