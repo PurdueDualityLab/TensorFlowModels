@@ -57,7 +57,7 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.000005
+        initial_learning_rate: 0.00005
         end_learning_rate: 0.000005
         power: 4.0
         decay_steps: 1199000
