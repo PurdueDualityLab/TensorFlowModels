@@ -47,7 +47,7 @@ python3.8 -m yolo.train --mode=train_and_eval --experiment=darknet_classificatio
 '''
 
 '''
-python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
+python3.8 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53_cs --config_file=yolo/configs/experiments/dilated_darknet53.yaml
 '''
 
 '''

@@ -102,11 +102,11 @@ class ClassificationModel(tf.keras.Model):
 
     if add_head_batch_norm:
       x = self._norm(axis=axis, momentum=norm_momentum, epsilon=norm_epsilon)(x)
-    # x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    # x = tf.expand_dims(x, axis = 1)
-    # x = tf.expand_dims(x, axis = 1)
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    x = tf.expand_dims(x, axis = 1)
+    x = tf.expand_dims(x, axis = 1)
     #x = tf.keras.layers.Dropout(dropout_rate)(x)
-    x = tf.keras.layers.AveragePooling2D(pool_size=8)(x)
+    #x = tf.keras.layers.AveragePooling2D(pool_size=8)(x)
     x = self._head(x)
     x = tf.keras.activations.softmax(x, axis = -1)
     x = tf.squeeze(x, axis = 1)
