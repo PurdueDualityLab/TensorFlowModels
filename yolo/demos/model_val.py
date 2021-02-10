@@ -30,9 +30,6 @@ if __name__ == "__main__":
     task.initialize(model)
 
     
-
-
-
     # pass in a all white image
     white_image = tf.fill([1, 608, 608, 3], 1.0)
     # layers = list(model.backbone.layers)

@@ -99,7 +99,7 @@ class ConvBN(tf.keras.layers.Layer):
     dilation_rate = self._dilation_rate if isinstance(
         self._dilation_rate, int) else self._dilation_rate[0]
     if self._padding == 'same' and kernel_size != 1:
-      padding = dilation_rate * (kernel_size - 1)
+      padding = (dilation_rate * (kernel_size - 1))
       left_shift = padding // 2
       self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
                                                      [left_shift, left_shift]])
