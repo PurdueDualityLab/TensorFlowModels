@@ -11,7 +11,7 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v4
+        version: v3
         type: regular
       darknet_weights_file: 'cache://csdarknet53.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
