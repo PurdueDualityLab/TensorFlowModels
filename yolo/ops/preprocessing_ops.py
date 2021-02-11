@@ -516,14 +516,14 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
       box known
     """
   with tf.name_scope('get_anchor'):
-    width = tf.cast(width, dtype=tf.float32)
-    height = tf.cast(height, dtype=tf.float32)
+    width = tf.cast(width, dtype=y_true.dtype)
+    height = tf.cast(height, dtype=y_true.dtype)
     # split the boxes into center and width height
     anchor_xy = y_true[..., 0:2]
     true_wh = y_true[..., 2:4]
 
     # scale thhe boxes
-    anchors = tf.convert_to_tensor(anchors, dtype=true_wh.dtype)
+    anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
     anchors_x = anchors[..., 0] / width
     anchors_y = anchors[..., 1] / height
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
@@ -587,14 +587,14 @@ def get_best_anchor_batch(y_true, anchors, width=1, height=1):
       box known
     """
   with tf.name_scope('get_anchor'):
-    width = tf.cast(width, dtype=tf.float32)
-    height = tf.cast(height, dtype=tf.float32)
+    width = tf.cast(width, dtype=y_true.dtype)
+    height = tf.cast(height, dtype=y_true.dtype)
     # split the boxes into center and width height
     anchor_xy = y_true[..., 0:2]
     true_wh = y_true[..., 2:4]
 
     # scale thhe boxes
-    anchors = tf.convert_to_tensor(anchors, dtype=true_wh.dtype)
+    anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
     anchors_x = anchors[..., 0] / width
     anchors_y = anchors[..., 1] / height
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
