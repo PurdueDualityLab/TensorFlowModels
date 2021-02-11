@@ -85,11 +85,16 @@ def main(_):
   if params.runtime.mixed_precision_dtype:
     performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
                                            params.runtime.loss_scale)
+  if params.runtime.worker_hosts != '' and params.runtime.worker_hosts is not None:                                       
+    num_workers = distribute_utils.configure_cluster(worker_hosts=params.runtime.worker_hosts, task_index=params.runtime.task_index)
+    print(num_workers)
   distribution_strategy = distribute_utils.get_distribution_strategy(
       distribution_strategy=params.runtime.distribution_strategy,
       all_reduce_alg=params.runtime.all_reduce_alg,
       num_gpus=params.runtime.num_gpus,
       tpu_address=params.runtime.tpu)
+  
+  
   with distribution_strategy.scope():
     task = task_factory.get_task(params.task, logging_dir=model_dir)
 
