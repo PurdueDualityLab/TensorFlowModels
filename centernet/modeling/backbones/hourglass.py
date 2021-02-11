@@ -35,19 +35,29 @@ class Hourglass(tf.keras.Model):
     input = tf.keras.layers.Input(shape=input_specs.shape[1:])
     x_inter = input
 
+    # Create some intermediate and postlayers to generate the heatmaps
+    # (document and make cleaner later)
+    inp_filters = channel_dims_per_stage[0]
+
     # Create prelayers if downsampling input
     if initial_downsample:
-      x_inter = tf.keras.Sequential([
-          tf.keras.layers.Conv2D(
-              filters=input_channel_dims,
-              kernel_size=(7, 7),
-              strides=(2, 2),
-              padding='same',
-              use_bias=True,
-              activation='relu'),
-          official_nn_blocks.ResidualBlock(
-              filters=input_channel_dims * 2, use_projection=True, strides=2)
-      ], name='Prelayers')(x_inter)
+      prelayer_kernel_size = 7
+      prelayer_strides = 2
+    else:
+      prelayer_kernel_size = 3
+      prelayer_strides = 1
+
+    x_inter = tf.keras.layers.Conv2D(
+        filters=input_channel_dims,
+        kernel_size=prelayer_kernel_size,
+        strides=prelayer_strides,
+        padding='same', # TODO: Google used valid
+        use_bias=True,
+        activation='relu'
+    )(x_inter)
+    x_inter = official_nn_blocks.ResidualBlock(
+        filters=inp_filters, use_projection=True, strides=prelayer_strides
+    )(x_inter)
 
     all_heatmaps = []
 
@@ -57,10 +67,6 @@ class Hourglass(tf.keras.Model):
           channel_dims_per_stage=channel_dims_per_stage,
           blocks_per_stage=blocks_per_stage
       )(x_inter)
-
-      # Create some intermediate and postlayers to generate the heatmaps
-      # (document and make cleaner later)
-      inp_filters = channel_dims_per_stage[0]
 
       # cnvs
       x_hg = tf.keras.layers.Conv2D(
@@ -78,7 +84,7 @@ class Hourglass(tf.keras.Model):
       if i < num_hourglasses - 1:
         # cnvs_
         inter_hg_conv1 = tf.keras.layers.Conv2D(
-            filters=input_channel_dims * 2,
+            filters=inp_filters, # TODO: input_channel_dims * 2 was here before
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
@@ -101,7 +107,7 @@ class Hourglass(tf.keras.Model):
 
         # inters
         x_inter = official_nn_blocks.ResidualBlock(
-            filters=inp_filters, use_projection=True, strides=2
+            filters=inp_filters, use_projection=True, strides=1 # TODO: strides=2 ?
         )(x_inter)
     # yapf: enable
 
