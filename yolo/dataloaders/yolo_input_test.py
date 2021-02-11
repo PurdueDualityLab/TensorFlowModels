@@ -92,8 +92,8 @@ def test_pipeline():
       break
 
 if __name__ == '__main__':
-  #test_pipeline()
-  test_classification_pipeline()
+  test_pipeline()
+  # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
 

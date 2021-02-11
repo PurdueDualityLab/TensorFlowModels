@@ -21,6 +21,8 @@ task:
     filter:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
+      iou_thresh: 0.0
+      class_thresh: 0.0
       loss_type: ciou
       max_boxes: 200
       use_nms: false
@@ -44,6 +46,7 @@ task:
       aug_rand_brightness: true
       aug_rand_zoom: true
       aug_rand_hue: true
+      letter_box: false
       seed: 10
       use_tie_breaker: true
     shuffle_buffer_size: 10000
@@ -51,7 +54,7 @@ task:
     global_batch_size: 8
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
     dtype: float16
     input_path: ''

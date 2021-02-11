@@ -22,8 +22,9 @@ class Parser(parser.Parser):
                image_h=416,
                num_classes=80,
                fixed_size=False,
-               jitter_im=0.1,
+               jitter_im=0.2,
                jitter_boxes=0.005,
+               letter_box = False, 
                use_tie_breaker=True,
                min_level=3,
                max_level=5,
@@ -78,7 +79,7 @@ class Parser(parser.Parser):
 
     self._max_process_size = max_process_size
     self._min_process_size = min_process_size
-    self._fixed_size = fixed_size
+    self._fixed_size = False #fixed_size
 
     self._anchors = anchors
     self._masks = {
@@ -91,6 +92,7 @@ class Parser(parser.Parser):
     self._pct_rand = pct_rand
     self._max_num_instances = max_num_instances
     self._random_flip = random_flip
+    self._letter_box = letter_box
 
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
@@ -134,14 +136,12 @@ class Parser(parser.Parser):
           labels: a dict of Tensors that contains labels.
         """
 
-    shape = tf.shape(data['image'])
+    
     image = data['image']/255 
     
     #/ 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
-    width = shape[0]
-    height = shape[1]
 
     do_blur = tf.random.uniform([], minval= 0,maxval=1, seed=self._seed, dtype=tf.float32)
     if do_blur > 0.9:
@@ -173,19 +173,30 @@ class Parser(parser.Parser):
     image += noise 
     image = tf.clip_by_value(image, 0.0, 1.0)
     
-    image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
-        image,
-        boxes,
-        width=width,
-        height=height,
-        target_dim=self._max_process_size)
 
+    
     image_shape = tf.shape(image)[:2]
 
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
+  
+    if self._jitter_boxes != 0.0:
+      boxes = box_ops.denormalize_boxes(boxes, image_shape)
+      boxes = box_ops.jitter_boxes(boxes, 0.025)
+      boxes = box_ops.normalize_boxes(boxes, image_shape)
+
+    if self._jitter_im != 0.0:
+      image, boxes, classes = preprocessing_ops.random_jitter(image, boxes, classes, self._jitter_im, seed=self._seed)
+      # image, boxes, classes = preprocessing_ops.random_translate(image, boxes, classes, 0.2, seed=self._seed)
+      
+    if self._aug_rand_zoom:
+      image, boxes, classes = preprocessing_ops.random_zoom_crop(image,boxes,classes, self._jitter_im)
+
+    shape = tf.shape(image)
+    width = shape[1]
+    height = shape[0]
     randscale = self._image_w // self._net_down_scale
 
     if self._fixed_size:
@@ -198,29 +209,33 @@ class Parser(parser.Parser):
                                       maxval=21,
                                       seed=self._seed,
                                       dtype=tf.int32)
-
-    if self._jitter_boxes != 0.0:
-      boxes = box_ops.denormalize_boxes(boxes, image_shape)
-      boxes = box_ops.jitter_boxes(boxes, 0.025)
-      boxes = box_ops.normalize_boxes(boxes, image_shape)
-
-    if self._aug_rand_zoom:
-      image, boxes, classes = preprocessing_ops.resize_crop_filter(
+    
+    if self._letter_box:
+      image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
           image,
           boxes,
-          classes, 
-          default_width=self._image_w,
-          default_height=self._image_h,
-          target_width=randscale * self._net_down_scale,
-          target_height=randscale * self._net_down_scale, 
-          randomize = True)
+          width=width,
+          height=height,
+          target_dim=randscale * self._net_down_scale)
+      width = randscale * self._net_down_scale
+      height = randscale * self._net_down_scale
 
-    if self._jitter_im != 0.0:
-      image, boxes, classes = preprocessing_ops.random_translate(
-          image, boxes, classes, self._jitter_im, seed=self._seed)
+    shape = tf.shape(image)
+    width = shape[1]
+    height = shape[0]                   
+    image, boxes, classes = preprocessing_ops.resize_crop_filter(
+        image,
+        boxes,
+        classes, 
+        default_width=width, #randscale * self._net_down_scale,
+        default_height=height, #randscale * self._net_down_scale,
+        target_width=self._image_w,
+        target_height=self._image_h, 
+        randomize = False)
+  
+      
     
     boxes = box_utils.yxyx_to_xcycwh(boxes)
-    image = tf.image.resize(image, (self._image_w, self._image_h), preserve_aspect_ratio=False)
     image = tf.clip_by_value(image, 0.0, 1.0)
     num_dets = tf.shape(classes)[0]
 
@@ -231,11 +246,6 @@ class Parser(parser.Parser):
     boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,self._max_num_instances, 0)
     classes = preprocess_ops.clip_or_pad_to_fixed_size(classes, self._max_num_instances, -1)
     best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
-    # area = preprocess_ops.clip_or_pad_to_fixed_size(data['groundtruth_area'],
-    #                                                 self._max_num_instances, 0)
-    # is_crowd = preprocess_ops.clip_or_pad_to_fixed_size(
-    #     tf.cast(data['groundtruth_is_crowd'], tf.int32),
-    #     self._max_num_instances, 0)
 
     labels = {
         'source_id': data['source_id'],
@@ -253,8 +263,6 @@ class Parser(parser.Parser):
       labels.update({'grid_form': grid})
       labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
 
-
-
     return image, labels
 
   # broken for some reason in task, i think dictionary to coco evaluator has
@@ -271,8 +279,8 @@ class Parser(parser.Parser):
     shape = tf.shape(data['image'])
     image = data['image'] / 255
     boxes = data['groundtruth_boxes']
-    width = shape[0]
-    height = shape[1]
+    width = shape[1]
+    height = shape[0]
 
     image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
         image, boxes, width=width, height=height, target_dim=self._image_w)
@@ -316,26 +324,6 @@ class Parser(parser.Parser):
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     return image, labels
 
-  def mosaic_fn(self, image, label):
-    image, boxes, classes, num_instances = preprocessing_ops.randomized_cutmix_split(image, label['bbox'], label['classes'])
-    best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width=self._image_w, height=self._image_h)
-    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,0)
-    classes = preprocess_ops.clip_or_pad_to_fixed_size(classes, self._max_num_instances, -1)
-    best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
-
-    boxes = box_utils.yxyx_to_xcycwh(boxes)
-    label['bbox'] = boxes
-    label['classes'] = classes
-    label['best_anchors'] = best_anchors
-
-    del label["grid_form"]
-    
-    if self._fixed_size:
-      grid = self._build_grid(labels, self._image_w, batch=True, use_tie_breaker=self._use_tie_breaker)
-      labels.update({'grid_form': grid})
-      labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    return image, label
-
   def _postprocess_fn(self, image, label):
     randscale = self._image_w // self._net_down_scale
     if not self._fixed_size:
@@ -345,7 +333,7 @@ class Parser(parser.Parser):
       if do_scale:
         randscale = tf.random.uniform([],
                                       minval=10,
-                                      maxval=20,
+                                      maxval=21,
                                       seed=self._seed,
                                       dtype=tf.int32)
     width = randscale * self._net_down_scale
@@ -358,3 +346,24 @@ class Parser(parser.Parser):
 
   def postprocess_fn(self):
     return self._postprocess_fn if not self._fixed_size else None
+
+  # def parse_fn(self, is_training):
+  #   """Returns a parse fn that reads and parses raw tensors from the decoder.
+
+  #   Args:
+  #     is_training: a `bool` to indicate whether it is in training mode.
+
+  #   Returns:
+  #     parse: a `callable` that takes the serialized examle and generate the
+  #       images, labels tuple where labels is a dict of Tensors that contains
+  #       labels.
+  #   """
+  #   def parse(decoded_tensors):
+  #     """Parses the serialized example data."""
+  #     if is_training:
+  #       return self._parse_train_data(decoded_tensors)
+  #     else:
+  #       return self._parse_train_data(decoded_tensors)
+
+  #   return parse
+

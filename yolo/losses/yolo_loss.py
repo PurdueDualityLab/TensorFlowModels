@@ -5,6 +5,9 @@ from tensorflow.keras import backend as K
 from yolo.ops import box_ops
 from yolo.ops.loss_utils import GridGenerator
 
+def smooth_labels(y_true, num_classes, label_smoothing):
+  num_classes = tf.cast(num_classes, label_smoothing.dtype)
+  return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
 
 class Yolo_Loss(object):
 
@@ -70,6 +73,7 @@ class Yolo_Loss(object):
     self._obj_normalizer = obj_normalizer
     self._scale_x_y = scale_x_y
     self._max_value = max_val
+    self._label_smoothing = tf.cast(0.1, tf.float32)
 
     # used in detection filtering
     self._beta_nms = beta_nms
@@ -159,6 +163,7 @@ class Yolo_Loss(object):
     true_class = tf.squeeze(true_class, axis = -1)
     true_conf = tf.squeeze(true_conf, axis = -1)
     true_class = tf.one_hot(tf.cast(true_class, tf.int32), depth = self._classes, axis = -1, dtype=y_pred.dtype)
+    true_class = smooth_labels(true_class, self._classes, self._label_smoothing)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == "giou":

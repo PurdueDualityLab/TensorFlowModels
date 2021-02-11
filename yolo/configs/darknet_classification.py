@@ -35,7 +35,7 @@ class DataConfig(cfg.DataConfig):
   dtype: str = 'float16'
   decoder = None
   parser: Parser = Parser()
-  shuffle_buffer_size: int = 100
+  shuffle_buffer_size: int = 10000
   tfds_download: bool = True
 
 
@@ -72,7 +72,6 @@ class ImageClassificationTask(cfg.TaskConfig):
   losses: Losses = Losses()
   gradient_clip_norm: float = 0.0
   logging_dir: str = None
-
   load_darknet_weights: bool = True
 
 
