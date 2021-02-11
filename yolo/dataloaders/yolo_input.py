@@ -380,9 +380,11 @@ class Parser(parser.Parser):
     label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
     return image, label
 
-  def postprocess_fn(self):
-    return self._postprocess_fn if not self._fixed_size or self._cutmix else None
-
+  def postprocess_fn(self, is_training):
+    if is_training:
+      return self._postprocess_fn if not self._fixed_size or self._cutmix else None
+    else:
+      return None
   # def parse_fn(self, is_training):
   #   """Returns a parse fn that reads and parses raw tensors from the decoder.
 

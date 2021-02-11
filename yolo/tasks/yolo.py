@@ -109,17 +109,13 @@ class YoloTask(base_task.Task):
         anchors=anchors,
         dtype = params.dtype)
 
-    if params.is_training:
-      post_process_fn = parser.postprocess_fn()
-    else:
-      post_process_fn = None
 
     reader = input_reader.InputReader(
         params,
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
         parser_fn=parser.parse_fn(params.is_training),
-        postprocess_fn=post_process_fn)
+        postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
     return dataset
 

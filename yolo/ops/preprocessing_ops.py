@@ -548,7 +548,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
         tf.expand_dims(y_true[..., 0:4], axis=-1),
         [1, 1, tf.shape(anchors)[0]])
     truth_comp = tf.transpose(truth_comp, perm=[2, 0, 1])
-    tf.print(tf.shape(anchors), tf.shape(truth_comp))
 
     # compute intersection over union of the boxes, and take the argmax of 
     # comuted iou for each box. thus each box is associated with the 
