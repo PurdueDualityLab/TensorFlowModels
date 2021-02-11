@@ -34,10 +34,9 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           [[1.0], [1.0]],
       ])
       loss = losses.PenaltyReducedLogisticFocalLoss(alpha=2.0, beta=0.5)
-      computed_value = loss._compute_loss(prediction, target,
-                                          weights)
+      computed_value = loss(prediction, target, weights)
       return computed_value
-    computed_value = self.execute(graph_fn, [self._prediction, self._target])
+    computed_value = graph_fn(self._prediction, self._target)
     expected_value = np.array([
         # First batch
         [[1 / 4 * LOG_2,

@@ -44,11 +44,12 @@ class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
         representing the value of the loss function.
     """
 
+    target_tensor = y_true
+
     is_present_tensor = tf.math.equal(target_tensor, 1.0)
     prediction_tensor = tf.clip_by_value(tf.sigmoid(y_pred),
                                          self._sigmoid_clip_value,
                                          1 - self._sigmoid_clip_value)
-    target_tensor = y_true
 
     positive_loss = (tf.math.pow((1 - prediction_tensor), self._alpha)*
                      tf.math.log(prediction_tensor))
