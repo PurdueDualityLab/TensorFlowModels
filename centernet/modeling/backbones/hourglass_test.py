@@ -9,9 +9,11 @@ import dataclasses
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
 
+
 @dataclasses.dataclass
 class CenterNet(hyperparams.Config):
-  backbone : backbones.Backbone = backbones.Backbone(type='hourglass')
+  backbone: backbones.Backbone = backbones.Backbone(type='hourglass')
+
 
 class HourglassTest(tf.test.TestCase, parameterized.TestCase):
 
@@ -25,7 +27,8 @@ class HourglassTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(outputs[0].shape, (2, 16, 16, 6))
     self.assertEqual(outputs[1].shape, (2, 16, 16, 6))
 
-    backbone = hourglass.build_hourglass(tf.keras.layers.InputSpec(shape=[None, 512, 512, 3]), CenterNet())
+    backbone = hourglass.build_hourglass(
+        tf.keras.layers.InputSpec(shape=[None, 512, 512, 3]), CenterNet())
     input = np.zeros((2, 512, 512, 3), dtype=np.float32)
     outputs = backbone(input)
     self.assertEqual(outputs[0].shape, (2, 128, 128, 256))

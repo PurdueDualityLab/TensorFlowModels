@@ -89,3 +89,12 @@ class HourglassBlock(tf.keras.layers.Layer):
       inner_output = self.inner_hg(x_pooled)
       hg_output = self.end_block(inner_output)
       return self.upsample_layer(hg_output) + x_side
+
+  def get_config(self):
+    layer_config = {
+        'channel_dims_per_stage': self._channel_dims_per_stage,
+        'blocks_per_stage': self._blocks_per_stage,
+        'strides': self._strides
+    }
+    layer_config.update(super().get_config())
+    return layer_config

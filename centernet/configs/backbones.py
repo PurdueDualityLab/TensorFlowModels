@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import Tuple
+from typing import List
 
 # Import libraries
 import dataclasses
@@ -26,7 +26,9 @@ from official.modeling import hyperparams
 class Hourglass(hyperparams.Config):
   """Hourglass config."""
   input_channel_dims: int = 128
-  channel_dims_per_stage: Tuple[int] = (256, 256, 384, 384, 384, 512)
-  blocks_per_stage: Tuple[int] = (2, 2, 2, 2, 2, 4)
+  channel_dims_per_stage: List[int] = dataclasses.field(
+      default_factory=lambda: [256, 256, 384, 384, 384, 512])
+  blocks_per_stage: List[int] = dataclasses.field(
+      default_factory=lambda: [2, 2, 2, 2, 2, 4])
   num_hourglasses: int = 2
   initial_downsample: bool = True

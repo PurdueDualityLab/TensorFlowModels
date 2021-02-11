@@ -51,7 +51,7 @@ class Hourglass(tf.keras.Model):
         filters=input_channel_dims,
         kernel_size=prelayer_kernel_size,
         strides=prelayer_strides,
-        padding='same', # TODO: Google used valid
+        padding='same',
         use_bias=True,
         activation='relu'
     )(x_inter)
@@ -84,7 +84,7 @@ class Hourglass(tf.keras.Model):
       if i < num_hourglasses - 1:
         # cnvs_
         inter_hg_conv1 = tf.keras.layers.Conv2D(
-            filters=inp_filters, # TODO: input_channel_dims * 2 was here before
+            filters=inp_filters,
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
@@ -107,11 +107,28 @@ class Hourglass(tf.keras.Model):
 
         # inters
         x_inter = official_nn_blocks.ResidualBlock(
-            filters=inp_filters, use_projection=True, strides=1 # TODO: strides=2 ?
+            filters=inp_filters, use_projection=True, strides=1
         )(x_inter)
     # yapf: enable
 
     super().__init__(inputs=input, outputs=all_heatmaps, **kwargs)
+
+    self._input_channel_dims = input_channel_dims
+    self._channel_dims_per_stage = channel_dims_per_stage
+    self._blocks_per_stage = blocks_per_stage
+    self._num_hourglasses = num_hourglasses
+    self._initial_downsample = initial_downsample
+
+  def get_config(self):
+    layer_config = {
+        'input_channel_dims': self._input_channel_dims,
+        'channel_dims_per_stage': self._channel_dims_per_stage,
+        'blocks_per_stage': self._blocks_per_stage,
+        'num_hourglasses': self._num_hourglasses,
+        'initial_downsample': self._initial_downsample
+    }
+    layer_config.update(super().get_config())
+    return layer_config
 
 
 # @factory.register_backbone_builder('hourglass')
