@@ -38,7 +38,7 @@ task:
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 4 # 64 batch size 
-    tfds_data_dir: ''
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -57,7 +57,7 @@ task:
       use_tie_breaker: true
   validation_data:
     global_batch_size: 4
-    tfds_data_dir: ''
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
@@ -77,7 +77,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 10010000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 80080000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -87,13 +87,13 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [800000, 900000] #[400000, 450000]
+        boundaries: [6400000, 7200000] #[400000, 450000]
         name: PiecewiseConstantDecay
-        values:  [0.0001625, 0.00001625, 0.000001625] #[0.0013, 0.00013, 0.000013]
+        values:  [0.0000625, 0.00000625, 0.000000625] #[0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.949
+        momentum: 0.9
         name: SGD
     warmup:
       type: 'linear'
