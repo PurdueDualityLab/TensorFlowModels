@@ -27,43 +27,50 @@ from yolo.modeling.heads import yolo_head as heads
 
 
 class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
+
   def test_network_creation(self):
     """Test creation of ResNet family models."""
     tf.keras.backend.set_image_data_format('channels_last')
-    input_shape = {'3': [1, 52, 52, 256], '4': [1, 26, 26, 512], '5': [1, 13, 13, 1024]}
+    input_shape = {
+        '3': [1, 52, 52, 256],
+        '4': [1, 26, 26, 512],
+        '5': [1, 13, 13, 1024]
+    }
     classes = 100
     bps = 3
     head = heads.YoloHead(classes=classes, boxes_per_level=bps)
 
     inputs = {}
     for key in input_shape.keys():
-        inputs[key] = tf.ones(input_shape[key], dtype = tf.float32)
-    
+      inputs[key] = tf.ones(input_shape[key], dtype=tf.float32)
+
     endpoints = head(inputs)
     # print(endpoints)
 
     for key in endpoints.keys():
-        ishape = input_shape[key]
-        ishape[-1] = (classes + 5) * bps
-        self.assertAllEqual(endpoints[key].shape.as_list(), ishape)
-
+      ishape = input_shape[key]
+      ishape[-1] = (classes + 5) * bps
+      self.assertAllEqual(endpoints[key].shape.as_list(), ishape)
 
   def test_serialize_deserialize(self):
     # Create a network object that sets all of its config options.
     tf.keras.backend.set_image_data_format('channels_last')
-    input_shape = {'3': [1, 52, 52, 256], '4': [1, 26, 26, 512], '5': [1, 13, 13, 1024]}
+    input_shape = {
+        '3': [1, 52, 52, 256],
+        '4': [1, 26, 26, 512],
+        '5': [1, 13, 13, 1024]
+    }
     classes = 100
     bps = 3
     head = heads.YoloHead(classes=classes, boxes_per_level=bps)
 
     inputs = {}
     for key in input_shape.keys():
-      inputs[key] = tf.ones(input_shape[key], dtype = tf.float32)
+      inputs[key] = tf.ones(input_shape[key], dtype=tf.float32)
 
     _ = head(inputs)
 
     a = head.get_config()
-
 
     b = heads.YoloHead.from_config(a)
 

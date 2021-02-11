@@ -14,6 +14,9 @@ from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
+from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.modeling.layers.detection_generator import YoloGTFilter
+
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
@@ -28,11 +31,14 @@ class YoloTask(base_task.Task):
     self._loss_dict = None
     self._num_boxes = None
     self._anchors_built = False
+    # self._get_gt_boxes_used = None #YoloGTFilter()
 
     self._masks = None
     self._path_scales = None
     self._x_y_scales = None
     self.coco_metric = None
+    self._metric_names = []
+    self._metrics = []
     return
 
   def build_model(self):
@@ -87,6 +93,8 @@ class YoloTask(base_task.Task):
         jitter_im=params.parser.jitter_im,
         jitter_boxes=params.parser.jitter_boxes,
         masks=masks,
+        letter_box=params.parser.letter_box,
+        cutmix=params.parser.cutmix,
         use_tie_breaker=params.parser.use_tie_breaker,
         min_process_size=params.parser.min_process_size,
         max_process_size=params.parser.max_process_size,
@@ -98,19 +106,15 @@ class YoloTask(base_task.Task):
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,
         aug_rand_hue=params.parser.aug_rand_hue,
-        anchors=anchors)
-
-    if params.is_training:
-      post_process_fn = parser.postprocess_fn()
-    else:
-      post_process_fn = None
+        anchors=anchors,
+        dtype=params.dtype)
 
     reader = input_reader.InputReader(
         params,
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
         parser_fn=parser.parse_fn(params.is_training),
-        postprocess_fn=post_process_fn)
+        postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
     return dataset
 
@@ -124,7 +128,8 @@ class YoloTask(base_task.Task):
     grid = labels['grid_form']
     for key in outputs.keys():
       # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
-      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key], outputs[key])
+      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+          key](grid[key], outputs[key])
       #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
       loss += _loss
       loss_box += _loss_box
@@ -136,28 +141,35 @@ class YoloTask(base_task.Task):
     metric_dict['box_loss'] = loss_box
     metric_dict['conf_loss'] = loss_conf
     metric_dict['class_loss'] = loss_class
+    metric_dict['total_loss'] = loss
 
     return loss, metric_dict
 
   def build_metrics(self, training=True):
-    #return super().build_metrics(training=training)
+    metrics = []
+    metric_names = self._metric_names
+
+    for name in metric_names:
+      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+
+    self._metrics = metrics
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
           include_mask=False,
           need_rescale_bboxes=False,
           per_category_metrics=self._task_config.per_category_metrics)
-    return []
+    return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
-      loss, metrics = self.build_losses(y_pred['raw_output'], label)
+      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
       scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -174,46 +186,65 @@ class YoloTask(base_task.Task):
                                             self.task_config.gradient_clip_norm)
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    #custom metrics
+    # custom metrics
     logs = {'loss': loss}
-    logs.update(metrics)
 
-    #tf.print("loss: ", logs["loss"], end = "\n")
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+
     tf.print(logs, end='\n')
 
     ret = '\033[F' * (len(logs.keys()) + 1)
     tf.print(ret, end='\n')
-
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
 
     # computer detivative and apply gradients
     y_pred = model(image, training=False)
-    loss, metrics = self.build_losses(y_pred['raw_output'], label)
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
 
     # #custom metrics
-    loss_metrics = {'loss': loss}
-    loss_metrics.update(metrics)
-    label['boxes'] = xcycwh_to_yxyx(label['bbox'])
+    logs = {'loss': loss}
+    # loss_metrics.update(metrics)
+    image_shape = tf.shape(image)[1:-1]
+
+    label['boxes'] = box_ops.denormalize_boxes(
+        tf.cast(label['bbox'], tf.float32), image_shape)
     del label['bbox']
 
     coco_model_outputs = {
-        'detection_boxes': y_pred['bbox'],
-        'detection_scores': y_pred['confidence'],
-        'detection_classes': y_pred['classes'],
-        'num_detections': tf.shape(y_pred['bbox'])[:-1],
-        'source_id': label['source_id'],
+        'detection_boxes':
+            box_ops.denormalize_boxes(
+                tf.cast(y_pred['bbox'], tf.float32), image_shape),
+        'detection_scores':
+            y_pred['confidence'],
+        'detection_classes':
+            y_pred['classes'],
+        'num_detections':
+            tf.shape(y_pred['bbox'])[:-1],
+        'source_id':
+            label['source_id'],
     }
 
-    loss_metrics.update({self.coco_metric.name: (label, coco_model_outputs)})
-    return loss_metrics
+    logs.update({self.coco_metric.name: (label, coco_model_outputs)})
+
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+    return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
-    #return super().aggregate_logs(state=state, step_outputs=step_outputs)
+    # return super().aggregate_logs(state=state, step_outputs=step_outputs)
+
     if not state:
+      # for metric in self._metrics:
+      #   metric.reset_states()
       self.coco_metric.reset_states()
       state = self.coco_metric
     self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
@@ -221,7 +252,7 @@ class YoloTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
-    #return super().reduce_aggregated_logsI(aggregated_logs)
+    # return super().reduce_aggregated_logsI(aggregated_logs)
     return self.coco_metric.result()
 
   @property
@@ -230,7 +261,7 @@ class YoloTask(base_task.Task):
 
   def _get_boxes(self, gen_boxes=True):
     # gen_boxes = params.is_training
-    if gen_boxes and self.task_config.model.boxes == None and not self._anchors_built:
+    if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
@@ -250,7 +281,7 @@ class YoloTask(base_task.Task):
     return self.task_config.model.boxes
 
   def _get_masks(self,
-                 xy_exponential=False,
+                 xy_exponential=True,
                  exp_base=2,
                  xy_scale_base='default_value'):
     start = 0
@@ -267,7 +298,7 @@ class YoloTask(base_task.Task):
 
     params = self.task_config.model
 
-    if self._masks == None or self._path_scales == None or self._x_y_scales == None:
+    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
       for i in range(params.min_level, params.max_level + 1):
         boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
         path_scales[str(i)] = 2**i
@@ -280,6 +311,18 @@ class YoloTask(base_task.Task):
       self._masks = boxes
       self._path_scales = path_scales
       self._x_y_scales = scale_x_y
+      # self._get_gt_boxes_used = YoloGTFilter(self._masks)
+
+    metric_names = []
+    for key in self._masks.keys():
+      metric_names.append(f"recall50_{key}")
+      metric_names.append(f"avg_iou_{key}")
+
+    metric_names.append('box_loss')
+    metric_names.append('conf_loss')
+    metric_names.append('class_loss')
+    metric_names.append('total_loss')
+    self._metric_names = metric_names
 
     return self._masks, self._path_scales, self._x_y_scales
 
@@ -325,16 +368,16 @@ class YoloTask(base_task.Task):
         neck = None
 
       load_weights_backbone(model.backbone, encoder)
-      model.backbone.trainable = False
+      #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck != None:
+        if neck is not None:
           load_weights_neck(model.decoder.neck, neck)
-          model.decoder.neck.trainable = False
+          #model.decoder.neck.trainable = False
         cfgheads = load_head(model.decoder.head, decoder)
-        model.decoder.head.trainable = False
+        #model.decoder.head.trainable = False
         load_weights_prediction_layers(cfgheads, model.head)
-        model.head.trainable = False
+        #model.head.trainable = False
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:

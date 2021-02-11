@@ -6,6 +6,11 @@ from yolo.ops import box_ops
 from yolo.ops.loss_utils import GridGenerator
 
 
+def smooth_labels(y_true, num_classes, label_smoothing):
+  num_classes = tf.cast(num_classes, label_smoothing.dtype)
+  return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
+
+
 class Yolo_Loss(object):
 
   def __init__(self,
@@ -19,6 +24,7 @@ class Yolo_Loss(object):
                loss_type="ciou",
                iou_normalizer=1.0,
                cls_normalizer=1.0,
+               obj_normalizer=1.0,
                scale_x_y=1.0,
                nms_kind="greedynms",
                beta_nms=0.6,
@@ -66,8 +72,10 @@ class Yolo_Loss(object):
     self._loss_type = tf.cast(loss_type, tf.string)
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
+    self._obj_normalizer = obj_normalizer
     self._scale_x_y = scale_x_y
     self._max_value = max_val
+    self._label_smoothing = tf.cast(0.1, tf.float32)
 
     # used in detection filtering
     self._beta_nms = beta_nms
@@ -153,9 +161,15 @@ class Yolo_Loss(object):
     self.print_error(pred_box)
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
-    true_box = y_true[..., 0:4]
-    true_conf = y_true[..., 4]
-    true_class = y_true[..., 5:]
+    true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
+    true_class = tf.squeeze(true_class, axis=-1)
+    true_conf = tf.squeeze(true_conf, axis=-1)
+    true_class = tf.one_hot(
+        tf.cast(true_class, tf.int32),
+        depth=self._classes,
+        axis=-1,
+        dtype=y_pred.dtype)
+    true_class = smooth_labels(true_class, self._classes, self._label_smoothing)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == "giou":
@@ -193,7 +207,8 @@ class Yolo_Loss(object):
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf)
-    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce
+    conf_loss = (true_conf +
+                 (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.reduce_mean(

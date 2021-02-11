@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
+
 @tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
