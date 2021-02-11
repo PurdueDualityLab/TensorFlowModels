@@ -212,7 +212,6 @@ class YoloBase(hyperparams.OneOfConfig):
   decoder: YoloDecoder = YoloDecoder(version='v3', type='regular')
   darknet_weights_file: str = 'yolov3.weights'
   darknet_weights_cfg: str = 'yolov3.cfg'
-  activation: str = 'mish'
 
 
 @dataclasses.dataclass
@@ -245,8 +244,7 @@ class Yolo(ModelConfig):
                   darknet=backbones.DarkNet(model_id='darknet53')),
               decoder=YoloDecoder(version='v3', type='regular'),
               darknet_weights_file='cache://yolov3.weights',
-              darknet_weights_cfg='cache://yolov3.cfg',
-              activation='leaky'),
+              darknet_weights_cfg='cache://yolov3.cfg'),
       'v3spp':
           YoloBase(
               backbone=backbones.Backbone(
@@ -254,8 +252,7 @@ class Yolo(ModelConfig):
                   darknet=backbones.DarkNet(model_id='darknet53')),
               decoder=YoloDecoder(version='v3', type='spp'),
               darknet_weights_file='cache://yolov3-spp.weights',
-              darknet_weights_cfg='cache://yolov3-spp.cfg',
-              activation='leaky'),
+              darknet_weights_cfg='cache://yolov3-spp.cfg'),
       'v3tiny':
           YoloBase(
               backbone=backbones.Backbone(
@@ -263,8 +260,7 @@ class Yolo(ModelConfig):
                   darknet=backbones.DarkNet(model_id='darknettiny')),
               decoder=YoloDecoder(version='v3', type='tiny'),
               darknet_weights_file='cache://yolov3-tiny.weights',
-              darknet_weights_cfg='cache://yolov3-tiny.cfg',
-              activation='leaky'),
+              darknet_weights_cfg='cache://yolov3-tiny.cfg'),
       'v4':
           YoloBase(
               backbone=backbones.Backbone(
@@ -272,8 +268,7 @@ class Yolo(ModelConfig):
                   darknet=backbones.DarkNet(model_id='cspdarknet53')),
               decoder=YoloDecoder(version='v4', type='regular'),
               darknet_weights_file='cache://yolov4.weights',
-              darknet_weights_cfg='cache://yolov4.cfg',
-              activation='mish'),
+              darknet_weights_cfg='cache://yolov4.cfg'),
       'v4tiny':
           YoloBase(
               backbone=backbones.Backbone(
@@ -281,8 +276,7 @@ class Yolo(ModelConfig):
                   darknet=backbones.DarkNet(model_id='cspdarknettiny')),
               decoder=YoloDecoder(version='v4', type='tiny'),
               darknet_weights_file='cache://yolov4-tiny.weights',
-              darknet_weights_cfg='cache://yolov4-tiny.cfg',
-              activation='leaky'
+              darknet_weights_cfg='cache://yolov4-tiny.cfg'
           ),  # TODO: fix activation for v4 tiny and all v3 models
   }
 
