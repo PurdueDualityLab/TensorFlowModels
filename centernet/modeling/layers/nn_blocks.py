@@ -2,12 +2,17 @@ import tensorflow as tf
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import nn_blocks as official_nn_blocks
 
+
 class HourglassBlock(tf.keras.layers.Layer):
   """
   Hourglass module
   """
 
-  def __init__(self, channel_dims_per_stage, blocks_per_stage, strides=1, **kwargs):
+  def __init__(self,
+               channel_dims_per_stage,
+               blocks_per_stage,
+               strides=1,
+               **kwargs):
     """
     Args:
       channel_dims_per_stage: list of filter sizes for Residual blocks
@@ -19,8 +24,8 @@ class HourglassBlock(tf.keras.layers.Layer):
     self._blocks_per_stage = blocks_per_stage
     self._strides = strides
 
-    assert len(channel_dims_per_stage) == len(blocks_per_stage), 'filter size and ' \
-        'residual block repetition lists must have the same length'
+    assert len(channel_dims_per_stage) == len(blocks_per_stage), 'filter ' \
+        'size and residual block repetition lists must have the same length'
 
     self._filters = channel_dims_per_stage[0]
     self._reps = blocks_per_stage[0]
@@ -57,9 +62,9 @@ class HourglassBlock(tf.keras.layers.Layer):
 
       # recursively define inner hourglasses
       self.inner_hg = type(self)(
-        channel_dims_per_stage=self._channel_dims_per_stage[1:],
-        blocks_per_stage=self._blocks_per_stage[1:],
-        strides=self._strides)
+          channel_dims_per_stage=self._channel_dims_per_stage[1:],
+          blocks_per_stage=self._blocks_per_stage[1:],
+          strides=self._strides)
 
       # outer hourglass structures
       end_block = [
