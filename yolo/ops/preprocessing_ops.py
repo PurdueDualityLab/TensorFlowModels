@@ -523,7 +523,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
     true_wh = y_true[..., 2:4]
 
     # scale thhe boxes
-    anchors = tf.convert_to_tensor(anchors, dtype=tf.float32)
+    anchors = tf.convert_to_tensor(anchors, dtype=true_wh.dtype)
     anchors_x = anchors[..., 0] / width
     anchors_y = anchors[..., 1] / height
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
@@ -536,7 +536,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
     anchors = tf.tile(
         tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1])
 
-    
 
     # stack the xy so, each anchor is asscoaited once with each center from 
     # the ground truth input
@@ -595,7 +594,7 @@ def get_best_anchor_batch(y_true, anchors, width=1, height=1):
     true_wh = y_true[..., 2:4]
 
     # scale thhe boxes
-    anchors = tf.convert_to_tensor(anchors, dtype=tf.float32)
+    anchors = tf.convert_to_tensor(anchors, dtype=true_wh.dtype)
     anchors_x = anchors[..., 0] / width
     anchors_y = anchors[..., 1] / height
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
