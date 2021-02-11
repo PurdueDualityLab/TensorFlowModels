@@ -37,22 +37,19 @@ FLAGS = flags.FLAGS
 def main(_):
   task, model, params = vgu.load_flags(FLAGS)
 
-  if FLAGS.scale_que <= 100:
-    cap = vgu.FastVideo(
-        FLAGS.video,
-        model=model,
-        process_width=FLAGS.process_size,
-        process_height=FLAGS.process_size,
-        preprocess_with_gpu=FLAGS.preprocess_gpu,
-        print_conf=FLAGS.print_conf,
-        max_batch=FLAGS.max_batch,
-        disp_h=FLAGS.out_resolution,
-        scale_que=FLAGS.scale_que,
-        wait_time=FLAGS.wait_time)
-    cap.run()
-  else:
-    cap = msu.run(model, FLAGS.video, FLAGS.out_resolution, FLAGS.wait_time, FLAGS.max_batch, FLAGS.scale_que)
-
+  cap = vgu.FastVideo(
+      FLAGS.video,
+      model=model,
+      process_width=FLAGS.process_size,
+      process_height=FLAGS.process_size,
+      preprocess_with_gpu=FLAGS.preprocess_gpu,
+      print_conf=FLAGS.print_conf,
+      max_batch=FLAGS.max_batch,
+      disp_h=FLAGS.out_resolution,
+      scale_que=FLAGS.scale_que,
+      wait_time=FLAGS.wait_time)
+  cap.run()
+ 
 if __name__ == '__main__':
   import datetime
 
