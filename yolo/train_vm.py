@@ -34,32 +34,26 @@ from official.modeling import performance
 
 FLAGS = flags.FLAGS
 '''
+get the cache file:
 scp -i ./jaeyounkim-purdue-1 cache.zip  purdue@34.105.118.198:~/
-'''
 
-'''
+train darknet:
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
-'''
-
-'''
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
-'''
 
-'''
-darknet debug: 
+finetune darknet: 
 nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log
 
-yolo debug: 
+train yolo-v4:
+nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4.yaml  >> yolov4.log & tail -f yolov4.log
+nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-1gpu.yaml  >> yolov4-1gpu.log & tail -f yolov4-1gpu.log
 
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-dt_mod --config_file=yolo/configs/experiments/yolov4-dt_mod.yaml  >> v4_yolo.log & tail -f v4_yolo.log
 
+evalaute Yolo: 
+nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-eval.yaml  >> yolov4-eval.log & tail -f yolov4-eval.log
 '''
-'''
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-dt32_mod --config_file=yolo/configs/experiments/yolov4-v4-vm.yaml >> v4_yolo.log & tail -f v4_yolo.log
-'''
-'''
-python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=../checkpoints/yolov4-2014-dt --config_file=yolo/configs/experiments/yolov4-dt.yaml
-'''
+
+
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   print(FLAGS.experiment)

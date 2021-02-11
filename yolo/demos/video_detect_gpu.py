@@ -20,7 +20,17 @@ from yolo.utils.demos.coco import get_coco_names
 from yolo.utils.demos.coco import int_scale_boxes
 #from yolo.utils.demos import utils
 from utils.demos import utils
+from yolo.utils.run_utils import prep_gpu
+from yolo.configs import yolo as exp_cfg
+from yolo.tasks.yolo import YoloTask
 
+prep_gpu()
+
+from typing import Tuple, List
+from official.core import train_utils
+from official.modeling import performance
+from official.core import task_factory
+import os
 
 class FastVideo(object):
   """
@@ -76,9 +86,14 @@ class FastVideo(object):
                wait_time=None,
                preprocess_with_gpu=False,
                scale_que=1,
-               policy='float16',
                gpu_device='/GPU:0',
                preprocess_gpu='/GPU:0'):
+
+    file_name = 0 if file_name is None else file_name
+    try:
+      file_name = int(file_name)
+    except:
+      print(file_name)
     self._cap = cv2.VideoCapture(file_name)
     if not self._cap.isOpened():
       raise IOError('video file was not found')
@@ -107,7 +122,6 @@ class FastVideo(object):
     self._classes = classes
     self._p_width = process_width
     self._p_height = process_height
-    self._policy = policy
     self._model = model
 
     # fast but as close to one 2 one as possible
@@ -148,7 +162,7 @@ class FastVideo(object):
     self._display_que = Queue(1 * scale_que)
     self._running = True
 
-    self._dynamic_wt = wait_time == 'dynamic'
+    self._dynamic_wt = (wait_time == 'dynamic' or wait_time == None)
     if not self._dynamic_wt:
       self._wait_time = utils.get_wait_time(wait_time, max_batch)
     else:
@@ -492,75 +506,156 @@ def get_model(model):
 
   return ret
 
+def load_model(experiment = 'yolo_custom', config_path = [], model_dir = ""):
+  CFG = train_utils.ParseConfigOptions(experiment=experiment, config_file=config)
+  params = train_utils.parse_configuration(CFG)
+
+  if params.runtime.mixed_precision_dtype:
+    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
+                                           params.runtime.loss_scale)
+
+  task = task_factory.get_task(params.task, logging_dir=model_dir)    
+  model = task.build_model()
+                  
+  if model_dir is not None and model_dir != "":
+    optimizer = task.create_optimizer(params.trainer.optimizer_config, params.runtime)
+    # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+    ckpt = tf.train.Checkpoint(
+      model = model, 
+      optimizer = optimizer)
+    status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
+    
+    status.expect_partial().assert_existing_objects_matched()
+    print(dir(status), status)
+  else:
+    task.initialize(model)  
+  
+  return task, model
+
+def load_flags(CFG):
+  params = train_utils.parse_configuration(CFG)
+  model_dir = CFG.model_dir
+
+  if params.runtime.mixed_precision_dtype:
+    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
+                                           params.runtime.loss_scale)
+
+  task = task_factory.get_task(params.task, logging_dir=model_dir)    
+  model = task.build_model()
+                  
+  if model_dir is not None and model_dir != "":
+    optimizer = task.create_optimizer(params.trainer.optimizer_config, params.runtime)
+    # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+    ckpt = tf.train.Checkpoint(
+      model = model, 
+      optimizer = optimizer)
+    status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
+    
+    status.expect_partial().assert_existing_objects_matched()
+    print(dir(status), status)
+  else:
+    task.initialize(model)  
+  
+  return task, model, params
+
+from absl import flags
+def define_flags():
+  """Defines flags."""
+  flags.DEFINE_string(
+      'experiment', default=None, help='The experiment type registered.')
+
+  flags.DEFINE_string(
+      'model_dir',
+      default=None,
+      help='The directory where the model and training/evaluation summaries'
+      'are stored.')
+
+  flags.DEFINE_multi_string(
+      'config_file',
+      default=None,
+      help='YAML/JSON files which specifies overrides. The override order '
+      'follows the order of args. Note that each file '
+      'can be used as an override template to override the default parameters '
+      'specified in Python. If the same parameter is specified in both '
+      '`--config_file` and `--params_override`, `config_file` will be used '
+      'first, followed by params_override.')
+
+  flags.DEFINE_string(
+      'params_override',
+      default=None,
+      help='a YAML/JSON string or a YAML file which specifies additional '
+      'overrides over the default parameters and those specified in '
+      '`--config_file`. Note that this is supposed to be used only to override '
+      'the model parameters, but not the parameters like TPU specific flags. '
+      'One canonical use case of `--config_file` and `--params_override` is '
+      'users first define a template config file using `--config_file`, then '
+      'use `--params_override` to adjust the minimal set of tuning parameters, '
+      'for example setting up different `train_batch_size`. The final override '
+      'order of parameters: default_model_params --> params from config_file '
+      '--> params in params_override. See also the help message of '
+      '`--config_file`.')
+
+  flags.DEFINE_string(
+      'tpu', default=None,
+      help='The Cloud TPU to use for training. This should be either the name '
+      'used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 '
+      'url.')
+
+  flags.DEFINE_string(
+      'tf_data_service', default=None, help='The tf.data service address')
+
+  flags.DEFINE_string(
+      'video', default=None, help='path to video to run on')
+
+  flags.DEFINE_bool(
+      'preprocess_gpu', default=False, help='preprocess on the gpu')
+    
+  flags.DEFINE_bool(
+      'print_conf', default=True, help='preprocess on the gpu')
+  
+  flags.DEFINE_integer(
+      'process_size', default=416, help='preprocess on the gpu')
+  
+  flags.DEFINE_integer(
+      'max_batch', default=None, help='preprocess on the gpu')
+  
+  flags.DEFINE_integer(
+      'wait_time', default=None, help='preprocess on the gpu')
+  
+  flags.DEFINE_integer(
+      'out_resolution', default=416, help='preprocess on the gpu')
+  
+  flags.DEFINE_integer(
+      'scale_que', default=1, help='preprocess on the gpu')
+
+# import yolo.utils.export.tensor_rt as trt
+# model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
+# name = "saved_models/v3/tflite-tiny-no-nms"
+# model.save(name, overwrite=True)
+# new_name = f"{name}_tensorrt"
+# model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+# model.convertModel()
+# model.compile()
+# model.summary()
+# model.set_postprocessor_fn(func)
+
+# #name = "saved_models/v4/tflite-regualr-no-nms"
+# name = "saved_models/v4/tflite-tiny-no-nms"
+# # name = "saved_models/v3/tflite-regular-no-nms"
+# # name = "saved_models/v3/tflite-tiny-no-nms"
+# new_name = f"{name}_tensorrt"
+# model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
+# model.compile()
+# model.summary()
+# model.set_postprocessor_fn(func)
 
 if __name__ == '__main__':
-  from yolo.utils.run_utils import prep_gpu
-  from yolo.configs import yolo as exp_cfg
-  from yolo.tasks.yolo import YoloTask
-  import yolo.utils.export.tensor_rt as trt
-  prep_gpu()
+  config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
+  model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-  from tensorflow.keras.mixed_precision import experimental as mixed_precision
-  mixed_precision.set_policy('mixed_float16')
-  # mixed_precision.set_policy("float32")
-
-  config = exp_cfg.YoloTask(
-      model=exp_cfg.Yolo(
-          base='v4',
-          min_level=3,
-          norm_activation=exp_cfg.common.NormActivation(activation='mish', use_sync_bn=False),
-          #norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-          #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-          #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-          _boxes=[
-              '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-              '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-          ],
-          dilate=False,
-          filter=exp_cfg.YoloLossLayer(use_nms=False)))
-
-  # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny',
-  #                     min_level=4,
-  #                     #norm_activation = exp_cfg.common.NormActivation(activation="mish"),
-  #                     norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-  #                     _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-  #                     #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-  #                     #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
-  #                     filter = exp_cfg.YoloLossLayer(use_nms=False)
-  #                     ))
-  task = YoloTask(config)
-  model = task.build_model()
-  task.initialize(model)
-    
-  # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-  # ckpt = tf.train.Checkpoint(
-  #   model = model, 
-  #   optimizer = optimizer)
-  # status = ckpt.restore(tf.train.latest_checkpoint("/media/vbanna/DATA_SHARE/Research/TensorFlowModelGardeners/yolo_dt8_norm_iou"))
-  
-  # status.expect_partial()
-  # print(dir(status), status)
+  task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
   
 
-  # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
-  # name = "saved_models/v3/tflite-tiny-no-nms"
-  # model.save(name, overwrite=True)
-  # new_name = f"{name}_tensorrt"
-  # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-  # model.convertModel()
-  # model.compile()
-  # model.summary()
-  # model.set_postprocessor_fn(func)
-
-  # #name = "saved_models/v4/tflite-regualr-no-nms"
-  # name = "saved_models/v4/tflite-tiny-no-nms"
-  # # name = "saved_models/v3/tflite-regular-no-nms"
-  # # name = "saved_models/v3/tflite-tiny-no-nms"
-  # new_name = f"{name}_tensorrt"
-  # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
-  # model.compile()
-  # model.summary()
-  # model.set_postprocessor_fn(func)
 
   cap = FastVideo(
       "../videos/nyc.mp4",
@@ -569,9 +664,8 @@ if __name__ == '__main__':
       process_height=416,
       preprocess_with_gpu=True,
       print_conf=True,
-      max_batch=9,
+      max_batch=5,
       disp_h=416,
       scale_que=1,
-      wait_time='dynamic',
-      policy='mixed_float16')
+      wait_time='dynamic')
   cap.run()

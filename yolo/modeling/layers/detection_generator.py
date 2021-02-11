@@ -16,9 +16,9 @@ class YoloLayer(ks.Model):
                masks,
                anchors,
                classes,
-               thresh=0.45,
-               cls_thresh=0.45,
+               iou_thresh=0.0,
                ignore_thresh=0.7,
+               nms_thresh = 0.6, 
                loss_type='ciou',
                use_tie_breaker=True,
                iou_normalizer = 1.0, 
@@ -32,12 +32,12 @@ class YoloLayer(ks.Model):
     super().__init__(**kwargs)
     self._masks = masks
     self._anchors = anchors
-    self._thresh = thresh
-    self._cls_thresh = cls_thresh
+    self._thresh = iou_thresh
     self._ignore_thresh = ignore_thresh
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
+    self._nms_thresh = 1 - nms_thresh
     self._max_boxes = max_boxes
     self._classes = classes
     self._loss_type = loss_type
@@ -116,8 +116,8 @@ class YoloLayer(ks.Model):
     classifications = tf.boolean_mask(scaled, mask, axis=1)
     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
-    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
-    #box, classifications, objectness = nms_ops.nms(box, classifications, objectness, self._max_boxes, 2.5,0.6, sorted=False, one_hot=True)
+    #objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+    box, classifications, objectness = nms_ops.nms(box, classifications, objectness, self._max_boxes, 2.5, self._nms_thresh, sorted=False, one_hot=True)
     return objectness, box, classifications, num_dets
 
   def call(self, inputs):
@@ -147,7 +147,7 @@ class YoloLayer(ks.Model):
       classifs = tf.cast(classifs, dtype=tf.float32)
       nms = tf.image.combined_non_max_suppression(
           tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
-          self._max_boxes, 0.6, 0.45)#self._thresh, self._cls_thresh)
+          self._max_boxes, 1 - self._nms_thresh, self._nms_thresh)
       return {
           'bbox': nms.nmsed_boxes,
           'classes': tf.cast(nms.nmsed_classes, tf.int32),
@@ -161,9 +161,9 @@ class YoloLayer(ks.Model):
         confidence,
         self._max_boxes,
         2.5,
-        0.6,
+        self._nms_thresh,
         sorted=False,
-        one_hot=True)
+        one_hot=False)
     
     num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis = -1)
 
@@ -202,7 +202,6 @@ class YoloLayer(ks.Model):
         'masks': dict(self._masks),
         'anchors': [list(a) for a in self._anchors],
         'thresh': self._thresh,
-        'cls_thresh': self._cls_thresh,
         'max_boxes': self._max_boxes,
     }
 

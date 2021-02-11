@@ -194,7 +194,7 @@ class YoloDecoder(hyperparams.Config):
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
   iou_thresh: float = 0.2
-  class_thresh: float = 0.2
+  nms_thresh: float = 0.6
   ignore_thresh: float = 0.5
   loss_type: str = 'ciou'
   max_boxes: int = 200
