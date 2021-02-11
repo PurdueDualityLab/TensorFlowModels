@@ -153,8 +153,8 @@ class Parser(hyperparams.Config):
   max_num_instances: int = 200
   random_flip: bool = True
   pct_rand: float = 0.5
-  letter_box: bool = True
-  cutmix: bool = False
+  letter_box: bool = False
+  cutmix: bool = True
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = True
@@ -193,8 +193,8 @@ class YoloDecoder(hyperparams.Config):
 
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
-  iou_thresh: float = 0.0
-  class_thresh: float = 0.0
+  iou_thresh: float = 0.2
+  class_thresh: float = 0.2
   ignore_thresh: float = 0.5
   loss_type: str = 'ciou'
   max_boxes: int = 200

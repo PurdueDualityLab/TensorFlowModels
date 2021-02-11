@@ -569,7 +569,7 @@ if __name__ == '__main__':
       process_height=416,
       preprocess_with_gpu=True,
       print_conf=True,
-      max_batch=5,
+      max_batch=9,
       disp_h=416,
       scale_que=1,
       wait_time='dynamic',
