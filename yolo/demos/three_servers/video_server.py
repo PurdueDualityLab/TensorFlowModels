@@ -10,7 +10,7 @@ from yolo.utils.demos import utils
 
 class VideoServer(object):
 
-  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10):
+  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10, post_process = None):
 
     self._file = file
     self._cap = cv2.VideoCapture(file)
@@ -34,6 +34,7 @@ class VideoServer(object):
     self._load_thread = None
     self._send_thread = None
     self._socket = None
+    self._postprocess_fn = post_process
     return
 
   @property
@@ -74,6 +75,9 @@ class VideoServer(object):
         image = cv2.resize(
             image, (self._width, self._height), interpolation=cv2.INTER_AREA)
         image = image / 255
+
+        if self._postprocess_fn != None:
+          image = self._postprocess_fn(image)
         # then dump the image on the que
         self._ret_que.put(image)
 
@@ -124,7 +128,7 @@ class VideoServer(object):
 
 class VideoPlayer(object):
 
-  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10):
+  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10, post_process = None):
 
     self._file = file
     self._cap = cv2.VideoCapture(file)
@@ -135,6 +139,7 @@ class VideoPlayer(object):
     self._og_height = int(self._cap.get(4))
     self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
+    self._postprocess_fn = post_process
     return
 
   def get(self):
@@ -146,6 +151,8 @@ class VideoPlayer(object):
       image = cv2.resize(
           image, (self._width, self._height), interpolation=cv2.INTER_AREA)
       image = image / 255
+      if self._postprocess_fn != None:
+        image = self._postprocess_fn(image)
     return suc, image
 
   @property

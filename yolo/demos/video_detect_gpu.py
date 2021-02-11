@@ -12,25 +12,16 @@ import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 from yolo.utils.run_utils import support_windows
-from yolo.utils.run_utils import prep_gpu
 from yolo.utils.demos.coco import draw_box
 from yolo.utils.demos.coco import get_draw_fn
 from yolo.utils.demos.coco import gen_colors
 from yolo.utils.demos.coco import get_coco_names
 from yolo.utils.demos.coco import int_scale_boxes
-#from yolo.utils.demos import utils
-from utils.demos import utils
+from yolo.utils.demos import utils
+# from utils.demos import utils
 from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
-
-prep_gpu()
-
-from typing import Tuple, List
-from official.core import train_utils
-from official.modeling import performance
-from official.core import task_factory
-import os
 
 class FastVideo(object):
   """
@@ -506,127 +497,6 @@ def get_model(model):
 
   return ret
 
-def load_model(experiment = 'yolo_custom', config_path = [], model_dir = ""):
-  CFG = train_utils.ParseConfigOptions(experiment=experiment, config_file=config)
-  params = train_utils.parse_configuration(CFG)
-
-  if params.runtime.mixed_precision_dtype:
-    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
-                                           params.runtime.loss_scale)
-
-  task = task_factory.get_task(params.task, logging_dir=model_dir)    
-  model = task.build_model()
-                  
-  if model_dir is not None and model_dir != "":
-    optimizer = task.create_optimizer(params.trainer.optimizer_config, params.runtime)
-    # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-    ckpt = tf.train.Checkpoint(
-      model = model, 
-      optimizer = optimizer)
-    status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
-    
-    status.expect_partial().assert_existing_objects_matched()
-    print(dir(status), status)
-  else:
-    task.initialize(model)  
-  
-  return task, model
-
-def load_flags(CFG):
-  params = train_utils.parse_configuration(CFG)
-  model_dir = CFG.model_dir
-
-  if params.runtime.mixed_precision_dtype:
-    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
-                                           params.runtime.loss_scale)
-
-  task = task_factory.get_task(params.task, logging_dir=model_dir)    
-  model = task.build_model()
-                  
-  if model_dir is not None and model_dir != "":
-    optimizer = task.create_optimizer(params.trainer.optimizer_config, params.runtime)
-    # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-    ckpt = tf.train.Checkpoint(
-      model = model, 
-      optimizer = optimizer)
-    status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
-    
-    status.expect_partial().assert_existing_objects_matched()
-    print(dir(status), status)
-  else:
-    task.initialize(model)  
-  
-  return task, model, params
-
-from absl import flags
-def define_flags():
-  """Defines flags."""
-  flags.DEFINE_string(
-      'experiment', default=None, help='The experiment type registered.')
-
-  flags.DEFINE_string(
-      'model_dir',
-      default=None,
-      help='The directory where the model and training/evaluation summaries'
-      'are stored.')
-
-  flags.DEFINE_multi_string(
-      'config_file',
-      default=None,
-      help='YAML/JSON files which specifies overrides. The override order '
-      'follows the order of args. Note that each file '
-      'can be used as an override template to override the default parameters '
-      'specified in Python. If the same parameter is specified in both '
-      '`--config_file` and `--params_override`, `config_file` will be used '
-      'first, followed by params_override.')
-
-  flags.DEFINE_string(
-      'params_override',
-      default=None,
-      help='a YAML/JSON string or a YAML file which specifies additional '
-      'overrides over the default parameters and those specified in '
-      '`--config_file`. Note that this is supposed to be used only to override '
-      'the model parameters, but not the parameters like TPU specific flags. '
-      'One canonical use case of `--config_file` and `--params_override` is '
-      'users first define a template config file using `--config_file`, then '
-      'use `--params_override` to adjust the minimal set of tuning parameters, '
-      'for example setting up different `train_batch_size`. The final override '
-      'order of parameters: default_model_params --> params from config_file '
-      '--> params in params_override. See also the help message of '
-      '`--config_file`.')
-
-  flags.DEFINE_string(
-      'tpu', default=None,
-      help='The Cloud TPU to use for training. This should be either the name '
-      'used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 '
-      'url.')
-
-  flags.DEFINE_string(
-      'tf_data_service', default=None, help='The tf.data service address')
-
-  flags.DEFINE_string(
-      'video', default=None, help='path to video to run on')
-
-  flags.DEFINE_bool(
-      'preprocess_gpu', default=False, help='preprocess on the gpu')
-    
-  flags.DEFINE_bool(
-      'print_conf', default=True, help='preprocess on the gpu')
-  
-  flags.DEFINE_integer(
-      'process_size', default=416, help='preprocess on the gpu')
-  
-  flags.DEFINE_integer(
-      'max_batch', default=None, help='preprocess on the gpu')
-  
-  flags.DEFINE_integer(
-      'wait_time', default=None, help='preprocess on the gpu')
-  
-  flags.DEFINE_integer(
-      'out_resolution', default=416, help='preprocess on the gpu')
-  
-  flags.DEFINE_integer(
-      'scale_que', default=1, help='preprocess on the gpu')
 
 # import yolo.utils.export.tensor_rt as trt
 # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
@@ -649,23 +519,23 @@ def define_flags():
 # model.summary()
 # model.set_postprocessor_fn(func)
 
-if __name__ == '__main__':
-  config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
-  model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
+# if __name__ == '__main__':
+#   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
+#   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-  task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
+#   task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
   
 
 
-  cap = FastVideo(
-      "../videos/nyc.mp4",
-      model=model,
-      process_width=416,
-      process_height=416,
-      preprocess_with_gpu=True,
-      print_conf=True,
-      max_batch=5,
-      disp_h=416,
-      scale_que=1,
-      wait_time='dynamic')
-  cap.run()
+#   cap = FastVideo(
+#       "../videos/nyc.mp4",
+#       model=model,
+#       process_width=416,
+#       process_height=416,
+#       preprocess_with_gpu=True,
+#       print_conf=True,
+#       max_batch=5,
+#       disp_h=416,
+#       scale_que=1,
+#       wait_time='dynamic')
+#   cap.run()
