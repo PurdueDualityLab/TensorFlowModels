@@ -52,7 +52,7 @@ task:
       image_h: 416
       image_w: 416
       seed: 10
-      letter_box: false
+      letter_box: true
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
