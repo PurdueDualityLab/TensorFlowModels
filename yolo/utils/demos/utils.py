@@ -209,9 +209,9 @@ class DrawBoxes(object):
 
     try:
       conf = results["confidence"]
-    except:
+    except BaseException:
       conf = results["classes"]
-      
+
     if not isinstance(image, list):
       ndims = len(image.shape)
       if ndims == 4:

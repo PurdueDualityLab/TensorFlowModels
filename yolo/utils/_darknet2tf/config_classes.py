@@ -434,6 +434,7 @@ class maxpoolCFG(Config):
         padding='same')(
             tensors[-1])
 
+
 @layer_builder.register('upsample')
 @dataclass
 class upsampleCFG(Config):
@@ -468,7 +469,9 @@ class avgpoolCFG(Config):
   def shape(self):
     #pad = 0 if self.stride == 1 else 1
     #print((self.w//self.stride, self.h//self.stride, self.c))
-    return (1,1, self.c)  # ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
+    return (
+        1, 1, self.c
+    )  # ((self.w - self.size) // self.stride + 2, (self.h - self.size) // self.stride + 2, self.c)
 
   def to_tf(self, tensors):
     #from tensorflow.nn import max_pool2d
@@ -478,6 +481,7 @@ class avgpoolCFG(Config):
         strides=(self.stride, self.stride),
         padding='same')(
             tensors[-1])
+
 
 @layer_builder.register('softmax')
 @dataclass
@@ -505,6 +509,7 @@ class softmaxCFG(Config):
         strides=(self.stride, self.stride),
         padding='same')(
             tensors[-1])
+
 
 def len_width(n, f, p, s):
   """

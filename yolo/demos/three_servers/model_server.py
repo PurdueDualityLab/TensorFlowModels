@@ -1,3 +1,4 @@
+import yolo.demos.three_servers.video_server as video_t
 import struct
 import cv2
 import datetime
@@ -248,9 +249,9 @@ def func(inputs):
       "confidence": nms.nmsed_scores,
   }
 
-import yolo.demos.three_servers.video_server as video_t
+
 def run(model, video, disp_h, wait_time, max_batch, que_size):
-  max_batch = 5 if max_batch == None else max_batch
+  max_batch = 5 if max_batch is None else max_batch
   pfn = preprocess_fn
   pofn = utils.DrawBoxes(
       classes=80, labels=coco.get_coco_names(), display_names=True, thickness=2)
@@ -261,7 +262,8 @@ def run(model, video, disp_h, wait_time, max_batch, que_size):
       postprocess_fn=pofn,
       wait_time=wait_time,
       max_batch=max_batch)
-  video = video_t.VideoServer(video, wait_time=0.00000001, que=que_size, disp_h=disp_h)
+  video = video_t.VideoServer(
+      video, wait_time=0.00000001, que=que_size, disp_h=disp_h)
   display = video_t.DisplayThread(
       server, alpha=0.9, wait_time=0.000001, fix_wt=False)
   server.start()
@@ -298,12 +300,12 @@ if __name__ == "__main__":
   from tensorflow.keras.mixed_precision import experimental as mixed_precision
   mixed_precision.set_policy("mixed_float16")
 
-  config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4)  )
+  config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base="v4tiny", min_level=4))
   task = YoloTask(config)
   model = task.build_model()
   task.initialize(model)
   model.summary()
-  model.predict(tf.ones((1, 416, 416, 3), dtype = tf.float16))
+  model.predict(tf.ones((1, 416, 416, 3), dtype=tf.float16))
 
   # #name = "saved_models/v4/tflite-regualr-no-nms"
   # #name = "saved_models/v4/tflite-tiny-no-nms"
@@ -318,7 +320,4 @@ if __name__ == "__main__":
   # model.summary()
   # model.set_postprocessor_fn(func)
 
-
   run(model, 0, 416, "dynamic", 5, 10000)
-
- 

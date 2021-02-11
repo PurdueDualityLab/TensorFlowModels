@@ -1,3 +1,7 @@
+from yolo.configs import yolo
+from official.core import registry
+from official.vision.beta.modeling.backbones import factory
+from yolo.modeling.backbones.darknet import build_darknet
 import tensorflow as tf
 import tensorflow.keras as ks
 from typing import *
@@ -17,7 +21,7 @@ class Yolo(ks.Model):
                filter=None,
                **kwargs):
     super().__init__(**kwargs)
-    #model components
+    # model components
     self._backbone = backbone
     self._decoder = decoder
     self._head = head
@@ -59,15 +63,9 @@ class Yolo(ks.Model):
     return self._filter
 
 
-from yolo.modeling.backbones.darknet import build_darknet
-from official.vision.beta.modeling.backbones import factory
-from official.core import registry
-from yolo.configs import yolo
-
-
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
-  if model_config.decoder.version == None:  #custom yolo
+  if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
         embed_spp=model_config.decoder.embed_spp,
         embed_fpn=model_config.decoder.embed_fpn,
@@ -83,7 +81,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
     model.build(input_specs)
     return model
 
-  if model_config.decoder.type == None or model_config.decoder.type == "regular":  # defaut regular
+  if model_config.decoder.type is None or model_config.decoder.type == "regular":  # defaut regular
     if model_config.decoder.version == "v4":
       model = YoloDecoder(
           embed_spp=False,
@@ -143,14 +141,14 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       classes=model_config.num_classes,
       anchors=model_config.boxes,
       iou_thresh=model_config.filter.iou_thresh,
-      nms_thresh=model_config.filter.nms_thresh, 
+      nms_thresh=model_config.filter.nms_thresh,
       max_boxes=model_config.filter.max_boxes,
       path_scale=path_scales,
       scale_xy=xy_scales,
       use_nms=model_config.filter.use_nms,
       loss_type=model_config.filter.loss_type,
-      iou_normalizer=model_config.filter.iou_normalizer, 
-      cls_normalizer=model_config.filter.cls_normalizer, 
+      iou_normalizer=model_config.filter.iou_normalizer,
+      cls_normalizer=model_config.filter.cls_normalizer,
       obj_normalizer=model_config.filter.obj_normalizer,
       ignore_thresh=model_config.filter.ignore_thresh)
   return model
@@ -160,7 +158,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   head = YoloHead(
       classes=model_config.num_classes,
       boxes_per_level=model_config.boxes_per_scale,
-      xy_exponential=False,  #model_config.decoder.version == 'v4',
+      xy_exponential=False,  # model_config.decoder.version == 'v4',
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization)
@@ -174,7 +172,8 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   print(input_specs)
   print(l2_regularization)
 
-  backbone = factory.build_backbone(input_specs, model_config, l2_regularization)
+  backbone = factory.build_backbone(input_specs, model_config,
+                                    l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(backbone.output_specs, model_config, l2_regularization)

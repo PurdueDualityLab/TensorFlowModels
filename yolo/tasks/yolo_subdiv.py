@@ -49,9 +49,9 @@ class YoloSubDivTask(yolo.YoloTask):
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
     if params.is_training:
-      params.global_batch_size = params.global_batch_size//self.task_config.subdivisions
-      if params.global_batch_size == 0: 
-        raise RuntimeError("batchsize must be divisible by the subdivisions")
+      params.global_batch_size = params.global_batch_size // self.task_config.subdivisions
+      if params.global_batch_size == 0:
+        raise RuntimeError('batchsize must be divisible by the subdivisions')
 
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
@@ -75,7 +75,7 @@ class YoloSubDivTask(yolo.YoloTask):
         aug_rand_zoom=params.parser.aug_rand_zoom,
         aug_rand_hue=params.parser.aug_rand_hue,
         anchors=anchors,
-        dtype = params.dtype)
+        dtype=params.dtype)
 
     if params.is_training:
       post_process_fn = parser.postprocess_fn()
@@ -94,7 +94,7 @@ class YoloSubDivTask(yolo.YoloTask):
       dataset = dataset.batch(self.task_config.subdivisions)
     return dataset
 
-  def build_losses(self, outputs, labels, div = None, aux_losses=None):
+  def build_losses(self, outputs, labels, div=None, aux_losses=None):
     loss = 0.0
     loss_box = 0.0
     loss_conf = 0.0
@@ -104,9 +104,11 @@ class YoloSubDivTask(yolo.YoloTask):
     grid = labels['grid_form']
     for key in outputs.keys():
       if div is not None:
-        _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key][div], outputs[key])
+        _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+            key](grid[key][div], outputs[key])
       else:
-        _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key], outputs[key])
+        _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+            key](grid[key], outputs[key])
       loss += _loss
       loss_box += _loss_box
       loss_conf += _loss_conf
@@ -121,18 +123,19 @@ class YoloSubDivTask(yolo.YoloTask):
     return loss, metric_dict
 
   def train_step(self, inputs, model, optimizer, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     logs = {}
     net_loss = 0
-    
+
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
       for i in range(self.task_config.subdivisions):
         y_pred = model(image[i], training=True)
-        loss, loss_metrics = self.build_losses(y_pred['raw_output'], label, div = i)
+        loss, loss_metrics = self.build_losses(
+            y_pred['raw_output'], label, div=i)
         net_loss += loss
 
         # if metrics:
@@ -145,7 +148,7 @@ class YoloSubDivTask(yolo.YoloTask):
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
-        
+
     # compute the gradient
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
@@ -153,12 +156,12 @@ class YoloSubDivTask(yolo.YoloTask):
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
     if self.task_config.gradient_clip_norm > 0.0:
-      gradients, _ = tf.clip_by_global_norm(gradients,self.task_config.gradient_clip_norm)
+      gradients, _ = tf.clip_by_global_norm(gradients,
+                                            self.task_config.gradient_clip_norm)
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    #custom metrics
+    # custom metrics
     logs['loss'] = net_loss
-
 
     tf.print(logs, end='\n')
 
@@ -167,7 +170,7 @@ class YoloSubDivTask(yolo.YoloTask):
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
 
     # computer detivative and apply gradients
@@ -179,15 +182,22 @@ class YoloSubDivTask(yolo.YoloTask):
     # loss_metrics.update(metrics)
     image_shape = tf.shape(image)[1:-1]
 
-    label['boxes'] = box_ops.denormalize_boxes(tf.cast(label['bbox'], tf.float32), image_shape)
+    label['boxes'] = box_ops.denormalize_boxes(
+        tf.cast(label['bbox'], tf.float32), image_shape)
     del label['bbox']
 
     coco_model_outputs = {
-        'detection_boxes': box_ops.denormalize_boxes(tf.cast(y_pred['bbox'], tf.float32), image_shape),
-        'detection_scores': y_pred['confidence'],
-        'detection_classes': y_pred['classes'],
-        'num_detections': tf.shape(y_pred['bbox'])[:-1],
-        'source_id': label['source_id'],
+        'detection_boxes':
+            box_ops.denormalize_boxes(
+                tf.cast(y_pred['bbox'], tf.float32), image_shape),
+        'detection_scores':
+            y_pred['confidence'],
+        'detection_classes':
+            y_pred['classes'],
+        'num_detections':
+            tf.shape(y_pred['bbox'])[:-1],
+        'source_id':
+            label['source_id'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
@@ -197,6 +207,7 @@ class YoloSubDivTask(yolo.YoloTask):
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
     return logs
+
 
 if __name__ == '__main__':
   import matplotlib.pyplot as plt
@@ -211,13 +222,13 @@ if __name__ == '__main__':
 
   train_data = task.build_inputs(config.train_data)
   test_data = task.build_inputs(config.validation_data)
-  metrics = task.build_metrics(training = False)
+  metrics = task.build_metrics(training=False)
   # test_data = task.build_inputs(config.task.validation_data)
-  
+
   optimizer = tf.keras.optimizers.Adam()
   print(test_data)
   for l, (i, j) in enumerate(test_data):
-    preds = task.validation_step((i, j), model, metrics = metrics)
+    preds = task.validation_step((i, j), model, metrics=metrics)
     print(preds)
     # boxes = xcycwh_to_yxyx(j['bbox'])
 
@@ -229,4 +240,3 @@ if __name__ == '__main__':
 
     if l > 2:
       break
-

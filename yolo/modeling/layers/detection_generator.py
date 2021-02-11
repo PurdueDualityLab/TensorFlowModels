@@ -18,12 +18,12 @@ class YoloLayer(ks.Model):
                classes,
                iou_thresh=0.0,
                ignore_thresh=0.7,
-               nms_thresh = 0.6, 
+               nms_thresh=0.6,
                loss_type='ciou',
                use_tie_breaker=True,
-               iou_normalizer = 1.0, 
-               cls_normalizer = 1.0, 
-               obj_normalizer = 1.0, 
+               iou_normalizer=1.0,
+               cls_normalizer=1.0,
+               obj_normalizer=1.0,
                max_boxes=200,
                path_scale=None,
                scale_xy=None,
@@ -44,14 +44,17 @@ class YoloLayer(ks.Model):
     self._use_tie_breaker = use_tie_breaker
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
-    self._path_scale = path_scale or {key: 2 ** int(key) for key, _ in masks.items()} 
+    self._path_scale = path_scale or {
+        key: 2**int(key) for key, _ in masks.items()
+    }
     self._use_nms = use_nms
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
     self._generator = {}
     self._len_mask = {}
     for key in self._keys:
       anchors = [self._anchors[mask] for mask in self._masks[key]]
-      self._generator[key] = self.get_generators(anchors, self._path_scale[key], key)
+      self._generator[key] = self.get_generators(anchors, self._path_scale[key],
+                                                 key)
       self._len_mask[key] = len(self._masks[key])
     return
 
@@ -100,7 +103,8 @@ class YoloLayer(ks.Model):
     scaled = tf.math.sigmoid(classifics) * objectness
 
     # compute the mask of where objects have been located
-    mask_check = tf.fill(tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
+    mask_check = tf.fill(
+        tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
     sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
     num_dets = tf.reduce_sum(sub, axis=(1, 2, 3))
 
@@ -117,14 +121,22 @@ class YoloLayer(ks.Model):
     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
     #objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
-    box, classifications, objectness = nms_ops.nms(box, classifications, objectness, self._max_boxes, 2.5, self._nms_thresh, sorted=False, one_hot=True)
+    box, classifications, objectness = nms_ops.nms(
+        box,
+        classifications,
+        objectness,
+        self._max_boxes,
+        2.5,
+        self._nms_thresh,
+        sorted=False,
+        one_hot=True)
     return objectness, box, classifications, num_dets
 
   def call(self, inputs):
     key = self._keys[0]
     confidence, boxes, classifs, num_dets = self.parse_prediction_path(
-        self._generator[key], self._len_mask[key],
-        self._scale_xy[key], inputs[str(key)])
+        self._generator[key], self._len_mask[key], self._scale_xy[key],
+        inputs[str(key)])
 
     i = 1
     while i < self._len_keys:
@@ -164,8 +176,8 @@ class YoloLayer(ks.Model):
         self._nms_thresh,
         sorted=False,
         one_hot=False)
-    
-    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis = -1)
+
+    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis=-1)
 
     return {
         'bbox': boxes,
@@ -209,7 +221,7 @@ class YoloLayer(ks.Model):
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloGTFilter(ks.Model):
 
-  def __init__(self, masks, max_boxes=200,   **kwargs):
+  def __init__(self, masks, max_boxes=200, **kwargs):
     super().__init__(**kwargs)
 
     self._max_boxes = max_boxes
@@ -240,22 +252,26 @@ class YoloGTFilter(ks.Model):
     #objectness = tf.boolean_mask(objectness, mask, axis=1)
     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
-    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+    objectness, box, classifications = nms_ops.sort_drop(
+        objectness, box, classifications, self._max_boxes)
     return objectness, box, classifications
 
   def call(self, inputs):
-    confidence, boxes, classifs = self.parse_prediction_path(inputs[str(self._keys[0])], self._len_masks[str(self._keys[0])])
+    confidence, boxes, classifs = self.parse_prediction_path(
+        inputs[str(self._keys[0])], self._len_masks[str(self._keys[0])])
     i = 1
     while i < self._len_keys:
       key = self._keys[i]
-      conf, b, c = self.parse_prediction_path(inputs[str(key)], self._len_masks[str(key)])
+      conf, b, c = self.parse_prediction_path(inputs[str(key)],
+                                              self._len_masks[str(key)])
       boxes = K.concatenate([boxes, b], axis=1)
       classifs = K.concatenate([classifs, c], axis=1)
       confidence = K.concatenate([confidence, conf], axis=1)
       i += 1
 
-    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs, self._max_boxes)
-    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis = -1)
+    confidence, boxes, classifs = nms_ops.sort_drop(confidence, boxes, classifs,
+                                                    self._max_boxes)
+    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis=-1)
 
     return {
         'bbox': boxes,

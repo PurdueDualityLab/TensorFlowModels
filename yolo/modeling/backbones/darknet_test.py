@@ -16,39 +16,40 @@ class DarkNetTest(parameterized.TestCase, tf.test.TestCase):
       (224, 'cspdarknettiny', 1, 1, False),
       (224, 'cspdarknet53', 2, 1, True),
   )
-  def test_network_creation(self, input_size, model_id, endpoint_filter_scale,scale_final, dilate):
+  def test_network_creation(self, input_size, model_id, endpoint_filter_scale,
+                            scale_final, dilate):
     """Test creation of ResNet family models."""
     tf.keras.backend.set_image_data_format('channels_last')
 
-    network = darknet.Darknet(model_id=model_id, min_level=3, max_level=5, dilate=dilate)
+    network = darknet.Darknet(
+        model_id=model_id, min_level=3, max_level=5, dilate=dilate)
     self.assertEqual(network.model_id, model_id)
 
     inputs = tf.keras.Input(shape=(input_size, input_size, 3), batch_size=1)
     endpoints = network(inputs)
-    
-    if not dilate:
-        self.assertAllEqual(
-            [1, input_size / 2**3, input_size / 2**3, 128 * endpoint_filter_scale],
-            endpoints['3'].shape.as_list())
-        self.assertAllEqual(
-            [1, input_size / 2**4, input_size / 2**4, 256 * endpoint_filter_scale],
-            endpoints['4'].shape.as_list())
-        self.assertAllEqual([
-            1, input_size / 2**5, input_size / 2**5,
-            512 * endpoint_filter_scale * scale_final
-        ], endpoints['5'].shape.as_list())
-    else:
-        self.assertAllEqual(
-            [1, input_size / 2**3, input_size / 2**3, 128 * endpoint_filter_scale],
-            endpoints['3'].shape.as_list())
-        self.assertAllEqual(
-            [1, input_size / 2**3, input_size / 2**3, 256 * endpoint_filter_scale],
-            endpoints['4'].shape.as_list())
-        self.assertAllEqual([
-            1, input_size / 2**3, input_size / 2**3,
-            512 * endpoint_filter_scale * scale_final
-        ], endpoints['5'].shape.as_list())
 
+    if not dilate:
+      self.assertAllEqual([
+          1, input_size / 2**3, input_size / 2**3, 128 * endpoint_filter_scale
+      ], endpoints['3'].shape.as_list())
+      self.assertAllEqual([
+          1, input_size / 2**4, input_size / 2**4, 256 * endpoint_filter_scale
+      ], endpoints['4'].shape.as_list())
+      self.assertAllEqual([
+          1, input_size / 2**5, input_size / 2**5,
+          512 * endpoint_filter_scale * scale_final
+      ], endpoints['5'].shape.as_list())
+    else:
+      self.assertAllEqual([
+          1, input_size / 2**3, input_size / 2**3, 128 * endpoint_filter_scale
+      ], endpoints['3'].shape.as_list())
+      self.assertAllEqual([
+          1, input_size / 2**3, input_size / 2**3, 256 * endpoint_filter_scale
+      ], endpoints['4'].shape.as_list())
+      self.assertAllEqual([
+          1, input_size / 2**3, input_size / 2**3,
+          512 * endpoint_filter_scale * scale_final
+      ], endpoints['5'].shape.as_list())
 
   @combinations.generate(
       combinations.combine(
@@ -110,9 +111,9 @@ class DarkNetTest(parameterized.TestCase, tf.test.TestCase):
 
 
 if __name__ == '__main__':
-    from yolo.utils.run_utils import prep_gpu
-    try:
-        prep_gpu()
-    except:
-        print("GPUs ready")
-    tf.test.main()
+  from yolo.utils.run_utils import prep_gpu
+  try:
+    prep_gpu()
+  except BaseException:
+    print('GPUs ready')
+  tf.test.main()

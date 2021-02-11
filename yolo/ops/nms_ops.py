@@ -2,7 +2,8 @@ import tensorflow as tf
 
 from yolo.ops import box_ops as box_ops
 
-def aggregated_comparitive_iou(boxes1, boxes2 = None, iou_type = "iou", xyxy = True):
+
+def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type="iou", xyxy=True):
   k = tf.shape(boxes1)[-2]
 
   boxes1 = tf.expand_dims(boxes1, axis=-2)
@@ -16,19 +17,22 @@ def aggregated_comparitive_iou(boxes1, boxes2 = None, iou_type = "iou", xyxy = T
     boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
 
   if iou_type == "diou":
-    _, iou = box_ops.compute_diou(boxes1, boxes2, yxyx = True)
+    _, iou = box_ops.compute_diou(boxes1, boxes2, yxyx=True)
   elif iou_type == "ciou":
-    _, iou = box_ops.compute_ciou(boxes1, boxes2, yxyx = True)
+    _, iou = box_ops.compute_ciou(boxes1, boxes2, yxyx=True)
   elif iou_type == "giou":
-    _, iou = box_ops.compute_giou(boxes1, boxes2, yxyx = True)
+    _, iou = box_ops.compute_giou(boxes1, boxes2, yxyx=True)
   else:
-    iou = box_ops.compute_iou(boxes1, boxes2, yxyx = True)
+    iou = box_ops.compute_iou(boxes1, boxes2, yxyx=True)
   return iou
+
 
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
 
-  ind_m = tf.ones_like(ind) * tf.expand_dims(tf.range(0,tf.shape(objectness)[0]), axis=-1)
+  ind_m = tf.ones_like(ind) * tf.expand_dims(
+      tf.range(0,
+               tf.shape(objectness)[0]), axis=-1)
   bind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis=-1)
 
   box = tf.gather_nd(box, bind)
@@ -38,6 +42,7 @@ def sort_drop(objectness, box, classificationsi, k):
   box = tf.reshape(box, [bsize, k, -1])
   classifications = tf.reshape(classifications, [bsize, k, -1])
   return objectness, box, classifications
+
 
 def segment_nms(boxes, classes, confidence, k, class_thresh, iou_thresh):
   mrange = tf.range(k)
@@ -91,7 +96,7 @@ def nms(boxes,
     classes = tf.squeeze(classes, axis=-1)
 
   box_l, class_l, conf_l = segment_nms(boxes, classes, confidence, k,
-                                        class_thresh, iou_thresh)
+                                       class_thresh, iou_thresh)
   conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)
   class_l = tf.squeeze(class_l, axis=-1)
 
@@ -116,7 +121,6 @@ def nms(boxes,
 #   scores, boxes, classes = sorted_non_max_suppression_padded(
 #       confidence, boxes, classes, k, iou_thresh)
 #   return boxes, classes, scores
-
 
 # # very very slow
 # def _nms(boxes, classif, confid, k, class_thresh, iou_thresh):
@@ -197,7 +201,6 @@ def nms(boxes,
 
 #   return u_box, u_class, u_conf
 
-
 # NMS_TILE_SIZE = 512
 
 # def _self_suppression(iou, _, iou_sum):
@@ -213,7 +216,6 @@ def nms(boxes,
 #       tf.reduce_any(iou_sum - iou_sum_new > 0.5), iou_sum_new
 #   ]
 
-
 # def _cross_suppression(boxes, box_slice, iou_threshold, inner_idx):
 #   batch_size = tf.shape(boxes)[0]
 #   new_slice = tf.slice(boxes, [0, inner_idx * NMS_TILE_SIZE, 0],
@@ -225,7 +227,6 @@ def nms(boxes,
 #           tf.logical_not(tf.reduce_any(iou < iou_threshold, [1])),
 #           box_slice.dtype), 2) * box_slice
 #   return boxes, ret_slice, iou_threshold, inner_idx + 1
-
 
 # def _suppression_loop_body(boxes, iou_threshold, output_size, idx):
 #   """Process boxes in the range [idx*NMS_TILE_SIZE, (idx+1)*NMS_TILE_SIZE).
@@ -281,7 +282,6 @@ def nms(boxes,
 #   output_size += tf.reduce_sum(
 #       tf.cast(tf.reduce_any(box_slice > 0, [2]), tf.int32), [1])
 #   return boxes, iou_threshold, output_size, idx + 1
-
 
 # def sorted_non_max_suppression_padded(scores, boxes, classes, max_output_size,
 #                                       iou_threshold):

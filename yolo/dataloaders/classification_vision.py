@@ -9,13 +9,14 @@ from official.vision.beta.dataloaders import parser
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import augment
 
+
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
   def __init__(self,
                output_size,
                aug_policy,
-               scale = [128, 448],
+               scale=[128, 448],
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
@@ -70,7 +71,7 @@ class Parser(parser.Parser):
     """
     image = tf.io.decode_image(decoded_tensors['image/encoded'])
     image.set_shape((None, None, 3))
-    
+
     image = tf.image.resize_with_pad(
         image,
         target_width=self._output_size[0],
@@ -90,7 +91,7 @@ class Parser(parser.Parser):
       image = self._augmenter.distort(image)
 
     image = tf.image.random_flip_left_right(image)
-    image = tf.cast(image, tf.float32)/255
+    image = tf.cast(image, tf.float32) / 255
     image = tf.image.resize(image, (self._output_size[0], self._output_size[1]))
 
     label = decoded_tensors['image/class/label']

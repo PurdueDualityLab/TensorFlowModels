@@ -5,6 +5,7 @@ import tensorflow as tf
 from typing import Tuple, Union
 import math
 
+
 def yxyx_to_xcycwh(box: tf.Tensor):
   """Converts boxes from ymin, xmin, ymax, xmax to x_center, y_center, width, height.
     Args:
@@ -58,8 +59,7 @@ def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
   return dist
 
 
-
-#IOU
+# IOU
 def compute_iou(box1, box2, yxyx=False):
   """Calculates the intersection of union between box1 and box2.
     Args:
@@ -95,7 +95,7 @@ def compute_iou(box1, box2, yxyx=False):
   return iou
 
 
-def compute_giou(box1, box2, yxyx = False):
+def compute_giou(box1, box2, yxyx=False):
   """Calculates the generalized intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -129,8 +129,8 @@ def compute_giou(box1, box2, yxyx = False):
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # find the smallest box to encompase both box1 and box2
-    c_mins = tf.math.minimum(b1mi, b2mi)#box1[..., 0:2], box2[..., 0:2])
-    c_maxes = tf.math.maximum(b1ma, b2ma)#box1[..., 2:4], box2[..., 2:4])
+    c_mins = tf.math.minimum(b1mi, b2mi)  # box1[..., 0:2], box2[..., 0:2])
+    c_maxes = tf.math.maximum(b1ma, b2ma)  # box1[..., 2:4], box2[..., 2:4])
     c = tf.math.abs(tf.reduce_prod(c_mins - c_maxes, axis=-1))
 
     # compute giou
@@ -139,7 +139,7 @@ def compute_giou(box1, box2, yxyx = False):
   return iou, giou
 
 
-def compute_diou(box1, box2, yxyx = False):
+def compute_diou(box1, box2, yxyx=False):
   """Calculates the distance intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -179,8 +179,8 @@ def compute_diou(box1, box2, yxyx = False):
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # compute max diagnal of the smallest enclosing box
-    c_mins = tf.math.minimum(b1mi, b2mi)#box1[..., 0:2], box2[..., 0:2])
-    c_maxes = tf.math.maximum(b1ma, b2ma)#box1[..., 2:4], box2[..., 2:4])
+    c_mins = tf.math.minimum(b1mi, b2mi)  # box1[..., 0:2], box2[..., 0:2])
+    c_maxes = tf.math.maximum(b1ma, b2ma)  # box1[..., 2:4], box2[..., 2:4])
 
     diag_dist = tf.reduce_sum((c_maxes - c_mins)**2, axis=-1)
 
@@ -189,7 +189,7 @@ def compute_diou(box1, box2, yxyx = False):
   return iou, diou
 
 
-def compute_ciou(box1, box2, yxyx = False):
+def compute_ciou(box1, box2, yxyx=False):
   """Calculates the complete intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -202,7 +202,7 @@ def compute_ciou(box1, box2, yxyx = False):
   with tf.name_scope('ciou'):
     # compute DIOU and IOU
 
-    iou, diou = compute_diou(box1, box2, yxyx = yxyx)
+    iou, diou = compute_diou(box1, box2, yxyx=yxyx)
 
     if yxyx:
       box1 = yxyx_to_xcycwh(box1)
