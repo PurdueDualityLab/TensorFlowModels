@@ -13,6 +13,20 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser
 from yolo.ops import loss_utils as loss_ops
 
+def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+  shape = tf.shape(value)
+  if pad_axis < 0:
+    pad_axis = tf.shape(shape)[0] + pad_axis
+  dim1 = shape[pad_axis]
+  take = tf.math.reduce_min([instances, dim1])
+  value, _ = tf.split(
+      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
+  pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
+  nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
+  pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
+  value = tf.concat([value, pad_tensor], axis=pad_axis)
+  return value
+
 
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
@@ -29,6 +43,7 @@ class Parser(parser.Parser):
                min_level=3,
                max_level=5,
                masks=None,
+               cutmix = True, 
                max_process_size=608,
                min_process_size=320,
                max_num_instances=200,
@@ -79,7 +94,7 @@ class Parser(parser.Parser):
 
     self._max_process_size = max_process_size
     self._min_process_size = min_process_size
-    self._fixed_size = False #fixed_size
+    
 
     self._anchors = anchors
     self._masks = {
@@ -100,6 +115,8 @@ class Parser(parser.Parser):
     self._aug_rand_hue = aug_rand_hue
 
     self._seed = seed
+    self._cutmix = cutmix
+    self._fixed_size = fixed_size
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -206,7 +223,7 @@ class Parser(parser.Parser):
       if do_scale:
         randscale = tf.random.uniform([],
                                       minval=10,
-                                      maxval=21,
+                                      maxval=15,
                                       seed=self._seed,
                                       dtype=tf.int32)
     
@@ -232,37 +249,40 @@ class Parser(parser.Parser):
         target_width=self._image_w,
         target_height=self._image_h, 
         randomize = False)
-  
-      
     
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     image = tf.clip_by_value(image, 0.0, 1.0)
     num_dets = tf.shape(classes)[0]
 
-    best_anchors = preprocessing_ops.get_best_anchor(
-        boxes, self._anchors, width=self._image_w, height=self._image_h)
-
     # padding
-    boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,self._max_num_instances, 0)
     classes = preprocess_ops.clip_or_pad_to_fixed_size(classes, self._max_num_instances, -1)
-    best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
-
-    labels = {
+   
+    if self._fixed_size and not self._cutmix:
+      best_anchors = preprocessing_ops.get_best_anchor(boxes, self._anchors, width=self._image_w, height=self._image_h)
+      best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(best_anchors, self._max_num_instances, 0)
+      boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,self._max_num_instances, 0)
+      labels = {
         'source_id': data['source_id'],
         'bbox': tf.cast(boxes, self._dtype),
         'classes': tf.cast(classes, self._dtype),
         'best_anchors': tf.cast(best_anchors, self._dtype),
         'width': width,
         'height': height,
-        'num_detections': num_dets,
-    }
-
-    if self._fixed_size:
-      grid = self._build_grid(
-          labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
+        'num_detections': num_dets
+      }
+      grid = self._build_grid(labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
       labels.update({'grid_form': grid})
       labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-
+    else:
+      boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,self._max_num_instances, 0)
+      labels = {
+        'source_id': data['source_id'],
+        'bbox': tf.cast(boxes, self._dtype),
+        'classes': tf.cast(classes, self._dtype),
+        'width': width,
+        'height': height,
+        'num_detections': num_dets
+      }
     return image, labels
 
   # broken for some reason in task, i think dictionary to coco evaluator has
@@ -288,16 +308,16 @@ class Parser(parser.Parser):
 
     best_anchors = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
-    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,
+    boxes = pad_max_instances(boxes, self._max_num_instances,
                                                 0)
-    classes = preprocessing_ops.pad_max_instances(data['groundtruth_classes'],
+    classes = pad_max_instances(data['groundtruth_classes'],
                                                   self._max_num_instances, -1)
-    best_anchors = preprocessing_ops.pad_max_instances(best_anchors,
+    best_anchors = pad_max_instances(best_anchors,
                                                        self._max_num_instances,
                                                        0)
-    area = preprocessing_ops.pad_max_instances(data['groundtruth_area'],
+    area = pad_max_instances(data['groundtruth_area'],
                                                self._max_num_instances, 0)
-    is_crowd = preprocessing_ops.pad_max_instances(
+    is_crowd = pad_max_instances(
         tf.cast(data['groundtruth_is_crowd'], tf.int32),
         self._max_num_instances, 0)
 
@@ -325,6 +345,18 @@ class Parser(parser.Parser):
     return image, labels
 
   def _postprocess_fn(self, image, label):
+    
+    if self._cutmix: 
+      batch_size = tf.shape(image)[0]
+      if batch_size >= 1:
+        boxes = box_utils.xcycwh_to_yxyx(label['bbox'])
+        classes = label['classes']
+        image, boxes, classes, num_detections = preprocessing_ops.randomized_cutmix_batch(image, boxes, classes)
+        boxes = box_utils.yxyx_to_xcycwh(boxes)
+        label['bbox'] = pad_max_instances(boxes, self._max_num_instances,  pad_axis=-2, pad_value=0)
+        label['classes'] = pad_max_instances(classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
+
+
     randscale = self._image_w // self._net_down_scale
     if not self._fixed_size:
       do_scale = tf.greater(
@@ -338,6 +370,10 @@ class Parser(parser.Parser):
                                       dtype=tf.int32)
     width = randscale * self._net_down_scale
     image = tf.image.resize(image, (width, width))
+
+    best_anchors = preprocessing_ops.get_best_anchor_batch(label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
+    label['best_anchors'] = pad_max_instances(best_anchors, self._max_num_instances, pad_axis=-2, pad_value=0)
+    
     grid = self._build_grid(
         label, width, batch=True, use_tie_breaker=self._use_tie_breaker)
     label.update({'grid_form': grid})
@@ -345,7 +381,7 @@ class Parser(parser.Parser):
     return image, label
 
   def postprocess_fn(self):
-    return self._postprocess_fn if not self._fixed_size else None
+    return self._postprocess_fn if not self._fixed_size or self._cutmix else None
 
   # def parse_fn(self, is_training):
   #   """Returns a parse fn that reads and parses raw tensors from the decoder.

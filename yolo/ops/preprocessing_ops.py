@@ -16,8 +16,8 @@ def rand_scale(val, dtype = tf.float32):
     return scale 
   return 1.0/scale
   
-def shift_zeros(data, mask, axis=-2):
-  zeros = tf.zeros_like(data)
+def shift_zeros(data, mask, axis=-2, fill = 0):
+  zeros = tf.zeros_like(data) + fill
 
   data_flat = tf.boolean_mask(data, mask)
   nonzero_lens = tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=-2)
@@ -136,17 +136,7 @@ def translate_image(image, translate_x, translate_y):
   return image
 
 
-def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
-  shape = tf.shape(value)
-  dim1 = shape[pad_axis]
-  take = tf.math.reduce_min([instances, dim1])
-  value, _ = tf.split(
-      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
-  pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
-  nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
-  pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
-  value = tf.concat([value, pad_tensor], axis=pad_axis)
-  return value
+
 
 def resize_crop_filter(image,
                        boxes,
@@ -223,7 +213,7 @@ def crop_filter_to_bbox(image,
     y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
     w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
     h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill = -1)
     classes = tf.squeeze(classes, axis=-1)
 
     if not fix:
@@ -308,7 +298,7 @@ def cut_out(image_full, boxes, classes, target_width, target_height,
   y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
   w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
   h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-  classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask)
+  classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill = -1)
   classes = tf.squeeze(classes, axis=-1)
 
   boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
@@ -344,7 +334,7 @@ def cutmix_1(image_to_crop, boxes1, classes1, image_mask, boxes2, classes2,
     y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
     w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
     h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill = -1)
     classes = tf.squeeze(classes, axis=-1)
 
     boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
@@ -392,14 +382,13 @@ def cutmix_batch(image, boxes, classes, target_width, target_height,
     y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
     w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
     h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask)
+    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill = -1)
     classes = tf.squeeze(classes, axis=-1)
 
     boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
     boxes = box_ops.xcycwh_to_yxyx(boxes)
 
     x = tf.squeeze(x, axis=-1)
-    classes = tf.where(x == 0, -1, classes)
 
     num_detections = tf.reduce_sum(tf.cast(x > 0, tf.int32), axis=-1)
 
@@ -529,7 +518,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
   with tf.name_scope('get_anchor'):
     width = tf.cast(width, dtype=tf.float32)
     height = tf.cast(height, dtype=tf.float32)
-
     # split the boxes into center and width height
     anchor_xy = y_true[..., 0:2]
     true_wh = y_true[..., 2:4]
@@ -540,13 +528,14 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
     anchors_y = anchors[..., 1] / height
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
     k = tf.shape(anchors)[0]
-
     # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
     anchors = tf.transpose(anchors, perm=[1, 0])
+
     anchor_xy = tf.tile(
         tf.expand_dims(anchor_xy, axis=-1), [1, 1, tf.shape(anchors)[-1]])
     anchors = tf.tile(
         tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1])
+
     
 
     # stack the xy so, each anchor is asscoaited once with each center from 
@@ -560,6 +549,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
         tf.expand_dims(y_true[..., 0:4], axis=-1),
         [1, 1, tf.shape(anchors)[0]])
     truth_comp = tf.transpose(truth_comp, perm=[2, 0, 1])
+    tf.print(tf.shape(anchors), tf.shape(truth_comp))
 
     # compute intersection over union of the boxes, and take the argmax of 
     # comuted iou for each box. thus each box is associated with the 
@@ -583,6 +573,71 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
 
   return tf.cast(iou_index, dtype=tf.float32)
 
+def get_best_anchor_batch(y_true, anchors, width=1, height=1):
+  """
+    get the correct anchor that is assoiciated with each box using IOU
+    Args:
+      y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
+      anchors: list or tensor for the anchor boxes to be used in prediction 
+        found via Kmeans
+      width: int for the image width
+      height: int for the image height
+
+    Return:
+      tf.Tensor: y_true with the anchor associated with each ground truth 
+      box known
+    """
+  with tf.name_scope('get_anchor'):
+    width = tf.cast(width, dtype=tf.float32)
+    height = tf.cast(height, dtype=tf.float32)
+    # split the boxes into center and width height
+    anchor_xy = y_true[..., 0:2]
+    true_wh = y_true[..., 2:4]
+
+    # scale thhe boxes
+    anchors = tf.convert_to_tensor(anchors, dtype=tf.float32)
+    anchors_x = anchors[..., 0] / width
+    anchors_y = anchors[..., 1] / height
+    anchors = tf.stack([anchors_x, anchors_y], axis=-1)
+    k = tf.shape(anchors)[0]
+    # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
+    anchors = tf.transpose(anchors, perm=[1, 0])
+
+    anchor_xy = tf.repeat(tf.expand_dims(anchor_xy, axis=-1), tf.shape(anchors)[-1], axis = -1)
+    anchors = tf.repeat(tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[1], axis = 0)
+    anchors = tf.repeat(tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[0], axis = 0)
+
+    # stack the xy so, each anchor is asscoaited once with each center from 
+    # the ground truth input
+    anchors = K.concatenate([anchor_xy, anchors], axis=2)
+    anchors = tf.transpose(anchors, perm=[0, 3, 1, 2])
+    
+    # # copy the gt n times so that each anchor from above can be compared to 
+    # # input ground truth to shape: [num_anchors, num_boxes, 4]
+    truth_comp = tf.tile(tf.expand_dims(y_true[..., 0:4], axis=-1),[1, 1, 1, tf.shape(anchors)[1]])
+    truth_comp = tf.transpose(truth_comp, perm=[0, 3, 1, 2])
+
+    # compute intersection over union of the boxes, and take the argmax of 
+    # comuted iou for each box. thus each box is associated with the 
+    # largest interection over union
+    iou_raw = box_ops.compute_iou(truth_comp, anchors)
+    values, indexes = tf.math.top_k(
+        tf.transpose(iou_raw, perm=[0, 2, 1]),
+        k=tf.cast(k, dtype=tf.int32),
+        sorted=True)
+    ind_mask = tf.cast(values > 0.213, dtype=indexes.dtype)
+
+    # pad the indexs such that all values less than the thresh are -1
+    # add one, multiply the mask to zeros all the bad locations
+    # subtract 1 makeing all the bad locations 0.
+    iou_index = tf.concat([
+        K.expand_dims(indexes[..., 0], axis=-1),
+        ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
+    ],
+                          axis=-1)
+    iou_index = iou_index[..., :6]
+
+  return tf.cast(iou_index, dtype=tf.float32)
 
 def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   """
@@ -844,3 +899,13 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
     update = update.stack()
     full = tf.tensor_scatter_nd_update(full, update_index, update)
   return full
+
+
+def unpad_tensor(input_tensor, padding_value = 0):
+  if tf.rank(input_tensor) == 3:
+    abs_sum_tensor = tf.reduce_sum(tf.abs(input_tensor), -1)
+    padding_vector = tf.ones(shape = (1, 1)) * padding_value
+    mask = abs_sum_tensor != padding_vector
+    return input_tensor[mask]
+  elif tf.rank(input_tensor) == 2:
+    return input_tensor[input_tensor != padding_value]
