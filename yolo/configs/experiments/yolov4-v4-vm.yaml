@@ -30,8 +30,8 @@ task:
     filter:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
-      iou_thresh: 0.0
-      class_thresh: 0.0
+      iou_thresh: 0.1
+      class_thresh: 0.1
       loss_type: ciou
       max_boxes: 200
       use_nms: false
