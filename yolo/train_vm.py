@@ -35,7 +35,15 @@ from official.modeling import performance
 FLAGS = flags.FLAGS
 '''
 get the cache file:
-scp -i ./jaeyounkim-purdue-1 cache.zip  purdue@34.105.118.198:~/
+scp -i <keyfile> cache.zip  purdue@<ip>:~/
+
+tensorboard:
+on the vm:
+nohup tensorboard --logdir ../checkpoints/yolov4-model --port 6006  >> temp.log
+
+on your device:
+ssh -i <keyfile> -N -f -L localhost:16006:localhost:6006 purdue@<ip>
+
 
 train darknet:
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
