@@ -58,7 +58,7 @@ def scale_image(image, resize=False, w=None, h=None):
 
 def random_jitter(image, box, classes, t, seed=10):
   jx = 1 + tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
-  jy = jx  # 1 + tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
+  jy = 1 + tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
   shape = tf.shape(image)
 
   if tf.shape(shape)[0] == 4:
@@ -83,8 +83,9 @@ def random_translate(image, box, classes, t, seed=10):
 def random_zoom_crop(image, boxes, classes, zoom_factor):
   jx = 1 + tf.random.uniform(
       minval=-zoom_factor, maxval=zoom_factor, shape=(), dtype=tf.float32)
-  jy = 1 + tf.random.uniform(
-      minval=-zoom_factor, maxval=zoom_factor, shape=(), dtype=tf.float32)
+  jy = jx
+  # jy = 1 + tf.random.uniform(
+  #     minval=-zoom_factor, maxval=zoom_factor, shape=(), dtype=tf.float32)
   shape = tf.shape(image)
   if tf.shape(shape)[0] == 4:
     width = shape[2]
