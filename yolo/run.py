@@ -96,7 +96,7 @@ def define_flags():
 
   flags.DEFINE_integer("max_batch", default=None, help="preprocess on the gpu")
 
-  flags.DEFINE_integer("wait_time", default=None, help="preprocess on the gpu")
+  flags.DEFINE_float("wait_time", default=None, help="preprocess on the gpu")
 
   flags.DEFINE_integer(
       "out_resolution", default=416, help="preprocess on the gpu")
