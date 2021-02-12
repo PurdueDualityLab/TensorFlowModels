@@ -23,6 +23,7 @@ from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
 
+
 class FastVideo(object):
   """
     program for faster object detection in TensorFlow. Algorithm was tested on RTX 2070 Super with Intel Core i5-4500k CPU. The first 2-3 seconds of
@@ -83,7 +84,7 @@ class FastVideo(object):
     file_name = 0 if file_name is None else file_name
     try:
       file_name = int(file_name)
-    except:
+    except BaseException:
       print(file_name)
     self._cap = cv2.VideoCapture(file_name)
     if not self._cap.isOpened():
@@ -153,7 +154,7 @@ class FastVideo(object):
     self._display_que = Queue(1 * scale_que)
     self._running = True
 
-    self._dynamic_wt = (wait_time == 'dynamic' or wait_time == None)
+    self._dynamic_wt = (wait_time == 'dynamic' or wait_time is None)
     if not self._dynamic_wt:
       self._wait_time = utils.get_wait_time(wait_time, max_batch)
     else:
@@ -524,8 +525,6 @@ def get_model(model):
 #   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
 #   task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
-  
-
 
 #   cap = FastVideo(
 #       "../videos/nyc.mp4",

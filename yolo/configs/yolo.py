@@ -222,7 +222,7 @@ class Yolo(ModelConfig):
   max_level: int = 5
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
-  dilate:bool = False
+  dilate: bool = False
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
@@ -230,8 +230,10 @@ class Yolo(ModelConfig):
       norm_momentum=0.99,
       norm_epsilon=0.001)
   decoder_activation: str = 'leaky'
-  _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'])
-
+  _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: [
+      '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)', '(72, 146)',
+      '(142, 110)', '(192, 243)', '(459, 401)'
+  ])
 
 
 # model task
@@ -244,19 +246,19 @@ class YoloTask(cfg.TaskConfig):
   annotation_file: Optional[str] = None
   gradient_clip_norm: float = 0.0
   per_category_metrics: bool = False
-  
+
   load_darknet_weights: bool = True
   darknet_load_decoder: bool = True
+
 
 @dataclasses.dataclass
 class YoloSubDivTask(YoloTask):
   subdivisions: int = 4
 
+
 COCO_INPUT_PATH_BASE = 'coco'
 COCO_TRIAN_EXAMPLES = 118287
 COCO_VAL_EXAMPLES = 5000
-
-
 
 
 @exp_factory.register_config_factory('yolo_custom')
@@ -328,6 +330,7 @@ def yolo_custom() -> cfg.ExperimentConfig:
       ])
 
   return config
+
 
 @exp_factory.register_config_factory('yolo_subdiv_custom')
 def yolo_subdiv_custom() -> cfg.ExperimentConfig:

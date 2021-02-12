@@ -31,9 +31,8 @@ from official.core import task_factory
 from official.core import train_lib
 from official.modeling import performance
 
-
 FLAGS = flags.FLAGS
-'''
+"""
 get the cache file:
 scp -i <keyfile> cache.zip  purdue@<ip>:~/
 
@@ -49,7 +48,7 @@ train darknet:
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
 python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
 
-finetune darknet: 
+finetune darknet:
 nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log
 
 train yolo-v4:
@@ -57,9 +56,9 @@ nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --
 nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-1gpu.yaml  >> yolov4-1gpu.log & tail -f yolov4-1gpu.log
 
 
-evalaute Yolo: 
+evalaute Yolo:
 nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-eval.yaml  >> yolov4-eval.log & tail -f yolov4-eval.log
-'''
+"""
 
 
 def main(_):
@@ -67,7 +66,6 @@ def main(_):
   print(FLAGS.experiment)
   params = train_utils.parse_configuration(FLAGS)
 
-  
   model_dir = FLAGS.model_dir
   if 'train' in FLAGS.mode:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
@@ -81,8 +79,10 @@ def main(_):
   if params.runtime.mixed_precision_dtype:
     performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
                                            params.runtime.loss_scale)
-  if params.runtime.worker_hosts != '' and params.runtime.worker_hosts is not None:                                       
-    num_workers = distribute_utils.configure_cluster(worker_hosts=params.runtime.worker_hosts, task_index=params.runtime.task_index)
+  if params.runtime.worker_hosts != '' and params.runtime.worker_hosts is not None:
+    num_workers = distribute_utils.configure_cluster(
+        worker_hosts=params.runtime.worker_hosts,
+        task_index=params.runtime.task_index)
     print(num_workers)
   distribution_strategy = distribute_utils.get_distribution_strategy(
       distribution_strategy=params.runtime.distribution_strategy,
@@ -99,6 +99,7 @@ def main(_):
       params=params,
       model_dir=model_dir)
 
+
 if __name__ == '__main__':
   import datetime
 
@@ -107,5 +108,4 @@ if __name__ == '__main__':
   app.run(main)
   b = datetime.datetime.now()
 
-
-  print("\n\n\n\n\n\n\n {b - a}")
+  print('\n\n\n\n\n\n\n {b - a}')

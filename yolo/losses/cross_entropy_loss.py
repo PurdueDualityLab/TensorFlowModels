@@ -7,11 +7,13 @@ def smooth_labels(y_true, y_pred, label_smoothing):
   num_classes = tf.cast(tf.shape(y_true)[-1], y_pred.dtype)
   return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
 
+
 def ce_loss(y_true, y_pred, label_smoothing):
   y_true = smooth_labels(y_true, y_pred, label_smoothing)\
 
   loss = -tf.math.xlogy(y_true, y_pred + tf.keras.backend.epsilon())
-  return tf.math.reduce_sum(loss, axis = -1)
+  return tf.math.reduce_sum(loss, axis=-1)
+
 
 # def ce_loss(y_true, y_pred, label_smoothing):
 #   y_true = smooth_labels(y_true, y_pred, label_smoothing)\
@@ -23,7 +25,7 @@ class CrossEntropyLoss(tf.keras.losses.Loss):
   """Wraps a loss function in the `Loss` class."""
 
   def __init__(self,
-               label_smoothing = 0.0, 
+               label_smoothing=0.0,
                reduction=tf.keras.losses.Reduction.SUM,
                name=None,
                **kwargs):
@@ -58,8 +60,9 @@ class CrossEntropyLoss(tf.keras.losses.Loss):
     tf.print(y_true)
     return -tf.math.xlogy(y_true, y_pred)
 
+
 if __name__ == '__main__':
-  loss = CrossEntropyLoss(label_smoothing = 0.1)
+  loss = CrossEntropyLoss(label_smoothing=0.1)
 
   y = tf.ones((1, 2))
   x = tf.ones((1, 2))

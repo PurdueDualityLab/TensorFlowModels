@@ -22,7 +22,10 @@ def load_weights(convs, layers):
     except BaseException as e:
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
 
+
 # import sys
+
+
 def load_weights_backbone(model, net):
   convs = []
   for layer in net:
@@ -33,7 +36,7 @@ def load_weights_backbone(model, net):
   key = 0
   for layer in model.layers:
     # non sub module conv blocks
-    #print(layer.name)
+    # print(layer.name)
     if isinstance(layer, ConvBN):
       layers[key] = layer
       key += 1
@@ -43,14 +46,14 @@ def load_weights_backbone(model, net):
         if isinstance(sublayer, ConvBN):
           #print(sublayer.name, key)
           temp.append(sublayer)
-      
+
       a = [temp[-1]] + temp[:-1]
 
       for layeri in a:
         layers[key] = layeri
         #print(layeri.name, key)
         key += 1
-        
+
     else:
       for sublayer in layer.submodules:
         if isinstance(sublayer, ConvBN):
@@ -61,6 +64,7 @@ def load_weights_backbone(model, net):
   load_weights(convs, layers)
   # sys.exit()
   return
+
 
 def load_weights_neck(model, net):
   convs = []
@@ -97,7 +101,6 @@ def load_weights_neck(model, net):
 
   load_weights(convs, layers)
   return
-
 
 
 def ishead(out_conv, layer):

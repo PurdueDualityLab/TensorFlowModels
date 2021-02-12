@@ -10,7 +10,12 @@ from yolo.utils.demos import utils
 
 class VideoServer(object):
 
-  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10, post_process = None):
+  def __init__(self,
+               file=0,
+               disp_h=720,
+               wait_time=0.001,
+               que=10,
+               post_process=None):
 
     self._file = file
     self._cap = cv2.VideoCapture(file)
@@ -76,7 +81,7 @@ class VideoServer(object):
             image, (self._width, self._height), interpolation=cv2.INTER_AREA)
         image = image / 255
 
-        if self._postprocess_fn != None:
+        if self._postprocess_fn is not None:
           image = self._postprocess_fn(image)
         # then dump the image on the que
         self._ret_que.put(image)
@@ -128,7 +133,12 @@ class VideoServer(object):
 
 class VideoPlayer(object):
 
-  def __init__(self, file=0, disp_h=720, wait_time=0.001, que=10, post_process = None):
+  def __init__(self,
+               file=0,
+               disp_h=720,
+               wait_time=0.001,
+               que=10,
+               post_process=None):
 
     self._file = file
     self._cap = cv2.VideoCapture(file)
@@ -151,7 +161,7 @@ class VideoPlayer(object):
       image = cv2.resize(
           image, (self._width, self._height), interpolation=cv2.INTER_AREA)
       image = image / 255
-      if self._postprocess_fn != None:
+      if self._postprocess_fn is not None:
         image = self._postprocess_fn(image)
     return suc, image
 

@@ -1,4 +1,4 @@
-  # Lint as: python3
+# Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,8 +64,8 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       splits = model.backbone._splits
       if 'neck_split' in splits.keys():
         encoder, decoder, _ = split_converter(list_encdec,
-                                                 splits['backbone_split'],
-                                                 splits['neck_split'])
+                                              splits['backbone_split'],
+                                              splits['neck_split'])
       else:
         encoder, decoder = split_converter(list_encdec,
                                            splits['backbone_split'])
@@ -108,7 +108,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 
       logging.info('Finished loading pretrained checkpoint from %s',
-                  ckpt_dir_or_file)
+                   ckpt_dir_or_file)
       # model.backbone.trainable = False
       # model.head.trainable = False
 
@@ -130,7 +130,8 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       #     model_outputs,
       #     from_logits=False,
       #     label_smoothing=losses_config.label_smoothing)
-      total_loss = cross_entropy_loss.ce_loss(labels, model_outputs, losses_config.label_smoothing)
+      total_loss = cross_entropy_loss.ce_loss(labels, model_outputs,
+                                              losses_config.label_smoothing)
       #total_loss = tf.math.reduce_sum(total_loss)
     else:
       total_loss = tf.keras.losses.sparse_categorical_crossentropy(
@@ -168,8 +169,8 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
         dtype=params.dtype)
 
     # parser = classification_vision.Parser(
-    #   output_size = input_size[:2],  
-    #   aug_policy = 'randaug', 
+    #   output_size = input_size[:2],
+    #   aug_policy = 'randaug',
     #   dtype=params.dtype)
 
     reader = input_reader.InputReader(
@@ -237,7 +238,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     elif model.compiled_metrics:
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
-    
+
     tf.print(logs, end='\r')
 
     # ret = '\033[F' * (len(logs.keys()))

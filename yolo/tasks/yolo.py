@@ -94,7 +94,7 @@ class YoloTask(base_task.Task):
         jitter_boxes=params.parser.jitter_boxes,
         masks=masks,
         letter_box=params.parser.letter_box,
-        cutmix=params.parser.cutmix, 
+        cutmix=params.parser.cutmix,
         use_tie_breaker=params.parser.use_tie_breaker,
         min_process_size=params.parser.min_process_size,
         max_process_size=params.parser.max_process_size,
@@ -107,8 +107,7 @@ class YoloTask(base_task.Task):
         aug_rand_zoom=params.parser.aug_rand_zoom,
         aug_rand_hue=params.parser.aug_rand_hue,
         anchors=anchors,
-        dtype = params.dtype)
-
+        dtype=params.dtype)
 
     reader = input_reader.InputReader(
         params,
@@ -129,7 +128,8 @@ class YoloTask(base_task.Task):
     grid = labels['grid_form']
     for key in outputs.keys():
       # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
-      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](grid[key], outputs[key])
+      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
+          key](grid[key], outputs[key])
       #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
       loss += _loss
       loss_box += _loss_box
@@ -147,11 +147,11 @@ class YoloTask(base_task.Task):
 
   def build_metrics(self, training=True):
     metrics = []
-    metric_names = self._metric_names 
-    
+    metric_names = self._metric_names
+
     for name in metric_names:
       metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
-    
+
     self._metrics = metrics
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
@@ -162,7 +162,7 @@ class YoloTask(base_task.Task):
     return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
@@ -186,14 +186,14 @@ class YoloTask(base_task.Task):
                                             self.task_config.gradient_clip_norm)
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    #custom metrics
+    # custom metrics
     logs = {'loss': loss}
 
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
-    
+
     tf.print(logs, end='\n')
 
     ret = '\033[F' * (len(logs.keys()) + 1)
@@ -201,7 +201,7 @@ class YoloTask(base_task.Task):
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
-    #get the data point
+    # get the data point
     image, label = inputs
 
     # computer detivative and apply gradients
@@ -213,15 +213,22 @@ class YoloTask(base_task.Task):
     # loss_metrics.update(metrics)
     image_shape = tf.shape(image)[1:-1]
 
-    label['boxes'] = box_ops.denormalize_boxes(tf.cast(label['bbox'], tf.float32), image_shape)
+    label['boxes'] = box_ops.denormalize_boxes(
+        tf.cast(label['bbox'], tf.float32), image_shape)
     del label['bbox']
 
     coco_model_outputs = {
-        'detection_boxes': box_ops.denormalize_boxes(tf.cast(y_pred['bbox'], tf.float32), image_shape),
-        'detection_scores': y_pred['confidence'],
-        'detection_classes': y_pred['classes'],
-        'num_detections': tf.shape(y_pred['bbox'])[:-1],
-        'source_id': label['source_id'],
+        'detection_boxes':
+            box_ops.denormalize_boxes(
+                tf.cast(y_pred['bbox'], tf.float32), image_shape),
+        'detection_scores':
+            y_pred['confidence'],
+        'detection_classes':
+            y_pred['classes'],
+        'num_detections':
+            tf.shape(y_pred['bbox'])[:-1],
+        'source_id':
+            label['source_id'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
@@ -233,7 +240,7 @@ class YoloTask(base_task.Task):
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
-    #return super().aggregate_logs(state=state, step_outputs=step_outputs)
+    # return super().aggregate_logs(state=state, step_outputs=step_outputs)
 
     if not state:
       # for metric in self._metrics:
@@ -245,7 +252,7 @@ class YoloTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
-    #return super().reduce_aggregated_logsI(aggregated_logs)
+    # return super().reduce_aggregated_logsI(aggregated_logs)
     return self.coco_metric.result()
 
   @property
@@ -254,7 +261,7 @@ class YoloTask(base_task.Task):
 
   def _get_boxes(self, gen_boxes=True):
     # gen_boxes = params.is_training
-    if gen_boxes and self.task_config.model.boxes == None and not self._anchors_built:
+    if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
@@ -291,7 +298,7 @@ class YoloTask(base_task.Task):
 
     params = self.task_config.model
 
-    if self._masks == None or self._path_scales == None or self._x_y_scales == None:
+    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
       for i in range(params.min_level, params.max_level + 1):
         boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
         path_scales[str(i)] = 2**i
@@ -308,7 +315,7 @@ class YoloTask(base_task.Task):
 
     metric_names = []
     for key in self._masks.keys():
-      metric_names.append(f"recall50_{key}") 
+      metric_names.append(f"recall50_{key}")
       metric_names.append(f"avg_iou_{key}")
 
     metric_names.append('box_loss')
@@ -364,7 +371,7 @@ class YoloTask(base_task.Task):
       #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck != None:
+        if neck is not None:
           load_weights_neck(model.decoder.neck, neck)
           #model.decoder.neck.trainable = False
         cfgheads = load_head(model.decoder.head, decoder)
