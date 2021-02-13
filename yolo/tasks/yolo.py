@@ -82,7 +82,9 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    print(masks, path_scales, xy_scales)
+    if params.is_training and params.parser.mosaic:
+      params.global_batch_size = 4 * params.global_batch_size
+
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
         image_h=params.parser.image_h,
@@ -95,6 +97,7 @@ class YoloTask(base_task.Task):
         masks=masks,
         letter_box=params.parser.letter_box,
         cutmix=params.parser.cutmix,
+        mosaic=params.parser.mosaic, 
         use_tie_breaker=params.parser.use_tie_breaker,
         min_process_size=params.parser.min_process_size,
         max_process_size=params.parser.max_process_size,

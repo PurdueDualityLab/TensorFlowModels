@@ -44,7 +44,8 @@ class Parser(parser.Parser):
                min_level=3,
                max_level=5,
                masks=None,
-               cutmix=True,
+               cutmix = False,
+               mosaic = True, 
                max_process_size=608,
                min_process_size=320,
                max_num_instances=200,
@@ -117,6 +118,7 @@ class Parser(parser.Parser):
     self._seed = seed
     self._cutmix = cutmix
     self._fixed_size = fixed_size
+    self._mosaic = mosaic
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -220,7 +222,7 @@ class Parser(parser.Parser):
           image, boxes, classes, self._jitter_im, seed=self._seed)
       # image, boxes, classes = preprocessing_ops.random_translate(image, boxes, classes, 0.2, seed=self._seed)
 
-    if self._aug_rand_zoom:
+    if self._aug_rand_zoom and not self._mosaic:
       image, boxes, classes = preprocessing_ops.random_zoom_crop(
           image, boxes, classes, self._jitter_im)
 
@@ -229,7 +231,7 @@ class Parser(parser.Parser):
     height = shape[0]
     randscale = self._image_w // self._net_down_scale
 
-    if self._fixed_size:
+    if self._fixed_size and not self._mosaic:
       do_scale = tf.greater(
           tf.random.uniform([], minval=0, maxval=1, seed=self._seed),
           1 - self._pct_rand)
@@ -240,7 +242,7 @@ class Parser(parser.Parser):
                                       seed=self._seed,
                                       dtype=tf.int32)
 
-    if self._letter_box:
+    if self._letter_box and not self._mosaic:
       image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
           image,
           boxes,
@@ -266,16 +268,16 @@ class Parser(parser.Parser):
     height = shape[0]
     image = tf.image.resize(image, (self._image_w, self._image_h))
 
-    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    
     image = tf.clip_by_value(image, 0.0, 1.0)
     num_dets = tf.shape(classes)[0]
-
     # padding
     classes = preprocess_ops.clip_or_pad_to_fixed_size(classes,
                                                        self._max_num_instances,
                                                        -1)
 
-    if self._fixed_size and not self._cutmix:
+    if self._fixed_size and not self._cutmix and not self._mosaic:
+      boxes = box_utils.yxyx_to_xcycwh(boxes)
       best_anchors = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
       best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(
@@ -300,6 +302,7 @@ class Parser(parser.Parser):
       boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
                                                        self._max_num_instances,
                                                        0)
+                                  
       labels = {
           'source_id': data['source_id'],
           'bbox': tf.cast(boxes, self._dtype),
@@ -370,15 +373,24 @@ class Parser(parser.Parser):
     if self._cutmix:
       batch_size = tf.shape(image)[0]
       if batch_size >= 1:
-        boxes = box_utils.xcycwh_to_yxyx(label['bbox'])
-        classes = label['classes']
         image, boxes, classes, num_detections = preprocessing_ops.randomized_cutmix_batch(
-            image, boxes, classes)
-        boxes = box_utils.yxyx_to_xcycwh(boxes)
+            image, label['bbox'],label['classes'])
         label['bbox'] = pad_max_instances(
             boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
         label['classes'] = pad_max_instances(
             classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
+    
+    if self._mosaic:
+      image, boxes, classes = preprocessing_ops.mosaic(
+          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.5)
+      label['bbox'] = pad_max_instances(boxes,
+                                        self._max_num_instances,
+                                        pad_axis=-2,
+                                        pad_value=0)
+      label['classes'] = pad_max_instances(classes,
+                                           self._max_num_instances,
+                                           pad_axis=-1,
+                                           pad_value=-1)
 
     randscale = self._image_w // self._net_down_scale
     if not self._fixed_size:
@@ -394,6 +406,7 @@ class Parser(parser.Parser):
     width = randscale * self._net_down_scale
     image = tf.image.resize(image, (width, width))
 
+    label['bbox'] = box_utils.yxyx_to_xcycwh(label['bbox'])
     best_anchors = preprocessing_ops.get_best_anchor_batch(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
     label['best_anchors'] = pad_max_instances(
@@ -407,26 +420,26 @@ class Parser(parser.Parser):
 
   def postprocess_fn(self, is_training):
     if is_training:
-      return self._postprocess_fn if not self._fixed_size or self._cutmix else None
+      return self._postprocess_fn if not self._fixed_size or self._cutmix or self._mosaic else None
     else:
       return None
 
-  # def parse_fn(self, is_training):
-  #   """Returns a parse fn that reads and parses raw tensors from the decoder.
+  def parse_fn(self, is_training):
+    """Returns a parse fn that reads and parses raw tensors from the decoder.
 
-  #   Args:
-  #     is_training: a `bool` to indicate whether it is in training mode.
+    Args:
+      is_training: a `bool` to indicate whether it is in training mode.
 
-  #   Returns:
-  #     parse: a `callable` that takes the serialized examle and generate the
-  #       images, labels tuple where labels is a dict of Tensors that contains
-  #       labels.
-  #   """
-  #   def parse(decoded_tensors):
-  #     """Parses the serialized example data."""
-  #     if is_training:
-  #       return self._parse_train_data(decoded_tensors)
-  #     else:
-  #       return self._parse_train_data(decoded_tensors)
+    Returns:
+      parse: a `callable` that takes the serialized examle and generate the
+        images, labels tuple where labels is a dict of Tensors that contains
+        labels.
+    """
+    def parse(decoded_tensors):
+      """Parses the serialized example data."""
+      if is_training:
+        return self._parse_train_data(decoded_tensors)
+      else:
+        return self._parse_train_data(decoded_tensors)
 
-  #   return parse
+    return parse
