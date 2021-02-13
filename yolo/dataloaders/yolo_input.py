@@ -249,19 +249,22 @@ class Parser(parser.Parser):
           target_dim=randscale * self._net_down_scale)
       width = randscale * self._net_down_scale
       height = randscale * self._net_down_scale
-
-    shape = tf.shape(image)
-    width = shape[1]
-    height = shape[0]
-    image, boxes, classes = preprocessing_ops.resize_crop_filter(
+    else:
+      minscale = tf.math.minimum(width, height)
+      image, boxes, classes = preprocessing_ops.resize_crop_filter(
         image,
         boxes,
         classes,
         default_width=width,  # randscale * self._net_down_scale,
         default_height=height,  # randscale * self._net_down_scale,
-        target_width=self._image_w,
-        target_height=self._image_h,
-        randomize=False)
+        target_width=minscale,
+        target_height=minscale,
+        randomize=True)
+
+    shape = tf.shape(image)
+    width = shape[1]
+    height = shape[0]
+    image = tf.image.resize(image, (self._image_w, self._image_h))
 
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     image = tf.clip_by_value(image, 0.0, 1.0)
