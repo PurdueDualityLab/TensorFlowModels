@@ -90,7 +90,7 @@ def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_u
   y_lower_bound = tf.cast(y_lower_bound, boxes.dtype)
   x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
   y_upper_bound = tf.cast(y_upper_bound, boxes.dtype)
-  keep_thresh = tf.cast(keep_thresh, tf.float32)
+  keep_thresh = tf.cast(keep_thresh, boxes.dtype)
 
   y_min, x_min, y_max, x_max = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
   boxes = box_ops.yxyx_to_xcycwh(boxes)

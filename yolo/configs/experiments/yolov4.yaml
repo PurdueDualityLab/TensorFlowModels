@@ -31,6 +31,7 @@ task:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
       iou_thresh: 0.1
+      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false

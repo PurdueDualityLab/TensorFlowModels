@@ -120,16 +120,16 @@ class YoloLayer(ks.Model):
     classifications = tf.boolean_mask(scaled, mask, axis=1)
     objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
 
-    #objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
-    box, classifications, objectness = nms_ops.nms(
-        box,
-        classifications,
-        objectness,
-        self._max_boxes,
-        2.5,
-        self._nms_thresh,
-        sorted=False,
-        one_hot=True)
+    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
+    # box, classifications, objectness = nms_ops.nms(
+    #     box,
+    #     classifications,
+    #     objectness,
+    #     self._max_boxes,
+    #     2.5,
+    #     self._nms_thresh,
+    #     sorted=False,
+    #     one_hot=True)
     return objectness, box, classifications, num_dets
 
   def call(self, inputs):
@@ -175,7 +175,7 @@ class YoloLayer(ks.Model):
         2.5,
         self._nms_thresh,
         sorted=False,
-        one_hot=False)
+        one_hot=True)
 
     num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis=-1)
 

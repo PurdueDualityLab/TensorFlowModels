@@ -424,22 +424,22 @@ class Parser(parser.Parser):
     else:
       return None
 
-  def parse_fn(self, is_training):
-    """Returns a parse fn that reads and parses raw tensors from the decoder.
+  # def parse_fn(self, is_training):
+  #   """Returns a parse fn that reads and parses raw tensors from the decoder.
 
-    Args:
-      is_training: a `bool` to indicate whether it is in training mode.
+  #   Args:
+  #     is_training: a `bool` to indicate whether it is in training mode.
 
-    Returns:
-      parse: a `callable` that takes the serialized examle and generate the
-        images, labels tuple where labels is a dict of Tensors that contains
-        labels.
-    """
-    def parse(decoded_tensors):
-      """Parses the serialized example data."""
-      if is_training:
-        return self._parse_train_data(decoded_tensors)
-      else:
-        return self._parse_train_data(decoded_tensors)
+  #   Returns:
+  #     parse: a `callable` that takes the serialized examle and generate the
+  #       images, labels tuple where labels is a dict of Tensors that contains
+  #       labels.
+  #   """
+  #   def parse(decoded_tensors):
+  #     """Parses the serialized example data."""
+  #     if is_training:
+  #       return self._parse_train_data(decoded_tensors)
+  #     else:
+  #       return self._parse_train_data(decoded_tensors)
 
-    return parse
+  #   return parse
