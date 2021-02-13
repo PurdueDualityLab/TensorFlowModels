@@ -4,7 +4,6 @@ import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from official.vision.beta.ops import preprocess_ops
 
-
 def rand_uniform_strong(minval, maxval, dtype=tf.float32):
   if minval > maxval:
     minval, maxval = maxval, minval
@@ -17,7 +16,6 @@ def rand_scale(val, dtype=tf.float32):
   if (do_ret == 1):
     return scale
   return 1.0 / scale
-
 
 def shift_zeros(data, mask, axis=-2, fill=0):
   zeros = tf.zeros_like(data) + fill
@@ -37,9 +35,41 @@ def shift_zeros(data, mask, axis=-2, fill=0):
   inds = tf.cast(tf.where(nonzero_mask), dtype=tf.int32)
   nonzero_data = tf.tensor_scatter_nd_update(
       zeros, tf.cast(tf.where(nonzero_mask), dtype=tf.int32), data_flat)
-
   return nonzero_data
 
+def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+  shape = tf.shape(value)
+  if pad_axis < 0:
+    pad_axis = tf.shape(shape)[0] + pad_axis
+  dim1 = shape[pad_axis]
+  take = tf.math.reduce_min([instances, dim1])
+  value, _ = tf.split(
+      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
+  pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
+  nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
+  pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
+  value = tf.concat([value, pad_tensor], axis=pad_axis)
+  return value
+
+def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
+  if yxyx:
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+  x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+  mask = w > 0
+  x = shift_zeros(x, mask)  # tf.boolean_mask(x, mask)
+  y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
+  w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
+  h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
+  classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill=-1)
+  classes = tf.squeeze(classes, axis=-1)
+  boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
+
+  boxes = _pad_max_instances(boxes, num_instances, pad_axis=-2, pad_value=0)
+  classes = _pad_max_instances(classes, num_instances, pad_axis=-1, pad_value=-1)
+  if yxyx:
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+  return boxes, classes 
 
 def scale_image(image, resize=False, w=None, h=None):
   """Image Normalization.
@@ -391,23 +421,8 @@ def cutmix_batch(image, boxes, classes, target_width, target_height,
     boxes = tf.concat([boxes_, boxes__], axis=-2)
     classes = tf.concat([classes_, classes__], axis=-1)
 
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-    mask = x > 0
-    x = shift_zeros(x, mask)  # tf.boolean_mask(x, mask)
-    y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
-    w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
-    h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-    classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill=-1)
-    classes = tf.squeeze(classes, axis=-1)
-
-    boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
-    boxes = box_ops.xcycwh_to_yxyx(boxes)
-
-    x = tf.squeeze(x, axis=-1)
-
-    num_detections = tf.reduce_sum(tf.cast(x > 0, tf.int32), axis=-1)
+    boxes, classes = _shift_zeros_full(boxes, classes, 200)
+    num_detections = tf.reduce_sum(tf.cast(tf.math.abs(boxes[..., 0] - boxes[..., 1]) > 0, tf.int32), axis=-1)
 
   return image, boxes, classes, num_detections
 

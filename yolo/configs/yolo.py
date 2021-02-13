@@ -154,7 +154,7 @@ class Parser(hyperparams.Config):
   random_flip: bool = True
   pct_rand: float = 0.5
   letter_box: bool = False
-  cutmix: bool = False
+  cutmix: bool = True
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
