@@ -14,12 +14,12 @@
 # limitations under the License.
 # ==============================================================================
 """TensorFlow Model Garden Vision training driver."""
-from yolo.utils.run_utils import prep_gpu
+# from yolo.utils.run_utils import prep_gpu
 
-try:
-    prep_gpu()
-except RuntimeError:
-    print("GPUs ready")
+# try:
+#     prep_gpu()
+# except RuntimeError:
+#     print("GPUs ready")
 
 from absl import app
 from absl import flags
