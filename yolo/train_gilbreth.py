@@ -73,8 +73,8 @@ def main(_):
         cluster_resolver = distribute.cluster_resolver.SlurmClusterResolver(
             port_base=2222,
             gpus_per_node=2,
-            gpus_per_task=2,
-            tasks_per_node=1
+            gpus_per_task=1,
+            tasks_per_node=2
         )
     except RuntimeError as e:
         print('Error with number of GPUs, tasks, or GPUs per node:\n')
