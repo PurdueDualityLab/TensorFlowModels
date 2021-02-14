@@ -98,3 +98,38 @@ class HourglassBlock(tf.keras.layers.Layer):
     }
     layer_config.update(super().get_config())
     return layer_config
+
+class CenterNetHeadConv(tf.keras.layers.Layer):
+  """
+  Convolution block for the CenterNet head. This is used to generate
+  both the confidence heatmaps and other regressed predictions such as 
+  center offsets, object size, etc.
+  """
+  def __init__(self,
+               output_filters: int,
+               name: str,
+               **kwargs):
+    """
+    Args:
+      output_filters: int, channel depth of layer output
+      name: string, layer name
+    """
+    self._output_filters = output_filters
+    super().__init__(name=name, **kwargs)
+  
+  def build(self, input_shape):
+    n_channels = input_shape[-1]
+
+    self.conv1 = tf.keras.layers.Conv2D(filters=n_channels,
+      kernel_size=(3, 3), padding='same')
+
+    self.relu = tf.keras.layers.ReLU()
+
+    self.conv2 = tf.keras.layers.Conv2D(filters=self._output_filters,
+    kernel_size=(1, 1), padding='valid')
+
+  def call(self, x):
+    x = self.conv1(x)
+    x = self.relu(x)
+    x = self.conv2(x)
+    return x
