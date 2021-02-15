@@ -11,11 +11,11 @@ def _smallest_positive_root(a, b, c) -> tf.Tensor:
   root1 = (-b - discriminant) / (2 * a)
   root2 = (-b + discriminant) / (2 * a)
 
-  return tf.where(tf.less(root1, 0), root2, root1)
+  return (-b + discriminant) / (2) #tf.where(tf.less(root1, 0), root2, root1)
 
 def gaussian_radius(det_size, min_overlap=0.7) -> int:
   """
-    Given a bounding box size, returns a lower bound on how far apart the 
+    Given a bounding box size, returns a lower bound on how far apart the
     corners of another bounding box can lie while still maintaining the given
     minimum overlap, or IoU. Modified from implementation found in
     https://github.com/tensorflow/models/blob/master/research/object_detection/core/target_assigner.py.
@@ -24,7 +24,7 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
         det_size (tuple): tuple of integers representing height and width
         min_overlap (tf.float32): minimum IoU desired
     Returns:
-        int representing desired gaussian radius 
+        int representing desired gaussian radius
     """
   height, width = det_size
 
@@ -32,32 +32,29 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
   # contains the other.
 
   a1  = 1
-  b1  = (height + width)
+  b1  = -(height + width)
   c1  = width * height * (1 - min_overlap) / (1 + min_overlap)
-  distance_detection_offset = _smallest_positive_root(a1, b1, c1)
-  r1  = (b1 + distance_detection_offset) / 2
+  r1 = _smallest_positive_root(a1, b1, c1)
 
   # Case where detection is smaller than ground truth and completely contained
   # in it.
 
   a2  = 4
-  b2  = 2 * (height + width)
+  b2  = -2 * (height + width)
   c2  = (1 - min_overlap) * width * height
-  distance_detection_in_gt = _smallest_positive_root(a2, b2, c2)
-  r2  = (b2 + distance_detection_in_gt) / 2
+  r2 = _smallest_positive_root(a2, b2, c2)
 
   # Case where ground truth is smaller than detection and completely contained
   # in it.
 
   a3  = 4 * min_overlap
-  b3  = -2 * min_overlap * (height + width)
+  b3  = 2 * min_overlap * (height + width)
   c3  = (min_overlap - 1) * width * height
-  distance_gt_in_detection = _smallest_positive_root(a3, b3, c3)
-  r3  = (b3 + distance_gt_in_detection) / 2
+  r3 = _smallest_positive_root(a3, b3, c3)
   # TODO discuss whether to return scalar or tensor
   # return tf.reduce_min([r1, r2, r3], axis=0)
 
-  return min(r1, r2, r3)
+  return tf.reduce_min([r1, r2, r3], axis=0)
 
 def gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
     """
@@ -87,11 +84,11 @@ def draw_gaussian(heatmap, center, radius, k=1):
 
     diameter = 2 * radius + 1
     gaussian = gaussian_penalty(radius)
-    
+
     x, y = center
 
     height, width = heatmap.shape[0:2]
-    
+
     left, right = min(x, radius), min(width - x, radius + 1)
     top, bottom = min(y, radius), min(height - y, radius + 1)
 
