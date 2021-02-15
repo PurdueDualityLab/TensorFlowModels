@@ -155,7 +155,7 @@ class Parser(hyperparams.Config):
   pct_rand: float = 0.5
   letter_box: bool = False
   cutmix: bool = False
-  mosaic: bool = True
+  mosaic: bool = True #too slow
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
@@ -170,7 +170,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = ''
   tfds_name: str = 'coco'
   tfds_split: str = 'train'
-  global_batch_size: int = 4
+  global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
   decoder = None

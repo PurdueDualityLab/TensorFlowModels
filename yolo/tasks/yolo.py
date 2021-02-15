@@ -39,6 +39,7 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
+  
     return
 
   def build_model(self):
@@ -168,6 +169,7 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    self._a += 1
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32

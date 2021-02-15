@@ -128,7 +128,7 @@ def load_model(experiment="yolo_custom", config_path=[], model_dir=""):
   else:
     task.initialize(model)
 
-  return task, model
+  return task, model, params
 
 
 def load_flags(CFG):
