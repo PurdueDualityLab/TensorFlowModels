@@ -21,6 +21,17 @@ class CenterNetParser(parser.Parser):
             images: the image tensor.
             labels: a dict of Tensors that contains labels.
         """
+        tl_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
+        br_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
+        ct_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
+        tl_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
+        br_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
+        ct_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
+        tl_tags = tf.zeros((max_tag_len), dtype=tf.int64)
+        br_tags = tf.zeros((max_tag_len), dtype=tf.int64)
+        ct_tags = tf.zeros((max_tag_len), dtype=tf.int64)
+        tag_masks = tf.zeros((max_tag_len), dtype=tf.uint8)
+
         # TODO: input size, output size
         image = decoded_tensors["image"]
 
@@ -29,11 +40,15 @@ class CenterNetParser(parser.Parser):
 
         for ind, detection in enumerate(decoded_tensors["groundtruth_boxes"]):
             category = int(detection[-1]) - 1
-            #category = 0
+            # category = 0
 
             xtl, ytl = detection[0], detection[1]
             xbr, ybr = detection[2], detection[3]
-            xct, yct = (detection[2] + detection[0])/2., (detection[3]+detection[1])/2.
+
+            xct, yct = (
+                (detection[2] + detection[0]) / 2,
+                (detection[3] + detection[1]) / 2
+            )
 
             fxtl = (xtl * width_ratio)
             fytl = (ytl * height_ratio)
@@ -61,24 +76,21 @@ class CenterNetParser(parser.Parser):
                     radius = max(0, int(radius))
                 else:
                     radius = gaussian_rad
-                # TODO: implement gaussian
-                # draw_gaussian(tl_heatmaps[b_ind, category], [xtl, ytl], radius)
-                # draw_gaussian(br_heatmaps[b_ind, category], [xbr, ybr], radius)
-                # draw_gaussian(ct_heatmaps[b_ind, category], [xct, yct], radius, delte=5)
+                draw_gaussian(tl_heatmaps[category], [xtl, ytl], radius)
+                draw_gaussian(br_heatmaps[category], [xbr, ybr], radius)
+                draw_gaussian(ct_heatmaps[category], [xct, yct], radius, delte=5)
 
             else:
                 tl_heatmaps[category, ytl, xtl] = 1
                 br_heatmaps[category, ybr, xbr] = 1
                 ct_heatmaps[category, yct, xct] = 1
 
-            tag_ind = tag_lens
             tl_regrs[tag_ind, :] = [fxtl - xtl, fytl - ytl]
             br_regrs[tag_ind, :] = [fxbr - xbr, fybr - ybr]
             ct_regrs[tag_ind, :] = [fxct - xct, fyct - yct]
             tl_tags[tag_ind] = ytl * output_size[1] + xtl
             br_tags[tag_ind] = ybr * output_size[1] + xbr
             ct_tags[tag_ind] = yct * output_size[1] + xct
-            tag_lens += 1
 
         labels = {
             'tl_tags': tl_tags,
