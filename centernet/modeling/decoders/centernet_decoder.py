@@ -1,29 +1,7 @@
 import tensorflow as tf
 from centernet.modeling.layers.nn_blocks import CenterNetDecoderConv
 
-"""
-  # OLD: use to reference task_outputs dictionary, maybe can go in config
-  # class later
-  task_output_specs = {
-    "2D" : {'heatmap': 91,
-      'local_offset': 2, 
-      'object_size': 2
-    },
-    "3D": {'heatmap': 91,
-      'local_offset': 2, 
-      'object_size': 3, 
-      'depth': 1, 
-      'orientation': 8
-    },
-    "pose": {'heatmap': 91,
-      'joint_locs': 17 * 2, 
-      'joint_heatmap': 17, 
-      'joint_offset': 2
-    }
-  }
-"""
-
-class CenterNetDecoder(tf.keras.layers.Layer):
+class CenterNetDecoder(tf.keras.Model):
   """
   CenterNet Decoder
   """
@@ -50,21 +28,35 @@ class CenterNetDecoder(tf.keras.layers.Layer):
     super().__init__(**kwargs)
   
   def build(self, input_shape):
-    self.layers = {}
+    self.out_layers = {}
     for key in self._task_outputs:
       num_filters = self._task_outputs[key]
       bias = 0
-      if key == "heatmap":
+      if key == 'heatmap':
         bias = self._heatmap_bias
 
-      self.layers[key] = CenterNetDecoderConv(output_filters=num_filters, 
+      self.out_layers[key] = CenterNetDecoderConv(output_filters=num_filters, 
         name=key, bias_init=bias)
     
     super().build(input_shape)
 
   def call(self, x):
     outputs = {}
-    for key in self.layers:
-      outputs[key] = self.layers[key](x)
+    for key in self.out_layers:
+      outputs[key] = self.out_layers[key](x)
 
     return outputs
+  
+  def get_config(self):
+    layer_config = {
+      'task_outputs': self._task_outputs,
+      'heatmap_bias': self._heatmap_bias
+    }
+
+    #layer_config.update(super().get_config())
+    return layer_config
+
+def build_centernet_decoder(model_config) -> tf.keras.Model:
+  return CenterNetDecoder(
+      task_outputs=model_config.task_outputs,
+      heatmap_bias=model_config.heatmap_bias)
