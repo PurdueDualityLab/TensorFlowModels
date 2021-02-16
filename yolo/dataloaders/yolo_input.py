@@ -220,7 +220,6 @@ class Parser(parser.Parser):
     if self._jitter_im != 0.0:
       image, boxes, classes = preprocessing_ops.random_jitter(
           image, boxes, classes, self._jitter_im, seed=self._seed)
-      # image, boxes, classes = preprocessing_ops.random_translate(image, boxes, classes, 0.2, seed=self._seed)
 
     if self._aug_rand_zoom and not self._mosaic:
       image, boxes, classes = preprocessing_ops.random_zoom_crop(
