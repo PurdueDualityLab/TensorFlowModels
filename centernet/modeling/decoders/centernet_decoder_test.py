@@ -2,10 +2,10 @@ from absl.testing import parameterized
 import tensorflow as tf
 import numpy as np
 
-from centernet.modeling.heads import centernet_head
+from centernet.modeling.decoders import centernet_decoder
 
 
-class CenterNetHeadTest(tf.test.TestCase, parameterized.TestCase):
+class CenterNetDecoderTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_head(self):
     task_outputs = {'heatmap': 91,
@@ -13,7 +13,7 @@ class CenterNetHeadTest(tf.test.TestCase, parameterized.TestCase):
         'object_size': 2
     }
 
-    head = centernet_head.CenterNetHead(task_outputs=task_outputs, 
+    head = centernet_decoder.CenterNetDecoder(task_outputs=task_outputs, 
       heatmap_bias=-2.19)
 
     # Output shape tests

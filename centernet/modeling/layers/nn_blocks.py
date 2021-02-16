@@ -99,7 +99,7 @@ class HourglassBlock(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
-class CenterNetHeadConv(tf.keras.layers.Layer):
+class CenterNetDecoderConv(tf.keras.layers.Layer):
   """
   Convolution block for the CenterNet head. This is used to generate
   both the confidence heatmaps and other regressed predictions such as 

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from centernet.modeling.layers.nn_blocks import CenterNetHeadConv
+from centernet.modeling.layers.nn_blocks import CenterNetDecoderConv
 
 """
   # OLD: use to reference task_outputs dictionary, maybe can go in config
@@ -23,9 +23,9 @@ from centernet.modeling.layers.nn_blocks import CenterNetHeadConv
   }
 """
 
-class CenterNetHead(tf.keras.layers.Layer):
+class CenterNetDecoder(tf.keras.layers.Layer):
   """
-  CenterNet Head
+  CenterNet Decoder
   """
   def __init__(self, 
                task_outputs: dict,
@@ -54,10 +54,10 @@ class CenterNetHead(tf.keras.layers.Layer):
     for key in self._task_outputs:
       num_filters = self._task_outputs[key]
       bias = 0
-      if key is "heatmap":
+      if key == "heatmap":
         bias = self._heatmap_bias
 
-      self.layers[key] = CenterNetHeadConv(output_filters=num_filters, 
+      self.layers[key] = CenterNetDecoderConv(output_filters=num_filters, 
         name=key, bias_init=bias)
     
     super().build(input_shape)
