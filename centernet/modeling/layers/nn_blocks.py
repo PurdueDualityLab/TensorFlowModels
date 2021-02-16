@@ -107,14 +107,18 @@ class CenterNetHeadConv(tf.keras.layers.Layer):
   """
   def __init__(self,
                output_filters: int,
+               bias_init : float,
                name: str,
                **kwargs):
     """
     Args:
       output_filters: int, channel depth of layer output
+      bias_init: float, value to initialize the bias vector for the final
+        convolution layer
       name: string, layer name
     """
     self._output_filters = output_filters
+    self._bias_init = bias_init
     super().__init__(name=name, **kwargs)
   
   def build(self, input_shape):
@@ -125,8 +129,10 @@ class CenterNetHeadConv(tf.keras.layers.Layer):
 
     self.relu = tf.keras.layers.ReLU()
 
+    # Initialize bias to the last Conv2D Layer
     self.conv2 = tf.keras.layers.Conv2D(filters=self._output_filters,
-    kernel_size=(1, 1), padding='valid')
+      kernel_size=(1, 1), 
+      bias_initializer=tf.constant_initializer(self._bias_init))
 
   def call(self, x):
     x = self.conv1(x)
