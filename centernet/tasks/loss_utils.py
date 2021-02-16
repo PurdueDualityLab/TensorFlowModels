@@ -26,4 +26,20 @@ def get_num_instances_from_weights(groundtruth_weights_list):
   num_instances = tf.maximum(num_instances, 1)
   return num_instances
 
+def get_batch_predictions_from_indices(batch_predictions, indices):
+  """Gets the values of predictions in a batch at the given indices.
+  The indices are expected to come from the offset targets generation functions
+  in this library. The returned value is intended to be used inside a loss
+  function.
+  Args:
+    batch_predictions: A tensor of shape [batch_size, height, width, channels]
+      or [batch_size, height, width, class, channels] for class-specific
+      features (e.g. keypoint joint offsets).
+    indices: A tensor of shape [num_instances, 3] for single class features or
+      [num_instances, 4] for multiple classes features.
+  Returns:
+    values: A tensor of shape [num_instances, channels] holding the predicted
+      values at the given indices.
+  """
+  return tf.gather_nd(batch_predictions, indices)
 
