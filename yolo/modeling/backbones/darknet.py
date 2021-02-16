@@ -552,7 +552,7 @@ def build_darknet(
       model_id=backbone_cfg.model_id,
       min_level=model_config.min_level,
       max_level=model_config.max_level,
-      input_shape=input_specs,
+      input_specs=input_specs,
       dilate=model_config.dilate,
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,

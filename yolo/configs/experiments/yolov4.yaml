@@ -31,6 +31,7 @@ task:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
       iou_thresh: 0.1
+      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false
@@ -51,8 +52,9 @@ task:
       image_h: 416
       image_w: 416
       seed: 10
-      letter_box: true
-      cutmix: true
+      letter_box: false
+      cutmix: false
+      mosaic: true
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8

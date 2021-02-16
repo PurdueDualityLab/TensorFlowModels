@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   model:
     base: 
@@ -11,12 +11,12 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v3
+        version: v4
         type: regular
       darknet_weights_file: 'cache://csdarknet53.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     num_classes: 80
-    _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
+    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: null
     boxes_per_scale: 3
     max_level: 5
@@ -31,13 +31,14 @@ task:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
       iou_thresh: 0.1
+      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 4 # 64 batch size 
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -57,7 +58,7 @@ task:
       use_tie_breaker: true
   validation_data:
     global_batch_size: 4
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
@@ -77,7 +78,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 80080000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 8008000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -87,17 +88,18 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [6400000, 7200000] #[400000, 450000]
+        boundaries: [6400000, 7200000]
         name: PiecewiseConstantDecay
-        values:  [0.0000625, 0.00000625, 0.000000625] #[0.0013, 0.00013, 0.000013]
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
-      type: sgd
-      sgd:
-        momentum: 0.9
+      type: sgd_accum
+      sgd_accum:
+        accumulation_steps: 16 # 32 * 2 = 64 batch_size
+        momentum: 0.949
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 2000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 8000 #learning rate rises from 0 to 0.0013 over 1000 steps
       
 

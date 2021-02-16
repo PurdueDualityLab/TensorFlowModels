@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 class Parser(hyperparams.Config):
   image_w: int = 416
   image_h: int = 416
-  fixed_size: bool = False
+  fixed_size: bool = True
   jitter_im: float = 0.3
   jitter_boxes: float = 0.005
   min_process_size: int = 320
@@ -153,11 +153,12 @@ class Parser(hyperparams.Config):
   max_num_instances: int = 200
   random_flip: bool = True
   pct_rand: float = 0.5
-  letter_box: bool = True
+  letter_box: bool = False
   cutmix: bool = False
+  mosaic: bool = True #too slow
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
-  aug_rand_zoom: bool = True
+  aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
   seed: int = 10
   use_tie_breaker: bool = True
@@ -169,7 +170,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = ''
   tfds_name: str = 'coco'
   tfds_split: str = 'train'
-  global_batch_size: int = 4
+  global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
   decoder = None

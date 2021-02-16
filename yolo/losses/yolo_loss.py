@@ -211,27 +211,27 @@ class Yolo_Loss(object):
                  (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-    loss_box = tf.reduce_mean(
-        tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype))
-    conf_loss = tf.reduce_mean(
-        tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype))
-    class_loss = tf.reduce_mean(
-        tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype))
+    loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    conf_loss =tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
     # 9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
-    loss = class_loss + conf_loss + loss_box
+    loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+    loss_box = tf.reduce_mean(loss_box)
+    conf_loss = tf.reduce_mean(conf_loss)
+    class_loss = tf.reduce_mean(class_loss)
 
     # 10. store values for use in metrics
-    recall50 = tf.reduce_mean(
+    recall50 =  tf.stop_gradient(tf.reduce_mean(
         tf.math.divide_no_nan(
             tf.reduce_sum(
                 tf.cast(
                     tf.squeeze(pred_conf, axis=-1) > 0.5, dtype=true_conf.dtype)
                 * true_conf,
-                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-    avg_iou = tf.math.divide_no_nan(
+                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
+    avg_iou =  tf.stop_gradient(tf.math.divide_no_nan(
         tf.reduce_sum(iou),
         tf.cast(
             tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
-            dtype=y_pred.dtype))
+            dtype=y_pred.dtype)))
     return loss, loss_box, conf_loss, class_loss, avg_iou, recall50

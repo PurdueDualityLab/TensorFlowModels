@@ -66,6 +66,7 @@ def test_classification_pipeline():
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
 
+  shind = 1
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   for l, (i, j) in enumerate(dataset):
 
@@ -82,10 +83,10 @@ def test_pipeline():
 
     fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(i[0])
-    axe[1].imshow(obj3[0].numpy())
-    axe[2].imshow(obj4[0].numpy())
-    axe[3].imshow(obj5[0].numpy())
+    axe[0].imshow(i[shind])
+    axe[1].imshow(obj3[shind].numpy())
+    axe[2].imshow(obj4[shind].numpy())
+    axe[3].imshow(obj5[shind].numpy())
 
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
