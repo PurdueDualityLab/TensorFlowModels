@@ -61,7 +61,6 @@ nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --
 """
 
 
-
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   print(FLAGS.experiment)
