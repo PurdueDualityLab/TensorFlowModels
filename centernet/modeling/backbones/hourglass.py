@@ -10,6 +10,7 @@ from utils import register
 from typing import List
 
 
+@tf.keras.utils.register_keras_serializable(package='centernet')
 class Hourglass(tf.keras.Model):
   """
   CenterNet Hourglass backbone
@@ -47,12 +48,11 @@ class Hourglass(tf.keras.Model):
       prelayer_kernel_size = 3
       prelayer_strides = 1
 
-    x_inter = tf.keras.layers.Conv2D(
+    x_inter = nn_blocks.ConvBN(
         filters=input_channel_dims,
         kernel_size=prelayer_kernel_size,
         strides=prelayer_strides,
         padding='same',
-        use_bias=True,
         activation='relu'
     )(x_inter)
     x_inter = official_nn_blocks.ResidualBlock(
@@ -69,12 +69,11 @@ class Hourglass(tf.keras.Model):
       )(x_inter)
 
       # cnvs
-      x_hg = tf.keras.layers.Conv2D(
+      x_hg = nn_blocks.ConvBN(
           filters=inp_filters,
           kernel_size=(3, 3),
           strides=(1, 1),
           padding='same',
-          use_bias=True,
           activation='relu'
       )(x_hg)
 
@@ -83,22 +82,20 @@ class Hourglass(tf.keras.Model):
       # between hourglasses, we insert intermediate layers
       if i < num_hourglasses - 1:
         # cnvs_
-        inter_hg_conv1 = tf.keras.layers.Conv2D(
+        inter_hg_conv1 = nn_blocks.ConvBN(
             filters=inp_filters,
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
-            use_bias=True,
             activation='linear'
         )(x_inter)
 
         # inters_
-        inter_hg_conv2 = tf.keras.layers.Conv2D(
+        inter_hg_conv2 = nn_blocks.ConvBN(
             filters=inp_filters,
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
-            use_bias=True,
             activation='linear'
         )(x_hg)
 
