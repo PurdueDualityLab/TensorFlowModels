@@ -45,7 +45,7 @@ class SGDAccumulated(OptimizerV2):
     """
 
     super(SGDAccumulated, self).__init__(name, **kwargs)
-    self._set_hyper('accumulation_steps', accumulation_steps)
+    self._set_hyper('accumulation_steps', tf.cast(accumulation_steps, tf.int32))
     self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))
     self._set_hyper("decay", self._initial_decay)
     self._momentum = False
@@ -84,13 +84,15 @@ class SGDAccumulated(OptimizerV2):
     # used to control when updates happen (zero when substeps != accumulation steps)
     lr = tf.where(update_cond, lr_t, 0.0)
 
-    #gradient accumulation
+    
+    #gradient accumulation (is this really how to agregat gradients)
     g = self.get_slot(var, 'g') # accumulated gradient
     g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
     g_t = tf.where(tf.equal(sub_step, 1),
                     g_a,
                     g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    # tf.print('opt', update_cond, self.iterations)
 
     # momentum update
     if self._momentum:
@@ -101,6 +103,8 @@ class SGDAccumulated(OptimizerV2):
       with tf.control_dependencies([momentum_g]):
         momentum_g = state_ops.assign(momentum_grad, momentum_g, use_locking=self._use_locking)
       return control_flow_ops.group(*[var_update, momentum_g])
+      # momentum_g = state_ops.assign(momentum_grad, momentum_g, use_locking=self._use_locking)
+      # return control_flow_ops.group(*[var_update])
     # nestrov momentum
     # standard update
     else:
@@ -134,6 +138,7 @@ class SGDAccumulated(OptimizerV2):
                     g_a,
                     g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    
 
     # momentum update
     momentum = coefficients["momentum"]

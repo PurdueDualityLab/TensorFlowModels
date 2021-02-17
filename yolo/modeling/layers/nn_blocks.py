@@ -13,6 +13,7 @@ class Identity(tf.keras.layers.Layer):
   def call(self, input):
     return input
 
+from yolo.modeling.layers import subnormalization
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class ConvBN(tf.keras.layers.Layer):
@@ -139,7 +140,12 @@ class ConvBN(tf.keras.layers.Layer):
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
       else:
-        self.bn = tf.keras.layers.BatchNormalization(
+        # self.bn = tf.keras.layers.BatchNormalization(
+        #     momentum=self._norm_moment,
+        #     epsilon=self._norm_epsilon,
+        #     axis=self._bn_axis)
+        self.bn = subnormalization.SubDivBatchNormalization(
+            subdivisions=16, 
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)

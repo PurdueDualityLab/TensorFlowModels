@@ -1,6 +1,6 @@
 from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
-
+import numpy as np
 
 def split_converter(lst, i, j=None):
   if j is None:
@@ -18,7 +18,15 @@ def load_weights(convs, layers):
     try:
       cfg = convs.pop(0)
       #print(cfg.c, cfg.filters, layers[i]._filters)
-      layers[i].set_weights(cfg.get_weights())
+      weights = cfg.get_weights()
+      if len(layers[i].get_weights()) == len(weights):
+        layers[i].set_weights(weights)
+      else:
+        # need to match the batch norm
+        weights.append(np.zeros_like(weights[-2]))
+        weights.append(np.zeros_like(weights[-2]))
+        weights.append(np.zeros([]))
+        layers[i].set_weights(weights)
     except BaseException as e:
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
 

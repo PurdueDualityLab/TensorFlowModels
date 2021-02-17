@@ -1,13 +1,13 @@
 import tensorflow as tf
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
-from tensorflow.python.ops import math_ops, state_ops, control_flow_ops
+from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_ops
 # from tensorflow.python import ops 
 # from tensorflow.python.keras import backend_config
 
 
 __all__ = ['SGDAccumulated']
 
-
+# issues with saving the checkpoint
 class SGDAccumulated(OptimizerV2):
   """Optimizer that implements the Adam algorithm with gradient accumulation."""
 
@@ -64,7 +64,7 @@ class SGDAccumulated(OptimizerV2):
         self.add_slot(var, "momentum")
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(SGD, self)._prepare_local(var_device, var_dtype, apply_state)
+    super(SGDAccumulated, self)._prepare_local(var_device, var_dtype, apply_state)
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
 
@@ -91,15 +91,17 @@ class SGDAccumulated(OptimizerV2):
                     g_a,
                     g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    tf.print(g_t)
 
     # momentum update
     if self._momentum:
       momentum = coefficients["momentum"]
-      momuentum_grad = self.get_slot(var, 'momentum')
-      momuentum_g = tf.where(update_cond, momentum * momuentum_grad + (1 - momentum) * g_t , momuentum_grad)
-      var_update = state_ops.assign_sub(var, lr * momuentum_grad, use_locking=self._use_locking)
-      momuentum_grad = state_ops.assign(momuentum_g, momuentum_grad, use_locking=self._use_locking)
-      return control_flow_ops.group(*[var_update, momuentum_grad])
+      momentum_grad = self.get_slot(var, 'momentum')
+      momentum_g = tf.where(update_cond, momentum * momentum_grad + (1 - momentum) * g_t , momentum_grad)
+      var_update = state_ops.assign_sub(var, lr * momentum_g, use_locking=self._use_locking)
+      with tf.control_dependencies([momentum_g]):
+        momentum_g = state_ops.assign(momentum_grad, momentum_g, use_locking=self._use_locking)
+      return control_flow_ops.group(*[var_update, momentum_g])
     # nestrov momentum
     # standard update
     else:
@@ -153,21 +155,3 @@ class SGDAccumulated(OptimizerV2):
         'momentum': self._serialize_hyperparameter('momentum'),
     })
     return config
-
-
-
-if __name__ == "__main__":
-  from yolo import run
-  import os
-  optimizer = SGDAccumulated(accumulation_steps = 8)
-
-  print(optimizer)
-  # config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
-  # model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
-
-  # task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
-
-  # train_data = task.build_inputs(task.task_config.train_data)
-  # validation_data = task.build_inputs(task.task_config.train_data)
-  
-  # model.compile(optimizer = optimizer)
