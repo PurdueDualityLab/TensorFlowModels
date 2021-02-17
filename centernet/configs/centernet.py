@@ -26,37 +26,29 @@ from official.vision.beta.configs import backbones
 
 from centernet.configs import backbones
 
-# Note these do not subclass from hyperparams.Config,
-# for some reason Dicts are not supported in their
-# immutable types
+
+@dataclasses.dataclass
+class Loss(hyperparams.Config):
+  pass
 
 
 @dataclasses.dataclass
-class CenterNetDecoder(hyperparams.Config):
-  """CenterNet for 2D Object Detection Decoder."""
-  task_outputs: Dict[str, int] = dataclasses.field(
-    default_factory=lambda: {'heatmap': 91, 'local_offset': 2, 'object_size': 2})
-  heatmap_bias: float = -2.19
+class DetectionLoss(Loss):
+  detection_weight: float = 1.0
+  corner_pull_weight: float = 0.1 # alpha
+  corner_push_weight: float = 0.1 # beta
+  offset_weight: float = 1 # gamma
+
 
 @dataclasses.dataclass
-class CenterNet3D():
-  """CenterNet for 3D Object Detection Decoder."""
-  task_outputs: Dict[str, int] = dataclasses.field(
-    default_factory=lambda: {'heatmap': 91,
-    'local_offset': 2,
-    'object_size': 3,
-    'depth' : 1,
-    'orientation': 8})
-  heatmap_bias: float = -2.19
+class SegmentationLoss(Loss):
+  pass
+
 
 @dataclasses.dataclass
-class CenterNetPose():
-  """CenterNet for Pose Estimation Decoder."""
-  task_outputs: Dict[str, int] = dataclasses.field(
-    default_factory=lambda: {'heatmap': 17,
-    'joint_locs': 17 * 2,
-    'joint_offset': 2})
-  heatmap_bias: float = -2.19
+class Losses(hyperparams.Config):
+  detection: DetectionLoss = DetectionLoss()
+  segmentation: SegmentationLoss = SegmentationLoss()
 
 
 @dataclasses.dataclass
@@ -91,6 +83,8 @@ class CenterNetSubTasks(cfg.TaskConfig):
 class CenterNetTask(cfg.TaskConfig):
   model: CenterNet = CenterNet()
   subtasks: CenterNetSubTasks = CenterNetSubTasks()
+  losses: Losses = Losses()
+
   def _get_output_length_dict(self):
     lengths = {}
     assert self.subtasks.detection is not None or self.subtasks.kp_detection \
@@ -98,24 +92,27 @@ class CenterNetTask(cfg.TaskConfig):
         "subtask to CenterNet"
 
     if self.subtasks.detection:
+      # TODO: locations of the ground truths will also be passed in from the
+      # data pipeline which need to be mapped accordingly
       assert self.subtasks.detection.use_centers or \
           self.subtasks.detection.use_corners, "Cannot use CenterNet without " \
           "heatmaps"
       if self.subtasks.detection.use_centers:
         lengths.update({
-          'ct_heatmaps': self.model.num_classes, # renamed from heatmap
-          'ct_offset': 2, # renamed from local_offset
-          'ct_size': 2 # renamed from object_size
+          'ct_heatmaps': self.model.num_classes,
+          'ct_offset': 2,
         })
+        if not self.subtasks.detection.use_corners:
+          lengths['ct_size'] = 2
+
       if self.subtasks.detection.use_corners:
         lengths.update({
           'tl_heatmaps': self.model.num_classes,
           'tl_offset': 2,
-          'tl_size': 2,
           'br_heatmaps': self.model.num_classes,
-          'br_offset': 2,
-          'br_size': 2,
+          'br_offset': 2
         })
+
       if self.subtasks.detection.predict_3d:
         lengths.update({
           'depth': 1,
