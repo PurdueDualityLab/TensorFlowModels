@@ -32,7 +32,7 @@ class CenterNetDecoder(tf.keras.Model):
     for key in self._task_outputs:
       num_filters = self._task_outputs[key]
       bias = 0
-      if key == 'heatmap':
+      if 'heatmaps' in key:
         bias = self._heatmap_bias
 
       self.out_layers[key] = CenterNetDecoderConv(output_filters=num_filters, 
@@ -57,6 +57,13 @@ class CenterNetDecoder(tf.keras.Model):
     return layer_config
 
 def build_centernet_decoder(model_config) -> tf.keras.Model:
+  cfg = model_config()
+
+  task_outputs = cfg._get_output_length_dict()
+  heatmap_bias = cfg.model.decoder.heatmap_bias
+
+  print(task_outputs)
+
   return CenterNetDecoder(
-      task_outputs=model_config.task_outputs,
-      heatmap_bias=model_config.heatmap_bias)
+      task_outputs=task_outputs,
+      heatmap_bias=heatmap_bias)
