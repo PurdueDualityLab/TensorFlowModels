@@ -17,9 +17,9 @@
 from yolo.utils.run_utils import prep_gpu
 try:
   prep_gpu()
-except:
-  print("GPUs ready")
-  
+except BaseException:
+  print('GPUs ready')
+
 from absl import app
 from absl import flags
 import gin
@@ -35,30 +35,36 @@ from official.core import task_factory
 from official.core import train_lib
 from official.modeling import performance
 
-
 FLAGS = flags.FLAGS
-'''
+"""
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64
-'''
+"""
+"""
+get the cache file:
+scp -i ./jaeyounkim-purdue-1 cache.zip  purdue@34.105.118.198:~/
+
+train darknet:
+python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
+python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
+
+finetune darknet:
+nohup python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log
+
+train yolo-v4:
+nohup python3 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4.yaml  >> yolov4.log & tail -f yolov4.log
+nohup python3 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-1gpu.yaml  >> yolov4-1gpu.log & tail -f yolov4-1gpu.log
 
 
-'''
-python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=yolo/configs/experiments/darknet53.yaml
-'''
+evalaute Yolo:
+nohup python3 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-eval.yaml  >> yolov4-eval.log & tail -f yolov4-eval.log
+"""
 
-'''
-python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=training_dir --config_file=yolo/configs/experiments/dilated_darknet53.yaml
-'''
 
-'''
-python3 -m yolo.train --mode=train_and_eval --experiment=yolo_v4_coco --model_dir=training_dir --config_file=yolo/configs/experiments/yolov4.yaml
-'''
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   print(FLAGS.experiment)
   params = train_utils.parse_configuration(FLAGS)
 
-  
   model_dir = FLAGS.model_dir
   if 'train' in FLAGS.mode:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
@@ -72,11 +78,17 @@ def main(_):
   if params.runtime.mixed_precision_dtype:
     performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
                                            params.runtime.loss_scale)
+  if params.runtime.worker_hosts != '' and params.runtime.worker_hosts is not None:
+    num_workers = distribute_utils.configure_cluster(
+        worker_hosts=params.runtime.worker_hosts,
+        task_index=params.runtime.task_index)
+    print(num_workers)
   distribution_strategy = distribute_utils.get_distribution_strategy(
       distribution_strategy=params.runtime.distribution_strategy,
       all_reduce_alg=params.runtime.all_reduce_alg,
       num_gpus=params.runtime.num_gpus,
       tpu_address=params.runtime.tpu)
+
   with distribution_strategy.scope():
     task = task_factory.get_task(params.task, logging_dir=model_dir)
 
@@ -87,6 +99,7 @@ def main(_):
       params=params,
       model_dir=model_dir)
 
+
 if __name__ == '__main__':
   import datetime
 
@@ -95,5 +108,4 @@ if __name__ == '__main__':
   app.run(main)
   b = datetime.datetime.now()
 
-
-  print("\n\n\n\n\n\n\n {b - a}")
+  print('\n\n\n\n\n\n\n {b - a}')

@@ -1,3 +1,4 @@
+# Lint as: python3
 # Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""All necessary imports for registration."""
+"""Backbones configurations."""
+from typing import List
 
-# pylint: disable=unused-import
-from official.common import registry_imports
+# Import libraries
+import dataclasses
 
-import yolo
-from yolo.modeling.backbones import darknet
-from yolo.configs import darknet_classification
-from yolo.configs import yolo
-from yolo.configs.yolo import yolo_custom
-from yolo.configs.darknet_classification import image_classification
-from yolo.configs.darknet_classification import ImageClassificationTask
-from yolo.configs.yolo import YoloTask
+from official.modeling import hyperparams
 
-from yolo.tasks.image_classification import ImageClassificationTask
-from yolo.tasks.yolo import YoloTask
-from yolo.tasks.yolo_subdiv import YoloSubDivTask
+
+@dataclasses.dataclass
+class Hourglass(hyperparams.Config):
+  """Hourglass config."""
+  input_channel_dims: int = 128
+  channel_dims_per_stage: List[int] = dataclasses.field(
+      default_factory=lambda: [256, 256, 384, 384, 384, 512])
+  blocks_per_stage: List[int] = dataclasses.field(
+      default_factory=lambda: [2, 2, 2, 2, 2, 4])
+  num_hourglasses: int = 2
+  initial_downsample: bool = True
