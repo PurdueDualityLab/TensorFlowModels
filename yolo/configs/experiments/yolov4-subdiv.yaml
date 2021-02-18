@@ -42,7 +42,7 @@ task:
     global_batch_size: 2 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: train
     drop_remainder: true
     dtype: float16
@@ -62,7 +62,7 @@ task:
     global_batch_size: 2
     tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: validation
     dtype: float16
     input_path: ''
