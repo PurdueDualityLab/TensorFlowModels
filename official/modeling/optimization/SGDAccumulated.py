@@ -13,6 +13,7 @@ class SGDAccumulated(OptimizerV2):
 
   def __init__(self,
                 accumulation_steps = 1,
+                accumulation_type = 'sum', 
                 learning_rate=0.01,
                 momentum=0.0,
                 nesterov=False,
@@ -55,6 +56,7 @@ class SGDAccumulated(OptimizerV2):
       raise ValueError("`momentum` must be between [0, 1].")
     self._set_hyper("momentum", momentum)
     self.nesterov = nesterov
+    self._accumulation_type = accumulation_type
 
   def _create_slots(self, var_list):
     for var in var_list:
@@ -86,18 +88,26 @@ class SGDAccumulated(OptimizerV2):
 
     
     # #gradient accumulation (is this really how to agregat gradients)
-    # g = self.get_slot(var, 'g') # accumulated gradient
-    # g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
-    # g_t = tf.where(tf.equal(sub_step, 1),
-    #                 g_a,
-    #                 g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
-    # g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+
 
     #gradient accumulation sum
-    g = self.get_slot(var, 'g') # accumulated gradient
-    g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
-    g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
-    g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    if self._accumulation_type == 'sum':
+      g = self.get_slot(var, 'g') # accumulated gradient
+      g_a = grad 
+      g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
+      g_t = state_ops.assign(g, g_t, use_locking=self._use_locking) 
+    elif self._accumulation_type == 'moving_avg':
+      g = self.get_slot(var, 'g') # accumulated gradient
+      g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
+      g_t = tf.where(tf.equal(sub_step, 1),
+                      g_a,
+                      g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
+      g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    else:
+      g = self.get_slot(var, 'g') # accumulated gradient
+      g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
+      g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
+      g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
 
     # momentum update
     if self._momentum:

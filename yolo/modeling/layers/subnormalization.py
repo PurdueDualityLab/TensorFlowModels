@@ -768,3 +768,109 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
 
 
 # class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
+#   def __init__(self,
+#                axis=-1,
+#                momentum=0.99,
+#                epsilon=1e-3,
+#                center=True,
+#                scale=True,
+#                beta_initializer='zeros',
+#                gamma_initializer='ones',
+#                moving_mean_initializer='zeros',
+#                moving_variance_initializer='ones',
+#                beta_regularizer=None,
+#                gamma_regularizer=None,
+#                beta_constraint=None,
+#                gamma_constraint=None,
+#                renorm=False,
+#                renorm_clipping=None,
+#                renorm_momentum=0.99,
+#                trainable=True,
+#                adjustment=None,
+#                name=None,
+#                **kwargs):
+
+#     # Currently we only support aggregating over the global batch size.
+#     super(ShuffleBatchNormalization, self).__init__(
+#         axis=axis,
+#         momentum=momentum,
+#         epsilon=epsilon,
+#         center=center,
+#         scale=scale,
+#         beta_initializer=beta_initializer,
+#         gamma_initializer=gamma_initializer,
+#         moving_mean_initializer=moving_mean_initializer,
+#         moving_variance_initializer=moving_variance_initializer,
+#         beta_regularizer=beta_regularizer,
+#         gamma_regularizer=gamma_regularizer,
+#         beta_constraint=beta_constraint,
+#         gamma_constraint=gamma_constraint,
+#         renorm=renorm,
+#         renorm_clipping=renorm_clipping,
+#         renorm_momentum=renorm_momentum,
+#         fused=False,
+#         trainable=trainable,
+#         virtual_batch_size=None, 
+#         name=name,
+#         **kwargs)
+#   def _calculate_mean_and_var(self, x, axes, keep_dims):
+  
+#     with K.name_scope('moments'):
+#       # The dynamic range of fp16 is too limited to support the collection of
+#       # sufficient statistics. As a workaround we simply perform the operations
+#       # on 32-bit floats before converting the mean and variance back to fp16
+#       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
+#       replica_ctx = ds.get_replica_context()
+#       if replica_ctx:
+#         tf.print(replica_ctx.num_replicas_in_sync)
+#         tf.print(replica_ctx.replica_id_in_sync_group)
+#         # local to me
+#         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
+#         local_squared_sum = math_ops.reduce_sum(math_ops.square(y), axis=axes,
+#                                                 keepdims=True)
+#         batch_size = math_ops.cast(array_ops.shape_v2(y)[0], dtypes.float32)
+#         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
+#         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
+#         # order in each replica nowadays, so we limit NCCL to batch all-reduces.
+        
+#         # get the sum of all replicas (converge all devices)
+#         y_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM, local_sum)
+#         # get the sum from all replicas (converge all devices)
+#         y_squared_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
+#                                                local_squared_sum)
+#         # get the net batch size from all devices (converge all devices)
+#         global_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
+#                                                    batch_size)
+
+#         # get the number of total params you are averaging (local)
+#         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
+#         multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
+#                                    dtypes.float32)
+#         multiplier = multiplier * global_batch_size
+
+#         # conver mean var (locally)
+#         mean = y_sum / multiplier
+#         y_squared_mean = y_squared_sum / multiplier
+#         # var = E(x^2) - E(x)^2
+#         variance = y_squared_mean - math_ops.square(mean)
+#       else:
+#         # if you only have one replica dont worry about it 
+#         # Compute true mean while keeping the dims for proper broadcasting.
+#         mean = math_ops.reduce_mean(y, axes, keepdims=True, name='mean')
+#         # sample variance, not unbiased variance
+#         # Note: stop_gradient does not change the gradient that gets
+#         #       backpropagated to the mean from the variance calculation,
+#         #       because that gradient is zero
+#         variance = math_ops.reduce_mean(
+#             math_ops.squared_difference(y, array_ops.stop_gradient(mean)),
+#             axes,
+#             keepdims=True,
+#             name='variance')
+#       if not keep_dims:
+#         mean = array_ops.squeeze(mean, axes)
+#         variance = array_ops.squeeze(variance, axes)
+#       if x.dtype == dtypes.float16:
+#         return (math_ops.cast(mean, dtypes.float16),
+#                 math_ops.cast(variance, dtypes.float16))
+#       else:
+#         return (mean, variance)
