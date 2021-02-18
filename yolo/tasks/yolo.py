@@ -83,7 +83,9 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
+    
     if params.is_training and params.parser.mosaic:
+      # gbs = params.global_batch_size
       params.global_batch_size = 4 * params.global_batch_size
 
     parser = yolo_input.Parser(
@@ -120,6 +122,12 @@ class YoloTask(base_task.Task):
         parser_fn=parser.parse_fn(params.is_training),
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
+
+
+    # if params.is_training and params.parser.mosaic:
+    #   dataset = dataset.unbatch()
+    #   dataset = dataset.batch(gbs)
+
     return dataset
 
   def build_losses(self, outputs, labels, aux_losses=None):

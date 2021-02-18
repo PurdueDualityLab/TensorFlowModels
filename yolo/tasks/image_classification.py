@@ -153,25 +153,25 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     else:
       decoder = classification_input.Decoder()
 
-    parser = classification_input.Parser(
-        output_size=input_size[:2],
-        num_classes=num_classes,
-        aug_rand_saturation=params.parser.aug_rand or
-        params.parser.aug_rand_saturation,
-        aug_rand_brightness=params.parser.aug_rand or
-        params.parser.aug_rand_brightness,
-        aug_rand_zoom=params.parser.aug_rand or params.parser.aug_rand_zoom,
-        aug_rand_rotate=params.parser.aug_rand or params.parser.aug_rand_rotate,
-        aug_rand_hue=params.parser.aug_rand or params.parser.aug_rand_hue,
-        aug_rand_aspect=params.parser.aug_rand or params.parser.aug_rand_aspect,
-        scale=params.parser.scale,
-        seed=params.parser.seed,
-        dtype=params.dtype)
+    # parser = classification_input.Parser(
+    #     output_size=input_size[:2],
+    #     num_classes=num_classes,
+    #     aug_rand_saturation=params.parser.aug_rand or
+    #     params.parser.aug_rand_saturation,
+    #     aug_rand_brightness=params.parser.aug_rand or
+    #     params.parser.aug_rand_brightness,
+    #     aug_rand_zoom=params.parser.aug_rand or params.parser.aug_rand_zoom,
+    #     aug_rand_rotate=params.parser.aug_rand or params.parser.aug_rand_rotate,
+    #     aug_rand_hue=params.parser.aug_rand or params.parser.aug_rand_hue,
+    #     aug_rand_aspect=params.parser.aug_rand or params.parser.aug_rand_aspect,
+    #     scale=params.parser.scale,
+    #     seed=params.parser.seed,
+    #     dtype=params.dtype)
 
-    # parser = classification_vision.Parser(
-    #   output_size = input_size[:2],
-    #   aug_policy = 'randaug',
-    #   dtype=params.dtype)
+    parser = classification_vision.Parser(
+      output_size = input_size[:2],
+      aug_policy = 'randaug',
+      dtype=params.dtype)
 
     reader = input_reader.InputReader(
         params,

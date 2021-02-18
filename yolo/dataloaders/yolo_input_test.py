@@ -62,14 +62,18 @@ def test_classification_pipeline():
       break
   return
 
-
+import time
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
 
-  shind = 1
+  shind = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  ltime = time.time()
   for l, (i, j) in enumerate(dataset):
-
+    ftime = time.time()
+    print(ftime - ltime)
+   
+    print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
     i = drawer(i,
@@ -91,8 +95,9 @@ def test_pipeline():
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
+    ltime = time.time()
 
-    if l >= 30:
+    if l >= 5:
       break
 
 

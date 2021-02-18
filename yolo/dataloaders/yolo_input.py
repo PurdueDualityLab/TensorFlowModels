@@ -161,17 +161,19 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    do_blur = tf.random.uniform([],
-                                minval=0,
-                                maxval=1,
-                                seed=self._seed,
-                                dtype=tf.float32)
-    if do_blur > 0.9:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=7, sigma=15)
-    elif do_blur > 0.7:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=6)
-    elif do_blur > 0.4:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=3)
+    # really slow
+    # do_blur = tf.random.uniform([],
+    #                             minval=0,
+    #                             maxval=1,
+    #                             seed=self._seed,
+    #                             dtype=tf.float32)
+    # do_blur = 0.9
+    # if do_blur > 0.9:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=7, sigma=15)
+    # elif do_blur > 0.7:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=6)
+    # elif do_blur > 0.4:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=3)
 
     image = tf.image.rgb_to_hsv(image)
     i_h, i_s, i_v = tf.split(image, 3, axis=-1)
@@ -303,12 +305,12 @@ class Parser(parser.Parser):
                                                        0)
                                   
       labels = {
-          'source_id': data['source_id'],
+          # 'source_id': data['source_id'],
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
-          'width': width,
-          'height': height,
-          'num_detections': num_dets
+          # 'width': width,
+          # 'height': height,
+          # 'num_detections': num_dets
       }
     return image, labels
 
