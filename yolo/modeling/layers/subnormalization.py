@@ -263,7 +263,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     else:
       batches_ = math_ops.cast(input_batch_size, self._param_dtype)
       mean = net_sum/batches_
-      varience = squared_mean/batches_- math_ops.square(mean) 
+      varience = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
     
     return mean, net_sum, varience, squared_mean, input_batch_size
   
@@ -751,7 +751,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
           # # if you only have one replica dont worry about it 
           # # Compute true mean while keeping the dims for proper broadcasting.
           mean = net_sum/batches_
-          varience = squared_mean/batches_- math_ops.square(mean) 
+          varience = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
 
       if not keep_dims:
         mean = array_ops.squeeze(mean, axes)
