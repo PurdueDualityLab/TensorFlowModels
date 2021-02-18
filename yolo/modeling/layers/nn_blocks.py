@@ -140,7 +140,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivSyncBatchNormalization(
-            subdivisions=1, 
+            subdivisions=32, 
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -150,7 +150,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivBatchNormalization(
-            subdivisions=1, 
+            subdivisions=32, 
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
