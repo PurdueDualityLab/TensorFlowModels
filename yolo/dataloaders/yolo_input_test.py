@@ -101,8 +101,28 @@ def test_pipeline():
       break
 
 
+
+def time_pipeline():
+  dataset, dsp = test_yolo_input_task()
+  print(dataset)
+  times = []
+  ltime = time.time()
+  for l, (i, j) in enumerate(dataset):
+    ftime = time.time()
+    # print(tf.reduce_min(i))
+    # print(l , ftime - ltime, end = ", ")
+    times.append(ftime - ltime)
+    ltime = time.time()
+    if l >= 100:
+      break
+
+  plt.plot(times)
+  plt.show()
+
+  print(f"total time {sum(times)}")
+
 if __name__ == '__main__':
-  test_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

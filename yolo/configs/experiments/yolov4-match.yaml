@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   model:
     base: 
@@ -37,7 +37,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 # 64 batch size 
+    global_batch_size: 8 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -77,7 +77,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 4004000 # 160 epochs at 64 batchsize -> 500500 * 64/8
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -87,13 +87,14 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [400000, 450000]
+        boundaries: [3200000, 3600000]
         name: PiecewiseConstantDecay
         values: [0.01, 0.001, 0.0001]
     optimizer:
-      type: sgd
+      type: sgd_accum
       sgd:
         momentum: 0.9
+        accumulation_steps: 8
         name: SGD
     warmup:
       type: 'linear'

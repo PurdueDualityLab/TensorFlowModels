@@ -175,6 +175,7 @@ class Parser(parser.Parser):
     # elif do_blur > 0.4:
     #   image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=3)
 
+    # slow as balls 20 second addition at batch size 128
     image = tf.image.rgb_to_hsv(image)
     i_h, i_s, i_v = tf.split(image, 3, axis=-1)
     if self._aug_rand_hue:
@@ -282,7 +283,7 @@ class Parser(parser.Parser):
       best_anchors = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
       best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(
-          best_anchors, self._max_num_instances, 0)
+          best_anchors, self._max_num_instances, -1)
       boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
                                                        self._max_num_instances,
                                                        0)
@@ -340,7 +341,7 @@ class Parser(parser.Parser):
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)
     classes = pad_max_instances(data['groundtruth_classes'],
                                 self._max_num_instances, -1)
-    best_anchors = pad_max_instances(best_anchors, self._max_num_instances, 0)
+    best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
     area = pad_max_instances(data['groundtruth_area'], self._max_num_instances,
                              0)
     is_crowd = pad_max_instances(
@@ -411,7 +412,7 @@ class Parser(parser.Parser):
     best_anchors = preprocessing_ops.get_best_anchor_batch(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
     label['best_anchors'] = pad_max_instances(
-        best_anchors, self._max_num_instances, pad_axis=-2, pad_value=0)
+        best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
 
     grid = self._build_grid(
         label, width, batch=True, use_tie_breaker=self._use_tie_breaker)

@@ -143,8 +143,8 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 416
-  image_h: int = 416
+  image_w: int = 512
+  image_h: int = 512
   fixed_size: bool = True
   jitter_im: float = 0.3
   jitter_boxes: float = 0.005
@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
-  seed: int = 10
+  seed: Optional[int] = None
   use_tie_breaker: bool = True
 
 
@@ -170,7 +170,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = ''
   tfds_name: str = 'coco'
   tfds_split: str = 'train'
-  global_batch_size: int = 128
+  global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
   decoder = None
@@ -199,7 +199,7 @@ class YoloLossLayer(hyperparams.Config):
   ignore_thresh: float = 0.5
   loss_type: str = 'ciou'
   max_boxes: int = 200
-  anchor_generation_scale: int = 416
+  anchor_generation_scale: int = 512
   use_nms: bool = False
   iou_normalizer: float = 0.75
   cls_normalizer: float = 1.0

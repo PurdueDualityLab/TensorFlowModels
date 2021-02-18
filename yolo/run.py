@@ -1,6 +1,6 @@
 from yolo.utils.run_utils import prep_gpu
 # try:
-#   prep_gpu()
+#   
 # except BaseException:
 #   print("GPUs ready")
 
@@ -23,6 +23,7 @@ import os
 
 from yolo.demos import video_detect_gpu as vgu
 from yolo.demos import video_detect_cpu as vcu
+import tensorflow as tf
 """
 python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4-eval.yaml --video ../videos/nyc.mp4  --max_batch 5
 """
@@ -158,6 +159,7 @@ def load_flags(CFG):
 
 
 def main(_):
+  prep_gpu()
   task, model, params = load_flags(FLAGS)
 
   if FLAGS.gpu:

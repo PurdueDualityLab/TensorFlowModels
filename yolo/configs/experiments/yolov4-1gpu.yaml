@@ -90,10 +90,10 @@ trainer:
         name: PiecewiseConstantDecay
         values:  [0.0001625, 0.00001625, 0.000001625] #[0.0013, 0.00013, 0.000013]
     optimizer:
-      type: sgd
-      sgd:
-        momentum: 0.949
-        name: SGD
+      type: adam
+      adam:
+        beta_1: 0.9
+        beta_2: 0.999
     warmup:
       type: 'linear'
       linear:

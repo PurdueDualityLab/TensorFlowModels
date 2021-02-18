@@ -101,6 +101,8 @@ class YoloLayer(ks.Model):
     # computer objectness and generate grid cell mask for where objects are located in the image
     objectness = tf.expand_dims(tf.math.sigmoid(obns), axis=-1)
     scaled = tf.math.sigmoid(classifics) * objectness
+    objectness = tf.reduce_max(scaled, axis = -1, keepdims = True)
+    # tf.print(tf.shape(objectness))
 
     # compute the mask of where objects have been located
     mask_check = tf.fill(

@@ -75,7 +75,7 @@ class Yolo_Loss(object):
     self._obj_normalizer = obj_normalizer
     self._scale_x_y = scale_x_y
     self._max_value = max_val
-    self._label_smoothing = tf.cast(0.1, tf.float32)
+    self._label_smoothing = tf.cast(0.0, tf.float32)
 
     # used in detection filtering
     self._beta_nms = beta_nms
@@ -138,6 +138,14 @@ class Yolo_Loss(object):
     x = tf.where(tf.math.is_inf(x), tf.cast(0.0, dtype=x.dtype), x)
     return x
 
+  def bce(self, target, output):
+    def _smooth_labels(y_true):
+      return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing)
+    target = _smooth_labels(target)
+    bce = target * tf.math.log(output + K.epsilon())
+    bce += (1 - target) * tf.math.log(1 - output + K.epsilon())
+    return -bce
+
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
@@ -169,7 +177,6 @@ class Yolo_Loss(object):
         depth=self._classes,
         axis=-1,
         dtype=y_pred.dtype)
-    true_class = smooth_labels(true_class, self._classes, self._label_smoothing)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == "giou":
@@ -198,15 +205,19 @@ class Yolo_Loss(object):
       #loss_box = tf.math.minimum(loss_box, self._max_value)
 
     # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
-    class_loss = self._cls_normalizer * tf.reduce_sum(
-        ks.losses.binary_crossentropy(
-            K.expand_dims(true_class, axis=-1),
-            K.expand_dims(pred_class, axis=-1)),
-        axis=-1) * true_conf
+    # class_loss = self._cls_normalizer * tf.reduce_sum(
+    #     ks.losses.binary_crossentropy(
+    #         K.expand_dims(true_class, axis=-1),
+    #         K.expand_dims(pred_class, axis=-1), 
+    #         label_smoothing=self._label_smoothing),
+    #     axis=-1) * true_conf
+    
+    class_loss = self._cls_normalizer * tf.reduce_sum(self.bce(true_class, pred_class), axis = -1) * true_conf
 
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf)
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf)
+    #bce = self.bce(true_conf, tf.squeeze(pred_conf))
     conf_loss = (true_conf +
                  (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
 
@@ -222,16 +233,16 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(class_loss)
 
     # 10. store values for use in metrics
-    recall50 =  tf.stop_gradient(tf.reduce_mean(
+    recall50 =  tf.reduce_mean(
         tf.math.divide_no_nan(
             tf.reduce_sum(
                 tf.cast(
                     tf.squeeze(pred_conf, axis=-1) > 0.5, dtype=true_conf.dtype)
                 * true_conf,
-                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
-    avg_iou =  tf.stop_gradient(tf.math.divide_no_nan(
+                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+    avg_iou =  tf.math.divide_no_nan(
         tf.reduce_sum(iou),
         tf.cast(
             tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
-            dtype=y_pred.dtype)))
+            dtype=y_pred.dtype))
     return loss, loss_box, conf_loss, class_loss, avg_iou, recall50

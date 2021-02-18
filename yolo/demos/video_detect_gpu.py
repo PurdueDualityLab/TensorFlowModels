@@ -524,7 +524,7 @@ def get_model(model):
 #   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
 #   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-#   task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
+#   task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
 
 #   cap = FastVideo(
 #       "../videos/nyc.mp4",

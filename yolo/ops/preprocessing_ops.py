@@ -71,6 +71,16 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
     boxes = box_ops.xcycwh_to_yxyx(boxes)
   return boxes, classes 
 
+# def rgb_to_hsv(image):
+#   mins = tf.reduce_min(image, axis = -1)
+#   maxs = tf.reduce_max(image, axis = -1)
+#   diff = maxs - mins
+
+#   r, g, b = tf.split(image, 3, axis = -1)
+
+#   tf.
+
+#   return 
 
 def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_upper_bound, keep_thresh = 0.25):
   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
