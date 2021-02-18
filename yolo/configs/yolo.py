@@ -227,7 +227,7 @@ class Yolo(ModelConfig):
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
-      use_sync_bn=False,
+      use_sync_bn=True,
       norm_momentum=0.99,
       norm_epsilon=0.001)
   decoder_activation: str = 'leaky'
