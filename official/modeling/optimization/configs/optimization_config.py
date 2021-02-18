@@ -42,7 +42,7 @@ class OptimizerConfig(oneof.OneOfConfig):
   """
   type: Optional[str] = None
   sgd: opt_cfg.SGDConfig = opt_cfg.SGDConfig()
-  # sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
+  sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
   adam: opt_cfg.AdamConfig = opt_cfg.AdamConfig()
   adamw: opt_cfg.AdamWeightDecayConfig = opt_cfg.AdamWeightDecayConfig()
   lamb: opt_cfg.LAMBConfig = opt_cfg.LAMBConfig()

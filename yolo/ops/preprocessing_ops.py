@@ -71,19 +71,6 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
     boxes = box_ops.xcycwh_to_yxyx(boxes)
   return boxes, classes 
 
-def scale_image(image, resize=False, w=None, h=None):
-  """Image Normalization.
-    Args:
-        image(tensorflow.python.framework.ops.Tensor): The image.
-    Returns:
-        A Normalized Function.
-    """
-  with tf.name_scope('scale_image'):
-    image = tf.convert_to_tensor(image)
-    if resize:
-      image = tf.image.resize(image, size=(w, h))
-    image = image / 255
-  return image
 
 def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_upper_bound, keep_thresh = 0.25):
   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
@@ -121,6 +108,10 @@ def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_u
   boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
   boxes = box_ops.xcycwh_to_yxyx(boxes)
   return boxes
+
+
+# above is private to support our usecase 
+
 
 def random_jitter(image, box, classes, t, seed=10):
   jx = 1 + tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)

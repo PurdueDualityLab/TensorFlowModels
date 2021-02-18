@@ -31,7 +31,7 @@ OPTIMIZERS_CLS = {
     'adamw': nlp_optimization.AdamWeightDecay,
     'lamb': tfa_optimizers.LAMB,
     'rmsprop': tf.keras.optimizers.RMSprop, 
-    # 'sgd_accum': SGDAccumulated.SGDAccumulated
+    'sgd_accum': SGDAccumulated.SGDAccumulated
 }
 
 LR_CLS = {
