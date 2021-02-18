@@ -54,22 +54,22 @@ class SGDConfig(BaseOptimizerConfig):
   momentum: float = 0.0
 
 
-@dataclasses.dataclass
-class SGDAccumConfig(BaseOptimizerConfig):
-  """Configuration for SGD optimizer.
+# @dataclasses.dataclass
+# class SGDAccumConfig(BaseOptimizerConfig):
+#   """Configuration for SGD optimizer.
 
-  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+#   The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
 
-  Attributes:
-    name: name of the optimizer.
-    decay: decay rate for SGD optimizer.
-    nesterov: nesterov for SGD optimizer.
-    momentum: momentum for SGD optimizer.
-  """
-  name: str = "SGD"
-  accumulation_steps: int = 1
-  decay: float = 0.0
-  momentum: float = 0.0
+#   Attributes:
+#     name: name of the optimizer.
+#     decay: decay rate for SGD optimizer.
+#     nesterov: nesterov for SGD optimizer.
+#     momentum: momentum for SGD optimizer.
+#   """
+#   name: str = "SGD"
+#   accumulation_steps: int = 1
+#   decay: float = 0.0
+#   momentum: float = 0.0
 
 
 @dataclasses.dataclass

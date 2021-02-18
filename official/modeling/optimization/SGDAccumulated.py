@@ -170,17 +170,17 @@ class SGDAccumulated(OptimizerV2):
     return config
 
 
-if __name__ == "__main__":
-  from yolo import run
-  import os
-  optimizer = SGDAccumulated(accumulation_steps = 8)
+# if __name__ == "__main__":
+#   from yolo import run
+#   import os
+#   optimizer = SGDAccumulated(accumulation_steps = 8)
 
-  config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
-  model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
+#   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
+#   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-  task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
+#   task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
 
-  train_data = task.build_inputs(task.task_config.train_data)
-  validation_data = task.build_inputs(task.task_config.train_data)
+#   train_data = task.build_inputs(task.task_config.train_data)
+#   validation_data = task.build_inputs(task.task_config.train_data)
   
-  model.compile(optimizer = optimizer)
+#   model.compile(optimizer = optimizer)
