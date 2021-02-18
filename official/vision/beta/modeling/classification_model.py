@@ -80,8 +80,6 @@ class ClassificationModel(tf.keras.Model):
     #     num_classes, kernel_initializer=kernel_initializer,
     #     kernel_regularizer=self._kernel_regularizer,
     #     bias_regularizer=self._bias_regularizer)
-
-    #self._head = tf.keras.layers.Conv2D(num_classes, kernel_size=1, kernel_initializer=kernel_initializer, kernel_regularizer=self._kernel_regularizer, bias_regularizer=self._bias_regularizer)
     
     self._head = nn_blocks.ConvBN(filters = num_classes, kernel_size = 1, kernel_initializer=kernel_initializer, kernel_regularizer=self._kernel_regularizer, bias_regularizer=self._bias_regularizer, use_bn = False, activation=None)
     
