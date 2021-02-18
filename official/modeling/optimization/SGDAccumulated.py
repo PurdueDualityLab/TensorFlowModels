@@ -13,7 +13,7 @@ class SGDAccumulated(OptimizerV2):
 
   def __init__(self,
                 accumulation_steps = 1,
-                accumulation_type = 'sum', 
+                accumulation_type = 'mean', 
                 learning_rate=0.01,
                 momentum=0.0,
                 nesterov=False,
@@ -85,10 +85,6 @@ class SGDAccumulated(OptimizerV2):
 
     # used to control when updates happen (zero when substeps != accumulation steps)
     lr = tf.where(update_cond, lr_t, 0.0)
-
-    
-    # #gradient accumulation (is this really how to agregat gradients)
-
 
     #gradient accumulation sum
     if self._accumulation_type == 'sum':
