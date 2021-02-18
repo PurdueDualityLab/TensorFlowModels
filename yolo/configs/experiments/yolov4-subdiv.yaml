@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 2
+  num_gpus: 1
 task:
   model:
     base: 
@@ -25,7 +25,7 @@ task:
       activation: leaky
       norm_epsilon: 0.001
       norm_momentum: 0.99
-      use_sync_bn: false
+      use_sync_bn: true
     decoder_activation: leaky
     filter:
       anchor_generation_scale: 416
@@ -37,7 +37,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 4 # 64 batch size 
+    global_batch_size: 2 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -57,7 +57,7 @@ task:
       mosaic: true
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 4
+    global_batch_size: 2
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -78,7 +78,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 8008000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 16016000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -88,13 +88,13 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [6400000, 7200000]
+        boundaries: [12800000, 14400000]
         name: PiecewiseConstantDecay
         values: [0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd_accum
       sgd_accum:
-        accumulation_steps: 16 # 32 * 2 = 64 batch_size
+        accumulation_steps: 32 # 32 * 2 = 64 batch_size
         momentum: 0.949
         name: SGD
     warmup:

@@ -26,6 +26,7 @@ def load_weights(convs, layers):
         weights.append(np.zeros_like(weights[-2]))
         weights.append(np.zeros_like(weights[-2]))
         weights.append(np.zeros([]))
+        weights.append(np.zeros([]))
         layers[i].set_weights(weights)
     except BaseException as e:
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
