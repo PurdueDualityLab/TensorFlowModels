@@ -1,8 +1,8 @@
 from yolo.utils.run_utils import prep_gpu
-try:
-  prep_gpu()
-except BaseException:
-  print("GPUs ready")
+# try:
+#   prep_gpu()
+# except BaseException:
+#   print("GPUs ready")
 
 from absl import app
 from absl import flags
