@@ -217,9 +217,8 @@ class Yolo_Loss(object):
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf)
-    #bce = self.bce(true_conf, tf.squeeze(pred_conf))
-    conf_loss = (true_conf +
-                 (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
+    bce = self.bce(true_conf, tf.squeeze(pred_conf))
+    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
