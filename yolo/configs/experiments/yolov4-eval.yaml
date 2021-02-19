@@ -28,7 +28,7 @@ task:
       use_sync_bn: false
     decoder_activation: leaky
     filter:
-      anchor_generation_scale: 416
+      anchor_generation_scale: 512
       ignore_thresh: 0.7
       iou_thresh: 0.25
       nms_thresh: 0.4

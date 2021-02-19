@@ -65,6 +65,12 @@ class Yolo(ks.Model):
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
+  if hasattr(model_config, 'subdivisions'):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
+
   if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
         embed_spp=model_config.decoder.embed_spp,
@@ -74,6 +80,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         max_level_process_len=model_config.decoder.max_level_process_len,
         xy_exponential=model_config.decoder.xy_exponential,
         activation=activation,
+        subdivisions= subdivisions, 
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -89,6 +96,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
           max_level_process_len=None,
           path_process_len=6,
           activation=activation,
+          subdivisions= subdivisions, 
           use_sync_bn=model_config.norm_activation.use_sync_bn,
           norm_momentum=model_config.norm_activation.norm_momentum,
           norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -100,6 +108,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
           max_level_process_len=None,
           path_process_len=6,
           activation=activation,
+          subdivisions= subdivisions, 
           use_sync_bn=model_config.norm_activation.use_sync_bn,
           norm_momentum=model_config.norm_activation.norm_momentum,
           norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -111,6 +120,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         max_level_process_len=2,
         path_process_len=1,
         activation=activation,
+        subdivisions= subdivisions, 
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -122,6 +132,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         max_level_process_len=None,
         path_process_len=6,
         activation=activation,
+        subdivisions= subdivisions, 
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -155,12 +166,18 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
 
 
 def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
+  if hasattr(model_config, 'subdivisions'):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
   head = YoloHead(
       classes=model_config.num_classes,
       boxes_per_level=model_config.boxes_per_scale,
       xy_exponential=False,  # model_config.decoder.version == 'v4',
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
+      subdivisions=subdivisions, 
       kernel_regularizer=l2_regularization)
   head.build(input_specs)
   return head

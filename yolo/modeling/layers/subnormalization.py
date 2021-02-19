@@ -121,6 +121,49 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if len(self.axis) != len(set(self.axis)):
       raise ValueError('Duplicate axis: %s' % self.axis)
 
+   
+    # TODO(yaozhang): if input is not 4D, reshape it to 4D and reshape the
+    # output back to its original shape accordingly.
+    self.fused = None
+
+    if self._USE_V2_BEHAVIOR:
+      # TODO(b/173253101): Using fused in the 5D case is currently disabled
+      # due to a regression on UNet, so it is only currently only supported in
+      # the 4D case.
+      if self.fused is None:
+        self.fused = ndims == 4
+      elif self.fused and ndims != 4:
+        raise ValueError('Batch normalization layers with `fused=True` only '
+                          'support 4D or 5D input tensors. '
+                          'Received tensor with shape: %s' %
+                          (tuple(input_shape),))
+    else:
+      assert self.fused is not None
+      self.fused = (ndims == 4 and self._fused_can_be_used())
+    # TODO(chrisying): fused batch norm is currently not supported for
+    # multi-axis batch norm and by extension virtual batches. In some cases,
+    # it might be possible to use fused batch norm but would require reshaping
+    # the Tensor to 4D with the axis in 1 or 3 (preferred 1) which is
+    # particularly tricky. A compromise might be to just support the most
+    # common use case (turning 5D w/ virtual batch to NCHW)
+
+    if self.axis == [1] and ndims == 4:
+      self._data_format = 'NCHW'
+    elif self.axis == [1] and ndims == 5:
+      self._data_format = 'NCDHW'
+    elif self.axis == [3] and ndims == 4:
+      self._data_format = 'NHWC'
+    elif self.axis == [4] and ndims == 5:
+      self._data_format = 'NDHWC'
+    elif ndims == 5:
+      # 5D tensors that can be passed in but should not use fused batch norm
+      # due to unsupported axis.
+      self.fused = False
+    else:
+      raise ValueError('Unsupported axis, fused batch norm only supports '
+                        'axis == [1] or axis == [3] for 4D input tensors or '
+                        'axis == [1] or axis == [4] for 5D input tensors')
+
     axis_to_dim = {x: input_shape.dims[x].value for x in self.axis}
     for x in axis_to_dim:
       if axis_to_dim[x] is None:
@@ -237,6 +280,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         # rid of the value variable
         update_delta = array_ops.where(count%subdivisions == 0, update_delta - variable, update_delta)
         return state_ops.assign_add(variable, update_delta, name=scope)
+
 
   def _subdiv_calculate_mean_and_var(self, inputs, reduction_axes, keep_dims):
     # calculate the 
@@ -476,19 +520,24 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     return outputs
 
   def call(self, inputs, training=None):
+    training = self._get_training_value(training)
     if self.subdivisions <= 1 or self.subdivisions is None:
       return super().call(inputs, training=training)
     else:
-      # be special Now
-
-      # deal later
-      # if self.fused:
-      #   outputs = self._fused_batch_norm(inputs, training=training)
-      #   if self.virtual_batch_size is not None:
-      #     # Currently never reaches here since fused_batch_norm does not support
-      #     # virtual batching
-      #     outputs = undo_virtual_batching(outputs)
-      #   return outputs
+      # optimize for speed if possible 
+      if self.renorm is False and training is False and self.fused: 
+        # outputs = self._fused_batch_norm(inputs, training=False)
+        beta = self.beta if self.center else self._beta_const
+        gamma = self.gamma if self.scale else self._gamma_const
+        outputs, mean, varience = nn.fused_batch_norm(inputs,
+                                                gamma,
+                                                beta,
+                                                mean=self.moving_mean,
+                                                variance=self.moving_variance,
+                                                epsilon=self.epsilon,
+                                                is_training=False,
+                                                data_format=self._data_format)
+        return outputs
       return self._subdiv_batch_norm(inputs, training=training)
 
   

@@ -721,8 +721,6 @@ class SubDivBatchNormalization(Layer):
         self.add_update(subdiv_agg_variance)
         self.add_update(subdiv_mean_update)
         self.add_update(subdiv_variance_update)
-        # if (self.local_count + 1) % self.subdivisions == 0: 
-        #   tf.print("I updated my mean and var")
         self.add_update(update_count)
       else:
 

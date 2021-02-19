@@ -34,6 +34,7 @@ from official.common import flags as tfm_flags
 from official.core import task_factory
 from official.core import train_lib
 from official.modeling import performance
+import pprint
 
 FLAGS = flags.FLAGS
 """
@@ -61,13 +62,43 @@ nohup python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --m
 evalaute Yolo:
 nohup python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-eval.yaml  >> yolov4-eval.log & tail -f yolov4-eval.log
 """
+def subdivison_adjustment(params):
 
+  if hasattr(params.task.model, 'subdivisions') and params.task.model.subdivisions > 1:
+    print("adjustment is needed")
+    subdivisons = params.task.model.subdivisions
+    params.task.train_data.global_batch_size //= subdivisons
+    params.task.validation_data.global_batch_size //= subdivisons
+    params.trainer.train_steps *= subdivisons
+    params.trainer.validation_steps *= subdivisons
+    
+    if params.trainer.optimizer_config.learning_rate.type == 'stepwise':
+      bounds = params.trainer.optimizer_config.learning_rate.stepwise.boundaries
+      params.trainer.optimizer_config.learning_rate.stepwise.boundaries = [subdivisons * bound for bound in bounds]
+
+    if params.trainer.optimizer_config.learning_rate.type == 'polynomial':
+      params.trainer.optimizer_config.learning_rate.polynomial.decay_steps *= subdivisons
+
+    if params.trainer.optimizer_config.optimizer.type == 'sgd':
+      print(params.trainer.optimizer_config.optimizer.type)
+      params.trainer.optimizer_config.optimizer.type = 'sgd_accum'
+      params.trainer.optimizer_config.optimizer.sgd_accum.accumulation_steps = subdivisons
+      params.trainer.optimizer_config.optimizer.sgd_accum.momentum = params.trainer.optimizer_config.optimizer.sgd.momentum
+      params.trainer.optimizer_config.optimizer.sgd_accum.decay = params.trainer.optimizer_config.optimizer.sgd.decay
+    
+    if params.trainer.optimizer_config.warmup.type == 'linear':
+      params.trainer.optimizer_config.warmup.linear.warmup_steps *= subdivisons
+
+  print(params.as_dict())
+  # sys.exit()
+  return params
 
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   print(FLAGS.experiment)
   params = train_utils.parse_configuration(FLAGS)
 
+  params = subdivison_adjustment(params)
   model_dir = FLAGS.model_dir
   if 'train' in FLAGS.mode:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job

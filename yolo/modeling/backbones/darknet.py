@@ -279,6 +279,7 @@ class Darknet(ks.Model):
       use_sync_bn=False,
       norm_momentum=0.99,
       norm_epsilon=0.001,
+      subdivisions=8, 
       dilate=False,
       kernel_initializer='glorot_uniform',
       kernel_regularizer=None,
@@ -305,6 +306,7 @@ class Darknet(ks.Model):
     self._activation = activation
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
+    self._subdivisions = subdivisions
 
     self._default_dict = {
         'kernel_initializer': self._kernel_initializer,
@@ -314,6 +316,7 @@ class Darknet(ks.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
+        'subdivisions': self._subdivisions,
         'dilation_rate': 1,
         'name': None
     }
@@ -534,7 +537,8 @@ class Darknet(ks.Model):
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
-        'activation': self._activation
+        'activation': self._activation,
+        'subdivisions': self._subdivisions,
     }
     return layer_config
 
@@ -547,13 +551,19 @@ def build_darknet(
 
   backbone_cfg = model_config.backbone.get()
   norm_activation_config = model_config.norm_activation
-  print(backbone_cfg)
+
+  if hasattr(model_config, 'subdivisions'):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
   model = Darknet(
       model_id=backbone_cfg.model_id,
       min_level=model_config.min_level,
       max_level=model_config.max_level,
       input_specs=input_specs,
       dilate=model_config.dilate,
+      subdivisions=subdivisions, 
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,

@@ -15,6 +15,7 @@ class FPNTail(tf.keras.layers.Layer):
                kernel_initializer="glorot_uniform",
                bias_regularizer=None,
                norm_epsilon=0.001,
+               subdivisions = 8, 
                norm_momentum=0.99,
                **kwargs):
 
@@ -29,10 +30,12 @@ class FPNTail(tf.keras.layers.Layer):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
+        subdivisions = self._subdivisions,
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
@@ -80,6 +83,7 @@ class YoloFPN(tf.keras.Model):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
+               subdivisions = 8, 
                **kwargs):
 
     super().__init__(**kwargs)
@@ -92,10 +96,12 @@ class YoloFPN(tf.keras.Model):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
+        subdivisions = self._subdivisions, 
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
@@ -174,6 +180,7 @@ class YoloRoutedDecoder(tf.keras.Model):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
+               subdivisions = 8, 
                **kwargs):
     super().__init__(**kwargs)
     self._max_level_process_len = path_process_len if max_level_process_len is None else max_level_process_len
@@ -187,6 +194,7 @@ class YoloRoutedDecoder(tf.keras.Model):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         activation=self._activation,
@@ -194,6 +202,7 @@ class YoloRoutedDecoder(tf.keras.Model):
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
+        subdivisions = self._subdivisions, 
         norm_epsilon=self._norm_epsilon,
         norm_momentum=self._norm_momentum)
 
@@ -260,6 +269,7 @@ class YoloFPNDecoder(tf.keras.Model):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
+               subdivisions = 8, 
                **kwargs):
     super().__init__(**kwargs)
     self._path_process_len = path_process_len
@@ -274,10 +284,12 @@ class YoloFPNDecoder(tf.keras.Model):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
+        subdivisions=self._subdivisions, 
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
@@ -348,6 +360,7 @@ class YoloDecoder(tf.keras.Model):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
+               subdivisions = 8, 
                **kwargs):
     super().__init__(**kwargs)
     self._embed_fpn = embed_fpn
@@ -363,6 +376,7 @@ class YoloDecoder(tf.keras.Model):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         activation=self._activation,
@@ -371,7 +385,8 @@ class YoloDecoder(tf.keras.Model):
         norm_epsilon=self._norm_epsilon,
         kernel_initializer=self._kernel_initializer,
         kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer)
+        bias_regularizer=self._bias_regularizer, 
+        subdivisions = self._subdivisions)
 
     self._decoder_config = dict(
         path_process_len=self._path_process_len,

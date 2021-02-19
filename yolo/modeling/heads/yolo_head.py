@@ -14,6 +14,7 @@ class YoloHead(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                kernel_initializer="glorot_uniform",
+               subdivisions = 8, 
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
@@ -36,6 +37,7 @@ class YoloHead(tf.keras.layers.Layer):
     self._kernel_initializer = kernel_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
 
     self._base_config = dict(
         filters=self._output_conv,
@@ -44,6 +46,7 @@ class YoloHead(tf.keras.layers.Layer):
         padding="same",
         use_bn=False,
         activation=None,
+        subdivisions = self._subdivisions, 
         norm_momentum=self._norm_momentum,
         norm_epsilon=self._norm_epsilon,
         kernel_initializer=self._kernel_initializer,

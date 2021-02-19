@@ -226,6 +226,7 @@ class Yolo(ModelConfig):
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
   dilate: bool = False
+  subdivisions: int = 1
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',

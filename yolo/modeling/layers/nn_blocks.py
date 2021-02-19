@@ -54,6 +54,7 @@ class ConvBN(tf.keras.layers.Layer):
       dilation_rate=(1, 1),
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
+      subdivisions = 8, 
       bias_regularizer=None,
       kernel_regularizer=None,  # Specify the weight decay as the default will not work.
       use_bn=True,
@@ -74,7 +75,8 @@ class ConvBN(tf.keras.layers.Layer):
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
-
+    self._subdivisions = subdivisions
+    
     # batch normalization params
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
@@ -140,7 +142,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivSyncBatchNormalization(
-            subdivisions=8, 
+            subdivisions=self._subdivisions, 
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -150,7 +152,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivBatchNormalization(
-            subdivisions=8, 
+            subdivisions=self._subdivisions, 
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -223,6 +225,7 @@ class DarkResidual(tf.keras.layers.Layer):
                filters=1,
                filter_scale=2,
                dilation_rate=1,
+               subdivisions = 8, 
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                kernel_regularizer=None,
@@ -249,6 +252,7 @@ class DarkResidual(tf.keras.layers.Layer):
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
     self._kernel_regularizer = kernel_regularizer
+    self._subdivisions = subdivisions
 
     # normal params
     self._norm_moment = norm_momentum
@@ -275,6 +279,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
         'norm_momentum': self._norm_moment,
+        'subdivisions': self._subdivisions,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -347,7 +352,8 @@ class DarkResidual(tf.keras.layers.Layer):
         'activation': self._conv_activation,
         'leaky_alpha': self._leaky_alpha,
         'sc_activation': self._sc_activation,
-        'downsample': self._downsample
+        'downsample': self._downsample, 
+        'subdivisions': self._subdivisions,
     }
     layer_config.update(super().get_config())
     return layer_config
@@ -391,6 +397,7 @@ class CSPTiny(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                dilation_rate=1,
+               subdivisions=1,
                use_sync_bn=False,
                group_id=1,
                groups=2,
@@ -413,6 +420,7 @@ class CSPTiny(tf.keras.layers.Layer):
     self._groups = groups
     self._group_id = group_id
     self._downsample = downsample
+    self._subdivisions = subdivisions
 
     # normal params
     self._norm_moment = norm_momentum
@@ -431,6 +439,7 @@ class CSPTiny(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'subdivisions': self._subdivisions,
         'norm_momentum': self._norm_moment,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
@@ -528,6 +537,7 @@ class CSPRoute(tf.keras.layers.Layer):
   def __init__(self,
                filters,
                filter_scale=2,
+               subdivisions=1,
                activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
@@ -558,6 +568,7 @@ class CSPRoute(tf.keras.layers.Layer):
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._downsample = downsample
+    self._subdivisions = subdivisions
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -570,6 +581,7 @@ class CSPRoute(tf.keras.layers.Layer):
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
+        'subdivisions': self._subdivisions,
     }
     if self._downsample:
       if self._dilation_rate > 1:
@@ -637,6 +649,7 @@ class CSPConnect(tf.keras.layers.Layer):
   def __init__(self,
                filters,
                filter_scale=2,
+               subdivisions=1,
                activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
@@ -664,6 +677,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._use_sync_bn = use_sync_bn
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
+    self._subdivisions = subdivisions
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -676,6 +690,7 @@ class CSPConnect(tf.keras.layers.Layer):
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
+        'subdivisions': self._subdivisions,
     }
     self._conv1 = ConvBN(
         filters=self._filters // self._filter_scale,
@@ -727,6 +742,7 @@ class CSPStack(tf.keras.layers.Layer):
   def __init__(self,
                filters,
                model_to_wrap=None,
+               subdivisions=1,
                filter_scale=2,
                activation='mish',
                kernel_initializer='glorot_uniform',
@@ -756,6 +772,7 @@ class CSPStack(tf.keras.layers.Layer):
     self._use_sync_bn = use_sync_bn
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
+    self._subdivisions = subdivisions
 
     if model_to_wrap is not None:
       if isinstance(model_to_wrap, Callable):
@@ -782,6 +799,7 @@ class CSPStack(tf.keras.layers.Layer):
         'norm_momentum': self._norm_moment,
         'norm_epsilon': self._norm_epsilon,
         'kernel_regularizer': self._kernel_regularizer,
+        'subdivisions': self._subdivisions,
     }
     self._route = CSPRoute(downsample=self._downsample, **_dark_conv_args)
     self._connect = CSPConnect(**_dark_conv_args)
@@ -804,6 +822,7 @@ class RouteMerge(tf.keras.layers.Layer):
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
       bias_regularizer=None,
+      subdivisions=1,
       kernel_regularizer=None,  # default find where is it is stated
       use_bn=True,
       use_sync_bn=False,
@@ -835,6 +854,7 @@ class RouteMerge(tf.keras.layers.Layer):
     self._downsample = downsample
     self._upsample = upsample
     self._upsample_size = upsample_size
+    self._subdivisions = subdivisions
 
     super().__init__(**kwargs)
 
@@ -850,6 +870,7 @@ class RouteMerge(tf.keras.layers.Layer):
         'activation': self._conv_activation,
         'kernel_regularizer': self._kernel_regularizer,
         'leaky_alpha': self._leaky_alpha,
+        'subdivisions': self._subdivisions,
     }
     if self._downsample:
       self._conv = ConvBN(
@@ -931,6 +952,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       mod=1,
       repetitions=2,
       insert_spp=False,
+      subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
       bias_regularizer=None,
@@ -980,6 +1002,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._bias_initializer = bias_initializer
     self._bias_regularizer = bias_regularizer
     self._kernel_regularizer = kernel_regularizer
+    self._subdivisions = subdivisions
 
     # normal params
     self._norm_moment = norm_momentum
@@ -1055,6 +1078,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
         'leaky_alpha': self._leaky_alpha,
+        'subdivisions': self._subdivisions,
     }
     self.layers = []
     for layer in self.layer_list:
