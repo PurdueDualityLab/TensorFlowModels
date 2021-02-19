@@ -14,7 +14,7 @@ task:
     norm_activation:
       activation: 'mish'  
       use_sync_bn: true
-    subdivisions: 4
+    subdivisions: 32
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
