@@ -204,6 +204,8 @@ class YoloLossLayer(hyperparams.Config):
   iou_normalizer: float = 0.75
   cls_normalizer: float = 1.0
   obj_normalizer: float = 1.0
+  # scale_xy:
+  # path scales:
 
 
 @dataclasses.dataclass

@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 2
+  num_gpus: 1
 task:
   model:
     num_classes: 1000
@@ -13,6 +13,7 @@ task:
         model_id: 'cspdarknet53'
     norm_activation:
       activation: 'leaky'  
+      use_sync_bn: true
     darknet_weights_file: 'cache://csdarknet53.weights'
     darknet_weights_cfg: 'cache://csdarknet53.cfg'
   losses:
@@ -25,7 +26,7 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 64
+    global_batch_size: 16
     dtype: 'float16'
     shuffle_buffer_size: 10000
     parser:
@@ -36,22 +37,22 @@ task:
     #tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: false
-    global_batch_size: 64
+    global_batch_size: 16
     dtype: 'float16'
     drop_remainder: false
     shuffle_buffer_size: 10000
     parser:
       aug_rand: false
 trainer:
-  train_steps: 1200000 # epochs: 120
-  validation_steps: 400 # size of validation data
+  train_steps: 4800000 # epochs: 120
+  validation_steps: 2400 # size of validation data
   validation_interval: 10000
   steps_per_loop: 10000
   summary_interval: 10000
   checkpoint_interval: 10000
   optimizer_config:
     optimizer:
-      type: 'sgd'
+      type: 'sgd_accum'
       sgd:
         momentum: 0.9
     learning_rate:
@@ -64,4 +65,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.1 over 1000 steps
+        warmup_steps: 2000 #learning rate rises from 0 to 0.1 over 1000 steps

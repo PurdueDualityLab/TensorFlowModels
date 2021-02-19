@@ -79,17 +79,17 @@ class Parser(parser.Parser):
     w = tf.cast(tf.shape(image)[0], tf.float32)
     h = tf.cast(tf.shape(image)[1], tf.int32)
 
-    do_blur = tf.random.uniform([],
-                                minval=0,
-                                maxval=1,
-                                seed=self._seed,
-                                dtype=tf.float32)
-    if do_blur > 0.9:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=7, sigma=15)
-    elif do_blur > 0.7:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=6)
-    elif do_blur > 0.4:
-      image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=3)
+    # do_blur = tf.random.uniform([],
+    #                             minval=0,
+    #                             maxval=1,
+    #                             seed=self._seed,
+    #                             dtype=tf.float32)
+    # if do_blur > 0.9:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=7, sigma=15)
+    # elif do_blur > 0.7:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=6)
+    # elif do_blur > 0.4:
+    #   image = tfa.image.gaussian_filter2d(image, filter_shape=5, sigma=3)
 
     image = tf.image.rgb_to_hsv(image)
     i_h, i_s, i_v = tf.split(image, 3, axis=-1)

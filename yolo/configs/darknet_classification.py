@@ -29,7 +29,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = ''
   tfds_name: str = 'imagenet2012'  # 'cats_vs_dogs' #
   tfds_split: str = 'train'
-  tfds_data_dir: str = '/media/vbanna/DATA_SHARE/tfds'
+  tfds_data_dir: str = '' #'/media/vbanna/DATA_SHARE/tfds'
   global_batch_size: int = 1
   is_training: bool = True
   dtype: str = 'float16'
