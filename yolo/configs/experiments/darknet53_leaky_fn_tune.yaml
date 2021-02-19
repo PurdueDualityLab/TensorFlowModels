@@ -52,9 +52,11 @@ trainer:
   checkpoint_interval: 10000
   optimizer_config:
     optimizer:
-      type: 'sgd_accum'
-      sgd:
+      type: sgd_accum
+      sgd_accum:
         momentum: 0.9
+        accumulation_steps: 8
+        name: SGD
     learning_rate:
       type: 'polynomial'
       polynomial:
