@@ -10,7 +10,7 @@ except (ImportError, AttributeError):
 
   def absolute_difference(
       labels, predictions, weights=1.0,
-      reduction=tf.keras.losses.Reduction.SUM_BY_NONZERO_WEIGHTS):
+      reduction=tf.keras.losses.Reduction.SUM):
     """Adds an Absolute Difference loss to the training procedure.
     `weights` acts as a coefficient for the loss. If a scalar is provided, then
     the loss is simply scaled by the given value. If `weights` is a `Tensor` of
@@ -39,8 +39,7 @@ except (ImportError, AttributeError):
       raise ValueError("labels must not be None.")
     if predictions is None:
       raise ValueError("predictions must not be None.")
-    with tf.name_scope(scope, "absolute_difference",
-                        (predictions, labels, weights)) as scope:
+    with tf.name_scope("absolute_difference") as scope:
       predictions = tf.cast(predictions, dtype=tf.float32)
       labels = tf.cast(labels, dtype=tf.float32)
       predictions.get_shape().assert_is_compatible_with(labels.get_shape())
