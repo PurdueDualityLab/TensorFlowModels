@@ -669,7 +669,6 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
       replica_ctx = ds.get_replica_context()
-      tf.print(replica_ctx)
       if replica_ctx:
         # local to me
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
@@ -689,7 +688,6 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         global_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
-        tf.print(global_batch_size)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
@@ -731,6 +729,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
       replica_ctx = ds.get_replica_context()
+      tf.print(replica_ctx)
       if replica_ctx:
         # local to me
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
@@ -740,7 +739,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
         # order in each replica nowadays, so we limit NCCL to batch all-reduces.
-        
+        tf.print(batch_size)
         # get the sum of all replicas (converge all devices)
         y_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM, local_sum)
         # get the sum from all replicas (converge all devices)
@@ -750,6 +749,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         input_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
+        tf.print(input_batch_size)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier_ = math_ops.cast(math_ops.reduce_prod(axes_vals),
