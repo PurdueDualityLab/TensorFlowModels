@@ -146,6 +146,15 @@ class Yolo_Loss(object):
     bce += (1 - target) * tf.math.log(1 - output + K.epsilon())
     return -bce
 
+
+  def ce(self, target, output):
+    def _smooth_labels(y_true):
+      return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing)
+    target = _smooth_labels(target)
+    loss = -tf.math.xlogy(target, output + K.epsilon())
+    loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
+    return loss
+
   @tf.function(experimental_relax_shapes=True)
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
@@ -213,17 +222,21 @@ class Yolo_Loss(object):
     #     axis=-1) * true_conf
     
     class_loss = self._cls_normalizer * tf.reduce_sum(self.bce(true_class, pred_class), axis = -1) * true_conf
-
+    
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf)
-    bce = self.bce(true_conf, tf.squeeze(pred_conf))
-    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
+    ce = self.ce(true_conf, tf.squeeze(pred_conf))
+    #conf_loss = (true_conf + (1 - true_conf) * mask_iou) * ce * self._obj_normalizer
+    
+    ce_neg = self.ce((1-true_conf) * mask_iou, tf.squeeze(1-pred_conf))
+    conf_loss = (ce + ce_neg) * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
     conf_loss =tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+
 
     # 9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
     loss = tf.reduce_mean(class_loss + conf_loss + loss_box)

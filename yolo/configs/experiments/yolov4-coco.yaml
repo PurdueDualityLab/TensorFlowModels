@@ -13,7 +13,7 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://csdarknet53.weights'
+      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 16
     num_classes: 80
@@ -23,7 +23,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
