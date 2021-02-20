@@ -740,7 +740,6 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
         # order in each replica nowadays, so we limit NCCL to batch all-reduces.
-        tf.print(batch_size)
         # get the sum of all replicas (converge all devices)
         y_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM, local_sum)
         # get the sum from all replicas (converge all devices)
@@ -750,7 +749,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         input_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
-        tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, input_batch_size)
+        tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, self.local_count)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier_ = math_ops.cast(math_ops.reduce_prod(axes_vals),
@@ -777,8 +776,8 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         #     keepdims=True,
         #     name='variance')
 
-        net_sum = math_ops.reduce_sum(y, axis=reduction_axes, keepdims=True)
-        squared_mean = math_ops.reduce_sum(math_ops.square(y), axis=reduction_axes, keepdims=True)
+        net_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
+        squared_mean = math_ops.reduce_sum(math_ops.square(y), axis=axes, keepdims=True)
         
         if self._support_zero_size_input():
           # Keras assumes that batch dimension is the first dimension for Batch
@@ -788,7 +787,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
           input_batch_size = None
 
         # get the number of total params you are averaging including batchsize(local)
-        axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(reduction_axes))]
+        axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
                                     dtypes.float32)
         
@@ -796,7 +795,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         net_sum = net_sum/multiplier
 
         if input_batch_size is None:
-          mean, varience = nn.moments(y, reduction_axes, keep_dims=True)
+          mean, varience = nn.moments(y, axes, keep_dims=True)
           input_batch_size = 0
         else:
           batches_ = math_ops.cast(input_batch_size, self._param_dtype)
