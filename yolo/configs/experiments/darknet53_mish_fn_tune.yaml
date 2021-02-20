@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   model:
     num_classes: 1000
@@ -12,11 +12,11 @@ task:
       darknet:
         model_id: 'cspdarknet53'
     norm_activation:
-      activation: 'leaky'  
+      activation: 'mish'  
       use_sync_bn: true
-    darknet_weights_file: 'cache://csdarknet53.weights'
+    darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
     darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 32
+    subdivisions: 2
   losses:
     l2_weight_decay: 0.0005
     one_hot: True

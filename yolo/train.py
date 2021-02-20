@@ -71,6 +71,10 @@ def subdivison_adjustment(params):
     params.task.validation_data.global_batch_size //= subdivisons
     params.trainer.train_steps *= subdivisons
     params.trainer.validation_steps *= subdivisons
+    params.trainer.validation_interval = (params.trainer.validation_interval//subdivisons) * subdivisons
+    params.trainer.checkpoint_interval = (params.trainer.checkpoint_interval//subdivisons) * subdivisons
+    params.trainer.steps_per_loop = (params.trainer.steps_per_loop//subdivisons) * subdivisons
+    params.trainer.summary_interval = (params.trainer.summary_interval//subdivisons) * subdivisons
     
     if params.trainer.optimizer_config.learning_rate.type == 'stepwise':
       bounds = params.trainer.optimizer_config.learning_rate.stepwise.boundaries

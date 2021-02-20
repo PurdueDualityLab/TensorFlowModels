@@ -54,7 +54,7 @@ class ConvBN(tf.keras.layers.Layer):
       dilation_rate=(1, 1),
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
-      subdivisions = 8, 
+      subdivisions = 1, 
       bias_regularizer=None,
       kernel_regularizer=None,  # Specify the weight decay as the default will not work.
       use_bn=True,
@@ -135,6 +135,7 @@ class ConvBN(tf.keras.layers.Layer):
         kernel_regularizer=self._kernel_regularizer,
         bias_regularizer=self._bias_regularizer)
 
+    print(self._subdivisions)
     if self._use_bn:
       if self._use_sync_bn:
         # self.bn = tf.keras.layers.experimental.SyncBatchNormalization(

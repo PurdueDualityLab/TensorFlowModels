@@ -328,6 +328,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
 
 
   def _subdiv_batch_norm(self, inputs, training = None):
+    # tf.print('bn', self.local_count)
     training = self._get_training_value(training)
 
     inputs_dtype = inputs.dtype.base_dtype
@@ -427,7 +428,6 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
 
       # if we are training use the stats for this batch for normalizing this 
       # value other wise use the moving average
-      
 
       # should only happen when we update the moving values
       mean = control_flow_util.smart_cond(
@@ -462,7 +462,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       def _do_update(var, value):
         """Compute the updates for mean and variance."""
         return self._assign_moving_average(var, value, self.momentum,
-                                          input_batch_size)
+                                          self.aggregated_batch_size)
 
       def mean_update():
         true_branch = lambda: _do_update(self.moving_mean, new_mean)
@@ -524,7 +524,6 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if self.subdivisions <= 1 or self.subdivisions is None:
       return super().call(inputs, training=training)
     else:
-      # optimize for speed if possible 
       if self.renorm is False and training is False and self.fused: 
         # outputs = self._fused_batch_norm(inputs, training=False)
         beta = self.beta if self.center else self._beta_const
@@ -795,12 +794,13 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
 
         if input_batch_size is None:
           mean, varience = nn.moments(y, reduction_axes, keep_dims=True)
+          input_batch_size = 0
         else:
           batches_ = math_ops.cast(input_batch_size, self._param_dtype)
           # # if you only have one replica dont worry about it 
           # # Compute true mean while keeping the dims for proper broadcasting.
           mean = net_sum/batches_
-          varience = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
+          varience = squared_mean/batches_- math_ops.square(mean) 
 
       if not keep_dims:
         mean = array_ops.squeeze(mean, axes)

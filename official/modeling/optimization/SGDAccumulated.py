@@ -7,7 +7,7 @@ from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_o
 
 __all__ = ['SGDAccumulated']
 
-
+# problem is that sub division cannot change between saves
 class SGDAccumulated(OptimizerV2):
   """Optimizer that implements the Adam algorithm with gradient accumulation."""
 
@@ -71,6 +71,7 @@ class SGDAccumulated(OptimizerV2):
         self._get_hyper("momentum", var_dtype))
 
   def _resource_apply_dense(self, grad, var, apply_state = None):
+    # tf.print('opt', self.iterations)
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype))
                   or self._fallback_apply_state(var_device, var_dtype))
@@ -125,6 +126,7 @@ class SGDAccumulated(OptimizerV2):
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
+
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype))
                     or self._fallback_apply_state(var_device, var_dtype))
@@ -147,6 +149,7 @@ class SGDAccumulated(OptimizerV2):
                     g_a,
                     g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+    
     
 
     # momentum update
