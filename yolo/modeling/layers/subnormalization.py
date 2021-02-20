@@ -729,9 +729,10 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
       replica_ctx = ds.get_replica_context()
-      tf.print(replica_ctx)
+      
       if replica_ctx:
         # local to me
+        
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
         local_squared_sum = math_ops.reduce_sum(math_ops.square(y), axis=axes,
                                                 keepdims=True)
@@ -749,7 +750,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         input_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
-        tf.print(input_batch_size)
+        tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, input_batch_size)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier_ = math_ops.cast(math_ops.reduce_prod(axes_vals),
