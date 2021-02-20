@@ -524,19 +524,19 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if self.subdivisions <= 1 or self.subdivisions is None:
       return super().call(inputs, training=training)
     else:
-      if self.renorm is False and training is False and self.fused: 
-        # outputs = self._fused_batch_norm(inputs, training=False)
-        beta = self.beta if self.center else self._beta_const
-        gamma = self.gamma if self.scale else self._gamma_const
-        outputs, mean, varience = nn.fused_batch_norm(inputs,
-                                                gamma,
-                                                beta,
-                                                mean=self.moving_mean,
-                                                variance=self.moving_variance,
-                                                epsilon=self.epsilon,
-                                                is_training=False,
-                                                data_format=self._data_format)
-        return outputs
+      # if self.renorm is False and training is False and self.fused: 
+      #   # outputs = self._fused_batch_norm(inputs, training=False)
+      #   beta = self.beta if self.center else self._beta_const
+      #   gamma = self.gamma if self.scale else self._gamma_const
+      #   outputs, mean, varience = nn.fused_batch_norm(inputs,
+      #                                           gamma,
+      #                                           beta,
+      #                                           mean=self.moving_mean,
+      #                                           variance=self.moving_variance,
+      #                                           epsilon=self.epsilon,
+      #                                           is_training=False,
+      #                                           data_format=self._data_format)
+      #   return outputs
       return self._subdiv_batch_norm(inputs, training=training)
 
   
