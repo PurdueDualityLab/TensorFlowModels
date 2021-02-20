@@ -524,19 +524,19 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if self.subdivisions <= 1 or self.subdivisions is None:
       return super().call(inputs, training=training)
     else:
-      # if self.renorm is False and training is False and self.fused: 
-      #   # outputs = self._fused_batch_norm(inputs, training=False)
-      #   beta = self.beta if self.center else self._beta_const
-      #   gamma = self.gamma if self.scale else self._gamma_const
-      #   outputs, mean, varience = nn.fused_batch_norm(inputs,
-      #                                           gamma,
-      #                                           beta,
-      #                                           mean=self.moving_mean,
-      #                                           variance=self.moving_variance,
-      #                                           epsilon=self.epsilon,
-      #                                           is_training=False,
-      #                                           data_format=self._data_format)
-      #   return outputs
+      if self.renorm is False and training is False and self.fused: 
+        # outputs = self._fused_batch_norm(inputs, training=False)
+        beta = self.beta if self.center else self._beta_const
+        gamma = self.gamma if self.scale else self._gamma_const
+        outputs, mean, varience = nn.fused_batch_norm(inputs,
+                                                gamma,
+                                                beta,
+                                                mean=self.moving_mean,
+                                                variance=self.moving_variance,
+                                                epsilon=self.epsilon,
+                                                is_training=False,
+                                                data_format=self._data_format)
+        return outputs
       return self._subdiv_batch_norm(inputs, training=training)
 
   
@@ -669,6 +669,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
       replica_ctx = ds.get_replica_context()
+      tf.print(replica_ctx)
       if replica_ctx:
         # local to me
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
@@ -688,6 +689,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         global_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
+        tf.print(global_batch_size)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
