@@ -749,7 +749,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         input_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
                                                    batch_size)
 
-        tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, self.local_count)
+        tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, self.moving_mean)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
         multiplier_ = math_ops.cast(math_ops.reduce_prod(axes_vals),
