@@ -85,12 +85,12 @@ def subdivison_adjustment(params):
     if params.trainer.optimizer_config.learning_rate.type == 'polynomial':
       params.trainer.optimizer_config.learning_rate.polynomial.decay_steps *= subdivisons
 
-    if params.trainer.optimizer_config.optimizer.type == 'sgd':
-      print(params.trainer.optimizer_config.optimizer.type)
-      params.trainer.optimizer_config.optimizer.type = 'sgd_accum'
-      params.trainer.optimizer_config.optimizer.sgd_accum.accumulation_steps = subdivisons
-      params.trainer.optimizer_config.optimizer.sgd_accum.momentum = params.trainer.optimizer_config.optimizer.sgd.momentum
-      params.trainer.optimizer_config.optimizer.sgd_accum.decay = params.trainer.optimizer_config.optimizer.sgd.decay
+    # if params.trainer.optimizer_config.optimizer.type == 'sgd':
+    #   print(params.trainer.optimizer_config.optimizer.type)
+    #   params.trainer.optimizer_config.optimizer.type = 'sgd_accum'
+    #   params.trainer.optimizer_config.optimizer.sgd_accum.accumulation_steps = subdivisons
+    #   params.trainer.optimizer_config.optimizer.sgd_accum.momentum = params.trainer.optimizer_config.optimizer.sgd.momentum
+    #   params.trainer.optimizer_config.optimizer.sgd_accum.decay = params.trainer.optimizer_config.optimizer.sgd.decay
     
     if params.trainer.optimizer_config.warmup.type == 'linear':
       params.trainer.optimizer_config.warmup.linear.warmup_steps *= subdivisons
