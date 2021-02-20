@@ -24,8 +24,8 @@ task:
   train_data:
     tfds_name: imagenet2012
     tfds_split: train
-    tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
-    #input_path: 'imagenet-2012-tfrecord/train*'
+    # tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
+    # input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
     global_batch_size: 128
     dtype: 'float16'
@@ -35,8 +35,8 @@ task:
   validation_data:
     tfds_name: imagenet2012
     tfds_split: validation
-    tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
-    #input_path: 'imagenet-2012-tfrecord/valid*'
+    # tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
+    # input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: false
     global_batch_size: 128
     dtype: 'float16'
