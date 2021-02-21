@@ -805,6 +805,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
           mean = net_sum/batches_
           variance = squared_mean/batches_- math_ops.square(mean) 
 
+      input_batch_size = math_ops.cast(input_batch_size, dtypes.int32)
       if not keep_dims:
         mean = array_ops.squeeze(mean, axes)
         net_sum = array_ops.squeeze(net_sum, axes)
@@ -815,7 +816,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
                 math_ops.cast(net_sum, dtypes.float16),
                 math_ops.cast(variance, dtypes.float16), 
                 math_ops.cast(squared_mean, dtypes.float16), 
-                math_ops.cast(input_batch_size, dtypes.int32))
+                input_batch_size)
       else:
         return (mean, net_sum, variance, squared_mean, input_batch_size)
 
