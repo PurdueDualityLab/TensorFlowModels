@@ -16,7 +16,7 @@ task:
       use_sync_bn: true
     darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
     darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 2
+    subdivisions: 4
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
@@ -57,12 +57,11 @@ trainer:
       sgd:
         momentum: 0.9
     learning_rate:
-      type: 'polynomial'
-      polynomial:
-        initial_learning_rate: 0.01
-        end_learning_rate: 0.001
-        power: 4.0
-        decay_steps: 1190000
+      type: stepwise
+      stepwise:
+        boundaries: [10000, 20000, 30000] 
+        name: PiecewiseConstantDecay
+        values: [0.01, 0.0001, 0.00001] 
     warmup:
       type: 'linear'
       linear:
