@@ -91,7 +91,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         renorm=renorm,
         renorm_clipping=renorm_clipping,
         renorm_momentum=renorm_momentum,
-        fused= None if subdivisions <= 1 else False,
+        fused= None if not renorm else False, #if subdivisions <= 1 else False, #alter this
         trainable=trainable,
         virtual_batch_size=None,
         name=name,
@@ -124,45 +124,46 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
    
     # TODO(yaozhang): if input is not 4D, reshape it to 4D and reshape the
     # output back to its original shape accordingly.
-    self.fused = None
+    # self.fused = None
 
-    if self._USE_V2_BEHAVIOR:
-      # TODO(b/173253101): Using fused in the 5D case is currently disabled
-      # due to a regression on UNet, so it is only currently only supported in
-      # the 4D case.
-      if self.fused is None:
-        self.fused = ndims == 4
-      elif self.fused and ndims != 4:
-        raise ValueError('Batch normalization layers with `fused=True` only '
-                          'support 4D or 5D input tensors. '
-                          'Received tensor with shape: %s' %
-                          (tuple(input_shape),))
-    else:
-      assert self.fused is not None
-      self.fused = (ndims == 4 and self._fused_can_be_used())
-    # TODO(chrisying): fused batch norm is currently not supported for
-    # multi-axis batch norm and by extension virtual batches. In some cases,
-    # it might be possible to use fused batch norm but would require reshaping
-    # the Tensor to 4D with the axis in 1 or 3 (preferred 1) which is
-    # particularly tricky. A compromise might be to just support the most
-    # common use case (turning 5D w/ virtual batch to NCHW)
+    if self.fused:
+      if self._USE_V2_BEHAVIOR:
+        # TODO(b/173253101): Using fused in the 5D case is currently disabled
+        # due to a regression on UNet, so it is only currently only supported in
+        # the 4D case.
+        if self.fused is None:
+          self.fused = ndims == 4
+        elif self.fused and ndims != 4:
+          raise ValueError('Batch normalization layers with `fused=True` only '
+                            'support 4D or 5D input tensors. '
+                            'Received tensor with shape: %s' %
+                            (tuple(input_shape),))
+      else:
+        assert self.fused is not None
+        self.fused = (ndims == 4 and self._fused_can_be_used())
+      # TODO(chrisying): fused batch norm is currently not supported for
+      # multi-axis batch norm and by extension virtual batches. In some cases,
+      # it might be possible to use fused batch norm but would require reshaping
+      # the Tensor to 4D with the axis in 1 or 3 (preferred 1) which is
+      # particularly tricky. A compromise might be to just support the most
+      # common use case (turning 5D w/ virtual batch to NCHW)
 
-    if self.axis == [1] and ndims == 4:
-      self._data_format = 'NCHW'
-    elif self.axis == [1] and ndims == 5:
-      self._data_format = 'NCDHW'
-    elif self.axis == [3] and ndims == 4:
-      self._data_format = 'NHWC'
-    elif self.axis == [4] and ndims == 5:
-      self._data_format = 'NDHWC'
-    elif ndims == 5:
-      # 5D tensors that can be passed in but should not use fused batch norm
-      # due to unsupported axis.
-      self.fused = False
-    else:
-      raise ValueError('Unsupported axis, fused batch norm only supports '
-                        'axis == [1] or axis == [3] for 4D input tensors or '
-                        'axis == [1] or axis == [4] for 5D input tensors')
+      if self.axis == [1] and ndims == 4:
+        self._data_format = 'NCHW'
+      elif self.axis == [1] and ndims == 5:
+        self._data_format = 'NCDHW'
+      elif self.axis == [3] and ndims == 4:
+        self._data_format = 'NHWC'
+      elif self.axis == [4] and ndims == 5:
+        self._data_format = 'NDHWC'
+      elif ndims == 5:
+        # 5D tensors that can be passed in but should not use fused batch norm
+        # due to unsupported axis.
+        self.fused = False
+      else:
+        raise ValueError('Unsupported axis, fused batch norm only supports '
+                          'axis == [1] or axis == [3] for 4D input tensors or '
+                          'axis == [1] or axis == [4] for 5D input tensors')
 
     axis_to_dim = {x: input_shape.dims[x].value for x in self.axis}
     for x in axis_to_dim:
@@ -303,20 +304,20 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     net_sum = net_sum/multiplier
 
     if input_batch_size is None:
-      mean, varience = nn.moments(inputs, reduction_axes, keep_dims=keep_dims)
+      mean, variance = nn.moments(inputs, reduction_axes, keep_dims=keep_dims)
     else:
       batches_ = math_ops.cast(input_batch_size, self._param_dtype)
       mean = net_sum/batches_
-      varience = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
+      variance = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
     
-    return mean, net_sum, varience, squared_mean, input_batch_size
+    return mean, net_sum, variance, squared_mean, input_batch_size
   
   def subdiv_moments(self, inputs, reduction_axes, keep_dims):
     # mean and variance only for the current batch
     mean, net_sum, variance, squared_mean, input_batch_size = self._subdiv_calculate_mean_and_var(inputs, reduction_axes, keep_dims)
 
     if self._support_zero_size_input():
-      input_batch_size = array_ops.shape(inputs)[0]
+      input_batch_size = 0 if input_batch_size is None else input_batch_size
       mean = array_ops.where(input_batch_size > 0, mean, K.zeros_like(mean))
       net_sum = array_ops.where(input_batch_size > 0, net_sum,
                                 K.zeros_like(net_sum))
@@ -421,7 +422,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
 
       aggregated_mean = self.aggregated_sum_batch / math_ops.cast(self.aggregated_batch_size, params_dtype)
       aggregated_squared_mean = self.aggregated_square_sum_batch / math_ops.cast(self.aggregated_batch_size, params_dtype)
-      aggregated_varience = aggregated_squared_mean - math_ops.square(aggregated_mean)
+      aggregated_variance = aggregated_squared_mean - math_ops.square(aggregated_mean)
 
       moving_mean = self.moving_mean
       moving_variance = self.moving_variance
@@ -443,7 +444,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
                                               false_fn=lambda: moving_mean)
       
       new_variance = control_flow_util.smart_cond(update_value, 
-                                        true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(aggregated_varience),
+                                        true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(aggregated_variance),
                                         false_fn=lambda: moving_variance)
       
       # # should only be done when the moving mean is updated
@@ -528,7 +529,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         # outputs = self._fused_batch_norm(inputs, training=False)
         beta = self.beta if self.center else self._beta_const
         gamma = self.gamma if self.scale else self._gamma_const
-        outputs, mean, varience = nn.fused_batch_norm(inputs,
+        outputs, mean, variance = nn.fused_batch_norm(inputs,
                                                 gamma,
                                                 beta,
                                                 mean=self.moving_mean,
@@ -795,14 +796,14 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         net_sum = net_sum/multiplier
 
         if input_batch_size is None:
-          mean, varience = nn.moments(y, axes, keep_dims=True)
+          mean, variance = nn.moments(y, axes, keep_dims=True)
           input_batch_size = 0
         else:
           batches_ = math_ops.cast(input_batch_size, self._param_dtype)
           # # if you only have one replica dont worry about it 
           # # Compute true mean while keeping the dims for proper broadcasting.
           mean = net_sum/batches_
-          varience = squared_mean/batches_- math_ops.square(mean) 
+          variance = squared_mean/batches_- math_ops.square(mean) 
 
       if not keep_dims:
         mean = array_ops.squeeze(mean, axes)
@@ -817,7 +818,6 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
                 math_ops.cast(input_batch_size, dtypes.int32))
       else:
         return (mean, net_sum, variance, squared_mean, input_batch_size)
-
 
 class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
   def __init__(self,
