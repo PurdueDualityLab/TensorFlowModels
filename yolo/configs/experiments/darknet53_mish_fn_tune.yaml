@@ -59,7 +59,7 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [5000, 10000, 15000] 
+        boundaries: [5000, 10000] 
         name: PiecewiseConstantDecay
         values: [0.01, 0.0001, 0.00001] 
     warmup:
