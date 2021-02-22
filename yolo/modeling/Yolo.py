@@ -141,7 +141,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
     raise Exception(
         "unsupported model_key please select from {v3, v4, v3spp, v3tiny, v4tiny}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
     )
-  model.build(input_specs)
+  # model.build(input_specs)
   return model
 
 
