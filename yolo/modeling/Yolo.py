@@ -179,7 +179,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       subdivisions=subdivisions, 
       kernel_regularizer=l2_regularization)
-  head.build(input_specs)
+  # head.build(input_specs)
   return head
 
 
@@ -197,7 +197,7 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
 
   model = Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
-  model.build(input_specs.shape)
+  # model.build(input_specs.shape)
 
   losses = filter.losses
   return model, losses
