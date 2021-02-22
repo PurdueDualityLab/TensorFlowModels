@@ -278,6 +278,8 @@ class Parser(parser.Parser):
                                                        self._max_num_instances,
                                                        -1)
 
+
+    image = tf.cast(image, self._dtype)
     if self._fixed_size and not self._cutmix and not self._mosaic:
       boxes = box_utils.yxyx_to_xcycwh(boxes)
       best_anchors = preprocessing_ops.get_best_anchor(
@@ -292,9 +294,9 @@ class Parser(parser.Parser):
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
           'best_anchors': tf.cast(best_anchors, self._dtype),
-          'width': width,
-          'height': height,
-          'num_detections': num_dets
+          # 'width': width,
+          # 'height': height,
+          # 'num_detections': num_dets
       }
       grid = self._build_grid(
           labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
@@ -313,6 +315,7 @@ class Parser(parser.Parser):
           # 'height': height,
           # 'num_detections': num_dets
       }
+    
     return image, labels
 
   # broken for some reason in task, i think dictionary to coco evaluator has
