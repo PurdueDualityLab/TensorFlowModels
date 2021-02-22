@@ -337,6 +337,8 @@ class Parser(parser.Parser):
 
     image, boxes = preprocessing_ops.fit_preserve_aspect_ratio(
         image, boxes, width=width, height=height, target_dim=self._image_w)
+    image = tf.cast(image, self._dtype)
+    
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors = preprocessing_ops.get_best_anchor(
