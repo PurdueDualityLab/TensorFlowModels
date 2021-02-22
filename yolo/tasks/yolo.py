@@ -176,6 +176,7 @@ class YoloTask(base_task.Task):
   def train_step(self, inputs, model, optimizer, metrics=None):
     # get the data point
     image, label = inputs
+    label = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label)
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape(persistent=True) as tape:
       # compute a prediction
@@ -188,9 +189,11 @@ class YoloTask(base_task.Task):
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
+    
     # compute the gradient
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
+    
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
