@@ -6,8 +6,7 @@ from official.modeling import tf_utils
 
 TPU_BASE = True
 
-if TPU_BASE:
-  from official.vision.beta.ops import spatial_transform_ops
+from official.vision.beta.ops import spatial_transform_ops
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -895,8 +894,8 @@ class RouteMerge(tf.keras.layers.Layer):
           strides=(1, 1),
           padding='same',
           **_dark_conv_args)
-    if self._upsample and not TPU_BASE:
-      self._upsample = tf.keras.layers.UpSampling2D(size=self._upsample_size)
+    # if self._upsample and not TPU_BASE:
+    #   self._upsample = tf.keras.layers.UpSampling2D(size=self._upsample_size)
 
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
@@ -907,10 +906,10 @@ class RouteMerge(tf.keras.layers.Layer):
     inputToConvolve, inputToConcat = inputs
     x = self._conv(inputToConvolve)
     if self._upsample:
-      if not TPU_BASE:
-        x = self._upsample(x)
-      else:
-        x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
+      # if not TPU_BASE:
+      #   x = self._upsample(x)
+      # else:
+      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
     x = self._concat([x, inputToConcat])
     return x
 
@@ -1179,18 +1178,18 @@ class FPNTail(tf.keras.layers.Layer):
           strides=(1, 1),
           padding="same",
           **self._base_config)
-      if not TPU_BASE:    
-        self._upsampling_block = tf.keras.layers.UpSampling2D(
-            size=self._upsample_size)
+      # if not TPU_BASE:    
+      #   self._upsampling_block = tf.keras.layers.UpSampling2D(
+      #       size=self._upsample_size)
 
   def call(self, inputs):
     x_route = self._route_conv(inputs)
     if self._upsample:
       x = self._process_conv(x_route)
-      if not TPU_BASE:
-        x = self._upsampling_block(x)
-      else:
-        x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
+      #if not TPU_BASE:
+      # x = self._upsampling_block(x)
+      # else:
+      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
       return x_route, x
     else:
       return x_route

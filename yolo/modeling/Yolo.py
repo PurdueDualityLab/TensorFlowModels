@@ -202,8 +202,8 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
 
   model = Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
-  #model.build(input_specs.shape)
-  #model.summary()
+  model.build(input_specs.shape)
+  model.summary()
 
   losses = filter.losses
   return model, losses
