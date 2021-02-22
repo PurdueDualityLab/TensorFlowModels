@@ -211,7 +211,7 @@ class YoloTask(base_task.Task):
     #   loss_val += tf.reduce_sum(tf.square(delta[value]))
     # custom metrics
     logs = {'loss': loss}
-    loss_metrics['darknet_loss'] = loss_val
+    # loss_metrics['darknet_loss'] = loss_val
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
