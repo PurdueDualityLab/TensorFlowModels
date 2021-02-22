@@ -85,7 +85,7 @@ def run_experiment(distribution_strategy: tf.distribute.Strategy,
         evaluate=('eval' in mode) or run_post_eval,
         checkpoint_exporter=maybe_create_best_ckpt_exporter(params, model_dir))
 
-  if trainer.checkpoint:
+  if trainer.checkpoint and model_dir != None:
     checkpoint_manager = tf.train.CheckpointManager(
         trainer.checkpoint,
         directory=model_dir,
