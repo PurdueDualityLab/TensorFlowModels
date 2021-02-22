@@ -30,7 +30,7 @@ OPTIMIZERS_CLS = {
     'adam': tf.keras.optimizers.Adam,
     'adamw': nlp_optimization.AdamWeightDecay,
     'lamb': tfa_optimizers.LAMB,
-    'rmsprop': tf.keras.optimizers.RMSprop, 
+    'rmsprop': tf.keras.optimizers.RMSprop,
     'sgd_accum': SGDAccumulated.SGDAccumulated
 }
 
@@ -159,7 +159,6 @@ class OptimizerFactory(object):
 
     optimizer_dict['learning_rate'] = lr
 
-    print(OPTIMIZERS_CLS[self._optimizer_type])
     optimizer = OPTIMIZERS_CLS[self._optimizer_type](**optimizer_dict)
 
     if self._use_ema:

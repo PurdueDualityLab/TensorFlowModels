@@ -53,7 +53,6 @@ class SGDConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum: float = 0.0
 
-
 @dataclasses.dataclass
 class SGDAccumConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
@@ -67,10 +66,10 @@ class SGDAccumConfig(BaseOptimizerConfig):
     momentum: momentum for SGD optimizer.
   """
   name: str = "SGD"
-  accumulation_steps: int = 1
   decay: float = 0.0
+  nesterov: bool = False
   momentum: float = 0.0
-
+  accumulation_steps: int = 1
 
 @dataclasses.dataclass
 class RMSPropConfig(BaseOptimizerConfig):
