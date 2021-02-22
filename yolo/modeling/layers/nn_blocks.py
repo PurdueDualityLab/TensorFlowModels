@@ -97,37 +97,25 @@ class ConvBN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    kernel_size = self._kernel_size if isinstance(self._kernel_size,
-                                                  int) else self._kernel_size[0]
-    dilation_rate = self._dilation_rate if isinstance(
-        self._dilation_rate, int) else self._dilation_rate[0]
-    if self._padding == 'same' and kernel_size != 1:
-      padding = (dilation_rate * (kernel_size - 1))
-      left_shift = padding // 2
-      self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
-                                                     [left_shift, left_shift]])
-    else:
-      self._zeropad = Identity()
+    # kernel_size = self._kernel_size if isinstance(self._kernel_size,
+    #                                               int) else self._kernel_size[0]
+    # dilation_rate = self._dilation_rate if isinstance(
+    #     self._dilation_rate, int) else self._dilation_rate[0]
+    # if self._padding == 'same' and kernel_size != 1:
+    #   padding = (dilation_rate * (kernel_size - 1))
+    #   left_shift = padding // 2
+    #   self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
+    #                                                  [left_shift, left_shift]])
+    # else:
+    #   self._zeropad = Identity()
 
     use_bias = not self._use_bn
-
-    # self.conv = tf.keras.layers.Conv2D(
-    #     filters=self._filters,
-    #     kernel_size=self._kernel_size,
-    #     strides=self._strides,
-    #     padding= self._padding,# 'valid',
-    #     dilation_rate=self._dilation_rate,
-    #     use_bias=use_bias,
-    #     kernel_initializer=self._kernel_initializer,
-    #     bias_initializer=self._bias_initializer,
-    #     kernel_regularizer=self._kernel_regularizer,
-    #     bias_regularizer=self._bias_regularizer)
 
     self.conv = tf.keras.layers.Conv2D(
         filters=self._filters,
         kernel_size=self._kernel_size,
         strides=self._strides,
-        padding='valid',
+        padding= self._padding,# 'valid',
         dilation_rate=self._dilation_rate,
         use_bias=use_bias,
         kernel_initializer=self._kernel_initializer,
@@ -135,7 +123,18 @@ class ConvBN(tf.keras.layers.Layer):
         kernel_regularizer=self._kernel_regularizer,
         bias_regularizer=self._bias_regularizer)
 
-    print(self._subdivisions)
+    # self.conv = tf.keras.layers.Conv2D(
+    #     filters=self._filters,
+    #     kernel_size=self._kernel_size,
+    #     strides=self._strides,
+    #     padding='valid',
+    #     dilation_rate=self._dilation_rate,
+    #     use_bias=use_bias,
+    #     kernel_initializer=self._kernel_initializer,
+    #     bias_initializer=self._bias_initializer,
+    #     kernel_regularizer=self._kernel_regularizer,
+    #     bias_regularizer=self._bias_regularizer)
+
     if self._use_bn:
       if self._use_sync_bn:
         # self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
