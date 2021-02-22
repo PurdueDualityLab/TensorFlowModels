@@ -105,11 +105,11 @@ def run_experiment(distribution_strategy: tf.distribute.Strategy,
       global_step=trainer.global_step,
       steps_per_loop=params.trainer.steps_per_loop,
       checkpoint_manager=checkpoint_manager,
-      summary_dir=os.path.join(model_dir, 'train') if (save_summary) else None,
+      summary_dir=os.path.join(model_dir, 'train') if (save_summary and model_dir != None) else None,
       eval_summary_dir=os.path.join(model_dir, 'validation') if
-      (save_summary) else None,
+      (save_summary and model_dir != None) else None,
       summary_interval=params.trainer.summary_interval if
-      (save_summary) else None)
+      (save_summary and model_dir != None) else None)
 
   logging.info('Starts to execute mode: %s', mode)
   with distribution_strategy.scope():
