@@ -340,11 +340,16 @@ class YoloDecoder(tf.keras.Model):
     else:
       outputs = YoloRoutedDecoder(**self._decoder_config)(inputs)
 
+    self._output_specs = {key: value.shape for key, value in outputs.items()}
     super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
 
   @property
   def embed_fpn(self):
     return self._embed_fpn
+
+  @property
+  def output_specs(self):
+    return self._output_specs
 
   def get_config(self):
     config = dict(
