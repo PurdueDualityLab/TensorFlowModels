@@ -28,12 +28,12 @@ class Yolo(ks.Model):
     self._filter = filter
     return
 
-  def build(self, input_shape):
-    self._backbone.build(input_shape)
-    nshape = self._backbone.output_shape
-    self._decoder.build(nshape)
-    super().build(input_shape)
-    return
+  # def build(self, input_shape):
+  #   self._backbone.build(input_shape)
+  #   nshape = self._backbone.output_shape
+  #   self._decoder.build(nshape)
+  #   super().build(input_shape)
+  #   return
 
   def call(self, inputs, training=False):
     maps = self._backbone(inputs)
