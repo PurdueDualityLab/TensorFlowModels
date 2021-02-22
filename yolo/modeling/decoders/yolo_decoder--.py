@@ -1,8 +1,75 @@
 import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
-
+from official.vision.beta.ops import spatial_transform_ops
 
 # if it is too large break into 2 files
+class FPNTail(tf.keras.layers.Layer):
+
+  def __init__(self,
+               filters=1,
+               upsample=True,
+               upsample_size=2,
+               activation="leaky",
+               use_sync_bn=False,
+               kernel_regularizer=None,
+               kernel_initializer="glorot_uniform",
+               bias_regularizer=None,
+               norm_epsilon=0.001,
+               subdivisions = 8, 
+               norm_momentum=0.99,
+               **kwargs):
+
+    self._filters = filters
+    self._upsample = upsample
+    self._upsample_size = upsample_size
+
+    self._activation = "leaky" if activation is None else activation
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+    self._kernel_initializer = kernel_initializer
+    self._kernel_regularizer = kernel_regularizer
+    self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
+
+    self._base_config = dict(
+        activation=self._activation,
+        use_sync_bn=self._use_sync_bn,
+        subdivisions = self._subdivisions,
+        kernel_regularizer=self._kernel_regularizer,
+        kernel_initializer=self._kernel_initializer,
+        bias_regularizer=self._bias_regularizer,
+        norm_epsilon=self._norm_epsilon,
+        norm_momentum=self._norm_momentum)
+
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    self._route_conv = nn_blocks.ConvBN(
+        filters=self._filters // 2,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding="same",
+        **self._base_config)
+    if self._upsample:
+      self._process_conv = nn_blocks.ConvBN(
+          filters=self._filters // 4,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding="same",
+          **self._base_config)
+      # self._upsampling_block = tf.keras.layers.UpSampling2D(
+      #     size=self._upsample_size)
+
+  def call(self, inputs):
+    x_route = self._route_conv(inputs)
+    if self._upsample:
+      x = self._process_conv(x_route)
+      # x = self._upsampling_block(x)
+      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
+      return x_route, x
+    else:
+      return x_route
 
 
 @tf.keras.utils.register_keras_serializable(package="yolo")
@@ -78,10 +145,10 @@ class YoloFPN(tf.keras.layers.Layer):
             insert_spp=True,
             **self._base_config)
       if level == self._min_level:
-        self.tails[str(level)] = nn_blocks.FPNTail(
+        self.tails[str(level)] = FPNTail(
             filters=depth, upsample=False, **self._base_config)
       else:
-        self.tails[str(level)] = nn_blocks.FPNTail(
+        self.tails[str(level)] = FPNTail(
             filters=depth, upsample=True, **self._base_config)
     return
 
@@ -168,7 +235,6 @@ class YoloRoutedDecoder(tf.keras.layers.Layer):
             repetitions=self._path_process_len,
             insert_spp=False,
             **self._base_config)
-            
     return
 
   def get_raw_depths(self, minimum_depth):
@@ -240,7 +306,6 @@ class YoloFPNDecoder(tf.keras.layers.Layer):
 
   def build(self, inputs):
     keys = [int(key) for key in inputs.keys()]
-    print(inputs)
     self._min_level = min(keys)
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
@@ -268,8 +333,6 @@ class YoloFPNDecoder(tf.keras.layers.Layer):
             insert_spp=False,
             **self._base_config)
 
-    # print(inputs_)
-
   def call(self, inputs, training=False):
     outputs = dict()
     layer_in = inputs[str(self._min_level)]
@@ -283,7 +346,7 @@ class YoloFPNDecoder(tf.keras.layers.Layer):
 
 
 @tf.keras.utils.register_keras_serializable(package="yolo")
-class YoloDecoder(tf.keras.Model):
+class YoloDecoder(tf.keras.layers.Layer):
 
   def __init__(self,
                input_specs, 
@@ -301,7 +364,7 @@ class YoloDecoder(tf.keras.Model):
                bias_regularizer=None,
                subdivisions = 8, 
                **kwargs):
-    # super().__init__(**kwargs)
+    super().__init__(**kwargs)
     self._embed_fpn = embed_fpn
     self._fpn_path_len = fpn_path_len
     self._path_process_len = path_process_len
@@ -333,24 +396,34 @@ class YoloDecoder(tf.keras.Model):
         embed_spp=self._embed_spp,
         **self._base_config)
 
-    inputs = {key: tf.keras.layers.Input(shape = value[1:]) for key, value in input_specs.items()}
+  def build(self, inputs):
     if self._embed_fpn:
-      inter_outs = YoloFPN(fpn_path_len=self._fpn_path_len, **self._base_config)(inputs)
-      outputs = YoloFPNDecoder(**self._decoder_config)(inter_outs)
+      self._fpn = YoloFPN(fpn_path_len=self._fpn_path_len, **self._base_config)
+      self._decoder = YoloFPNDecoder(**self._decoder_config)
     else:
-      outputs = YoloRoutedDecoder(**self._decoder_config)(inputs)
+      self._fpn = None
+      self._decoder = YoloRoutedDecoder(**self._decoder_config)
+    return
 
-    super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
+  def call(self, inputs, training=False):
+    if self._embed_fpn:
+      inputs = self._fpn(inputs)
+    return self._decoder(inputs)
 
   @property
-  def embed_fpn(self):
-    return self._embed_fpn
+  def neck(self):
+    return self._fpn
+
+  @property
+  def head(self):
+    return self._decoder
 
   def get_config(self):
     config = dict(
         embed_fpn=self._embed_fpn,
         fpn_path_len=self._fpn_path_len,
         **self._decoder_config)
+
     return config
 
   @classmethod

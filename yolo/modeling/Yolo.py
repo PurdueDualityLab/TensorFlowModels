@@ -28,12 +28,12 @@ class Yolo(ks.Model):
     self._filter = filter
     return
 
-  # def build(self, input_shape):
-  #   self._backbone.build(input_shape)
-  #   nshape = self._backbone.output_shape
-  #   self._decoder.build(nshape)
-  #   super().build(input_shape)
-  #   return
+  def build(self, input_shape):
+    self._backbone.build(input_shape)
+    nshape = self._backbone.output_shape
+    self._decoder.build(nshape)
+    super().build(input_shape)
+    return
 
   def call(self, inputs, training=False):
     maps = self._backbone(inputs)
@@ -73,6 +73,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
+        input_specs, 
         embed_spp=model_config.decoder.embed_spp,
         embed_fpn=model_config.decoder.embed_fpn,
         fpn_path_len=model_config.decoder.fpn_path_len,
@@ -85,12 +86,13 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
         kernel_regularizer=l2_regularization)
-    model.build(input_specs)
+    # model.build(input_specs)
     return model
 
   if model_config.decoder.type is None or model_config.decoder.type == "regular":  # defaut regular
     if model_config.decoder.version == "v4":
       model = YoloDecoder(
+          input_specs, 
           embed_spp=False,
           embed_fpn=True,
           max_level_process_len=None,
@@ -103,6 +105,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
           kernel_regularizer=l2_regularization)
     if model_config.decoder.version == "v3":
       model = YoloDecoder(
+          input_specs, 
           embed_spp=False,
           embed_fpn=False,
           max_level_process_len=None,
@@ -115,6 +118,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
           kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "tiny":
     model = YoloDecoder(
+        input_specs, 
         embed_spp=False,
         embed_fpn=False,
         max_level_process_len=2,
@@ -127,6 +131,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "spp":
     model = YoloDecoder(
+        input_specs, 
         embed_spp=True,
         embed_fpn=False,
         max_level_process_len=None,
@@ -197,7 +202,8 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
 
   model = Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
-  # model.build(input_specs.shape)
+  #model.build(input_specs.shape)
+  #model.summary()
 
   losses = filter.losses
   return model, losses

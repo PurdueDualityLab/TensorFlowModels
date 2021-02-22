@@ -363,8 +363,7 @@ class YoloTask(base_task.Task):
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter
       from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_neck
-      from yolo.utils._darknet2tf.load_weights2 import load_head
+      from yolo.utils._darknet2tf.load_weights2 import load_weights_decoder
       from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
       from yolo.utils.downloads.file_manager import download
 
@@ -403,13 +402,10 @@ class YoloTask(base_task.Task):
       #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck is not None:
-          load_weights_neck(model.decoder.neck, neck)
-          #model.decoder.neck.trainable = False
-        cfgheads = load_head(model.decoder.head, decoder)
-        #model.decoder.head.trainable = False
+        cfgheads = load_weights_decoder(model.decoder, [neck, decoder])
         load_weights_prediction_layers(cfgheads, model.head)
         #model.head.trainable = False
+
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:

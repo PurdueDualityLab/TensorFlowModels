@@ -4,6 +4,12 @@ import tensorflow as tf
 from official.modeling import tf_utils
 
 
+TPU_BASE = True
+
+if TPU_BASE:
+  from official.vision.beta.ops import spatial_transform_ops
+
+
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
 
@@ -97,43 +103,45 @@ class ConvBN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    # kernel_size = self._kernel_size if isinstance(self._kernel_size,
-    #                                               int) else self._kernel_size[0]
-    # dilation_rate = self._dilation_rate if isinstance(
-    #     self._dilation_rate, int) else self._dilation_rate[0]
-    # if self._padding == 'same' and kernel_size != 1:
-    #   padding = (dilation_rate * (kernel_size - 1))
-    #   left_shift = padding // 2
-    #   self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
-    #                                                  [left_shift, left_shift]])
-    # else:
-    #   self._zeropad = Identity()
-
     use_bias = not self._use_bn
 
-    self.conv = tf.keras.layers.Conv2D(
-        filters=self._filters,
-        kernel_size=self._kernel_size,
-        strides=self._strides,
-        padding= self._padding,# 'valid',
-        dilation_rate=self._dilation_rate,
-        use_bias=use_bias,
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer)
 
-    # self.conv = tf.keras.layers.Conv2D(
-    #     filters=self._filters,
-    #     kernel_size=self._kernel_size,
-    #     strides=self._strides,
-    #     padding='valid',
-    #     dilation_rate=self._dilation_rate,
-    #     use_bias=use_bias,
-    #     kernel_initializer=self._kernel_initializer,
-    #     bias_initializer=self._bias_initializer,
-    #     kernel_regularizer=self._kernel_regularizer,
-    #     bias_regularizer=self._bias_regularizer)
+    if not TPU_BASE:
+      kernel_size = self._kernel_size if isinstance(self._kernel_size,
+                                                    int) else self._kernel_size[0]
+      dilation_rate = self._dilation_rate if isinstance(
+          self._dilation_rate, int) else self._dilation_rate[0]
+      if self._padding == 'same' and kernel_size != 1:
+        padding = (dilation_rate * (kernel_size - 1))
+        left_shift = padding // 2
+        self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
+                                                      [left_shift, left_shift]])
+      else:
+        self._zeropad = Identity()
+
+      self.conv = tf.keras.layers.Conv2D(
+          filters=self._filters,
+          kernel_size=self._kernel_size,
+          strides=self._strides,
+          padding='valid',
+          dilation_rate=self._dilation_rate,
+          use_bias=use_bias,
+          kernel_initializer=self._kernel_initializer,
+          bias_initializer=self._bias_initializer,
+          kernel_regularizer=self._kernel_regularizer,
+          bias_regularizer=self._bias_regularizer)
+    else:
+      self.conv = tf.keras.layers.Conv2D(
+          filters=self._filters,
+          kernel_size=self._kernel_size,
+          strides=self._strides,
+          padding= self._padding,# 'valid',
+          dilation_rate=self._dilation_rate,
+          use_bias=use_bias,
+          kernel_initializer=self._kernel_initializer,
+          bias_initializer=self._bias_initializer,
+          kernel_regularizer=self._kernel_regularizer,
+          bias_regularizer=self._bias_regularizer)
 
     if self._use_bn:
       if self._use_sync_bn:
@@ -168,7 +176,8 @@ class ConvBN(tf.keras.layers.Layer):
           self._activation)  # tf.keras.layers.Activation(self._activation)
 
   def call(self, x):
-    # x = self._zeropad(x)
+    if not TPU_BASE:
+      x = self._zeropad(x)
     x = self.conv(x)
     x = self.bn(x)
     x = self._activation_fn(x)
@@ -886,8 +895,9 @@ class RouteMerge(tf.keras.layers.Layer):
           strides=(1, 1),
           padding='same',
           **_dark_conv_args)
-    if self._upsample:
+    if self._upsample and not TPU_BASE:
       self._upsample = tf.keras.layers.UpSampling2D(size=self._upsample_size)
+
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
     return
@@ -897,7 +907,10 @@ class RouteMerge(tf.keras.layers.Layer):
     inputToConvolve, inputToConcat = inputs
     x = self._conv(inputToConvolve)
     if self._upsample:
-      x = self._upsample(x)
+      if not TPU_BASE:
+        x = self._upsample(x)
+      else:
+        x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
     x = self._concat([x, inputToConcat])
     return x
 
@@ -1109,3 +1122,75 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       x = layer(x)
       i += 1
     return x_prev, x
+
+
+class FPNTail(tf.keras.layers.Layer):
+  
+  def __init__(self,
+               filters=1,
+               upsample=True,
+               upsample_size=2,
+               activation="leaky",
+               use_sync_bn=False,
+               kernel_regularizer=None,
+               kernel_initializer="glorot_uniform",
+               bias_regularizer=None,
+               norm_epsilon=0.001,
+               subdivisions = 8, 
+               norm_momentum=0.99,
+               **kwargs):
+
+    self._filters = filters
+    self._upsample = upsample
+    self._upsample_size = upsample_size
+
+    self._activation = "leaky" if activation is None else activation
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+    self._kernel_initializer = kernel_initializer
+    self._kernel_regularizer = kernel_regularizer
+    self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
+
+    self._base_config = dict(
+        activation=self._activation,
+        use_sync_bn=self._use_sync_bn,
+        subdivisions = self._subdivisions,
+        kernel_regularizer=self._kernel_regularizer,
+        kernel_initializer=self._kernel_initializer,
+        bias_regularizer=self._bias_regularizer,
+        norm_epsilon=self._norm_epsilon,
+        norm_momentum=self._norm_momentum)
+
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    self._route_conv = ConvBN(
+        filters=self._filters // 2,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding="same",
+        **self._base_config)
+    if self._upsample:
+      self._process_conv = ConvBN(
+          filters=self._filters // 4,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding="same",
+          **self._base_config)
+      if not TPU_BASE:    
+        self._upsampling_block = tf.keras.layers.UpSampling2D(
+            size=self._upsample_size)
+
+  def call(self, inputs):
+    x_route = self._route_conv(inputs)
+    if self._upsample:
+      x = self._process_conv(x_route)
+      if not TPU_BASE:
+        x = self._upsampling_block(x)
+      else:
+        x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
+      return x_route, x
+    else:
+      return x_route
