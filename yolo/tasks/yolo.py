@@ -193,7 +193,7 @@ class YoloTask(base_task.Task):
     # compute the gradient
     train_vars = model.trainable_variables
     print(set([var.dtype for var in train_vars]), scaled_loss.dtype)
-    gradients = tape.gradient(scaled_loss, train_vars, unconnected_gradients=tf.UnconnectedGradients.ZERO)
+    gradients = tape.gradient(scaled_loss, train_vars)
     
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
