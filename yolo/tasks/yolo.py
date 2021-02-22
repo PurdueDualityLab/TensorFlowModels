@@ -177,7 +177,8 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    with tf.GradientTape(persistent=True) as tape:
+    #with tf.GradientTape(persistent=True) as tape:
+    with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
@@ -191,7 +192,7 @@ class YoloTask(base_task.Task):
     
     # compute the gradient
     train_vars = model.trainable_variables
-    print([var.dtype for var in train_vars] , scaled_loss.dtype)
+    print(set([var.dtype for var in train_vars]), scaled_loss.dtype)
     gradients = tape.gradient(scaled_loss, train_vars, unconnected_gradients=tf.UnconnectedGradients.ZERO)
     
     # get unscaled loss if the scaled_loss was used
@@ -204,10 +205,10 @@ class YoloTask(base_task.Task):
 
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    delta = tape.gradient(loss, y_pred['raw_output'])
-    loss_val = 0
-    for value in delta.keys():
-      loss_val += tf.reduce_sum(tf.square(delta[value]))
+    # delta = tape.gradient(loss, y_pred['raw_output'])
+    # loss_val = 0
+    # for value in delta.keys():
+    #   loss_val += tf.reduce_sum(tf.square(delta[value]))
     # custom metrics
     logs = {'loss': loss}
     loss_metrics['darknet_loss'] = loss_val
@@ -227,20 +228,20 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     # computer detivative and apply gradients
-    with tf.GradientTape() as tape:
-      y_pred = model(image, training=False)
-      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    #with tf.GradientTape() as tape:
+    y_pred = model(image, training=False)
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
 
-    gradients = tape.gradient(loss, y_pred['raw_output'])
+    # gradients = tape.gradient(loss, y_pred['raw_output'])
 
-    loss_val = 0
-    for value in gradients.keys():
-      loss_val += tf.reduce_sum(tf.square(gradients[value]))
+    # loss_val = 0
+    # for value in gradients.keys():
+    #   loss_val += tf.reduce_sum(tf.square(gradients[value]))
 
     # #custom metrics
     logs = {'loss': loss}
     # loss_metrics.update(metrics)
-    loss_metrics['darknet_loss'] = loss_val
+    # loss_metrics['darknet_loss'] = loss_val
     image_shape = tf.shape(image)[1:-1]
 
     label['boxes'] = box_ops.denormalize_boxes(
@@ -352,7 +353,7 @@ class YoloTask(base_task.Task):
     metric_names.append('conf_loss')
     metric_names.append('class_loss')
     metric_names.append('total_loss')
-    metric_names.append('darknet_loss')
+    # metric_names.append('darknet_loss')
     self._metric_names = metric_names
 
     return self._masks, self._path_scales, self._x_y_scales
