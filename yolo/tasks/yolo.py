@@ -191,7 +191,7 @@ class YoloTask(base_task.Task):
     
     # compute the gradient
     train_vars = model.trainable_variables
-    print(train_vars[-1].dtype, scaled_loss.dtype)
+    print([var.dtype for var in train_vars] , scaled_loss.dtype)
     gradients = tape.gradient(scaled_loss, train_vars)
     
     # get unscaled loss if the scaled_loss was used
