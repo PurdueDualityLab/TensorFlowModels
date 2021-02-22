@@ -191,7 +191,8 @@ class YoloTask(base_task.Task):
     
     # compute the gradient
     train_vars = model.trainable_variables
-    gradients = tape.gradient(scaled_loss, train_vars)
+    train_vars_ = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), train_vars)
+    gradients = tape.gradient(scaled_loss, train_vars_)
     
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
