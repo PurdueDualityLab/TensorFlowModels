@@ -181,6 +181,7 @@ class YoloTask(base_task.Task):
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
+      y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
       loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
       scaled_loss = loss / num_replicas
 
