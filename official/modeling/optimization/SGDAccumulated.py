@@ -71,6 +71,10 @@ class SGDAccumulated(OptimizerV2):
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
 
+  # def momentum_update(self ):
+  #   return 
+
+
   def _resource_apply_dense(self, grad, var, apply_state = None):
     # tf.print('opt', self.iterations)
     var_device, var_dtype = var.device, var.dtype.base_dtype
@@ -99,6 +103,7 @@ class SGDAccumulated(OptimizerV2):
     g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
     g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
+
 
     # momentum update
     if self._momentum:
