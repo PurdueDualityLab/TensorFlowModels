@@ -144,7 +144,7 @@ class Yolo_Loss(object):
     target = _smooth_labels(target)
     bce = target * tf.math.log(output + K.epsilon())
     bce += (1 - target) * tf.math.log(1 - output + K.epsilon())
-    bce = tf.where(tf.math.is_nan(bce), 1.0, bce)
+    bce = tf.where(tf.math.is_nan(bce), -1.0, bce)
     return -bce
 
 
