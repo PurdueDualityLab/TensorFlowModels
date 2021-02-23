@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   model:
     base: 
@@ -15,7 +15,7 @@ task:
         type: regular
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 32
+    subdivisions: 4
     num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: [512, 512, 3]
@@ -82,10 +82,10 @@ task:
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 32
-  validation_interval: 32 #00
-  summary_interval: 32
-  checkpoint_interval: 32
+  steps_per_loop: 10000
+  validation_interval: 10000 #00
+  summary_interval: 10000
+  checkpoint_interval: 10000
   optimizer_config:
     learning_rate:
       type: stepwise
