@@ -359,6 +359,7 @@ class YoloTask(base_task.Task):
     return self._masks, self._path_scales, self._x_y_scales
 
   def initialize(self, model: tf.keras.Model):
+    
     if self.task_config.load_darknet_weights:
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter

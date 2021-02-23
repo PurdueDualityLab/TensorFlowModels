@@ -73,6 +73,7 @@ task:
       use_tie_breaker: true
   weight_decay: 0.0005
   init_checkpoint: '../checkpoints/csdarknet53_tune3'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false

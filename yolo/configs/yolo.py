@@ -253,6 +253,7 @@ class YoloTask(cfg.TaskConfig):
 
   load_darknet_weights: bool = True
   darknet_load_decoder: bool = True
+  init_checkpoint_modules: str = 'backbone'
 
 
 @dataclasses.dataclass
