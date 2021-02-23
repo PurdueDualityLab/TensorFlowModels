@@ -230,6 +230,7 @@ class YoloTask(base_task.Task):
     # computer detivative and apply gradients
     #with tf.GradientTape() as tape:
     y_pred = model(image, training=False)
+    y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
 
     # gradients = tape.gradient(loss, y_pred['raw_output'])
@@ -268,14 +269,17 @@ class YoloTask(base_task.Task):
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
+    
+    tf.print(logs, end='\n')
+
+    # ret = '\033[F' * (len(logs.keys()) + 1)
+    # tf.print(ret, end='\n')
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
     # return super().aggregate_logs(state=state, step_outputs=step_outputs)
 
     if not state:
-      # for metric in self._metrics:
-      #   metric.reset_states()
       self.coco_metric.reset_states()
       state = self.coco_metric
     self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
