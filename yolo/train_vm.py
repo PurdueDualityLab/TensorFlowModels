@@ -72,7 +72,7 @@ def subdivison_adjustment(params):
     params.task.train_data.global_batch_size //= subdivisons
     params.task.validation_data.global_batch_size //= subdivisons
     params.trainer.train_steps *= subdivisons
-    params.trainer.validation_steps *= subdivisons
+    # params.trainer.validation_steps = subdivisons
     params.trainer.validation_interval = (params.trainer.validation_interval//subdivisons) * subdivisons
     params.trainer.checkpoint_interval = (params.trainer.checkpoint_interval//subdivisons) * subdivisons
     params.trainer.steps_per_loop = (params.trainer.steps_per_loop//subdivisons) * subdivisons
