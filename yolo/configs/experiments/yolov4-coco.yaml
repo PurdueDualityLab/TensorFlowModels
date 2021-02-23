@@ -72,10 +72,10 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: ''
+  init_checkpoint: '../checkpoints/csdarknet53_tune4'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: true
+  load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
