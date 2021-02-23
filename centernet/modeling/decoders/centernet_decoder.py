@@ -58,12 +58,17 @@ class CenterNetDecoder(tf.keras.Model):
     #layer_config.update(super().get_config())
     return layer_config
 
-def build_centernet_decoder(task_config: cfg.CenterNetTask) -> tf.keras.Model:
+def build_centernet_decoder(input_specs, task_config):
+  # NOTE: For now just support the default config
+  
+  # model specific 
+  heatmap_bias = task_config.model.base.decoder.heatmap_bias
+  
+  # task specific
   task_outputs = task_config._get_output_length_dict()
-  heatmap_bias = task_config.model.decoder.heatmap_bias
-
-  print(task_outputs)
-
-  return CenterNetDecoder(
+  model = CenterNetDecoder(
       task_outputs=task_outputs,
       heatmap_bias=heatmap_bias)
+  
+  model.build(input_specs)
+  return model

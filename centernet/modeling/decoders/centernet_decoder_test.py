@@ -9,13 +9,18 @@ from centernet.modeling.decoders import centernet_decoder
 class CenterNetDecoderTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_create_decoder(self):
-    decoder = centernet_decoder.build_centernet_decoder(task_config=cfg.CenterNetTask())
+    decoder = centernet_decoder.build_centernet_decoder(
+      task_config=cfg.CenterNetTask(), 
+      input_specs=(2, 128, 128, 256))
+
     config = decoder.get_config()
     self.assertEqual(len(config), 2)
     self.assertEqual(config['heatmap_bias'], -2.19)
 
   def test_decoder_shape(self):
-    decoder = centernet_decoder.build_centernet_decoder(task_config=cfg.CenterNetTask())
+    decoder = centernet_decoder.build_centernet_decoder(
+      task_config=cfg.CenterNetTask(), 
+      input_specs=(2, 128, 128, 256))
 
     # Output shape tests
     outputs = decoder(np.zeros((2, 128, 128, 256), dtype=np.float32))

@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Decoder configurations."""
-from typing import Dict
+"""CenterNet configuration definition."""
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 # Import libraries
 import dataclasses
@@ -22,10 +22,7 @@ import dataclasses
 from official.modeling import hyperparams
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
-from official.vision.beta.configs import backbones
-
 from centernet.configs import backbones
-
 
 @dataclasses.dataclass
 class Loss(hyperparams.Config):
@@ -57,12 +54,6 @@ class CenterNetDecoder(hyperparams.Config):
 
 
 @dataclasses.dataclass
-class CenterNet(hyperparams.Config):
-  num_classes: int = 80
-  decoder: CenterNetDecoder = CenterNetDecoder()
-
-
-@dataclasses.dataclass
 class CenterNetDetection(cfg.TaskConfig):
   use_centers: bool = True
   use_corners: bool = False
@@ -78,12 +69,25 @@ class CenterNetSubTasks(cfg.TaskConfig):
   # reid: bool = False
   # temporal: bool = False
 
+@dataclasses.dataclass
+class CenterNetBase(hyperparams.OneOfConfig):
+  backbone: backbones.Backbone = backbones.Backbone(type='hourglass')
+  decoder: CenterNetDecoder = CenterNetDecoder()
+
+@dataclasses.dataclass
+class CenterNet(hyperparams.Config):
+  num_classes: int = 80
+  input_size: Optional[List[int]] = dataclasses.field(
+    default_factory=lambda: [None, None, 3])
+  base: Union[str, CenterNetBase] = CenterNetBase()
 
 @dataclasses.dataclass
 class CenterNetTask(cfg.TaskConfig):
   model: CenterNet = CenterNet()
   subtasks: CenterNetSubTasks = CenterNetSubTasks()
   losses: Losses = Losses()
+
+  weight_decay: float = 5e-4
 
   def _get_output_length_dict(self):
     lengths = {}
