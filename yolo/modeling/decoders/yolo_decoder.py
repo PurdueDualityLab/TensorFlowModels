@@ -85,7 +85,7 @@ class YoloFPN(tf.keras.layers.Layer):
             filters=depth, upsample=True, **self._base_config)
     return
 
-  def call(self, inputs, training=False):
+  def call(self, inputs):
     outputs = {}
     layer_in = inputs[str(self._max_level)]
     for level in reversed(range(self._min_level, self._max_level + 1)):
@@ -178,7 +178,7 @@ class YoloRoutedDecoder(tf.keras.layers.Layer):
       minimum_depth *= 2
     return list(reversed(depths))
 
-  def call(self, inputs, training=False):
+  def call(self, inputs):
     outputs = dict()
     layer_in = inputs[str(self._max_level)]
     for level in reversed(range(self._min_level, self._max_level + 1)):
@@ -270,7 +270,7 @@ class YoloFPNDecoder(tf.keras.layers.Layer):
 
     # print(inputs_)
 
-  def call(self, inputs, training=False):
+  def call(self, inputs):
     outputs = dict()
     layer_in = inputs[str(self._min_level)]
     for level in range(self._min_level, self._max_level + 1):
