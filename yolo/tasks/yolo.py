@@ -241,7 +241,6 @@ class YoloTask(base_task.Task):
 
     # #custom metrics
     logs = {self.loss: loss}
-    # loss_metrics.update(metrics)
     # loss_metrics['darknet_loss'] = loss_val
     image_shape = tf.shape(image)[1:-1]
 

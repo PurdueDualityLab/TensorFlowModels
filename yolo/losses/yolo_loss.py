@@ -68,8 +68,13 @@ class Yolo_Loss(object):
     # checking anchor box 1 on prediction for anchor box 2
     # self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
     self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
+    if loss_type == "giou":
+      self._loss_type = 1
+    elif loss_type == "ciou":
+      self._loss_type = 2
+    else:
+      self._loss_type = 0
 
-    self._loss_type = tf.cast(loss_type, tf.string)
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
@@ -188,12 +193,12 @@ class Yolo_Loss(object):
         dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
-    if self._loss_type == "giou":
+    if self._loss_type == 1:
       iou, giou = box_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
       loss_box = (1 - giou) * self._iou_normalizer * true_conf
       #loss_box = tf.math.minimum(loss_box, self._max_value)
-    elif self._loss_type == "ciou":
+    elif self._loss_type == 2:
       iou, ciou = box_ops.compute_ciou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
       loss_box = (1 - ciou) * self._iou_normalizer * true_conf

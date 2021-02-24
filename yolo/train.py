@@ -104,7 +104,7 @@ def main(_):
 
   params = subdivison_adjustment(params)
   model_dir = FLAGS.model_dir
-  if 'train' in FLAGS.mode:
+  if 'train' in FLAGS.mode and model_dir != None:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
     # may race against the train job for writing the same file.
     train_utils.serialize_config(params, model_dir)
