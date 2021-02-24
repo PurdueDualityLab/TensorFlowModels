@@ -279,10 +279,10 @@ class Trainer(orbit.StandardTrainer, orbit.StandardEvaluator):
     for metric in self.train_metrics + [self.train_loss]:
       logs[metric.name] = metric.result()
       metric.reset_states()
-    # if callable(self.optimizer.learning_rate):
-    #   logs["learning_rate"] = self.optimizer.learning_rate(self.global_step)
-    # else:
-    #   logs["learning_rate"] = self.optimizer.learning_rate
+    if callable(self.optimizer.learning_rate):
+      logs["learning_rate"] = self.optimizer.learning_rate(self.global_step)
+    else:
+      logs["learning_rate"] = self.optimizer.learning_rate
     return logs
 
   def train_step(self, iterator):

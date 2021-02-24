@@ -336,9 +336,8 @@ def yolo_custom() -> cfg.ExperimentConfig:
 
   return config
 
-
-@exp_factory.register_config_factory('yolo_subdiv_custom')
-def yolo_subdiv_custom() -> cfg.ExperimentConfig:
+@exp_factory.register_config_factory('yolo_tpu')
+def yolo_tpu() -> cfg.ExperimentConfig:
   """COCO object detection with YOLO."""
   train_batch_size = 1
   eval_batch_size = 1
@@ -346,24 +345,21 @@ def yolo_subdiv_custom() -> cfg.ExperimentConfig:
   num_batches = 1200000 * 64 / train_batch_size
 
   config = cfg.ExperimentConfig(
-      runtime=cfg.RuntimeConfig(
-          #            mixed_precision_dtype='float16',
-          #            loss_scale='dynamic',
-          num_gpus=2),
-      task=YoloSubDivTask(
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
+      task=YoloTask(
           model=Yolo(),
           train_data=DataConfig(  # input_path=os.path.join(
               # COCO_INPUT_PATH_BASE, 'train*'),
               is_training=True,
               global_batch_size=train_batch_size,
               parser=Parser(),
-              shuffle_buffer_size=2),
+              shuffle_buffer_size=10000),
           validation_data=DataConfig(
               # input_path=os.path.join(COCO_INPUT_PATH_BASE,
               #                        'val*'),
               is_training=False,
               global_batch_size=eval_batch_size,
-              shuffle_buffer_size=2)),
+              shuffle_buffer_size=10000)),
       trainer=cfg.TrainerConfig(
           steps_per_loop=2000,
           summary_interval=8000,
