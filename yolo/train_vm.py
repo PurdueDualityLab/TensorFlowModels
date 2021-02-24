@@ -65,7 +65,7 @@ nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --
 """
 
 def subdivison_adjustment(params):
-  
+  tf.config.set_soft_device_placement(True)
   if hasattr(params.task.model, 'subdivisions') and params.task.model.subdivisions > 1:
     print("adjustment is needed")
     subdivisons = params.task.model.subdivisions
