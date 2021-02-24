@@ -252,7 +252,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
 
-    # tf.print(logs, end='\r')
+    tf.print(logs, end='\r')
 
     # ret = '\033[F' * (len(logs.keys()))
     # tf.print(ret, end='\n')
