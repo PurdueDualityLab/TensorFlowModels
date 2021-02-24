@@ -23,7 +23,7 @@ task:
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
     global_batch_size: 512 # 128
-    dtype: 'float16'
+    dtype: 'bfloat16'
     parser:
       aug_rand: true
   validation_data:
@@ -32,7 +32,7 @@ task:
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
     global_batch_size: 512 # 128
-    dtype: 'float16'
+    dtype: 'bfloat16'
     drop_remainder: true
     parser:
       aug_rand: true
