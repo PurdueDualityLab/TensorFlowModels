@@ -84,7 +84,6 @@ class ClassificationModel(tf.keras.Model):
 
     inputs = tf.keras.Input(shape=input_specs.shape[1:])
     endpoints = backbone(inputs)
-    print(max(endpoints.keys()))
     x = endpoints[max(endpoints.keys())]
 
     if add_head_batch_norm:
