@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: mirrored
-  mixed_precision_dtype: float16
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
     base: 
@@ -13,17 +11,17 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://csdarknet53.weights'
+      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
+    subdivisions: 1
     num_classes: 80
-    subdivisions: 32
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
@@ -38,7 +36,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 2 # 64 batch size 
+    global_batch_size: 64 # 64 batch size 
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -57,7 +55,7 @@ task:
       mosaic: true
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 2
+    global_batch_size: 8
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -72,13 +70,14 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: ''
+  init_checkpoint: '../checkpoints/csdarknet53_tune3'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: true
+  load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 4004000 # 160 epochs at 64 batchsize -> 500500 * 64/8
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -88,18 +87,17 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [3200000, 3600000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.01, 0.001, 0.0001]
+        values: [0.00261, 0.000261, 0.0000261]
     optimizer:
-      type: sgd_accum
-      sgd_accum:
+      type: sgd
+      sgd:
         momentum: 0.9
-        accumulation_steps: 8
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 8000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
       
 

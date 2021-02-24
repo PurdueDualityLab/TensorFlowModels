@@ -35,8 +35,6 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter
       from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_neck
-      from yolo.utils._darknet2tf.load_weights2 import load_head
       from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
       from yolo.utils.downloads.file_manager import download
 
@@ -125,13 +123,13 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     """
     losses_config = self.task_config.losses
     if losses_config.one_hot:
-      # total_loss = tf.keras.losses.categorical_crossentropy(
-      #     labels,
-      #     model_outputs,
-      #     from_logits=False,
-      #     label_smoothing=losses_config.label_smoothing)
-      total_loss = cross_entropy_loss.ce_loss(labels, model_outputs,
-                                              losses_config.label_smoothing)
+      total_loss = tf.keras.losses.categorical_crossentropy(
+          labels,
+          model_outputs,
+          from_logits=True,
+          label_smoothing=losses_config.label_smoothing)
+      # total_loss = cross_entropy_loss.ce_loss(labels, model_outputs,
+      #                                         losses_config.label_smoothing)
       #total_loss = tf.math.reduce_sum(total_loss)
     else:
       total_loss = tf.keras.losses.sparse_categorical_crossentropy(

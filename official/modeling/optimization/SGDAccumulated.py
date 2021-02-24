@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_ops
 from tensorflow.python import ops 
-from tensorflow.python.keras.utils import control_flow_util
+# from tensorflow.python.keras.utils import control_flow_util
 # from tensorflow.python.keras import backend_config
 
 
@@ -149,7 +149,7 @@ class SGDAccumulated(OptimizerV2):
     g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
 
-    updates = control_flow_util.smart_cond(update_cond, 
+    updates = tf.cond(update_cond, 
                                 true_fn = self.raw_update(coefficients, var, g_t, update_cond), 
                                 false_fn = self.no_update(var))
     return updates

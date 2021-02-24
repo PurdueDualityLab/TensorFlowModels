@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: mirrored
   mixed_precision_dtype: float16
   loss_scale: "dynamic"
-  num_gpus: 2
+  num_gpus: 1
 task:
   model:
     base: 
@@ -11,14 +11,14 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v4
+        version: v3
         type: regular
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 4
+    subdivisions: 16
     num_classes: 80
-    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: [512, 512, 3]
+    _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
+    _input_size: null
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -26,20 +26,19 @@ task:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
-      use_sync_bn: true
+      use_sync_bn: false
     decoder_activation: leaky
     filter:
-      anchor_generation_scale: 512
+      anchor_generation_scale: 416
       ignore_thresh: 0.7
       iou_thresh: 0.25
-      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: ''
+    global_batch_size: 64 #batch size 
+    #tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -50,15 +49,16 @@ task:
     shuffle_buffer_size: 10000
     parser:
       fixed_size: true
-      image_h: 512
-      image_w: 512
+      image_h: 416
+      image_w: 416
+      seed: 10
       letter_box: false
       cutmix: false
       mosaic: true
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 64
-    tfds_data_dir: ''
+    global_batch_size: 8
+    #tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
@@ -67,23 +67,22 @@ task:
     is_training: false
     shuffle_buffer_size: 10000
     parser:
-      image_h: 512
-      image_w: 512
+      image_h: 416
+      image_w: 416
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: '../checkpoints/csdarknet53_tune3'
-  init_checkpoint_modules: 'backbone'
+  init_checkpoint: ''
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: false
+  load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
-  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize
   validation_steps: 625
   steps_per_loop: 10000
-  validation_interval: 10000 #00
   summary_interval: 10000
+  validation_interval: 10000
   checkpoint_interval: 10000
   optimizer_config:
     learning_rate:
@@ -91,7 +90,7 @@ trainer:
       stepwise:
         boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.01, 0.001, 0.0001]
+        values: [0.001, 0.0001, 0.00001] #[]
     optimizer:
       type: sgd
       sgd:
@@ -101,5 +100,4 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
 
