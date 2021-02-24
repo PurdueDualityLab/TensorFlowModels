@@ -10,7 +10,7 @@ import tensorflow_addons as tfa
 from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
 from official.vision.beta.ops import box_ops, preprocess_ops
-from official.vision.beta.dataloaders import parser
+from official.vision.beta.dataloaders import parser, utils
 from yolo.ops import loss_utils as loss_ops
 
 
@@ -304,7 +304,7 @@ class Parser(parser.Parser):
         self._max_num_instances, 0)
 
     labels = {
-        'source_id': data['source_id'],
+        'source_id': utils.process_source_id(data['source_id']),
         'bbox': tf.cast(boxes, self._dtype),
         'classes': tf.cast(classes, self._dtype),
         'area': tf.cast(area, self._dtype),
