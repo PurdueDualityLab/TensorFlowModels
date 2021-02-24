@@ -177,9 +177,10 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
     subdivisions = 1
 
   head = YoloHead(
+      min_level = model_config.min_level, 
+      max_level = model_config.max_level, 
       classes=model_config.num_classes,
       boxes_per_level=model_config.boxes_per_scale,
-      xy_exponential=False,  # model_config.decoder.version == 'v4',
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       subdivisions=subdivisions, 

@@ -139,7 +139,7 @@ class StandardTrainer(runner.AbstractTrainer, metaclass=abc.ABCMeta):
       self._train_iter = tf.nest.map_structure(iter, self.train_dataset)
 
     self._train_loop_fn(self._train_iter, num_steps)
-    return {} #self.train_loop_end()
+    return self.train_loop_end()
 
   def train_loop_begin(self):
     """Called once at the beginning of the training loop.

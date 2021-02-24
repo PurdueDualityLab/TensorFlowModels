@@ -8,7 +8,6 @@ def _build_grid_points(lwidth, lheight, num, dtype):
   with tf.name_scope('center_grid'):
     y = tf.range(0, lheight)
     x = tf.range(0, lwidth)
-    #x_left, y_left = tf.meshgrid(y, x)
 
     x_left = tf.repeat(
         tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth], axis=0)
