@@ -210,7 +210,7 @@ class YoloTask(base_task.Task):
     # for value in delta.keys():
     #   loss_val += tf.reduce_sum(tf.square(delta[value]))
     # custom metrics
-    logs = {'loss': loss}
+    logs = {self.loss: loss}
     # loss_metrics['darknet_loss'] = loss_val
     if metrics:
       for m in metrics:
@@ -240,7 +240,7 @@ class YoloTask(base_task.Task):
     #   loss_val += tf.reduce_sum(tf.square(gradients[value]))
 
     # #custom metrics
-    logs = {'loss': loss}
+    logs = {self.loss: loss}
     # loss_metrics.update(metrics)
     # loss_metrics['darknet_loss'] = loss_val
     image_shape = tf.shape(image)[1:-1]
