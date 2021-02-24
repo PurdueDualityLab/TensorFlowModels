@@ -4,7 +4,7 @@ import tensorflow as tf
 from official.modeling import tf_utils
 
 
-TPU_BASE = False
+TPU_BASE = True
 
 from official.vision.beta.ops import spatial_transform_ops
 
