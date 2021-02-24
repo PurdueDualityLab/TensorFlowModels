@@ -217,7 +217,7 @@ class YoloTask(base_task.Task):
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
 
-    tf.print(logs['total_loss'], "\t", end='\r')
+    # tf.print(logs['total_loss'], "\t", end='\r')
     # tf.print(logs,  end='\n')
     # ret = '\033[F' * (len(logs.keys()) + 1)
     # tf.print(ret, end='\n')
