@@ -30,6 +30,7 @@ from official.common import flags as tfm_flags
 from official.core import task_factory
 from official.core import train_lib
 from official.modeling import performance
+import tensorflow as tf
 
 FLAGS = flags.FLAGS
 """
