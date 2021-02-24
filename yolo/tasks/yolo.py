@@ -199,9 +199,9 @@ class YoloTask(base_task.Task):
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
       
-    # if self.task_config.gradient_clip_norm > 0.0:
-    #   gradients, _ = tf.clip_by_global_norm(gradients,
-    #                                         self.task_config.gradient_clip_norm)
+    if self.task_config.gradient_clip_norm > 0.0:
+      gradients, _ = tf.clip_by_global_norm(gradients,
+                                            self.task_config.gradient_clip_norm)
 
     optimizer.apply_gradients(zip(gradients, train_vars))
 

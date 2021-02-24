@@ -134,9 +134,8 @@ class SGDAccumulated(OptimizerV2):
 
     accumulation_steps = self._get_hyper('accumulation_steps', 'int64')
     update_cond = tf.equal((self.iterations + 1) % accumulation_steps, 0)
-
     sub_step = self.iterations % accumulation_steps + 1
-    local_step = math_ops.cast(self.iterations // accumulation_steps + 1, var_dtype)
+    # local_step = math_ops.cast(self.iterations // accumulation_steps + 1, var_dtype)
 
     #gradient accumulation sum
     # if self._accumulation_type == 'sum':
