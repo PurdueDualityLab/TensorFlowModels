@@ -218,9 +218,9 @@ class YoloTask(base_task.Task):
         logs.update({m.name: m.result()})
 
     # tf.print(logs['total_loss'], "\t", end='\r')
-
-    # ret = '\033[F' * (len(logs.keys()) + 1)
-    # tf.print(ret, end='\n')
+    tf.print(logs,  end='\n')
+    ret = '\033[F' * (len(logs.keys()) + 1)
+    tf.print(ret, end='\n')
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
