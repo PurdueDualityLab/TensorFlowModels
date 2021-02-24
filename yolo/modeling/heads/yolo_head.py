@@ -50,7 +50,7 @@ class YoloHead(tf.keras.layers.Layer):
     self._head = dict()
     for key in self._key_list:
       self._head[key] = nn_blocks.ConvBN(**self._base_config)
-    super().build(input_shape)
+    # super().build(input_shape)
 
   def call(self, inputs):
     outputs = dict()

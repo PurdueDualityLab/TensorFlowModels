@@ -133,14 +133,15 @@ class Yolo_Loss(object):
         K.expand_dims(xy[..., 1] * height, axis=-1)
     ],
                        axis=-1)
-    wh = tf.math.log(box[..., 2:4] / anchor_grid)
-    wh = tf.where(tf.math.is_nan(wh), tf.cast(0.0, dtype=dtype), wh)
-    wh = tf.where(tf.math.is_inf(wh), tf.cast(0.0, dtype=dtype), wh)
+    wh = tf.math.log(tf.math.divide_no_nan(box[..., 2:4] / anchor_grid))
+    # wh = tf.math.log(box[..., 2:4] / (anchor_grid + K.epsilon()))
+    # wh = tf.where(tf.math.is_nan(wh), tf.cast(0.0, dtype=dtype), wh)
+    # wh = tf.where(tf.math.is_inf(wh), tf.cast(0.0, dtype=dtype), wh)
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
 
-  def rm_nan_inf(self, x):
-    x = tf.where(tf.math.is_nan(x), tf.cast(0.0, dtype=x.dtype), x)
-    x = tf.where(tf.math.is_inf(x), tf.cast(0.0, dtype=x.dtype), x)
+  def rm_nan_inf(self, x, val = 0.0):
+    x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
+    x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
     return x
 
   def bce(self, target, output):
@@ -149,6 +150,7 @@ class Yolo_Loss(object):
     target = _smooth_labels(target)
     bce = target * tf.math.log(output + K.epsilon())
     bce += (1 - target) * tf.math.log(1 - (output + K.epsilon()))
+    bce = -bce
     bce = tf.where(tf.math.is_nan(bce), -1.0, bce)
     return -bce
 
@@ -217,6 +219,7 @@ class Yolo_Loss(object):
       loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
       loss_box = (loss_wh + loss_xy) * true_conf * scale
       #loss_box = tf.math.minimum(loss_box, self._max_value)
+    loss_box = self.rm_nan_inf(loss_box)
 
     # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     class_loss = self._cls_normalizer * tf.reduce_sum(
@@ -229,13 +232,13 @@ class Yolo_Loss(object):
     #class_loss = self._cls_normalizer * tf.reduce_sum(self.bce(true_class, pred_class), axis = -1) * true_conf
     
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf)
-    #bce = self.bce(true_conf, tf.squeeze(pred_conf))
-    conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
-    # ce = self.ce(true_conf, tf.squeeze(pred_conf))
-    # ce_neg = self.ce((1-true_conf) * mask_iou, tf.squeeze(1-pred_conf))
-    # conf_loss = (ce + ce_neg) * self._obj_normalizer
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf)
+    # #bce = self.bce(true_conf, tf.squeeze(pred_conf))
+    # conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
+    ce = self.ce(true_conf, tf.squeeze(pred_conf))
+    ce_neg = self.ce((1-true_conf) * mask_iou, tf.squeeze(1-pred_conf))
+    conf_loss = (ce + ce_neg) * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
