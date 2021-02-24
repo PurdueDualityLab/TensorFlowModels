@@ -1,9 +1,31 @@
+from absl.testing import parameterized
 import tensorflow as tf
 import numpy as np
 
 import centernet.utils.groundtruth as preprocessing_ops
+from yolo.ops import box_ops
 
-class CenterNetBoxTargetAssignerTest(tf.test.TestCase):
+def image_shape_to_grids(height, width):
+  """Computes xy-grids given the shape of the image.
+  Args:
+    height: The height of the image.
+    width: The width of the image.
+  Returns:
+    A tuple of two tensors:
+      y_grid: A float tensor with shape [height, width] representing the
+        y-coordinate of each pixel grid.
+      x_grid: A float tensor with shape [height, width] representing the
+        x-coordinate of each pixel grid.
+  """
+  out_height = tf.cast(height, tf.float32)
+  out_width = tf.cast(width, tf.float32)
+  x_range = tf.range(out_width, dtype=tf.float32)
+  y_range = tf.range(out_height, dtype=tf.float32)
+  x_grid, y_grid = tf.meshgrid(x_range, y_range, indexing='xy')
+  return (y_grid, x_grid)
+
+
+class CenterNetBoxTargetAssignerTest(parameterized.TestCase, tf.test.TestCase):
 
   def __init__(self, *args, **kwargs):
     super(CenterNetBoxTargetAssignerTest, self).__init__(*args, **kwargs)
@@ -43,7 +65,7 @@ class CenterNetBoxTargetAssignerTest(tf.test.TestCase):
     boxes1 = np.vstack([ymin1, xmin1, ymax1, xmax1]).T
     boxes2 = np.vstack([ymin2, xmin2, ymax2, xmax2]).T
 
-    iou = np.diag(np_box_ops.iou(boxes1, boxes2))
+    iou = box_ops.compute_iou(boxes1, boxes2)
 
     self.assertTrue(np.all(iou >= min_iou))
 
@@ -52,6 +74,25 @@ class CenterNetBoxTargetAssignerTest(tf.test.TestCase):
     distance = preprocessing_ops.gaussian_radius((10, 5), 0.5)
     self.assertAlmostEqual(2.807764064, distance.numpy())
 
+  @parameterized.parameters((False,), (True,))
+  def test_coordinates_to_heatmap(self, sparse):
+    self.skipTest('Not yet functioning.')
+
+    (y_grid, x_grid) = image_shape_to_grids(height=3, width=5)
+    y_coordinates = tf.constant([1.5, 0.5], dtype=tf.float32)
+    x_coordinates = tf.constant([2.5, 4.5], dtype=tf.float32)
+    sigma = tf.constant([0.1, 0.5], dtype=tf.float32)
+    channel_onehot = tf.constant([[1, 0, 0], [0, 1, 0]], dtype=tf.float32)
+    channel_weights = tf.constant([1, 1], dtype=tf.float32)
+    heatmap = ta_utils.coordinates_to_heatmap(y_grid, x_grid, y_coordinates,
+                                              x_coordinates, sigma,
+                                              channel_onehot,
+                                              channel_weights, sparse=sparse)
+
+    # Peak at (1, 2) for the first class.
+    self.assertAlmostEqual(1.0, heatmap[1, 2, 0])
+    # Peak at (0, 4) for the second class.
+    self.assertAlmostEqual(1.0, heatmap[0, 4, 1])
 
 if __name__ == '__main__':
   tf.test.main()

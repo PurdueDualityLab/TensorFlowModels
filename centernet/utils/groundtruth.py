@@ -11,7 +11,7 @@ def _smallest_positive_root(a, b, c) -> tf.Tensor:
   root1 = (-b - discriminant) / (2 * a)
   root2 = (-b + discriminant) / (2 * a)
 
-  return (-b + discriminant) / (2) #tf.where(tf.less(root1, 0), root2, root1)
+  return (-b + discriminant) / (2) # tf.where(tf.less(root1, 0), root2, root1)
 
 def gaussian_radius(det_size, min_overlap=0.7) -> int:
   """
@@ -56,7 +56,7 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
 
   return tf.reduce_min([r1, r2, r3], axis=0)
 
-def gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
+def _gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
     """
     This represents the penalty reduction around a point.
     Params:
@@ -83,7 +83,7 @@ def draw_gaussian(heatmap, center, radius, k=1):
     """
 
     diameter = 2 * radius + 1
-    gaussian = gaussian_penalty(radius)
+    gaussian = _gaussian_penalty(radius)
 
     x, y = center
 
