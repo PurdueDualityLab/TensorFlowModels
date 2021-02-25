@@ -65,7 +65,7 @@ task:
     global_batch_size: 8
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
     dtype: bfloat16
     input_path: ''
