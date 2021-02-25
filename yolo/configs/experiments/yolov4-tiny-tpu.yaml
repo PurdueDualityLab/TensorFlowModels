@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: mirrored
-  mixed_precision_dtype: float16
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   weight_decay: 0.0005
   init_checkpoint: ''
@@ -22,7 +20,7 @@ task:
       darknet_weights_file: 'cache://yolov4-tiny.weights'
       darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
     num_classes: 80
-    subdivisions: 4
+    subdivisions: 1
     _boxes: ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)']
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
@@ -44,8 +42,8 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 #batch size 
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
+    global_batch_size: 64 # 64 batch size 
+    tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -58,21 +56,21 @@ task:
       fixed_size: true
       image_h: 512
       image_w: 512
-      seed: 10
       letter_box: false
       cutmix: false
       mosaic: true
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
+    tfds_data_dir: ''
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
     dtype: float16
     input_path: ''
     is_training: false
     shuffle_buffer_size: 10000
+    drop_remainder: True
     parser:
       image_h: 512
       image_w: 512
