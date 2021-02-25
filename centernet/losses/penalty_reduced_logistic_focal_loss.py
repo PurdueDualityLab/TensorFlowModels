@@ -9,7 +9,7 @@ class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
   [1]: https://arxiv.org/abs/1904.07850
   """
 
-  def __init__(self, alpha=2.0, beta=4.0, sigmoid_clip_value=1e-4):
+  def __init__(self, *args, alpha=2.0, beta=4.0, sigmoid_clip_value=1e-4, **kwargs):
     """Constructor.
     Args:
       alpha: Focussing parameter of the focal loss. Increasing this will
@@ -22,7 +22,7 @@ class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
     self._alpha = alpha
     self._beta = beta
     self._sigmoid_clip_value = sigmoid_clip_value
-    super(PenaltyReducedLogisticFocalLoss, self).__init__()
+    super(PenaltyReducedLogisticFocalLoss, self).__init__(*args, **kwargs)
 
   def call(self, y_true, y_pred):
     """Compute loss function.

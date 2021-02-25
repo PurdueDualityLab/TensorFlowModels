@@ -38,7 +38,7 @@ class CenterNetTask(base_task.Task):
     flattened_ct_heatmaps = utils._flatten_spatial_dimensions(labels['ct_heatmaps'])
     num_boxes = utils._to_float32(utils.get_num_instances_from_weights(labels['tag_masks']))   #gt_weights_list here shouldn't be tag_masks here
 
-    object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss()
+    object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
     # Loop through each feature output head.
     for pred in outputs['ct_heatmaps']:
       pred = utils._flatten_spatial_dimensions(pred)
@@ -50,7 +50,7 @@ class CenterNetTask(base_task.Task):
     metric_dict['ct_loss'] = center_loss
 
     #localization loss for offset and scale loss
-    localization_loss_fn = l1_localization_loss.L1LocalizationLoss()
+    localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
     for scale_pred, offset_pred in zip(outputs['ct_size'], outputs['ct_offset']):
       # Compute the scale loss.
       scale_pred = utils.get_batch_predictions_from_indices(

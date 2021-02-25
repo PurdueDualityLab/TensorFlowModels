@@ -36,8 +36,9 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           [[1.0], [1.0]],
           [[1.0], [1.0]],
       ])
-      loss = losses.PenaltyReducedLogisticFocalLoss(alpha=2.0, beta=0.5)
-      computed_value = loss.call(target, prediction) * weights
+      loss = losses.PenaltyReducedLogisticFocalLoss(
+          alpha=2.0, beta=0.5, reduction=tf.keras.losses.Reduction.NONE)
+      computed_value = loss(target, prediction, weights)
       return computed_value
     computed_value = graph_fn(self._prediction, self._target)
     expected_value = np.array([
@@ -64,9 +65,10 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]],
       ])
 
-      loss = losses.PenaltyReducedLogisticFocalLoss(alpha=2.0, beta=0.5)
+      loss = losses.PenaltyReducedLogisticFocalLoss(
+          alpha=2.0, beta=0.5, reduction=tf.keras.losses.Reduction.NONE)
 
-      computed_value = loss.call(target, prediction) * weights
+      computed_value = loss(target, prediction, weights)
       return computed_value
     computed_value = graph_fn(self._prediction, self._target)
     expected_value = np.array([
