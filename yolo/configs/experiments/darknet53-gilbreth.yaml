@@ -4,16 +4,20 @@ runtime:
   #loss_scale: "dynamic"
   num_gpus: 8
 task:
+  load_darknet_weights: false
   model:
-    num_classes: 1001
+    num_classes: 1000
     input_size: [256, 256, 3]
     backbone:
       type: 'darknet'
       darknet:
         model_id: 'cspdarknet53'
     norm_activation:
-      activation: 'mish'
-      use_sync_bn: True
+      activation: 'mish'  
+      use_sync_bn: true
+    subdivisions: 1
+    darknet_weights_file: ''
+    darknet_weights_cfg: ''
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
