@@ -55,7 +55,7 @@ def test_classification_input():
 
 def test_classification_pipeline():
   dataset, dsp = test_classification_input()
-  for l, (i, j) in enumerate(dataset):
+  for l, (i, j) in enumerate(dsp):
     plt.imshow(i[0].numpy())
     plt.show()
     if l > 30:
