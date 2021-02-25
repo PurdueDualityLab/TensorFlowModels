@@ -224,9 +224,14 @@ def compute_ciou(box1, box2, yxyx=False):
       box2 = yxyx_to_xcycwh(box2)
 
     # computer aspect ratio consistency
+    # arcterm = (
+    #     tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3] + K.epsilon())) -
+    #     tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3] + K.epsilon())))**2
+    
     arcterm = (
-        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3] + K.epsilon())) -
-        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3] + K.epsilon())))**2
+        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3])) -
+        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3])))**2
+    arcterm = rm_nan_inf(arcterm)
     # arcterm = (
     #     tf.math.atan(tf.math.divide_no_nan(box1[..., 2], box1[..., 3])) -
     #     tf.math.atan(tf.math.divide_no_nan(box2[..., 2], box2[..., 3])))**2
