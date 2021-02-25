@@ -61,6 +61,13 @@ def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
 
 
 # IOU
+
+def rm_nan_inf(x, val = 0.0):
+  x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
+  x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
+  return x
+
+
 def compute_iou(box1, box2, yxyx=False):
   """Calculates the intersection of union between box1 and box2.
     Args:
@@ -90,7 +97,8 @@ def compute_iou(box1, box2, yxyx=False):
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
-    iou = intersection / (union + K.epsilon())  
+    iou = tf.math.divide(intersection, union + K.epsilon())  
+    iou = rm_nan_inf(iou)
     # iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
   return iou
@@ -127,6 +135,7 @@ def compute_giou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     iou = tf.math.divide(intersection, union + K.epsilon())
+    iou = rm_nan_inf(iou)
     #iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
@@ -179,6 +188,7 @@ def compute_diou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     iou = tf.math.divide(intersection, union + K.epsilon())
+    iou = rm_nan_inf(iou)
     #iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
@@ -214,9 +224,14 @@ def compute_ciou(box1, box2, yxyx=False):
       box2 = yxyx_to_xcycwh(box2)
 
     # computer aspect ratio consistency
+    # arcterm = (
+    #     tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3] + K.epsilon())) -
+    #     tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3] + K.epsilon())))**2
+    
     arcterm = (
-        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3] + K.epsilon())) -
-        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3] + K.epsilon())))**2
+        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3])) -
+        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3])))**2
+    arcterm = rm_nan_inf(arcterm)
     # arcterm = (
     #     tf.math.atan(tf.math.divide_no_nan(box1[..., 2], box1[..., 3])) -
     #     tf.math.atan(tf.math.divide_no_nan(box2[..., 2], box2[..., 3])))**2
