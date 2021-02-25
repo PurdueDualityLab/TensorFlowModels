@@ -59,3 +59,12 @@ class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
 
     loss = -tf.where(is_present_tensor, positive_loss, negative_loss)
     return loss
+
+  def get_config(self):
+    """Returns the config dictionary for a `Loss` instance."""
+    return {
+        'alpha': self._alpha,
+        'beta': self._beta,
+        'sigmoid_clip_value': self._sigmoid_clip_value,
+        **super().get_config()
+    }

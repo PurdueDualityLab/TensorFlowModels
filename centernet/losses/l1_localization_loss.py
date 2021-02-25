@@ -68,7 +68,7 @@ class L1LocalizationLoss(tf.keras.losses.Loss):
         y_true,
         y_pred,
         weights=sample_weight,
-        reduction=self.reduction
+        reduction=self._get_reduction()
     )
 
   call = __call__
