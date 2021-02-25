@@ -16,6 +16,7 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
     config = exp_cfg.CenterNetTask()
     task = CenterNetTask(config)
     model = task.build_model()
+    out = model(tf.zeros((3, 512, 512, 3)))
     model.summary()
         
 
