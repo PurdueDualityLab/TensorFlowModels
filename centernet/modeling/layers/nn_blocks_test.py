@@ -1,5 +1,6 @@
 from absl.testing import parameterized
 import tensorflow as tf
+import numpy as np
 
 from centernet.modeling.layers import nn_blocks
 
@@ -53,7 +54,7 @@ class HourglassBlockPyTorch(tf.keras.layers.Layer):
     self.max1 = self.make_pool_layer(curr_dim)
     self.low1 = self.make_hg_layer(3, curr_dim, next_dim, curr_mod, **kwargs)
     self.low2 = type(self)(
-      dims, modules, k=k+1, **kwargs
+      dims, modules, k=k + 1, **kwargs
     ) if self.n - k > 1 else \
     self.make_low_layer(
       3, next_dim, next_dim, next_mod, **kwargs
@@ -113,9 +114,33 @@ class NNBlocksTest(parameterized.TestCase, tf.test.TestCase):
   def test_hourglass_block(self):
     dims = [256, 256, 384, 384, 384, 512]
     modules = [2, 2, 2, 2, 2, 4]
-    model = nn_blocks.HourglassBlock(len(dims) - 1, dims, modules)
+    model = nn_blocks.HourglassBlock(dims, modules)
     test_input = tf.keras.Input((512, 512, 256))
     _ = model(test_input)
+
+    filter_sizes = [256, 256, 384, 384, 384, 512]
+    rep_sizes = [2, 2, 2, 2, 2, 4]
+
+    hg_test_input_shape = (1, 512, 512, 256)
+    bb_test_input_shape = (1, 512, 512, 3)
+    x_hg = tf.ones(shape=hg_test_input_shape)
+    x_bb = tf.ones(shape=bb_test_input_shape)
+
+    hg = nn_blocks.HourglassBlock(
+        channel_dims_per_stage=filter_sizes, blocks_per_stage=rep_sizes)
+
+    hg.build(input_shape=hg_test_input_shape)
+    out = hg(x_hg)
+    self.assertAllEqual(
+        tf.shape(out), hg_test_input_shape,
+        'Hourglass module output shape and expected shape differ')
+
+    # ODAPI Test
+    layer = nn_blocks.HourglassBlock(
+        blocks_per_stage=[2, 3, 4, 5, 6],
+        channel_dims_per_stage=[4, 6, 8, 10, 12])
+    output = layer(np.zeros((2, 64, 64, 4), dtype=np.float32))
+    self.assertEqual(output.shape, (2, 64, 64, 4))
 
 
 if __name__ == '__main__':

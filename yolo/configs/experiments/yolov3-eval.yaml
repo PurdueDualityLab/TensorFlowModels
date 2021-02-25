@@ -5,9 +5,18 @@ runtime:
   num_gpus: 1
 task:
   model:
-    base: v4tiny
+    base: 
+      backbone:
+        type: 'darknet'
+        darknet:
+          model_id: 'darknet53'
+      decoder:
+        version: v3
+        type: regular
+      darknet_weights_file: 'cache://yolov3.weights'
+      darknet_weights_cfg: 'cache://yolov3.cfg'
     num_classes: 80
-    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
     _input_size: null
     boxes_per_scale: 3
     max_level: 5
@@ -21,29 +30,15 @@ task:
     filter:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
+      iou_thresh: 0.1
+      nms_thresh: 0.9
       loss_type: ciou
       max_boxes: 200
-  train_data:
-    global_batch_size: 32 # 64 batch size 
-    shuffle_buffer_size: 200
-    tfds_data_dir: ''
-    tfds_download: true
-    tfds_name: coco
-    tfds_split: train
-    drop_remainder: true
-    dtype: float16
-    input_path: ''
-    is_training: true
-    parser:
-      fixed_size: false
-      image_h: 416
-      image_w: 416
-      seed: 10
-      use_tie_breaker: true
-    shuffle_buffer_size: 10000
+      use_nms: false
+      iou_normalizer: 0.07
   validation_data:
     global_batch_size: 8
-    tfds_data_dir: ''
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
@@ -51,22 +46,22 @@ task:
     input_path: ''
     is_training: false
     parser:
-      image_h: 416
-      image_w: 416
-      shuffle_buffer_size: 10000
+      fixed_size: true
+      image_h: 512
+      image_w: 512
       use_tie_breaker: true
-    shuffle_buffer_size: 2
+    shuffle_buffer_size: 10000
   weight_decay: 0.0005
   init_checkpoint: ''
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: true
-  darknet_load_decoder: false
+  darknet_load_decoder: true
 trainer:
-  train_steps: 1001000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 625
+  train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
+  validation_steps: 625 # 5063 #625
   steps_per_loop: 10000
-  validation_interval: 10000
+  validation_interval: 1
   summary_interval: 10000
   checkpoint_interval: 10000
   optimizer_config:
@@ -85,5 +80,3 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
-
