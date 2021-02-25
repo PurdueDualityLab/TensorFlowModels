@@ -39,12 +39,12 @@ task:
     is_training: false
     global_batch_size: 512 # 128
     dtype: 'bfloat16'
-    drop_remainder: true
+    drop_remainder: false
     parser:
       aug_rand: true
 trainer:
   train_steps: 300000 # epochs: 120
-  validation_steps: 100 # size of validation data
+  validation_steps: 97 # size of validation data
   validation_interval: 2500
   steps_per_loop: 2500
   summary_interval: 2500
