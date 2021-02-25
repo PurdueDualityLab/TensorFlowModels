@@ -1,15 +1,18 @@
 import tensorflow as tf
 import numpy as np
 
-from centernet import losses
+import penalty_reduced_logistic_focal_loss as losses
+
+LOG_2 = np.log(2)
+LOG_3 = np.log(3)
 
 class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
   """Testing loss function from Equation (1) in [1].
   [1]: https://arxiv.org/abs/1904.07850
   """
 
-  def setUp(self):
-    super(PenaltyReducedLogisticFocalLossTest, self).setUp()
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
     self._prediction = np.array([
         # First batch
         [[1 / 2, 1 / 4, 3 / 4],
@@ -33,8 +36,9 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           [[1.0], [1.0]],
           [[1.0], [1.0]],
       ])
-      loss = losses.PenaltyReducedLogisticFocalLoss(alpha=2.0, beta=0.5)
-      computed_value = loss(prediction, target, weights)
+      loss = losses.PenaltyReducedLogisticFocalLoss(
+          alpha=2.0, beta=0.5, reduction=tf.keras.losses.Reduction.NONE)
+      computed_value = loss(target, prediction, weights)
       return computed_value
     computed_value = graph_fn(self._prediction, self._target)
     expected_value = np.array([
@@ -52,7 +56,7 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
          [0.2 * 9 / 16 * 2 * LOG_2,
           1 / 9 * (LOG_3 - LOG_2),
           4 / 9 * LOG_3]]])
-    self.assertAllClose(computed_value, expected_value, rtol=1e-3, atol=1e-3)
+    self.assertAllClose(expected_value, computed_value, rtol=1e-3, atol=1e-3)
 
   def test_returns_correct_loss_weighted(self):
     def graph_fn(prediction, target):
@@ -61,9 +65,10 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]],
       ])
 
-      loss = losses.PenaltyReducedLogisticFocalLoss(alpha=2.0, beta=0.5)
+      loss = losses.PenaltyReducedLogisticFocalLoss(
+          alpha=2.0, beta=0.5, reduction=tf.keras.losses.Reduction.NONE)
 
-      computed_value = loss(prediction, target, weights)
+      computed_value = loss(target, prediction, weights)
       return computed_value
     computed_value = graph_fn(self._prediction, self._target)
     expected_value = np.array([
@@ -82,7 +87,7 @@ class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
           0.0,
           0.0]]])
 
-    self.assertAllClose(computed_value, expected_value, rtol=1e-3, atol=1e-3)
+    self.assertAllClose(expected_value, computed_value, rtol=1e-3, atol=1e-3)
 
 if __name__ == '__main__':
   tf.test.main()

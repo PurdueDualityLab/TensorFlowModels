@@ -7,7 +7,7 @@ class L1LocalizationLossTest(tf.test.TestCase):
 
   def test_returns_correct_loss(self):
     def graph_fn():
-      loss = losses.L1LocalizationLoss()
+      loss = losses.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
       pred = [[0.1, 0.2], [0.7, 0.5]]
       target = [[0.9, 1.0], [0.1, 0.4]]
 
