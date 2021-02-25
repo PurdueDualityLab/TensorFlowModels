@@ -55,7 +55,7 @@ class Yolo_Loss(object):
         call Return:
           float: for the average loss
         """
-    self._classes = tf.cast(classes, dtype=tf.int32)
+    self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
     self._num = tf.cast(len(mask), dtype=tf.int32)
     self._num_extras = tf.cast(num_extras, dtype=tf.int32)
     self._truth_thresh = truth_thresh
