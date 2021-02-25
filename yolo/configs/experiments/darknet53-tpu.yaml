@@ -59,7 +59,7 @@ trainer:
         initial_learning_rate: 0.4
         end_learning_rate: 0.0000
         power: 4.0
-        decay_steps: 29750
+        decay_steps: 299750
     warmup:
       type: 'linear'
       linear:
