@@ -13,7 +13,8 @@ from centernet.configs import centernet as exp_cfg
 class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
 
   def testCenterNetTask(self):
-    config = exp_cfg.CenterNetTask()
+    model_config = exp_cfg.CenterNet(input_size=[512, 512, 3])
+    config = exp_cfg.CenterNetTask(model=model_config)
     task = CenterNetTask(config)
     model = task.build_model()
     out = model(tf.zeros((3, 512, 512, 3)))
