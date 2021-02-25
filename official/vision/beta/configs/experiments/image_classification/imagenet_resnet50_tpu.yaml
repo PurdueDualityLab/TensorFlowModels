@@ -20,7 +20,7 @@ task:
     tfds_name: imagenet2012
     tfds_split: train
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
-    #input_path: 'imagenet-2012-tfrecord/train*'
+    input_path: ''
     is_training: true
     global_batch_size: 512 # 128
     drop_remainder: true
@@ -29,7 +29,7 @@ task:
     tfds_name: imagenet2012
     tfds_split: validation
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
-    #input_path: 'imagenet-2012-tfrecord/valid*'
+    input_path: ''
     is_training: false
     global_batch_size: 512 # 128
     dtype: 'bfloat16'
