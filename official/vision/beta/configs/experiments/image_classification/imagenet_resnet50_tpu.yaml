@@ -17,16 +17,27 @@ task:
     one_hot: true
     label_smoothing: 0.1
   train_data:
-    input_path: 'imagenet-2012-tfrecord/train*'
+    tfds_name: imagenet2012
+    tfds_split: train
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
+    #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 512
+    global_batch_size: 512 # 128
+    drop_remainder: true
     dtype: 'bfloat16'
+    parser:
+      aug_rand: true
   validation_data:
-    input_path: 'imagenet-2012-tfrecord/valid*'
+    tfds_name: imagenet2012
+    tfds_split: validation
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
+    #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: false
-    global_batch_size: 512
+    global_batch_size: 512 # 128
     dtype: 'bfloat16'
     drop_remainder: false
+    parser:
+      aug_rand: true
 trainer:
   train_steps: 499200
   validation_steps: 104
