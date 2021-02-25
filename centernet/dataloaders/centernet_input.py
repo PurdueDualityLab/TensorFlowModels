@@ -23,16 +23,16 @@ class CenterNetParser(parser.Parser):
             images: the image tensor.
             labels: a dict of Tensors that contains labels.
         """
-        tl_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
-        br_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
-        ct_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
-        tl_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
-        br_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
-        ct_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
-        tl_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
-        br_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
-        ct_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
-        tag_masks = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.uint8))
+        tl_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+        br_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+        ct_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+        tl_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        br_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        ct_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        tl_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        br_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        ct_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        tag_masks = tf.zeros((self._max_num_instances), dtype=tf.uint8)
 
         # TODO: input size, output size
         image = decoded_tensors["image"]
@@ -78,21 +78,30 @@ class CenterNetParser(parser.Parser):
                     radius = max(0, int(radius))
                 else:
                     radius = gaussian_rad
-                draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
-                draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
-                draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
+                tl_heatmaps = draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
+                br_heatmaps = draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
+                ct_heatmaps = draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
 
             else:
-                tl_heatmaps[category, ytl, xtl] = 1
-                br_heatmaps[category, ybr, xbr] = 1
-                ct_heatmaps[category, yct, xct] = 1
+                # tl_heatmaps[category, ytl, xtl] = 1
+                # br_heatmaps[category, ybr, xbr] = 1
+                # ct_heatmaps[category, yct, xct] = 1
+                tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, [[category, ytl, xtl]], [1])
+                br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[category, ytl, xtl]], [1])
+                ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[category, ytl, xtl]], [1])
 
-            tl_regrs[tag_ind, :] = [fxtl - xtl, fytl - ytl]
-            br_regrs[tag_ind, :] = [fxbr - xbr, fybr - ybr]
-            ct_regrs[tag_ind, :] = [fxct - xct, fyct - yct]
-            tl_tags[tag_ind] = ytl * output_size[1] + xtl
-            br_tags[tag_ind] = ybr * output_size[1] + xbr
-            ct_tags[tag_ind] = yct * output_size[1] + xct
+            # tl_regrs[tag_ind, :] = [fxtl - xtl, fytl - ytl]
+            # br_regrs[tag_ind, :] = [fxbr - xbr, fybr - ybr]
+            # ct_regrs[tag_ind, :] = [fxct - xct, fyct - yct]
+            # tl_tags[tag_ind] = ytl * output_size[1] + xtl
+            # br_tags[tag_ind] = ybr * output_size[1] + xbr
+            # ct_tags[tag_ind] = yct * output_size[1] + xct
+            tl_regrs = tf.tensor_scatter_nd_update(tl_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxtl - xtl, fytl - ytl])
+            br_regrs = tf.tensor_scatter_nd_update(br_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxbr - xbr, fybr - ybr])
+            ct_regrs = tf.tensor_scatter_nd_update(ct_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxct - xct, fyct - yct])
+            tl_tags = tf.tensor_scatter_nd_update(tl_tags, [[tag_ind]], [ytl * output_size[1] + xtl])
+            br_tags = tf.tensor_scatter_nd_update(br_tags, [[tag_ind]], [ybr * output_size[1] + xbr])
+            ct_tags = tf.tensor_scatter_nd_update(ct_tags, [[tag_ind]], [yct * output_size[1] + xct])
 
         labels = {
             'tl_tags': tl_tags,
