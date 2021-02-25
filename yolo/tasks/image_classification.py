@@ -41,7 +41,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       weights_file = self.task_config.model.darknet_weights_file
       config_file = self.task_config.model.darknet_weights_cfg
 
-      if ('cache' not in weights_file and 'cache' not in config_file):
+      if ('cache://' not in weights_file and 'cache://' not in config_file):
         list_encdec = DarkNetConverter.read(config_file, weights_file)
       else:
         import os

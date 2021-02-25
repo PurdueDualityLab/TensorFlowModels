@@ -13,6 +13,8 @@ task:
       activation: 'mish'  
       use_sync_bn: true
     subdivisions: 1
+    darknet_weights_file: ''
+    darknet_weights_cfg: ''
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
