@@ -124,7 +124,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     """
     losses_config = self.task_config.losses
     if losses_config.one_hot:
-      total_loss = tf.keras.losses.binary_crossentropy(
+      total_loss = tf.keras.losses.categorical_crossentropy(
           labels,
           model_outputs,
           from_logits=True,
