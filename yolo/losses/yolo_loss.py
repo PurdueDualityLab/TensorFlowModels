@@ -134,14 +134,8 @@ class Yolo_Loss(object):
     ],
                        axis=-1)
     wh = tf.math.log(box[..., 2:4] / anchor_grid)
-    wh = tf.where(tf.math.is_nan(wh), tf.cast(0.0, dtype=dtype), wh)
-    wh = tf.where(tf.math.is_inf(wh), tf.cast(0.0, dtype=dtype), wh)
+    wh = box_ops.rm_nan_inf(wh)
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
-
-  def rm_nan_inf(self, x, val = 0.0):
-    x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
-    x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
-    return x
 
   def ce(self, target, output):
     def _smooth_labels(y_true):
@@ -216,8 +210,6 @@ class Yolo_Loss(object):
             K.expand_dims(pred_class, axis=-1), 
             label_smoothing=self._label_smoothing),
         axis=-1) * true_conf
-    
-    #class_loss = self._cls_normalizer * tf.reduce_sum(self.bce(true_class, pred_class), axis = -1) * true_conf
     
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(
