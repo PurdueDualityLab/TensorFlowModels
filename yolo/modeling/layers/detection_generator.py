@@ -94,7 +94,6 @@ class YoloLayer(ks.Model):
     ubox, obns, classifics = tf.split(data, [4, 1, -1], axis=-1)
     classes = tf.shape(classifics)[-1]
     obns = tf.squeeze(obns, axis=-1)
-    #obns = self.rm_nan_inf(obns)
     _, _, boxes = self.parse_yolo_box_predictions(
         ubox,
         tf.cast(shape[1], data.dtype),
