@@ -55,7 +55,7 @@ def test_classification_input():
 
 def test_classification_pipeline():
   dataset, dsp = test_classification_input()
-  for l, (i, j) in enumerate(dsp):
+  for l, (i, j) in enumerate(dataset):
     plt.imshow(i[0].numpy())
     plt.show()
     if l > 30:
@@ -69,7 +69,7 @@ def test_pipeline():
   shind = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   ltime = time.time()
-  for l, (i, j) in enumerate(dataset):
+  for l, (i, j) in enumerate(dsp):
     ftime = time.time()
     print(ftime - ltime)
    
@@ -97,7 +97,7 @@ def test_pipeline():
     plt.show()
     ltime = time.time()
 
-    if l >= 5:
+    if l >= 10:
       break
 
 
@@ -122,7 +122,7 @@ def time_pipeline():
   print(f"total time {sum(times)}")
 
 if __name__ == '__main__':
-  time_pipeline()
+  test_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

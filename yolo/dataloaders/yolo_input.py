@@ -156,24 +156,40 @@ class Parser(parser.Parser):
         """
 
     image = data['image'] / 255
+
+    # / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
+    # slow as balls 20 second addition at batch size 128
+    # image = tf.image.rgb_to_hsv(image)
+    # i_h, i_s, i_v = tf.split(image, 3, axis=-1)
+
+    # if self._aug_rand_hue:
+    #   delta = 0.1 #preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
+    #   i_h = i_h + delta  # Hue
+    #   i_h = tf.clip_by_value(i_h, 0.0, 1.0)
+    # if self._aug_rand_saturation:
+    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
+    #   i_s = i_s * delta
+    # if self._aug_rand_brightness:
+    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
+    #   i_v = i_v * delta
+
+    # image = tf.concat([i_h, i_s, i_v], axis=-1)
+    # image = tf.image.hsv_to_rgb(image)
+
     if self._aug_rand_hue:
-      delta = preprocessing_ops.rand_uniform_strong(
-          -0.1, 0.1
-      )  # tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
+      delta = preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation:
-      delta = preprocessing_ops.rand_scale(
-          0.75
-      )  # tf.random.uniform([], minval= 0.5,maxval=1.1, seed=self._seed, dtype=tf.float32)
+      delta = preprocessing_ops.rand_scale(1.5)  
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness:
-      delta = preprocessing_ops.rand_scale(
-          0.75
-      )  # tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
+      delta = preprocessing_ops.rand_scale(1.5)
       image *= delta
+    image = tf.clip_by_value(image, 0.0, 1.0)
+
 
     # stddev = tf.random.uniform([],
     #                            minval=0,
@@ -220,8 +236,7 @@ class Parser(parser.Parser):
       image = tf.image.resize(image, (self._image_w, self._image_h))
       boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info)
 
-    
-    image = tf.clip_by_value(image, 0.0, 1.0)
+  
     num_dets = tf.shape(classes)[0]
     # padding
     classes = preprocess_ops.clip_or_pad_to_fixed_size(classes,
@@ -230,7 +245,7 @@ class Parser(parser.Parser):
 
 
     image = tf.cast(image, self._dtype)
-    if self._fixed_size and not self._cutmix and not self._mosaic:
+    if self._fixed_size  and not self._mosaic: #and not self._cutmix
       boxes = box_utils.yxyx_to_xcycwh(boxes)
       best_anchors = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
@@ -372,3 +387,4 @@ class Parser(parser.Parser):
       return self._postprocess_fn if not self._fixed_size or self._mosaic else None
     else:
       return None
+  
