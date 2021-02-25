@@ -45,10 +45,10 @@ task:
 trainer:
   train_steps: 300000 # epochs: 120
   validation_steps: 97 # size of validation data
-  validation_interval: 2500
-  steps_per_loop: 2500
-  summary_interval: 2500
-  checkpoint_interval: 2500
+  validation_interval: 10 #2500
+  steps_per_loop: 10 #2500
+  summary_interval: 10 #2500
+  checkpoint_interval: 10 #2500
   optimizer_config:
     optimizer:
       type: 'sgd'
