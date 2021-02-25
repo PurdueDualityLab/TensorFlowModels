@@ -25,8 +25,6 @@ task:
     global_batch_size: 512 # 128
     drop_remainder: true
     dtype: 'bfloat16'
-    parser:
-      aug_rand: true
   validation_data:
     tfds_name: imagenet2012
     tfds_split: validation
@@ -36,8 +34,6 @@ task:
     global_batch_size: 512 # 128
     dtype: 'bfloat16'
     drop_remainder: false
-    parser:
-      aug_rand: true
 trainer:
   train_steps: 499200
   validation_steps: 104
