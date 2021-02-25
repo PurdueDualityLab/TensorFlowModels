@@ -31,6 +31,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
   """A task for image classification."""
 
   def initialize(self, model: tf.keras.Model):
+    
     if self.task_config.load_darknet_weights:
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter

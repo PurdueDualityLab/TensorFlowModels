@@ -2,6 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
+  load_darknet_weights: false
   model:
     num_classes: 1000
     input_size: [256, 256, 3]
