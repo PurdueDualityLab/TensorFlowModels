@@ -133,7 +133,7 @@ class Yolo_Loss(object):
         K.expand_dims(xy[..., 1] * height, axis=-1)
     ],
                        axis=-1)
-    wh = tf.math.log(tf.math.divide_no_nan(box[..., 2:4] / anchor_grid))
+    wh = tf.math.log(box[..., 2:4] / anchor_grid)
     # wh = tf.math.log(box[..., 2:4] / (anchor_grid + K.epsilon()))
     # wh = tf.where(tf.math.is_nan(wh), tf.cast(0.0, dtype=dtype), wh)
     # wh = tf.where(tf.math.is_inf(wh), tf.cast(0.0, dtype=dtype), wh)

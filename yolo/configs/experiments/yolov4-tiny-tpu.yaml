@@ -59,7 +59,7 @@ task:
       seed: 10
       letter_box: false
       cutmix: false
-      mosaic: true
+      mosaic: false
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
