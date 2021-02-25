@@ -31,7 +31,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
   """A task for image classification."""
 
   def initialize(self, model: tf.keras.Model):
-    
+
     if self.task_config.load_darknet_weights:
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter
@@ -253,7 +253,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
 
-    tf.print(logs, end='\r')
+    # tf.print(logs, end='\r')
 
     # ret = '\033[F' * (len(logs.keys()))
     # tf.print(ret, end='\n')
