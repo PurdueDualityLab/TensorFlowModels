@@ -122,8 +122,8 @@ def time_pipeline():
   print(f"total time {sum(times)}")
 
 if __name__ == '__main__':
-  # time_pipeline()
-  test_classification_pipeline()
+  time_pipeline()
+  # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
 

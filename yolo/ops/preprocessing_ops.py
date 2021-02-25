@@ -117,6 +117,7 @@ def get_image_shape(image):
   return height, width 
 
 
+
 # do all the ops needed
 def random_op_image(image, jfactor, zfactor, tfactor, letter_box = True):
   image, jitter_info = random_jitter(image, jfactor)

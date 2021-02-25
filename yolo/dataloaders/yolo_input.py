@@ -156,44 +156,36 @@ class Parser(parser.Parser):
         """
 
     image = data['image'] / 255
-
-    # / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    # slow as balls 20 second addition at batch size 128
-    image = tf.image.rgb_to_hsv(image)
-    i_h, i_s, i_v = tf.split(image, 3, axis=-1)
     if self._aug_rand_hue:
       delta = preprocessing_ops.rand_uniform_strong(
           -0.1, 0.1
       )  # tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
-      i_h = i_h + delta  # Hue
-      i_h = tf.clip_by_value(i_h, 0.0, 1.0)
+      image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation:
       delta = preprocessing_ops.rand_scale(
           0.75
       )  # tf.random.uniform([], minval= 0.5,maxval=1.1, seed=self._seed, dtype=tf.float32)
-      i_s = i_s * delta
+      image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness:
       delta = preprocessing_ops.rand_scale(
           0.75
       )  # tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
-      i_v = i_v * delta
-    image = tf.concat([i_h, i_s, i_v], axis=-1)
-    image = tf.image.hsv_to_rgb(image)
+      image *= delta
 
-    stddev = tf.random.uniform([],
-                               minval=0,
-                               maxval=40 / 255,
-                               seed=self._seed,
-                               dtype=tf.float32)
-    noise = tf.random.normal(
-        shape=tf.shape(image), mean=0.0, stddev=stddev, seed=self._seed)
-    noise = tf.math.minimum(noise, 0.5)
-    noise = tf.math.maximum(noise, 0)
-    image += noise
-    image = tf.clip_by_value(image, 0.0, 1.0)
+    # stddev = tf.random.uniform([],
+    #                            minval=0,
+    #                            maxval=40 / 255,
+    #                            seed=self._seed,
+    #                            dtype=tf.float32)
+    # noise = tf.random.normal(
+    #     shape=tf.shape(image), mean=0.0, stddev=stddev, seed=self._seed)
+    # noise = tf.math.minimum(noise, 0.5)
+    # noise = tf.math.maximum(noise, 0)
+    # image += noise
+    # image = tf.clip_by_value(image, 0.0, 1.0)
 
 
     if self._random_flip:
