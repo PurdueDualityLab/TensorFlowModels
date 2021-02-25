@@ -3,6 +3,9 @@ import numpy as np
 
 from centernet import losses
 
+LOG_2 = np.log(2)
+LOG_3 = np.log(3)
+
 class PenaltyReducedLogisticFocalLossTest(tf.test.TestCase):
   """Testing loss function from Equation (1) in [1].
   [1]: https://arxiv.org/abs/1904.07850
