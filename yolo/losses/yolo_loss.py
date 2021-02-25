@@ -185,6 +185,7 @@ class Yolo_Loss(object):
     self.print_error(pred_box)
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
+    # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
     true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
