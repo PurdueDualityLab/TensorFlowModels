@@ -26,7 +26,7 @@ task:
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 512 # 128
+    global_batch_size: 4096 # 128
     dtype: 'bfloat16'
     parser:
       aug_rand: true
@@ -36,18 +36,18 @@ task:
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/downloads/manual'
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: false
-    global_batch_size: 512 # 128
+    global_batch_size: 4096 # 128
     dtype: 'bfloat16'
     drop_remainder: true
     parser:
       aug_rand: true
 trainer:
   train_steps: 37500 # epochs: 120
-  validation_steps: 100 # size of validation data
-  validation_interval: 313
-  steps_per_loop: 313
-  summary_interval: 313
-  checkpoint_interval: 313
+  validation_steps: 12 # size of validation data
+  validation_interval: 312
+  steps_per_loop: 312
+  summary_interval: 312
+  checkpoint_interval: 312
   optimizer_config:
     optimizer:
       type: 'sgd'
