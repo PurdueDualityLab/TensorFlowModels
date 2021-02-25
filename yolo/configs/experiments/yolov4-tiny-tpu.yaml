@@ -42,13 +42,13 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: ''
+    global_batch_size: 64 #batch size 
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     tfds_download: true
     tfds_name: coco
     tfds_split: train
     drop_remainder: true
-    dtype: float16
+    dtype: bfloat16
     input_path: ''
     is_training: true
     shuffle_buffer_size: 10000
@@ -56,21 +56,21 @@ task:
       fixed_size: true
       image_h: 512
       image_w: 512
+      seed: 10
       letter_box: false
       cutmix: false
       mosaic: true
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
-    tfds_data_dir: ''
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     tfds_download: true
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: validation
-    dtype: float16
+    dtype: bfloat16
     input_path: ''
     is_training: false
     shuffle_buffer_size: 10000
-    drop_remainder: True
     parser:
       image_h: 512
       image_w: 512
