@@ -1,8 +1,8 @@
 runtime:
   distribution_strategy: 'multi_worker_mirrored'
-  mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 6
+  mixed_precision_dtype: 'float32'
+  #loss_scale: "dynamic"
+  num_gpus: 8
 task:
   model:
     num_classes: 1001
@@ -13,7 +13,7 @@ task:
         model_id: 'cspdarknet53'
     norm_activation:
       activation: 'mish'
-      use_sync_bn: true
+      use_sync_bn: True
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
@@ -21,25 +21,27 @@ task:
   train_data:
     tfds_name: imagenet2012
     tfds_split: train
+    tfds_data_dir: /depot/davisjam/data/tensorflow_datasets/
     #input_path: 'imagenet-2012-tfrecord/train*'
     is_training: true
-    global_batch_size: 128
-    dtype: 'float16'
+    global_batch_size: 256
+    dtype: 'float32'
     parser:
       aug_rand: true
   validation_data:
     tfds_name: imagenet2012
     tfds_split: validation
+    tfds_data_dir: /depot/davisjam/data/tensorflow_datasets/
     #input_path: 'imagenet-2012-tfrecord/valid*'
     is_training: true
-    global_batch_size: 128
-    dtype: 'float16'
+    global_batch_size: 256
+    dtype: 'float32'
     drop_remainder: false
     parser:
       aug_rand: true
 trainer:
-  train_steps: 1200000 # epochs: 120
-  validation_steps: 400 # size of validation data
+  train_steps: 600000 # epochs: 120
+  validation_steps: 200 # size of validation data
   validation_interval: 10000
   steps_per_loop: 10000
   summary_interval: 10000
@@ -52,10 +54,10 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.1
-        end_learning_rate: 0.0001
+        initial_learning_rate: 0.2
+        end_learning_rate: 0.0002
         power: 4.0
-        decay_steps: 1190000
+        decay_steps: 599000
     warmup:
       type: 'linear'
       linear:
