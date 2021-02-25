@@ -72,14 +72,15 @@ def _gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
     exponent = (-1 * (x ** 2) - (y ** 2)) / (2 * sigma ** 2)
     return tf.math.exp(exponent)
 
-def draw_gaussian(heatmap, center, radius, k=1):
+def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
     """
     Draws a gaussian heatmap around a center point given a radius.
     Params:
         heatmap (tf.Tensor): heatmap placeholder to fill
+        category (int): class ID of the object being drawn
         center (int): integer for center of gaussian
         radius (int): integer for radius of gaussian
-        k (int): scaling factor for gaussian
+        scaling_factor (int): scaling factor for gaussian
     """
 
     diameter = 2 * radius + 1
@@ -92,8 +93,9 @@ def draw_gaussian(heatmap, center, radius, k=1):
     left, right = min(x, radius), min(width - x, radius + 1)
     top, bottom = min(y, radius), min(height - y, radius + 1)
 
-    masked_heatmap  = heatmap[y - top:y + bottom, x - left:x + right]
+    masked_heatmap  = heatmap[category, y - top:y + bottom, x - left:x + right]
     masked_gaussian = gaussian[radius - top:radius + bottom, radius - left:radius + right]
     # TODO: make sure this replicates original functionality
     # np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
-    masked_heatmap = tf.math.maximum(masked_heatmap, masked_gaussian * k)
+    masked_heatmap = tf.math.maximum(masked_heatmap, masked_gaussian * scaling_factor)
+    heatmap.assign(masked_heatmap)

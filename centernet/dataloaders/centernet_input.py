@@ -6,10 +6,12 @@ class CenterNetParser(parser.Parser):
     def __init__(
         self,
         num_classes: int,
+        max_num_instances: int,
         gaussian_iou: float
     ):
-        self.num_classes = num_classes
-        self.gaussian_io = gaussian_iou
+        self._num_classes = num_classes
+        self._max_num_instances = max_num_instances
+        self._gaussian_iou = gaussian_iou
 
     def _parse_train_data(self, decoded_tensors):
         """Generates images and labels that are usable for model training.
@@ -21,16 +23,16 @@ class CenterNetParser(parser.Parser):
             images: the image tensor.
             labels: a dict of Tensors that contains labels.
         """
-        tl_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
-        br_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
-        ct_heatmaps = tf.zeros((categories, output_size[0], output_size[1]), dtype=tf.float32)
-        tl_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
-        br_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
-        ct_regrs = tf.zeros((max_tag_len, 2), dtype=tf.float32)
-        tl_tags = tf.zeros((max_tag_len), dtype=tf.int64)
-        br_tags = tf.zeros((max_tag_len), dtype=tf.int64)
-        ct_tags = tf.zeros((max_tag_len), dtype=tf.int64)
-        tag_masks = tf.zeros((max_tag_len), dtype=tf.uint8)
+        tl_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
+        br_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
+        ct_heatmaps = tf.Variable(tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32))
+        tl_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
+        br_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
+        ct_regrs = tf.Variable(tf.zeros((self._max_num_instances, 2), dtype=tf.float32))
+        tl_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
+        br_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
+        ct_tags = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.int64))
+        tag_masks = tf.Variable(tf.zeros((self._max_num_instances), dtype=tf.uint8))
 
         # TODO: input size, output size
         image = decoded_tensors["image"]
@@ -72,13 +74,13 @@ class CenterNetParser(parser.Parser):
                 height = math.ceil(height * height_ratio)
 
                 if gaussian_rad == -1:
-                    radius = gaussian_radius((height, width), self.gaussian_iou)
+                    radius = gaussian_radius((height, width), self._gaussian_iou)
                     radius = max(0, int(radius))
                 else:
                     radius = gaussian_rad
-                draw_gaussian(tl_heatmaps[category], [xtl, ytl], radius)
-                draw_gaussian(br_heatmaps[category], [xbr, ybr], radius)
-                draw_gaussian(ct_heatmaps[category], [xct, yct], radius, delte=5)
+                draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
+                draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
+                draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
 
             else:
                 tl_heatmaps[category, ytl, xtl] = 1
