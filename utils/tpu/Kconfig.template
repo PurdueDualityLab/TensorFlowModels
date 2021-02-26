@@ -1,0 +1,75 @@
+mainmenu "TPU Configuration"
+
+config AUTH_KEY
+	string "Authorization Key"
+	default {AUTH_KEY}
+
+choice
+	prompt "Zone"
+	default TPU_ZONE__US_CENTRAL1_F
+	config TPU_ZONE__US_CENTRAL1_A
+		bool "us-central1-a"
+	config TPU_ZONE__US_CENTRAL1_F
+		bool "us-central1-f"
+	config TPU_ZONE__EUROPE_WEST4_A
+		bool "europe_west4_a"
+endchoice
+
+
+config VM_NAME
+	string "VM Name"
+	default "yolo"
+
+config TPU_NAME
+	string "TPU Name"
+	default VM_NAME
+
+choice
+	prompt "CPU Size"
+	default CPU_SIZE__E2_STANDARD_16
+	config CPU_SIZE__E2_STANDARD_16
+		bool "e2-standard-16"
+endchoice
+
+choice
+	prompt "TPU Size"
+	default TPU_SIZE__V2_64 if TPU_ZONE__US_CENTRAL1_A
+	default TPU_SIZE__V2_8 if TPU_ZONE__US_CENTRAL1_F
+	default TPU_SIZE__V3_8 if TPU_ZONE__EUROPE_WEST4_A
+	if TPU_ZONE__US_CENTRAL1_F
+		config TPU_SIZE__V2_8
+			bool "v2-8"
+	endif
+	if TPU_ZONE__US_CENTRAL1_A
+		config TPU_SIZE__V2_64
+			bool "v2-64"
+	endif
+	if TPU_ZONE__EUROPE_WEST4_A
+		config TPU_SIZE__V3_8
+			bool "v3-8"
+	endif
+endchoice
+
+config REPO
+	string "Git Repo URL"
+	default "https://github.com/PurdueCAM2Project/TensorFlowModels"
+
+config BRANCH_NAME
+	string "Git Branch Name"
+	default "yolo_debug"
+
+config EXPERIMENT_NAME
+	string "YAML Experiment Name"
+	default "yolov4-coco-tpuV2-256"
+
+config BUCKET
+	string "GCS Bucket"
+	default "gs://tensorflow2/"
+
+config MODEL_DIR
+	string "Model Directory"
+	default EXPERIMENT_NAME
+
+config LOG_FILE
+	string "Log File"
+	default EXPERIMENT_NAME
