@@ -150,7 +150,7 @@ class Yolo_Loss(object):
         width, height, batch_size, y_true, y_pred, tf.float32)
 
     y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, num, self._classes + 5]),
+        tf.reshape(y_pred, [batch_size, width, height, num, -1]),
         tf.float32)
 
     fwidth = tf.cast(width, y_pred.dtype)
