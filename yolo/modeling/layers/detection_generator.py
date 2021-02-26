@@ -130,18 +130,19 @@ class YoloLayer(ks.Model):
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
 
-    object_scores, boxes, class_scores = nms_ops.sort_drop(object_scores , boxes, class_scores, self._max_boxes)
+    # object_scores, boxes, class_scores = nms_ops.sort_drop(object_scores , boxes, class_scores, self._max_boxes)
 
-    mask = tf.fill(tf.shape(object_scores), tf.cast(self._thresh, dtype=object_scores.dtype))
-    mask = tf.math.ceil(tf.nn.relu(object_scores - mask))
+    # mask = tf.fill(tf.shape(object_scores), tf.cast(self._thresh, dtype=object_scores.dtype))
+    # mask = tf.math.ceil(tf.nn.relu(object_scores - mask))
+
     boxes, class_scores, object_scores = nms_ops.nms(
-        boxes  * tf.expand_dims(mask, axis = -1),
-        class_scores * tf.expand_dims(mask, axis = -1),
-        object_scores * mask,
+        boxes,
+        class_scores,
+        object_scores,
         self._max_boxes,
+        self._thresh,
         self._nms_thresh,
-        sorted=False,
-        one_hot=True)
+        use_classes=False)
 
     return {
         'bbox': boxes,

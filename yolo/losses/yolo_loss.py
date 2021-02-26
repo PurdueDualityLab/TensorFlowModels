@@ -136,8 +136,8 @@ class Yolo_Loss(object):
       return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing)
     target = _smooth_labels(target)
     output = tf.clip_by_value(output, K.epsilon(), 1. - K.epsilon())
-    loss = -tf.math.xlogy(target, output + K.epsilon())
-    #loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
+    loss = -target * tf.math.log(output + K.epsilon())
+    loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
     return loss
 
   def __call__(self, y_true, y_pred):

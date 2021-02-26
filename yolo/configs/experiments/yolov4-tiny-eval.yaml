@@ -8,8 +8,8 @@ task:
   init_checkpoint: ''
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: false #true
-  darknet_load_decoder: false #true
+  load_darknet_weights: true
+  darknet_load_decoder: true
   model:
     base: 
       backbone:

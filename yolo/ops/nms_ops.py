@@ -81,22 +81,33 @@ def nms(boxes,
         classes,
         confidence,
         k,
-        iou_thresh,
-        sorted=False,
-        one_hot=True):
-  # if one_hot:
-  confidence = tf.reduce_max(classes, axis=-1)
-  classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
+        pre_nms_thresh,
+        nms_thresh,
+        limit_pre_thresh = False, 
+        use_classes=True):
 
-  #if not sorted:
+
+
+  
+  if limit_pre_thresh:
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+
+  mask = tf.fill(tf.shape(confidence), tf.cast(pre_nms_thresh, dtype=confidence.dtype))
+  mask = tf.math.ceil(tf.nn.relu(confidence - mask))
+  confidence = confidence * mask
+  mask = tf.expand_dims(mask, axis = -1)
+  boxes = boxes * mask
+  classes = classes * mask
+
+  if use_classes:
+    confidence = tf.reduce_max(classes, axis=-1)
+  confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+  
+  classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
+  boxes, classes, confidence = segment_nms(boxes, classes, confidence, k, nms_thresh)
   confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
   classes = tf.squeeze(classes, axis=-1)
-
-  box_l, class_l, conf_l = segment_nms(boxes, classes, confidence, k, iou_thresh)
-  conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)
-  class_l = tf.squeeze(class_l, axis=-1)
-
-  return box_l, class_l, conf_l
+  return boxes, classes, confidence
 
 
 
