@@ -147,7 +147,7 @@ class Yolo_Loss(object):
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
     y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, self._num, -1])#self._classes + 5]),
+        tf.reshape(y_pred, [batch_size, width, height, self._num, -self._classes + 5]),
         tf.float32)
     grid_points, anchor_grid, y_true = self._get_label_attributes(
         width, height, batch_size, y_true, y_pred, y_pred.dtype)
