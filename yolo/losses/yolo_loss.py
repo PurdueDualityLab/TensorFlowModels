@@ -144,13 +144,14 @@ class Yolo_Loss(object):
     # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
-
-    y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, self._num, self._classes + 5]),
-        tf.float32)
+    num = tf.shape(y_true)[-2]
 
     grid_points, anchor_grid, y_true = self._get_label_attributes(
-        width, height, batch_size, y_true, y_pred, y_pred.dtype)
+        width, height, batch_size, y_true, y_pred, tf.float32)
+
+    y_pred = tf.cast(
+        tf.reshape(y_pred, [batch_size, width, height, num, self._classes + 5]),
+        tf.float32)
 
     fwidth = tf.cast(width, y_pred.dtype)
     fheight = tf.cast(height, y_pred.dtype)
@@ -169,7 +170,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
-        depth= 80, #self._classes,
+        depth= self._classes,
         dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
