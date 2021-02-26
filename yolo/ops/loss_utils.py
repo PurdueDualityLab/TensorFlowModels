@@ -18,9 +18,10 @@ def _build_grid_points(lwidth, lheight, num, dtype):
   return x_y
 
 
-def _build_anchor_grid(width, height, anchors, num, dtype):
+def _build_anchor_grid(width, height, anchors, dtype): #, num, dtype):
   with tf.name_scope('anchor_grid'):
     """ get the transformed anchor boxes for each dimention """
+    num = tf.shape(anchors)[0]
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, -1])
     #anchors = tf.reshape(anchors, [1, num * 2])
@@ -58,7 +59,7 @@ class GridGenerator(object):
     anchor_grid = _build_anchor_grid(
         width, height,
         tf.cast(self._anchors, self.dtype) /
-        tf.cast(self._scale_anchors * width, self.dtype), self._num, self.dtype)
+        tf.cast(self._scale_anchors * width, self.dtype), self.dtype) #self._num, self.dtype)
     grid_points = self._extend_batch(grid_points, batch_size)
     anchor_grid = self._extend_batch(anchor_grid, batch_size)
     return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
