@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 
 
-@tf.function(experimental_relax_shapes=True)
 def _build_grid_points(lwidth, lheight, num, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
   with tf.name_scope('center_grid'):
@@ -19,7 +18,6 @@ def _build_grid_points(lwidth, lheight, num, dtype):
   return x_y
 
 
-@tf.function(experimental_relax_shapes=True)
 def _build_anchor_grid(width, height, anchors, num, dtype):
   with tf.name_scope('anchor_grid'):
     """ get the transformed anchor boxes for each dimention """
@@ -46,11 +44,10 @@ class GridGenerator(object):
     self._anchors = tf.convert_to_tensor(anchors)
     return
 
-  @tf.function(experimental_relax_shapes=True)
   def _extend_batch(self, grid, batch_size):
     return tf.tile(grid, [batch_size, 1, 1, 1, 1])
 
-  @tf.function(experimental_relax_shapes=True)
+
   def __call__(self, width, height, batch_size, dtype=None):
     if dtype is None:
       self.dtype = tf.keras.backend.floatx()
