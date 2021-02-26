@@ -219,8 +219,8 @@ class YoloTask(base_task.Task):
 
     # tf.print(logs['total_loss'], "\t", end='\r')
     tf.print(logs,  end='\n')
-    # ret = '\033[F' * (len(logs.keys()) + 1)
-    # tf.print(ret, end='\n')
+    ret = '\033[F' * (len(logs.keys()) + 1)
+    tf.print(ret, end='\n')
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
@@ -297,6 +297,7 @@ class YoloTask(base_task.Task):
     # gen_boxes = params.is_training
     if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
+      params = self.task_config.train_data
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
                          1) * model_base_cfg.boxes_per_scale
@@ -307,7 +308,7 @@ class YoloTask(base_task.Task):
           decoder_fn=decoder.decode,
           parser_fn=None)
       anchors = reader.read(
-          k=9, image_width=params.parser.image_w, input_context=input_context)
+          k=9, image_width=params.parser.image_w, input_context=None)
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
