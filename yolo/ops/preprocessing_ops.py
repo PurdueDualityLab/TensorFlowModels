@@ -16,9 +16,20 @@ def rand_scale(val, dtype=tf.float32):
     return scale
   return 1.0 / scale
 
+def _boolean_mask(data, mask):
+  data = data * tf.cast(mask, data.dtype)
+  if tf.shape(tf.shape(data)) == 2: 
+    data = tf.reshape(data, [-1])
+  else:
+    data = tf.reshape(data, [tf.shape(data)[0], -1])
+  return data
+
+
 def shift_zeros(data, mask, axis=-2, fill=0):
   zeros = tf.zeros_like(data) + fill
   data_flat = tf.boolean_mask(data, mask)
+  
+  # tf.print(tf.shape(data_flat), tf.shape(data))
   nonzero_lens = tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=-2)
   nonzero_mask = tf.sequence_mask(nonzero_lens, maxlen=tf.shape(mask)[-2])
   perm1 = tf.range(0, tf.shape(tf.shape(data))[0] - 2)
@@ -34,6 +45,19 @@ def shift_zeros(data, mask, axis=-2, fill=0):
   nonzero_data = tf.tensor_scatter_nd_update(
       zeros, tf.cast(tf.where(nonzero_mask), dtype=tf.int32), data_flat)
   return nonzero_data
+
+def shift_zeros2(mask, squeeze = True, fill = 0):
+  mask = tf.cast(mask, tf.float32)
+  if squeeze: 
+    mask = tf.squeeze(mask, axis = -1)
+
+  k = tf.shape(mask)[-1]
+  mask, ind = tf.math.top_k(mask, k=k, sorted = True)
+  return mask, ind
+
+def gather_nds(data, ind):
+
+  return data
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -53,16 +77,37 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
   if yxyx:
     boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
-
   mask = w > 0
-  x = shift_zeros(x, mask)  # tf.boolean_mask(x, mask)
-  y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
-  w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
-  h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-  classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill=-1)
-  classes = tf.squeeze(classes, axis=-1)
-  boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
+  # tf.print(tf.shape(x), tf.shape(mask))
+  mask, ind = shift_zeros2(mask)
+  ind_m = tf.ones_like(ind) * tf.expand_dims(
+      tf.range(0,
+               tf.shape(ind)[0]), axis=-1)
+  ind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis=-1)
+  
 
+  classes_shape = tf.shape(classes)
+  classes_ = tf.gather_nd(classes, ind)
+  classes = (tf.reshape(classes_, classes_shape) * tf.cast(mask, classes.dtype)) - (1 - tf.cast(mask, x.dtype))
+
+  mask = tf.expand_dims(tf.cast(mask, x.dtype), axis = -1)
+  x_shape = tf.shape(x)
+  x_ = tf.gather_nd(tf.squeeze(x), ind)
+  x = tf.reshape(x_, x_shape) * mask
+
+  y_shape = tf.shape(y)
+  y_ = tf.gather_nd(tf.squeeze(y), ind)
+  y = tf.reshape(y_, y_shape) * mask
+
+  w_shape = tf.shape(w)
+  w_ = tf.gather_nd(tf.squeeze(w), ind)
+  w = tf.reshape(w_, w_shape) * mask
+
+  h_shape = tf.shape(h)
+  h_ = tf.gather_nd(tf.squeeze(h), ind)
+  h = tf.reshape(h_, h_shape) * mask
+
+  boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
   boxes = _pad_max_instances(boxes, num_instances, pad_axis=-2, pad_value=0)
   classes = _pad_max_instances(classes, num_instances, pad_axis=-1, pad_value=-1)
   if yxyx:
@@ -71,7 +116,7 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
 
 def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_upper_bound, keep_thresh = 0.25):
   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
-  y_lower_bound = tf.cast(y_lower_bound, boxes.dtype)
+  y_lower_bound = tf.cast(y_lower_bound, boxes.dtype) 
   x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
   y_upper_bound = tf.cast(y_upper_bound, boxes.dtype)
   keep_thresh = tf.cast(keep_thresh, boxes.dtype)

@@ -214,12 +214,14 @@ class Parser(parser.Parser):
       zfactor = 0.0
 
     image_shape = tf.shape(image)[:2]
-    image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info)
-
     boxes = box_ops.denormalize_boxes(boxes, image_shape)
     boxes = box_ops.jitter_boxes(boxes, 0.025)
     boxes = box_ops.normalize_boxes(boxes, image_shape)
+    
+    image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
+    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info)
+
+
 
     if self._letter_box and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(

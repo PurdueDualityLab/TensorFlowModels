@@ -69,7 +69,7 @@ def test_pipeline():
   shind = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   ltime = time.time()
-  for l, (i, j) in enumerate(dsp):
+  for l, (i, j) in enumerate(dataset):
     ftime = time.time()
     print(ftime - ltime)
    
@@ -122,7 +122,7 @@ def time_pipeline():
   print(f"total time {sum(times)}")
 
 if __name__ == '__main__':
-  test_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
