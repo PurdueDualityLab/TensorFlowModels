@@ -2,12 +2,12 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 
 
-def _build_grid_points(lwidth, lheight, num, dtype):
+def _build_grid_points(lwidth, lheight, anchors, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
   with tf.name_scope('center_grid'):
     y = tf.range(0, lheight)
     x = tf.range(0, lwidth)
-
+    num = tf.shape(anchors)[0]
     x_left = tf.tile(
         tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
     y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
@@ -55,7 +55,7 @@ class GridGenerator(object):
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype
-    grid_points = _build_grid_points(width, height, self._num, self.dtype)
+    grid_points = _build_grid_points(width, height, anchors, self.dtype)
     anchor_grid = _build_anchor_grid(
         width, height,
         tf.cast(self._anchors, self.dtype) /
