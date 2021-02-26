@@ -88,7 +88,7 @@ class YoloLayer(ks.Model):
     shape = tf.shape(inputs)
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     batchsize, height, width = shape[0], shape[1], shape[2]
-    data = tf.reshape(inputs, [batchsize, height, width, len_mask, -1])
+    data = tf.reshape(inputs, [batchsize, height, width, len_mask, self._classes + 5])
     centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
     #boxes, obns_scores, class_scores = tf.split(data, [4, 1, -1], axis=-1)
     boxes, obns_scores, class_scores = tf.split(data, [4, 1, self._classes], axis=-1)
