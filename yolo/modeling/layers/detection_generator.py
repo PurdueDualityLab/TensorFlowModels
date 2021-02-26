@@ -8,7 +8,6 @@ from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.ops import nms_ops
 
-
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
 
@@ -75,122 +74,78 @@ class YoloLayer(ks.Model):
                                  anchor_grid,
                                  grid_points,
                                  scale_x_y=1.0):
-    # with tf.name_scope("decode_box_predictions_yolo"):
+
     ubxy, pred_wh = tf.split(unscaled_box, 2, axis=-1)
     pred_xy = tf.math.sigmoid(ubxy) * scale_x_y - 0.5 * (scale_x_y - 1)
     x, y = tf.split(pred_xy, 2, axis=-1)
     box_xy = tf.concat([x / width, y / height], axis=-1) + grid_points
     box_wh = tf.math.exp(pred_wh) * anchor_grid
     pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-    return pred_xy, pred_wh, pred_box
+    pred_box = box_utils.xcycwh_to_yxyx(pred_box)
+    return pred_box
 
   def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
     shape = tf.shape(inputs)
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
-    data = tf.reshape(inputs, [shape[0], shape[1], shape[2], len_mask, -1])
-    centers, anchors = generator(shape[1], shape[2], shape[0], dtype=data.dtype)
+    batchsize, height, width = shape[0], shape[1], shape[2]
+    data = tf.reshape(inputs, [batchsize, height, width, len_mask, -1])
+    centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
+    boxes, obns_scores, class_scores = tf.split(data, [4, 1, -1], axis=-1)
+    classes = tf.shape(class_scores)[-1]
 
-    # compute the true box output values
-    ubox, obns, classifics = tf.split(data, [4, 1, -1], axis=-1)
-    classes = tf.shape(classifics)[-1]
-    obns = tf.squeeze(obns, axis=-1)
-    _, _, boxes = self.parse_yolo_box_predictions(
-        ubox,
-        tf.cast(shape[1], data.dtype),
-        tf.cast(shape[2], data.dtype),
+    boxes = self.parse_yolo_box_predictions(
+        boxes,
+        tf.cast(height, data.dtype),
+        tf.cast(width, data.dtype),
         anchors,
         centers,
         scale_x_y=scale_xy)
-    box = box_utils.xcycwh_to_yxyx(boxes)
+    obns_scores = tf.math.sigmoid(obns_scores)
+    class_scores = tf.math.sigmoid(class_scores) * obns_scores
 
-    # computer objectness and generate grid cell mask for where objects are located in the image
-    objectness = tf.expand_dims(tf.math.sigmoid(obns), axis=-1)
-    scaled = tf.math.sigmoid(classifics) * objectness
-    objectness = tf.reduce_max(scaled, axis = -1, keepdims = True)
-    # tf.print(tf.shape(objectness))
-
-    # compute the mask of where objects have been located
-    mask_check = tf.fill(
-        tf.shape(objectness), tf.cast(self._thresh, dtype=objectness.dtype))
-    sub = tf.math.ceil(tf.nn.relu(objectness - mask_check))
-    num_dets = tf.reduce_sum(sub, axis=(1, 2, 3))
-
-    box = box * sub
-    scaled = scaled * sub
-    objectness = objectness * sub
-
-    mask = tf.cast(tf.ones_like(sub), dtype=tf.bool)
-    mask = tf.reduce_any(mask, axis=(0, -1))
-
-    # reduce the dimentions of the predictions to (batch size, max predictions, -1)
-    box = tf.boolean_mask(box, mask, axis=1)
-    classifications = tf.boolean_mask(scaled, mask, axis=1)
-    objectness = tf.squeeze(tf.boolean_mask(objectness, mask, axis=1), axis=-1)
-
-    objectness, box, classifications = nms_ops.sort_drop(objectness, box, classifications, self._max_boxes)
-    # box, classifications, objectness = nms_ops.nms(
-    #     box,
-    #     classifications,
-    #     objectness,
-    #     self._max_boxes,
-    #     2.5,
-    #     self._nms_thresh,
-    #     sorted=False,
-    #     one_hot=True)
-    return objectness, box, classifications, num_dets
+    boxes = tf.reshape(boxes, [shape[0], -1, 4])
+    class_scores = tf.reshape(class_scores, [shape[0], -1, classes])
+    obns_scores = tf.reshape(obns_scores, [shape[0], -1])
+    return obns_scores, boxes, class_scores
 
   def call(self, inputs):
-    key = self._keys[0]
-    confidence, boxes, classifs, num_dets = self.parse_prediction_path(
-        self._generator[key], self._len_mask[key], self._scale_xy[key],
-        inputs[str(key)])
+    boxes = []
+    class_scores = []
+    object_scores = []
+    levels = list(inputs.keys())
+    min_level = int(min(levels))
+    max_level = int(max(levels))
+    
+    for i in range(min_level, max_level + 1):
+      key = str(i)
+      object_scores_, boxes_, class_scores_ = self.parse_prediction_path(
+          self._generator[key], self._len_mask[key], self._scale_xy[key],
+          inputs[key])
+      boxes.append(boxes_)
+      class_scores.append(class_scores_)
+      object_scores.append(object_scores_)
 
-    i = 1
-    while i < self._len_keys:
-      key = self._keys[i]
-      conf, b, c, nd = self.parse_prediction_path(self._generator[key],
-                                                  self._len_mask[key],
-                                                  self._scale_xy[key],
-                                                  inputs[str(key)])
+    boxes = tf.concat(boxes, axis=1)
+    object_scores = K.concatenate(object_scores, axis=1)
+    class_scores = K.concatenate(class_scores, axis=1)
 
-      boxes = K.concatenate([boxes, b], axis=1)
-      classifs = K.concatenate([classifs, c], axis=1)
-      confidence = K.concatenate([confidence, conf], axis=1)
-      num_dets += nd
-      i += 1
+    object_scores, boxes, class_scores = nms_ops.sort_drop(object_scores , boxes, class_scores, self._max_boxes)
 
-    num_dets = tf.cast(tf.squeeze(num_dets, axis=-1), tf.float32)
-
-    if self._use_nms:
-      boxes = tf.cast(boxes, dtype=tf.float32)
-      classifs = tf.cast(classifs, dtype=tf.float32)
-      nms = tf.image.combined_non_max_suppression(
-          tf.expand_dims(boxes, axis=2), classifs, self._max_boxes,
-          self._max_boxes, 1 - self._nms_thresh, self._nms_thresh)
-      return {
-          'bbox': nms.nmsed_boxes,
-          'classes': tf.cast(nms.nmsed_classes, tf.int32),
-          'confidence': nms.nmsed_scores,
-          'num_dets': num_dets
-      }
-
-    boxes, classifs, confidence = nms_ops.nms(
-        boxes,
-        classifs,
-        confidence,
+    mask = tf.fill(tf.shape(object_scores), tf.cast(self._thresh, dtype=object_scores.dtype))
+    mask = tf.math.ceil(tf.nn.relu(object_scores - mask))
+    boxes, class_scores, object_scores = nms_ops.nms(
+        boxes  * tf.expand_dims(mask, axis = -1),
+        class_scores * tf.expand_dims(mask, axis = -1),
+        object_scores * mask,
         self._max_boxes,
-        2.5,
         self._nms_thresh,
         sorted=False,
         one_hot=True)
 
-    num_dets = tf.reduce_sum(tf.cast(confidence > 0, tf.int32), axis=-1)
-
     return {
         'bbox': boxes,
-        'classes': classifs,
-        'confidence': confidence,
-        'num_dets': num_dets
+        'classes':  class_scores, 
+        'confidence': object_scores,
     }
 
   @property

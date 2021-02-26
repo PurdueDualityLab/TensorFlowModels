@@ -141,8 +141,9 @@ class Yolo_Loss(object):
     def _smooth_labels(y_true):
       return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing)
     target = _smooth_labels(target)
+    output = tf.clip_by_value(output, K.epsilon(), 1. - K.epsilon())
     loss = -tf.math.xlogy(target, output + K.epsilon())
-    loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
+    #loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
     return loss
 
   @tf.function(experimental_relax_shapes=True)
@@ -233,16 +234,16 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(class_loss)
 
     # 10. store values for use in metrics
-    recall50 =  tf.reduce_mean(
+    recall50 = tf.stop_gradient(tf.reduce_mean(
         tf.math.divide_no_nan(
             tf.reduce_sum(
                 tf.cast(
                     tf.squeeze(pred_conf, axis=-1) > 0.5, dtype=true_conf.dtype)
                 * true_conf,
-                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
-    avg_iou =  tf.math.divide_no_nan(
+                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
+    avg_iou =  tf.stop_gradient(tf.math.divide_no_nan(
         tf.reduce_sum(iou),
         tf.cast(
             tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
-            dtype=y_pred.dtype))
+            dtype=y_pred.dtype)))
     return loss, loss_box, conf_loss, class_loss, avg_iou, recall50
