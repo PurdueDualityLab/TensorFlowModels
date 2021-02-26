@@ -94,10 +94,12 @@ class Yolo_Loss(object):
     self._path_key = path_key
     return
 
+  @tf.function(experimental_relax_shapes=True)
   def print_error(self, pred_conf):
     if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred_conf))):
       tf.print("\nerror: stop training")
 
+  @tf.function(experimental_relax_shapes=True)
   def _get_label_attributes(self, width, height, batch_size, y_true, y_pred,
                             dtype):
     grid_points, anchor_grid = self._anchor_generator(
@@ -109,6 +111,7 @@ class Yolo_Loss(object):
     return tf.stop_gradient(grid_points), tf.stop_gradient(
         anchor_grid), tf.stop_gradient(y_true)
 
+  @tf.function(experimental_relax_shapes=True)
   def _get_predicted_box(self, width, height, unscaled_box, anchor_grid,
                          grid_points):
     pred_xy = tf.math.sigmoid(unscaled_box[...,
@@ -121,6 +124,7 @@ class Yolo_Loss(object):
     pred_box = K.concatenate([box_xy, box_wh], axis=-1)
     return pred_xy, pred_wh, pred_box
 
+  @tf.function(experimental_relax_shapes=True)
   def _scale_ground_truth_box(self, box, width, height, anchor_grid,
                               grid_points, dtype):
     xy = tf.nn.relu(box[..., 0:2] - grid_points)
@@ -142,12 +146,14 @@ class Yolo_Loss(object):
     #loss = tf.where(tf.math.is_nan(loss), 1.0, loss)
     return loss
 
+  @tf.function(experimental_relax_shapes=True)
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
     y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, self._num, self._classes + 5] ,tf.float32))
+        tf.reshape(y_pred, [batch_size, width, height, self._num, -1]),
+        tf.float32)
     grid_points, anchor_grid, y_true = self._get_label_attributes(
         width, height, batch_size, y_true, y_pred, y_pred.dtype)
 
