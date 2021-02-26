@@ -231,9 +231,8 @@ class YoloTask(base_task.Task):
     #with tf.GradientTape() as tape:
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    # loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-    # logs = {self.loss: loss}
-    logs = {self.loss: 0.0}
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    logs = {self.loss: loss}
 
     # gradients = tape.gradient(loss, y_pred['raw_output'])
 
@@ -265,10 +264,10 @@ class YoloTask(base_task.Task):
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
 
-    # if metrics:
-    #   for m in metrics:
-    #     m.update_state(loss_metrics[m.name])
-    #     logs.update({m.name: m.result()})
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
     
     # tf.print(logs, end='\n')
 
