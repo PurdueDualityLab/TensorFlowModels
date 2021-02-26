@@ -169,7 +169,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
-        depth=self._classes,
+        depth=80, #self._classes,
         axis=-1,
         dtype=y_pred.dtype)
 
