@@ -103,9 +103,6 @@ class Yolo_Loss(object):
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=dtype)
     y_true = tf.cast(y_true, dtype)
-    # y_true = build_grided_gt(
-    #     y_true, tf.convert_to_tensor(self._masks, dtype=dtype), width,
-    #     self._classes, tf.shape(y_pred), dtype, self._use_tie_breaker)
     return tf.stop_gradient(grid_points), tf.stop_gradient(
         anchor_grid), tf.stop_gradient(y_true)
 
@@ -147,9 +144,11 @@ class Yolo_Loss(object):
     # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
+
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, self._num, self._classes + 5]),
         tf.float32)
+    y_pred = self.pred_rshape(y_pred)
     grid_points, anchor_grid, y_true = self._get_label_attributes(
         width, height, batch_size, y_true, y_pred, y_pred.dtype)
 
