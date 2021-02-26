@@ -231,7 +231,9 @@ class YoloTask(base_task.Task):
     #with tf.GradientTape() as tape:
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    # loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    # logs = {self.loss: loss}
+    logs = {self.loss: 0.0}
 
     # gradients = tape.gradient(loss, y_pred['raw_output'])
 
@@ -240,7 +242,6 @@ class YoloTask(base_task.Task):
     #   loss_val += tf.reduce_sum(tf.square(gradients[value]))
 
     # #custom metrics
-    logs = {self.loss: loss}
     # loss_metrics['darknet_loss'] = loss_val
     image_shape = tf.shape(image)[1:-1]
 
