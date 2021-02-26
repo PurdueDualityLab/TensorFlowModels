@@ -170,7 +170,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
-        depth= 80, #self._classes,
+        depth= tf.shape(pred_classes)[-1], #,80, #self._classes,
         dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
