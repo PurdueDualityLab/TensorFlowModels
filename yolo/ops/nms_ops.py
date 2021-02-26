@@ -84,13 +84,13 @@ def nms(boxes,
         iou_thresh,
         sorted=False,
         one_hot=True):
-  if one_hot:
-    confidence = tf.reduce_max(classes, axis=-1)
-    classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
+  # if one_hot:
+  confidence = tf.reduce_max(classes, axis=-1)
+  classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
 
-  if not sorted:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
-    classes = tf.squeeze(classes, axis=-1)
+  #if not sorted:
+  confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+  classes = tf.squeeze(classes, axis=-1)
 
   box_l, class_l, conf_l = segment_nms(boxes, classes, confidence, k, iou_thresh)
   conf_l, box_l, class_l = sort_drop(conf_l, box_l, class_l, k)
