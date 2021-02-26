@@ -55,7 +55,7 @@ class GridGenerator(object):
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype
-    grid_points = _build_grid_points(width, height, anchors, self.dtype)
+    grid_points = _build_grid_points(width, height, self._anchors, self.dtype)
     anchor_grid = _build_anchor_grid(
         width, height,
         tf.cast(self._anchors, self.dtype) /
