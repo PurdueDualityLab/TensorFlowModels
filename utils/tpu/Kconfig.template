@@ -12,7 +12,7 @@ choice
 	config TPU_ZONE__US_CENTRAL1_F
 		bool "us-central1-f"
 	config TPU_ZONE__EUROPE_WEST4_A
-		bool "europe_west4_a"
+		bool "europe-west4-a"
 endchoice
 
 
@@ -33,7 +33,7 @@ endchoice
 
 choice
 	prompt "TPU Size"
-	default TPU_SIZE__V2_64 if TPU_ZONE__US_CENTRAL1_A
+	default TPU_SIZE__V2_256 if TPU_ZONE__US_CENTRAL1_A
 	default TPU_SIZE__V2_8 if TPU_ZONE__US_CENTRAL1_F
 	default TPU_SIZE__V3_8 if TPU_ZONE__EUROPE_WEST4_A
 	if TPU_ZONE__US_CENTRAL1_F
@@ -41,8 +41,8 @@ choice
 			bool "v2-8"
 	endif
 	if TPU_ZONE__US_CENTRAL1_A
-		config TPU_SIZE__V2_64
-			bool "v2-64"
+		config TPU_SIZE__V2_256
+			bool "v2-256"
 	endif
 	if TPU_ZONE__EUROPE_WEST4_A
 		config TPU_SIZE__V3_8
