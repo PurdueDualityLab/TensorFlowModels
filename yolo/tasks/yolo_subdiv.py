@@ -15,7 +15,7 @@ from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
 from official.vision.beta.ops import box_ops, preprocess_ops
-from yolo.modeling.layers.detection_generator import YoloGTFilter
+# from yolo.modeling.layers.detection_generator import YoloGTFilter
 from yolo.tasks import yolo
 from yolo.losses import gradient_aggregator
 

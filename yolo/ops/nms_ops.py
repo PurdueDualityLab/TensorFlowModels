@@ -8,11 +8,11 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, xyxy=True):
   k = tf.shape(boxes1)[-2]
 
   boxes1 = tf.expand_dims(boxes1, axis=-2)
-  boxes1 = tf.repeat(boxes1, [k], axis=-2)
+  boxes1 = tf.tile(boxes1, [1, 1, k, 1])
 
   if boxes2 is not None:
     boxes2 = tf.expand_dims(boxes2, axis=-2)
-    boxes2 = tf.repeat(boxes2, [k], axis=-2)
+    boxes2 = tf.tile(boxes2, [1, 1, k, 1])
     boxes2 = tf.transpose(boxes2, perm=(0, 2, 1, 3))
   else:
     boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
@@ -45,9 +45,8 @@ def sort_drop(objectness, box, classificationsi, k):
 
 def segment_nms(boxes, classes, confidence, k,iou_thresh):
   mrange = tf.range(k)
-  mask_x = tf.repeat(
-      tf.transpose(tf.expand_dims(mrange, axis=-1), perm=[1, 0]), [k], axis=0)
-  mask_y = tf.repeat(tf.expand_dims(mrange, axis=-1), [k], axis=1)
+  mask_x = tf.tile(tf.transpose(tf.expand_dims(mrange, axis=-1), perm=[1, 0]), [k, 1])
+  mask_y = tf.tile(tf.expand_dims(mrange, axis=-1), [1, k])
   mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
 
   iou = aggregated_comparitive_iou(boxes, iou_type=0)
