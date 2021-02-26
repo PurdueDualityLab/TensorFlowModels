@@ -24,7 +24,7 @@ def _build_anchor_grid(width, height, anchors, num, dtype):
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, -1])
     anchors = tf.tile(anchors, [width * height, 1])
-    anchors = tf.reshape(anchors, [1, width, height, num, -1])
+    anchors = tf.reshape(anchors, [1, width, height, num, 2])
   return anchors
 
 
