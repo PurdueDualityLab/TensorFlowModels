@@ -150,7 +150,10 @@ def load_flags(CFG):
     ckpt = tf.train.Checkpoint(model=model, optimizer=optimizer)
     status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
 
-    status.expect_partial().assert_existing_objects_matched()
+    # try:
+    #   status.expect_partial().assert_existing_objects_matched()
+    # except:
+    #   print("this checkpoint could not assert all components consumed, componnets may not match")
     print(dir(status), status)
   else:
     task.initialize(model)

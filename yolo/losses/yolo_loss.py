@@ -161,7 +161,7 @@ class Yolo_Loss(object):
         fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
     pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
     pred_class = tf.math.sigmoid(y_pred[..., 5:])
-    self.print_error(pred_box)
+    self.print_error(y_pred)
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)

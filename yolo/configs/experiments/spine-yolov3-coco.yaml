@@ -1,6 +1,8 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  distribution_strategy: mirrored
+  mixed_precision_dtype: float16
+  loss_scale: "dynamic"
+  num_gpus: 1
 task:
   model:
     base: 
@@ -9,13 +11,13 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v4
+        version: v3
         type: regular
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 1
+    subdivisions: 16
     num_classes: 80
-    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
@@ -24,25 +26,24 @@ task:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
-      use_sync_bn: true
+      use_sync_bn: false
     decoder_activation: leaky
     filter:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
       iou_thresh: 0.25
-      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
+    global_batch_size: 64 #batch size 
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
     tfds_split: train
     drop_remainder: true
-    dtype: bfloat16
+    dtype: float16
     input_path: ''
     is_training: true
     shuffle_buffer_size: 10000
@@ -50,17 +51,18 @@ task:
       fixed_size: true
       image_h: 512
       image_w: 512
+      seed: 10
       letter_box: false
       cutmix: false
       mosaic: true
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: validation
-    dtype: bfloat16
+    dtype: float16
     input_path: ''
     is_training: false
     shuffle_buffer_size: 10000
@@ -70,37 +72,14 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/csdarknet53_tune3/'
+  init_checkpoint: '../checkpoints/csdarknet53_tune3'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
-# trainer:
-#   train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-#   validation_steps: 625
-#   steps_per_loop: 10000
-#   validation_interval: 10000 #00
-#   summary_interval: 10000
-#   checkpoint_interval: 10000
-#   optimizer_config:
-#     learning_rate:
-#       type: stepwise
-#       stepwise:
-#         boundaries: [75000, 112500]
-#         name: PiecewiseConstantDecay
-#         values: [0.00261, 0.000261, 0.0000261]
-#     optimizer:
-#       type: sgd
-#       sgd:
-#         momentum: 0.9
-#         name: SGD
-#     warmup:
-#       type: 'linear'
-#       linear:
-#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
 trainer:
-  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -110,8 +89,7 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        #boundaries: [300000, 337500]
-        boundaries: [262500, 300000]
+        boundaries: [75000, 112500]
         name: PiecewiseConstantDecay
         values: [0.00261, 0.000261, 0.0000261]
     optimizer:
@@ -123,4 +101,4 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
+

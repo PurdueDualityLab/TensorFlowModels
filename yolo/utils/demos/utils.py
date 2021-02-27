@@ -6,7 +6,10 @@ from typing import Callable
 import numpy as np
 import colorsys
 import cv2
-
+from concurrent.futures import ThreadPoolExecutor as pooler
+import multiprocessing as mp
+import os
+# from concurrent.futures import ProcessPoolExecutor as pooler
 
 def get_device(policy):
   if not isinstance(policy, str):
@@ -154,9 +157,7 @@ def int_scale_boxes(boxes, classes, width, height):
   classes = tf.cast(classes, dtype=tf.int32)
   return boxes, classes
 
-
 class DrawBoxes(object):
-
   def __init__(self, classes=80, labels=None, display_names=True, thickness=2):
 
     self._classes = classes
@@ -175,16 +176,21 @@ class DrawBoxes(object):
         return False
       cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
                     self._thickness)
-      cv2.putText(image, "%s, %0.3f" % (label_names[classes], conf),
-                  (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                  colors[classes], self._thickness)
+
+      if conf is not None:
+        cv2.putText(image, "%s, %0.3f" % (label_names[classes], conf),
+                    (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    colors[classes], self._thickness)
+      else:
+        cv2.putText(image, "%s, %0.3f" % (label_names[classes]),
+                    (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    colors[classes], self._thickness)
       return True
 
     def draw_box(image, box, classes, conf):
       if box[3] == 0:
         return False
-      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
-                    1)
+      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],1)
       return True
 
     if display_name and label_names is not None:
@@ -198,8 +204,13 @@ class DrawBoxes(object):
       if self._draw_fn(image, boxes[i], classes[i], conf[i]):
         i += 1
       else:
-        return i
-    return i
+        return image
+    return image
+
+  def _parent(self, image, boxes, classes, conf):
+    def func(i):
+      return self._draw(image[i], boxes[i], classes[i], conf[i])
+    return func
 
   def __call__(self, image, results):
     """ expectoed format = {bbox: , classes: , "confidence": }"""
@@ -209,7 +220,7 @@ class DrawBoxes(object):
 
     try:
       conf = results["confidence"]
-    except BaseException:
+    except:
       conf = results["classes"]
 
     if not isinstance(image, list):
@@ -237,8 +248,10 @@ class DrawBoxes(object):
     if not isinstance(image, list):
       if ndims == 4:
         images = []
-        for i, im in enumerate(image):
-          self._draw(im, boxes[i], classes[i], conf[i])
+        func = self._parent(image, boxes, classes, conf)
+        #images = tf.map_fn(func, elems = tf.range(image.shape[0]), parallel_iterations=10)
+        for i in range(image.shape[0]):
+          im = func(i)
           images.append(im)
         image = np.stack(images, axis=0)
       elif ndims == 3:
@@ -255,15 +268,3 @@ class DrawBoxes(object):
         images.append(im)
       image = np.stack(images, axis=0)
     return image
-
-
-def int_scale_boxes(boxes, classes, width, height):
-  boxes = K.stack([
-      tf.cast(boxes[..., 1] * width, dtype=tf.int32),
-      tf.cast(boxes[..., 3] * width, dtype=tf.int32),
-      tf.cast(boxes[..., 0] * height, dtype=tf.int32),
-      tf.cast(boxes[..., 2] * height, dtype=tf.int32)
-  ],
-                  axis=-1)
-  classes = tf.cast(classes, dtype=tf.int32)
-  return boxes, classes
