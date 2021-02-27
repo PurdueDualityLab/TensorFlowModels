@@ -195,8 +195,6 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         self._scope.set_partitioner(None)
       else:
         partitioner = None
-      
-      # if self.renorm:
 
       # if self.subdivisions > 1:
       self.aggregated_sum_batch = self.add_weight(
