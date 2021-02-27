@@ -8,9 +8,11 @@ from official.core import task_factory
 from yolo.configs import yolo as exp_cfg
 
 from official.vision.beta.evaluation import coco_evaluator
+from official.vision.beta.dataloaders import tf_example_decoder
+from official.vision.beta.dataloaders import tfds_detection_decoders
+from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
 from yolo.dataloaders import yolo_input
-from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
@@ -64,7 +66,7 @@ class YoloTask(base_task.Task):
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
-    decoder = tfds_coco_decoder.MSCOCODecoder()
+    # decoder = tfds_coco_decoder.MSCOCODecoder()
     """
     decoder_cfg = params.decoder.get()
     if params.decoder.type == 'simple_decoder':
@@ -77,6 +79,25 @@ class YoloTask(base_task.Task):
     else:
         raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
     """
+
+    if params.tfds_name:
+      if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
+        decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
+            params.tfds_name]()
+      else:
+        raise ValueError('TFDS {} is not supported'.format(params.tfds_name))
+    else:
+      decoder_cfg = params.decoder.get()
+      if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      else:
+        raise ValueError('Unknown decoder type: {}!'.format(
+            params.decoder.type))
 
     model = self.task_config.model
 
