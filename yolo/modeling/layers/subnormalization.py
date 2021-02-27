@@ -198,46 +198,46 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       
       # if self.renorm:
 
-      if self.subdivisions > 1:
-        self.aggregated_sum_batch = self.add_weight(
-            name='agg_sum',
-            shape=param_shape,
-            dtype=self._param_dtype,
-            initializer=self.moving_mean_initializer,
-            synchronization=tf_variables.VariableSynchronization.ON_READ,
-            trainable=False,
-            aggregation=tf_variables.VariableAggregation.SUM,
-            experimental_autocast=False)
+      # if self.subdivisions > 1:
+      self.aggregated_sum_batch = self.add_weight(
+          name='agg_sum',
+          shape=param_shape,
+          dtype=self._param_dtype,
+          initializer=self.moving_mean_initializer,
+          synchronization=tf_variables.VariableSynchronization.ON_READ,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.SUM,
+          experimental_autocast=False)
 
-        self.aggregated_square_sum_batch = self.add_weight(
-            name='agg_square_sum',
-            shape=param_shape,
-            dtype=self._param_dtype,
-            initializer=self.moving_variance_initializer,
-            synchronization=tf_variables.VariableSynchronization.ON_READ,
-            trainable=False,
-            aggregation=tf_variables.VariableAggregation.SUM,
-            experimental_autocast=False)
-        
-        self.local_count = self.add_weight(
-            name='local_sum',
-            shape=(),
-            dtype=tf.int32,
-            initializer=tf.zeros_initializer(),
-            synchronization=tf_variables.VariableSynchronization.ON_READ,
-            trainable=False,
-            aggregation=tf_variables.VariableAggregation.SUM,
-            experimental_autocast=False)
-        
-        self.aggregated_batch_size = self.add_weight(
-            name='net_batches',
-            shape=(),
-            dtype=tf.int32,
-            initializer=tf.zeros_initializer(),
-            synchronization=tf_variables.VariableSynchronization.ON_READ,
-            trainable=False,
-            aggregation=tf_variables.VariableAggregation.SUM,
-            experimental_autocast=False)
+      self.aggregated_square_sum_batch = self.add_weight(
+          name='agg_square_sum',
+          shape=param_shape,
+          dtype=self._param_dtype,
+          initializer=self.moving_variance_initializer,
+          synchronization=tf_variables.VariableSynchronization.ON_READ,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.SUM,
+          experimental_autocast=False)
+      
+      self.local_count = self.add_weight(
+          name='local_sum',
+          shape=(),
+          dtype=tf.int32,
+          initializer=tf.zeros_initializer(),
+          synchronization=tf_variables.VariableSynchronization.ON_READ,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.SUM,
+          experimental_autocast=False)
+      
+      self.aggregated_batch_size = self.add_weight(
+          name='net_batches',
+          shape=(),
+          dtype=tf.int32,
+          initializer=tf.zeros_initializer(),
+          synchronization=tf_variables.VariableSynchronization.ON_READ,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.SUM,
+          experimental_autocast=False)
 
     finally:
       if partitioner:
