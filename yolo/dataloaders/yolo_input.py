@@ -214,7 +214,7 @@ class Parser(parser.Parser):
       image, image_info = preprocessing_ops.random_crop_or_pad(image,
                                                   target_width=minscale,
                                                   target_height=minscale,
-                                                  random_patch=False)
+                                                  random_patch=True)
       image = tf.image.resize(image, (self._image_w, self._image_h))
       boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info)
 

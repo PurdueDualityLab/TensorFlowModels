@@ -146,8 +146,8 @@ class YoloTask(base_task.Task):
 
 
     if params.is_training and params.parser.mosaic:
-      dataset = dataset.unbatch().shuffle(params.global_batch_size)
-      dataset = dataset.batch(params.global_batch_size//4)
+      dataset = dataset.unbatch()
+      dataset = dataset.shuffle(1000).batch(params.global_batch_size//4)
 
     return dataset
 
