@@ -161,24 +161,6 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    # slow as balls 20 second addition at batch size 128
-    # image = tf.image.rgb_to_hsv(image)
-    # i_h, i_s, i_v = tf.split(image, 3, axis=-1)
-
-    # if self._aug_rand_hue:
-    #   delta = 0.1 #preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
-    #   i_h = i_h + delta  # Hue
-    #   i_h = tf.clip_by_value(i_h, 0.0, 1.0)
-    # if self._aug_rand_saturation:
-    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
-    #   i_s = i_s * delta
-    # if self._aug_rand_brightness:
-    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
-    #   i_v = i_v * delta
-
-    # image = tf.concat([i_h, i_s, i_v], axis=-1)
-    # image = tf.image.hsv_to_rgb(image)
-
     if self._aug_rand_hue:
       delta = preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
       image = tf.image.adjust_hue(image, delta)
@@ -191,17 +173,17 @@ class Parser(parser.Parser):
     image = tf.clip_by_value(image, 0.0, 1.0)
 
 
-    # stddev = tf.random.uniform([],
-    #                            minval=0,
-    #                            maxval=40 / 255,
-    #                            seed=self._seed,
-    #                            dtype=tf.float32)
-    # noise = tf.random.normal(
-    #     shape=tf.shape(image), mean=0.0, stddev=stddev, seed=self._seed)
-    # noise = tf.math.minimum(noise, 0.5)
-    # noise = tf.math.maximum(noise, 0)
-    # image += noise
-    # image = tf.clip_by_value(image, 0.0, 1.0)
+    stddev = tf.random.uniform([],
+                               minval=0,
+                               maxval=40 / 255,
+                               seed=self._seed,
+                               dtype=tf.float32)
+    noise = tf.random.normal(
+        shape=tf.shape(image), mean=0.0, stddev=stddev, seed=self._seed)
+    noise = tf.math.minimum(noise, 0.5)
+    noise = tf.math.maximum(noise, 0)
+    image += noise
+    image = tf.clip_by_value(image, 0.0, 1.0)
 
 
     if self._random_flip:
@@ -221,8 +203,6 @@ class Parser(parser.Parser):
     image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
     boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info)
 
-
-
     if self._letter_box and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
         image,
@@ -234,7 +214,7 @@ class Parser(parser.Parser):
       image, image_info = preprocessing_ops.random_crop_or_pad(image,
                                                   target_width=minscale,
                                                   target_height=minscale,
-                                                  random_patch=True)
+                                                  random_patch=False)
       image = tf.image.resize(image, (self._image_w, self._image_h))
       boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info)
 
@@ -348,7 +328,7 @@ class Parser(parser.Parser):
     
     if self._mosaic:
       image, boxes, classes = preprocessing_ops.mosaic(
-          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.5)
+          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.57)
       label['bbox'] = pad_max_instances(boxes,
                                         self._max_num_instances,
                                         pad_axis=-2,

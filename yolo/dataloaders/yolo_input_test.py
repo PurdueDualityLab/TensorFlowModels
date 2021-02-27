@@ -95,6 +95,16 @@ def test_pipeline():
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
+
+    fig, axe = plt.subplots(1, 4)
+    axe[0].imshow(i[shind + 1])
+    axe[1].imshow(obj3[shind + 1].numpy())
+    axe[2].imshow(obj4[shind + 1].numpy())
+    axe[3].imshow(obj5[shind + 1].numpy())
+
+    fig.set_size_inches(18.5, 6.5, forward=True)
+    plt.tight_layout()
+    plt.show()
     ltime = time.time()
 
     if l >= 10:
@@ -122,7 +132,7 @@ def time_pipeline():
   print(f"total time {sum(times)}")
 
 if __name__ == '__main__':
-  time_pipeline()
+  test_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

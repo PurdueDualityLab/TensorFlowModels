@@ -87,7 +87,7 @@ trainer:
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.9
+        momentum: 0.949
         name: SGD
     warmup:
       type: 'linear'

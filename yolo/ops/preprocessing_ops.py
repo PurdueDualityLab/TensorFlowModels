@@ -11,7 +11,7 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32):
 
 def rand_scale(val, dtype=tf.float32):
   scale = rand_uniform_strong(1, val, dtype=dtype)
-  do_ret = tf.random.uniform([], minval=0, maxval=1, dtype=tf.int32)
+  do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
   if (do_ret == 1):
     return scale
   return 1.0 / scale
@@ -55,9 +55,6 @@ def shift_zeros2(mask, squeeze = True, fill = 0):
   mask, ind = tf.math.top_k(mask, k=k, sorted = True)
   return mask, ind
 
-def gather_nds(data, ind):
-
-  return data
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -207,8 +204,9 @@ def random_zoom(image, zfactor):
   return random_crop_or_pad(image, width, height, random_patch = True)
 
 def random_jitter(image, jfactor):
-  jx = 1 + tf.random.uniform(minval=-jfactor, maxval=jfactor, shape=(), dtype=tf.float32)
-  jy = 1 + tf.random.uniform(minval=-jfactor, maxval=jfactor, shape=(), dtype=tf.float32)
+  jx = 1 + tf.random.uniform(minval= -2 * jfactor, maxval=2 * jfactor, shape=(), dtype=tf.float32)
+  jy = 1 + tf.random.uniform(minval= -2 * jfactor, maxval=2 * jfactor, shape=(), dtype=tf.float32)
+
   height, width = get_image_shape(image)
   width = tf.cast(width, jx.dtype) * jx
   height = tf.cast(height, jy.dtype) * jy
@@ -381,7 +379,7 @@ def patch_four_images(images):
   full_image = tf.concat([patch1, patch2], axis=-3)
   return full_image
 
-def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=1):
+def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6):
   full_image = patch_four_images(images)
   height, width = get_image_shape(full_image)
   num_instances = tf.shape(boxes)[-2]
@@ -399,15 +397,14 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=1):
                                              num_instances,
                                              yxyx=True)
 
-  crop_delta = rand_uniform_strong(crop_delta, 0.9) 
-
+  crop_delta = rand_uniform_strong(crop_delta, 1 + crop_delta * 3/5)
   full_image, image_info = random_crop_or_pad(full_image,
                                                   target_width=tf.cast(
           tf.cast(height, tf.float32) * crop_delta, tf.int32),
                                                   target_height=tf.cast(
           tf.cast(width, tf.float32) * crop_delta, tf.int32),
                                                   random_patch=True)
-  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.01)
+  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.25)
   full_image = tf.image.resize(full_image, [output_size, output_size])
   return full_image, full_boxes, full_classes
 
