@@ -328,7 +328,7 @@ class Parser(parser.Parser):
     
     if self._mosaic:
       image, boxes, classes = preprocessing_ops.mosaic(
-          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.57)
+          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54)
       label['bbox'] = pad_max_instances(boxes,
                                         self._max_num_instances,
                                         pad_axis=-2,
