@@ -105,8 +105,8 @@ class YoloTask(base_task.Task):
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
     gbs = params.global_batch_size
-    if params.is_training and params.parser.mosaic:
-      params.global_batch_size = 4
+    # if params.is_training and params.parser.mosaic:
+    #   params.global_batch_size = params.global_batch_size
 
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
@@ -145,7 +145,7 @@ class YoloTask(base_task.Task):
 
 
     if params.is_training and params.parser.mosaic:
-      dataset = dataset.unbatch().batch(gbs, drop_remainder=True)
+      dataset = dataset.unbatch().shuffle(gbs*4).batch(gbs, drop_remainder=True)
 
     return dataset
 
