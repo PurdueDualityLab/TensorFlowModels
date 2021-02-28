@@ -5,7 +5,7 @@ import glob
 
 dir = os.path.dirname(__file__)
 dest = os.path.join(dir, 'Kconfig')
-template = os.path.join(dir, 'Kconfig.template')
+# template = os.path.join(dir, 'Kconfig.template')
 creds = os.path.join(dir, 'creds', '*.json')
 
 if sys.stdin.isatty():
@@ -22,5 +22,7 @@ if sys.stdin.isatty():
 else:
   AUTH_KEY = next(glob.iglob(creds))
 
-with open(template) as tfile, open(dest, 'w') as dfile:
-  dfile.write(tfile.read().format(AUTH_KEY=repr(AUTH_KEY)))
+# with open(template) as tfile, open(dest, 'w') as dfile:
+#   dfile.write(tfile.read().format(AUTH_KEY=repr(AUTH_KEY)))
+with open('creds/default.txt', 'w') as dfile:
+  dfile.write(AUTH_KEY)

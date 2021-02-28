@@ -10,6 +10,7 @@ import sys
 import os
 
 USE_GUI = False
+DRY_RUN = True
 
 if USE_GUI:
   import guiconfig
@@ -79,7 +80,9 @@ else:
   raise ValueError("Unknown Zone")
 
 if CPU:
-  if my_env.get('CONFIG_CPU_SIZE__E2_STANDARD_16', 'n') == 'y':
+  if my_env.get('CONFIG_CPU_SIZE__E2_STANDARD_8', 'n') == 'y':
+    CPU_SIZE = "e2-standard-8"
+  elif my_env.get('CONFIG_CPU_SIZE__E2_STANDARD_16', 'n') == 'y':
     CPU_SIZE = "e2-standard-16"
   else:
     raise ValueError("Unknown CPU")
@@ -95,19 +98,34 @@ if TPU:
     raise ValueError("Unknown TPU")
 
 
+if my_env.get('TF_VERSION__2_4_1', 'n') == 'y':
+  TF_VERSION = '2.4.1'
+else:
+  raise ValueError("Unknown TensorFlow version")
+
+
 with open(AUTH_KEY) as file:
   PROJECT_NAME = json.load(file)['project_id']
 
 def new_cpu_tpu():
-  proc = subprocess.Popen(['ctpu', 'up', f'--tpu-size={TPU_SIZE}', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', '--tf-version=2.4.1'], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+  command = ['ctpu', '--require-permissions', 'up', f'--tpu-size={TPU_SIZE}', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
+  if DRY_RUN:
+    command.insert(0, 'echo')
+  proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
   proc.communicate()
 
 def new_cpu():
-  proc = subprocess.Popen(['ctpu', 'up', '--vm-only', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', '--tf-version=2.4.1'], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+  command = ['ctpu', '--require-permissions', 'up', '--vm-only', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
+  if DRY_RUN:
+    command.insert(0, 'echo')
+  proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
   proc.communicate()
 
 def new_tpu():
-  proc = subprocess.Popen(['ctpu', 'up', '--tpu-only', f'--tpu-size={TPU_SIZE}', f'--name={TPU_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--tf-version=2.4.1'], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+  command = ['ctpu', '--require-permissions', 'up', '--tpu-only', f'--tpu-size={TPU_SIZE}', f'--name={TPU_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', f'--tf-version={TF_VERSION}']
+  if DRY_RUN:
+    command.insert(0, 'echo')
+  proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
   proc.communicate()
 
 if CPU:

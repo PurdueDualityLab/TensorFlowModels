@@ -2,7 +2,7 @@ mainmenu "TPU Configuration"
 
 config AUTH_KEY
 	string "Authorization Key"
-	default {AUTH_KEY}
+	default "$(shell, cat creds/default.txt)"
 
 choice
 	prompt "Zone"
@@ -20,11 +20,6 @@ config VM
 	bool "Create a new VM"
 	default y
 
-config TPU
-	bool "Create a new TPU"
-	default y
-
-
 if VM
 	config VM_NAME
 		string "VM Name"
@@ -32,11 +27,18 @@ if VM
 
 	choice
 		prompt "CPU Size"
-		default CPU_SIZE__E2_STANDARD_16
+		default CPU_SIZE__E2_STANDARD_8
+		config CPU_SIZE__E2_STANDARD_8
+			bool "e2-standard-8 (8 vCPU, 32 GB RAM)"
 		config CPU_SIZE__E2_STANDARD_16
-			bool "e2-standard-16"
+			bool "e2-standard-16 (16 vCPU, 64 GB RAM)"
 	endchoice
 endif
+
+
+config TPU
+	bool "Create a new TPU"
+	default y
 
 if TPU
 	config TPU_NAME
@@ -64,26 +66,44 @@ if TPU
 	endchoice
 endif
 
-config REPO
-	string "Git Repo URL"
-	default "https://github.com/PurdueCAM2Project/TensorFlowModels"
+choice
+	prompt "TensorFlow Version"
+	config TF_VERSION__2_4_1
+		bool "2.4.1"
+endchoice
 
-config BRANCH_NAME
-	string "Git Branch Name"
-	default "yolo_debug"
+config CLONE
+	bool "Auto-clone Git repo"
+	default y
 
-config EXPERIMENT_NAME
-	string "YAML Experiment Name"
-	default "yolov4-coco-tpuV2-256"
+if CLONE
+	config REPO
+		string "Git Repo URL"
+		default "https://github.com/PurdueCAM2Project/TensorFlowModels"
 
-config BUCKET
-	string "GCS Bucket"
-	default "gs://tensorflow2/"
+	config BRANCH_NAME
+		string "Git Branch Name"
+		default "yolo_debug"
+endif
 
-config MODEL_DIR
-	string "Model Directory"
-	default EXPERIMENT_NAME
+config START_EXPERIMENT
+	bool "Auto-start experiment"
+	default n
 
-config LOG_FILE
-	string "Log File"
-	default EXPERIMENT_NAME
+if START_EXPERIMENT
+	config EXPERIMENT_NAME
+		string "YAML Experiment Name"
+		default "yolov4-coco-tpuV2-256"
+
+	config BUCKET
+		string "GCS Bucket"
+		default "gs://tensorflow2/"
+
+	config MODEL_DIR
+		string "Model Directory"
+		default EXPERIMENT_NAME
+
+	config LOG_FILE
+		string "Log File"
+		default EXPERIMENT_NAME
+endif

@@ -2,14 +2,14 @@ ifeq (, $(shell which ctpu))
 $(error "No ctpu in $(PATH), consider downlading Google Cloud SDK (https://cloud.google.com/sdk/docs/install) and CTPU (https://github.com/tensorflow/tpu/tree/master/tools/ctpu)")
 endif
 
-.PHONY: new_tpu menuconfig
+.PHONY: tpu tpu_prior_settings
 
-new: Kconfig
-	python3 show_menu.py
-
-brand_new: Kconfig
+tpu: creds/default.txt
 	[ ! -e .config ] || rm .config
 	python3 show_menu.py
 
-Kconfig: Kconfig.template creds/*.json
+tpu_prior_settings: creds/default.txt
+	python3 show_menu.py
+
+creds/default.txt:
 	python3 create_kconfig.py
