@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+trap popd EXIT
+pushd $PWD
+cd $(dirname "$0")
+make tpu

@@ -2,7 +2,7 @@ mainmenu "TPU Configuration"
 
 config AUTH_KEY
 	string "Authorization Key"
-	default "$(shell, cat creds/default.txt)"
+	default "$(shell, tail -n1 creds/default.txt)"
 
 choice
 	prompt "Zone"

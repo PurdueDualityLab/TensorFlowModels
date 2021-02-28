@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import subprocess
 import sys
 import glob
 
@@ -7,6 +8,8 @@ dir = os.path.dirname(__file__)
 dest = os.path.join(dir, 'Kconfig')
 # template = os.path.join(dir, 'Kconfig.template')
 creds = os.path.join(dir, 'creds', '*.json')
+
+username = input("Enter the project username (without @gmail.com): ")
 
 if sys.stdin.isatty():
   credList = glob.glob(creds)
@@ -22,7 +25,14 @@ if sys.stdin.isatty():
 else:
   AUTH_KEY = next(glob.iglob(creds))
 
+command = ['gcloud', 'auth', 'activate-service-account', f'--key-file={AUTH_KEY}']
+# if DRY_RUN:
+#   command.insert(0, 'echo')
+proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+proc.communicate()
+
 # with open(template) as tfile, open(dest, 'w') as dfile:
 #   dfile.write(tfile.read().format(AUTH_KEY=repr(AUTH_KEY)))
 with open('creds/default.txt', 'w') as dfile:
-  dfile.write(AUTH_KEY)
+  print(username, file=dfile)
+  print(AUTH_KEY, file=dfile)

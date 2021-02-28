@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+if [ "$#" -lt 1 ]
+then
+  echo "Usage: ./vmssh vm_name"
+  echo
+  echo "Copies your SSH key onto the VM and SSH's in. Same as the Google Cloud"
+  echo "Console except it is done in your terminal instead of a web GUI."
+  exit 1
+fi
+
+trap popd EXIT
+pushd $PWD
+cd $(dirname "$0")
+
+username="$(head -n1 creds/default.txt)"
+rest_args=("${all_args[@]:2}")
+zone="$(gcloud compute instances list | awk -v vm=$1 '{ if($1 == vm) {print $2} }')"
+gcloud compute ssh $username@$1 --zone=$zone ${rest_args[@]}

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+if [ "$#" -lt 1 ]
+then
+  echo "Usage: ./tpurm tpu_name"
+  echo
+  echo "Delete a TPU."
+  exit 1
+fi
+
+zone="$(gcloud compute tpus list --zone=us-central1-a; gcloud compute tpus list --zone=us-central1-f; gcloud compute tpus list --zone=europe-west4-a) | awk -v tpu=$1 '{ if($1 == tpu) {print $2} }')"
+gcloud compute tpus delete $1 --zone=$zone
