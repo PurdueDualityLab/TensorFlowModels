@@ -163,6 +163,24 @@ class Parser(hyperparams.Config):
   seed: Optional[int] = None
   use_tie_breaker: bool = True
 
+# pylint: disable=missing-class-docstring
+@dataclasses.dataclass
+class TfExampleDecoder(hyperparams.Config):
+  regenerate_source_id: bool = False
+
+
+@dataclasses.dataclass
+class TfExampleDecoderLabelMap(hyperparams.Config):
+  regenerate_source_id: bool = False
+  label_map: str = ''
+
+
+@dataclasses.dataclass
+class DataDecoder(hyperparams.OneOfConfig):
+  type: Optional[str] = 'simple_decoder'
+  simple_decoder: TfExampleDecoder = TfExampleDecoder()
+  label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
+
 
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
@@ -173,7 +191,7 @@ class DataConfig(cfg.DataConfig):
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
-  decoder = None
+  decoder: DataDecoder = 'simple_decoder'
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
   tfds_download: bool = True
