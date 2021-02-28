@@ -191,7 +191,7 @@ class DataConfig(cfg.DataConfig):
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
-  decoder: DataDecoder = 'simple_decoder'
+  decoder: DataDecoder = DataDecoder()
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
   tfds_download: bool = True
