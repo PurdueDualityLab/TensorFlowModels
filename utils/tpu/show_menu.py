@@ -10,7 +10,7 @@ import sys
 import os
 
 USE_GUI = False
-DRY_RUN = True
+DRY_RUN = False
 
 if USE_GUI:
   import guiconfig
@@ -92,13 +92,13 @@ if TPU:
     TPU_SIZE = "v2-256"
   elif my_env.get('CONFIG_TPU_SIZE__V2_8', 'n') == 'y':
     TPU_SIZE = "v2-8"
-  elif my_env.get('CONFITPU_SIZE__V3_8', 'n') == 'y':
+  elif my_env.get('CONFIG_TPU_SIZE__V3_8', 'n') == 'y':
     TPU_SIZE = "v3-8"
   else:
     raise ValueError("Unknown TPU")
 
 
-if my_env.get('TF_VERSION__2_4_1', 'n') == 'y':
+if my_env.get('CONFIG_TF_VERSION__2_4_1', 'n') == 'y':
   TF_VERSION = '2.4.1'
 else:
   raise ValueError("Unknown TensorFlow version")
@@ -108,21 +108,21 @@ with open(AUTH_KEY) as file:
   PROJECT_NAME = json.load(file)['project_id']
 
 def new_cpu_tpu():
-  command = ['ctpu', '--require-permissions', 'up', f'--tpu-size={TPU_SIZE}', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
+  command = ['ctpu', 'up', '--require-permissions', f'--tpu-size={TPU_SIZE}', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
   if DRY_RUN:
     command.insert(0, 'echo')
   proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
   proc.communicate()
 
 def new_cpu():
-  command = ['ctpu', '--require-permissions', 'up', '--vm-only', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
+  command = ['ctpu', 'up', '--require-permissions', '--vm-only', f'--name={VM_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', '--disk-size-gb=50', f'--machine-type={CPU_SIZE}', f'--tf-version={TF_VERSION}']
   if DRY_RUN:
     command.insert(0, 'echo')
   proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
   proc.communicate()
 
 def new_tpu():
-  command = ['ctpu', '--require-permissions', 'up', '--tpu-only', f'--tpu-size={TPU_SIZE}', f'--name={TPU_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', f'--tf-version={TF_VERSION}']
+  command = ['ctpu', 'up', '--require-permissions', '--tpu-only', f'--tpu-size={TPU_SIZE}', f'--name={TPU_NAME}', f'--project={PROJECT_NAME}', f'--zone={TPU_ZONE}', f'--tf-version={TF_VERSION}']
   if DRY_RUN:
     command.insert(0, 'echo')
   proc = subprocess.Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
