@@ -59,33 +59,54 @@ def shift_zeros2(mask, squeeze = True, fill = 0):
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
   if pad_axis < 0:
-    pad_axis = tf.shape(shape)[0] + pad_axis
+    pad_axis = tf.rank(value) + pad_axis
   dim1 = shape[pad_axis]
   take = tf.math.reduce_min([instances, dim1])
   value, _ = tf.split(
-      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
+      value, [take, -1], axis=pad_axis) 
   pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
   nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
   value = tf.concat([value, pad_tensor], axis=pad_axis)
   return value
 
-def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
+def _shift_zeros_full(boxes, classes, num_instances, mask = None, yxyx = True):
+  is_batch = True
+  boxes_shape = boxes.get_shape()
+  if boxes_shape.ndims == 2:
+    is_batch = False
+    boxes = tf.expand_dims(boxes, 0)
+    classes = tf.expand_dims(classes, 0)
+  elif boxes_shape.ndims is None:
+    is_batch = False
+    boxes = tf.expand_dims(image, 0)
+    classes = tf.expand_dims(classes, 0)
+    boxes.set_shape([None] * 3)
+    classes.set_shape([None] * 2)
+  elif boxes_shape.ndims != 3:
+    raise ValueError(
+        '\'box\' (shape %s) must have either 3 or 4 dimensions.')
+  
   if yxyx:
     boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
-  mask = w > 0
+
+  if mask is None:
+    mask = w > 0
+  elif not is_batch:
+    mask = tf.expand_dims(mask, 0)
+    
   # tf.print(tf.shape(x), tf.shape(mask))
   mask, ind = shift_zeros2(mask)
   ind_m = tf.ones_like(ind) * tf.expand_dims(
       tf.range(0,
-               tf.shape(ind)[0]), axis=-1)
+              tf.shape(ind)[0]), axis=-1)
   ind = tf.stack([tf.reshape(ind_m, [-1]), tf.reshape(ind, [-1])], axis=-1)
   
 
   classes_shape = tf.shape(classes)
   classes_ = tf.gather_nd(classes, ind)
-  classes = (tf.reshape(classes_, classes_shape) * tf.cast(mask, classes.dtype)) - (1 - tf.cast(mask, x.dtype))
+  classes = (tf.reshape(classes_, classes_shape) * tf.cast(mask, classes.dtype)) - (1 - tf.cast(mask, classes.dtype))
 
   mask = tf.expand_dims(tf.cast(mask, x.dtype), axis = -1)
   x_shape = tf.shape(x)
@@ -109,6 +130,10 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
   classes = _pad_max_instances(classes, num_instances, pad_axis=-1, pad_value=-1)
   if yxyx:
     boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  if not is_batch:
+    boxes = tf.squeeze(boxes, axis = 0)
+    classes = tf.squeeze(classes, axis = 0)  
   return boxes, classes 
 
 def near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = 0.25):
@@ -331,8 +356,8 @@ def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh = 0.01):
   y_upper_bound = (offset_height + target_height) / height if yscaler > 1.0 else tf.cast(1.0, tf.float64)
 
   boxes = near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = keep_thresh)
-  boxes = box_ops.yxyx_to_xcycwh(boxes)
-  x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+  boxes_ = box_ops.yxyx_to_xcycwh(boxes)
+  x, y, w, h = tf.split(tf.cast(boxes_, x_lower_bound.dtype), 4, axis=-1)
 
   x_mask_lower = tf.math.logical_and(x > x_lower_bound, x >= 0)
   y_mask_lower = tf.math.logical_and(y > y_lower_bound, y >= 0)
@@ -343,12 +368,15 @@ def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh = 0.01):
   y_mask = tf.math.logical_and(y_mask_lower, y_mask_upper)
   mask = tf.math.logical_and(x_mask, y_mask)
 
-  x = shift_zeros(x, mask)  # tf.boolean_mask(x, mask)
-  y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
-  w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
-  h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
-  classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill=-1)
-  classes = tf.squeeze(classes, axis=-1)
+  boxes, classes = _shift_zeros_full(boxes, classes, mask = mask, num_instances = tf.shape(boxes)[-2])
+  boxes = box_ops.yxyx_to_xcycwh(boxes)
+  x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+  # x = shift_zeros(x, mask)  # tf.boolean_mask(x, mask)
+  # y = shift_zeros(y, mask)  # tf.boolean_mask(y, mask)
+  # w = shift_zeros(w, mask)  # tf.boolean_mask(w, mask)
+  # h = shift_zeros(h, mask)  # tf.boolean_mask(h, mask)
+  # classes = shift_zeros(tf.expand_dims(classes, axis=-1), mask, fill=-1)
+  # classes = tf.squeeze(classes, axis=-1)
 
   if not fixed:
     x = (x - x_lower_bound) * xscaler
@@ -423,7 +451,7 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6):
                                                   target_height=tf.cast(
           tf.cast(width, tf.float32) * crop_delta, tf.int32),
                                                   random_patch=True)
-  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.1)
+  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.25)
   full_image = tf.image.resize(full_image, [output_size, output_size])
   return tf.cast(full_image, images.dtype), tf.cast(full_boxes, boxes.dtype), tf.cast(full_classes, classes.dtype)
 
@@ -550,12 +578,15 @@ def get_best_anchor_batch(y_true, anchors, width=1, height=1):
     # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
     anchors = tf.transpose(anchors, perm=[1, 0])
 
-    anchor_xy = tf.repeat(
-        tf.expand_dims(anchor_xy, axis=-1), tf.shape(anchors)[-1], axis=-1)
-    anchors = tf.repeat(
-        tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[1], axis=0)
-    anchors = tf.repeat(
-        tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[0], axis=0)
+    anchor_xy = tf.tile(
+        tf.expand_dims(anchor_xy, axis=-1), [1, 1, 1, tf.shape(anchors)[-1]])
+    anchors = tf.tile(
+        tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[1], 1, 1])
+    anchors = tf.tile(
+        tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1, 1])
+    
+    # tf.repeat(
+    #     tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[0], axis=0)
 
     # stack the xy so, each anchor is asscoaited once with each center from
     # the ground truth input

@@ -201,7 +201,7 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, image_shape)
     
     image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info, keep_thresh=0.1)
+    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info, keep_thresh=0.25)
 
     if self._letter_box: #and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
@@ -216,14 +216,17 @@ class Parser(parser.Parser):
                                                   target_height=minscale,
                                                   random_patch=True)
       image = tf.image.resize(image, (self._image_w, self._image_h))
-      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.1)
+      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.25)
 
   
     num_dets = tf.shape(classes)[0]
+
+
     # padding
-    classes = preprocess_ops.clip_or_pad_to_fixed_size(classes,
-                                                       self._max_num_instances,
-                                                       -1)
+    classes = pad_max_instances(classes,
+                                self._max_num_instances,
+                                pad_axis=-1,
+                                pad_value=-1)
 
 
     image = tf.cast(image, self._dtype)
@@ -231,11 +234,11 @@ class Parser(parser.Parser):
       boxes = box_utils.yxyx_to_xcycwh(boxes)
       best_anchors = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
-      best_anchors = preprocess_ops.clip_or_pad_to_fixed_size(
-          best_anchors, self._max_num_instances, -1)
-      boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
-                                                        self._max_num_instances,
-                                                        0)
+      best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
+      boxes = pad_max_instances(boxes,
+                                self._max_num_instances,
+                                pad_axis=-2,
+                                pad_value=0)
       labels = {
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
@@ -246,9 +249,10 @@ class Parser(parser.Parser):
       labels.update({'grid_form': grid})
       labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     else:
-      boxes = preprocess_ops.clip_or_pad_to_fixed_size(boxes,
-                                                        self._max_num_instances,
-                                                        0)
+      boxes = pad_max_instances(boxes,
+                                self._max_num_instances,
+                                pad_axis=-2,
+                                pad_value=0)
                                   
       labels = {
           'bbox': tf.cast(boxes, self._dtype),
