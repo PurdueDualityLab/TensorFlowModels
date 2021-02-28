@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+if [ "$#" -lt 5 ]
+then
+  echo "Usage: ~/experiment_start tpu_name project experiment config trial"
+  echo
+  echo "Start a TPU experiment on a VM. This command is intended to run in a VM"
+  echo "created using gcnew or ctpu."
+  echo
+  echo "Example:"
+  echo "  ~/experiment_start tf-record-debug yolo yolo_custom yolov4-coco-tpuV3-8 91classes-recordtest"
+  exit 1
+fi
+
+nohup bash .experiment_start.sh $@ > $4-$5 &
+tail -f $4-$5
