@@ -7,7 +7,7 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'pdarknet53'
+          model_id: 'darknet53'
       decoder:
         version: v3
         type: regular
