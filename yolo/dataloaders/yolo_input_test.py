@@ -65,7 +65,7 @@ def test_classification_pipeline():
 import time
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
-
+  print(dataset)
   shind = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   ltime = time.time()

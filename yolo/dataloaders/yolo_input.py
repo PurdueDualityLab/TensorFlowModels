@@ -201,9 +201,9 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, image_shape)
     
     image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info)
+    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info, keep_thresh=0.1)
 
-    if self._letter_box and not self._mosaic:
+    if self._letter_box: #and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
         image,
         boxes,
@@ -216,7 +216,7 @@ class Parser(parser.Parser):
                                                   target_height=minscale,
                                                   random_patch=True)
       image = tf.image.resize(image, (self._image_w, self._image_h))
-      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info)
+      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.1)
 
   
     num_dets = tf.shape(classes)[0]
@@ -327,16 +327,18 @@ class Parser(parser.Parser):
     #         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
     
     if self._mosaic:
-      image, boxes, classes = preprocessing_ops.mosaic(
-          image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54)
-      label['bbox'] = pad_max_instances(boxes,
-                                        self._max_num_instances,
-                                        pad_axis=-2,
-                                        pad_value=0)
-      label['classes'] = pad_max_instances(classes,
-                                           self._max_num_instances,
-                                           pad_axis=-1,
-                                           pad_value=-1)
+      domo = preprocessing_ops.rand_uniform_strong(0, 4, tf.int32)
+      if domo >= 1:
+        image, boxes, classes = preprocessing_ops.mosaic(
+            image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54)
+        label['bbox'] = pad_max_instances(boxes,
+                                          self._max_num_instances,
+                                          pad_axis=-2,
+                                          pad_value=0)
+        label['classes'] = pad_max_instances(classes,
+                                            self._max_num_instances,
+                                            pad_axis=-1,
+                                            pad_value=-1)
 
     randscale = self._image_w // self._net_down_scale
     if not self._fixed_size:

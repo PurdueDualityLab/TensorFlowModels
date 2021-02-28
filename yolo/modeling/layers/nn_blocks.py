@@ -5,7 +5,6 @@ from official.modeling import tf_utils
 
 
 TPU_BASE = True
-
 from official.vision.beta.ops import spatial_transform_ops
 
 
@@ -113,10 +112,10 @@ class ConvBN(tf.keras.layers.Layer):
       if self._padding == 'same' and kernel_size != 1:
         padding = (dilation_rate * (kernel_size - 1))
         left_shift = padding // 2
-        self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
-                                                      [left_shift, left_shift]])
+        self._paddings = tf.constant([[0,0],[left_shift, left_shift],[left_shift, left_shift],[0,0]])
+        # self._zeropad = tf.keras.layers.ZeroPadding2D()
       else:
-        self._zeropad = Identity()
+        self._paddings = tf.constant([[0,0],[0,0],[0,0],[0,0]])
 
       self.conv = tf.keras.layers.Conv2D(
           filters=self._filters,
@@ -176,7 +175,7 @@ class ConvBN(tf.keras.layers.Layer):
 
   def call(self, x):
     if not TPU_BASE:
-      x = self._zeropad(x)
+      x = tf.pad(x, self._paddings, mode = "CONSTANT", constant_values=0)
     x = self.conv(x)
     x = self.bn(x)
     x = self._activation_fn(x)

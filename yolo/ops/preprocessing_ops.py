@@ -111,7 +111,12 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
     boxes = box_ops.xcycwh_to_yxyx(boxes)
   return boxes, classes 
 
-def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_upper_bound, keep_thresh = 0.25):
+def near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = 0.25):
+  x_lower_bound = tf.clip_by_value(x_lower_bound, 0.0, 1.0 - K.epsilon())
+  y_lower_bound = tf.clip_by_value(y_lower_bound, 0.0, 1.0 - K.epsilon())
+  x_upper_bound = tf.clip_by_value(x_upper_bound, 0.0, 1.0 - K.epsilon())
+  y_upper_bound = tf.clip_by_value(y_upper_bound, 0.0, 1.0 - K.epsilon())
+
   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
   y_lower_bound = tf.cast(y_lower_bound, boxes.dtype) 
   x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
@@ -126,10 +131,17 @@ def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_u
   y_mask1 = tf.math.logical_and((y_upper_bound-y_min > tf.cast(h * keep_thresh, y_min.dtype)), (y > y_upper_bound))
   x_mask1 = tf.math.logical_and((x_upper_bound-x_min > tf.cast(w * keep_thresh, x_min.dtype)), (x > x_upper_bound))
 
-  y_new = tf.where(y_mask1, y_upper_bound - 1, y)
-  h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
-  x_new = tf.where(x_mask1, x_upper_bound - 1, x)
-  w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
+  # tf.print(tf.reduce_sum(tf.cast(x_mask1, tf.int32)))
+  # tf.print(tf.reduce_sum(tf.cast(y_mask1, tf.int32)))
+
+  #y_new = tf.where(y_mask1, y_upper_bound - 1, y)
+  y_new = tf.where(y_mask1, y_upper_bound, y)
+  h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+  # h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+  # x_new = tf.where(x_mask1, x_upper_bound - 1, x)
+  x_new = tf.where(x_mask1, x_upper_bound, x)
+  w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
+  #w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
   
   boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
   x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
@@ -139,10 +151,17 @@ def near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_u
   y_mask1 = tf.math.logical_and((y_max-y_lower_bound > tf.cast(h * keep_thresh, y_max.dtype)), (y < y_lower_bound))
   x_mask1 = tf.math.logical_and((x_max-x_lower_bound > tf.cast(w * keep_thresh, x_max.dtype)), (x < x_lower_bound))
 
-  y_new = tf.where(y_mask1, y_lower_bound + 1, y)
-  h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
-  x_new = tf.where(x_mask1, x_lower_bound + 1, x)
-  w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
+  # tf.print(tf.reduce_sum(tf.cast(x_mask1, tf.int32)))
+  # tf.print(tf.reduce_sum(tf.cast(y_mask1, tf.int32)))
+
+  # y_new = tf.where(y_mask1, y_lower_bound + 1, y)
+  y_new = tf.where(y_mask1, y_lower_bound, y)
+  h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+  # h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+  # x_new = tf.where(x_mask1, x_lower_bound + 1, x)
+  x_new = tf.where(x_mask1, x_lower_bound, x)
+  w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
+  # w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
   
   boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
   boxes = box_ops.xcycwh_to_yxyx(boxes)
@@ -227,9 +246,9 @@ def random_crop_or_pad(image,
 
     if random_patch:
       dx = tf.random.uniform([], minval=0, maxval=dx *
-                             2, dtype=tf.int32) if dx != 0 else 0
+                             2 + 1, dtype=tf.int32) if dx != 0 else 0
       dy = tf.random.uniform([], minval=0, maxval=dy *
-                             2, dtype=tf.int32) if dy != 0 else 0
+                             2 + 1, dtype=tf.int32) if dy != 0 else 0
 
     if target_width > default_width:
       image, _ = pad_to_bbox(image, target_width, default_height, dx, 0)
@@ -283,7 +302,7 @@ def pad_to_bbox(image, target_width, target_height,
   return image, crop_info
 
 
-def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh = 0.25):
+def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh = 0.01):
   height = image_info['original_dims'][0]
   target_height = image_info['new_dims'][0]
   offset_height = image_info['offset'][0]
@@ -311,7 +330,7 @@ def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh = 0.25):
   y_lower_bound = offset_height / height
   y_upper_bound = (offset_height + target_height) / height if yscaler > 1.0 else tf.cast(1.0, tf.float64)
 
-  boxes = near_edge_adjustment(boxes, x_lower_bound, y_lower_bound, x_upper_bound, y_upper_bound, keep_thresh = keep_thresh)
+  boxes = near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = keep_thresh)
   boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
 
@@ -397,16 +416,16 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6):
                                              num_instances,
                                              yxyx=True)
 
-  crop_delta = rand_uniform_strong(crop_delta, 1 + crop_delta * 3/5)
+  crop_delta = rand_uniform_strong(crop_delta, 1.0) #1 + crop_delta * 3/5)
   full_image, image_info = random_crop_or_pad(full_image,
                                                   target_width=tf.cast(
           tf.cast(height, tf.float32) * crop_delta, tf.int32),
                                                   target_height=tf.cast(
           tf.cast(width, tf.float32) * crop_delta, tf.int32),
                                                   random_patch=True)
-  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.25)
+  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = 0.1)
   full_image = tf.image.resize(full_image, [output_size, output_size])
-  return full_image, full_boxes, full_classes
+  return tf.cast(full_image, images.dtype), tf.cast(full_boxes, boxes.dtype), tf.cast(full_classes, classes.dtype)
 
 
 

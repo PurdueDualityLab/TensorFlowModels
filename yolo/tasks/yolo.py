@@ -41,7 +41,7 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
-  
+
     return
 
   def build_model(self):
@@ -147,34 +147,35 @@ class YoloTask(base_task.Task):
     dataset = reader.read(input_context=input_context)
 
 
-    # if params.is_training and params.parser.mosaic:
-    dataset = dataset.unbatch().batch(gbs, drop_remainder=True)
+    if params.is_training and params.parser.mosaic:
+      dataset = dataset.unbatch().shuffle(params.global_batch_size * 4 * 2).batch(gbs, drop_remainder=True)
     return dataset
 
-  def build_losses(self, outputs, labels, aux_losses=None):
-    loss = 0.0
-    loss_box = 0.0
-    loss_conf = 0.0
-    loss_class = 0.0
+  def build_losses(self, outputs, labels, num_replicas = 1, aux_losses=None):
+    # loss = 0.0
+    # loss_box = 0.0
+    # loss_conf = 0.0
+    # loss_class = 0.0
     metric_dict = dict()
+    loss = dict()
+    metric_dict['total_loss'] = 0
 
     grid = labels['grid_form']
+    # metric_dict['conf_loss'] = loss_conf
+    # metric_dict['box_loss'] = loss_box
+    # metric_dict['class_loss'] = loss_class
     for key in outputs.keys():
       # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
       _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
           key](grid[key], outputs[key])
       #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
-      loss += _loss
-      loss_box += _loss_box
-      loss_conf += _loss_conf
-      loss_class += _loss_class
+      metric_dict[f'total_loss'] += _loss
+      metric_dict[f'conf_loss_{key}'] = _loss_conf
+      metric_dict[f'box_loss_{key}'] = _loss_box
+      metric_dict[f'class_loss_{key}'] = _loss_class
       metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
       metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
-
-    metric_dict['box_loss'] = loss_box
-    metric_dict['conf_loss'] = loss_conf
-    metric_dict['class_loss'] = loss_class
-    metric_dict['total_loss'] = loss
+      loss[f"loss_{key}"] = _loss/num_replicas
 
     return loss, metric_dict
 
@@ -204,12 +205,13 @@ class YoloTask(base_task.Task):
       # cast to float32
       y_pred = model(image, training=True)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-      scaled_loss = loss / num_replicas
+      scaled_loss, loss_metrics = self.build_losses(y_pred['raw_output'], label, num_replicas=num_replicas)
+      # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
-        scaled_loss = optimizer.get_scaled_loss(scaled_loss)
+        for key in scaled_loss.keys():
+          scaled_loss[key] = optimizer.get_scaled_loss(scaled_loss[key])
     
     # compute the gradient
     train_vars = model.trainable_variables
@@ -231,7 +233,7 @@ class YoloTask(base_task.Task):
     # for value in delta.keys():
     #   loss_val += tf.reduce_sum(tf.square(delta[value]))
     # custom metrics
-    logs = {self.loss: loss}
+    logs = {self.loss: loss_metrics['total_loss']}
     # loss_metrics['darknet_loss'] = loss_val
     if metrics:
       for m in metrics:
@@ -253,16 +255,8 @@ class YoloTask(base_task.Task):
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-    logs = {self.loss: loss}
+    logs = {self.loss: loss_metrics['total_loss']}
 
-    # gradients = tape.gradient(loss, y_pred['raw_output'])
-
-    # loss_val = 0
-    # for value in gradients.keys():
-    #   loss_val += tf.reduce_sum(tf.square(gradients[value]))
-
-    # #custom metrics
-    # loss_metrics['darknet_loss'] = loss_val
     image_shape = tf.shape(image)[1:-1]
 
     label['boxes'] = box_ops.denormalize_boxes(
@@ -370,14 +364,17 @@ class YoloTask(base_task.Task):
       # self._get_gt_boxes_used = YoloGTFilter(self._masks)
 
     metric_names = []
+    loss_names = []
     for key in self._masks.keys():
+      metric_names.append(f'box_loss_{key}')
+      metric_names.append(f'class_loss_{key}')
+      metric_names.append(f'conf_loss_{key}') 
+      loss_names.append(f'loss_{key}')
       metric_names.append(f"recall50_{key}")
       metric_names.append(f"avg_iou_{key}")
 
-    metric_names.append('box_loss')
-    metric_names.append('conf_loss')
-    metric_names.append('class_loss')
-    metric_names.append('total_loss')
+    metric_names.append(f'total_loss')
+    
     # metric_names.append('darknet_loss')
     self._metric_names = metric_names
 
