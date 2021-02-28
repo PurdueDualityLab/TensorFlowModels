@@ -449,7 +449,7 @@ class YoloTask(base_task.Task):
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
-        if self.task_config.model.subdivisons == 1:
+        if self.task_config.model.subdivisions == 1:
           try:
             status.expect_partial().assert_existing_objects_matched()
           except:
