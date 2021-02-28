@@ -449,11 +449,11 @@ class YoloTask(base_task.Task):
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
-        if self.task_config.model.subdivisions == 1:
-          try:
-            status.expect_partial().assert_existing_objects_matched()
-          except:
-            print("this checkpoint could not assert all components consumed")
+        # if self.task_config.model.subdivisions == 1:
+        #   try:
+        status.expect_partial().assert_existing_objects_matched()
+        #except:
+        #print("this checkpoint could not assert all components consumed")
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 

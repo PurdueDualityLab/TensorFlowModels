@@ -9,27 +9,27 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'darknet53'
       decoder:
         version: v3
         type: regular
-      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
-      darknet_weights_cfg: 'cache://csdarknet53.cfg'
+      darknet_weights_file: 'cache://darknet53.weights'
+      darknet_weights_cfg: 'cache://darknet53.cfg'
     subdivisions: 16
     num_classes: 80
     _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
-    _input_size: [512, 512, 3]
+    _input_size: [416, 416, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: false
     decoder_activation: leaky
     filter:
-      anchor_generation_scale: 512
+      anchor_generation_scale: 416
       ignore_thresh: 0.7
       iou_thresh: 0.25
       loss_type: ciou
@@ -49,12 +49,12 @@ task:
     shuffle_buffer_size: 10000
     parser:
       fixed_size: true
-      image_h: 512
-      image_w: 512
+      image_h: 416
+      image_w: 416
       seed: 10
-      letter_box: false
+      letter_box: true
       cutmix: false
-      mosaic: true
+      mosaic: false
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
@@ -67,8 +67,8 @@ task:
     is_training: false
     shuffle_buffer_size: 10000
     parser:
-      image_h: 512
-      image_w: 512
+      image_h: 416
+      image_w: 416
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
@@ -76,7 +76,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: false
+  load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
   train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -91,7 +91,7 @@ trainer:
       stepwise:
         boundaries: [75000, 112500]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
