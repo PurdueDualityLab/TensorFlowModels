@@ -76,8 +76,31 @@ task:
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
+# trainer:
+#   train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+#   validation_steps: 625
+#   steps_per_loop: 10000
+#   validation_interval: 10000 #00
+#   summary_interval: 10000
+#   checkpoint_interval: 10000
+#   optimizer_config:
+#     learning_rate:
+#       type: stepwise
+#       stepwise:
+#         boundaries: [75000, 112500]
+#         name: PiecewiseConstantDecay
+#         values: [0.00261, 0.000261, 0.0000261]
+#     optimizer:
+#       type: sgd
+#       sgd:
+#         momentum: 0.949
+#         name: SGD
+#     warmup:
+#       type: 'linear'
+#       linear:
+#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
 trainer:
-  train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -87,17 +110,16 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [75000, 112500]
+        boundaries: [300000, 337500]
         name: PiecewiseConstantDecay
         values: [0.00261, 0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.9
+        momentum: 0.949
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps 
 
