@@ -13,7 +13,7 @@ task:
         type: regular
       darknet_weights_file: 'cache://yolov3.weights'
       darknet_weights_cfg: 'cache://yolov3.cfg'
-    subdivisions: 4
+    subdivisions: 1
     num_classes: 80
     _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
     _input_size: [512, 512, 3]
