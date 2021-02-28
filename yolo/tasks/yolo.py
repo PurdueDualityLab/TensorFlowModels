@@ -108,6 +108,8 @@ class YoloTask(base_task.Task):
     if input_context is not None:
       gbs = input_context.get_per_replica_batch_size(
           gbs) if input_context else gbs
+    if params.is_training and params.parser.mosaic:
+      params.global_batch_size = 4 * params.global_batch_size//gbs
 
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
@@ -146,12 +148,7 @@ class YoloTask(base_task.Task):
 
 
     # if params.is_training and params.parser.mosaic:
-    dataset = dataset.unbatch()
-    if input_context is not None:
-      gbs = input_context.get_per_replica_batch_size(
-            gbs) if input_context else gbs
-    dataset = dataset.batch(gbs, drop_remainder=True)
-
+    dataset = dataset.unbatch().batch(gbs, drop_remainder=True)
     return dataset
 
   def build_losses(self, outputs, labels, aux_losses=None):
