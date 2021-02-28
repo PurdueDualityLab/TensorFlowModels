@@ -89,19 +89,19 @@ def _shift_zeros_full(boxes, classes, num_instances, yxyx = True):
 
   mask = tf.expand_dims(tf.cast(mask, x.dtype), axis = -1)
   x_shape = tf.shape(x)
-  x_ = tf.gather_nd(tf.squeeze(x), ind)
+  x_ = tf.gather_nd(tf.squeeze(x, axis = -1), ind)
   x = tf.reshape(x_, x_shape) * mask
 
   y_shape = tf.shape(y)
-  y_ = tf.gather_nd(tf.squeeze(y), ind)
+  y_ = tf.gather_nd(tf.squeeze(y, axis = -1), ind)
   y = tf.reshape(y_, y_shape) * mask
 
   w_shape = tf.shape(w)
-  w_ = tf.gather_nd(tf.squeeze(w), ind)
+  w_ = tf.gather_nd(tf.squeeze(w, axis = -1), ind)
   w = tf.reshape(w_, w_shape) * mask
 
   h_shape = tf.shape(h)
-  h_ = tf.gather_nd(tf.squeeze(h), ind)
+  h_ = tf.gather_nd(tf.squeeze(h, axis = -1), ind)
   h = tf.reshape(h_, h_shape) * mask
 
   boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
