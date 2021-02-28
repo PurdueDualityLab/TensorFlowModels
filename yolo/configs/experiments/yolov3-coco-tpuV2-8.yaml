@@ -7,12 +7,12 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'pdarknet53'
       decoder:
         version: v3
-        type: spp
-      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
-      darknet_weights_cfg: 'cache://csdarknet53.cfg'
+        type: regular
+      darknet_weights_file: 'cache://yolov3.weights'
+      darknet_weights_cfg: 'cache://yolov3.cfg'
     subdivisions: 4
     num_classes: 80
     _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
@@ -21,7 +21,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: false
@@ -52,7 +52,7 @@ task:
       seed: 10
       letter_box: false
       cutmix: false
-      mosaic: true
+      mosaic: false
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
@@ -70,11 +70,11 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/csdarknet53_tune3/'
-  init_checkpoint_modules: 'backbone'
+  # init_checkpoint: 'gs://tensorflow2/csdarknet53_tune3/'
+  # init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: false
+  load_darknet_weights: true
   darknet_load_decoder: false
 trainer:
   train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
