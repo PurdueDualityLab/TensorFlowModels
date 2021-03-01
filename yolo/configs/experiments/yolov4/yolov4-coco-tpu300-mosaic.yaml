@@ -34,7 +34,6 @@ task:
       loss_type: ciou
       max_boxes: 200
       use_nms: false
-      mosaic_frequency: 0.5
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 64 # 64 batch size 
@@ -53,7 +52,9 @@ task:
       image_w: 512
       letter_box: false
       cutmix: false
-      mosaic: true
+      mosaic: false
+      keep_thresh: 0.25
+      mosaic_frequency: 0.5
       use_tie_breaker: true
   validation_data:
     global_batch_size: 64
