@@ -62,16 +62,17 @@ if __name__ == "__main__":
         classes=params.task.model.num_classes,
         labels=None,
         display_names=False,
-        thickness=1)
+        thickness=2)
 
 
-  image = url_to_image("https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/dog.jpg")
+  image = url_to_image("/home/vbanna/Downloads/images/images/crop.png")
   save_name = "save.png"
 
   image_ = resize_input_image(image, [416, 416, 3], normalize=True)
 
   pred = model(image_, training = False)
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+  image = cv2.resize(image, (1280, 720))
   image = draw_fn(image/255, pred)
   
   cv2.imshow("testframe", image)

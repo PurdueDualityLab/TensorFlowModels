@@ -76,8 +76,9 @@ def test_pipeline():
     print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
-    i = drawer(i,
-               j)  # tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
+    i2 = drawer(i,
+               j)  # 
+    i = tf.image.draw_bounding_boxes(i, j["bbox"], [[1.0, 0.0, 1.0]])
 
     gt = j['grid_form']
 
@@ -87,7 +88,7 @@ def test_pipeline():
 
     fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(i[shind])
+    axe[0].imshow(i2[shind])
     axe[1].imshow(obj3[shind].numpy())
     axe[2].imshow(obj4[shind].numpy())
     axe[3].imshow(obj5[shind].numpy())
@@ -97,7 +98,7 @@ def test_pipeline():
     plt.show()
 
     fig, axe = plt.subplots(1, 4)
-    axe[0].imshow(i[shind + 1])
+    axe[0].imshow(i2[shind + 1])
     axe[1].imshow(obj3[shind + 1].numpy())
     axe[2].imshow(obj4[shind + 1].numpy())
     axe[3].imshow(obj5[shind + 1].numpy())

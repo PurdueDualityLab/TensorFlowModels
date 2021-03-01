@@ -130,7 +130,7 @@ class YoloTask(base_task.Task):
         max_num_instances=params.parser.max_num_instances,
         random_flip=params.parser.random_flip,
         pct_rand=params.parser.pct_rand,
-        seed=params.parser.seed,
+        keep_thresh=params.parser.keep_thesh, 
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,

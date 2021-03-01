@@ -70,4 +70,3 @@ pycocotools
 seqeval
 sentencepiece
 tflite_support
-more-itertools

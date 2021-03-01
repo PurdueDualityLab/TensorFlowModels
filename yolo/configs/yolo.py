@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
-  seed: Optional[int] = None
+  keep_thesh: float = 0.1
   use_tie_breaker: bool = True
 
 # pylint: disable=missing-class-docstring

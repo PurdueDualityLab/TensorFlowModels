@@ -49,6 +49,7 @@ class Parser(parser.Parser):
                max_process_size=608,
                min_process_size=320,
                max_num_instances=200,
+               keep_thresh = 0.25, 
                random_flip=True,
                pct_rand=0.5,
                aug_rand_saturation=True,
@@ -114,6 +115,7 @@ class Parser(parser.Parser):
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_zoom = aug_rand_zoom
     self._aug_rand_hue = aug_rand_hue
+    self._keep_thresh = keep_thresh
 
     self._seed = seed
     self._cutmix = cutmix
@@ -201,7 +203,7 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, image_shape)
     
     image, crop_info = preprocessing_ops.random_op_image(image, self._jitter_im, zfactor, 0.0, True)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info, keep_thresh=0.25)
+    boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
     if self._letter_box: #and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
@@ -216,7 +218,7 @@ class Parser(parser.Parser):
                                                   target_height=minscale,
                                                   random_patch=True)
       image = tf.image.resize(image, (self._image_w, self._image_h))
-      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.25)
+      boxes, classes = preprocessing_ops.filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=self._keep_thresh)
 
   
     num_dets = tf.shape(classes)[0]
@@ -334,7 +336,7 @@ class Parser(parser.Parser):
       domo = preprocessing_ops.rand_uniform_strong(0, 4, tf.int32)
       if domo >= 1:
         image, boxes, classes = preprocessing_ops.mosaic(
-            image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54)
+            image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54, keep_thresh = self._keep_thresh)
         label['bbox'] = pad_max_instances(boxes,
                                           self._max_num_instances,
                                           pad_axis=-2,
