@@ -124,7 +124,7 @@ def load_model(experiment="yolo_custom", config_path=[], model_dir=""):
     ckpt = tf.train.Checkpoint(model=model, optimizer=optimizer)
     status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
 
-    status.expect_partial().assert_existing_objects_matched()
+    # status.expect_partial().assert_existing_objects_matched()
     print(dir(status), status)
   else:
     task.initialize(model)
