@@ -14,7 +14,7 @@ task:
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
-    num_classes: 80
+    num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
@@ -36,11 +36,8 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
-    tfds_download: true
-    tfds_name: coco
-    tfds_split: train
+    global_batch_size: 1024 # 64 batch size 
+    input_path: 'gs://tensorflow2/coco2017/coco_train*'
     drop_remainder: true
     dtype: bfloat16
     input_path: ''
@@ -55,41 +52,38 @@ task:
       mosaic: true
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 8
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
-    tfds_download: true
-    tfds_name: coco/2017
-    tfds_split: validation
+    global_batch_size: 1024
     dtype: bfloat16
-    input_path: ''
+    input_path: 'gs://tensorflow2/coco2017/coco_val*'
     is_training: false
     shuffle_buffer_size: 10000
+    drop_remainder: false
     parser:
       image_h: 512
       image_w: 512
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/csdarknet53/'
+  init_checkpoint: 'gs://tensorflow2/csdarknet53_tune3/'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
-  steps_per_loop: 10000
-  validation_interval: 10000 #00
-  summary_interval: 10000
-  checkpoint_interval: 10000
+  train_steps: 31282 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 4
+  steps_per_loop: 100
+  validation_interval: 100 #00
+  summary_interval: 100
+  checkpoint_interval: 100
   optimizer_config:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [75000, 112500]
+        boundaries: [25000, 28125]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.04176, 0.004176, 0.0004176]
     optimizer:
       type: sgd
       sgd:
@@ -98,7 +92,7 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 250 #learning rate rises from 0 to 0.0013 over 1000 steps
 # trainer:
 #   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
 #   validation_steps: 625
@@ -116,10 +110,34 @@ trainer:
 #     optimizer:
 #       type: sgd
 #       sgd:
-#         momentum: 0.949
+#         momentum: 0.9
 #         name: SGD
 #     warmup:
 #       type: 'linear'
 #       linear:
-#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps 
-
+#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+# trainer:
+#   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+#   validation_steps: 625
+#   steps_per_loop: 10000
+#   validation_interval: 10000 #00
+#   summary_interval: 10000
+#   checkpoint_interval: 10000
+#   optimizer_config:
+#     learning_rate:
+#       type: stepwise
+#       stepwise:
+#         #boundaries: [300000, 337500]
+#         boundaries: [262500, 300000]
+#         name: PiecewiseConstantDecay
+#         values: [0.00261, 0.000261, 0.0000261]
+#     optimizer:
+#       type: sgd
+#       sgd:
+#         momentum: 0.9
+#         name: SGD
+#     warmup:
+#       type: 'linear'
+#       linear:
+#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+      

@@ -11,10 +11,10 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://yolov4.weights'
-      darknet_weights_cfg: 'cache://yolov4.cfg'
+      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
+      darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
-    num_classes: 80
+    num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
@@ -37,13 +37,9 @@ task:
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
-    tfds_download: true
-    tfds_name: coco
-    tfds_split: train
+    input_path: 'gs://tensorflow2/tensorflow_datasets/coco2017/coco_train.*'
     drop_remainder: true
     dtype: bfloat16
-    input_path: ''
     is_training: true
     shuffle_buffer_size: 10000
     parser:
@@ -52,16 +48,13 @@ task:
       image_w: 512
       letter_box: false
       cutmix: false
-      mosaic: false
+      mosaic: true
+      keep_thresh: 0.25
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
-    tfds_download: true
-    tfds_name: coco/2017
-    tfds_split: validation
+    input_path: 'gs://tensorflow2/tensorflow_datasets/coco2017/coco_val.*'
     dtype: bfloat16
-    input_path: ''
     is_training: false
     shuffle_buffer_size: 10000
     parser:
@@ -70,11 +63,11 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  # init_checkpoint: 'gs://tensorflow2/csdarknet53/'
-  # init_checkpoint_modules: 'backbone'
+  init_checkpoint: 'gs://tensorflow2/csdarknet53_tune3/'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: true
+  load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
   train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -89,7 +82,7 @@ trainer:
       stepwise:
         boundaries: [75000, 112500]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.00013, 0.000013]
+        values: [0.00261, 0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
@@ -100,8 +93,8 @@ trainer:
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
 # trainer:
-#   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-#   validation_steps: 625
+#   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+#   validation_steps: 78
 #   steps_per_loop: 10000
 #   validation_interval: 10000 #00
 #   summary_interval: 10000
@@ -110,9 +103,10 @@ trainer:
 #     learning_rate:
 #       type: stepwise
 #       stepwise:
-#         boundaries: [300000, 337500]
+#         #boundaries: [300000, 337500]
+#         boundaries: [400000, 450000]
 #         name: PiecewiseConstantDecay
-#         values: [0.0013, 0.00013, 0.000013]
+#         values: [0.00261, 0.000261, 0.0000261]
 #     optimizer:
 #       type: sgd
 #       sgd:
@@ -121,5 +115,5 @@ trainer:
 #     warmup:
 #       type: 'linear'
 #       linear:
-#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps 
-
+#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+      

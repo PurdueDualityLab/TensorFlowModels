@@ -46,6 +46,7 @@ class Parser(parser.Parser):
                masks=None,
                cutmix = False,
                mosaic = True, 
+               mosaic_frequency = 1, 
                max_process_size=608,
                min_process_size=320,
                max_num_instances=200,
