@@ -56,7 +56,9 @@ task:
       image_w: 512
       letter_box: false
       cutmix: false
-      mosaic: true
+      mosaic: false
+      keep_thresh: 0.25
+      mosaic_frequency: 0.5
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
@@ -79,7 +81,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: true
+  load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
