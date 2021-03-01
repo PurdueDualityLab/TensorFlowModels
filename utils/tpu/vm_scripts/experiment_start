@@ -11,5 +11,11 @@ then
   exit 1
 fi
 
-nohup bash .experiment_start.sh $@ > $4-$5 &
-tail -f $4-$5
+if [ $# -ge 5 ]
+then
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4-$5 > $4-$5 &
+  tail -f $4-$5
+else
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4 > $4 &
+  tail -f $4
+fi
