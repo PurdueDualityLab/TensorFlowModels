@@ -99,7 +99,7 @@ class Hourglass(tf.keras.Model):
             activation='linear'
         )(x_hg)
 
-        x_inter = inter_hg_conv1 + inter_hg_conv2
+        x_inter = tf.keras.layers.Add()([inter_hg_conv1, inter_hg_conv2])
         x_inter = tf.keras.layers.ReLU()(x_inter)
 
         # inters

@@ -16,10 +16,16 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
     model_config = exp_cfg.CenterNet(input_size=[512, 512, 3])
     config = exp_cfg.CenterNetTask(model=model_config)
     task = CenterNetTask(config)
+
     model = task.build_model()
-    out = model(tf.zeros((3, 512, 512, 3)))
-    model.summary()
-        
+    outputs = model(tf.zeros((3, 512, 512, 3)))
+
+    self.assertEqual(len(outputs['raw_output']), 3)
+    self.assertEqual(outputs['raw_output']['ct_heatmaps'].shape, (3, 128, 128, 80))
+    self.assertEqual(outputs['raw_output']['ct_offset'].shape, (3, 128, 128, 2))
+    self.assertEqual(outputs['raw_output']['ct_size'].shape, (3, 128, 128, 2))
+
+    model.summary()    
 
 
 if __name__ == '__main__':

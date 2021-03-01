@@ -19,7 +19,13 @@ class CenterNetTest(parameterized.TestCase, tf.test.TestCase):
     model, loss = build_centernet(input_specs=input_specs,
       task_config=config, l2_regularization=0)
     
-    # TODO: add some call tests
+    outputs = model(tf.zeros((5, 512, 512, 3)))
+    self.assertEqual(len(outputs['raw_output']), 3)
+    self.assertEqual(outputs['raw_output']['ct_heatmaps'].shape, (5, 128, 128, 80))
+    self.assertEqual(outputs['raw_output']['ct_offset'].shape, (5, 128, 128, 2))
+    self.assertEqual(outputs['raw_output']['ct_size'].shape, (5, 128, 128, 2))
+
+    model.summary()
     
 
 
