@@ -161,7 +161,7 @@ class Parser(hyperparams.Config):
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
   keep_thesh: float = 0.1
-  mosaic_frequency: float = 1
+  mosaic_frequency: float = 0.5
   use_tie_breaker: bool = True
 
 # pylint: disable=missing-class-docstring

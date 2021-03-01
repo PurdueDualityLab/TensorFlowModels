@@ -131,6 +131,7 @@ class YoloTask(base_task.Task):
         random_flip=params.parser.random_flip,
         pct_rand=params.parser.pct_rand,
         keep_thresh=params.parser.keep_thesh, 
+        mosaic_frequency=params.parser.mosaic_frequency, 
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,

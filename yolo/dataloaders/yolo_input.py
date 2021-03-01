@@ -117,6 +117,7 @@ class Parser(parser.Parser):
     self._aug_rand_zoom = aug_rand_zoom
     self._aug_rand_hue = aug_rand_hue
     self._keep_thresh = keep_thresh
+    self._mosaic_frequency = mosaic_frequency
 
     self._seed = seed
     self._cutmix = cutmix
@@ -334,8 +335,8 @@ class Parser(parser.Parser):
     #         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
     
     if self._mosaic:
-      domo = preprocessing_ops.rand_uniform_strong(0, 4, tf.int32)
-      if domo >= 1:
+      domo = preprocessing_ops.rand_uniform_strong(0, 1, tf.float32)
+      if domo >= (1 - self._mosaic_frequency):
         image, boxes, classes = preprocessing_ops.mosaic(
             image, label['bbox'],label['classes'], self._image_w, crop_delta=0.54, keep_thresh = self._keep_thresh)
         label['bbox'] = pad_max_instances(boxes,
