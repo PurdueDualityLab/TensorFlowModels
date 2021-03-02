@@ -37,7 +37,7 @@ task:
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 64 # 64 batch size 
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/coco'
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -57,8 +57,8 @@ task:
       mosaic_frequency: 0.5
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 8
-    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/coco'
+    global_batch_size: 64
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
