@@ -363,7 +363,7 @@ class Parser(parser.Parser):
     image = tf.image.resize(image, (width, width))
 
     label['bbox'] = box_utils.yxyx_to_xcycwh(label['bbox'])
-    best_anchors = preprocessing_ops.get_best_anchor_batch(
+    best_anchors = preprocessing_ops.get_best_anchor(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
     label['best_anchors'] = pad_max_instances(
         best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)

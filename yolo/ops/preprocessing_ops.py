@@ -470,22 +470,6 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6, ke
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ops for building batches in GT format
 def get_best_anchor(y_true, anchors, width=1, height=1):
   """
     get the correct anchor that is assoiciated with each box using IOU
@@ -501,76 +485,19 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
       box known
     """
   with tf.name_scope('get_anchor'):
-    width = tf.cast(width, dtype=y_true.dtype)
-    height = tf.cast(height, dtype=y_true.dtype)
-    # split the boxes into center and width height
-    anchor_xy = y_true[..., 0:2]
-    true_wh = y_true[..., 2:4]
+    is_batch = True
+    ytrue_shape = y_true.get_shape()
+    if ytrue_shape.ndims == 2:
+      is_batch = False
+      y_true = tf.expand_dims(y_true, 0)
+    elif ytrue_shape.ndims is None:
+      is_batch = False
+      y_true = tf.expand_dims(y_true, 0)
+      y_true.set_shape([None] * 3)
+    elif ytrue_shape.ndims != 3:
+      raise ValueError(
+          '\'box\' (shape %s) must have either 3 or 4 dimensions.')
 
-    # scale thhe boxes
-    anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
-    anchors_x = anchors[..., 0] / width
-    anchors_y = anchors[..., 1] / height
-    anchors = tf.stack([anchors_x, anchors_y], axis=-1)
-    k = tf.shape(anchors)[0]
-    # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
-    anchors = tf.transpose(anchors, perm=[1, 0])
-
-    anchor_xy = tf.tile(
-        tf.expand_dims(anchor_xy, axis=-1), [1, 1, tf.shape(anchors)[-1]])
-    anchors = tf.tile(
-        tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1])
-
-    # stack the xy so, each anchor is asscoaited once with each center from
-    # the ground truth input
-    anchors = K.concatenate([anchor_xy, anchors], axis=1)
-    anchors = tf.transpose(anchors, perm=[2, 0, 1])
-
-    # copy the gt n times so that each anchor from above can be compared to
-    # input ground truth to shape: [num_anchors, num_boxes, 4]
-    truth_comp = tf.tile(
-        tf.expand_dims(y_true[..., 0:4], axis=-1),
-        [1, 1, tf.shape(anchors)[0]])
-    truth_comp = tf.transpose(truth_comp, perm=[2, 0, 1])
-
-    # compute intersection over union of the boxes, and take the argmax of
-    # comuted iou for each box. thus each box is associated with the
-    # largest interection over union
-    iou_raw = box_ops.compute_iou(truth_comp, anchors)
-    values, indexes = tf.math.top_k(
-        tf.transpose(iou_raw, perm=[1, 0]),
-        k=tf.cast(k, dtype=tf.int32),
-        sorted=True)
-    ind_mask = tf.cast(values > 0.213, dtype=indexes.dtype)
-
-    # pad the indexs such that all values less than the thresh are -1
-    # add one, multiply the mask to zeros all the bad locations
-    # subtract 1 makeing all the bad locations 0.
-    iou_index = tf.concat([
-        K.expand_dims(indexes[..., 0], axis=-1),
-        ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
-    ],
-                          axis=-1)
-    iou_index = iou_index[..., :6]
-
-  return tf.cast(iou_index, dtype=tf.float32)
-
-
-def get_best_anchor_batch(y_true, anchors, width=1, height=1):
-  """
-    get the correct anchor that is assoiciated with each box using IOU
-    Args:
-      y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
-      anchors: list or tensor for the anchor boxes to be used in prediction
-        found via Kmeans
-      width: int for the image width
-      height: int for the image height
-
-    Return:
-      tf.Tensor: y_true with the anchor associated with each ground truth
-      box known
-    """
-  with tf.name_scope('get_anchor'):
     width = tf.cast(width, dtype=y_true.dtype)
     height = tf.cast(height, dtype=y_true.dtype)
     # split the boxes into center and width height
@@ -592,9 +519,6 @@ def get_best_anchor_batch(y_true, anchors, width=1, height=1):
         tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[1], 1, 1])
     anchors = tf.tile(
         tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1, 1])
-    
-    # tf.repeat(
-    #     tf.expand_dims(anchors, axis=0), tf.shape(anchor_xy)[0], axis=0)
 
     # stack the xy so, each anchor is asscoaited once with each center from
     # the ground truth input
@@ -627,7 +551,8 @@ def get_best_anchor_batch(y_true, anchors, width=1, height=1):
     ],
                           axis=-1)
     iou_index = iou_index[..., :6]
-
+    if not is_batch:
+      iou_index = tf.squeeze(iou_index, axis = 0)  
   return tf.cast(iou_index, dtype=tf.float32)
 
 
