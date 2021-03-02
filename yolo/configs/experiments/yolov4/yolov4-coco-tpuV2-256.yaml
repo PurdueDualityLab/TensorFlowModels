@@ -37,7 +37,7 @@ task:
       iou_normalizer: 0.07
   train_data:
     global_batch_size: 1024 # 64 batch size 
-    input_path: 'gs://tensorflow2/coco2017/coco_train*'
+    input_path: 'gs://tensorflow2/coco_records/train/2017*'
     drop_remainder: true
     dtype: bfloat16
     input_path: ''
@@ -54,7 +54,7 @@ task:
   validation_data:
     global_batch_size: 1024
     dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco2017/coco_val*'
+    input_path: 'gs://tensorflow2/coco_records/val/2017*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: false
