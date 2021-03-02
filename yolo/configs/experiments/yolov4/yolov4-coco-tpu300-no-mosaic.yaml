@@ -14,7 +14,7 @@ task:
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
-    num_classes: 91
+    num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: [512, 512, 3]
     boxes_per_scale: 3
@@ -36,12 +36,16 @@ task:
       use_nms: false
       iou_normalizer: 0.07
   train_data:
-    global_batch_size: 64
-    dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
+    global_batch_size: 64 # 64 batch size 
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/coco'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: train
+    drop_remainder: true
+    dtype: float16
+    input_path: ''
     is_training: true
     shuffle_buffer_size: 10000
-    drop_remainder: false
     parser:
       fixed_size: true
       image_h: 512
@@ -53,12 +57,16 @@ task:
       mosaic_frequency: 0.5
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 64
-    dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    global_batch_size: 8
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/coco'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: validation
+    dtype: float16
+    input_path: ''
     is_training: false
     shuffle_buffer_size: 10000
-    drop_remainder: false
+    drop_remainder: True
     parser:
       image_h: 512
       image_w: 512
