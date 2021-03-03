@@ -138,15 +138,9 @@ class Parser(parser.Parser):
   def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False):
     mask = self._masks
     for key in self._masks.keys():
-      if not batch:
-        mask[key] = preprocessing_ops.build_grided_gt(
-            raw_true, self._masks[key], width // 2**int(key), self._num_classes,
-            raw_true['bbox'].dtype, use_tie_breaker)
-      else:
-        mask[key] = preprocessing_ops.build_batch_grided_gt(
-            raw_true, self._masks[key], width // 2**int(key), self._num_classes,
-            raw_true['bbox'].dtype, use_tie_breaker)
-
+      mask[key] = preprocessing_ops.build_grided_gt(
+          raw_true, self._masks[key], width // 2**int(key), self._num_classes,
+          raw_true['bbox'].dtype, use_tie_breaker)
       mask[key] = tf.cast(mask[key], self._dtype)
     return mask
 

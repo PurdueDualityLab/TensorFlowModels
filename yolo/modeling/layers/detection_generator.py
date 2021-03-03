@@ -142,7 +142,7 @@ class YoloLayer(ks.Model):
         self._max_boxes,
         self._thresh,
         self._nms_thresh,
-        use_classes=False)
+        use_classes=True)
 
     return {
         'bbox': boxes,
