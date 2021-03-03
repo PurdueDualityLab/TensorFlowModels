@@ -13,9 +13,9 @@ fi
 
 if [ $# -ge 5 ]
 then
-  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4-$5 > $4-$5 &
-  tail -f $4-$5
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4-$5 > logs/$4-$5 &
+  tail -f logs/$4-$5
 else
-  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4 > $4 &
-  tail -f $4
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4 > logs/$4 &
+  tail -f logs/$4
 fi

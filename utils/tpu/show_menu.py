@@ -84,6 +84,8 @@ if CPU:
     CPU_SIZE = "e2-standard-8"
   elif my_env.get('CONFIG_CPU_SIZE__E2_STANDARD_16', 'n') == 'y':
     CPU_SIZE = "e2-standard-16"
+  elif my_env.get('CONFIG_CPU_SIZE__E2_HIGHMEM_8', 'n') == 'y':
+    CPU_SIZE = "e2-highmem-8"
   else:
     raise ValueError("Unknown CPU")
 
