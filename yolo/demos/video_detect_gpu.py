@@ -137,9 +137,12 @@ class FastVideo(object):
 
     self._colors = gen_colors(self._classes)
 
-    if labels is None:
+    if labels is None and classes == 80:
       self._labels = get_coco_names(
           path='yolo/dataloaders/dataset_specs/coco.names')
+    elif labels is None and classes == 91:
+      self._labels = get_coco_names(
+          path='yolo/dataloaders/dataset_specs/coco-91.names') 
     else:
       self._labels = labels
 

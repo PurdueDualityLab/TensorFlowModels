@@ -25,7 +25,8 @@ from yolo.demos import video_detect_gpu as vgu
 from yolo.demos import video_detect_cpu as vcu
 import tensorflow as tf
 """
-python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4-eval.yaml --video ../videos/nyc.mp4  --max_batch 5
+export GOOGLE_APPLICATION_CREDENTIALS=<key>.json 
+python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4-eval.yaml --video ../videos/nyc.mp4  --max_batch 5 
 """
 """
 python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov3-eval.yaml --video ../videos/nyc.mp4  --max_batch 9
@@ -172,6 +173,7 @@ def main(_):
         process_width=FLAGS.process_size,
         process_height=FLAGS.process_size,
         preprocess_with_gpu=FLAGS.preprocess_gpu,
+        classes=params.task.model.num_classes,
         print_conf=FLAGS.print_conf,
         max_batch=FLAGS.max_batch,
         disp_h=FLAGS.out_resolution,

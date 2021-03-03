@@ -127,9 +127,15 @@ def load_weights_decoder(model, net):
   alternate = 0
   for layer in model.layers:
     # non sub module conv blocks
-    if 'input' not in layer.name and 'decoder' not in layer.name:
+    print(layer.name)
+    # if 'input' not in layer.name and 'decoder' not in layer.name:
+    #   load_weights_fpn(layer, net[0])
+    # elif 'input' not in layer.name and 'decoder' in layer.name:
+    #   out_convs = load_weights_pan(layer, net[1])
+    
+    if 'input' not in layer.name and 'fpn' in layer.name:
       load_weights_fpn(layer, net[0])
-    elif 'input' not in layer.name and 'decoder' in layer.name:
+    elif 'input' not in layer.name and 'pan' in layer.name:
       out_convs = load_weights_pan(layer, net[1])
   return out_convs
 
