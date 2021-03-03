@@ -178,12 +178,10 @@ class Yolo_Loss(object):
       iou, giou = box_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
       loss_box = (1 - giou) * self._iou_normalizer * true_conf
-      #loss_box = tf.math.minimum(loss_box, self._max_value)
     elif self._loss_type == 2:
       iou, ciou = box_ops.compute_ciou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
       loss_box = (1 - ciou) * self._iou_normalizer * true_conf
-      #loss_box = tf.math.minimum(loss_box, self._max_value)
     else:
       # iou mask computation
       iou = box_ops.compute_iou(true_box, pred_box)

@@ -137,7 +137,7 @@ def _shift_zeros_full(boxes, classes, num_instances, mask = None, yxyx = True):
     classes = tf.squeeze(classes, axis = 0)  
   return boxes, classes 
 
-def near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = 0.25, aggressive = True):
+def near_edge_adjustment(boxes, y_lower_bound, x_lower_bound, y_upper_bound, x_upper_bound, keep_thresh = 0.25, aggressive = False):
   x_lower_bound = tf.clip_by_value(x_lower_bound, 0.0, 1.0 - K.epsilon())
   y_lower_bound = tf.clip_by_value(y_lower_bound, 0.0, 1.0 - K.epsilon())
   x_upper_bound = tf.clip_by_value(x_upper_bound, 0.0, 1.0 - K.epsilon())

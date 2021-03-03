@@ -67,6 +67,7 @@ def test_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset)
   shind = 0
+  dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
@@ -81,9 +82,13 @@ def test_pipeline():
 
     gt = j['grid_form']
 
-    obj3 = gt['3'][..., 4]
-    obj4 = gt['4'][..., 4]
-    obj5 = gt['5'][..., 4]
+    obj3 = gt['3'][...,  4]
+    obj4 = gt['4'][...,  4]
+    obj5 = gt['5'][...,  4]
+  
+    cls3 = gt['3'][..., dip, 5]
+    cls4 = gt['4'][..., dip, 5]
+    cls5 = gt['5'][..., dip, 5]
 
     fig, axe = plt.subplots(1, 4)
 
@@ -96,15 +101,6 @@ def test_pipeline():
     plt.tight_layout()
     plt.show()
 
-    fig, axe = plt.subplots(1, 4)
-    axe[0].imshow(i2[shind + 1])
-    axe[1].imshow(obj3[shind + 1].numpy())
-    axe[2].imshow(obj4[shind + 1].numpy())
-    axe[3].imshow(obj5[shind + 1].numpy())
-
-    fig.set_size_inches(18.5, 6.5, forward=True)
-    plt.tight_layout()
-    plt.show()
     ltime = time.time()
 
     if l >= 10:
