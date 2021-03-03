@@ -549,6 +549,101 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
       iou_index = tf.squeeze(iou_index, axis = 0)  
   return tf.cast(iou_index, dtype=tf.float32)
 
+
+def _update_tensor_arrays(batch, 
+                          y, 
+                          x, 
+                          anchor_idx, 
+                          boxes, 
+                          classes, 
+                          update_index, 
+                          update, 
+                          i):
+  const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
+  update_index = update_index.write(i, [batch, y, x, anchor_idx])
+  update = update.write(i, K.concatenate([boxes, const, classes]))
+  i += 1
+  return update_index, update, i
+
+def _use_tie_breaker(batch, 
+                     anchors, 
+                     mask,
+                     i,
+                     box_id, 
+                     depth_track, 
+                     x, 
+                     y, 
+                     boxes, 
+                     classes, 
+                     update_index, 
+                     update):
+  mask = tf.cast(mask, dtype=boxes.dtype)
+  rand_update = 0.0
+  for anchor_id in range(tf.shape(anchors)[-1]):
+    index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
+    if K.any(index):
+      # using the boolean index mask to determine exactly which anchor
+      #  box was used
+      anchor_idx = tf.cast(
+          K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
+      # determine if the index was used or not
+      used = depth_track[batch, y[batch, box_id], x[batch, box_id], anchor_idx]
+      # defualt used upadte value
+      uid = 1
+
+      # if anchor_id is 0, this is the best matched anchor for this box
+      # with the highest IOU
+      if anchor_id == 0:
+        # create random number to trigger a replacment if the cell
+        # is used already
+        update_index, update, i = _update_tensor_arrays(
+          batch, 
+          y[batch, box_id], 
+          x[batch, box_id], 
+          anchor_idx, 
+          boxes[batch, box_id],
+          classes[batch, box_id],
+          update_index, 
+          update, 
+          i
+        )
+
+      # if used is 2, this cell is filled with a non-optimal box
+      # if used is 0, the cell in the ground truth is not yet consumed
+      # in either case you can replace that cell with a new box, as long
+      # as it is not consumed by an optimal box with anchor_id = 0
+      elif tf.math.equal(used, 2) or tf.math.equal(used, 0):   
+        # write the box to the update list
+        if tf.math.equal(used, 2):
+          rand_update = tf.random.uniform([], maxval=1)
+        else:
+          rand_update = 1.0
+        
+        if rand_update > 0.3:
+          uid = 2
+          update_index, update, i = _update_tensor_arrays(
+              batch, 
+              y[batch, box_id], 
+              x[batch, box_id], 
+              anchor_idx, 
+              boxes[batch, box_id],
+              classes[batch, box_id],
+              update_index, 
+              update, 
+              i
+            )
+        else:
+          uid = 0
+          
+      # update the used index for where and how the box was placed
+      depth_track = tf.tensor_scatter_nd_update(
+          depth_track, [(batch, y[batch, box_id], x[batch, box_id], anchor_idx)],
+          [uid])
+      
+  return update_index, update, depth_track, i
+
+
+
 def build_grided_gt(y_true, mask, size, num_classes, dtype,
                           use_tie_breaker):
   """
@@ -593,7 +688,6 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype,
     raise ValueError(
         '\'box\' (shape %s) must have either 3 or 4 dimensions.')
 
-
   # get the batch size
   batches = tf.shape(boxes)[0]
   # get the number of boxes in the ground truth boxs
@@ -635,66 +729,35 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype,
           tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
         continue
       if use_tie_breaker:
-        for anchor_id in range(tf.shape(anchors)[-1]):
-          index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
-          if K.any(index):
-            # using the boolean index mask to determine exactly which anchor
-            #  box was used
-            p = tf.cast(
-                K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
-            # determine if the index was used or not
-            used = depth_track[batch, y[batch, box_id], x[batch, box_id], p]
-            # defualt used upadte value
-            uid = 1
-
-            # if anchor_id is 0, this is the best matched anchor for this box
-            # with the highest IOU
-            if anchor_id == 0:
-              # create random number to trigger a replacment if the cell
-              # is used already
-              if tf.math.equal(used, 1):
-                rand_update = tf.random.uniform([], maxval=1)
-              else:
-                rand_update = 1.0
-
-              if rand_update > 0.5:
-                # write the box to the update list
-                update_index = update_index.write(
-                    i, [batch, y[batch, box_id], x[batch, box_id], p])
-                value = K.concatenate(
-                    [boxes[batch, box_id], const, classes[batch, box_id]])
-                update = update.write(i, value)
-
-            # if used is 2, this cell is filled with a non-optimal box
-            # if used is 0, the cell in the ground truth is not yet consumed
-            # in either case you can replace that cell with a new box, as long
-            # as it is not consumed by an optimal box with anchor_id = 0
-            elif tf.math.equal(used, 2) or tf.math.equal(used, 0):
-              uid = 2
-              # write the box to the update list
-              update_index = update_index.write(
-                  i, [batch, y[batch, box_id], x[batch, box_id], p])
-              value = K.concatenate(
-                  [boxes[batch, box_id], const, classes[batch, box_id]])
-              update = update.write(i, value)
-
-            # update the used index for where and how the box was placed
-            depth_track = tf.tensor_scatter_nd_update(
-                depth_track, [(batch, y[batch, box_id], x[batch, box_id], p)],
-                [uid])
-            i += 1
+        update_index, update, depth_track, i = _use_tie_breaker(batch, 
+                         anchors, 
+                         mask, 
+                         i, 
+                         box_id, 
+                         depth_track, 
+                         x, 
+                         y, 
+                         boxes, 
+                         classes, 
+                         update_index, 
+                         update)
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
         if K.any(index):
           # if any there is an index match
           p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
           # write the box to the update list
-          update_index = update_index.write(
-              i, [batch, y[batch, box_id], x[batch, box_id], p])
-          value = K.concatenate(
-              [boxes[batch, box_id], const, classes[batch, box_id]])
-          update = update.write(i, value)
-          i += 1
+          update_index, update, i = _update_tensor_arrays(
+            batch, 
+            y[batch, box_id], 
+            x[batch, box_id], 
+            p, 
+            boxes[batch, box_id],
+            classes[batch, box_id],
+            update_index, 
+            update, 
+            i
+          )
 
   # if the size of the update list is not 0, do an update, other wise,
   # no boxes and pass an empty grid

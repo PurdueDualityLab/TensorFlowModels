@@ -103,7 +103,7 @@ class Parser(parser.Parser):
     self._masks = {
         key: tf.convert_to_tensor(value) for key, value in masks.items()
     }
-    self._use_tie_breaker = use_tie_breaker
+    self._use_tie_breaker = True#use_tie_breaker
 
     self._jitter_im = 0.0 if jitter_im is None else jitter_im
     self._jitter_boxes = 0.0 if jitter_boxes is None else jitter_boxes
