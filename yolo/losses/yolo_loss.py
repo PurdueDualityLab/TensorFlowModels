@@ -94,8 +94,8 @@ class Yolo_Loss(object):
     self._path_key = path_key
     return
 
-  def print_error(self, pred_conf):
-    if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred_conf))):
+  def print_error(self, pred):
+    if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred))):
       tf.print("\nerror: stop training")
 
   def _get_label_attributes(self, width, height, batch_size, y_true, y_pred,

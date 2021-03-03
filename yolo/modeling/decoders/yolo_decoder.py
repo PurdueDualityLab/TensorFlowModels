@@ -155,7 +155,6 @@ class YoloPAN(tf.keras.layers.Layer):
     self.outputs = {}
 
     if self._fpn_input:
-      # works
       self._iterator = range(self._min_level, self._max_level + 1)
       self._check = lambda x: x < self._max_level
       self._key_shift = lambda x: x + 1
@@ -186,7 +185,10 @@ class YoloPAN(tf.keras.layers.Layer):
             **self._base_config)
       else:
         self.resamples[str(level)] = nn_blocks.RouteMerge(
-            filters=resample_filters(depth), upsample=upsample, downsample=downsample, **self._base_config)
+            filters=resample_filters(depth), 
+            upsample=upsample, 
+            downsample=downsample, 
+            **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
             repetitions=self._path_process_len,

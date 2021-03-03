@@ -45,21 +45,6 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
   return box
 
 
-def center_distance(center_1: tf.Tensor, center_2: tf.Tensor):
-  """Calculates the squared distance between two points.
-    Args:
-      center_1: a `Tensor` that represents a point.
-      center_2: a `Tensor` that represents a point.
-    Returns:
-      dist: a `Tensor` whose value represents the squared distance
-        between center_1 and center_2.
-    """
-  with tf.name_scope('center_distance'):
-    dist = (center_1[..., 0] - center_2[..., 0])**2 + (center_1[..., 1] -
-                                                       center_2[..., 1])**2
-  return dist
-
-
 # IOU
 def rm_nan_inf(x, val = 0.0):
   x = tf.where(tf.math.logical_or(tf.math.is_nan(x), tf.math.is_inf(x)), tf.cast(val, dtype=x.dtype), x)
@@ -101,6 +86,7 @@ def compute_iou(box1, box2, yxyx=False):
 
     iou = tf.math.divide(intersection, union + K.epsilon())  
     iou = rm_nan(iou)
+
     # iou = tf.math.divide_no_nan(intersection, union)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
   return iou
@@ -227,15 +213,15 @@ def compute_ciou(box1, box2, yxyx=False):
       box2 = yxyx_to_xcycwh(box2)
 
     # computer aspect ratio consistency
-    # arcterm = (
-    #     tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3] + K.epsilon())) -
-    #     tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3] + K.epsilon())))**2
+    # arcterm = tf.square(
+    #     tf.math.atan(tf.math.divide_no_nan(box1[..., 2], box1[..., 3])) -
+    #     tf.math.atan(tf.math.divide_no_nan(box2[..., 2], box2[..., 3])))
     
-    arcterm = (
-        tf.math.atan(tf.math.divide_no_nan(box1[..., 2], box1[..., 3])) -
-        tf.math.atan(tf.math.divide_no_nan(box2[..., 2], box2[..., 3])))**2
-    v = 4 * arcterm / (math.pi)**2
-
+    arcterm = tf.square(
+        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3])) -
+        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3])))
+    v = 4 * arcterm / (math.pi**2)
+    v = rm_nan(v)
     # compute IOU regularization
     # a = tf.math.divide(v, ((1 - iou) + v) + K.epsilon())
     a = tf.math.divide_no_nan(v, ((1 - iou) + v))

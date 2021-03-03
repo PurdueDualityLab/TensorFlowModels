@@ -112,19 +112,19 @@ def _shift_zeros_full(boxes, classes, num_instances, mask = None, yxyx = True):
   mask = tf.expand_dims(tf.cast(mask, x.dtype), axis = -1)
   x_shape = tf.shape(x)
   x_ = tf.gather_nd(tf.squeeze(x, axis = -1), ind)
-  x = tf.reshape(x_, x_shape) * mask
+  x = tf.reshape(x_, x_shape) * mask #- (1 - tf.cast(mask, x.dtype))
 
   y_shape = tf.shape(y)
   y_ = tf.gather_nd(tf.squeeze(y, axis = -1), ind)
-  y = tf.reshape(y_, y_shape) * mask
+  y = tf.reshape(y_, y_shape) * mask #- (1 - tf.cast(mask, y.dtype))
 
   w_shape = tf.shape(w)
   w_ = tf.gather_nd(tf.squeeze(w, axis = -1), ind)
-  w = tf.reshape(w_, w_shape) * mask
+  w = tf.reshape(w_, w_shape) * mask #- (1 - tf.cast(mask, w.dtype))
 
   h_shape = tf.shape(h)
   h_ = tf.gather_nd(tf.squeeze(h, axis = -1), ind)
-  h = tf.reshape(h_, h_shape) * mask
+  h = tf.reshape(h_, h_shape) * mask #- (1 - tf.cast(mask, h.dtype))
 
   boxes = tf.cast(tf.concat([x, y, w, h], axis=-1), boxes.dtype)
   boxes = _pad_max_instances(boxes, num_instances, pad_axis=-2, pad_value=0)
@@ -604,7 +604,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
 
   for box_id in range(num_boxes):
     # if the width or height of the box is zero, skip it
-    if K.all(tf.math.equal(boxes[box_id, 2:4], 0)):
+    if K.all(tf.math.less_equal(boxes[box_id, 2:4], 0)):
       continue
     # after pre processing, if the box is not in the i
     # image bounds anymore skip the box
@@ -734,7 +734,7 @@ def build_batch_grided_gt(y_true, mask, size, num_classes, dtype,
   for batch in range(batches):
     for box_id in range(num_boxes):
       # if the width or height of the box is zero, skip it
-      if K.all(tf.math.equal(boxes[batch, box_id, 2:4], 0)):
+      if K.all(tf.math.less_equal(boxes[box_id, 2:4], 0)):
         continue
       # after pre processing, if the box is not in the image bounds anymore
       # skip the box
