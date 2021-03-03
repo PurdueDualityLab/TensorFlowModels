@@ -464,7 +464,7 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6, ke
   return tf.cast(full_image, images.dtype), tf.cast(full_boxes, boxes.dtype), tf.cast(full_classes, classes.dtype)
 
 
-def get_best_anchor(y_true, anchors, width=1, height=1):
+def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh = 0.213):
   """
     get the correct anchor that is assoiciated with each box using IOU
     Args:
@@ -534,7 +534,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
         tf.transpose(iou_raw, perm=[0, 2, 1]),
         k=tf.cast(k, dtype=tf.int32),
         sorted=True)
-    ind_mask = tf.cast(values > 0.213, dtype=indexes.dtype)
+    ind_mask = tf.cast(values > iou_thresh, dtype=indexes.dtype)
 
     # pad the indexs such that all values less than the thresh are -1
     # add one, multiply the mask to zeros all the bad locations
@@ -547,7 +547,8 @@ def get_best_anchor(y_true, anchors, width=1, height=1):
 
     if not is_batch:
       iou_index = tf.squeeze(iou_index, axis = 0)  
-  return tf.cast(iou_index, dtype=tf.float32)
+      values = tf.squeeze(values, axis = 0)  
+  return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
 
 
 def _update_tensor_arrays(batch, 

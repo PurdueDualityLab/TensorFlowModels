@@ -103,7 +103,7 @@ class Parser(parser.Parser):
     self._masks = {
         key: tf.convert_to_tensor(value) for key, value in masks.items()
     }
-    self._use_tie_breaker = True#use_tie_breaker
+    self._use_tie_breaker = use_tie_breaker
 
     self._jitter_im = 0.0 if jitter_im is None else jitter_im
     self._jitter_boxes = 0.0 if jitter_boxes is None else jitter_boxes
@@ -230,7 +230,7 @@ class Parser(parser.Parser):
     image = tf.cast(image, self._dtype)
     if self._fixed_size  and not self._mosaic: #and not self._cutmix
       boxes = box_utils.yxyx_to_xcycwh(boxes)
-      best_anchors = preprocessing_ops.get_best_anchor(
+      best_anchors, ious = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
       best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
       boxes = pad_max_instances(boxes,
@@ -282,7 +282,7 @@ class Parser(parser.Parser):
     
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
-    best_anchors = preprocessing_ops.get_best_anchor(
+    best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)
     classes = pad_max_instances(data['groundtruth_classes'],
@@ -357,7 +357,7 @@ class Parser(parser.Parser):
     image = tf.image.resize(image, (width, width))
 
     label['bbox'] = box_utils.yxyx_to_xcycwh(label['bbox'])
-    best_anchors = preprocessing_ops.get_best_anchor(
+    best_anchors, ious = preprocessing_ops.get_best_anchor(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
     label['best_anchors'] = pad_max_instances(
         best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
