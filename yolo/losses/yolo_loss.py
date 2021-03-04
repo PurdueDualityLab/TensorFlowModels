@@ -185,11 +185,13 @@ class Yolo_Loss(object):
     if self._loss_type == 1:
       iou, giou = box_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = (1 - giou) * self._iou_normalizer * true_conf
+      loss_box = mul_no_nan(true_conf, (1 - giou) * self._iou_normalizer)
+      # loss_box = (1 - giou) * self._iou_normalizer * true_conf
     elif self._loss_type == 2:
       iou, ciou = box_ops.compute_ciou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = (1 - ciou) * self._iou_normalizer * true_conf
+      loss_box = mul_no_nan(true_conf, (1 - ciou) * self._iou_normalizer)
+      # loss_box = (1 - ciou) * self._iou_normalizer * true_conf
     else:
       # iou mask computation
       iou = box_ops.compute_iou(true_box, pred_box)
@@ -202,8 +204,9 @@ class Yolo_Loss(object):
                                                       y_pred.dtype)
       loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
       loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
-      loss_box = (loss_wh + loss_xy) * true_conf * scale
-      #loss_box = tf.math.minimum(loss_box, self._max_value)
+      loss_box = mul_no_nan(true_conf, (loss_wh + loss_xy) * scale)
+      # loss_box =  (loss_wh + loss_xy) * true_conf * scale
+      # loss_box = tf.math.minimum(loss_box, self._max_value)
 
     # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     class_loss = self._cls_normalizer * tf.reduce_sum(
