@@ -17,7 +17,7 @@ def mul_no_nan(x, y):
 def gradient_trap(y):
   def trap(dy):
     dy = box_ops.rm_nan_inf(dy)
-    tf.print(tf.reduce_mean(dy))
+    #tf.print(tf.reduce_mean(dy))
     return dy 
   return y, trap 
 
