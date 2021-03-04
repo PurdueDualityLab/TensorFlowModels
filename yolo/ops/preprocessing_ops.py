@@ -459,9 +459,12 @@ def mosaic(images, boxes, classes, output_size, masks = None, crop_delta=0.6, ke
                                                   target_height=tf.cast(
           tf.cast(width, tf.float32) * crop_delta, tf.int32),
                                                   random_patch=True)
-  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, image_info, keep_thresh = keep_thresh)
+  full_boxes, full_classes = filter_boxes_and_classes(full_boxes, full_classes, 
+                                          image_info, keep_thresh = keep_thresh)
   full_image = tf.image.resize(full_image, [output_size, output_size])
-  return tf.cast(full_image, images.dtype), tf.cast(full_boxes, boxes.dtype), tf.cast(full_classes, classes.dtype)
+  return (tf.cast(full_image, images.dtype), 
+          tf.cast(full_boxes, boxes.dtype), 
+          tf.cast(full_classes, classes.dtype))
 
 
 def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh = 0.213):
@@ -597,17 +600,9 @@ def _use_tie_breaker(batch,
       if anchor_id == 0:
         # create random number to trigger a replacment if the cell
         # is used already
-        update_index, update, i = _update_tensor_arrays(
-          batch, 
-          y[batch, box_id], 
-          x[batch, box_id], 
-          anchor_idx, 
-          boxes[batch, box_id],
-          classes[batch, box_id],
-          update_index, 
-          update, 
-          i
-        )
+        update_index, update, i = _update_tensor_arrays(batch, y[batch, box_id], 
+                        x[batch, box_id], anchor_idx, boxes[batch, box_id],
+                        classes[batch, box_id], update_index, update, i)
 
       # if used is 2, this cell is filled with a non-optimal box
       # if used is 0, the cell in the ground truth is not yet consumed
@@ -622,23 +617,16 @@ def _use_tie_breaker(batch,
         
         if rand_update > 0.3:
           uid = 2
-          update_index, update, i = _update_tensor_arrays(
-              batch, 
-              y[batch, box_id], 
-              x[batch, box_id], 
-              anchor_idx, 
-              boxes[batch, box_id],
-              classes[batch, box_id],
-              update_index, 
-              update, 
-              i
-            )
+          update_index, update, i = _update_tensor_arrays(batch, 
+              y[batch, box_id], x[batch, box_id], anchor_idx, 
+              boxes[batch, box_id], classes[batch, box_id], update_index, 
+              update, i)
         else:
           uid = 0
           
       # update the used index for where and how the box was placed
       depth_track = tf.tensor_scatter_nd_update(
-          depth_track, [(batch, y[batch, box_id], x[batch, box_id], anchor_idx)],
+        depth_track, [(batch, y[batch, box_id], x[batch, box_id], anchor_idx)],
           [uid])
       
   return update_index, update, depth_track, i
@@ -730,35 +718,20 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype,
           tf.math.greater_equal(boxes[batch, box_id, 0:2], 1.0)):
         continue
       if use_tie_breaker:
-        update_index, update, depth_track, i = _use_tie_breaker(batch, 
-                         anchors, 
-                         mask, 
-                         i, 
-                         box_id, 
-                         depth_track, 
-                         x, 
-                         y, 
-                         boxes, 
-                         classes, 
-                         update_index, 
-                         update)
+        update_index, update, depth_track, i = _use_tie_breaker(batch, anchors, 
+                        mask, i, box_id, depth_track, x, y, boxes, classes, 
+                         update_index, update)
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
         if K.any(index):
           # if any there is an index match
-          p = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
+          anchor_idx = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), 
+                                                              dtype=tf.int32)
           # write the box to the update list
-          update_index, update, i = _update_tensor_arrays(
-            batch, 
-            y[batch, box_id], 
-            x[batch, box_id], 
-            p, 
-            boxes[batch, box_id],
-            classes[batch, box_id],
-            update_index, 
-            update, 
-            i
-          )
+          update_index, update, i = _update_tensor_arrays(batch, 
+              y[batch, box_id], x[batch, box_id], anchor_idx, 
+              boxes[batch, box_id], classes[batch, box_id], update_index, 
+              update, i)
 
   # if the size of the update list is not 0, do an update, other wise,
   # no boxes and pass an empty grid
