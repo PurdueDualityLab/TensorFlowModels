@@ -24,6 +24,7 @@ from yolo.dataloaders import classification_vision
 from official.vision.beta.tasks import image_classification
 from yolo.losses import cross_entropy_loss
 from official.modeling import tf_utils
+import logging
 
 
 @task_factory.register_task_cls(exp_cfg.ImageClassificationTask)
