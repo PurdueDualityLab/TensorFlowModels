@@ -57,7 +57,6 @@ class ImageClassificationModel(hyperparams.Config):
   subdivisions: int = 8
   darknet_weights_file: str = 'cache://csdarknet53.weights'
   darknet_weights_cfg: str = 'cache://csdarknet53.cfg'
-  
 
 
 @dataclasses.dataclass

@@ -176,7 +176,7 @@ class ConvBN(tf.keras.layers.Layer):
 
   def call(self, x):
     if not TPU_BASE:
-      x = tf.pad(x, self._paddings, mode="CONSTANT", constant_values=0)
+      x = tf.pad(x, self._paddings, mode='CONSTANT', constant_values=0)
     x = self.conv(x)
     x = self.bn(x)
     x = self._activation_fn(x)
@@ -1129,10 +1129,10 @@ class FPNTail(tf.keras.layers.Layer):
                filters=1,
                upsample=True,
                upsample_size=2,
-               activation="leaky",
+               activation='leaky',
                use_sync_bn=False,
                kernel_regularizer=None,
-               kernel_initializer="glorot_uniform",
+               kernel_initializer='glorot_uniform',
                bias_regularizer=None,
                norm_epsilon=0.001,
                subdivisions=8,
@@ -1143,7 +1143,7 @@ class FPNTail(tf.keras.layers.Layer):
     self._upsample = upsample
     self._upsample_size = upsample_size
 
-    self._activation = "leaky" if activation is None else activation
+    self._activation = 'leaky' if activation is None else activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -1169,14 +1169,14 @@ class FPNTail(tf.keras.layers.Layer):
         filters=self._filters // 2,
         kernel_size=(1, 1),
         strides=(1, 1),
-        padding="same",
+        padding='same',
         **self._base_config)
     if self._upsample:
       self._process_conv = ConvBN(
           filters=self._filters // 4,
           kernel_size=(1, 1),
           strides=(1, 1),
-          padding="same",
+          padding='same',
           **self._base_config)
       # if not TPU_BASE:
       #   self._upsampling_block = tf.keras.layers.UpSampling2D(

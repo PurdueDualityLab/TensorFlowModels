@@ -81,7 +81,7 @@ def test_pipeline():
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
     i2 = drawer(i, j)  #
-    i = tf.image.draw_bounding_boxes(i, j["bbox"], [[1.0, 0.0, 1.0]])
+    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
     gt = j['grid_form']
 

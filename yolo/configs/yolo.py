@@ -201,7 +201,8 @@ class DataConfig(cfg.DataConfig):
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
-  """if the name is specified, or version is specified we ignore input parameters and use version and name defaults"""
+  """if the name is specified, or version is specified we ignore 
+  input parameters and use version and name defaults"""
   version: Optional[str] = None
   type: Optional[str] = None
   embed_fpn: bool = False
