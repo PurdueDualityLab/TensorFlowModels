@@ -162,7 +162,9 @@ class Yolo_Loss(object):
         fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
     pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
     pred_class = tf.math.sigmoid(y_pred[..., 5:])
-    self.print_error(y_pred)
+    self.print_error(pred_box)
+    self.print_error(pred_conf)
+    self.print_error(pred_class)
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
@@ -205,8 +207,6 @@ class Yolo_Loss(object):
             K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing),
         axis=-1) * true_conf
-    
-    class_loss = box_ops.rm_nan(class_loss, val = 1.0)
 
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(

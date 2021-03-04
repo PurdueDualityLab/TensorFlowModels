@@ -87,8 +87,8 @@ def compute_iou(box1, box2, yxyx=False):
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
-    iou = tf.math.divide(intersection, union + K.epsilon())
-    iou = rm_nan_inf(iou)
+    iou = tf.math.divide_no_nan(intersection, union)
+    #iou = rm_nan_inf(iou)
 
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
   return iou
@@ -125,8 +125,8 @@ def compute_giou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     # iou = tf.math.divide(intersection, union + K.epsilon())
-    iou = tf.math.divide(intersection, union)
-    iou = rm_nan_inf(iou)
+    iou = tf.math.divide_no_nan(intersection, union)
+    #iou = rm_nan_inf(iou)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # find the smallest box to encompase both box1 and box2
@@ -136,9 +136,9 @@ def compute_giou(box1, box2, yxyx=False):
 
     # compute giou
     # regularization = tf.math.divide((c - union), c + K.epsilon())
-    regularization = tf.math.divide((c - union), c)
+    regularization = tf.math.divide_no_nan((c - union), c)
     giou = iou - regularization
-    giou = rm_nan_inf(giou)
+    #giou = rm_nan_inf(giou)
   return iou, giou
 
 
@@ -178,8 +178,8 @@ def compute_diou(box1, box2, yxyx=False):
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
-    iou = tf.math.divide(intersection, union + K.epsilon())
-    iou = rm_nan_inf(iou)
+    iou = tf.math.divide_no_nan(intersection, union + K.epsilon())
+    #iou = rm_nan_inf(iou)
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # compute max diagnal of the smallest enclosing box
@@ -188,11 +188,11 @@ def compute_diou(box1, box2, yxyx=False):
 
     diag_dist = tf.reduce_sum((c_maxes - c_mins)**2, axis=-1)
 
-    regularization = tf.math.divide(dist, diag_dist + K.epsilon())
+    #regularization = tf.math.divide(dist, diag_dist + K.epsilon())
     # regularization = rm_nan(regularization)
-    # regularization = tf.math.divide_no_nan(dist, diag_dist)
+    regularization = tf.math.divide_no_nan(dist, diag_dist)
     diou = iou - regularization
-    diou = rm_nan_inf(diou)
+    #diou = rm_nan_inf(diou)
   return iou, diou
 
 
@@ -216,13 +216,13 @@ def compute_ciou(box1, box2, yxyx=False):
       box2 = yxyx_to_xcycwh(box2)
 
     arcterm = tf.square(
-        tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3])) -
-        tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3])))
+        tf.math.atan(tf.math.divide_no_nan(box1[..., 2], box1[..., 3])) -
+        tf.math.atan(tf.math.divide_no_nan(box2[..., 2], box2[..., 3])))
     v = 4 * arcterm / (math.pi**2)
 
     # compute IOU regularization
     # a = tf.math.divide(v, ((1 - iou) + v) + K.epsilon())
     a = tf.math.divide_no_nan(v, ((1 - iou) + v))
     ciou = diou - (v * a)
-    ciou = rm_nan_inf(ciou)
+    #ciou = rm_nan_inf(ciou)
   return iou, ciou
