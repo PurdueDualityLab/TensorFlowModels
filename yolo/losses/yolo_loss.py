@@ -205,6 +205,8 @@ class Yolo_Loss(object):
             K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing),
         axis=-1) * true_conf
+    
+    class_loss = box_ops.rm_nan(class_loss, val = 1.0)
 
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(
