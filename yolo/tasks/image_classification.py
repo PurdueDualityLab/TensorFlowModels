@@ -71,20 +71,6 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
         neck = None
 
       load_weights_backbone(model.backbone, encoder)
-      #model.backbone.trainable = False
-
-      # if len(decoder) == 3:
-      #   model.head.set_weights(decoder[-2].get_weights())
-      #   model.head.trainable = True
-      #   print("here")
-
-      # print(type(decoder[-2].get_weights()))
-      # print(type(model.head.get_weights()))
-
-      # for i, weight in enumerate(model.head.get_weights()):
-      #   print(decoder[-2].get_weights()[i])
-      #   print(weight)
-      #print(decoder, "model", tf.math.equal(tf.convert_to_tensor(model.get_weights()), tf.convert_to_tensor(decoder[-2].get_weights())))
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:
@@ -98,7 +84,8 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       if self.task_config.init_checkpoint_modules == 'all':
         ckpt = tf.train.Checkpoint(**model.checkpoint_items)
         status = ckpt.restore(ckpt_dir_or_file)
-        status.assert_consumed()
+        #status.assert_consumed()
+        status.expect_partial().assert_existing_objects_matched()
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)

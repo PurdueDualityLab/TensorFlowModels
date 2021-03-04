@@ -3,6 +3,8 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   load_darknet_weights: false
+  init_checkpoint: 'gs://tensorflow2/csdarknet53/'
+  init_checkpoint_modules: 'all'
   model:
     num_classes: 1000
     input_size: [512, 512, 3]

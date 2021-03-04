@@ -57,6 +57,7 @@ class ImageClassificationModel(hyperparams.Config):
   subdivisions: int = 8
   darknet_weights_file: str = 'cache://csdarknet53.weights'
   darknet_weights_cfg: str = 'cache://csdarknet53.cfg'
+  
 
 
 @dataclasses.dataclass
@@ -76,6 +77,7 @@ class ImageClassificationTask(cfg.TaskConfig):
   gradient_clip_norm: float = 0.0
   logging_dir: str = None
   load_darknet_weights: bool = True
+  init_checkpoint_modules: str = 'backbone'
 
 
 @exp_factory.register_config_factory('darknet_classification')
