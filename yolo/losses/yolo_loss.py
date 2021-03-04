@@ -236,8 +236,6 @@ class Yolo_Loss(object):
     # ce_neg = self.ce((1 - true_conf) * mask_iou, tf.squeeze(1 - pred_conf))
     # conf_loss = (ce + ce_neg) * self._obj_normalizer
 
-
-
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.cast(
         tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
