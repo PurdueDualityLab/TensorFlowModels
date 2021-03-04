@@ -41,8 +41,9 @@ else:
     menuconfig._minconf_filename = 'config'
     menuconfig._show_all = False
     kconf.warn = False
-    os.environ.setdefault("ESCDELAY", "0")
+  os.environ.setdefault("ESCDELAY", "0")
   status = curses.wrapper(menuconfig._menuconfig)
+  os.environ.setdefault("ESCDELAY", "1")
 
 if 'was not saved' in status:
   print('Changes not saved')

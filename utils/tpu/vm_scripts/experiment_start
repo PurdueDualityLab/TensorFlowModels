@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [ "$#" -lt 5 ]
+if [ "$#" -lt 4  ]
 then
   echo "Usage: ~/experiment_start tpu_name project experiment config trial"
   echo
@@ -13,9 +13,9 @@ fi
 
 if [ $# -ge 5 ]
 then
-  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4-$5 > logs/$4-$5 &
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $5 > logs/$4-$5 &
   tail -f logs/$4-$5
 else
-  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 $4 > logs/$4 &
+  nohup bash ~/.experiment_start.sh $1 $2 $3 $4 > logs/$4 &
   tail -f logs/$4
 fi
