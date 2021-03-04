@@ -143,17 +143,19 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
 
   def build_metrics(self, training=True):
     """Gets streaming metrics for training/validation."""
-    k = 5#self.task_config.evaluation.top_k
+    k = 5  #self.task_config.evaluation.top_k
     if self.task_config.losses.one_hot:
       metrics = [
           tf.keras.metrics.CategoricalAccuracy(name='accuracy'),
           tf.keras.metrics.TopKCategoricalAccuracy(
-              k=k, name='top_{}_accuracy'.format(k))]
+              k=k, name='top_{}_accuracy'.format(k))
+      ]
     else:
       metrics = [
           tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy'),
           tf.keras.metrics.SparseTopKCategoricalAccuracy(
-              k=k, name='top_{}_accuracy'.format(k))]
+              k=k, name='top_{}_accuracy'.format(k))
+      ]
     return metrics
 
   def build_inputs(self, params, input_context=None):

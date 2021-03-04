@@ -4,6 +4,7 @@ import time
 import cv2
 import abc
 
+
 class Writer(object):
 
   @abc.abstractclassmethod
@@ -22,13 +23,13 @@ class Writer(object):
   @property
   def running(self):
     ...
-  
-  def 
+
 
 class DisplayWriter(Writer):
+
   def __init__():
     self._display_fps = 0
-    return 
+    return
 
   def run(self):
     return

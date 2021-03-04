@@ -164,6 +164,7 @@ class Parser(hyperparams.Config):
   mosaic_frequency: float = 0.75
   use_tie_breaker: bool = True
 
+
 # pylint: disable=missing-class-docstring
 @dataclasses.dataclass
 class TfExampleDecoder(hyperparams.Config):
@@ -187,8 +188,8 @@ class DataDecoder(hyperparams.OneOfConfig):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   input_path: str = ''
-  tfds_name: str = None #'coco'
-  tfds_split: str =  None #'train'
+  tfds_name: str = None  #'coco'
+  tfds_split: str = None  #'train'
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
@@ -354,6 +355,7 @@ def yolo_custom() -> cfg.ExperimentConfig:
       ])
 
   return config
+
 
 @exp_factory.register_config_factory('yolo_tpu')
 def yolo_tpu() -> cfg.ExperimentConfig:

@@ -118,7 +118,6 @@ class Yolo_Loss(object):
     pred_box = K.concatenate([box_xy, box_wh], axis=-1)
     return pred_xy, pred_wh, pred_box
 
-
   def _scale_ground_truth_box(self, box, width, height, anchor_grid,
                               grid_points, dtype):
     xy = tf.nn.relu(box[..., 0:2] - grid_points)
@@ -132,8 +131,11 @@ class Yolo_Loss(object):
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
 
   def ce(self, target, output):
+
     def _smooth_labels(y_true):
-      return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) + 0.5 * self._label_smoothing)
+      return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) +
+                              0.5 * self._label_smoothing)
+
     target = _smooth_labels(target)
     output = tf.clip_by_value(output, K.epsilon(), 1. - K.epsilon())
     loss = -target * tf.math.log(output + K.epsilon())
@@ -147,9 +149,8 @@ class Yolo_Loss(object):
     num = tf.shape(y_true)[-2]
 
     y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, num, -1]),
-        tf.float32)
-  
+        tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+
     grid_points, anchor_grid, y_true = self._get_label_attributes(
         width, height, batch_size, y_true, y_pred, tf.float32)
 
@@ -170,7 +171,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
-        depth= tf.shape(pred_class)[-1], #,80, #self._classes,
+        depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
         dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
@@ -201,24 +202,26 @@ class Yolo_Loss(object):
     class_loss = self._cls_normalizer * tf.reduce_sum(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
-            K.expand_dims(pred_class, axis=-1), 
+            K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing),
         axis=-1) * true_conf
-    
+
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf)
     # #bce = self.bce(true_conf, tf.squeeze(pred_conf))
     # conf_loss = (true_conf + (1 - true_conf) * mask_iou) * bce * self._obj_normalizer
     ce = self.ce(true_conf, tf.squeeze(pred_conf))
-    ce_neg = self.ce((1-true_conf) * mask_iou, tf.squeeze(1-pred_conf))
+    ce_neg = self.ce((1 - true_conf) * mask_iou, tf.squeeze(1 - pred_conf))
     conf_loss = (ce + ce_neg) * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
-    loss_box = tf.cast(tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
-    conf_loss =tf.cast(tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-    class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-
+    loss_box = tf.cast(
+        tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    conf_loss = tf.cast(
+        tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    class_loss = tf.cast(
+        tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
     # 9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
     loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
@@ -227,16 +230,19 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(class_loss)
 
     # 10. store values for use in metrics
-    recall50 = tf.stop_gradient(tf.reduce_mean(
+    recall50 = tf.stop_gradient(
+        tf.reduce_mean(
+            tf.math.divide_no_nan(
+                tf.reduce_sum(
+                    tf.cast(
+                        tf.squeeze(pred_conf, axis=-1) > 0.5,
+                        dtype=true_conf.dtype) * true_conf,
+                    axis=(1, 2, 3)),
+                (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
+    avg_iou = tf.stop_gradient(
         tf.math.divide_no_nan(
-            tf.reduce_sum(
-                tf.cast(
-                    tf.squeeze(pred_conf, axis=-1) > 0.5, dtype=true_conf.dtype)
-                * true_conf,
-                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
-    avg_iou =  tf.stop_gradient(tf.math.divide_no_nan(
-        tf.reduce_sum(iou),
-        tf.cast(
-            tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
-            dtype=y_pred.dtype)))
+            tf.reduce_sum(iou),
+            tf.cast(
+                tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
+                dtype=y_pred.dtype)))
     return loss, loss_box, conf_loss, class_loss, avg_iou, recall50

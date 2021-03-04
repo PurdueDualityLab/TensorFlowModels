@@ -27,10 +27,10 @@ try:
   prep_gpu()
 except BaseException:
   print("GPUs ready")
-
 """
 python3.8 -m yolo.run_image
 """
+
 
 def url_to_image(url):
   image = io.imread(url)
@@ -56,25 +56,28 @@ def resize_input_image(image,
     image = np.expand_dims(image.astype(dtype), axis=0)
   return image
 
-if __name__ == "__main__":
-  task, model, params = load_model(experiment="yolo_custom", config_path=["yolo/configs/experiments/yolov3-tiny-eval-autodrone.yaml"], model_dir="")
-  draw_fn = utils.DrawBoxes(
-        classes=params.task.model.num_classes,
-        labels=None,
-        display_names=False,
-        thickness=2)
 
+if __name__ == "__main__":
+  task, model, params = load_model(
+      experiment="yolo_custom",
+      config_path=["yolo/configs/experiments/yolov3-tiny-eval-autodrone.yaml"],
+      model_dir="")
+  draw_fn = utils.DrawBoxes(
+      classes=params.task.model.num_classes,
+      labels=None,
+      display_names=False,
+      thickness=2)
 
   image = url_to_image("/home/vbanna/Downloads/images/images/crop.png")
   save_name = "save.png"
 
   image_ = resize_input_image(image, [416, 416, 3], normalize=True)
 
-  pred = model(image_, training = False)
+  pred = model(image_, training=False)
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
   image = cv2.resize(image, (1280, 720))
-  image = draw_fn(image/255, pred)
-  
+  image = draw_fn(image / 255, pred)
+
   cv2.imshow("testframe", image)
   k = cv2.waitKey(0)
   if k == 27:  # wait for ESC key to exit
@@ -82,7 +85,3 @@ if __name__ == "__main__":
   elif k == ord("s"):  # wait for 's' key to save and exit
     cv2.imwrite(save_name, image)
     cv2.destroyAllWindows()
-
-
-
-

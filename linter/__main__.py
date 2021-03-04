@@ -70,6 +70,7 @@ if args.noopts is not None:
 # The real linter starts here
 if len(opts) != 0:
   for file in files:
+    print(file)
     if file is None:
       continue
     changed = False

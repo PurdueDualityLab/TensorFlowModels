@@ -8,6 +8,7 @@ from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.ops import nms_ops
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
 
@@ -62,11 +63,11 @@ class YoloLayer(ks.Model):
         anchors, scale_anchors=path_scale)
     return anchor_generator
 
-  def rm_nan_inf(self, x, val = 0.0):
+  def rm_nan_inf(self, x, val=0.0):
     x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
     x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
     return x
-    
+
   def parse_yolo_box_predictions(self,
                                  unscaled_box,
                                  width,
@@ -88,10 +89,12 @@ class YoloLayer(ks.Model):
     shape = tf.shape(inputs)
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     batchsize, height, width = shape[0], shape[1], shape[2]
-    data = tf.reshape(inputs, [batchsize, height, width, len_mask, self._classes + 5])
+    data = tf.reshape(inputs,
+                      [batchsize, height, width, len_mask, self._classes + 5])
     centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
     #boxes, obns_scores, class_scores = tf.split(data, [4, 1, -1], axis=-1)
-    boxes, obns_scores, class_scores = tf.split(data, [4, 1, self._classes], axis=-1)
+    boxes, obns_scores, class_scores = tf.split(
+        data, [4, 1, self._classes], axis=-1)
     classes = tf.shape(class_scores)[-1]
 
     boxes = self.parse_yolo_box_predictions(
@@ -116,7 +119,7 @@ class YoloLayer(ks.Model):
     levels = list(inputs.keys())
     min_level = int(min(levels))
     max_level = int(max(levels))
-    
+
     for i in range(min_level, max_level + 1):
       key = str(i)
       object_scores_, boxes_, class_scores_ = self.parse_prediction_path(
@@ -146,7 +149,7 @@ class YoloLayer(ks.Model):
 
     return {
         'bbox': boxes,
-        'classes':  class_scores, 
+        'classes': class_scores,
         'confidence': object_scores,
     }
 

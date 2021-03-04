@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Text
 import tensorflow as tf
 from official.modeling import tf_utils
 
-
 TPU_BASE = True
 from official.vision.beta.ops import spatial_transform_ops
 
@@ -17,7 +16,9 @@ class Identity(tf.keras.layers.Layer):
   def call(self, input):
     return input
 
+
 from yolo.modeling.layers import subnormalization
+
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class ConvBN(tf.keras.layers.Layer):
@@ -58,7 +59,7 @@ class ConvBN(tf.keras.layers.Layer):
       dilation_rate=(1, 1),
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
-      subdivisions = 1, 
+      subdivisions=1,
       bias_regularizer=None,
       kernel_regularizer=None,  # Specify the weight decay as the default will not work.
       use_bn=True,
@@ -80,7 +81,7 @@ class ConvBN(tf.keras.layers.Layer):
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
     self._subdivisions = subdivisions
-    
+
     # batch normalization params
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
@@ -103,19 +104,19 @@ class ConvBN(tf.keras.layers.Layer):
   def build(self, input_shape):
     use_bias = not self._use_bn
 
-
     if not TPU_BASE:
-      kernel_size = self._kernel_size if isinstance(self._kernel_size,
-                                                    int) else self._kernel_size[0]
+      kernel_size = self._kernel_size if isinstance(
+          self._kernel_size, int) else self._kernel_size[0]
       dilation_rate = self._dilation_rate if isinstance(
           self._dilation_rate, int) else self._dilation_rate[0]
       if self._padding == 'same' and kernel_size != 1:
         padding = (dilation_rate * (kernel_size - 1))
         left_shift = padding // 2
-        self._paddings = tf.constant([[0,0],[left_shift, left_shift],[left_shift, left_shift],[0,0]])
+        self._paddings = tf.constant([[0, 0], [left_shift, left_shift],
+                                      [left_shift, left_shift], [0, 0]])
         # self._zeropad = tf.keras.layers.ZeroPadding2D()
       else:
-        self._paddings = tf.constant([[0,0],[0,0],[0,0],[0,0]])
+        self._paddings = tf.constant([[0, 0], [0, 0], [0, 0], [0, 0]])
 
       self.conv = tf.keras.layers.Conv2D(
           filters=self._filters,
@@ -133,7 +134,7 @@ class ConvBN(tf.keras.layers.Layer):
           filters=self._filters,
           kernel_size=self._kernel_size,
           strides=self._strides,
-          padding= self._padding,# 'valid',
+          padding=self._padding,  # 'valid',
           dilation_rate=self._dilation_rate,
           use_bias=use_bias,
           kernel_initializer=self._kernel_initializer,
@@ -148,7 +149,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivSyncBatchNormalization(
-            subdivisions=self._subdivisions, 
+            subdivisions=self._subdivisions,
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -158,7 +159,7 @@ class ConvBN(tf.keras.layers.Layer):
         #     epsilon=self._norm_epsilon,
         #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivBatchNormalization(
-            subdivisions=self._subdivisions, 
+            subdivisions=self._subdivisions,
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -175,7 +176,7 @@ class ConvBN(tf.keras.layers.Layer):
 
   def call(self, x):
     if not TPU_BASE:
-      x = tf.pad(x, self._paddings, mode = "CONSTANT", constant_values=0)
+      x = tf.pad(x, self._paddings, mode="CONSTANT", constant_values=0)
     x = self.conv(x)
     x = self.bn(x)
     x = self._activation_fn(x)
@@ -232,7 +233,7 @@ class DarkResidual(tf.keras.layers.Layer):
                filters=1,
                filter_scale=2,
                dilation_rate=1,
-               subdivisions = 8, 
+               subdivisions=8,
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                kernel_regularizer=None,
@@ -359,7 +360,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'activation': self._conv_activation,
         'leaky_alpha': self._leaky_alpha,
         'sc_activation': self._sc_activation,
-        'downsample': self._downsample, 
+        'downsample': self._downsample,
         'subdivisions': self._subdivisions,
     }
     layer_config.update(super().get_config())
@@ -1123,7 +1124,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
 
 class FPNTail(tf.keras.layers.Layer):
-  
+
   def __init__(self,
                filters=1,
                upsample=True,
@@ -1134,7 +1135,7 @@ class FPNTail(tf.keras.layers.Layer):
                kernel_initializer="glorot_uniform",
                bias_regularizer=None,
                norm_epsilon=0.001,
-               subdivisions = 8, 
+               subdivisions=8,
                norm_momentum=0.99,
                **kwargs):
 
@@ -1154,7 +1155,7 @@ class FPNTail(tf.keras.layers.Layer):
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
-        subdivisions = self._subdivisions,
+        subdivisions=self._subdivisions,
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
@@ -1177,7 +1178,7 @@ class FPNTail(tf.keras.layers.Layer):
           strides=(1, 1),
           padding="same",
           **self._base_config)
-      # if not TPU_BASE:    
+      # if not TPU_BASE:
       #   self._upsampling_block = tf.keras.layers.UpSampling2D(
       #       size=self._upsample_size)
 

@@ -2,6 +2,7 @@ from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
 import numpy as np
 
+
 def split_converter(lst, i, j=None):
   if j is None:
     return lst.data[:i], lst.data[i:j], lst.data[j:]
@@ -30,6 +31,7 @@ def load_weights(convs, layers):
         layers[i].set_weights(weights)
     except BaseException as e:
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
+
 
 def load_weights_backbone(model, net):
   convs = []
@@ -70,21 +72,22 @@ def load_weights_backbone(model, net):
   # sys.exit()
   return
 
+
 def load_weights_fpn(model, net):
   convs = []
   for layer in net:
     if isinstance(layer, convCFG):
       convs.append(layer)
-      
+
   layers = dict()
   base_key = 0
   alternate = 0
   for layer in model.submodules:
-    
+
     # # non sub module conv blocks
     if isinstance(layer, ConvBN):
       if layer.name == "conv_bn":
-          key = 0
+        key = 0
       else:
         key = int(layer.name.split("_")[-1])
       layers[key + base_key] = layer
@@ -92,9 +95,10 @@ def load_weights_fpn(model, net):
         alternate = key
       alternate += 1
   load_weights(convs, layers)
-  return 
+  return
 
-def load_weights_pan(model, net, out_conv = 255):
+
+def load_weights_pan(model, net, out_conv=255):
   convs = []
   cfg_heads = []
   for layer in net:
@@ -103,7 +107,7 @@ def load_weights_pan(model, net, out_conv = 255):
         convs.append(layer)
       else:
         cfg_heads.append(layer)
-      
+
   layers = dict()
   key = 0
   base_key = 0
@@ -121,6 +125,7 @@ def load_weights_pan(model, net, out_conv = 255):
   load_weights(convs, layers)
   return cfg_heads
 
+
 def load_weights_decoder(model, net):
   layers = dict()
   base_key = 0
@@ -132,7 +137,7 @@ def load_weights_decoder(model, net):
     #   load_weights_fpn(layer, net[0])
     # elif 'input' not in layer.name and 'decoder' in layer.name:
     #   out_convs = load_weights_pan(layer, net[1])
-    
+
     if 'input' not in layer.name and 'fpn' in layer.name:
       load_weights_fpn(layer, net[0])
     elif 'input' not in layer.name and 'pan' in layer.name:
@@ -149,6 +154,7 @@ def ishead(out_conv, layer):
     if layer._filters == out_conv:
       return True
   return False
+
 
 def load_weights_prediction_layers(convs, model):
   # print(convs)

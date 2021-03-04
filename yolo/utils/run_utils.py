@@ -20,20 +20,22 @@ def prep_gpu(distribution=None):
         raise
   return
 
+
 def expand_gpu(distribution=None):
   import tensorflow as tf
   physical_devices = tf.config.list_physical_devices('GPU')
   try:
-    tf.config.set_logical_device_configuration(
-      physical_devices[0],
-      [tf.config.LogicalDeviceConfiguration(memory_limit=5000),
-      tf.config.LogicalDeviceConfiguration(memory_limit=5000)])
+    tf.config.set_logical_device_configuration(physical_devices[0], [
+        tf.config.LogicalDeviceConfiguration(memory_limit=5000),
+        tf.config.LogicalDeviceConfiguration(memory_limit=5000)
+    ])
 
     logical_devices = tf.config.list_logical_devices('GPU')
     print(logical_devices)
   except:
     pass
   return
+
 
 def support_windows():
   import platform

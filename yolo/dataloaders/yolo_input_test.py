@@ -62,7 +62,10 @@ def test_classification_pipeline():
       break
   return
 
+
 import time
+
+
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset)
@@ -73,19 +76,19 @@ def test_pipeline():
   for l, (i, j) in enumerate(dataset):
     ftime = time.time()
     print(ftime - ltime)
-   
+
     print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
-    i2 = drawer(i,j)  # 
+    i2 = drawer(i, j)  #
     i = tf.image.draw_bounding_boxes(i, j["bbox"], [[1.0, 0.0, 1.0]])
 
     gt = j['grid_form']
 
-    obj3 = gt['3'][...,  4]
-    obj4 = gt['4'][...,  4]
-    obj5 = gt['5'][...,  4]
-  
+    obj3 = gt['3'][..., 4]
+    obj4 = gt['4'][..., 4]
+    obj5 = gt['5'][..., 4]
+
     cls3 = gt['3'][..., dip, 5]
     cls4 = gt['4'][..., dip, 5]
     cls5 = gt['5'][..., dip, 5]
@@ -107,7 +110,6 @@ def test_pipeline():
       break
 
 
-
 def time_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset)
@@ -126,6 +128,7 @@ def time_pipeline():
   plt.show()
 
   print(f"total time {sum(times)}")
+
 
 if __name__ == '__main__':
   test_pipeline()

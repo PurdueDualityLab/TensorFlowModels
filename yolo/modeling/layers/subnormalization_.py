@@ -149,7 +149,7 @@ class SubDivBatchNormalization(Layer):
 
   def __init__(self,
                axis=-1,
-               subdivisions = 1, 
+               subdivisions=1,
                momentum=0.99,
                epsilon=1e-3,
                center=True,
@@ -421,7 +421,6 @@ class SubDivBatchNormalization(Layer):
 
       # update the thing at the end up fuse step
 
-
       self.moving_mean = self.add_weight(
           name='moving_mean',
           shape=param_shape,
@@ -462,7 +461,7 @@ class SubDivBatchNormalization(Layer):
             trainable=False,
             aggregation=tf_variables.VariableAggregation.SUM,
             experimental_autocast=False)
-        
+
         self.local_count = self.add_weight(
             name='local_sum',
             shape=(),
@@ -540,45 +539,52 @@ class SubDivBatchNormalization(Layer):
                                          K.zeros_like(update_delta))
         return state_ops.assign_sub(variable, update_delta, name=scope)
 
-  def _assign_subdiv_moving_average(self, variable, subdivisions, count, value, momentum, inputs_size):
+  def _assign_subdiv_moving_average(self, variable, subdivisions, count, value,
+                                    momentum, inputs_size):
     with K.name_scope('AssignSubDivMovingAvg') as scope:
       with ops.colocate_with(variable):
         decay = ops.convert_to_tensor_v2_with_dispatch(
             1.0 - momentum, name='decay')
         if decay.dtype != variable.dtype.base_dtype:
           decay = math_ops.cast(decay, variable.dtype.base_dtype)
-        
+
         # get the aggregated update
-        update_delta = (variable - math_ops.cast(value, variable.dtype)) * decay/tf.cast(subdivisions, variable.dtype)
+        update_delta = (variable -
+                        math_ops.cast(value, variable.dtype)) * decay / tf.cast(
+                            subdivisions, variable.dtype)
 
         if inputs_size is not None:
           update_delta = array_ops.where(inputs_size > 0, update_delta,
                                          K.zeros_like(update_delta))
-        
-        update_delta = array_ops.where((count + 1)%subdivisions == 0, update_delta, K.zeros_like(update_delta))
+
+        update_delta = array_ops.where((count + 1) % subdivisions == 0,
+                                       update_delta, K.zeros_like(update_delta))
         return state_ops.assign_sub(variable, update_delta, name=scope)
 
   def _assign_subdiv_new_value(self, variable, subdivisions, count, value):
     with K.name_scope('AssignNewValue') as scope:
       with ops.colocate_with(variable):
-        update_value = array_ops.where((count + 1)%subdivisions == 0, value, variable)
+        update_value = array_ops.where((count + 1) % subdivisions == 0, value,
+                                       variable)
         return state_ops.assign(variable, update_value, name=scope)
 
-  def _assign_subdiv_rotating_sum(self, variable, subdivisions, value, count, inputs_size):
+  def _assign_subdiv_rotating_sum(self, variable, subdivisions, value, count,
+                                  inputs_size):
     with K.name_scope('AssignSubDivMovingAvg') as scope:
-      with ops.colocate_with(variable):        
-        # reduce it for the current 
-        update_delta = value #/subdivision
-        
+      with ops.colocate_with(variable):
+        # reduce it for the current
+        update_delta = value  #/subdivision
+
         # if the input size is 0
         if inputs_size is not None:
           update_delta = array_ops.where(inputs_size > 0, update_delta,
                                          K.zeros_like(update_delta))
-        
-        # if we are starting a new batch set the variable to 0 by removing it 
-        # from update delta then add the delta to the variable to get 
+
+        # if we are starting a new batch set the variable to 0 by removing it
+        # from update delta then add the delta to the variable to get
         # rid of the value variable
-        update_delta = array_ops.where(count%subdivisions == 0, update_delta - variable, update_delta)
+        update_delta = array_ops.where(count % subdivisions == 0,
+                                       update_delta - variable, update_delta)
         return state_ops.assign_add(variable, update_delta, name=scope)
 
   def _assign_new_value(self, variable, value):
@@ -605,8 +611,8 @@ class SubDivBatchNormalization(Layer):
     # take exponential_avg_factor as a tensor input.
     use_fused_avg_updates = (
         ops.executing_eagerly_outside_functions() and
-        isinstance(self.momentum, (float, int)) and
-        enclosing_xla_context() is None)
+        isinstance(self.momentum,
+                   (float, int)) and enclosing_xla_context() is None)
     if use_fused_avg_updates:
       exponential_avg_factor = 1.0 - self.momentum
     else:
@@ -671,10 +677,10 @@ class SubDivBatchNormalization(Layer):
         training, train_op, _fused_batch_norm_inference)
     variance = _maybe_add_or_remove_bessels_correction(variance, remove=True)
 
-    # if we are in training 
+    # if we are in training
     training_value = control_flow_util.constant_value(training)
     if training_value or training_value is None:
-      
+
       if not use_fused_avg_updates:
         if training_value is None:
           momentum = control_flow_util.smart_cond(training,
@@ -688,34 +694,53 @@ class SubDivBatchNormalization(Layer):
         def update_count():
           with K.name_scope('AssignSubDivMovingAvg') as scope:
             # update the local count
-            return state_ops.assign_add(self.local_count, tf.cast(1, self.local_count.dtype), name = scope)
+            return state_ops.assign_add(
+                self.local_count,
+                tf.cast(1, self.local_count.dtype),
+                name=scope)
 
         def subdiv_agg_mean():
-          return self._assign_subdiv_rotating_sum(self.agged_moving_mean, self.subdivisions, mean, self.local_count, input_batch_size) 
+          return self._assign_subdiv_rotating_sum(self.agged_moving_mean,
+                                                  self.subdivisions, mean,
+                                                  self.local_count,
+                                                  input_batch_size)
 
         def subdiv_agg_variance():
-          return self._assign_subdiv_rotating_sum(self.agged_moving_variance, self.subdivisions, mean, self.local_count, input_batch_size) 
+          return self._assign_subdiv_rotating_sum(self.agged_moving_variance,
+                                                  self.subdivisions, mean,
+                                                  self.local_count,
+                                                  input_batch_size)
 
         def subdiv_mean_update():
           """Update self.moving_mean with the most recent data point."""
           if use_fused_avg_updates:
-            return self._assign_subdiv_new_value(self.moving_mean, self.subdivisions, self.local_count, mean)
+            return self._assign_subdiv_new_value(self.moving_mean,
+                                                 self.subdivisions,
+                                                 self.local_count, mean)
           else:
-            # update moving average on every step i need to do it every n steps 
+            # update moving average on every step i need to do it every n steps
             # we can safley alter the sub div training only to the moving thing
             # we need mean/subdivisions agegated for sub division steps
-            return self._assign_subdiv_moving_average(self.moving_mean, self.subdivisions, self.local_count, mean, momentum,
-                                              input_batch_size)
+            return self._assign_subdiv_moving_average(self.moving_mean,
+                                                      self.subdivisions,
+                                                      self.local_count, mean,
+                                                      momentum,
+                                                      input_batch_size)
 
         def subdiv_variance_update():
           """Update self.moving_variance with the most recent data point."""
           if use_fused_avg_updates:
-            return self._assign_subdiv_new_value(self.moving_variance, self.subdivisions, self.local_count, variance)
+            return self._assign_subdiv_new_value(self.moving_variance,
+                                                 self.subdivisions,
+                                                 self.local_count, variance)
           else:
-            # update moving average on every step i need to do it every n steps 
-            return self._assign_subdiv_moving_average(self.moving_variance, self.subdivisions, self.local_count, variance,
-                                              momentum, input_batch_size)
-        
+            # update moving average on every step i need to do it every n steps
+            return self._assign_subdiv_moving_average(self.moving_variance,
+                                                      self.subdivisions,
+                                                      self.local_count,
+                                                      variance, momentum,
+                                                      input_batch_size)
+
         # updates done in this order at the end of callfn
         self.add_update(subdiv_agg_mean)
         self.add_update(subdiv_agg_variance)
@@ -730,7 +755,7 @@ class SubDivBatchNormalization(Layer):
             return self._assign_new_value(self.moving_mean, mean)
           else:
             return self._assign_moving_average(self.moving_mean, mean, momentum,
-                                              input_batch_size)
+                                               input_batch_size)
 
         def variance_update():
           """Update self.moving_variance with the most recent data point."""
@@ -738,7 +763,7 @@ class SubDivBatchNormalization(Layer):
             return self._assign_new_value(self.moving_variance, variance)
           else:
             return self._assign_moving_average(self.moving_variance, variance,
-                                              momentum, input_batch_size)
+                                               momentum, input_batch_size)
 
         self.add_update(mean_update)
         self.add_update(variance_update)
@@ -772,7 +797,7 @@ class SubDivBatchNormalization(Layer):
     if dmax is not None:
       d = math_ops.maximum(d, -dmax)
       d = math_ops.minimum(d, dmax)
-      
+
     # When not training, use r=1, d=0.
     r = control_flow_util.smart_cond(training, lambda: r,
                                      lambda: array_ops.ones_like(r))
@@ -919,7 +944,7 @@ class SubDivBatchNormalization(Layer):
       # Some of the computations here are not necessary when training==False
       # but not a constant. However, this makes the code simpler.
       keep_dims = self.virtual_batch_size is not None or len(self.axis) > 1
-      
+
       # stats for this alone batch
       mean, variance = self._moments(
           math_ops.cast(inputs, self._param_dtype),
@@ -929,7 +954,7 @@ class SubDivBatchNormalization(Layer):
       moving_mean = self.moving_mean
       moving_variance = self.moving_variance
 
-      # if we are training use the stats for this batch for normalizing this 
+      # if we are training use the stats for this batch for normalizing this
       # value other wise use the moving average
       mean = control_flow_util.smart_cond(
           training, lambda: mean,
@@ -966,19 +991,18 @@ class SubDivBatchNormalization(Layer):
         d = _broadcast(array_ops.stop_gradient(d, name='renorm_d'))
         scale, offset = _compose_transforms(r, d, scale, offset)
 
-
-
       if self.subdivisions <= 1:
         # needs to be altered for batch agg
         def _do_update(var, value):
           """Compute the updates for mean and variance."""
           return self._assign_moving_average(var, value, self.momentum,
-                                            input_batch_size)
+                                             input_batch_size)
 
         def mean_update():
           true_branch = lambda: _do_update(self.moving_mean, new_mean)
           false_branch = lambda: self.moving_mean
-          return control_flow_util.smart_cond(training, true_branch, false_branch)
+          return control_flow_util.smart_cond(training, true_branch,
+                                              false_branch)
 
         def variance_update():
           """Update the moving variance."""
@@ -986,8 +1010,8 @@ class SubDivBatchNormalization(Layer):
           def true_branch_renorm():
             # We apply epsilon as part of the moving_stddev to mirror the training
             # code path.
-            moving_stddev = _do_update(self.moving_stddev,
-                                      math_ops.sqrt(new_variance + self.epsilon))
+            moving_stddev = _do_update(
+                self.moving_stddev, math_ops.sqrt(new_variance + self.epsilon))
             return self._assign_new_value(
                 self.moving_variance,
                 # Apply relu in case floating point rounding causes it to go
@@ -1000,7 +1024,8 @@ class SubDivBatchNormalization(Layer):
             true_branch = lambda: _do_update(self.moving_variance, new_variance)
 
           false_branch = lambda: self.moving_variance
-          return control_flow_util.smart_cond(training, true_branch, false_branch)
+          return control_flow_util.smart_cond(training, true_branch,
+                                              false_branch)
 
         self.add_update(mean_update)
         self.add_update(variance_update)
@@ -1009,13 +1034,14 @@ class SubDivBatchNormalization(Layer):
         def _do_update(var, value):
           """Compute the updates for mean and variance."""
           return self._assign_moving_average(var, value, self.momentum,
-                                            input_batch_size)
+                                             input_batch_size)
 
         # swap with cyclic aggregate update
         def mean_update():
           true_branch = lambda: _do_update(self.moving_mean, new_mean)
           false_branch = lambda: self.moving_mean
-          return control_flow_util.smart_cond(training, true_branch, false_branch)
+          return control_flow_util.smart_cond(training, true_branch,
+                                              false_branch)
 
         def variance_update():
           """Update the moving variance."""
@@ -1023,8 +1049,8 @@ class SubDivBatchNormalization(Layer):
           def true_branch_renorm():
             # We apply epsilon as part of the moving_stddev to mirror the training
             # code path.
-            moving_stddev = _do_update(self.moving_stddev,
-                                      math_ops.sqrt(new_variance + self.epsilon))
+            moving_stddev = _do_update(
+                self.moving_stddev, math_ops.sqrt(new_variance + self.epsilon))
             return self._assign_new_value(
                 self.moving_variance,
                 # Apply relu in case floating point rounding causes it to go
@@ -1037,7 +1063,8 @@ class SubDivBatchNormalization(Layer):
             true_branch = lambda: _do_update(self.moving_variance, new_variance)
 
           false_branch = lambda: self.moving_variance
-          return control_flow_util.smart_cond(training, true_branch, false_branch)
+          return control_flow_util.smart_cond(training, true_branch,
+                                              false_branch)
 
         self.add_update(mean_update)
         self.add_update(variance_update)
@@ -1281,13 +1308,13 @@ class SyncBatchNormalization(SubDivBatchNormalization):
       if replica_ctx:
         # local to me
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
-        local_squared_sum = math_ops.reduce_sum(math_ops.square(y), axis=axes,
-                                                keepdims=True)
+        local_squared_sum = math_ops.reduce_sum(
+            math_ops.square(y), axis=axes, keepdims=True)
         batch_size = math_ops.cast(array_ops.shape_v2(y)[0], dtypes.float32)
         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
         # order in each replica nowadays, so we limit NCCL to batch all-reduces.
-        
+
         # get the sum of all replicas (converge all devices)
         y_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM, local_sum)
         # get the sum from all replicas (converge all devices)
@@ -1299,8 +1326,8 @@ class SyncBatchNormalization(SubDivBatchNormalization):
 
         # get the number of total params you are averaging excluding batchsize(local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
-        multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
-                                   dtypes.float32)
+        multiplier = math_ops.cast(
+            math_ops.reduce_prod(axes_vals), dtypes.float32)
         multiplier = multiplier * global_batch_size
 
         # conver mean var (locally)
@@ -1309,7 +1336,7 @@ class SyncBatchNormalization(SubDivBatchNormalization):
         # var = E(x^2) - E(x)^2
         variance = y_squared_mean - math_ops.square(mean)
       else:
-        # if you only have one replica dont worry about it 
+        # if you only have one replica dont worry about it
         # Compute true mean while keeping the dims for proper broadcasting.
         mean = math_ops.reduce_mean(y, axes, keepdims=True, name='mean')
         # sample variance, not unbiased variance

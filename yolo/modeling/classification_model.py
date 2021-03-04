@@ -80,9 +80,16 @@ class ClassificationModel(tf.keras.Model):
     #     num_classes, kernel_initializer=kernel_initializer,
     #     kernel_regularizer=self._kernel_regularizer,
     #     bias_regularizer=self._bias_regularizer)
-    
-    self._head = nn_blocks.ConvBN(filters = num_classes, kernel_size = 1, kernel_initializer=kernel_initializer, kernel_regularizer=self._kernel_regularizer, bias_regularizer=self._bias_regularizer, use_bn = False, activation=None)
-    
+
+    self._head = nn_blocks.ConvBN(
+        filters=num_classes,
+        kernel_size=1,
+        kernel_initializer=kernel_initializer,
+        kernel_regularizer=self._kernel_regularizer,
+        bias_regularizer=self._bias_regularizer,
+        use_bn=False,
+        activation=None)
+
     # self._head2 = tf.keras.layers.Dense(
     #     num_classes, kernel_initializer=kernel_initializer,
     #     kernel_regularizer=self._kernel_regularizer,
@@ -101,14 +108,14 @@ class ClassificationModel(tf.keras.Model):
     if add_head_batch_norm:
       x = self._norm(axis=axis, momentum=norm_momentum, epsilon=norm_epsilon)(x)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.expand_dims(x, axis = 1)
-    x = tf.expand_dims(x, axis = 1)
+    x = tf.expand_dims(x, axis=1)
+    x = tf.expand_dims(x, axis=1)
     #x = tf.keras.layers.Dropout(dropout_rate)(x)
     #x = tf.keras.layers.AveragePooling2D(pool_size=8)(x)
     x = self._head(x)
-    x = tf.keras.activations.softmax(x, axis = -1)
-    x = tf.squeeze(x, axis = 1)
-    x = tf.squeeze(x, axis = 1)
+    x = tf.keras.activations.softmax(x, axis=-1)
+    x = tf.squeeze(x, axis=1)
+    x = tf.squeeze(x, axis=1)
     #x = self._head2(x)
 
     super(ClassificationModel, self).__init__(

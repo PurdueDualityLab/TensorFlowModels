@@ -132,7 +132,7 @@ class VideoServer(object):
 
 
 class VideoPlayer(object):
-  
+
   def __init__(self,
                file=0,
                disp_h=720,
@@ -176,7 +176,7 @@ class VideoPlayer(object):
 class DisplayThread(object):
 
   def __init__(self,
-               frame_buffer = None,
+               frame_buffer=None,
                wait_time=0.0001,
                alpha=0.1,
                fix_wt=False,
@@ -214,16 +214,16 @@ class DisplayThread(object):
       l = 0
       tick = 0
       display_fps = 0
-      
+
       while (self._running):
         # success, frame = self._frame_buffer.read()
         success, frame = self._frame_buffer.read()
         if success and frame is not None:
           cv2.imshow("frame", frame)
-        
+
           if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-            
+
           del frame
           l += 1
           if time.time() - start - tick >= 1:
@@ -255,10 +255,10 @@ class DisplayThread(object):
   @property
   def running(self):
     return self._running
-  
+
   def put(self, frame):
     return self._frame_buffer.put(frame)
-  
+
   def put_all(self, frames):
     return self._frame_buffer.put_all(frames)
 

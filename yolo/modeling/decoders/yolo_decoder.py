@@ -1,6 +1,7 @@
 import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
 
+
 @tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloFPN(tf.keras.layers.Layer):
 
@@ -13,7 +14,7 @@ class YoloFPN(tf.keras.layers.Layer):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
-               subdivisions = 8, 
+               subdivisions=8,
                **kwargs):
 
     super().__init__(**kwargs)
@@ -31,7 +32,7 @@ class YoloFPN(tf.keras.layers.Layer):
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
-        subdivisions = self._subdivisions, 
+        subdivisions=self._subdivisions,
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
@@ -95,6 +96,7 @@ class YoloFPN(tf.keras.layers.Layer):
       outputs[str(level)] = x_route
     return outputs
 
+
 @tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloPAN(tf.keras.layers.Layer):
 
@@ -109,11 +111,11 @@ class YoloPAN(tf.keras.layers.Layer):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
-               subdivisions = 8, 
-               fpn_input = True, 
+               subdivisions=8,
+               fpn_input=True,
                **kwargs):
     super().__init__(**kwargs)
-    
+
     self._path_process_len = path_process_len
     self._embed_spp = embed_spp
 
@@ -132,14 +134,13 @@ class YoloPAN(tf.keras.layers.Layer):
     else:
       self._max_level_process_len = path_process_len if max_level_process_len is None else max_level_process_len
 
-    
     self._base_config = dict(
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
         kernel_regularizer=self._kernel_regularizer,
         kernel_initializer=self._kernel_initializer,
         bias_regularizer=self._bias_regularizer,
-        subdivisions = self._subdivisions, 
+        subdivisions=self._subdivisions,
         norm_epsilon=self._norm_epsilon,
         norm_momentum=self._norm_momentum)
 
@@ -161,17 +162,18 @@ class YoloPAN(tf.keras.layers.Layer):
       self._input = self._min_level
       proc_filters = lambda x: x * 2
       resample_filters = lambda x: x
-      
+
       downsample = True
       upsample = False
     else:
-      self._iterator = list(reversed(range(self._min_level, self._max_level + 1)))
+      self._iterator = list(
+          reversed(range(self._min_level, self._max_level + 1)))
       self._check = lambda x: x > self._min_level
       self._key_shift = lambda x: x - 1
       self._input = self._max_level
       proc_filters = lambda x: x
-      resample_filters = lambda x: x//2
-      
+      resample_filters = lambda x: x // 2
+
       downsample = False
       upsample = True
 
@@ -185,9 +187,9 @@ class YoloPAN(tf.keras.layers.Layer):
             **self._base_config)
       else:
         self.resamples[str(level)] = nn_blocks.RouteMerge(
-            filters=resample_filters(depth), 
-            upsample=upsample, 
-            downsample=downsample, 
+            filters=resample_filters(depth),
+            upsample=upsample,
+            downsample=downsample,
             **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
@@ -215,14 +217,16 @@ class YoloPAN(tf.keras.layers.Layer):
       outputs[str(level)] = x
       if self._check(level):
         x_next = inputs[str(self._key_shift(level))]
-        layer_in = self.resamples[str(self._key_shift(level))]([x_route, x_next])
+        layer_in = self.resamples[str(
+            self._key_shift(level))]([x_route, x_next])
     return outputs
+
 
 @tf.keras.utils.register_keras_serializable(package="yolo")
 class YoloDecoder(tf.keras.Model):
 
   def __init__(self,
-               input_specs, 
+               input_specs,
                embed_fpn=False,
                fpn_path_len=4,
                path_process_len=6,
@@ -235,7 +239,7 @@ class YoloDecoder(tf.keras.Model):
                kernel_initializer="glorot_uniform",
                kernel_regularizer=None,
                bias_regularizer=None,
-               subdivisions = 8, 
+               subdivisions=8,
                **kwargs):
     super().__init__(**kwargs)
     self._embed_fpn = embed_fpn
@@ -260,19 +264,24 @@ class YoloDecoder(tf.keras.Model):
         norm_epsilon=self._norm_epsilon,
         kernel_initializer=self._kernel_initializer,
         kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer, 
-        subdivisions = self._subdivisions)
+        bias_regularizer=self._bias_regularizer,
+        subdivisions=self._subdivisions)
 
     self._decoder_config = dict(
         path_process_len=self._path_process_len,
         max_level_process_len=self._max_level_process_len,
         embed_spp=self._embed_spp,
-        fpn_input=self._embed_fpn, 
+        fpn_input=self._embed_fpn,
         **self._base_config)
 
-    inputs = {key: tf.keras.layers.Input(shape = value[1:]) for key, value in input_specs.items()}
+    inputs = {
+        key: tf.keras.layers.Input(shape=value[1:])
+        for key, value in input_specs.items()
+    }
     if self._embed_fpn:
-      inter_outs = YoloFPN(fpn_path_len=self._fpn_path_len, **self._base_config)(inputs)
+      inter_outs = YoloFPN(
+          fpn_path_len=self._fpn_path_len, **self._base_config)(
+              inputs)
       outputs = YoloPAN(**self._decoder_config)(inter_outs)
     else:
       inter_outs = None
@@ -280,7 +289,7 @@ class YoloDecoder(tf.keras.Model):
 
     self._output_specs = {key: value.shape for key, value in outputs.items()}
     print(self._output_specs)
-    super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
+    super().__init__(inputs=inputs, outputs=outputs, name="YoloDecoder")
 
   @property
   def embed_fpn(self):
@@ -316,8 +325,8 @@ class YoloDecoder(tf.keras.Model):
 #                kernel_initializer="glorot_uniform",
 #                kernel_regularizer=None,
 #                bias_regularizer=None,
-#                subdivisions = 8, 
-#                fpn_input = True, 
+#                subdivisions = 8,
+#                fpn_input = True,
 #                **kwargs):
 #     super().__init__(**kwargs)
 #     self._max_level_process_len = path_process_len if max_level_process_len is None else max_level_process_len
@@ -340,7 +349,7 @@ class YoloDecoder(tf.keras.Model):
 #         kernel_regularizer=self._kernel_regularizer,
 #         kernel_initializer=self._kernel_initializer,
 #         bias_regularizer=self._bias_regularizer,
-#         subdivisions = self._subdivisions, 
+#         subdivisions = self._subdivisions,
 #         norm_epsilon=self._norm_epsilon,
 #         norm_momentum=self._norm_momentum)
 
@@ -372,7 +381,7 @@ class YoloDecoder(tf.keras.Model):
 #             repetitions=self._path_process_len,
 #             insert_spp=False,
 #             **self._base_config)
-            
+
 #     return
 
 #   def get_raw_depths(self, minimum_depth):
@@ -393,7 +402,6 @@ class YoloDecoder(tf.keras.Model):
 #         layer_in = self.resamples[str(level - 1)]([x_route, x_next])
 #     return outputs
 
-
 # @tf.keras.utils.register_keras_serializable(package="yolo")
 # class YoloFPNDecoder(tf.keras.layers.Layer):
 
@@ -408,7 +416,7 @@ class YoloDecoder(tf.keras.Model):
 #                kernel_initializer="glorot_uniform",
 #                kernel_regularizer=None,
 #                bias_regularizer=None,
-#                subdivisions = 8, 
+#                subdivisions = 8,
 #                **kwargs):
 #     super().__init__(**kwargs)
 #     self._path_process_len = path_process_len
@@ -428,7 +436,7 @@ class YoloDecoder(tf.keras.Model):
 #     self._base_config = dict(
 #         activation=self._activation,
 #         use_sync_bn=self._use_sync_bn,
-#         subdivisions=self._subdivisions, 
+#         subdivisions=self._subdivisions,
 #         kernel_regularizer=self._kernel_regularizer,
 #         kernel_initializer=self._kernel_initializer,
 #         bias_regularizer=self._bias_regularizer,
@@ -486,12 +494,11 @@ class YoloDecoder(tf.keras.Model):
 #         layer_in = self.resamples[str(level + 1)]([x_route, x_next])
 #     return outputs
 
-
 # @tf.keras.utils.register_keras_serializable(package="yolo")
 # class YoloDecoder(tf.keras.Model):
 
 #   def __init__(self,
-#                input_specs, 
+#                input_specs,
 #                embed_fpn=False,
 #                fpn_path_len=4,
 #                path_process_len=6,
@@ -504,7 +511,7 @@ class YoloDecoder(tf.keras.Model):
 #                kernel_initializer="glorot_uniform",
 #                kernel_regularizer=None,
 #                bias_regularizer=None,
-#                subdivisions = 8, 
+#                subdivisions = 8,
 #                **kwargs):
 #     # super().__init__(**kwargs)
 #     self._embed_fpn = embed_fpn
@@ -529,7 +536,7 @@ class YoloDecoder(tf.keras.Model):
 #         norm_epsilon=self._norm_epsilon,
 #         kernel_initializer=self._kernel_initializer,
 #         kernel_regularizer=self._kernel_regularizer,
-#         bias_regularizer=self._bias_regularizer, 
+#         bias_regularizer=self._bias_regularizer,
 #         subdivisions = self._subdivisions)
 
 #     self._decoder_config = dict(

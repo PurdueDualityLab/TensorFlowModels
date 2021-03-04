@@ -11,6 +11,7 @@ import multiprocessing as mp
 import os
 # from concurrent.futures import ProcessPoolExecutor as pooler
 
+
 def get_device(policy):
   if not isinstance(policy, str):
     return policy
@@ -157,7 +158,9 @@ def int_scale_boxes(boxes, classes, width, height):
   classes = tf.cast(classes, dtype=tf.int32)
   return boxes, classes
 
+
 class DrawBoxes(object):
+
   def __init__(self, classes=80, labels=None, display_names=True, thickness=2):
 
     self._classes = classes
@@ -190,7 +193,8 @@ class DrawBoxes(object):
     def draw_box(image, box, classes, conf):
       if box[3] == 0:
         return False
-      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],1)
+      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
+                    1)
       return True
 
     if display_name and label_names is not None:
@@ -208,8 +212,10 @@ class DrawBoxes(object):
     return image
 
   def _parent(self, image, boxes, classes, conf):
+
     def func(i):
       return self._draw(image[i], boxes[i], classes[i], conf[i])
+
     return func
 
   def __call__(self, image, results):

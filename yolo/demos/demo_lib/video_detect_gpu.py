@@ -25,11 +25,11 @@ from yolo.tasks.yolo import YoloTask
 
 
 class FastVideo(object):
-  
+
   def __init__(self,
                reader,
                processor,
-               drawer, 
+               drawer,
                writer,
                max_batch=None,
                wait_time=None,
@@ -73,7 +73,7 @@ class FastVideo(object):
           self._load_que.put(image)
           self._load_empty.notify_all()
       # time.sleep(self._wait_time)
-    
+
     self._running = False
     return
 
@@ -98,18 +98,15 @@ class FastVideo(object):
     self._load_thread.start()
     self._display_thread.start()
 
-
     self._load_thread.join()
     self._display_thread.join()
     self._running = False
     return
 
+
 if __name__ == '__main__':
-    draw_fn = utils.DrawBoxes(
-        classes=80,
-        labels=self._labels,
-        display_names=print_conf,
-        thickness=1)
+  draw_fn = utils.DrawBoxes(
+      classes=80, labels=self._labels, display_names=print_conf, thickness=1)
 #   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
 #   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 

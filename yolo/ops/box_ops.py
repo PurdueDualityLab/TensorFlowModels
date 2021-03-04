@@ -46,11 +46,14 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
 
 
 # IOU
-def rm_nan_inf(x, val = 0.0):
-  x = tf.where(tf.math.logical_or(tf.math.is_nan(x), tf.math.is_inf(x)), tf.cast(val, dtype=x.dtype), x)
+def rm_nan_inf(x, val=0.0):
+  x = tf.where(
+      tf.math.logical_or(tf.math.is_nan(x), tf.math.is_inf(x)),
+      tf.cast(val, dtype=x.dtype), x)
   return x
 
-def rm_nan(x, val = 0.0):
+
+def rm_nan(x, val=0.0):
   x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
   return x
 
@@ -84,7 +87,7 @@ def compute_iou(box1, box2, yxyx=False):
     box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
     union = box1_area + box2_area - intersection
 
-    iou = tf.math.divide(intersection, union + K.epsilon())  
+    iou = tf.math.divide(intersection, union + K.epsilon())
     iou = rm_nan_inf(iou)
 
     iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
@@ -211,12 +214,12 @@ def compute_ciou(box1, box2, yxyx=False):
     if yxyx:
       box1 = yxyx_to_xcycwh(box1)
       box2 = yxyx_to_xcycwh(box2)
-    
+
     arcterm = tf.square(
         tf.math.atan(tf.math.divide(box1[..., 2], box1[..., 3])) -
         tf.math.atan(tf.math.divide(box2[..., 2], box2[..., 3])))
     v = 4 * arcterm / (math.pi**2)
-    
+
     # compute IOU regularization
     # a = tf.math.divide(v, ((1 - iou) + v) + K.epsilon())
     a = tf.math.divide_no_nan(v, ((1 - iou) + v))

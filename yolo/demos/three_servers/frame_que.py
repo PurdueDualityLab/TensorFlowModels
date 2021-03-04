@@ -3,7 +3,7 @@ from queue import Queue
 
 class FrameQue(object):
 
-  def __init__(self, size = -1):
+  def __init__(self, size=-1):
     self._que = Queue(size)
     return
 
@@ -12,7 +12,7 @@ class FrameQue(object):
       return False
     self._que.put(frame)
     return True
-  
+
   def put_all(self, frames):
     map(self._que.put, frames)
     return True

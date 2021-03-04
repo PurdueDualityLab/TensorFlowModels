@@ -27,28 +27,35 @@ class YoloSubDivTask(yolo.YoloTask):
   loading/iterating over Datasets, initializing the model, calculating the loss,
   post-processing, and customized metrics with reduction.
   """
-  def __init__(self, params, logging_dir:str = None):
+
+  def __init__(self, params, logging_dir: str = None):
     super().__init__(params, logging_dir=logging_dir)
     self._gradient_aggregator = None
     self._training_batch_size = None
     self._subdivisons = None
-  
+
   def build_model(self):
     model = super().build_model()
     batch_size = self.get_batch_size()
-    self._gradient_aggregator = gradient_aggregator.GradientAggregator(model.trainable_variables, batch_size, self._subdivisons, loss_aggregation=None)
+    self._gradient_aggregator = gradient_aggregator.GradientAggregator(
+        model.trainable_variables,
+        batch_size,
+        self._subdivisons,
+        loss_aggregation=None)
     return model
 
   def get_batch_size(self):
     params = self._task_config.train_data
-    if params.is_training and self._training_batch_size is None: 
+    if params.is_training and self._training_batch_size is None:
       if self._task_config.subdivisions > params.global_batch_size:
-        raise IOError("subdivisions must be less than or equal to training batch_size")
-      if int(params.global_batch_size/self._task_config.subdivisions) != params.global_batch_size//self._task_config.subdivisions:
-        raise IOError("training batch_size must be divsible by subdivisions")
-      params.global_batch_size = params.global_batch_size//self._task_config.subdivisions
+        raise IOError(
+            'subdivisions must be less than or equal to training batch_size')
+      if int(params.global_batch_size / self._task_config.subdivisions
+            ) != params.global_batch_size // self._task_config.subdivisions:
+        raise IOError('training batch_size must be divsible by subdivisions')
+      params.global_batch_size = params.global_batch_size // self._task_config.subdivisions
       self._training_batch_size = params.global_batch_size
-      self._subdivisons = self._task_config.subdivisions 
+      self._subdivisons = self._task_config.subdivisions
     return self._training_batch_size
 
   def build_inputs(self, params, input_context=None):
@@ -90,7 +97,7 @@ class YoloSubDivTask(yolo.YoloTask):
         masks=masks,
         letter_box=params.parser.letter_box,
         cutmix=params.parser.cutmix,
-        mosaic=params.parser.mosaic, 
+        mosaic=params.parser.mosaic,
         use_tie_breaker=params.parser.use_tie_breaker,
         min_process_size=params.parser.min_process_size,
         max_process_size=params.parser.max_process_size,
@@ -113,7 +120,6 @@ class YoloSubDivTask(yolo.YoloTask):
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
     return dataset
-
 
   def build_losses(self, outputs, labels, div=None, aux_losses=None):
     loss = 0.0
@@ -161,10 +167,10 @@ class YoloSubDivTask(yolo.YoloTask):
     # compute the gradient
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
-    
+
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
-    
+
     if self.task_config.gradient_clip_norm > 0.0:
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)

@@ -4,11 +4,13 @@ import time
 import cv2
 import abc
 
+
 class Reader(object):
+
   @abc.abstractclassmethod
   def read(self):
     ...
-  
+
   @abc.abstractclassmethod
   def run(self):
     ...
@@ -24,9 +26,8 @@ class Reader(object):
 
 
 class VideoReader(Reader):
-  def __init__(self,
-               file=0,
-               output_reslution=720):
+
+  def __init__(self, file=0, output_reslution=720):
 
     self._file = file
     self._cap = cv2.VideoCapture(file)
@@ -43,7 +44,8 @@ class VideoReader(Reader):
   def read(self):
     suc, image = self._cap.read()
     if suc:
-      image = cv2.resize(image, (self._width, self._height), interpolation=cv2.INTER_AREA)
+      image = cv2.resize(
+          image, (self._width, self._height), interpolation=cv2.INTER_AREA)
     return suc, {"image": image, "id": self._id}
 
   @property
@@ -52,9 +54,9 @@ class VideoReader(Reader):
 
   def start(self):
     return
-  
+
   def close(self):
-    return 
+    return
 
 
 # TODO: File List Reader

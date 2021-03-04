@@ -24,6 +24,7 @@ from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
 import yolo.demos.three_servers.video_server as video_t
 
+
 class FastVideo(object):
   """
     program for faster object detection in TensorFlow. Algorithm was tested on RTX 2070 Super with Intel Core i5-4500k CPU. The first 2-3 seconds of
@@ -142,7 +143,7 @@ class FastVideo(object):
           path='yolo/dataloaders/dataset_specs/coco.names')
     elif labels is None and classes == 91:
       self._labels = get_coco_names(
-          path='yolo/dataloaders/dataset_specs/coco-91.names') 
+          path='yolo/dataloaders/dataset_specs/coco-91.names')
     else:
       self._labels = labels
 
@@ -261,9 +262,9 @@ class FastVideo(object):
         # get the images, the predictions placed on the que via the run function (the model)
         image, pred = self._display_que.get()
         image = self._draw_fn(image, pred)
-        # del image 
+        # del image
         # del pred
-        
+
         # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
         for im in iter(image):
           while not self._display.put(im):
@@ -340,7 +341,7 @@ class FastVideo(object):
         # log time and process the batch loaded in the for loop above
         a = datetime.datetime.now()
         with tf.device(self._gpu_device):
-          image = tf.stack(proc, axis = 0)
+          image = tf.stack(proc, axis=0)
           image = preprocess(image)
           pimage = tf.image.resize(image, (self._p_width, self._p_height))
           pred = predfunc(pimage)
@@ -447,10 +448,9 @@ class FastVideo(object):
         end='\n')
     print(
         '                                 \rmemuse: \033[1;37;40m%0.5f\033[0m GB'
-        % (tf.config.experimental.get_memory_usage(self._gpu_device)/1e9),
+        % (tf.config.experimental.get_memory_usage(self._gpu_device) / 1e9),
         end='\n')
 
-        
     print('\033[F\033[F\033[F\033[F\033[F\033[F\033[F\033[F', end='\n')
     return
 

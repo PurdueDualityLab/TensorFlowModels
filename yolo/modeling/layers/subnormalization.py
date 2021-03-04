@@ -41,8 +41,6 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.distribute import reduce_util
 from tensorflow.python.keras.layers import normalization
 
-
-
 import tensorflow as tf
 
 
@@ -52,7 +50,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
 
   def __init__(self,
                axis=-1,
-               subdivisions = 1, 
+               subdivisions=1,
                momentum=0.99,
                epsilon=1e-3,
                center=True,
@@ -74,7 +72,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
                name=None,
                **kwargs):
 
-      super(SubDivBatchNormalization, self).__init__(
+    super(SubDivBatchNormalization, self).__init__(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
@@ -91,13 +89,14 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         renorm=renorm,
         renorm_clipping=renorm_clipping,
         renorm_momentum=renorm_momentum,
-        fused= None if not renorm else False, #if subdivisions <= 1 else False, #alter this
+        fused=None
+        if not renorm else False,  #if subdivisions <= 1 else False, #alter this
         trainable=trainable,
         virtual_batch_size=None,
         name=name,
         **kwargs)
-      
-      self.subdivisions = subdivisions
+
+    self.subdivisions = subdivisions
 
   def build(self, input_shape):
     super().build(input_shape)
@@ -121,7 +120,6 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if len(self.axis) != len(set(self.axis)):
       raise ValueError('Duplicate axis: %s' % self.axis)
 
-   
     # TODO(yaozhang): if input is not 4D, reshape it to 4D and reshape the
     # output back to its original shape accordingly.
     # self.fused = None
@@ -135,9 +133,9 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
           self.fused = ndims == 4
         elif self.fused and ndims != 4:
           raise ValueError('Batch normalization layers with `fused=True` only '
-                            'support 4D or 5D input tensors. '
-                            'Received tensor with shape: %s' %
-                            (tuple(input_shape),))
+                           'support 4D or 5D input tensors. '
+                           'Received tensor with shape: %s' %
+                           (tuple(input_shape),))
       else:
         assert self.fused is not None
         self.fused = (ndims == 4 and self._fused_can_be_used())
@@ -162,8 +160,8 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         self.fused = False
       else:
         raise ValueError('Unsupported axis, fused batch norm only supports '
-                          'axis == [1] or axis == [3] for 4D input tensors or '
-                          'axis == [1] or axis == [4] for 5D input tensors')
+                         'axis == [1] or axis == [3] for 4D input tensors or '
+                         'axis == [1] or axis == [4] for 5D input tensors')
 
     axis_to_dim = {x: input_shape.dims[x].value for x in self.axis}
     for x in axis_to_dim:
@@ -186,7 +184,6 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         param_shape.insert(1, 1)
         for idx, x in enumerate(self.axis):
           self.axis[idx] = x + 1  # Account for added dimension
-
 
     try:
       # Disable variable partitioning when creating the moving mean and variance
@@ -216,7 +213,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
             trainable=False,
             aggregation=tf_variables.VariableAggregation.SUM,
             experimental_autocast=False)
-        
+
         self.local_count = self.add_weight(
             name='local_sum',
             shape=(),
@@ -226,7 +223,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
             trainable=False,
             aggregation=tf_variables.VariableAggregation.SUM,
             experimental_autocast=False)
-        
+
         self.aggregated_batch_size = self.add_weight(
             name='net_batches',
             shape=(),
@@ -242,50 +239,56 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         self._scope.set_partitioner(partitioner)
     self.built = True
 
-  def _assign_subdiv_moving_average(self, variable, value, momentum, subdivsions, count):
+  def _assign_subdiv_moving_average(self, variable, value, momentum,
+                                    subdivsions, count):
     with K.name_scope('AssignSubDivMovingAvg') as scope:
       with ops.colocate_with(variable):
         decay = ops.convert_to_tensor_v2_with_dispatch(
             1.0 - momentum, name='decay')
         if decay.dtype != variable.dtype.base_dtype:
           decay = math_ops.cast(decay, variable.dtype.base_dtype)
-        
+
         # get the aggregated update
         update_delta = (variable - math_ops.cast(value, variable.dtype)) * decay
-        
+
         # update at the end of last step
-        update_delta = array_ops.where((count + 1)%subdivisions == 0, update_delta, K.zeros_like(update_delta))
+        update_delta = array_ops.where((count + 1) % subdivisions == 0,
+                                       update_delta, K.zeros_like(update_delta))
         return state_ops.assign_sub(variable, update_delta, name=scope)
-  
+
   def _assign_subdiv_new_value(self, variable, value, subdivisions, count):
     with K.name_scope('AssignNewValue') as scope:
       with ops.colocate_with(variable):
-        update_value = array_ops.where((count + 1)%subdivisions == 0, value, variable)
+        update_value = array_ops.where((count + 1) % subdivisions == 0, value,
+                                       variable)
         return state_ops.assign(variable, update_value, name=scope)
 
-  def _assign_subdiv_rotating_sum(self, variable, value, subdivisions, count, inputs_size):
+  def _assign_subdiv_rotating_sum(self, variable, value, subdivisions, count,
+                                  inputs_size):
     with K.name_scope('AssignSubDivRotatedSum') as scope:
-      with ops.colocate_with(variable):        
-        # reduce it for the current 
-        update_delta = value#/subdivisions
-        
+      with ops.colocate_with(variable):
+        # reduce it for the current
+        update_delta = value  #/subdivisions
+
         # if the input size is 0
         if inputs_size is not None:
           update_delta = array_ops.where(inputs_size > 0, update_delta,
                                          K.zeros_like(update_delta))
-        
-        # if we are starting a new batch set the variable to 0 by removing it 
-        # from update delta then add the delta to the variable to get 
+
+        # if we are starting a new batch set the variable to 0 by removing it
+        # from update delta then add the delta to the variable to get
         # rid of the value variable
-        update_delta = array_ops.where(count%subdivisions == 0, update_delta - variable, update_delta)
+        update_delta = array_ops.where(count % subdivisions == 0,
+                                       update_delta - variable, update_delta)
         return state_ops.assign_add(variable, update_delta, name=scope)
 
-
   def _subdiv_calculate_mean_and_var(self, inputs, reduction_axes, keep_dims):
-    # calculate the 
-    net_sum = math_ops.reduce_sum(inputs, axis=reduction_axes, keepdims=keep_dims)
-    squared_mean = math_ops.reduce_sum(math_ops.square(inputs), axis=reduction_axes, keepdims=keep_dims)
-    
+    # calculate the
+    net_sum = math_ops.reduce_sum(
+        inputs, axis=reduction_axes, keepdims=keep_dims)
+    squared_mean = math_ops.reduce_sum(
+        math_ops.square(inputs), axis=reduction_axes, keepdims=keep_dims)
+
     if self._support_zero_size_input():
       # Keras assumes that batch dimension is the first dimension for Batch
       # Normalization.
@@ -294,25 +297,28 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       input_batch_size = None
 
     # get the number of total params you are averaging including batchsize(local)
-    axes_vals = [(array_ops.shape_v2(inputs))[i] for i in range(1, len(reduction_axes))]
-    multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
-                                dtypes.float32)
-    
-    squared_mean = squared_mean/multiplier
-    net_sum = net_sum/multiplier
+    axes_vals = [
+        (array_ops.shape_v2(inputs))[i] for i in range(1, len(reduction_axes))
+    ]
+    multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals), dtypes.float32)
+
+    squared_mean = squared_mean / multiplier
+    net_sum = net_sum / multiplier
 
     if input_batch_size is None:
       mean, variance = nn.moments(inputs, reduction_axes, keep_dims=keep_dims)
     else:
       batches_ = math_ops.cast(input_batch_size, self._param_dtype)
-      mean = net_sum/batches_
-      variance = squared_mean/batches_- math_ops.square(array_ops.stop_gradient(mean)) 
-    
+      mean = net_sum / batches_
+      variance = squared_mean / batches_ - math_ops.square(
+          array_ops.stop_gradient(mean))
+
     return mean, net_sum, variance, squared_mean, input_batch_size
-  
+
   def subdiv_moments(self, inputs, reduction_axes, keep_dims):
     # mean and variance only for the current batch
-    mean, net_sum, variance, squared_mean, input_batch_size = self._subdiv_calculate_mean_and_var(inputs, reduction_axes, keep_dims)
+    mean, net_sum, variance, squared_mean, input_batch_size = self._subdiv_calculate_mean_and_var(
+        inputs, reduction_axes, keep_dims)
 
     if self._support_zero_size_input():
       input_batch_size = 0 if input_batch_size is None else input_batch_size
@@ -320,13 +326,12 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       net_sum = array_ops.where(input_batch_size > 0, net_sum,
                                 K.zeros_like(net_sum))
       variance = array_ops.where(input_batch_size > 0, variance,
-                                K.zeros_like(variance))
+                                 K.zeros_like(variance))
       squared_mean = array_ops.where(input_batch_size > 0, squared_mean,
-                                K.zeros_like(squared_mean))
+                                     K.zeros_like(squared_mean))
     return mean, net_sum, variance, squared_mean, input_batch_size
 
-
-  def _subdiv_batch_norm(self, inputs, training = None):
+  def _subdiv_batch_norm(self, inputs, training=None):
     # tf.print('bn', self.local_count)
     training = self._get_training_value(training)
 
@@ -336,7 +341,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       # In particular, it's very easy for variance to overflow in float16 and
       # for safety we also choose to cast bfloat16 to float32.
       inputs = math_ops.cast(inputs, dtypes.float32)
-    
+
     params_dtype = self._param_dtype
 
     # Compute the axes along which to reduce the mean / variance
@@ -347,7 +352,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       del reduction_axes[1]  # Do not reduce along virtual batch dim
 
     # Broadcasting only necessary for single-axis batch norm where the axis is
-    # not the last dimension  
+    # not the last dimension
     broadcast_shape = [1] * ndims
     broadcast_shape[self.axis[0]] = input_shape.dims[self.axis[0]].value
 
@@ -367,13 +372,13 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       if then_offset is not None:
         offset += then_offset
       return (scale, offset)
-    
+
     # is training value true false or None
     training_value = control_flow_util.constant_value(training)
-    update_value = (self.local_count + 1)%self.subdivisions == 0
+    update_value = (self.local_count + 1) % self.subdivisions == 0
     if training_value == False:  # pylint: disable=singleton-comparison,g-explicit-bool-comparison
       mean, variance = self.moving_mean, self.moving_variance
-    else: 
+    else:
       # training_value could be True or None -> None means determine at runtime
       if self.adjustment:
         adj_scale, adj_bias = self.adjustment(array_ops.shape(inputs))
@@ -383,68 +388,75 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
         adj_bias = control_flow_util.smart_cond(
             training, lambda: adj_bias, lambda: array_ops.zeros_like(adj_bias))
         scale, offset = _compose_transforms(adj_scale, adj_bias, scale, offset)
-    
+
       keep_dims = self.virtual_batch_size is not None or len(self.axis) > 1
 
       # normalization stats for the current batch important = mean and squared_mean
       mean, net_sum, variance, squared_mean, input_batch_size = self.subdiv_moments(
-            math_ops.cast(inputs, self._param_dtype),
-            reduction_axes,
-            keep_dims=keep_dims) 
+          math_ops.cast(inputs, self._param_dtype),
+          reduction_axes,
+          keep_dims=keep_dims)
 
       # aggregate the things
       def _update_aggragate_sum():
-        return self._assign_subdiv_rotating_sum(self.aggregated_sum_batch, 
-                                                net_sum, 
-                                                self.subdivisions, 
-                                                self.local_count, 
+        return self._assign_subdiv_rotating_sum(self.aggregated_sum_batch,
+                                                net_sum, self.subdivisions,
+                                                self.local_count,
                                                 input_batch_size)
 
       def _update_aggragate_squared_sum():
-        return self._assign_subdiv_rotating_sum(self.aggregated_square_sum_batch, 
-                                                squared_mean, 
-                                                self.subdivisions, 
-                                                self.local_count, 
-                                                input_batch_size)
-      
+        return self._assign_subdiv_rotating_sum(
+            self.aggregated_square_sum_batch, squared_mean, self.subdivisions,
+            self.local_count, input_batch_size)
+
       def _update_aggragate_batch_size():
-        return self._assign_subdiv_rotating_sum(self.aggregated_batch_size, 
-                                                input_batch_size, 
-                                                self.subdivisions, 
-                                                self.local_count, 
+        return self._assign_subdiv_rotating_sum(self.aggregated_batch_size,
+                                                input_batch_size,
+                                                self.subdivisions,
+                                                self.local_count,
                                                 input_batch_size)
 
       self.add_update(_update_aggragate_sum)
       self.add_update(_update_aggragate_squared_sum)
       self.add_update(_update_aggragate_batch_size)
 
-      aggregated_mean = self.aggregated_sum_batch / math_ops.cast(self.aggregated_batch_size, params_dtype)
-      aggregated_squared_mean = self.aggregated_square_sum_batch / math_ops.cast(self.aggregated_batch_size, params_dtype)
-      aggregated_variance = aggregated_squared_mean - math_ops.square(aggregated_mean)
+      aggregated_mean = self.aggregated_sum_batch / math_ops.cast(
+          self.aggregated_batch_size, params_dtype)
+      aggregated_squared_mean = self.aggregated_square_sum_batch / math_ops.cast(
+          self.aggregated_batch_size, params_dtype)
+      aggregated_variance = aggregated_squared_mean - math_ops.square(
+          aggregated_mean)
 
       moving_mean = self.moving_mean
       moving_variance = self.moving_variance
 
-      # if we are training use the stats for this batch for normalizing this 
+      # if we are training use the stats for this batch for normalizing this
       # value other wise use the moving average
 
       # should only happen when we update the moving values
       mean = control_flow_util.smart_cond(
-          training, true_fn = lambda: mean,
-          false_fn = lambda: ops.convert_to_tensor_v2_with_dispatch(moving_mean))
+          training,
+          true_fn=lambda: mean,
+          false_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(moving_mean))
       variance = control_flow_util.smart_cond(
-          training, true_fn = lambda: variance,
-          false_fn = lambda: ops.convert_to_tensor_v2_with_dispatch(moving_variance))
+          training,
+          true_fn=lambda: variance,
+          false_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(
+              moving_variance))
 
       # circular update of the mean and variance
-      new_mean = control_flow_util.smart_cond(update_value, 
-                                              true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(aggregated_mean),
-                                              false_fn=lambda: moving_mean)
-      
-      new_variance = control_flow_util.smart_cond(update_value, 
-                                        true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(aggregated_variance),
-                                        false_fn=lambda: moving_variance)
-      
+      new_mean = control_flow_util.smart_cond(
+          update_value,
+          true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(aggregated_mean
+                                                                ),
+          false_fn=lambda: moving_mean)
+
+      new_variance = control_flow_util.smart_cond(
+          update_value,
+          true_fn=lambda: ops.convert_to_tensor_v2_with_dispatch(
+              aggregated_variance),
+          false_fn=lambda: moving_variance)
+
       # # should only be done when the moving mean is updated
       # tf.print(new_variance, self.local_count, update_value, self.aggregated_batch_size, self.aggregated_sum_batch)
 
@@ -461,7 +473,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       def _do_update(var, value):
         """Compute the updates for mean and variance."""
         return self._assign_moving_average(var, value, self.momentum,
-                                          self.aggregated_batch_size)
+                                           self.aggregated_batch_size)
 
       def mean_update():
         true_branch = lambda: _do_update(self.moving_mean, new_mean)
@@ -475,7 +487,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
           # We apply epsilon as part of the moving_stddev to mirror the training
           # code path.
           moving_stddev = _do_update(self.moving_stddev,
-                                    math_ops.sqrt(new_variance + self.epsilon))
+                                     math_ops.sqrt(new_variance + self.epsilon))
           return self._assign_new_value(
               self.moving_variance,
               # Apply relu in case floating point rounding causes it to go
@@ -493,7 +505,8 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
       def update_count():
         with K.name_scope('update_count') as scope:
           # update the local count
-          return state_ops.assign_add(self.local_count, tf.cast(1, self.local_count.dtype), name = scope)
+          return state_ops.assign_add(
+              self.local_count, tf.cast(1, self.local_count.dtype), name=scope)
 
       self.add_update(mean_update)
       self.add_update(variance_update)
@@ -523,22 +536,21 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     if self.subdivisions <= 1 or self.subdivisions is None:
       return super().call(inputs, training=training)
     else:
-      if self.renorm is False and training is False and self.fused: 
+      if self.renorm is False and training is False and self.fused:
         # outputs = self._fused_batch_norm(inputs, training=False)
         beta = self.beta if self.center else self._beta_const
         gamma = self.gamma if self.scale else self._gamma_const
-        outputs, mean, variance = nn.fused_batch_norm(inputs,
-                                                gamma,
-                                                beta,
-                                                mean=self.moving_mean,
-                                                variance=self.moving_variance,
-                                                epsilon=self.epsilon,
-                                                is_training=False,
-                                                data_format=self._data_format)
+        outputs, mean, variance = nn.fused_batch_norm(
+            inputs,
+            gamma,
+            beta,
+            mean=self.moving_mean,
+            variance=self.moving_variance,
+            epsilon=self.epsilon,
+            is_training=False,
+            data_format=self._data_format)
         return outputs
       return self._subdiv_batch_norm(inputs, training=training)
-
-  
 
 
 class SubDivSyncBatchNormalization(SubDivBatchNormalization):
@@ -615,7 +627,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
 
   def __init__(self,
                axis=-1,
-               subdivisions = 1, 
+               subdivisions=1,
                momentum=0.99,
                epsilon=1e-3,
                center=True,
@@ -671,13 +683,13 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       if replica_ctx:
         # local to me
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
-        local_squared_sum = math_ops.reduce_sum(math_ops.square(y), axis=axes,
-                                                keepdims=True)
+        local_squared_sum = math_ops.reduce_sum(
+            math_ops.square(y), axis=axes, keepdims=True)
         batch_size = math_ops.cast(array_ops.shape_v2(y)[0], dtypes.float32)
         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
         # order in each replica nowadays, so we limit NCCL to batch all-reduces.
-        
+
         # get the sum of all replicas (converge all devices)
         y_sum = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM, local_sum)
         # get the sum from all replicas (converge all devices)
@@ -689,8 +701,8 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
 
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
-        multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
-                                   dtypes.float32)
+        multiplier = math_ops.cast(
+            math_ops.reduce_prod(axes_vals), dtypes.float32)
         multiplier = multiplier * global_batch_size
 
         # conver mean var (locally)
@@ -699,7 +711,7 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         # var = E(x^2) - E(x)^2
         variance = y_squared_mean - math_ops.square(mean)
       else:
-        # if you only have one replica dont worry about it 
+        # if you only have one replica dont worry about it
         # Compute true mean while keeping the dims for proper broadcasting.
         mean = math_ops.reduce_mean(y, axes, keepdims=True, name='mean')
         # sample variance, not unbiased variance
@@ -721,20 +733,20 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         return (mean, variance)
 
   def _subdiv_calculate_mean_and_var(self, x, axes, keep_dims):
-  
+
     with K.name_scope('moments'):
       # The dynamic range of fp16 is too limited to support the collection of
       # sufficient statistics. As a workaround we simply perform the operations
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
       replica_ctx = ds.get_replica_context()
-      
+
       if replica_ctx:
         # local to me
-        
+
         local_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
-        local_squared_sum = math_ops.reduce_sum(math_ops.square(y), axis=axes,
-                                                keepdims=True)
+        local_squared_sum = math_ops.reduce_sum(
+            math_ops.square(y), axis=axes, keepdims=True)
         batch_size = math_ops.cast(array_ops.shape_v2(y)[0], dtypes.float32)
         # TODO(b/163099951): batch the all-reduces once we sort out the ordering
         # issue for NCCL. We don't have a mechanism to launch NCCL in the same
@@ -746,13 +758,13 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
                                                local_squared_sum)
         # get the net batch size from all devices (converge all devices)
         input_batch_size = replica_ctx.all_reduce(reduce_util.ReduceOp.SUM,
-                                                   batch_size)
+                                                  batch_size)
 
         #tf.print(replica_ctx.replica_id_in_sync_group, replica_ctx.num_replicas_in_sync, batch_size, self.aggregated_square_sum_batch, axes)
         # get the number of total params you are averaging (local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
-        multiplier_ = math_ops.cast(math_ops.reduce_prod(axes_vals),
-                                   dtypes.float32)
+        multiplier_ = math_ops.cast(
+            math_ops.reduce_prod(axes_vals), dtypes.float32)
         multiplier = multiplier_ * input_batch_size
 
         # conver mean var (locally)
@@ -760,8 +772,8 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         y_squared_mean = y_squared_sum / multiplier
         # var = E(x^2) - E(x)^2
         variance = y_squared_mean - math_ops.square(mean)
-        net_sum = y_sum/multiplier_
-        squared_mean = y_squared_sum/multiplier_
+        net_sum = y_sum / multiplier_
+        squared_mean = y_squared_sum / multiplier_
 
       else:
         # mean = math_ops.reduce_mean(y, axes, keepdims=True, name='mean')
@@ -776,8 +788,9 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
         #     name='variance')
 
         net_sum = math_ops.reduce_sum(y, axis=axes, keepdims=True)
-        squared_mean = math_ops.reduce_sum(math_ops.square(y), axis=axes, keepdims=True)
-        
+        squared_mean = math_ops.reduce_sum(
+            math_ops.square(y), axis=axes, keepdims=True)
+
         if self._support_zero_size_input():
           # Keras assumes that batch dimension is the first dimension for Batch
           # Normalization.
@@ -787,21 +800,21 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
 
         # get the number of total params you are averaging including batchsize(local)
         axes_vals = [(array_ops.shape_v2(y))[i] for i in range(1, len(axes))]
-        multiplier = math_ops.cast(math_ops.reduce_prod(axes_vals),
-                                    dtypes.float32)
-        
-        squared_mean = squared_mean/multiplier
-        net_sum = net_sum/multiplier
+        multiplier = math_ops.cast(
+            math_ops.reduce_prod(axes_vals), dtypes.float32)
+
+        squared_mean = squared_mean / multiplier
+        net_sum = net_sum / multiplier
 
         if input_batch_size is None:
           mean, variance = nn.moments(y, axes, keep_dims=True)
           input_batch_size = 0
         else:
           batches_ = math_ops.cast(input_batch_size, self._param_dtype)
-          # # if you only have one replica dont worry about it 
+          # # if you only have one replica dont worry about it
           # # Compute true mean while keeping the dims for proper broadcasting.
-          mean = net_sum/batches_
-          variance = squared_mean/batches_- math_ops.square(mean) 
+          mean = net_sum / batches_
+          variance = squared_mean / batches_ - math_ops.square(mean)
 
       input_batch_size = math_ops.cast(input_batch_size, dtypes.int32)
       if not keep_dims:
@@ -812,13 +825,14 @@ class SubDivSyncBatchNormalization(SubDivBatchNormalization):
       if x.dtype == dtypes.float16:
         return (math_ops.cast(mean, dtypes.float16),
                 math_ops.cast(net_sum, dtypes.float16),
-                math_ops.cast(variance, dtypes.float16), 
-                math_ops.cast(squared_mean, dtypes.float16), 
-                input_batch_size)
+                math_ops.cast(variance, dtypes.float16),
+                math_ops.cast(squared_mean, dtypes.float16), input_batch_size)
       else:
         return (mean, net_sum, variance, squared_mean, input_batch_size)
 
+
 class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
+
   def __init__(self,
                axis=-1,
                momentum=0.99,
@@ -861,17 +875,18 @@ class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
         renorm_momentum=renorm_momentum,
         fused=False,
         trainable=trainable,
-        virtual_batch_size=None, 
+        virtual_batch_size=None,
         name=name,
         **kwargs)
+
   def _calculate_mean_and_var(self, x, axes, keep_dims):
-  
+
     with K.name_scope('moments'):
       # The dynamic range of fp16 is too limited to support the collection of
       # sufficient statistics. As a workaround we simply perform the operations
       # on 32-bit floats before converting the mean and variance back to fp16
       y = math_ops.cast(x, dtypes.float32) if x.dtype == dtypes.float16 else x
-      # if you only have one replica dont worry about it 
+      # if you only have one replica dont worry about it
       # Compute true mean while keeping the dims for proper broadcasting.
       mean = math_ops.reduce_mean(y, axes, keepdims=True, name='mean')
       # sample variance, not unbiased variance
@@ -888,7 +903,6 @@ class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
       if replica_ctx:
         tf.print(replica_ctx.num_replicas_in_sync)
         tf.print(replica_ctx.replica_id_in_sync_group)
-  
 
       if not keep_dims:
         mean = array_ops.squeeze(mean, axes)

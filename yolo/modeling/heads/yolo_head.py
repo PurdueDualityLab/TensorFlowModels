@@ -5,7 +5,7 @@ from yolo.modeling.layers import nn_blocks
 class YoloHead(tf.keras.layers.Layer):
 
   def __init__(self,
-               min_level, 
+               min_level,
                max_level,
                classes=80,
                boxes_per_level=3,
@@ -13,16 +13,18 @@ class YoloHead(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                kernel_initializer="glorot_uniform",
-               subdivisions = 8, 
+               subdivisions=8,
                kernel_regularizer=None,
                bias_regularizer=None,
-               activation = None, 
+               activation=None,
                **kwargs):
     super().__init__(**kwargs)
     self._min_level = min_level
     self._max_level = max_level
 
-    self._key_list = [str(key) for key in range(self._min_level, self._max_level + 1)]
+    self._key_list = [
+        str(key) for key in range(self._min_level, self._max_level + 1)
+    ]
 
     self._classes = classes
     self._boxes_per_level = boxes_per_level
@@ -37,14 +39,12 @@ class YoloHead(tf.keras.layers.Layer):
         padding="same",
         use_bn=False,
         activation=activation,
-        subdivisions = subdivisions, 
+        subdivisions=subdivisions,
         norm_momentum=norm_momentum,
         norm_epsilon=norm_epsilon,
         kernel_initializer=kernel_initializer,
         kernel_regularizer=kernel_regularizer,
         bias_regularizer=bias_regularizer)
-
-    
 
   def build(self, input_shape):
     self._head = dict()

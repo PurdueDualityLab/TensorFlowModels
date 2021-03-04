@@ -168,7 +168,7 @@ class SpineNet(tf.keras.Model):
       self._norm = layers.experimental.SyncBatchNormalization
     else:
       self._norm = layers.BatchNormalization
-    
+
     if tf.keras.backend.image_data_format() == 'channels_last':
       self._bn_axis = -1
     else:
@@ -325,8 +325,11 @@ class SpineNet(tf.keras.Model):
       if weighted_fusion:
         dtype = parents[0].dtype
         parent_weights = [
-            tf.nn.relu(tf.cast(tf.Variable(1.0, name='block{}_fusion{}'.format(
-                i, j)), dtype=dtype)) for j in range(len(parents))]
+            tf.nn.relu(
+                tf.cast(
+                    tf.Variable(1.0, name='block{}_fusion{}'.format(i, j)),
+                    dtype=dtype)) for j in range(len(parents))
+        ]
         weights_sum = tf.add_n(parent_weights)
         parents = [
             parents[i] * parent_weights[i] / (weights_sum + 0.0001)

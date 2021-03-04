@@ -84,30 +84,29 @@ class Parser(parser.Parser):
     # i_h, i_s, i_v = tf.split(image, 3, axis=-1)
 
     # if self._aug_rand_hue:
-    #   delta = 0.1 #preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
+    #   delta = 0.1 #preprocessing_ops.rand_uniform_strong(-0.1, 0.1)
     #   i_h = i_h + delta  # Hue
     #   i_h = tf.clip_by_value(i_h, 0.0, 1.0)
     # if self._aug_rand_saturation:
-    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
+    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75)
     #   i_s = i_s * delta
     # if self._aug_rand_brightness:
-    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75) 
+    #   delta = 0.75 #preprocessing_ops.rand_scale(0.75)
     #   i_v = i_v * delta
 
     # image = tf.concat([i_h, i_s, i_v], axis=-1)
     # image = tf.image.hsv_to_rgb(image)
 
     if self._aug_rand_hue:
-      delta = preprocessing_ops.rand_uniform_strong(-0.1, 0.1)  
+      delta = preprocessing_ops.rand_uniform_strong(-0.1, 0.1)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation:
-      delta = preprocessing_ops.rand_scale(0.75)  
+      delta = preprocessing_ops.rand_scale(0.75)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness:
       delta = preprocessing_ops.rand_scale(0.75)
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
-
 
     # stddev = tf.random.uniform([],
     #                            minval=0,
