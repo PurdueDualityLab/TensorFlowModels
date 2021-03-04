@@ -13,6 +13,14 @@ def smooth_labels(y_true, num_classes, label_smoothing):
 def mul_no_nan(x, y):
   return tf.where(x == 0, tf.cast(0, x.dtype), x * y)
 
+@tf.custom_gradient
+def gradient_trap(y):
+  def trap(dy):
+    dy = box_ops.rm_nan_inf(dy)
+    tf.print(tf.reduce_mean(dy))
+    return dy 
+  return y, trap 
+
 class Yolo_Loss(object):
 
   def __init__(self,
@@ -153,6 +161,8 @@ class Yolo_Loss(object):
     batch_size, width, height = shape[0], shape[1], shape[2]
     num = tf.shape(y_true)[-2]
 
+    y_pred = gradient_trap(y_pred)
+
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
 
@@ -219,6 +229,7 @@ class Yolo_Loss(object):
     class_loss = mul_no_nan(true_conf, class_loss)
     
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+    pred_conf = box_ops.rm_nan_inf(pred_conf)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce) 
@@ -232,8 +243,9 @@ class Yolo_Loss(object):
 
     # # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     # pred_conf = tf.math.sigmoid(pred_conf)
+    # pred_conf = box_ops.rm_nan_inf(pred_conf)
     # ce = self.ce(true_conf, tf.squeeze(pred_conf))
-    # ce_neg = self.ce((1 - true_conf) * mask_iou, tf.squeeze(1 - pred_conf))
+    # ce_neg = self.ce(mul_no_nan(mask_iou, (1 - true_conf)) , tf.squeeze(1 - pred_conf))
     # conf_loss = (ce + ce_neg) * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value

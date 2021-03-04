@@ -54,7 +54,6 @@ def rm_nan(x, val = 0.0):
   x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
   return x
 
-
 def compute_iou(box1, box2, yxyx=False):
   """Calculates the intersection of union between box1 and box2.
     Args:
