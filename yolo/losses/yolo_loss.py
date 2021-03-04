@@ -165,14 +165,11 @@ class Yolo_Loss(object):
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
     pred_xy, pred_wh, pred_box = self._get_predicted_box(
         fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
-    # pred_conf = tf.expand_dims(tf.math.sigmoid(y_pred[..., 4]), axis=-1)
-    # pred_class = tf.math.sigmoid(y_pred[..., 5:])
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
-
-    self.print_error(pred_box, "boxes")
-    self.print_error(pred_conf, "confidence")
-    self.print_error(pred_class, "classes")
+    # self.print_error(pred_box, "boxes")
+    # self.print_error(pred_conf, "confidence")
+    # self.print_error(pred_class, "classes")
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
@@ -180,9 +177,9 @@ class Yolo_Loss(object):
     true_class = tf.squeeze(true_class, axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
-        tf.cast(true_class, tf.int32),
-        depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
-        dtype=y_pred.dtype)
+      tf.cast(true_class, tf.int32),
+      depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
+      dtype=y_pred.dtype)
 
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
     if self._loss_type == 1:
@@ -225,14 +222,18 @@ class Yolo_Loss(object):
     conf_loss = conf_loss * self._obj_normalizer
 
     # # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    # pred_class = tf.math.sigmoid(pred_class)
     # ce = self.ce(true_class, pred_class)
     # ce_neg = self.ce((1 - true_class), tf.squeeze(1 - pred_class))
     # class_loss = mul_no_nan(true_conf, tf.reduce_sum(ce + ce_neg, axis = -1))
 
     # # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+    # pred_conf = tf.math.sigmoid(pred_conf)
     # ce = self.ce(true_conf, tf.squeeze(pred_conf))
     # ce_neg = self.ce((1 - true_conf) * mask_iou, tf.squeeze(1 - pred_conf))
     # conf_loss = (ce + ce_neg) * self._obj_normalizer
+
+
 
     # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
     loss_box = tf.cast(
