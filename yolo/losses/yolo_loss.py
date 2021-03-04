@@ -14,6 +14,14 @@ def smooth_labels(y_true, num_classes, label_smoothing):
 def mul_no_nan(x, y):
   return tf.where(x == 0, tf.cast(0, x.dtype), x * y)
 
+
+@tf.custom_gradient
+def gradient_trap(y):
+  def trap(dy):
+    tf.print(dy)
+    return dy 
+  return y, trap 
+
 @tf.custom_gradient
 def obj_gradient_trap(y):
   def trap(dy):
@@ -62,19 +70,27 @@ class Yolo_Loss(object):
         parameters for the loss functions used at each detection head output
 
         Args:
-          mask: list of indexes for which anchors in the anchors list should be used in prediction
-          anchors: list of tuples (w, h) representing the anchor boxes to be used in prediction
-          num_extras: number of indexes predicted in addition to 4 for the box and N + 1 for classes
-          ignore_thresh: float for the threshold for if iou > threshold the network has made a prediction,
-            and should not be penealized for p(object) prediction if an object exists at this location
+          mask: list of indexes for which anchors in the anchors list should be 
+            used in prediction
+          anchors: list of tuples (w, h) representing the anchor boxes to be 
+            used in prediction
+          num_extras: number of indexes predicted in addition to 4 for the box 
+            and N + 1 for classes
+          ignore_thresh: float for the threshold for if iou > threshold the 
+            network has made a prediction, and should not be penealized for 
+            p(object) prediction if an object exists at this location
           truth_thresh: float thresholding the groud truth to get the true mask
           loss_type: string for the key of the loss to use,
             options -> mse, giou, ciou
-          iou_normalizer: float used for appropriatly scaling the iou or the loss used for the box prediction error
-          cls_normalizer: float used for appropriatly scaling the classification error
+          iou_normalizer: float used for appropriatly scaling the iou or the 
+            loss used for the box prediction error
+          cls_normalizer: float used for appropriatly scaling the classification 
+            error
           scale_x_y: float used to scale the predictied x and y outputs
-          nms_kind: string used for filtering the output and ensuring each object ahs only one prediction
-          beta_nms: float for the thresholding value to apply in non max supression(nms) -> not yet implemented
+          nms_kind: string used for filtering the output and ensuring each object 
+            ahs only one prediction
+          beta_nms: float for the thresholding value to apply in non max 
+            supression(nms) -> not yet implemented
 
         call Return:
           float: for the average loss
@@ -86,11 +102,6 @@ class Yolo_Loss(object):
     self._ignore_thresh = ignore_thresh
     self._masks = mask
 
-    # used (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) for id n != nest_n
-    # checks all anchors to see if another anchor was used on this ground truth box to make a prediction
-    # if iou > self._iou_thresh then the network check the other anchors, so basically
-    # checking anchor box 1 on prediction for anchor box 2
-    # self._iou_thresh = 0.213 # recomended use = 0.213 in [yolo]
     self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
     if loss_type == "giou":
       self._loss_type = 1
@@ -172,7 +183,7 @@ class Yolo_Loss(object):
     batch_size, width, height = shape[0], shape[1], shape[2]
     num = tf.shape(y_true)[-2]
 
-    # y_pred = gradient_trap(y_pred)
+    y_pred = gradient_trap(y_pred)
 
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
@@ -188,9 +199,9 @@ class Yolo_Loss(object):
         fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
-    # self.print_error(pred_box, "boxes")
-    # self.print_error(pred_conf, "confidence")
-    # self.print_error(pred_class, "classes")
+    self.print_error(pred_box, "boxes")
+    self.print_error(pred_conf, "confidence")
+    self.print_error(pred_class, "classes")
 
     # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
