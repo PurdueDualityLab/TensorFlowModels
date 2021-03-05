@@ -5,7 +5,7 @@ from yolo.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
 
-TPU_BASE = True
+TPU_BASE = False
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
@@ -1028,274 +1028,6 @@ class SPP(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
-
-@tf.keras.utils.register_keras_serializable(package='yolo')
-class DarkRouteProcess(tf.keras.layers.Layer):
-
-  def __init__(
-      self,
-      filters=2,
-      mod=1,
-      repetitions=2,
-      insert_spp=False,
-      subdivisions=1,
-      kernel_initializer='glorot_uniform',
-      bias_initializer='zeros',
-      bias_regularizer=None,
-      use_sync_bn=False,
-      kernel_regularizer=None,  # default find where is it is stated
-      norm_momentum=0.99,
-      norm_epsilon=0.001,
-      activation='leaky',
-      leaky_alpha=0.1,
-      spp_keys=None,
-      **kwargs):
-    """
-    process darknet outputs and connect back bone to head more generalizably
-    Abstracts repetition of DarkConv objects that is common in YOLO.
-
-    It is used like the following:
-
-    x = ConvBN(1024, (3, 3), (1, 1))(x)
-    proc = DarkRouteProcess(filters = 1024,
-                            repetitions = 3,
-                            insert_spp = False)(x)
-
-    Args:
-      filters: the number of filters to be used in all subsequent layers
-        filters should be the depth of the tensor input into this layer,
-        as no downsampling can be done within this layer object
-      repetitions: number of times to repeat the processign nodes
-        for tiny: 1 repition, no spp allowed
-        for spp: insert_spp = True, and allow for 3+ repetitions
-        for regular: insert_spp = False, and allow for 3+ repetitions
-      insert_spp: bool if true add the spatial pyramid pooling layer
-      kernel_initializer: method to use to initializa kernel weights
-      bias_initializer: method to use to initialize the bias of the conv
-        layers
-      subdivisions: `int` how many subdivision to usein training execution, not 
-        used in eval or inference
-      norm_momentum: batch norm parameter see Tensorflow documentation
-      norm_epsilon: batch norm parameter see Tensorflow documentation
-      activation: activation function to use in processing
-      leaky_alpha: if leaky acitivation function, the alpha to use in
-        processing the relu input
-
-    Returns:
-      callable tensorflow layer
-
-    Raises:
-      None
-    """
-
-    # darkconv params
-    self._filters = filters // mod
-    self._use_sync_bn = use_sync_bn
-    self._kernel_initializer = kernel_initializer
-    self._bias_initializer = bias_initializer
-    self._bias_regularizer = bias_regularizer
-    self._kernel_regularizer = kernel_regularizer
-    self._subdivisions = subdivisions
-
-    # normal params
-    self._norm_momentum = norm_momentum
-    self._norm_epsilon = norm_epsilon
-
-    # activation params
-    self._activation = activation
-    self._leaky_alpha = leaky_alpha
-
-    # layer configs
-    if repetitions % 2 == 1:
-      self._append_conv = True
-    else:
-      self._append_conv = False
-    self._repetitions = repetitions // 2
-    self._lim = repetitions
-    self._insert_spp = insert_spp
-    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
-
-    self.layer_list = self._get_layer_list()
-    # print(self.layer_list)
-    super().__init__(**kwargs)
-
-  def _get_layer_list(self):
-    layer_config = []
-    if self._repetitions > 0:
-      layers = ['block'] * self._repetitions
-      if self._repetitions > 2 and self._insert_spp:
-        layers[1] = 'spp'
-      layer_config.extend(layers)
-    if self._append_conv:
-      layer_config.append('mono_conv')
-    return layer_config
-
-  def _block(self, filters, kwargs):
-    x1 = ConvBN(
-        filters=filters // 2,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding='same',
-        use_bn=True,
-        **kwargs)
-    x2 = ConvBN(
-        filters=filters,
-        kernel_size=(3, 3),
-        strides=(1, 1),
-        padding='same',
-        use_bn=True,
-        **kwargs)
-    return [x1, x2]
-
-  def _spp(self, filters, kwargs):
-    x1 = ConvBN(
-        filters=filters // 2,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding='same',
-        use_bn=True,
-        **kwargs)
-    # repalce with spp
-    x2 = SPP(self._spp_keys)
-    return [x1, x2]
-
-  def build(self, input_shape):
-    _dark_conv_args = {
-        'kernel_initializer': self._kernel_initializer,
-        'bias_initializer': self._bias_initializer,
-        'bias_regularizer': self._bias_regularizer,
-        'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_momentum,
-        'norm_epsilon': self._norm_epsilon,
-        'activation': self._activation,
-        'kernel_regularizer': self._kernel_regularizer,
-        'leaky_alpha': self._leaky_alpha,
-        'subdivisions': self._subdivisions,
-    }
-    self.layers = []
-    for layer in self.layer_list:
-      if layer == 'block':
-        self.layers.extend(self._block(self._filters, _dark_conv_args))
-      elif layer == 'spp':
-        self.layers.extend(self._spp(self._filters, _dark_conv_args))
-      elif layer == 'mono_conv':
-        self.layers.append(
-            ConvBN(
-                filters=self._filters,
-                kernel_size=(3, 3),
-                strides=(1, 1),
-                padding='same',
-                use_bn=True,
-                **_dark_conv_args))
-    super().build(input_shape)
-
-  def call(self, inputs):
-    # check efficiency
-    x = inputs
-    x_prev = x
-    i = 0
-    while i < self._lim:
-      layer = self.layers[i]
-      x_prev = x
-      x = layer(x)
-      i += 1
-    return x_prev, x
-
-
-class FPNTail(tf.keras.layers.Layer):
-  """
-  Tail layer used in the FPN of the decoder to produce the final outputs of the
-  model
-  """
-  def __init__(self,
-               filters=1,
-               upsample=True,
-               upsample_size=2,
-               activation='leaky',
-               use_sync_bn=False,
-               kernel_regularizer=None,
-               kernel_initializer='glorot_uniform',
-               bias_regularizer=None,
-               norm_epsilon=0.001,
-               subdivisions=8,
-               norm_momentum=0.99,
-               **kwargs):
-
-    """Initializes FPNTail layer.
-    Args:
-      filters: `int`, output depth, or the number of features to learn
-      upsample: `bool`, Determines whether to upsample the output of the current
-        tailto be used by a subsequent tail later in the YOLO decoder. Setting
-        upsample to True returns the current tail's output as well as an
-        upsampled version of this output to be used by the next tail. Setting it
-        to False returns only the current tail's output
-      upsample_size: `int` or `tuple[int, int]`, Upsampling factors for rows and
-        columns in the upsampling block. Ignored if `upsample` is False
-      activation: `Optional[str]`, activation function to use in layer, None is
-        replaced by leaky
-      use_sync_bn: `bool`, whether sync batch normalization
-      kernel_regularizer: `str`, indicate which function to use to regularizer
-        weights.
-      kernel_initializer: `str`, indicate which function to use to initialize
-        weights.
-      bias_regularizer: `str`, indicate which function to use to regularizer
-        bias.
-      norm_momentum: float for moment to use for batch normalization
-      subdivisions: `int` how many subdivision to usein training execution, not 
-        used in eval or inference
-      norm_epsilon: float for batch normalization epsilon
-      **kwargs: Keyword Arguments
-    """
-    self._filters = filters
-    self._upsample = upsample
-    self._upsample_size = upsample_size
-
-    self._activation = 'leaky' if activation is None else activation
-    self._use_sync_bn = use_sync_bn
-    self._norm_momentum = norm_momentum
-    self._norm_epsilon = norm_epsilon
-    self._kernel_initializer = kernel_initializer
-    self._kernel_regularizer = kernel_regularizer
-    self._bias_regularizer = bias_regularizer
-    self._subdivisions = subdivisions
-
-    self._base_config = dict(
-        activation=self._activation,
-        use_sync_bn=self._use_sync_bn,
-        subdivisions=self._subdivisions,
-        kernel_regularizer=self._kernel_regularizer,
-        kernel_initializer=self._kernel_initializer,
-        bias_regularizer=self._bias_regularizer,
-        norm_epsilon=self._norm_epsilon,
-        norm_momentum=self._norm_momentum)
-
-    super().__init__(**kwargs)
-
-  def build(self, input_shape):
-    self._route_conv = ConvBN(
-        filters=self._filters // 2,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding='same',
-        **self._base_config)
-    if self._upsample:
-      self._process_conv = ConvBN(
-          filters=self._filters // 4,
-          kernel_size=(1, 1),
-          strides=(1, 1),
-          padding='same',
-          **self._base_config)
-
-  def call(self, inputs):
-    x_route = self._route_conv(inputs)
-    if self._upsample:
-      x = self._process_conv(x_route)
-      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
-      return x_route, x
-    else:
-      return x_route
-
-
 class SAM(tf.keras.layers.Layer):
   """
   [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
@@ -1527,3 +1259,309 @@ class CBAM(tf.keras.layers.Layer):
   
   def call(self, inputs):
     return self._sam(self._cam(inputs))
+
+
+@tf.keras.utils.register_keras_serializable(package='yolo')
+class DarkRouteProcess(tf.keras.layers.Layer):
+
+  def __init__(
+      self,
+      filters=2,
+      mod=1,
+      repetitions=2,
+      insert_spp=False,
+      insert_sam=False, 
+      insert_cbam=False, 
+      subdivisions=1,
+      kernel_initializer='glorot_uniform',
+      bias_initializer='zeros',
+      bias_regularizer=None,
+      use_sync_bn=False,
+      kernel_regularizer=None,  # default find where is it is stated
+      norm_momentum=0.99,
+      norm_epsilon=0.001,
+      activation='leaky',
+      leaky_alpha=0.1,
+      spp_keys=None,
+      **kwargs):
+    """
+    process darknet outputs and connect back bone to head more generalizably
+    Abstracts repetition of DarkConv objects that is common in YOLO.
+
+    It is used like the following:
+
+    x = ConvBN(1024, (3, 3), (1, 1))(x)
+    proc = DarkRouteProcess(filters = 1024,
+                            repetitions = 3,
+                            insert_spp = False)(x)
+
+    Args:
+      filters: the number of filters to be used in all subsequent layers
+        filters should be the depth of the tensor input into this layer,
+        as no downsampling can be done within this layer object
+      repetitions: number of times to repeat the processign nodes
+        for tiny: 1 repition, no spp allowed
+        for spp: insert_spp = True, and allow for 3+ repetitions
+        for regular: insert_spp = False, and allow for 3+ repetitions
+      insert_spp: bool if true add the spatial pyramid pooling layer
+      kernel_initializer: method to use to initializa kernel weights
+      bias_initializer: method to use to initialize the bias of the conv
+        layers
+      subdivisions: `int` how many subdivision to usein training execution, not 
+        used in eval or inference
+      norm_momentum: batch norm parameter see Tensorflow documentation
+      norm_epsilon: batch norm parameter see Tensorflow documentation
+      activation: activation function to use in processing
+      leaky_alpha: if leaky acitivation function, the alpha to use in
+        processing the relu input
+
+    Returns:
+      callable tensorflow layer
+
+    Raises:
+      None
+    """
+
+    # darkconv params
+    self._filters = filters // mod
+    self._use_sync_bn = use_sync_bn
+    self._kernel_initializer = kernel_initializer
+    self._bias_initializer = bias_initializer
+    self._bias_regularizer = bias_regularizer
+    self._kernel_regularizer = kernel_regularizer
+    self._subdivisions = subdivisions
+
+    # normal params
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
+    # activation params
+    self._activation = activation
+    self._leaky_alpha = leaky_alpha
+
+    # layer configs
+    if repetitions % 2 == 1:
+      self._append_conv = True
+    else:
+      self._append_conv = False
+    self._repetitions = repetitions // 2
+    self._lim = repetitions
+    self._insert_spp = insert_spp
+    self._insert_sam = insert_sam
+    self._insert_cbam = insert_cbam if insert_sam is False else False
+    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
+
+    self.layer_list = self._get_layer_list()
+    # print(self.layer_list)
+    super().__init__(**kwargs)
+
+  def _get_layer_list(self):
+    layer_config = []
+    if self._repetitions > 0:
+      layers = ['block'] * self._repetitions
+      if self._repetitions > 2 and self._insert_spp:
+        layers[1] = 'spp'
+      layer_config.extend(layers)
+    if self._append_conv:
+      layer_config.append('mono_conv')
+    
+    if self._insert_sam:
+      layer_config.insert(-2, 'sam')
+    if self._insert_cbam:
+      layer_config.insert(-2, 'cbam')
+    return layer_config
+
+  def _block(self, filters, kwargs):
+    x1 = ConvBN(
+        filters=filters // 2,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding='same',
+        use_bn=True,
+        **kwargs)
+    x2 = ConvBN(
+        filters=filters,
+        kernel_size=(3, 3),
+        strides=(1, 1),
+        padding='same',
+        use_bn=True,
+        **kwargs)
+    return [x1, x2]
+
+  def _spp(self, filters, kwargs):
+    x1 = ConvBN(
+        filters=filters // 2,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding='same',
+        use_bn=True,
+        **kwargs)
+    # repalce with spp
+    x2 = SPP(self._spp_keys)
+    return [x1, x2]
+
+  def _sam(self, kwargs):
+    x1 = SAM(
+        filter_match=True,
+        use_pooling=False,
+        use_bn=True,
+        **kwargs)
+    return [x1]
+
+  def _cbam(self, kwargs):
+    x1 = CBAM(
+        filter_match=True,
+        use_pooling=False,
+        use_bn=True,
+        reduction_ratio = 0.5, 
+        **kwargs)
+    return [x1]
+
+  def build(self, input_shape):
+    _dark_conv_args = {
+        'activation': self._activation,
+    }
+
+    _args = {
+        'kernel_initializer': self._kernel_initializer,
+        'bias_initializer': self._bias_initializer,
+        'bias_regularizer': self._bias_regularizer,
+        'use_sync_bn': self._use_sync_bn,
+        'norm_momentum': self._norm_momentum,
+        'norm_epsilon': self._norm_epsilon,
+        'kernel_regularizer': self._kernel_regularizer,
+        'leaky_alpha': self._leaky_alpha,
+        'subdivisions': self._subdivisions,
+    }
+
+    _dark_conv_args.update(_args)
+
+    self.layers = []
+    for layer in self.layer_list:
+      if layer == 'block':
+        self.layers.extend(self._block(self._filters, _dark_conv_args))
+      elif layer == 'spp':
+        self.layers.extend(self._spp(self._filters, _dark_conv_args))
+      elif layer == 'sam':
+        self.layers.extend(self._sam(_args))
+      elif layer == 'cbam':
+        self.layers.extend(self._cbam(_args))
+      elif layer == 'mono_conv':
+        self.layers.append(
+            ConvBN(
+                filters=self._filters,
+                kernel_size=(3, 3),
+                strides=(1, 1),
+                padding='same',
+                use_bn=True,
+                **_dark_conv_args))
+    super().build(input_shape)
+
+  def call(self, inputs):
+    # check efficiency
+    x = inputs
+    x_prev = x
+    i = 0
+    while i < self._lim:
+      layer = self.layers[i]
+      x_prev = x
+      x = layer(x)
+      i += 1
+    return x_prev, x
+
+
+class FPNTail(tf.keras.layers.Layer):
+  """
+  Tail layer used in the FPN of the decoder to produce the final outputs of the
+  model
+  """
+  def __init__(self,
+               filters=1,
+               upsample=True,
+               upsample_size=2,
+               activation='leaky',
+               use_sync_bn=False,
+               kernel_regularizer=None,
+               kernel_initializer='glorot_uniform',
+               bias_regularizer=None,
+               norm_epsilon=0.001,
+               subdivisions=8,
+               norm_momentum=0.99,
+               **kwargs):
+
+    """Initializes FPNTail layer.
+    Args:
+      filters: `int`, output depth, or the number of features to learn
+      upsample: `bool`, Determines whether to upsample the output of the current
+        tailto be used by a subsequent tail later in the YOLO decoder. Setting
+        upsample to True returns the current tail's output as well as an
+        upsampled version of this output to be used by the next tail. Setting it
+        to False returns only the current tail's output
+      upsample_size: `int` or `tuple[int, int]`, Upsampling factors for rows and
+        columns in the upsampling block. Ignored if `upsample` is False
+      activation: `Optional[str]`, activation function to use in layer, None is
+        replaced by leaky
+      use_sync_bn: `bool`, whether sync batch normalization
+      kernel_regularizer: `str`, indicate which function to use to regularizer
+        weights.
+      kernel_initializer: `str`, indicate which function to use to initialize
+        weights.
+      bias_regularizer: `str`, indicate which function to use to regularizer
+        bias.
+      norm_momentum: float for moment to use for batch normalization
+      subdivisions: `int` how many subdivision to usein training execution, not 
+        used in eval or inference
+      norm_epsilon: float for batch normalization epsilon
+      **kwargs: Keyword Arguments
+    """
+    self._filters = filters
+    self._upsample = upsample
+    self._upsample_size = upsample_size
+
+    self._activation = 'leaky' if activation is None else activation
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+    self._kernel_initializer = kernel_initializer
+    self._kernel_regularizer = kernel_regularizer
+    self._bias_regularizer = bias_regularizer
+    self._subdivisions = subdivisions
+
+    self._base_config = dict(
+        activation=self._activation,
+        use_sync_bn=self._use_sync_bn,
+        subdivisions=self._subdivisions,
+        kernel_regularizer=self._kernel_regularizer,
+        kernel_initializer=self._kernel_initializer,
+        bias_regularizer=self._bias_regularizer,
+        norm_epsilon=self._norm_epsilon,
+        norm_momentum=self._norm_momentum)
+
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    self._route_conv = ConvBN(
+        filters=self._filters // 2,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding='same',
+        **self._base_config)
+    if self._upsample:
+      self._process_conv = ConvBN(
+          filters=self._filters // 4,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **self._base_config)
+
+  def call(self, inputs):
+    x_route = self._route_conv(inputs)
+    if self._upsample:
+      x = self._process_conv(x_route)
+      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
+      return x_route, x
+    else:
+      return x_route
+
+
+
