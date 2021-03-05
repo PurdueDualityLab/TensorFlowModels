@@ -115,7 +115,7 @@ class YoloFPN(tf.keras.layers.Layer):
       else:
         self.tails[str(level)] = nn_blocks.FPNTail(
             filters=depth, upsample=True, **self._base_config)
-    return
+
 
   def call(self, inputs):
     outputs = {}
@@ -253,7 +253,7 @@ class YoloPAN(tf.keras.layers.Layer):
             repetitions=self._path_process_len,
             insert_spp=False,
             **self._base_config)
-    return
+
 
   def get_raw_depths(self, minimum_depth):
     depths = []
@@ -299,7 +299,6 @@ class YoloDecoder(tf.keras.Model):
                bias_regularizer=None,
                subdivisions=8,
                **kwargs):
-
     """
     Yolo Decoder initialization function. A unified model that ties all decoder
     components into a conditionally build YOLO decder. 
