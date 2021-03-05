@@ -175,6 +175,8 @@ class YoloPAN(tf.keras.layers.Layer):
         kernel_initializer: kernel_initializer for convolutional layers.
         kernel_regularizer: tf.keras.regularizers.Regularizer object for Conv2D.
         bias_regularizer: tf.keras.regularizers.Regularizer object for Conv2d.
+        fpn_input: `bool`, for whether the input into this fucntion is an FPN or
+          a backbone.
         **kwargs: keyword arguments to be passed.
     """
     super().__init__(**kwargs)
