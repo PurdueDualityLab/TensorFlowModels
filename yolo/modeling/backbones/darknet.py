@@ -68,7 +68,7 @@ def build_block_specs(config):
   return specs
 
 
-class layer_factory(object):
+class LayerFactory(object):
   """
   class for quick look up of default layers used by darknet to
   connect, introduce or exit a level. Used in place of an if condition
@@ -291,7 +291,7 @@ class Darknet(ks.Model):
     self._model_name = model_id
     self._splits = splits
     self._input_shape = input_specs
-    self._registry = layer_factory()
+    self._registry = LayerFactory()
 
     # default layer look up
     self._min_size = min_level

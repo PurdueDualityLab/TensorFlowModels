@@ -46,7 +46,7 @@ scp -i ./jaeyounkim-purdue-1 cache.zip  purdue@34.105.118.198:~/
 
 train darknet:
 python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet53.yaml
-python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
+python3.8 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
 
 finetune darknet:
 nohup python3 -m yolo.train --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log

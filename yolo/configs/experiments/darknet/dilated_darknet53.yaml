@@ -5,7 +5,7 @@ runtime:
   num_gpus: 1
 task:
   model:
-    num_classes: 1000
+    num_classes: 1001
     input_size: [256, 256, 3]
     backbone:
       type: 'darknet'
@@ -14,6 +14,7 @@ task:
     norm_activation:
       activation: 'leaky'
     dilate: True
+    subdivisions: 4
     darknet_weights_file: 'cache://csdarknet53.weights'
     darknet_weights_cfg: 'cache://csdarknet53.cfg'
   losses:
