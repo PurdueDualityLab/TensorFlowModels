@@ -466,8 +466,7 @@ class samCFG(Config):
         'w': prevlayer.shape[0],
         'h': prevlayer.shape[1],
         'c': prevlayer.shape[2],
-        '_from': _from,
-        'activation': layer_dict['activation'],
+        '_from': _from
     }
     return clz(**l)
 
