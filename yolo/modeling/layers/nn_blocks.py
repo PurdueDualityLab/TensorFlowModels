@@ -153,20 +153,12 @@ class ConvBN(tf.keras.layers.Layer):
 
     if self._use_bn:
       if self._use_sync_bn:
-        # self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
-        #     momentum=self._norm_moment,
-        #     epsilon=self._norm_epsilon,
-        #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivSyncBatchNormalization(
             subdivisions=self._subdivisions,
             momentum=self._norm_moment,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
       else:
-        # self.bn = tf.keras.layers.BatchNormalization(
-        #     momentum=self._norm_moment,
-        #     epsilon=self._norm_epsilon,
-        #     axis=self._bn_axis)
         self.bn = subnormalization.SubDivBatchNormalization(
             subdivisions=self._subdivisions,
             momentum=self._norm_moment,
@@ -281,10 +273,6 @@ class DarkResidual(tf.keras.layers.Layer):
     self._norm_epsilon = norm_epsilon
     self._dilation_rate = dilation_rate if isinstance(dilation_rate,
                                                       int) else dilation_rate[0]
-    # self._down_stride = 2
-
-    # if self._downsample and self._dilation_rate > 1:
-    #   self._down_stride = 1
 
     # activation params
     self._conv_activation = activation
@@ -885,7 +873,6 @@ class CSPStack(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class RouteMerge(tf.keras.layers.Layer):
-  """xor upsample rotuingblock. if downsample = false it will upsample"""
 
   def __init__(
       self,
@@ -894,7 +881,7 @@ class RouteMerge(tf.keras.layers.Layer):
       bias_initializer='zeros',
       bias_regularizer=None,
       subdivisions=1,
-      kernel_regularizer=None,  # default find where is it is stated
+      kernel_regularizer=None,  
       use_bn=True,
       use_sync_bn=False,
       norm_momentum=0.99,
@@ -905,6 +892,32 @@ class RouteMerge(tf.keras.layers.Layer):
       upsample=False,
       upsample_size=2,
       **kwargs):
+
+    """
+    Args:
+      filters: integer for output depth, or the number of features to learn
+      kernel_initializer: string to indicate which function to use to initialize
+        weights
+      bias_initializer: string to indicate which function to use to initialize
+        bias
+      kernel_regularizer: string to indicate which function to use to
+        regularizer weights
+      bias_regularizer: string to indicate which function to use to regularizer
+        bias
+      use_bn: boolean for whether to use batch normalization
+      use_sync_bn: boolean for whether sync batch normalization statistics
+        of all batch norm layers to the models global statistics
+        (across all input batches)
+      norm_moment: float for moment to use for batch normalization
+      norm_epsilon: float for batch normalization epsilon
+      activation: string or None for activation function to use in layer,
+        if None activation is replaced by linear
+      leaky_alpha: float to use as alpha if activation function is leaky
+      downsample: `bool` for whehter to downwample and merge 
+      upsample: `bool` for whehter to upsample and merge 
+      upsample_size: `int` how much to upsample in order to match shapes 
+      **kwargs: Keyword Arguments
+    """
 
     # darkconv params
     self._filters = filters
@@ -1032,40 +1045,40 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       spp_keys=None,
       **kwargs):
     """
-        process darknet outputs and connect back bone to head more generalizably
-        Abstracts repetition of DarkConv objects that is common in YOLO.
+    process darknet outputs and connect back bone to head more generalizably
+    Abstracts repetition of DarkConv objects that is common in YOLO.
 
-        It is used like the following:
+    It is used like the following:
 
-        x = ConvBN(1024, (3, 3), (1, 1))(x)
-        proc = DarkRouteProcess(filters = 1024,
-                                repetitions = 3,
-                                insert_spp = False)(x)
+    x = ConvBN(1024, (3, 3), (1, 1))(x)
+    proc = DarkRouteProcess(filters = 1024,
+                            repetitions = 3,
+                            insert_spp = False)(x)
 
-        Args:
-          filters: the number of filters to be used in all subsequent layers
-            filters should be the depth of the tensor input into this layer,
-            as no downsampling can be done within this layer object
-          repetitions: number of times to repeat the processign nodes
-            for tiny: 1 repition, no spp allowed
-            for spp: insert_spp = True, and allow for 3+ repetitions
-            for regular: insert_spp = False, and allow for 3+ repetitions
-          insert_spp: bool if true add the spatial pyramid pooling layer
-          kernel_initializer: method to use to initializa kernel weights
-          bias_initializer: method to use to initialize the bias of the conv
-            layers
-          norm_moment: batch norm parameter see Tensorflow documentation
-          norm_epsilon: batch norm parameter see Tensorflow documentation
-          activation: activation function to use in processing
-          leaky_alpha: if leaky acitivation function, the alpha to use in
-            processing the relu input
+    Args:
+      filters: the number of filters to be used in all subsequent layers
+        filters should be the depth of the tensor input into this layer,
+        as no downsampling can be done within this layer object
+      repetitions: number of times to repeat the processign nodes
+        for tiny: 1 repition, no spp allowed
+        for spp: insert_spp = True, and allow for 3+ repetitions
+        for regular: insert_spp = False, and allow for 3+ repetitions
+      insert_spp: bool if true add the spatial pyramid pooling layer
+      kernel_initializer: method to use to initializa kernel weights
+      bias_initializer: method to use to initialize the bias of the conv
+        layers
+      norm_moment: batch norm parameter see Tensorflow documentation
+      norm_epsilon: batch norm parameter see Tensorflow documentation
+      activation: activation function to use in processing
+      leaky_alpha: if leaky acitivation function, the alpha to use in
+        processing the relu input
 
-        Returns:
-          callable tensorflow layer
+    Returns:
+      callable tensorflow layer
 
-        Raises:
-          None
-        """
+    Raises:
+      None
+    """
 
     # darkconv params
     self._filters = filters // mod
@@ -1182,7 +1195,10 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
 
 class FPNTail(tf.keras.layers.Layer):
-
+  """
+  Tail layer used in the FPN of the decoder to produce the final outputs of the
+  model
+  """
   def __init__(self,
                filters=1,
                upsample=True,
@@ -1197,6 +1213,29 @@ class FPNTail(tf.keras.layers.Layer):
                norm_momentum=0.99,
                **kwargs):
 
+    """Initializes FPNTail layer.
+    Args:
+      filters: `int`, output depth, or the number of features to learn
+      upsample: `bool`, Determines whether to upsample the output of the current
+        tailto be used by a subsequent tail later in the YOLO decoder. Setting
+        upsample to True returns the current tail's output as well as an
+        upsampled version of this output to be used by the next tail. Setting it
+        to False returns only the current tail's output
+      upsample_size: `int` or `tuple[int, int]`, Upsampling factors for rows and
+        columns in the upsampling block. Ignored if `upsample` is False
+      activation: `Optional[str]`, activation function to use in layer, None is
+        replaced by leaky
+      use_sync_bn: `bool`, whether sync batch normalization
+      kernel_regularizer: `str`, indicate which function to use to regularizer
+        weights.
+      kernel_initializer: `str`, indicate which function to use to initialize
+        weights.
+      bias_regularizer: `str`, indicate which function to use to regularizer
+        bias.
+      norm_momentum: float for moment to use for batch normalization
+      norm_epsilon: float for batch normalization epsilon
+      **kwargs: Keyword Arguments
+    """
     self._filters = filters
     self._upsample = upsample
     self._upsample_size = upsample_size
