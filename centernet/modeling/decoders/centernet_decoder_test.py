@@ -11,7 +11,8 @@ class CenterNetDecoderTest(tf.test.TestCase, parameterized.TestCase):
   def test_create_decoder(self):
     decoder = centernet_decoder.build_centernet_decoder(
       task_config=cfg.CenterNetTask(), 
-      input_specs=(None, 128, 128, 256))
+      input_specs=(None, 128, 128, 256),
+      num_inputs=2)
 
     config = decoder.get_config()
     self.assertEqual(len(config), 2)
@@ -20,14 +21,16 @@ class CenterNetDecoderTest(tf.test.TestCase, parameterized.TestCase):
   def test_decoder_shape(self):
     decoder = centernet_decoder.build_centernet_decoder(
       task_config=cfg.CenterNetTask(), 
-      input_specs=(2, 128, 128, 256))
+      input_specs=(2, 128, 128, 256),
+      num_inputs=2)
 
     # Output shape tests
-    outputs = decoder(np.zeros((2, 128, 128, 256), dtype=np.float32))
+    outputs = decoder([np.zeros((2, 128, 128, 256), dtype=np.float32),
+                       np.zeros((2, 128, 128, 256), dtype=np.float32)])
     self.assertEqual(len(outputs), 3)
-    self.assertEqual(outputs['ct_heatmaps'].shape, (2, 128, 128, 80))
-    self.assertEqual(outputs['ct_offset'].shape, (2, 128, 128, 2))
-    self.assertEqual(outputs['ct_size'].shape, (2, 128, 128, 2))
+    self.assertEqual(outputs['ct_heatmaps'][0].shape, (2, 128, 128, 80))
+    self.assertEqual(outputs['ct_offset'][0].shape, (2, 128, 128, 2))
+    self.assertEqual(outputs['ct_size'][0].shape, (2, 128, 128, 2))
 
     # Weight initialization tests
     hm_bias_vector = np.asarray(decoder.layers[1].weights[-1])

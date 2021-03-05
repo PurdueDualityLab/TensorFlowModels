@@ -33,7 +33,7 @@ class Hourglass(tf.keras.Model):
         pre_layers: tf.keras layer to process input before stacked hourglasses
     """
     # yapf: disable
-    input = tf.keras.layers.Input(shape=input_specs.shape[1:])
+    input = tf.keras.layers.Input(shape=input_specs.shape[1:], name='input')
     x_inter = input
 
     # Create some intermediate and postlayers to generate the heatmaps
@@ -53,10 +53,10 @@ class Hourglass(tf.keras.Model):
         kernel_size=prelayer_kernel_size,
         strides=prelayer_strides,
         padding='same',
-        activation='relu'
+        activation='relu',
     )(x_inter)
     x_inter = official_nn_blocks.ResidualBlock(
-        filters=inp_filters, use_projection=True, strides=prelayer_strides
+        filters=inp_filters, use_projection=True, strides=prelayer_strides,
     )(x_inter)
 
     all_heatmaps = []
@@ -65,7 +65,7 @@ class Hourglass(tf.keras.Model):
       # Create hourglass stacks
       x_hg = nn_blocks.HourglassBlock(
           channel_dims_per_stage=channel_dims_per_stage,
-          blocks_per_stage=blocks_per_stage
+          blocks_per_stage=blocks_per_stage,
       )(x_inter)
 
       # cnvs
@@ -74,7 +74,7 @@ class Hourglass(tf.keras.Model):
           kernel_size=(3, 3),
           strides=(1, 1),
           padding='same',
-          activation='relu'
+          activation='relu',
       )(x_hg)
 
       all_heatmaps.append(x_hg)
@@ -104,7 +104,7 @@ class Hourglass(tf.keras.Model):
 
         # inters
         x_inter = official_nn_blocks.ResidualBlock(
-            filters=inp_filters, use_projection=True, strides=1
+            filters=inp_filters, use_projection=False, strides=1
         )(x_inter)
     # yapf: enable
 

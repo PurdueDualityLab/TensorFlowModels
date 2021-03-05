@@ -76,7 +76,7 @@ class CenterNetBase(hyperparams.OneOfConfig):
 
 @dataclasses.dataclass
 class CenterNet(hyperparams.Config):
-  num_classes: int = 80
+  num_classes: int = 90
   input_size: Optional[List[int]] = dataclasses.field(
     default_factory=lambda: [None, None, 3])
   base: Union[str, CenterNetBase] = CenterNetBase()

@@ -33,8 +33,8 @@ class CenterNet(ks.Model):
 
   def call(self, inputs, training=False):
     features = self._backbone(inputs)
-    final_backbone_output = features[-1]
-    decoded_maps = self._decoder(final_backbone_output)
+    # final_backbone_output = features[-1]
+    decoded_maps = self._decoder(features)
 
     # TODO: head + filters
 
@@ -63,7 +63,7 @@ class CenterNet(ks.Model):
   def filter(self):
     return self._filter
 
-def build_centernet_decoder(input_specs, task_config):
+def build_centernet_decoder(input_specs, task_config, num_inputs):
   # NOTE: For now just support the default config
   # model specific 
   heatmap_bias = task_config.model.base.decoder.heatmap_bias
@@ -72,7 +72,8 @@ def build_centernet_decoder(input_specs, task_config):
   task_outputs = task_config._get_output_length_dict()
   model = CenterNetDecoder(
       task_outputs=task_outputs,
-      heatmap_bias=heatmap_bias)
+      heatmap_bias=heatmap_bias,
+      num_inputs=num_inputs)
 
   model.build(input_specs)
   return model
@@ -91,7 +92,7 @@ def build_centernet(input_specs, task_config, l2_regularization):
   backbone = factory.build_backbone(input_specs, model_config.base,
                                     l2_regularization)
 
-  decoder = build_centernet_decoder(backbone.output_specs.as_list(), task_config)
+  decoder = build_centernet_decoder(backbone.output_specs.as_list(), task_config, backbone._num_hourglasses)
   head = build_centernet_head(model_config)
   filter = build_centernet_filter(model_config)
 
