@@ -11,37 +11,50 @@ def smooth_labels(y_true, num_classes, label_smoothing):
   num_classes = tf.cast(num_classes, label_smoothing.dtype)
   return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
 
+
 def mul_no_nan(x, y):
   return tf.where(x == 0, tf.cast(0, x.dtype), x * y)
 
 
 @tf.custom_gradient
 def gradient_trap(y):
+
   def trap(dy):
     tf.print(dy)
-    return dy 
-  return y, trap 
+    return dy
+
+  return y, trap
+
 
 @tf.custom_gradient
 def obj_gradient_trap(y):
+
   def trap(dy):
-    return dy 
-  return y, trap 
+    return dy
+
+  return y, trap
+
 
 @tf.custom_gradient
 def box_gradient_trap(y):
+
   def trap(dy):
     dy = box_ops.rm_nan_inf(dy)
-    return dy 
-  return y, trap 
+    return dy
+
+  return y, trap
+
 
 @tf.custom_gradient
 def class_gradient_trap(y):
+
   def trap(dy):
     #tf.print(tf.shape(dy))
     dy = box_ops.rm_nan_inf(dy)
-    return dy 
-  return y, trap 
+    return dy
+
+  return y, trap
+
 
 class Yolo_Loss(object):
 
@@ -165,8 +178,8 @@ class Yolo_Loss(object):
     wh = box_ops.rm_nan_inf(wh)
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
 
-
   def ce(self, target, output):
+
     def _smooth_labels(y_true):
       return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) +
                               0.5 * self._label_smoothing)
@@ -209,9 +222,9 @@ class Yolo_Loss(object):
     true_class = tf.squeeze(true_class, axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.one_hot(
-      tf.cast(true_class, tf.int32),
-      depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
-      dtype=y_pred.dtype)
+        tf.cast(true_class, tf.int32),
+        depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
+        dtype=y_pred.dtype)
 
     pred_box = box_gradient_trap(pred_box)
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
@@ -247,17 +260,17 @@ class Yolo_Loss(object):
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
-            label_smoothing=self._label_smoothing, 
+            label_smoothing=self._label_smoothing,
             from_logits=True),
-        axis=-1) 
+        axis=-1)
     class_loss = mul_no_nan(true_conf, class_loss)
-    
+
     # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
     pred_conf = obj_gradient_trap(pred_conf)
-    pred_conf = box_ops.rm_nan(pred_conf, val = -np.inf)
+    pred_conf = box_ops.rm_nan(pred_conf, val=-np.inf)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce) 
+    conf_loss = mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce)
     conf_loss = conf_loss * self._obj_normalizer
 
     # # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth

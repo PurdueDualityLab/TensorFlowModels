@@ -56,7 +56,8 @@ class Parser(parser.Parser):
     self._aug_rand_aspect = aug_rand_aspect
 
     scaler = 256 if self._output_size[0] == None else self._output_size[0]
-    self._scale = tf.cast(((tf.convert_to_tensor(scale)/256) * scaler), tf.int32)
+    self._scale = tf.cast(((tf.convert_to_tensor(scale) / 256) * scaler),
+                          tf.int32)
 
     self._seed = seed
     if dtype == 'float32':

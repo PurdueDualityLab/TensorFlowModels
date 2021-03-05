@@ -88,16 +88,16 @@ if len(opts) != 0:
       changed |= (old_src != src)
       del old_src
 
-    if 'quotes' in opts:
-      old_src = src
-      try:
-        src = fixers_api.Pre2to3FixerRun(src, {'fixers': ['quotes']})
-      except:
-        import traceback
-        print("Error trying to fix quotes: " + traceback.format_exc())
-      else:
-        changed |= (old_src != src)
-        del old_src
+    # if 'quotes' in opts:
+    #   old_src = src
+    #   try:
+    #     src = fixers_api.Pre2to3FixerRun(src, {'fixers': ['quotes']})
+    #   except:
+    #     import traceback
+    #     print("Error trying to fix quotes: " + traceback.format_exc())
+    #   else:
+    #     changed |= (old_src != src)
+    #     del old_src
 
     if 'yapf' in opts:
       src, _changed = yapf_api.FormatCode(src, file, 'yapf')

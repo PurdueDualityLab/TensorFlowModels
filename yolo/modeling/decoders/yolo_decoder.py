@@ -19,17 +19,17 @@ import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
 
 
-@tf.keras.utils.register_keras_serializable(package="yolo")
+@tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloFPN(tf.keras.layers.Layer):
   """YOLO Feature pyramid network."""
 
   def __init__(self,
                fpn_path_len=4,
-               activation="leaky",
+               activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="glorot_uniform",
+               kernel_initializer='glorot_uniform',
                kernel_regularizer=None,
                bias_regularizer=None,
                subdivisions=8,
@@ -62,14 +62,14 @@ class YoloFPN(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
 
     self._base_config = dict(
-        activation = self._activation,
-        use_sync_bn = self._use_sync_bn,
-        subdivisions = self._subdivisions,
-        kernel_regularizer = self._kernel_regularizer,
-        kernel_initializer = self._kernel_initializer,
-        bias_regularizer = self._bias_regularizer,
-        norm_epsilon = self._norm_epsilon,
-        norm_momentum = self._norm_momentum)
+        activation=self._activation,
+        use_sync_bn=self._use_sync_bn,
+        subdivisions=self._subdivisions,
+        kernel_regularizer=self._kernel_regularizer,
+        kernel_initializer=self._kernel_initializer,
+        bias_regularizer=self._bias_regularizer,
+        norm_epsilon=self._norm_epsilon,
+        norm_momentum=self._norm_momentum)
 
   def get_raw_depths(self, minimum_depth):
     depths = []
@@ -79,9 +79,9 @@ class YoloFPN(tf.keras.layers.Layer):
     return list(reversed(depths))
 
   def build(self, inputs):
-    """ 
+    """
     use config dictionary to generate all important attributes for head
-    construction 
+    construction
 
     Args:
        inputs: dictionary of the shape of input args as a dictionary of lists
@@ -92,12 +92,12 @@ class YoloFPN(tf.keras.layers.Layer):
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth)
 
-    # directly connect to an input path and process it  
+    # directly connect to an input path and process it
     self.preprocessors = {}
-    # resample an input and merge it with the output of another path 
+    # resample an input and merge it with the output of another path
     # inorder to aggregate backbone outputs
     self.resamples = {}
-    # set of convoltion layers and upsample layers that are used to 
+    # set of convoltion layers and upsample layers that are used to
     # prepare the FPN processors for output
     self.tails = {}
 
@@ -126,7 +126,6 @@ class YoloFPN(tf.keras.layers.Layer):
         self.tails[str(level)] = nn_blocks.FPNTail(
             filters=depth, upsample=True, **self._base_config)
 
-
   def call(self, inputs):
     outputs = {}
     layer_in = inputs[str(self._max_level)]
@@ -142,7 +141,7 @@ class YoloFPN(tf.keras.layers.Layer):
     return outputs
 
 
-@tf.keras.utils.register_keras_serializable(package="yolo")
+@tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloPAN(tf.keras.layers.Layer):
   """YOLO Path Aggregation Network"""
 
@@ -150,11 +149,11 @@ class YoloPAN(tf.keras.layers.Layer):
                path_process_len=6,
                max_level_process_len=None,
                embed_spp=False,
-               activation="leaky",
+               activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="glorot_uniform",
+               kernel_initializer='glorot_uniform',
                kernel_regularizer=None,
                bias_regularizer=None,
                subdivisions=8,
@@ -196,25 +195,25 @@ class YoloPAN(tf.keras.layers.Layer):
 
     if self._fpn_input:
       if max_level_process_len is None:
-        self._max_level_process_len = 1  
+        self._max_level_process_len = 1
     else:
       if max_level_process_len is None:
-        self._max_level_process_len = path_process_len  
+        self._max_level_process_len = path_process_len
 
     self._base_config = dict(
-        activation = self._activation,
-        use_sync_bn = self._use_sync_bn,
-        kernel_regularizer = self._kernel_regularizer,
-        kernel_initializer = self._kernel_initializer,
-        bias_regularizer = self._bias_regularizer,
-        subdivisions = self._subdivisions,
-        norm_epsilon = self._norm_epsilon,
-        norm_momentum = self._norm_momentum)
+        activation=self._activation,
+        use_sync_bn=self._use_sync_bn,
+        kernel_regularizer=self._kernel_regularizer,
+        kernel_initializer=self._kernel_initializer,
+        bias_regularizer=self._bias_regularizer,
+        subdivisions=self._subdivisions,
+        norm_epsilon=self._norm_epsilon,
+        norm_momentum=self._norm_momentum)
 
   def build(self, inputs):
-    """ 
+    """
     use config dictionary to generate all important attributes for head
-    construction 
+    construction
 
     Args:
       inputs: dictionary of the shape of input args as a dictionary of lists
@@ -226,17 +225,16 @@ class YoloPAN(tf.keras.layers.Layer):
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth)
 
-    # directly connect to an input path and process it     
+    # directly connect to an input path and process it
     self.preprocessors = {}
-    # resample an input and merge it with the output of another path 
+    # resample an input and merge it with the output of another path
     # inorder to aggregate backbone outputs
     self.resamples = {}
-
 
     # FPN will reverse the key process order for the backbone, so we need
     # adjust the order that objects are created and processed to adjust for
     # this. not using an FPN will directly connect the decoder to the backbone
-    # therefore the object creation order needs to be done from the largest 
+    # therefore the object creation order needs to be done from the largest
     # to smallest level.
     if self._fpn_input:
       # process order {... 3, 4, 5}
@@ -282,7 +280,6 @@ class YoloPAN(tf.keras.layers.Layer):
             insert_spp=False,
             **self._base_config)
 
-
   def get_raw_depths(self, minimum_depth):
     depths = []
     for _ in range(self._min_level, self._max_level + 1):
@@ -307,7 +304,7 @@ class YoloPAN(tf.keras.layers.Layer):
     return outputs
 
 
-@tf.keras.utils.register_keras_serializable(package="yolo")
+@tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloDecoder(tf.keras.Model):
   """Darknet Backbone Decoder"""
 
@@ -318,18 +315,18 @@ class YoloDecoder(tf.keras.Model):
                path_process_len=6,
                max_level_process_len=None,
                embed_spp=False,
-               activation="leaky",
+               activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="glorot_uniform",
+               kernel_initializer='glorot_uniform',
                kernel_regularizer=None,
                bias_regularizer=None,
                subdivisions=8,
                **kwargs):
     """
     Yolo Decoder initialization function. A unified model that ties all decoder
-    components into a conditionally build YOLO decder. 
+    components into a conditionally build YOLO decder.
 
     Args:
       input_specs: `dict[str, tf.InputSpec]`: input specs of each of the inputs
@@ -399,7 +396,7 @@ class YoloDecoder(tf.keras.Model):
       outputs = YoloPAN(**self._decoder_config)(inputs)
 
     self._output_specs = {key: value.shape for key, value in outputs.items()}
-    super().__init__(inputs = inputs, outputs = outputs, name = "YoloDecoder")
+    super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
 
   @property
   def embed_fpn(self):
@@ -411,14 +408,12 @@ class YoloDecoder(tf.keras.Model):
 
   def get_config(self):
     config = dict(
-        input_specs = self._input_specs,
-        embed_fpn = self._embed_fpn,
-        fpn_path_len = self._fpn_path_len,
+        input_specs=self._input_specs,
+        embed_fpn=self._embed_fpn,
+        fpn_path_len=self._fpn_path_len,
         **self._decoder_config)
     return config
 
   @classmethod
   def from_config(cls, config, custom_objects=None):
     return cls(**config)
-
-
