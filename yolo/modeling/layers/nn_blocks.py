@@ -960,7 +960,7 @@ class RouteMerge(tf.keras.layers.Layer):
 
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
- 
+
   def call(self, inputs):
     # done this way to prevent confusion in the auto graph
     inputToConvolve, inputToConcat = inputs
@@ -983,7 +983,7 @@ class SPP(tf.keras.layers.Layer):
     if len(sizes) == 0:
       raise ValueError('More than one maxpool should be specified in SSP block')
     super().__init__(**kwargs)
- 
+
   def build(self, input_shape):
     maxpools = []
     for size in self._sizes:
@@ -995,7 +995,7 @@ class SPP(tf.keras.layers.Layer):
               data_format=None))
     self._maxpools = maxpools
     super().build(input_shape)
- 
+
   def call(self, inputs):
     outputs = []
     for maxpool in self._maxpools:
@@ -1097,7 +1097,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self.layer_list = self._get_layer_list()
     # print(self.layer_list)
     super().__init__(**kwargs)
- 
+
   def _get_layer_list(self):
     layer_config = []
     if self._repetitions > 0:
@@ -1167,7 +1167,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
                 use_bn=True,
                 **_dark_conv_args))
     super().build(input_shape)
- 
+
   def call(self, inputs):
     # check efficiency
     x = inputs

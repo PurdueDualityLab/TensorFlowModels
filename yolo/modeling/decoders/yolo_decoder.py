@@ -93,13 +93,13 @@ class YoloFPN(tf.keras.layers.Layer):
     self._depths = self.get_raw_depths(self._min_depth)
 
     # directly connect to an input path and process it
-    self.preprocessors = {}
+    self.preprocessors = dict()
     # resample an input and merge it with the output of another path
     # inorder to aggregate backbone outputs
-    self.resamples = {}
+    self.resamples = dict()
     # set of convoltion layers and upsample layers that are used to
     # prepare the FPN processors for output
-    self.tails = {}
+    self.tails = dict()
 
     for level, depth in zip(
         reversed(range(self._min_level, self._max_level + 1)), self._depths):
@@ -127,7 +127,7 @@ class YoloFPN(tf.keras.layers.Layer):
             filters=depth, upsample=True, **self._base_config)
 
   def call(self, inputs):
-    outputs = {}
+    outputs = dict()
     layer_in = inputs[str(self._max_level)]
     for level in reversed(range(self._min_level, self._max_level + 1)):
       _, x = self.preprocessors[str(level)](layer_in)
@@ -228,10 +228,10 @@ class YoloPAN(tf.keras.layers.Layer):
     self._depths = self.get_raw_depths(self._min_depth)
 
     # directly connect to an input path and process it
-    self.preprocessors = {}
+    self.preprocessors = dict()
     # resample an input and merge it with the output of another path
     # inorder to aggregate backbone outputs
-    self.resamples = {}
+    self.resamples = dict()
 
     # FPN will reverse the key process order for the backbone, so we need
     # adjust the order that objects are created and processed to adjust for
