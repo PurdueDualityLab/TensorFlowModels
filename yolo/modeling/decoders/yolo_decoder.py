@@ -118,7 +118,7 @@ class YoloFPN(tf.keras.layers.Layer):
             repetitions=self._fpn_path_len + 2,
             insert_spp=True,
             **self._base_config)
-            
+
       if level == self._min_level:
         self.tails[str(level)] = nn_blocks.FPNTail(
             filters=depth, upsample=False, **self._base_config)
