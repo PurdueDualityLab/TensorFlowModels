@@ -51,7 +51,7 @@ class ConvBN(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
         (across all input batches)
-      norm_moment: float for moment to use for batch normalization
+      norm_momentum: float for moment to use for batch normalization
       norm_epsilon: float for batch normalization epsilon
       activation: string or None for activation function to use in layer,
         if None activation is replaced by linear
@@ -94,7 +94,7 @@ class ConvBN(tf.keras.layers.Layer):
     # batch normalization params
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
     if tf.keras.backend.image_data_format() == 'channels_last':
@@ -155,13 +155,13 @@ class ConvBN(tf.keras.layers.Layer):
       if self._use_sync_bn:
         self.bn = subnormalization.SubDivSyncBatchNormalization(
             subdivisions=self._subdivisions,
-            momentum=self._norm_moment,
+            momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
       else:
         self.bn = subnormalization.SubDivBatchNormalization(
             subdivisions=self._subdivisions,
-            momentum=self._norm_moment,
+            momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
     else:
@@ -197,7 +197,7 @@ class ConvBN(tf.keras.layers.Layer):
         'kernel_regularizer': self._kernel_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_moment': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'leaky_alpha': self._leaky_alpha
@@ -224,7 +224,7 @@ class DarkResidual(tf.keras.layers.Layer):
     use_sync_bn: boolean for whether sync batch normalization statistics
       of all batch norm layers to the models global statistics
       (across all input batches)
-    norm_moment: float for moment to use for batch normalization
+    norm_momentum: float for moment to use for batch normalization
     norm_epsilon: float for batch normalization epsilon
     conv_activation: string or None for activation function to use in layer,
       if None activation is replaced by linear
@@ -269,7 +269,7 @@ class DarkResidual(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
 
     # normal params
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._dilation_rate = dilation_rate if isinstance(dilation_rate,
                                                       int) else dilation_rate[0]
@@ -288,7 +288,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'subdivisions': self._subdivisions,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
@@ -359,7 +359,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'dilation_rate': self._dilation_rate,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_moment': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
         'leaky_alpha': self._leaky_alpha,
@@ -401,7 +401,7 @@ class CSPTiny(tf.keras.layers.Layer):
       tiny stack.
     groups: integer for how many splits there should be in the convolution
       feature stack output
-    norm_moment: float for moment to use for batch normalization
+    norm_momentum: float for moment to use for batch normalization
     norm_epsilon: float for batch normalization epsilon
     conv_activation: string or None for activation function to use in layer,
       if None activation is replaced by linear
@@ -446,7 +446,7 @@ class CSPTiny(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
 
     # normal params
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
     # activation params
@@ -463,7 +463,7 @@ class CSPTiny(tf.keras.layers.Layer):
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
         'subdivisions': self._subdivisions,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -487,7 +487,7 @@ class CSPTiny(tf.keras.layers.Layer):
         kernel_regularizer=self._kernel_regularizer,
         use_bn=self._use_bn,
         use_sync_bn=self._use_sync_bn,
-        norm_momentum=self._norm_moment,
+        norm_momentum=self._norm_momentum,
         norm_epsilon=self._norm_epsilon,
         activation=self._conv_activation,
         leaky_alpha=self._leaky_alpha)
@@ -564,7 +564,7 @@ class CSPRoute(tf.keras.layers.Layer):
     use_sync_bn: boolean for whether sync batch normalization statistics
       of all batch norm layers to the models global statistics
       (across all input batches)
-    norm_moment: float for moment to use for batch normalization
+    norm_momentum: float for moment to use for batch normalization
     norm_epsilon: float for batch normalization epsilon
     **kwargs: Keyword Arguments
   """
@@ -600,7 +600,7 @@ class CSPRoute(tf.keras.layers.Layer):
     self._dilation_rate = dilation_rate
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._downsample = downsample
     self._subdivisions = subdivisions
@@ -612,7 +612,7 @@ class CSPRoute(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -689,7 +689,7 @@ class CSPConnect(tf.keras.layers.Layer):
     use_sync_bn: boolean for whether sync batch normalization statistics
       of all batch norm layers to the models global
       statistics (across all input batches)
-    norm_moment: float for moment to use for batch normalization
+    norm_momentum: float for moment to use for batch normalization
     norm_epsilon: float for batch normalization epsilon
     **kwargs: Keyword Arguments
   """
@@ -723,7 +723,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._subdivisions = subdivisions
 
@@ -734,7 +734,7 @@ class CSPConnect(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -797,7 +797,7 @@ class CSPStack(tf.keras.layers.Layer):
     use_sync_bn: boolean for whether sync batch normalization statistics
       of all batch norm layers to the models global statistics
       (across all input batches)
-    norm_moment: float for moment to use for batch normalization
+    norm_momentum: float for moment to use for batch normalization
     norm_epsilon: float for batch normalization epsilon
     **kwargs: Keyword Arguments
     """
@@ -833,7 +833,7 @@ class CSPStack(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._subdivisions = subdivisions
 
@@ -859,7 +859,7 @@ class CSPStack(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'kernel_regularizer': self._kernel_regularizer,
         'subdivisions': self._subdivisions,
@@ -914,7 +914,7 @@ class RouteMerge(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
         (across all input batches)
-      norm_moment: float for moment to use for batch normalization
+      norm_momentum: float for moment to use for batch normalization
       norm_epsilon: float for batch normalization epsilon
       activation: string or None for activation function to use in layer,
         if None activation is replaced by linear
@@ -935,7 +935,7 @@ class RouteMerge(tf.keras.layers.Layer):
     self._use_sync_bn = use_sync_bn
 
     # normal params
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
     # activation params
@@ -955,7 +955,7 @@ class RouteMerge(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -1075,7 +1075,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         layers
       subdivisions: `int` how many subdivision to usein training execution, not 
         used in eval or inference
-      norm_moment: batch norm parameter see Tensorflow documentation
+      norm_momentum: batch norm parameter see Tensorflow documentation
       norm_epsilon: batch norm parameter see Tensorflow documentation
       activation: activation function to use in processing
       leaky_alpha: if leaky acitivation function, the alpha to use in
@@ -1098,7 +1098,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
 
     # normal params
-    self._norm_moment = norm_momentum
+    self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
     # activation params
@@ -1165,7 +1165,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
         'use_sync_bn': self._use_sync_bn,
-        'norm_momentum': self._norm_moment,
+        'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
@@ -1294,3 +1294,236 @@ class FPNTail(tf.keras.layers.Layer):
       return x_route, x
     else:
       return x_route
+
+
+class SAM(tf.keras.layers.Layer):
+  """
+  [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
+  CBAM: Convolutional Block Attention Module. arXiv:1807.06521
+
+  implementation of the Spatial Attention Model (SAM)
+  """
+  def __init__(self,
+              use_pooling = False, 
+              filter_match = False, 
+              kernel_size=(1, 1),
+              strides=(1, 1),
+              padding='same',
+              dilation_rate=(1, 1),
+              kernel_initializer='glorot_uniform',
+              bias_initializer='zeros',
+              subdivisions=1,
+              bias_regularizer=None,
+              kernel_regularizer=None,
+              use_bn=True,
+              use_sync_bn=False,
+              norm_momentum=0.99,
+              norm_epsilon=0.001,
+              activation='sigmoid',
+              leaky_alpha=0.1,
+              **kwargs):
+    
+    # use_pooling
+    self._use_pooling = use_pooling
+    self._filter_match = filter_match
+
+    self._dark_conv_args = {
+        'kernel_size': kernel_size, 
+        'strides': strides, 
+        'padding': padding, 
+        'dilation_rate': dilation_rate,
+        'kernel_initializer': kernel_initializer,
+        'bias_initializer': bias_initializer,
+        'bias_regularizer': bias_regularizer,
+        'use_bn': use_bn,
+        'use_sync_bn': use_sync_bn,
+        'subdivisions': subdivisions,
+        'norm_momentum': norm_momentum,
+        'norm_epsilon': norm_epsilon,
+        'activation': activation,
+        'kernel_regularizer': kernel_regularizer,
+        'leaky_alpha': leaky_alpha
+    }
+
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    if self._filter_match: 
+      self._filters = input_shape[-1]
+    else:
+      self._filters = 1
+    self._conv = ConvBN(filters = self._filters, **self._dark_conv_args)
+    return 
+  
+  def call(self, inputs):
+    if self._use_pooling:
+      depth_max = tf.reduce_max(inputs, axis = -1, keep_dims = True)
+      depth_avg = tf.reduce_mean(inputs, axis = -1, keep_dims = True)
+      input_maps = tf.concat([depth_avg, depth_max], axis = -1)
+    else:
+      input_maps = inputs
+
+    attention_mask = self._conv(input_maps)
+    return inputs * attention_mask
+
+
+class CAM(tf.keras.layers.Layer):
+  """
+  [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
+  CBAM: Convolutional Block Attention Module. arXiv:1807.06521
+
+  implementation of the Channel Attention Model (CAM)
+  """
+  def __init__(self,
+              reduction_ratio = 1.0, 
+              subdivisions=1,
+              kernel_initializer='glorot_uniform',
+              bias_initializer='zeros',
+              bias_regularizer=None,
+              kernel_regularizer=None,
+              use_bn = False,
+              use_sync_bn = False,
+              use_bias = False, 
+              norm_momentum=0.99,
+              norm_epsilon=0.001,
+              mlp_activation='linear', 
+              activation='sigmoid',
+              leaky_alpha=0.1,
+              **kwargs):
+    
+    self._reduction_ratio = reduction_ratio
+
+    # use_pooling
+    if use_sync_bn:
+      self._bn = subnormalization.SubDivSyncBatchNormalization
+    else:
+      self._bn = subnormalization.SubDivBatchNormalization
+    
+    if not use_bn:
+      self._bn = Identity
+      self._bn_args = {}
+    else:
+      self._bn_args = {
+        'subdivisions': subdivisions, 
+        'momentum': norm_momentum,
+        'epsilon': norm_epsilon,
+      }
+    
+    self._mlp_args = {
+      'use_bias': use_bias,
+      'kernel_initializer': kernel_initializer,
+      'bias_initializer': bias_initializer,
+      'bias_regularizer': bias_regularizer,
+      'activation': mlp_activation,
+      'kernel_regularizer': kernel_regularizer,
+    }
+
+
+    self._leaky_alpha = leaky_alpha
+    self._activation = activation
+
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    self._filters = input_shape[-1]
+
+    self._mlp = tf.keras.Sequential([
+      tf.keras.layers.Dense(self._filters, **self._mlp_args), 
+      self._bn(**self._bn_args), 
+      tf.keras.layers.Dense(int(self._filters * self._reduction_ratio), **self._mlp_args), 
+      self._bn(**self._bn_args), 
+      tf.keras.layers.Dense(self._filters, **self._mlp_args), 
+      self._bn(**self._bn_args), 
+    ])
+
+    if self._activation == 'leaky':
+      self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
+    elif self._activation == 'mish':
+      self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
+    else:
+      self._activation_fn = tf_utils.get_activation(self._activation)
+
+    return 
+  
+  def call(self, inputs):
+    depth_max = self._mlp(tf.reduce_max(inputs, axis = (1, 2)))
+    depth_avg = self._mlp(tf.reduce_mean(inputs, axis = (1, 2)))
+    channel_mask = self._activation_fn(depth_avg + depth_max)
+
+    channel_mask = tf.expand_dims(channel_mask, axis = 1)
+    attention_mask = tf.expand_dims(channel_mask, axis = 1)
+    
+    return inputs * attention_mask
+
+
+
+class CBAM(tf.keras.layers.Layer):
+  """
+  [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
+  CBAM: Convolutional Block Attention Module. arXiv:1807.06521
+
+  implementation of the Convolution Block Attention Module (CBAM)
+  """
+  def __init__(self,
+              use_pooling = False, 
+              filter_match = False, 
+              reduction_ratio = 1.0, 
+              kernel_size=(1, 1),
+              strides=(1, 1),
+              padding='same',
+              dilation_rate=(1, 1),
+              kernel_initializer='glorot_uniform',
+              bias_initializer='zeros',
+              subdivisions=1,
+              bias_regularizer=None,
+              kernel_regularizer=None,
+              use_bn=True,
+              use_sync_bn=False,
+              norm_momentum=0.99,
+              norm_epsilon=0.001,
+              mlp_activation = None, 
+              activation='sigmoid',
+              leaky_alpha=0.1,
+              **kwargs):
+    
+    # use_pooling
+
+    self._sam_args = {
+        'use_pooling': use_pooling,
+        'filter_match': filter_match,
+        'kernel_size': kernel_size, 
+        'strides': strides, 
+        'padding': padding, 
+        'dilation_rate': dilation_rate,
+    }
+
+    self._cam_args = {
+      'reduction_ratio': reduction_ratio, 
+      'mlp_activation': mlp_activation
+    }
+  
+    self._common_args = {
+      'kernel_initializer': kernel_initializer,
+      'bias_initializer': bias_initializer,
+      'bias_regularizer': bias_regularizer,
+      'use_bn': use_bn,
+      'use_sync_bn': use_sync_bn,
+      'subdivisions': subdivisions,
+      'norm_momentum': norm_momentum,
+      'norm_epsilon': norm_epsilon,
+      'activation': activation,
+      'kernel_regularizer': kernel_regularizer,
+      'leaky_alpha': leaky_alpha
+    }
+    
+    self._cam_args.update(self._common_args)
+    self._sam_args.update(self._common_args)
+    super().__init__(**kwargs)
+
+  def build(self, input_shape):
+    self._cam = CAM(**self._cam_args)
+    self._sam = SAM(**self._sam_args)
+    return 
+  
+  def call(self, inputs):
+    return self._sam(self._cam(inputs))
