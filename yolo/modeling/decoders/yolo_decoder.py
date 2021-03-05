@@ -38,12 +38,12 @@ class YoloFPN(tf.keras.layers.Layer):
     Yolo FPN initialization function. Yolo V4
     Args:
       fpn_path_len: `int`, number of layers ot use in each FPN path
-        if you choose to use an FPN
+        if you choose to use an FPN.
       use_sync_bn: if True, use synchronized batch normalization.
       norm_momentum: `float`, normalization omentum for the moving average.
       norm_epsilon: `float`, small float added to variance to avoid dividing by
         zero.
-      activation: `str`, the activation function to use typically leaky or mish
+      activation: `str`, the activation function to use typically leaky or mish.
       kernel_initializer: kernel_initializer for convolutional layers.
       kernel_regularizer: tf.keras.regularizers.Regularizer object for Conv2D.
       bias_regularizer: tf.keras.regularizers.Regularizer object for Conv2d.
@@ -52,7 +52,7 @@ class YoloFPN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
     self._fpn_path_len = fpn_path_len
 
-    self._activation = "leaky" if activation is None else activation
+    self._activation = activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -62,14 +62,14 @@ class YoloFPN(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
 
     self._base_config = dict(
-        activation=self._activation,
-        use_sync_bn=self._use_sync_bn,
-        subdivisions=self._subdivisions,
-        kernel_regularizer=self._kernel_regularizer,
-        kernel_initializer=self._kernel_initializer,
-        bias_regularizer=self._bias_regularizer,
-        norm_epsilon=self._norm_epsilon,
-        norm_momentum=self._norm_momentum)
+        activation = self._activation,
+        use_sync_bn = self._use_sync_bn,
+        subdivisions = self._subdivisions,
+        kernel_regularizer = self._kernel_regularizer,
+        kernel_initializer = self._kernel_initializer,
+        bias_regularizer = self._bias_regularizer,
+        norm_epsilon = self._norm_epsilon,
+        norm_momentum = self._norm_momentum)
 
   def get_raw_depths(self, minimum_depth):
     depths = []
@@ -82,6 +82,9 @@ class YoloFPN(tf.keras.layers.Layer):
     """ 
     use config dictionary to generate all important attributes for head
     construction 
+
+    Args:
+       inputs: dictionary of the shape of input args as a dictionary of lists
     """
     keys = [int(key) for key in inputs.keys()]
     self._min_level = min(keys)
@@ -89,9 +92,15 @@ class YoloFPN(tf.keras.layers.Layer):
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth)
 
-    self.resamples = {}
+    # directly connect to an input path and process it  
     self.preprocessors = {}
+    # resample an input and merge it with the output of another path 
+    # inorder to aggregate backbone outputs
+    self.resamples = {}
+    # set of convoltion layers and upsample layers that are used to 
+    # prepare the FPN processors for output
     self.tails = {}
+
     for level, depth in zip(
         reversed(range(self._min_level, self._max_level + 1)), self._depths):
 
@@ -109,6 +118,7 @@ class YoloFPN(tf.keras.layers.Layer):
             repetitions=self._fpn_path_len + 2,
             insert_spp=True,
             **self._base_config)
+            
       if level == self._min_level:
         self.tails[str(level)] = nn_blocks.FPNTail(
             filters=depth, upsample=False, **self._base_config)
@@ -173,7 +183,7 @@ class YoloPAN(tf.keras.layers.Layer):
     self._path_process_len = path_process_len
     self._embed_spp = embed_spp
 
-    self._activation = "leaky" if activation is None else activation
+    self._activation = activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -192,27 +202,44 @@ class YoloPAN(tf.keras.layers.Layer):
         self._max_level_process_len = path_process_len  
 
     self._base_config = dict(
-        activation=self._activation,
-        use_sync_bn=self._use_sync_bn,
-        kernel_regularizer=self._kernel_regularizer,
-        kernel_initializer=self._kernel_initializer,
-        bias_regularizer=self._bias_regularizer,
-        subdivisions=self._subdivisions,
-        norm_epsilon=self._norm_epsilon,
-        norm_momentum=self._norm_momentum)
+        activation = self._activation,
+        use_sync_bn = self._use_sync_bn,
+        kernel_regularizer = self._kernel_regularizer,
+        kernel_initializer = self._kernel_initializer,
+        bias_regularizer = self._bias_regularizer,
+        subdivisions = self._subdivisions,
+        norm_epsilon = self._norm_epsilon,
+        norm_momentum = self._norm_momentum)
 
   def build(self, inputs):
+    """ 
+    use config dictionary to generate all important attributes for head
+    construction 
+
+    Args:
+      inputs: dictionary of the shape of input args as a dictionary of lists
+    """
+    # define the key order
     keys = [int(key) for key in inputs.keys()]
     self._min_level = min(keys)
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth)
 
-    self.resamples = {}
+    # directly connect to an input path and process it     
     self.preprocessors = {}
-    self.outputs = {}
+    # resample an input and merge it with the output of another path 
+    # inorder to aggregate backbone outputs
+    self.resamples = {}
 
+
+    # FPN will reverse the key process order for the backbone, so we need
+    # adjust the order that objects are created and processed to adjust for
+    # this. not using an FPN will directly connect the decoder to the backbone
+    # therefore the object creation order needs to be done from the largest 
+    # to smallest level.
     if self._fpn_input:
+      # process order {... 3, 4, 5}
       self._iterator = range(self._min_level, self._max_level + 1)
       self._check = lambda x: x < self._max_level
       self._key_shift = lambda x: x + 1
@@ -223,6 +250,7 @@ class YoloPAN(tf.keras.layers.Layer):
       downsample = True
       upsample = False
     else:
+      # process order {5, 4, 3, ...}
       self._iterator = list(
           reversed(range(self._min_level, self._max_level + 1)))
       self._check = lambda x: x > self._min_level
@@ -331,7 +359,7 @@ class YoloDecoder(tf.keras.Model):
     self._max_level_process_len = max_level_process_len
     self._embed_spp = embed_spp
 
-    self._activation = "leaky" if activation is None else activation
+    self._activation = activation
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
@@ -371,7 +399,7 @@ class YoloDecoder(tf.keras.Model):
       outputs = YoloPAN(**self._decoder_config)(inputs)
 
     self._output_specs = {key: value.shape for key, value in outputs.items()}
-    super().__init__(inputs=inputs, outputs=outputs, name="YoloDecoder")
+    super().__init__(inputs = inputs, outputs = outputs, name = "YoloDecoder")
 
   @property
   def embed_fpn(self):
@@ -383,9 +411,9 @@ class YoloDecoder(tf.keras.Model):
 
   def get_config(self):
     config = dict(
-        input_specs=self._input_specs,
-        embed_fpn=self._embed_fpn,
-        fpn_path_len=self._fpn_path_len,
+        input_specs = self._input_specs,
+        embed_fpn = self._embed_fpn,
+        fpn_path_len = self._fpn_path_len,
         **self._decoder_config)
     return config
 
