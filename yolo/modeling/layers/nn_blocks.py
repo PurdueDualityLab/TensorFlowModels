@@ -679,6 +679,8 @@ class CSPConnect(tf.keras.layers.Layer):
       weights
     bias_initializer: string to indicate which function to use to initialize
       bias
+    subdivisions: `int` how many subdivision to usein training execution, not 
+      used in eval or inference
     kernel_regularizer: string to indicate which function to use to regularizer
       weights
     bias_regularizer: string to indicate which function to use to regularizer
@@ -776,6 +778,8 @@ class CSPStack(tf.keras.layers.Layer):
     model_to_wrap: callable Model or a list of callable objects that will
       process the output of CSPRoute, and be input into CSPConnect.
       list will be called sequentially.
+    subdivisions: `int` how many subdivision to usein training execution, not 
+      used in eval or inference
     downsample: down_sample the input
     filters: integer for output depth, or the number of features to learn
     filter_scale: integer dicating (filters//2) or the number of filters in the
@@ -900,6 +904,8 @@ class RouteMerge(tf.keras.layers.Layer):
         weights
       bias_initializer: string to indicate which function to use to initialize
         bias
+      subdivisions: `int` how many subdivision to usein training execution, not 
+        used in eval or inference
       kernel_regularizer: string to indicate which function to use to
         regularizer weights
       bias_regularizer: string to indicate which function to use to regularizer
@@ -1067,6 +1073,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       kernel_initializer: method to use to initializa kernel weights
       bias_initializer: method to use to initialize the bias of the conv
         layers
+      subdivisions: `int` how many subdivision to usein training execution, not 
+        used in eval or inference
       norm_moment: batch norm parameter see Tensorflow documentation
       norm_epsilon: batch norm parameter see Tensorflow documentation
       activation: activation function to use in processing
@@ -1233,6 +1241,8 @@ class FPNTail(tf.keras.layers.Layer):
       bias_regularizer: `str`, indicate which function to use to regularizer
         bias.
       norm_momentum: float for moment to use for batch normalization
+      subdivisions: `int` how many subdivision to usein training execution, not 
+        used in eval or inference
       norm_epsilon: float for batch normalization epsilon
       **kwargs: Keyword Arguments
     """
