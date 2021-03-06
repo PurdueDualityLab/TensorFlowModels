@@ -635,11 +635,8 @@ class CSPRoute(tf.keras.layers.Layer):
           dilation_rate=dilation_rate,
           **_dark_conv_args)
     else:
-      self._conv1 = ConvBN(
-          filters=self._filters,
-          kernel_size=(3, 3),
-          strides=(1, 1),
-          **_dark_conv_args)
+      self._conv1 = Identity()
+
     self._conv2 = ConvBN(
         filters=self._filters // self._filter_scale,
         kernel_size=(1, 1),
@@ -876,7 +873,7 @@ class CSPStack(tf.keras.layers.Layer):
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
-class RouteMerge(tf.keras.layers.Layer):
+class PathAggregationBlock(tf.keras.layers.Layer):
 
   def __init__(
       self,
@@ -888,6 +885,7 @@ class RouteMerge(tf.keras.layers.Layer):
       kernel_regularizer=None,  
       use_bn=True,
       use_sync_bn=False,
+      inverted = False, 
       norm_momentum=0.99,
       norm_epsilon=0.001,
       activation='leaky',
@@ -945,8 +943,59 @@ class RouteMerge(tf.keras.layers.Layer):
     self._upsample = upsample
     self._upsample_size = upsample_size
     self._subdivisions = subdivisions
+  
+    #block params 
+    self._inverted = inverted
 
     super().__init__(**kwargs)
+
+  def _build_regular(self, input_shape, kwargs):
+    if self._downsample:
+      self._conv = ConvBN(
+          filters=self._filters,
+          kernel_size=(3, 3),
+          strides=(2, 2),
+          padding='same',
+          **kwargs)
+    else:
+      self._conv = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **kwargs)
+    return 
+  
+  def _build_reversed(self, input_shape, kwargs):
+    if self._downsample:
+      self._conv_prev = ConvBN(
+        filters=self._filters,
+        kernel_size=(3, 3),
+        strides=(2, 2),
+        padding='same',
+        **kwargs)
+    else:
+      self._conv_prev = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **kwargs)
+    
+    self._conv_route = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **kwargs)
+
+    self._conv_sync = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **kwargs)
+    return 
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -962,32 +1011,39 @@ class RouteMerge(tf.keras.layers.Layer):
         'leaky_alpha': self._leaky_alpha,
         'subdivisions': self._subdivisions,
     }
-    if self._downsample:
-      self._conv = ConvBN(
-          filters=self._filters,
-          kernel_size=(3, 3),
-          strides=(2, 2),
-          padding='same',
-          **_dark_conv_args)
+
+    if self._inverted:
+      self._build_reversed(input_shape, _dark_conv_args)
     else:
-      self._conv = ConvBN(
-          filters=self._filters,
-          kernel_size=(1, 1),
-          strides=(1, 1),
-          padding='same',
-          **_dark_conv_args)
+      self._build_regular(input_shape, _dark_conv_args)
 
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
 
+  def _call_regular(self, inputs):
+    inputToConvolve, inputToConcat = inputs
+    x_prev = self._conv(inputToConvolve)
+    if self._upsample:
+      x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
+    x = self._concat([x_prev, inputToConcat])
+    return x_prev, x
+
+  def _call_reversed(self, inputs):
+    x_route, x_prev = inputs
+    x_prev = self._conv_prev(x_prev)
+    if self._upsample:
+      x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
+    x_route = self._conv_route(x_route)
+    x = self._concat([x_route, x_prev])
+    x = self._conv_sync(x)
+    return x_prev, x
+
   def call(self, inputs):
     # done this way to prevent confusion in the auto graph
-    inputToConvolve, inputToConcat = inputs
-    x = self._conv(inputToConvolve)
-    if self._upsample:
-      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
-    x = self._concat([x, inputToConcat])
-    return x
+    if self._inverted:
+      return self._call_reversed(inputs)
+    else:
+      return self._call_regular(inputs)
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -1038,6 +1094,7 @@ class SAM(tf.keras.layers.Layer):
   def __init__(self,
               use_pooling = False, 
               filter_match = False, 
+              filters = 1, 
               kernel_size=(1, 1),
               strides=(1, 1),
               padding='same',
@@ -1048,16 +1105,19 @@ class SAM(tf.keras.layers.Layer):
               bias_regularizer=None,
               kernel_regularizer=None,
               use_bn=True,
-              use_sync_bn=False,
+              use_sync_bn=True,
               norm_momentum=0.99,
               norm_epsilon=0.001,
               activation='sigmoid',
+              output_activation =None, 
               leaky_alpha=0.1,
               **kwargs):
     
     # use_pooling
     self._use_pooling = use_pooling
-    self._filter_match = filter_match
+    self._filters = filters
+    self._output_activation = output_activation
+    self._leaky_alpha = leaky_alpha
 
     self._dark_conv_args = {
         'kernel_size': kernel_size, 
@@ -1080,12 +1140,15 @@ class SAM(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    if self._filter_match: 
+    if self._filters == -1: 
       self._filters = input_shape[-1]
-    else:
-      self._filters = 1
     self._conv = ConvBN(filters = self._filters, **self._dark_conv_args)
-    return 
+    if self._output_activation == 'leaky':
+      self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
+    elif self._output_activation == 'mish':
+      self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
+    else:
+      self._activation_fn = tf_utils.get_activation(self._output_activation)
   
   def call(self, inputs):
     if self._use_pooling:
@@ -1096,7 +1159,7 @@ class SAM(tf.keras.layers.Layer):
       input_maps = inputs
 
     attention_mask = self._conv(input_maps)
-    return inputs * attention_mask
+    return  self._activation_fn(inputs * attention_mask)
 
 
 class CAM(tf.keras.layers.Layer):
@@ -1198,7 +1261,7 @@ class CBAM(tf.keras.layers.Layer):
   """
   def __init__(self,
               use_pooling = False, 
-              filter_match = False, 
+              filters = 1, 
               reduction_ratio = 1.0, 
               kernel_size=(1, 1),
               strides=(1, 1),
@@ -1222,7 +1285,7 @@ class CBAM(tf.keras.layers.Layer):
 
     self._sam_args = {
         'use_pooling': use_pooling,
-        'filter_match': filter_match,
+        'filters': filters,
         'kernel_size': kernel_size, 
         'strides': strides, 
         'padding': padding, 
@@ -1280,6 +1343,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       kernel_regularizer=None,  # default find where is it is stated
       norm_momentum=0.99,
       norm_epsilon=0.001,
+      block_invert = False, 
+      convert_csp = False, 
       activation='leaky',
       leaky_alpha=0.1,
       spp_keys=None,
@@ -1339,20 +1404,41 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
+    if repetitions == 1:
+      block_invert = True
+
+    if convert_csp:
+      self._conv1_filters = lambda x: x // 2
+      self._conv2_filters = lambda x: x // 2
+    elif block_invert:
+      self._conv1_filters = lambda x: x
+      self._conv2_filters = lambda x: x // 2
+    else:
+      self._conv1_filters = lambda x: x // 2
+      self._conv2_filters = lambda x: x 
+    
+
+    if block_invert:
+      self._conv1_kernel = (3,3)
+      self._conv2_kernel = (1,1)
+    else:
+      self._conv1_kernel = (1,1)
+      self._conv2_kernel = (3,3)
+
     # layer configs
     if repetitions % 2 == 1:
       self._append_conv = True
     else:
       self._append_conv = False
     self._repetitions = repetitions // 2
-    self._lim = repetitions
     self._insert_spp = insert_spp
     self._insert_sam = insert_sam
     self._insert_cbam = insert_cbam if insert_sam is False else False
     self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
 
+    self._lim = repetitions + int(self._insert_sam) + int(self._insert_cbam)
+    print(self._lim)
     self.layer_list = self._get_layer_list()
-    # print(self.layer_list)
     super().__init__(**kwargs)
 
   def _get_layer_list(self):
@@ -1366,22 +1452,24 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       layer_config.append('mono_conv')
     
     if self._insert_sam:
-      layer_config.insert(-2, 'sam')
+      layer_config.insert(-1, 'sam')
     if self._insert_cbam:
-      layer_config.insert(-2, 'cbam')
+      layer_config.insert(-1, 'cbam')
     return layer_config
 
   def _block(self, filters, kwargs):
+
+    print(self._conv1_filters(filters), self._conv2_filters(filters))
     x1 = ConvBN(
-        filters=filters // 2,
-        kernel_size=(1, 1),
+        filters=self._conv1_filters(filters),
+        kernel_size=self._conv1_kernel,
         strides=(1, 1),
         padding='same',
         use_bn=True,
         **kwargs)
     x2 = ConvBN(
-        filters=filters,
-        kernel_size=(3, 3),
+        filters=self._conv2_filters(filters),
+        kernel_size=self._conv2_kernel,
         strides=(1, 1),
         padding='same',
         use_bn=True,
@@ -1390,7 +1478,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
   def _spp(self, filters, kwargs):
     x1 = ConvBN(
-        filters=filters // 2,
+        filters=self._conv1_filters(filters),
         kernel_size=(1, 1),
         strides=(1, 1),
         padding='same',
@@ -1400,17 +1488,17 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     x2 = SPP(self._spp_keys)
     return [x1, x2]
 
-  def _sam(self, kwargs):
+  def _sam(self, filters, kwargs):
     x1 = SAM(
-        filter_match=True,
+        filters=-1,
         use_pooling=False,
         use_bn=True,
         **kwargs)
     return [x1]
 
-  def _cbam(self, kwargs):
+  def _cbam(self, filters, kwargs):
     x1 = CBAM(
-        filter_match=True,
+        filters=-1,
         use_pooling=False,
         use_bn=True,
         reduction_ratio = 0.5, 
@@ -1438,19 +1526,21 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
     self.layers = []
     for layer in self.layer_list:
+      print(layer)
       if layer == 'block':
         self.layers.extend(self._block(self._filters, _dark_conv_args))
       elif layer == 'spp':
         self.layers.extend(self._spp(self._filters, _dark_conv_args))
       elif layer == 'sam':
-        self.layers.extend(self._sam(_args))
+        self.layers.extend(self._sam(-1, _args))
       elif layer == 'cbam':
-        self.layers.extend(self._cbam(_args))
+        self.layers.extend(self._cbam(-1, _args))
       elif layer == 'mono_conv':
+        print(self._conv1_filters(self._filters))
         self.layers.append(
             ConvBN(
-                filters=self._filters,
-                kernel_size=(3, 3),
+                filters=self._conv1_filters(self._filters),
+                kernel_size=self._conv1_kernel,
                 strides=(1, 1),
                 padding='same',
                 use_bn=True,
@@ -1468,100 +1558,3 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       x = layer(x)
       i += 1
     return x_prev, x
-
-
-class FPNTail(tf.keras.layers.Layer):
-  """
-  Tail layer used in the FPN of the decoder to produce the final outputs of the
-  model
-  """
-  def __init__(self,
-               filters=1,
-               upsample=True,
-               upsample_size=2,
-               activation='leaky',
-               use_sync_bn=False,
-               kernel_regularizer=None,
-               kernel_initializer='glorot_uniform',
-               bias_regularizer=None,
-               norm_epsilon=0.001,
-               subdivisions=8,
-               norm_momentum=0.99,
-               **kwargs):
-
-    """Initializes FPNTail layer.
-    Args:
-      filters: `int`, output depth, or the number of features to learn
-      upsample: `bool`, Determines whether to upsample the output of the current
-        tailto be used by a subsequent tail later in the YOLO decoder. Setting
-        upsample to True returns the current tail's output as well as an
-        upsampled version of this output to be used by the next tail. Setting it
-        to False returns only the current tail's output
-      upsample_size: `int` or `tuple[int, int]`, Upsampling factors for rows and
-        columns in the upsampling block. Ignored if `upsample` is False
-      activation: `Optional[str]`, activation function to use in layer, None is
-        replaced by leaky
-      use_sync_bn: `bool`, whether sync batch normalization
-      kernel_regularizer: `str`, indicate which function to use to regularizer
-        weights.
-      kernel_initializer: `str`, indicate which function to use to initialize
-        weights.
-      bias_regularizer: `str`, indicate which function to use to regularizer
-        bias.
-      norm_momentum: float for moment to use for batch normalization
-      subdivisions: `int` how many subdivision to usein training execution, not 
-        used in eval or inference
-      norm_epsilon: float for batch normalization epsilon
-      **kwargs: Keyword Arguments
-    """
-    self._filters = filters
-    self._upsample = upsample
-    self._upsample_size = upsample_size
-
-    self._activation = 'leaky' if activation is None else activation
-    self._use_sync_bn = use_sync_bn
-    self._norm_momentum = norm_momentum
-    self._norm_epsilon = norm_epsilon
-    self._kernel_initializer = kernel_initializer
-    self._kernel_regularizer = kernel_regularizer
-    self._bias_regularizer = bias_regularizer
-    self._subdivisions = subdivisions
-
-    self._base_config = dict(
-        activation=self._activation,
-        use_sync_bn=self._use_sync_bn,
-        subdivisions=self._subdivisions,
-        kernel_regularizer=self._kernel_regularizer,
-        kernel_initializer=self._kernel_initializer,
-        bias_regularizer=self._bias_regularizer,
-        norm_epsilon=self._norm_epsilon,
-        norm_momentum=self._norm_momentum)
-
-    super().__init__(**kwargs)
-
-  def build(self, input_shape):
-    self._route_conv = ConvBN(
-        filters=self._filters // 2,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding='same',
-        **self._base_config)
-    if self._upsample:
-      self._process_conv = ConvBN(
-          filters=self._filters // 4,
-          kernel_size=(1, 1),
-          strides=(1, 1),
-          padding='same',
-          **self._base_config)
-
-  def call(self, inputs):
-    x_route = self._route_conv(inputs)
-    if self._upsample:
-      x = self._process_conv(x_route)
-      x = spatial_transform_ops.nearest_upsampling(x, self._upsample_size)
-      return x_route, x
-    else:
-      return x_route
-
-
-

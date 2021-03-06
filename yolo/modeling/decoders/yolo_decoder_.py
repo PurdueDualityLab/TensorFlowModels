@@ -101,39 +101,49 @@ class YoloFPN(tf.keras.layers.Layer):
     self.resamples = dict()
     # set of convoltion layers and upsample layers that are used to
     # prepare the FPN processors for output
+    self.tails = dict()
 
     for level, depth in zip(
         reversed(range(self._min_level, self._max_level + 1)), self._depths):
+
       if level != self._max_level:
-        self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
-            filters=depth // 2, 
-            inverted=True, 
-            upsample=True,
-            upsample_size=2, **self._base_config)
+        self.resamples[str(level)] = nn_blocks.RouteMerge(
+            filters=depth // 2, **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=depth,
-            repetitions=self._fpn_path_len - int(level == self._min_level),
-            block_invert=True,
+            repetitions=self._fpn_path_len,
             insert_spp=False,
             **self._base_config)
       else:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=depth,
-            repetitions=self._fpn_path_len + 2 + 1 ,
+            repetitions=self._fpn_path_len + 2,
             insert_spp=True,
-            block_invert=False, 
             **self._base_config)
+
+      if level == self._min_level:
+        self.tails[str(level)] = nn_blocks.FPNTail(
+            filters=depth, 
+            insert_sam=self._embed_sam, 
+            upsample=False, 
+            **self._base_config)
+      else:
+        self.tails[str(level)] = nn_blocks.FPNTail(
+            filters=depth, upsample=True, **self._base_config)
 
   def call(self, inputs):
     outputs = dict()
     layer_in = inputs[str(self._max_level)]
     for level in reversed(range(self._min_level, self._max_level + 1)):
       _, x = self.preprocessors[str(level)](layer_in)
-      outputs[str(level)] = x
       if level > self._min_level:
+        x_route, x = self.tails[str(level)](x)
         x_next = inputs[str(level - 1)]
-        _, layer_in = self.resamples[str(level - 1)]([x_next, x])
-      tf.print(tf.shape(x))
+        layer_in = self.resamples[str(level - 1)]([x_next, x])
+      else:
+        x_route = self.tails[str(level)](x)
+      outputs[str(level)] = x_route
+      tf.print(tf.shape(x_route))
     return outputs
 
 
@@ -195,7 +205,7 @@ class YoloPAN(tf.keras.layers.Layer):
 
     if self._fpn_input:
       if max_level_process_len is None:
-        self._max_level_process_len = 2
+        self._max_level_process_len = 1
     else:
       if max_level_process_len is None:
         self._max_level_process_len = path_process_len
@@ -242,6 +252,9 @@ class YoloPAN(tf.keras.layers.Layer):
       self._check = lambda x: x < self._max_level
       self._key_shift = lambda x: x + 1
       self._input = self._min_level
+      proc_filters = lambda x: x * 2
+      resample_filters = lambda x: x
+
       downsample = True
       upsample = False
     else:
@@ -251,26 +264,25 @@ class YoloPAN(tf.keras.layers.Layer):
       self._check = lambda x: x > self._min_level
       self._key_shift = lambda x: x - 1
       self._input = self._max_level
+      proc_filters = lambda x: x
+      resample_filters = lambda x: x // 2
+
       downsample = False
       upsample = True
-    
-    proc_filters = lambda x: x
-    resample_filters = lambda x: x // 2
     for level, depth in zip(self._iterator, self._depths):
       if level == self._input:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
-            repetitions=self._max_level_process_len + 2 * int(self._embed_spp),
+            repetitions=self._max_level_process_len + 2 *
+            (1 if self._embed_spp else 0),
             insert_spp=self._embed_spp,
-            block_invert=False, 
-            insert_sam=self._embed_sam,
+            insert_sam=not self._fpn_input and self._embed_sam,
             **self._base_config)
       else:
-        self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
+        self.resamples[str(level)] = nn_blocks.RouteMerge(
             filters=resample_filters(depth),
             upsample=upsample,
             downsample=downsample,
-            inverted=False, 
             **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
@@ -294,12 +306,11 @@ class YoloPAN(tf.keras.layers.Layer):
     layer_in = inputs[str(self._input)]
 
     for level in self._iterator:
-      print("key", level)
       x_route, x = self.preprocessors[str(level)](layer_in)
       outputs[str(level)] = x
       if self._check(level):
         x_next = inputs[str(self._key_shift(level))]
-        _, layer_in = self.resamples[str(
+        layer_in = self.resamples[str(
             self._key_shift(level))]([x_route, x_next])
     return outputs
 
@@ -366,7 +377,7 @@ class YoloDecoder(tf.keras.Model):
     self._subdivisions = subdivisions
 
     self._base_config = dict(
-        embed_sam = True, 
+        embed_sam = False, 
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
         norm_momentum=self._norm_momentum,

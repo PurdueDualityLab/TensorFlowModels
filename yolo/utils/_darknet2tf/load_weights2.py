@@ -1,5 +1,5 @@
 from yolo.modeling.layers.nn_blocks import ConvBN
-from .config_classes import convCFG
+from .config_classes import convCFG, samCFG
 import numpy as np
 
 
@@ -75,15 +75,21 @@ def load_weights_backbone(model, net):
 
 def load_weights_fpn(model, net):
   convs = []
+  sam = False
   for layer in net:
     if isinstance(layer, convCFG):
       convs.append(layer)
+    # if sam:
+    #   convs[-2], convs[-1] = convs[-1], convs[-2]
+    #   sam = False
+    # if isinstance(layer, samCFG):
+    #     sam = True
 
   layers = dict()
   base_key = 0
   alternate = 0
   for layer in model.submodules:
-
+    # print(layer.name)
     # # non sub module conv blocks
     if isinstance(layer, ConvBN):
       if layer.name == "conv_bn":
@@ -101,12 +107,24 @@ def load_weights_fpn(model, net):
 def load_weights_pan(model, net, out_conv=255):
   convs = []
   cfg_heads = []
+  sam = 0
   for layer in net:
     if isinstance(layer, convCFG):
       if not ishead(out_conv, layer):
         convs.append(layer)
       else:
         cfg_heads.append(layer)
+      
+    if sam > 0:
+      convs[-2], convs[-1] = convs[-1], convs[-2]
+      sam += 1
+      if sam == 3:
+        sam = 0
+
+    if isinstance(layer, samCFG):
+      sam += 1
+      
+    
 
   layers = dict()
   key = 0
@@ -133,11 +151,6 @@ def load_weights_decoder(model, net):
   for layer in model.layers:
     # non sub module conv blocks
     print(layer.name)
-    # if 'input' not in layer.name and 'decoder' not in layer.name:
-    #   load_weights_fpn(layer, net[0])
-    # elif 'input' not in layer.name and 'decoder' in layer.name:
-    #   out_convs = load_weights_pan(layer, net[1])
-
     if "input" not in layer.name and "fpn" in layer.name:
       load_weights_fpn(layer, net[0])
     elif "input" not in layer.name and "pan" in layer.name:

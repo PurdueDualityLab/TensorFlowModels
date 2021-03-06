@@ -2,59 +2,54 @@ import tensorflow as tf
 import tensorflow.keras as ks
 from tensorflow.keras import backend as K
 
-from yolo.ops import box_ops
 from yolo.ops.loss_utils import GridGenerator
+from yolo.ops import box_ops
+from yolo.ops import math_ops
 import numpy as np
-
-
-def smooth_labels(y_true, num_classes, label_smoothing):
-  num_classes = tf.cast(num_classes, label_smoothing.dtype)
-  return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
-
-
-def mul_no_nan(x, y):
-  return tf.where(x == 0, tf.cast(0, x.dtype), x * y)
-
 
 @tf.custom_gradient
 def gradient_trap(y):
-
   def trap(dy):
     tf.print(dy)
     return dy
-
   return y, trap
-
 
 @tf.custom_gradient
 def obj_gradient_trap(y):
-
   def trap(dy):
     return dy
-
   return y, trap
-
 
 @tf.custom_gradient
-def box_gradient_trap(y):
-
+def box_gradient_trap(y, max_delta = np.inf):
   def trap(dy):
-    dy = box_ops.rm_nan_inf(dy)
-    return dy
-
+    dy = math_ops.rm_nan_inf(dy)
+    dy = tf.clip_by_value(dy, -max_delta, max_delta)
+    return dy, 0.0
   return y, trap
-
 
 @tf.custom_gradient
 def class_gradient_trap(y):
-
   def trap(dy):
-    #tf.print(tf.shape(dy))
-    dy = box_ops.rm_nan_inf(dy)
+    dy = math_ops.rm_nan_inf(dy)
     return dy
-
   return y, trap
 
+def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y):
+  pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
+  pred_wh = unscaled_box[..., 2:4]
+  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],axis=-1) + grid_points
+  box_wh = tf.math.exp(pred_wh) * anchor_grid
+  pred_box = K.concatenate([box_xy, box_wh], axis=-1)
+  return pred_xy, pred_wh, pred_box
+
+def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y):
+  pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
+  pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
+  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
+  box_wh = 4 * tf.square(pred_wh) * anchor_grid
+  pred_box = K.concatenate([box_xy, box_wh], axis=-1)
+  return pred_xy, pred_wh, pred_box
 
 class Yolo_Loss(object):
 
@@ -71,11 +66,11 @@ class Yolo_Loss(object):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                scale_x_y=1.0,
+               max_delta=10,    
                nms_kind="greedynms",
                beta_nms=0.6,
                reduction=tf.keras.losses.Reduction.NONE,
                path_key=None,
-               max_val=5,
                use_tie_breaker=True,
                name=None,
                **kwargs):
@@ -127,7 +122,8 @@ class Yolo_Loss(object):
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
     self._scale_x_y = scale_x_y
-    self._max_value = max_val
+    self._max_delta = max_delta
+
     self._label_smoothing = tf.cast(0.0, tf.float32)
 
     # used in detection filtering
@@ -175,7 +171,7 @@ class Yolo_Loss(object):
     ],
                        axis=-1)
     wh = tf.math.log(box[..., 2:4] / anchor_grid)
-    wh = box_ops.rm_nan_inf(wh)
+    wh = math_ops.rm_nan_inf(wh)
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
 
   def ce(self, target, output):
@@ -187,8 +183,31 @@ class Yolo_Loss(object):
     target = _smooth_labels(target)
     output = tf.clip_by_value(output, K.epsilon(), 1. - K.epsilon())
     # loss = -target * tf.math.log(output + K.epsilon())
-    loss = mul_no_nan(-target, tf.math.log(output + K.epsilon()))
+    loss = math_ops.mul_no_nan(-target, tf.math.log(output + K.epsilon()))
     return loss
+
+  def recall(self, pred_conf, true_conf, pct = 0.5):
+    recall = tf.reduce_mean(
+        tf.math.divide_no_nan(
+            tf.reduce_sum(
+                math_ops.mul_no_nan(
+                  true_conf, 
+                  tf.cast(
+                    tf.squeeze(
+                      tf.math.sigmoid(pred_conf), 
+                      axis=-1) > pct, 
+                      dtype=true_conf.dtype)),
+                axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
+    return tf.stop_gradient(recall)
+
+  def avgiou(self, iou):
+    avg_iou = math_ops.divide_no_nan(
+      tf.reduce_sum(iou),
+      tf.cast(
+          tf.math.count_nonzero(tf.cast(iou > 0, dtype=iou.dtype)),
+          dtype=iou.dtype))
+    return tf.stop_gradient(avg_iou)
+
 
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
@@ -196,7 +215,7 @@ class Yolo_Loss(object):
     batch_size, width, height = shape[0], shape[1], shape[2]
     num = tf.shape(y_true)[-2]
 
-    y_pred = gradient_trap(y_pred)
+    # y_pred = gradient_trap(y_pred)
 
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
@@ -208,15 +227,17 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, y_pred.dtype)
 
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-    pred_xy, pred_wh, pred_box = self._get_predicted_box(
-        fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points)
+    pred_xy, pred_wh, pred_box = get_predicted_box(
+        fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
+
     self.print_error(pred_box, "boxes")
     self.print_error(pred_conf, "confidence")
     self.print_error(pred_class, "classes")
 
-    # 3. split up ground_truth into components, xy, wh, confidence, class -> apply calculations to acchive safe format as predictions
+    # 3. split up ground_truth into components, xy, wh, confidence, 
+    # class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
     true_box, true_conf, true_class = tf.split(y_true, [4, 1, 1], axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
@@ -226,18 +247,18 @@ class Yolo_Loss(object):
         depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
         dtype=y_pred.dtype)
 
-    pred_box = box_gradient_trap(pred_box)
-    # 5. apply generalized IOU or mse to the box predictions -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    pred_box = box_gradient_trap(pred_box, self._max_delta)
+    # 5. apply generalized IOU or mse to the box predictions -> only the indexes 
+    # where an object exists will affect the total loss -> found via the 
+    # true_confidnce in ground truth
     if self._loss_type == 1:
       iou, giou = box_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = mul_no_nan(true_conf, (1 - giou) * self._iou_normalizer)
-      # loss_box = (1 - giou) * self._iou_normalizer * true_conf
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - giou) * self._iou_normalizer)
     elif self._loss_type == 2:
       iou, ciou = box_ops.compute_ciou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = mul_no_nan(true_conf, (1 - ciou) * self._iou_normalizer)
-      # loss_box = (1 - ciou) * self._iou_normalizer * true_conf
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - ciou) * self._iou_normalizer)
     else:
       # iou mask computation
       iou = box_ops.compute_iou(true_box, pred_box)
@@ -250,11 +271,11 @@ class Yolo_Loss(object):
                                                       y_pred.dtype)
       loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
       loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
-      loss_box = mul_no_nan(true_conf, (loss_wh + loss_xy) * scale)
-      # loss_box =  (loss_wh + loss_xy) * true_conf * scale
-      # loss_box = tf.math.minimum(loss_box, self._max_value)
+      loss_box = math_ops.mul_no_nan(true_conf, (loss_wh + loss_xy) * scale)
 
-    # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    # 6. apply binary cross entropy(bce) to class attributes -> only the indexes
+    # where an object exists will affect the total loss -> found via the 
+    # true_confidnce in ground truth
     pred_class = class_gradient_trap(pred_class)
     class_loss = self._cls_normalizer * tf.reduce_sum(
         ks.losses.binary_crossentropy(
@@ -263,32 +284,39 @@ class Yolo_Loss(object):
             label_smoothing=self._label_smoothing,
             from_logits=True),
         axis=-1)
-    class_loss = mul_no_nan(true_conf, class_loss)
+    class_loss = math_ops.mul_no_nan(true_conf, class_loss)
 
-    # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+    # 7. apply bce to confidence at all points and then strategiacally penalize 
+    # the network for making predictions of objects at locations were no object 
+    # exists
     pred_conf = obj_gradient_trap(pred_conf)
-    pred_conf = box_ops.rm_nan(pred_conf, val=-np.inf)
+    pred_conf = math_ops.rm_nan_inf(pred_conf, val=-np.inf)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce)
+    conf_loss = math_ops.mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce)
     conf_loss = conf_loss * self._obj_normalizer
 
-    # # 6. apply binary cross entropy(bce) to class attributes -> only the indexes where an object exists will affect the total loss -> found via the true_confidnce in ground truth
+    # # 6. apply binary cross entropy(bce) to class attributes -> only the indexes 
+    # # where an object exists will affect the total loss -> found via the 
+    # # true_confidnce in ground truth
     # pred_class = tf.math.sigmoid(pred_class)
     # pred_class = class_gradient_trap(pred_class)
     # ce = self.ce(true_class, pred_class)
     # ce_neg = self.ce((1 - true_class), tf.squeeze(1 - pred_class))
-    # class_loss = mul_no_nan(true_conf, tf.reduce_sum(ce + ce_neg, axis = -1))
+    # class_loss = math_ops.mul_no_nan(true_conf, tf.reduce_sum(ce + ce_neg, axis = -1))
 
-    # # 7. apply bce to confidence at all points and then strategiacally penalize the network for making predictions of objects at locations were no object exists
+    # # 7. apply bce to confidence at all points and then strategiacally 
+    # # penalize the network for making predictions of objects at locations 
+    # # were no object exists
     # pred_conf = tf.math.sigmoid(pred_conf)
     # pred_conf = obj_gradient_trap(pred_conf)
-    # pred_conf = box_ops.rm_nan_inf(pred_conf)
+    # pred_conf = math_ops.rm_nan_inf(pred_conf)
     # ce = self.ce(true_conf, tf.squeeze(pred_conf))
-    # ce_neg = self.ce(mul_no_nan(mask_iou, (1 - true_conf)) , tf.squeeze(1 - pred_conf))
+    # ce_neg = self.ce(math_ops.mul_no_nan(mask_iou, (1 - true_conf)) , tf.squeeze(1 - pred_conf))
     # conf_loss = (ce + ce_neg) * self._obj_normalizer
 
-    # 8. take the sum of all the dimentions and reduce the loss such that each batch has a unique loss value
+    # 8. take the sum of all the dimentions and reduce the loss such that each
+    #  batch has a unique loss value
     loss_box = tf.cast(
         tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
     conf_loss = tf.cast(
@@ -296,26 +324,14 @@ class Yolo_Loss(object):
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    # 9. i beleive tensorflow will take the average of all the batches loss, so add them and let TF do its thing
+    # 9. i beleive tensorflow will take the average of all the batches loss, so 
+    # add them and let TF do its thing
     loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
     loss_box = tf.reduce_mean(loss_box)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
 
     # 10. store values for use in metrics
-    recall50 = tf.stop_gradient(
-        tf.reduce_mean(
-            tf.math.divide_no_nan(
-                tf.reduce_sum(
-                    tf.cast(
-                        tf.squeeze(pred_conf, axis=-1) > 0.5,
-                        dtype=true_conf.dtype) * true_conf,
-                    axis=(1, 2, 3)),
-                (tf.reduce_sum(true_conf, axis=(1, 2, 3))))))
-    avg_iou = tf.stop_gradient(
-        tf.math.divide_no_nan(
-            tf.reduce_sum(iou),
-            tf.cast(
-                tf.math.count_nonzero(tf.cast(iou > 0, dtype=y_pred.dtype)),
-                dtype=y_pred.dtype)))
+    recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
+    avg_iou = self.avgiou(iou)
     return loss, loss_box, conf_loss, class_loss, avg_iou, recall50

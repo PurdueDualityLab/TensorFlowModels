@@ -122,7 +122,7 @@ CSPDARKNET53 = {
         LISTNAMES,
     'splits': {
         'backbone_split': 106,
-        'neck_split': 138
+        'neck_split': 137 # + 2
     },
     'backbone': [
         [

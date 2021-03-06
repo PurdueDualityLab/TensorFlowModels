@@ -49,6 +49,9 @@ class YoloLayer(ks.Model):
     }
     self._use_nms = use_nms
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
+
+    print("detget", self._scale_xy)
+
     self._generator = {}
     self._len_mask = {}
     for key in self._keys:
@@ -132,11 +135,6 @@ class YoloLayer(ks.Model):
     boxes = tf.concat(boxes, axis=1)
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
-
-    # object_scores, boxes, class_scores = nms_ops.sort_drop(object_scores , boxes, class_scores, self._max_boxes)
-
-    # mask = tf.fill(tf.shape(object_scores), tf.cast(self._thresh, dtype=object_scores.dtype))
-    # mask = tf.math.ceil(tf.nn.relu(object_scores - mask))
 
     boxes, class_scores, object_scores = nms_ops.nms(
         boxes,
