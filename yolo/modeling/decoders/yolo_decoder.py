@@ -119,7 +119,7 @@ class YoloFPN(tf.keras.layers.Layer):
       else:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=depth,
-            repetitions=self._fpn_path_len + 2 + 1 ,
+            repetitions=self._fpn_path_len + 1 ,
             insert_spp=True,
             block_invert=False, 
             **self._base_config)
@@ -133,7 +133,6 @@ class YoloFPN(tf.keras.layers.Layer):
       if level > self._min_level:
         x_next = inputs[str(level - 1)]
         _, layer_in = self.resamples[str(level - 1)]([x_next, x])
-      tf.print(tf.shape(x))
     return outputs
 
 
@@ -260,7 +259,7 @@ class YoloPAN(tf.keras.layers.Layer):
       if level == self._input:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
-            repetitions=self._max_level_process_len + 2 * int(self._embed_spp),
+            repetitions=self._max_level_process_len,
             insert_spp=self._embed_spp,
             block_invert=False, 
             insert_sam=self._embed_sam,
@@ -294,7 +293,6 @@ class YoloPAN(tf.keras.layers.Layer):
     layer_in = inputs[str(self._input)]
 
     for level in self._iterator:
-      print("key", level)
       x_route, x = self.preprocessors[str(level)](layer_in)
       outputs[str(level)] = x
       if self._check(level):

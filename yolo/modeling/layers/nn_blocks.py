@@ -695,6 +695,7 @@ class CSPConnect(tf.keras.layers.Layer):
                filters,
                filter_scale=2,
                subdivisions=1,
+               drop_final= False,
                activation='mish',
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
@@ -723,6 +724,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._subdivisions = subdivisions
+    self._drop_final = drop_final
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -743,16 +745,22 @@ class CSPConnect(tf.keras.layers.Layer):
         strides=(1, 1),
         **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
-    self._conv2 = ConvBN(
-        filters=self._filters,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        **_dark_conv_args)
+
+    if not self._drop_final:
+      self._conv2 = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          **_dark_conv_args)
+    else:
+      self._conv2 = Identity()
 
   def call(self, inputs):
     x_prev, x_csp = inputs
     x = self._conv1(x_prev)
     x = self._concat([x, x_csp])
+
+    # skipped if drop final is true
     x = self._conv2(x)
     return x
 
@@ -1330,11 +1338,11 @@ class DarkRouteProcess(tf.keras.layers.Layer):
   def __init__(
       self,
       filters=2,
-      mod=1,
       repetitions=2,
       insert_spp=False,
       insert_sam=False, 
       insert_cbam=False, 
+      convert_csp = False, 
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1344,7 +1352,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       norm_momentum=0.99,
       norm_epsilon=0.001,
       block_invert = False, 
-      convert_csp = False, 
       activation='leaky',
       leaky_alpha=0.1,
       spp_keys=None,
@@ -1387,8 +1394,9 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       None
     """
 
+    super().__init__(**kwargs)
     # darkconv params
-    self._filters = filters // mod
+    self._filters = filters
     self._use_sync_bn = use_sync_bn
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
@@ -1404,6 +1412,9 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
+    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
+    repetitions += (2 * int(insert_spp)) 
+
     if repetitions == 1:
       block_invert = True
 
@@ -1417,76 +1428,72 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       self._conv1_filters = lambda x: x // 2
       self._conv2_filters = lambda x: x 
     
-
     if block_invert:
       self._conv1_kernel = (3,3)
       self._conv2_kernel = (1,1)
     else:
       self._conv1_kernel = (1,1)
       self._conv2_kernel = (3,3)
-
-    # layer configs
-    if repetitions % 2 == 1:
-      self._append_conv = True
-    else:
-      self._append_conv = False
-    self._repetitions = repetitions // 2
-    self._insert_spp = insert_spp
-    self._insert_sam = insert_sam
-    self._insert_cbam = insert_cbam if insert_sam is False else False
-    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
-
-    self._lim = repetitions + int(self._insert_sam) + int(self._insert_cbam)
-    print(self._lim)
-    self.layer_list = self._get_layer_list()
-    super().__init__(**kwargs)
-
-  def _get_layer_list(self):
-    layer_config = []
-    if self._repetitions > 0:
-      layers = ['block'] * self._repetitions
-      if self._repetitions > 2 and self._insert_spp:
-        layers[1] = 'spp'
-      layer_config.extend(layers)
-    if self._append_conv:
-      layer_config.append('mono_conv')
     
-    if self._insert_sam:
-      layer_config.insert(-1, 'sam')
-    if self._insert_cbam:
-      layer_config.insert(-1, 'cbam')
-    return layer_config
+    # insert SPP will always add to the total nuber of layer, never replace
+    self._repetitions = repetitions
+    self.layer_list = []
+    self.outputs = []
+    for i in range(self._repetitions):
+      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"]* (i % 2)
+      self.layer_list.extend(layers)  
+      self.outputs = [False] + self.outputs
+    if insert_spp:
+      self.layer_list = self._insert_spp(self.layer_list)
+    
+    if repetitions > 1:
+      self.outputs[-2] = True
 
-  def _block(self, filters, kwargs):
+    if insert_sam:
+      self.layer_list = self._insert_sam(self.layer_list, self.outputs)
+      self._repetitions += 1
+    self.outputs[-1] = True
+    print(self.outputs, self.layer_list)
 
-    print(self._conv1_filters(filters), self._conv2_filters(filters))
+  def _insert_spp(self, layer_list):
+    if len(layer_list) <= 3:
+      layer_list[1] = 'spp'
+    else:
+      layer_list[3] = 'spp'
+    return layer_list
+
+  def _insert_sam(self, layer_list, outputs):
+    if len(layer_list) >= 2 and layer_list[-2] != 'spp':
+      layer_list.insert(-2, 'sam')
+      outputs.insert(-1, True)
+    else:
+      layer_list.insert(-1, 'sam')
+      outputs.insert(-1, False)
+    return layer_list
+
+  def _conv1(self, filters, kwargs):
     x1 = ConvBN(
-        filters=self._conv1_filters(filters),
-        kernel_size=self._conv1_kernel,
-        strides=(1, 1),
-        padding='same',
-        use_bn=True,
-        **kwargs)
-    x2 = ConvBN(
+      filters=self._conv1_filters(filters),
+      kernel_size=self._conv1_kernel,
+      strides=(1, 1),
+      padding='same',
+      use_bn=True,
+      **kwargs)
+    return x1
+  
+  def _conv2(self, filters, kwargs):
+    x1 = ConvBN(
         filters=self._conv2_filters(filters),
         kernel_size=self._conv2_kernel,
         strides=(1, 1),
         padding='same',
         use_bn=True,
         **kwargs)
-    return [x1, x2]
+    return x1
 
   def _spp(self, filters, kwargs):
-    x1 = ConvBN(
-        filters=self._conv1_filters(filters),
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding='same',
-        use_bn=True,
-        **kwargs)
-    # repalce with spp
-    x2 = SPP(self._spp_keys)
-    return [x1, x2]
+    x1 = SPP(self._spp_keys)
+    return x1
 
   def _sam(self, filters, kwargs):
     x1 = SAM(
@@ -1494,16 +1501,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         use_pooling=False,
         use_bn=True,
         **kwargs)
-    return [x1]
-
-  def _cbam(self, filters, kwargs):
-    x1 = CBAM(
-        filters=-1,
-        use_pooling=False,
-        use_bn=True,
-        reduction_ratio = 0.5, 
-        **kwargs)
-    return [x1]
+    return x1
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -1527,34 +1525,28 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self.layers = []
     for layer in self.layer_list:
       print(layer)
-      if layer == 'block':
-        self.layers.extend(self._block(self._filters, _dark_conv_args))
+      if layer == 'conv1':
+        self.layers.append(self._conv1(self._filters, _dark_conv_args))
+      elif layer == 'conv2':
+        self.layers.append(self._conv2(self._filters, _dark_conv_args))
       elif layer == 'spp':
-        self.layers.extend(self._spp(self._filters, _dark_conv_args))
+        self.layers.append(self._spp(self._filters, _dark_conv_args))
       elif layer == 'sam':
-        self.layers.extend(self._sam(-1, _args))
-      elif layer == 'cbam':
-        self.layers.extend(self._cbam(-1, _args))
-      elif layer == 'mono_conv':
-        print(self._conv1_filters(self._filters))
-        self.layers.append(
-            ConvBN(
-                filters=self._conv1_filters(self._filters),
-                kernel_size=self._conv1_kernel,
-                strides=(1, 1),
-                padding='same',
-                use_bn=True,
-                **_dark_conv_args))
+        self.layers.append(self._sam(-1, _args))
+
+    self._lim = len(self.layers)
+    print(self._lim)
     super().build(input_shape)
 
   def call(self, inputs):
     # check efficiency
     x = inputs
     x_prev = x
-    i = 0
-    while i < self._lim:
-      layer = self.layers[i]
-      x_prev = x
+    output_prev = True
+
+    for layer, output, name in zip(self.layers, self.outputs, self.layer_list):
+      if output_prev:
+        x_prev = x
       x = layer(x)
-      i += 1
+      output_prev = output
     return x_prev, x
