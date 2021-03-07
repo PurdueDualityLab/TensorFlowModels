@@ -5,7 +5,7 @@ from yolo.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
 
-TPU_BASE = False
+TPU_BASE = True
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
@@ -697,6 +697,7 @@ class CSPConnect(tf.keras.layers.Layer):
                subdivisions=1,
                drop_final= False,
                activation='mish',
+               kernel_size = (1, 1),
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -715,6 +716,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._activation = activation
 
     # convoultion params
+    self._kernel_size = kernel_size
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
@@ -741,7 +743,7 @@ class CSPConnect(tf.keras.layers.Layer):
     }
     self._conv1 = ConvBN(
         filters=self._filters // self._filter_scale,
-        kernel_size=(1, 1),
+        kernel_size=self._kernel_size,
         strides=(1, 1),
         **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
@@ -886,6 +888,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
   def __init__(
       self,
       filters=1,
+      convolve_concat=False, 
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
       bias_regularizer=None,
@@ -951,6 +954,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._upsample = upsample
     self._upsample_size = upsample_size
     self._subdivisions = subdivisions
+    self._convolve_concat = convolve_concat
   
     #block params 
     self._inverted = inverted
@@ -967,6 +971,14 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           **kwargs)
     else:
       self._conv = ConvBN(
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          **kwargs)
+    
+    if self._convolve_concat:
+      self._conv_concat = ConvBN(
           filters=self._filters,
           kernel_size=(1, 1),
           strides=(1, 1),
@@ -1034,6 +1046,10 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     if self._upsample:
       x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
     x = self._concat([x_prev, inputToConcat])
+
+    # used in csp conversion
+    if self._convolve_concat:
+      x = self._conv_concat(x)
     return x_prev, x
 
   def _call_reversed(self, inputs):
@@ -1342,7 +1358,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       insert_spp=False,
       insert_sam=False, 
       insert_cbam=False, 
-      convert_csp = False, 
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1412,16 +1427,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
+
     self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
     repetitions += (2 * int(insert_spp)) 
 
     if repetitions == 1:
       block_invert = True
 
-    if convert_csp:
-      self._conv1_filters = lambda x: x // 2
-      self._conv2_filters = lambda x: x // 2
-    elif block_invert:
+    if block_invert:
       self._conv1_filters = lambda x: x
       self._conv2_filters = lambda x: x // 2
     else:
@@ -1453,7 +1466,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       self.layer_list = self._insert_sam(self.layer_list, self.outputs)
       self._repetitions += 1
     self.outputs[-1] = True
-    print(self.outputs, self.layer_list)
 
   def _insert_spp(self, layer_list):
     if len(layer_list) <= 3:

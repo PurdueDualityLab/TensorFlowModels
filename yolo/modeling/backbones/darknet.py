@@ -275,6 +275,7 @@ class Darknet(ks.Model):
       input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
       min_level=None,
       max_level=5,
+      csp_level_mod = [], 
       activation=None,
       use_sync_bn=False,
       norm_momentum=0.99,
@@ -297,6 +298,7 @@ class Darknet(ks.Model):
     self._min_size = min_level
     self._max_size = max_level
     self._output_specs = None
+    self._csp_level_mod = set(csp_level_mod)
 
     self._kernel_initializer = kernel_initializer
     self._bias_regularizer = bias_regularizer
@@ -341,6 +343,8 @@ class Darknet(ks.Model):
     endpoints = collections.OrderedDict()
     stack_outputs = [inputs]
     for i, config in enumerate(net):
+      if config.output_name in self._csp_level_mod:
+        config.stack = 'residual'
       if config.stack is None:
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")

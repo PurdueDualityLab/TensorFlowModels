@@ -26,6 +26,7 @@ class YoloFPN(tf.keras.layers.Layer):
   def __init__(self,
                fpn_path_len=4,
                embed_sam = False, 
+               convert_csp = False, 
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -62,6 +63,7 @@ class YoloFPN(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._subdivisions = subdivisions
     self._embed_sam = embed_sam
+    self._convert_csp = convert_csp
 
     self._base_config = dict(
         activation=self._activation,
@@ -145,6 +147,7 @@ class YoloPAN(tf.keras.layers.Layer):
                max_level_process_len=None,
                embed_spp=False,
                embed_sam = False, 
+               convert_csp = False, 
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -191,6 +194,7 @@ class YoloPAN(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
     self._fpn_input = fpn_input
     self._max_level_process_len = max_level_process_len
+    self._convert_csp = convert_csp
 
     if self._fpn_input:
       if max_level_process_len is None:
@@ -309,6 +313,8 @@ class YoloDecoder(tf.keras.Model):
   def __init__(self,
                input_specs,
                embed_fpn=False,
+               embed_sam=False, 
+               convert_csp=False, 
                fpn_path_len=4,
                path_process_len=6,
                max_level_process_len=None,
@@ -364,7 +370,8 @@ class YoloDecoder(tf.keras.Model):
     self._subdivisions = subdivisions
 
     self._base_config = dict(
-        embed_sam = True, 
+        embed_sam = embed_sam, 
+        convert_csp = convert_csp, 
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
         norm_momentum=self._norm_momentum,
