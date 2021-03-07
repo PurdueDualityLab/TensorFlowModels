@@ -19,6 +19,7 @@ class YoloLayer(ks.Model):
                iou_thresh=0.0,
                ignore_thresh=0.7,
                nms_thresh=0.6,
+               max_delta=10.0,
                loss_type='ciou',
                use_tie_breaker=True,
                iou_normalizer=1.0,
@@ -39,6 +40,7 @@ class YoloLayer(ks.Model):
     self._obj_normalizer = obj_normalizer
     self._nms_thresh = 1 - nms_thresh
     self._max_boxes = max_boxes
+    self._max_delta = max_delta
     self._classes = classes
     self._loss_type = loss_type
     self._use_tie_breaker = use_tie_breaker
@@ -165,6 +167,7 @@ class YoloLayer(ks.Model):
           obj_normalizer=self._obj_normalizer,
           path_key=key,
           mask=self._masks[key],
+          max_delta=self._max_delta,
           scale_anchors=self._path_scale[key],
           scale_x_y=self._scale_xy[key],
           use_tie_breaker=self._use_tie_breaker)

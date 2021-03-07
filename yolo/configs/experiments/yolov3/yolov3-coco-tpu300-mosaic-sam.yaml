@@ -9,8 +9,8 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v4
-        type: regular
+        version: v3
+        type: spp
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
@@ -20,12 +20,13 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
+    use_sam: true
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
@@ -50,8 +51,8 @@ task:
       letter_box: false
       cutmix: false
       mosaic: true
-      mosaic_frequency: 0.5
       keep_thresh: 0.25
+      mosaic_frequency: 0.5
       use_tie_breaker: true
   validation_data:
     global_batch_size: 64
@@ -66,14 +67,14 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/csdarknet53-golden'
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 200000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
   steps_per_loop: 10000
   validation_interval: 10000 #00
@@ -83,9 +84,9 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [160000, 180000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
@@ -96,8 +97,8 @@ trainer:
       linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
 # trainer:
-#   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
-#   validation_steps: 78
+#   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+#   validation_steps: 625
 #   steps_per_loop: 10000
 #   validation_interval: 10000 #00
 #   summary_interval: 10000
@@ -106,8 +107,7 @@ trainer:
 #     learning_rate:
 #       type: stepwise
 #       stepwise:
-#         #boundaries: [300000, 337500]
-#         boundaries: [400000, 450000]
+#         boundaries: [300000, 337500]
 #         name: PiecewiseConstantDecay
 #         values: [0.00261, 0.000261, 0.0000261]
 #     optimizer:
@@ -118,5 +118,5 @@ trainer:
 #     warmup:
 #       type: 'linear'
 #       linear:
-#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
+#         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps 
+

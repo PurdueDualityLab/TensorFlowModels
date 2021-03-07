@@ -225,6 +225,7 @@ class YoloLossLayer(hyperparams.Config):
   iou_normalizer: float = 0.75
   cls_normalizer: float = 1.0
   obj_normalizer: float = 1.0
+  max_delta: float = 10.0
   scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'5': 1.05, '4': 1.1, '3': 1.2})
   # path scales:
 
@@ -248,6 +249,7 @@ class Yolo(ModelConfig):
   base: Union[str, YoloBase] = YoloBase()
   dilate: bool = False
   subdivisions: int = 1
+  use_sam: bool = False
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',

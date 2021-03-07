@@ -24,6 +24,7 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
+    use_sam: true
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
@@ -39,6 +40,7 @@ task:
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
+      max_delta: 10.0
   train_data:
     global_batch_size: 64
     dtype: float16
