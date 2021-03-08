@@ -209,37 +209,56 @@ class HourglassBlock(tf.keras.layers.Layer):
         'size and residual block repetition lists must have the same length'
 
     self._filters = channel_dims_per_stage[0]
+    if self._order > 0:
+      self._filters_downsampled = channel_dims_per_stage[1]
     self._reps = blocks_per_stage[0]
 
-    super().__init__()
+    super().__init__(**kwargs)
+  
+  def make_repeated_residual_blocks(self, reps, out_channels,
+                                    residual_channels=None,
+                                    initial_stride=1, initial_skip=False):
+    blocks = []
+
+    if residual_channels is None:
+      residual_channels = out_channels
+    
+    for i in range(reps - 1):
+      stride = initial_stride if i == 0 else 1
+      skip_conv = stride > 1
+
+      blocks.append(official_nn_blocks.ResidualBlock(
+              filters=residual_channels, strides=stride, 
+              use_projection=skip_conv))
+    
+    if reps == 1:
+      stride = initial_stride
+      skip_conv = stride > 1
+    else:
+      stride = 1
+      skip_conv = residual_channels != out_channels
+
+    blocks.append(official_nn_blocks.ResidualBlock(
+          filters=out_channels, strides=stride, 
+          use_projection=skip_conv))
+    
+    return tf.keras.Sequential(blocks)
 
   def build(self, input_shape):
-    if self._order == 1:
+    if self._order == 0:
       # base case, residual block repetitions in most inner part of hourglass
-      blocks = [
-          official_nn_blocks.ResidualBlock(
-              filters=self._filters, strides=self._strides, use_projection=True)
-          for _ in range(self._reps)
-      ]
-      self.blocks = tf.keras.Sequential(blocks)
+      self.blocks = self.make_repeated_residual_blocks(reps=self._reps, 
+        out_channels=self._filters)
 
     else:
       # outer hourglass structures
-      main_block = [
-          official_nn_blocks.ResidualBlock(
-              filters=self._filters, strides=self._strides, use_projection=True)
-          for _ in range(self._reps)
-      ]
-      self.main_block = tf.keras.Sequential(main_block, name='Main_Block')
+      self.encoder_block1 = self.make_repeated_residual_blocks(reps=self._reps, 
+        out_channels=self._filters)
 
-      side_block = [
-          official_nn_blocks.ResidualBlock(
-              filters=self._filters, strides=self._strides, use_projection=True)
-          for _ in range(self._reps)
-      ]
-      self.side_block = tf.keras.Sequential(side_block, name='Side_Block')
+      self.encoder_block2 = self.make_repeated_residual_blocks(reps=self._reps, 
+        out_channels=self._filters_downsampled, initial_stride=2, initial_skip=self._filters != self._filters_downsampled)
 
-      self.pool = tf.keras.layers.MaxPool2D(pool_size=2)
+      # self.pool = tf.keras.layers.MaxPool2D(pool_size=2)
 
       # recursively define inner hourglasses
       self.inner_hg = type(self)(
@@ -248,12 +267,8 @@ class HourglassBlock(tf.keras.layers.Layer):
           strides=self._strides)
 
       # outer hourglass structures
-      end_block = [
-          official_nn_blocks.ResidualBlock(
-              filters=self._filters, strides=self._strides, use_projection=True)
-          for _ in range(self._reps)
-      ]
-      self.end_block = tf.keras.Sequential(end_block, name='End_Block')
+      self.decoder_block = self.make_repeated_residual_blocks(reps=self._reps, 
+        residual_channels=self._filters_downsampled, out_channels=self._filters)
 
       self.upsample_layer = tf.keras.layers.UpSampling2D(
           size=2, interpolation='nearest')
@@ -261,15 +276,21 @@ class HourglassBlock(tf.keras.layers.Layer):
     super().build(input_shape)
 
   def call(self, x):
-    if self._order == 1:
+    if self._order == 0:
       return self.blocks(x)
     else:
-      x_pre_pooled = self.main_block(x)
-      x_side = self.side_block(x_pre_pooled)
-      x_pooled = self.pool(x_pre_pooled)
-      inner_output = self.inner_hg(x_pooled)
-      hg_output = self.end_block(inner_output)
-      return self.upsample_layer(hg_output) + x_side
+      encoded_outputs = self.encoder_block1(x)
+      encoded_downsampled_outputs = self.encoder_block2(x)
+      inner_outputs = self.inner_hg(encoded_downsampled_outputs)
+      hg_output = self.decoder_block(inner_outputs)
+      return self.upsample_layer(hg_output) + encoded_outputs
+
+      # x_pre_pooled = self.encoder_block1(x)
+      # x_side = self.encoder_block2(x_pre_xpooled)
+      # x_pooled = self.pool(x_pre_pooled)
+      # inner_output = self.inner_hg(x_pooled)
+      # hg_output = self.decoder_block(inner_output)
+      # return self.upsample_layer(hg_output) + x_side
 
   def get_config(self):
     layer_config = {

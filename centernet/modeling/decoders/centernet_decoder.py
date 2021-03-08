@@ -10,6 +10,7 @@ class CenterNetDecoder(tf.keras.Model):
   def __init__(self,
                task_outputs: dict,
                heatmap_bias: float = -2.19,
+               num_inputs: int = 2,
                **kwargs):
     """
     Args:
@@ -23,30 +24,30 @@ class CenterNetDecoder(tf.keras.Model):
       dictionary where the keys-value pairs denote the names of the output
       and the respective output tensor
     """
+    super().__init__(**kwargs)
 
     self._task_outputs = task_outputs
     self._heatmap_bias = heatmap_bias
+    self._num_inputs = num_inputs
 
-    super().__init__(**kwargs)
+    self.outputs_layers = {}
 
-  def build(self, input_shape):
-    self.out_layers = {}
+  def build(self, inputs):
     for key in self._task_outputs:
       num_filters = self._task_outputs[key]
       bias = 0
       if 'heatmaps' in key:
         bias = self._heatmap_bias
 
-      self.out_layers[key] = CenterNetDecoderConv(output_filters=num_filters,
-        name=key, bias_init=bias)
+      self.outputs_layers[key] = [CenterNetDecoderConv(output_filters=num_filters,
+        name=key, bias_init=bias) for _ in range(self._num_inputs)] 
 
-    super().build(input_shape)
-
-  def call(self, x):
+  def call(self, inputs):
     outputs = {}
-    for key in self.out_layers:
-      outputs[key] = self.out_layers[key](x)
 
+    for key in self._task_outputs:
+      outputs[key] = [self.outputs_layers[key][i](inputs[i]) for i in range(self._num_inputs)]
+    
     return outputs
 
   def get_config(self):
@@ -58,12 +59,18 @@ class CenterNetDecoder(tf.keras.Model):
     #layer_config.update(super().get_config())
     return layer_config
 
-def build_centernet_decoder(task_config: cfg.CenterNetTask) -> tf.keras.Model:
+def build_centernet_decoder(input_specs, task_config, num_inputs):
+  # NOTE: For now just support the default config
+  
+  # model specific 
+  heatmap_bias = task_config.model.base.decoder.heatmap_bias
+  
+  # task specific
   task_outputs = task_config._get_output_length_dict()
-  heatmap_bias = task_config.model.decoder.heatmap_bias
-
-  print(task_outputs)
-
-  return CenterNetDecoder(
+  model = CenterNetDecoder(
       task_outputs=task_outputs,
-      heatmap_bias=heatmap_bias)
+      heatmap_bias=heatmap_bias,
+      num_inputs=num_inputs)
+  
+  model.build(input_specs)
+  return model
