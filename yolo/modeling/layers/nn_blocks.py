@@ -164,8 +164,6 @@ class ConvBN(tf.keras.layers.Layer):
             momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
-    else:
-      self.bn = Identity()
 
     if self._activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
@@ -179,7 +177,8 @@ class ConvBN(tf.keras.layers.Layer):
     if not TPU_BASE:
       x = tf.pad(x, self._paddings, mode='CONSTANT', constant_values=0)
     x = self.conv(x)
-    x = self.bn(x)
+    if self._use_bn:
+      x = self.bn(x)
     x = self._activation_fn(x)
     return x
 
@@ -312,8 +311,6 @@ class DarkResidual(tf.keras.layers.Layer):
           dilation_rate=dilation_rate,
           padding='same',
           **_dark_conv_args)
-    else:
-      self._dconv = Identity()
 
     self._conv1 = ConvBN(
         filters=self._filters // self._filter_scale,
@@ -343,10 +340,11 @@ class DarkResidual(tf.keras.layers.Layer):
     super().build(input_shape)
 
   def call(self, inputs):
-    shortcut = self._dconv(inputs)
-    x = self._conv1(shortcut)
+    if self._downsample:
+      inputs = self._dconv(inputs)
+    x = self._conv1(inputs)
     x = self._conv2(x)
-    x = self._shortcut([x, shortcut])
+    x = self._shortcut([x, inputs])
     return self._activation_fn(x)
 
   def get_config(self):
@@ -634,8 +632,6 @@ class CSPRoute(tf.keras.layers.Layer):
           strides=down_stride,
           dilation_rate=dilation_rate,
           **_dark_conv_args)
-    else:
-      self._conv1 = Identity()
 
     self._conv2 = ConvBN(
         filters=self._filters // self._filter_scale,
@@ -650,9 +646,10 @@ class CSPRoute(tf.keras.layers.Layer):
         **_dark_conv_args)
 
   def call(self, inputs):
-    x = self._conv1(inputs)
-    y = self._conv2(x)
-    x = self._conv3(x)
+    if self._downsample:
+      inputs = self._conv1(inputs)
+    y = self._conv2(inputs)
+    x = self._conv3(inputs)
     return (x, y)
 
 
@@ -695,7 +692,8 @@ class CSPConnect(tf.keras.layers.Layer):
                filters,
                filter_scale=2,
                subdivisions=1,
-               drop_final= False,
+               drop_final = False,
+               drop_first = False,
                activation='mish',
                kernel_size = (1, 1),
                kernel_initializer='glorot_uniform',
@@ -727,6 +725,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._norm_epsilon = norm_epsilon
     self._subdivisions = subdivisions
     self._drop_final = drop_final
+    self._drop_first = drop_first
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -741,11 +740,12 @@ class CSPConnect(tf.keras.layers.Layer):
         'kernel_regularizer': self._kernel_regularizer,
         'subdivisions': self._subdivisions,
     }
-    self._conv1 = ConvBN(
-        filters=self._filters // self._filter_scale,
-        kernel_size=self._kernel_size,
-        strides=(1, 1),
-        **_dark_conv_args)
+    if not self._drop_first:
+      self._conv1 = ConvBN(
+          filters=self._filters // self._filter_scale,
+          kernel_size=self._kernel_size,
+          strides=(1, 1),
+          **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
 
     if not self._drop_final:
@@ -754,16 +754,17 @@ class CSPConnect(tf.keras.layers.Layer):
           kernel_size=(1, 1),
           strides=(1, 1),
           **_dark_conv_args)
-    else:
-      self._conv2 = Identity()
+
 
   def call(self, inputs):
     x_prev, x_csp = inputs
-    x = self._conv1(x_prev)
-    x = self._concat([x, x_csp])
+    if not self._drop_first:
+      x_prev = self._conv1(x_prev)
+    x = self._concat([x_prev, x_csp])
 
-    # skipped if drop final is true
-    x = self._conv2(x)
+    # skipped if drop final is true\
+    if not self._drop_final:
+      x = self._conv2(x)
     return x
 
 
