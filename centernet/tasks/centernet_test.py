@@ -21,9 +21,9 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
     outputs = model(tf.zeros((3, 512, 512, 3)))
 
     self.assertEqual(len(outputs['raw_output']), 3)
-    self.assertEqual(outputs['raw_output']['ct_heatmaps'].shape, (3, 128, 128, 80))
-    self.assertEqual(outputs['raw_output']['ct_offset'].shape, (3, 128, 128, 2))
-    self.assertEqual(outputs['raw_output']['ct_size'].shape, (3, 128, 128, 2))
+    self.assertEqual(outputs['raw_output']['ct_heatmaps'][0].shape, (3, 128, 128, 90))
+    self.assertEqual(outputs['raw_output']['ct_offset'][0].shape, (3, 128, 128, 2))
+    self.assertEqual(outputs['raw_output']['ct_size'][0].shape, (3, 128, 128, 2))
 
     model.summary()    
 
