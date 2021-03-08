@@ -582,6 +582,7 @@ class CSPRoute(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                downsample=True,
+               leaky_alpha = 0.1, 
                **kwargs):
 
     super().__init__(**kwargs)
@@ -602,6 +603,7 @@ class CSPRoute(tf.keras.layers.Layer):
     self._norm_epsilon = norm_epsilon
     self._downsample = downsample
     self._subdivisions = subdivisions
+    self._leaky_alpha = leaky_alpha
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -615,6 +617,7 @@ class CSPRoute(tf.keras.layers.Layer):
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
         'subdivisions': self._subdivisions,
+        'leaky_alpha': self._leaky_alpha,
     }
     if self._downsample:
       if self._dilation_rate > 1:
@@ -705,6 +708,7 @@ class CSPConnect(tf.keras.layers.Layer):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
+               leaky_alpha = 0.1, 
                **kwargs):
 
     super().__init__(**kwargs)
@@ -726,6 +730,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
     self._drop_final = drop_final
     self._drop_first = drop_first
+    self._leaky_alpha = leaky_alpha
 
   def build(self, input_shape):
     _dark_conv_args = {
@@ -739,6 +744,7 @@ class CSPConnect(tf.keras.layers.Layer):
         'activation': self._activation,
         'kernel_regularizer': self._kernel_regularizer,
         'subdivisions': self._subdivisions,
+        'leaky_alpha': self._leaky_alpha, 
     }
     if not self._drop_first:
       self._conv1 = ConvBN(
@@ -1509,6 +1515,9 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         use_bn=True,
         **kwargs)
     return x1
+
+  # def _csp_route(self, filters, kwargs):
+
 
   def _spp(self, filters, kwargs):
     x1 = SPP(self._spp_keys)
