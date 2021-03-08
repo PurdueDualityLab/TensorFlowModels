@@ -35,7 +35,7 @@ class YoloFPN(tf.keras.layers.Layer):
   def __init__(self,
                fpn_path_len=4,
                embed_sam = False, 
-               convert_csp = False, 
+               csp_stack = False, 
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -72,7 +72,7 @@ class YoloFPN(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._subdivisions = subdivisions
     self._embed_sam = embed_sam
-    self._convert_csp = convert_csp
+    self._csp_stack = csp_stack
 
     self._base_config = dict(
         activation=self._activation,
@@ -135,6 +135,7 @@ class YoloFPN(tf.keras.layers.Layer):
             repetitions=self._fpn_path_len - int(level == self._min_level),
             block_invert=True,
             insert_spp=False,
+            csp_stack = self._csp_stack, 
             **self._base_config)
       else:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
@@ -142,6 +143,7 @@ class YoloFPN(tf.keras.layers.Layer):
             repetitions=self._fpn_path_len + 1 ,
             insert_spp=True,
             block_invert=False, 
+            csp_stack = self._csp_stack, 
             **self._base_config)
 
   def call(self, inputs):
@@ -165,7 +167,7 @@ class YoloPAN(tf.keras.layers.Layer):
                max_level_process_len=None,
                embed_spp=False,
                embed_sam = False, 
-               convert_csp = False, 
+               csp_stack = False, 
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -212,7 +214,7 @@ class YoloPAN(tf.keras.layers.Layer):
     self._subdivisions = subdivisions
     self._fpn_input = fpn_input
     self._max_level_process_len = max_level_process_len
-    self._convert_csp = convert_csp
+    self._csp_stack = csp_stack
 
     if max_level_process_len is None:
       self._max_level_process_len = path_process_len
@@ -281,6 +283,7 @@ class YoloPAN(tf.keras.layers.Layer):
             insert_spp=self._embed_spp,
             block_invert=False, 
             insert_sam=self._embed_sam,
+            csp_stack = self._csp_stack, 
             **self._base_config)
       else:
         self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
@@ -294,6 +297,7 @@ class YoloPAN(tf.keras.layers.Layer):
             repetitions=self._path_process_len,
             insert_spp=False,
             insert_sam=self._embed_sam,
+            csp_stack = self._csp_stack, 
             **self._base_config)
 
   def get_raw_depths(self, minimum_depth):
@@ -328,7 +332,7 @@ class YoloDecoder(tf.keras.Model):
                input_specs,
                embed_fpn=False,
                embed_sam=False, 
-               convert_csp=False, 
+               csp_stack=False, 
                fpn_path_len=4,
                path_process_len=6,
                max_level_process_len=None,
@@ -385,7 +389,7 @@ class YoloDecoder(tf.keras.Model):
 
     self._base_config = dict(
         embed_sam = embed_sam, 
-        convert_csp = convert_csp, 
+        csp_stack = csp_stack, 
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
         norm_momentum=self._norm_momentum,

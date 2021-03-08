@@ -1361,6 +1361,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       insert_spp=False,
       insert_sam=False, 
       insert_cbam=False, 
+      csp_stack =0, 
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1433,7 +1434,10 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
     self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
     repetitions += (2 * int(insert_spp)) 
+    if csp_stack > 0:
+      csp_stack += (2 * int(insert_spp)) 
 
+    self._csp_stack = csp_stack
     if repetitions == 1:
       block_invert = True
 
