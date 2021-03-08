@@ -24,7 +24,8 @@ def obj_gradient_trap(y):
 def box_gradient_trap(y, max_delta = np.inf):
   def trap(dy):
     dy = math_ops.rm_nan_inf(dy)
-    dy = tf.clip_by_value(dy, -max_delta, max_delta)
+    delta = tf.cast(max_delta, dy.dtype)
+    dy = tf.clip_by_value(dy, -delta, delta)
     return dy, 0.0
   return y, trap
 
