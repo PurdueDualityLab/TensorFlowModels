@@ -9,7 +9,7 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'altered_cspdarknet53'
       decoder:
         version: v4
         type: regular

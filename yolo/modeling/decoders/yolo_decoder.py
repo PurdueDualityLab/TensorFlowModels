@@ -123,12 +123,6 @@ class YoloFPN(tf.keras.layers.Layer):
             drop_final=True, 
             upsample_size=2, **self._base_config)
         self.preprocessors[str(level)] = Identity_dup()
-        # nn_blocks.DarkRouteProcess(
-        #     filters=depth,
-        #     repetitions=self._fpn_path_len - int(level == self._min_level),
-        #     block_invert=True,
-        #     insert_spp=False,
-        #     **self._base_config)
       elif level != self._max_level:
         self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
             filters=depth // 2, 
@@ -220,10 +214,6 @@ class YoloPAN(tf.keras.layers.Layer):
     self._max_level_process_len = max_level_process_len
     self._convert_csp = convert_csp
 
-    # if self._fpn_input:
-    #   if max_level_process_len is None:
-    #     self._max_level_process_len = 6 #2
-    # else:
     if max_level_process_len is None:
       self._max_level_process_len = path_process_len
 
