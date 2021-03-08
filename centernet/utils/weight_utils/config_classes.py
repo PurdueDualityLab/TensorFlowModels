@@ -11,6 +11,12 @@ class Config(ABC):
     def load_weights(self, layer):
       weights = self.get_weights() 
       layer.set_weights(weights)
+      n_weights = 0
+
+      for w in weights:
+        n_weights += w.size
+      return n_weights
+
 
 @dataclass
 class convBnCFG(Config):
@@ -123,18 +129,26 @@ class hourglassCFG(Config):
   def generate_block_weights(self, weights_dict):
     reps = len(weights_dict.keys())
     weights = []
+    n_weights = 0
 
     for i in range(reps):
       res_config = residualBlockCFG(weights_dict=weights_dict[str(i)])
-      weights += res_config.get_weights()
+      res_weights = res_config.get_weights()
+      weights += res_weights
+
+      for w in res_weights:
+        n_weights += w.size
     
-    return weights
+    return weights, n_weights
     
   def load_block_weights(self, layer, weight_dict):
-    block_weights = self.generate_block_weights(weight_dict)
+    block_weights, n_weights = self.generate_block_weights(weight_dict)
     layer.set_weights(block_weights)
+    return n_weights
 
   def load_weights(self, layer):
+    n_weights = 0
+
     if not self.is_last_stage:
       enc_dec_layers = [layer.submodules[0], 
                 layer.submodules[1], 
@@ -145,7 +159,7 @@ class hourglassCFG(Config):
       
 
       for l, weights_dict in zip(enc_dec_layers, enc_dec_weight_dicts):
-        self.load_block_weights(l, weights_dict)
+        n_weights += self.load_block_weights(l, weights_dict)
 
       if len(self.weights_dict['inner_block']) == 1: # still in an outer hourglass
         inner_weights_dict = self.weights_dict['inner_block']['0']
@@ -154,11 +168,13 @@ class hourglassCFG(Config):
 
       inner_hg_layer = layer.submodules[2]
       inner_hg_cfg = type(self)(weights_dict=inner_weights_dict)
-      inner_hg_cfg.load_weights(inner_hg_layer)
+      n_weights += inner_hg_cfg.load_weights(inner_hg_layer)
     
     else:
       inner_layer = layer.submodules[0]
-      self.load_block_weights(inner_layer, self.weights_dict)
+      n_weights += self.load_block_weights(inner_layer, self.weights_dict)
+    
+    return n_weights
   
 @dataclass
 class decoderConvCFG(Config):
