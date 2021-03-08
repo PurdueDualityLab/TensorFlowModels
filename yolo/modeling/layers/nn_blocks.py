@@ -1437,7 +1437,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
-
     self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
     repetitions += (2 * int(insert_spp)) 
     if csp_stack > 0:
@@ -1450,25 +1449,19 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     if block_invert:
       self._conv1_filters = lambda x: x
       self._conv2_filters = lambda x: x // 2
-    else:
-      self._conv1_filters = lambda x: x // 2
-      self._conv2_filters = lambda x: x 
-    
-    if block_invert:
       self._conv1_kernel = (3,3)
       self._conv2_kernel = (1,1)
     else:
+      self._conv1_filters = lambda x: x // 2
+      self._conv2_filters = lambda x: x 
       self._conv1_kernel = (1,1)
       self._conv2_kernel = (3,3)
+      
     
     # insert SPP will always add to the total nuber of layer, never replace
     self._repetitions = repetitions
-    self.layer_list = []
-    self.outputs = []
-    for i in range(self._repetitions):
-      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"]* (i % 2)
-      self.layer_list.extend(layers)  
-      self.outputs = [False] + self.outputs
+    self.layer_list, self.outputs = self._get_base_layers() 
+
     if insert_spp:
       self.layer_list = self._insert_spp(self.layer_list)
     
@@ -1479,6 +1472,15 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       self.layer_list = self._insert_sam(self.layer_list, self.outputs)
       self._repetitions += 1
     self.outputs[-1] = True
+
+  def _get_base_layers(self):
+    layer_list = []
+    outputs = []
+    for i in range(self._repetitions):
+      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"]* (i % 2)
+      layer_list.extend(layers)  
+      outputs = [False] + outputs
+    return layer_list, outputs
 
   def _insert_spp(self, layer_list):
     if len(layer_list) <= 3:
@@ -1516,8 +1518,13 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         **kwargs)
     return x1
 
-  # def _csp_route(self, filters, kwargs):
+  def _csp_route(self, filters, kwargs):
+    
+    return
 
+  def _csp_connect(self, filters, kwargs):
+
+    return
 
   def _spp(self, filters, kwargs):
     x1 = SPP(self._spp_keys)
