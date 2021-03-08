@@ -1367,7 +1367,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       insert_spp=False,
       insert_sam=False, 
       insert_cbam=False, 
-      csp_stack =0, 
+      csp_stack = 0, 
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1439,12 +1439,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
     self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
     repetitions += (2 * int(insert_spp)) 
-    if csp_stack > 0:
-      csp_stack += (2 * int(insert_spp)) 
-
-    self._csp_stack = csp_stack
     if repetitions == 1:
       block_invert = True
+
+    if csp_stack > 0:
+      csp_stack += (2 * int(insert_spp)) 
+      self._csp_filters = lambda x: x // 2
+
+    self._csp_stack = csp_stack
 
     if block_invert:
       self._conv1_filters = lambda x: x
@@ -1498,9 +1500,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       outputs.insert(-1, False)
     return layer_list
 
-  def _conv1(self, filters, kwargs):
+  def _conv1(self, filters, kwargs, csp = False):
+    if csp:
+      filters_ = self._csp_filters
+    else:
+      filters_ = self._conv1_filters
+
     x1 = ConvBN(
-      filters=self._conv1_filters(filters),
+      filters=filters_(filters),
       kernel_size=self._conv1_kernel,
       strides=(1, 1),
       padding='same',
@@ -1508,9 +1515,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       **kwargs)
     return x1
   
-  def _conv2(self, filters, kwargs):
+  def _conv2(self, filters, kwargs, csp = False):
+    if csp:
+      filters_ = self._csp_filters
+    else:
+      filters_ = self._conv2_filters
+
     x1 = ConvBN(
-        filters=self._conv2_filters(filters),
+        filters=filters_(filters),
         kernel_size=self._conv2_kernel,
         strides=(1, 1),
         padding='same',
@@ -1559,7 +1571,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
     self.layers = []
     for layer in self.layer_list:
-      print(layer)
+      print(layer, self._filters)
       if layer == 'conv1':
         self.layers.append(self._conv1(self._filters, _dark_conv_args))
       elif layer == 'conv2':
