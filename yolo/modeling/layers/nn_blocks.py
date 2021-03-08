@@ -888,7 +888,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
   def __init__(
       self,
       filters=1,
-      convolve_concat=False, 
+      drop_final=True, 
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
       bias_regularizer=None,
@@ -954,7 +954,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._upsample = upsample
     self._upsample_size = upsample_size
     self._subdivisions = subdivisions
-    self._convolve_concat = convolve_concat
+    self._drop_final = drop_final
   
     #block params 
     self._inverted = inverted
@@ -977,7 +977,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           padding='same',
           **kwargs)
     
-    if self._convolve_concat:
+    if not self._drop_final:
       self._conv_concat = ConvBN(
           filters=self._filters,
           kernel_size=(1, 1),
@@ -1009,12 +1009,13 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           padding='same',
           **kwargs)
 
-    self._conv_sync = ConvBN(
-          filters=self._filters,
-          kernel_size=(1, 1),
-          strides=(1, 1),
-          padding='same',
-          **kwargs)
+    if not self._drop_final:
+      self._conv_sync = ConvBN(
+            filters=self._filters,
+            kernel_size=(1, 1),
+            strides=(1, 1),
+            padding='same',
+            **kwargs)
     return 
 
   def build(self, input_shape):
@@ -1048,7 +1049,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     x = self._concat([x_prev, inputToConcat])
 
     # used in csp conversion
-    if self._convolve_concat:
+    if not self._drop_final:
       x = self._conv_concat(x)
     return x_prev, x
 
@@ -1059,7 +1060,8 @@ class PathAggregationBlock(tf.keras.layers.Layer):
       x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
     x_route = self._conv_route(x_route)
     x = self._concat([x_route, x_prev])
-    x = self._conv_sync(x)
+    if not self._drop_final:
+      x = self._conv_sync(x)
     return x_prev, x
 
   def call(self, inputs):

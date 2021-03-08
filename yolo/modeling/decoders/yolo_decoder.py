@@ -111,6 +111,7 @@ class YoloFPN(tf.keras.layers.Layer):
             filters=depth // 2, 
             inverted=True, 
             upsample=True,
+            drop_final=False, 
             upsample_size=2, **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=depth,
