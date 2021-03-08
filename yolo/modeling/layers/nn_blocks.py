@@ -1437,15 +1437,19 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
-    self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
+    
     repetitions += (2 * int(insert_spp)) 
     if repetitions == 1:
       block_invert = True
+    
+    self._repetitions = repetitions
+    self.layer_list, self.outputs = self._get_base_layers() 
 
     if csp_stack > 0:
       csp_stack += (2 * int(insert_spp)) 
       self._csp_filters = lambda x: x // 2
-
+      self._convert_csp(self.layer_list, self.outputs, csp_stack)
+    
     self._csp_stack = csp_stack
 
     if block_invert:
@@ -1461,10 +1465,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       
     
     # insert SPP will always add to the total nuber of layer, never replace
-    self._repetitions = repetitions
-    self.layer_list, self.outputs = self._get_base_layers() 
-
     if insert_spp:
+      self._spp_keys = spp_keys if spp_keys is not None else [5, 9, 13]
       self.layer_list = self._insert_spp(self.layer_list)
     
     if repetitions > 1:
@@ -1490,6 +1492,12 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     else:
       layer_list[3] = 'spp'
     return layer_list
+
+  def _convert_csp(self, layer_list, outputs, csp_stack_size):
+    layer_list[0] = 'csp_route'
+    layer_list.insert(csp_stack_size - 1, 'csp_connect')
+    outputs.insert(csp_stack_size - 1, False)
+    return layer_list, outputs
 
   def _insert_sam(self, layer_list, outputs):
     if len(layer_list) >= 2 and layer_list[-2] != 'spp':
@@ -1529,11 +1537,18 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def _csp_route(self, filters, kwargs):
-    
-    return
+    x1 = CSPRoute(
+        filters=filters_(filters),
+        filter_scale=2,
+        **kwargs)
+    return x1
 
   def _csp_connect(self, filters, kwargs):
-
+    x1 = CSPConnect(
+        filters=filters_(filters),
+        drop_final=True, 
+        drop_first=True,
+        **kwargs)
     return
 
   def _spp(self, filters, kwargs):
