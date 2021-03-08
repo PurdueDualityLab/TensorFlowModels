@@ -9,7 +9,7 @@ TPU_BASE = True
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
-
+  
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
 
