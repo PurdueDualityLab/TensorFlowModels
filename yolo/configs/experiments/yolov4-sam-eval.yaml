@@ -12,7 +12,7 @@ task:
           model_id: 'cspdarknet53'
       decoder:
         version: v4
-        type: regular
+        type: sam
       darknet_weights_file: 'cache://yolov4-sam-leaky.weights'
       darknet_weights_cfg: 'cache://yolov4-sam-leaky.cfg'
     num_classes: 80
