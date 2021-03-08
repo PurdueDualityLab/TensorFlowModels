@@ -131,6 +131,8 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
       embed_spp=False,
       embed_fpn=True,
       max_level_process_len=None,
+      csp_stack=5,
+      fpn_path_len=5, 
       path_process_len=6,
       activation=activation,
       subdivisions=subdivisions,

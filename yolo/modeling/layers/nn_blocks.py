@@ -1505,7 +1505,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       filters_ = self._csp_filters
     else:
       filters_ = self._conv1_filters
-
     x1 = ConvBN(
       filters=filters_(filters),
       kernel_size=self._conv1_kernel,
@@ -1520,7 +1519,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       filters_ = self._csp_filters
     else:
       filters_ = self._conv2_filters
-
     x1 = ConvBN(
         filters=filters_(filters),
         kernel_size=self._conv2_kernel,
