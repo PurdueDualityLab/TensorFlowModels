@@ -1581,14 +1581,20 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     }
 
     _dark_conv_args.update(_args)
-
+    csp = False
     self.layers = []
     for layer in self.layer_list:
       print(layer, self._filters)
-      if layer == 'conv1':
-        self.layers.append(self._conv1(self._filters, _dark_conv_args))
+      if layer == 'csp_route':
+        self.layers.append(self._csp_route(self._filters, _dark_conv_args))
+        csp = True
+      elif layer == 'csp_connect':
+        self.layers.append(self._csp_connect(self._filters, _dark_conv_args))
+        csp = False
+      elif layer == 'conv1':
+        self.layers.append(self._conv1(self._filters, _dark_conv_args, csp = csp))
       elif layer == 'conv2':
-        self.layers.append(self._conv2(self._filters, _dark_conv_args))
+        self.layers.append(self._conv2(self._filters, _dark_conv_args, csp = csp))
       elif layer == 'spp':
         self.layers.append(self._spp(self._filters, _dark_conv_args))
       elif layer == 'sam':
@@ -1598,7 +1604,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     print(self._lim)
     super().build(input_shape)
 
-  def call(self, inputs):
+  def _call_regular(self, inputs):
     # check efficiency
     x = inputs
     x_prev = x
@@ -1610,3 +1616,28 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       x = layer(x)
       output_prev = output
     return x_prev, x
+  
+  def _call_csp(self, inputs):
+    # check efficiency
+    x = inputs
+    x_prev = x
+    output_prev = True
+    route = None
+
+    for layer, output, name in zip(self.layers, self.outputs, self.layer_list):
+      if output_prev:
+        x_prev = x
+      if i == 0:
+        x, x_route = layer(x)
+      elif i == self._csp_stack - 1:
+        x = layer([x, x_route])
+      else:
+        x = layer(x)
+      output_prev = output
+    return x_prev, x
+  
+  def call(self, inputs):
+    if self._csp_stack > 0:
+      return self._call_csp(inputs)
+    else:
+      return self._call_regular(inputs)

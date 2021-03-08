@@ -140,7 +140,7 @@ class YoloFPN(tf.keras.layers.Layer):
       else:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=depth,
-            repetitions=self._fpn_path_len + 1 ,
+            repetitions=self._fpn_path_len + 1 * int(self._csp_stack == 0),
             insert_spp=True,
             block_invert=False, 
             csp_stack = self._csp_stack, 
