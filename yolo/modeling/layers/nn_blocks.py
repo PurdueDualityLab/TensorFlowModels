@@ -1545,7 +1545,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
   def _csp_connect(self, filters, kwargs):
     x1 = CSPConnect(
-        filters=filters_(filters),
+        filters=filters,
         drop_final=True, 
         drop_first=True,
         **kwargs)

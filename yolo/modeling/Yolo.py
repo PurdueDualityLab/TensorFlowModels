@@ -125,7 +125,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
         kernel_regularizer=l2_regularization)
-  elif model_config.decoder.version == "csp":
+  elif model_config.decoder.type == "csp":
     model = YoloDecoder(
       input_specs,
       embed_spp=False,
