@@ -39,9 +39,9 @@ task:
       new_cords: True
       use_reduction_sum: false
       scale_xy:
-        '5': 1.05
-        '4': 1.05 
-        '3': 1.05
+        '5': 2.0
+        '4': 2.0 
+        '3': 2.0
   train_data:
     global_batch_size: 64
     dtype: bfloat16
