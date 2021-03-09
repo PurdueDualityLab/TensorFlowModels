@@ -120,7 +120,7 @@ class YoloFPN(tf.keras.layers.Layer):
             filters=depth // 2, 
             inverted=True, 
             upsample=True,
-            drop_final=True, 
+            drop_final= self._csp_stack == 0, 
             upsample_size=2, **self._base_config)
         self.preprocessors[str(level)] = Identity_dup()
       elif level != self._max_level:
@@ -273,8 +273,13 @@ class YoloPAN(tf.keras.layers.Layer):
       downsample = False
       upsample = True
     
-    proc_filters = lambda x: x
-    resample_filters = lambda x: x // 2
+
+    if self._csp_stack == 0:
+      proc_filters = lambda x: x
+      resample_filters = lambda x: x // 2
+    else:
+      proc_filters = lambda x: x * 2
+      resample_filters = lambda x: x
     for level, depth in zip(self._iterator, self._depths):
       if level == self._input:
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
@@ -284,6 +289,7 @@ class YoloPAN(tf.keras.layers.Layer):
             block_invert=False, 
             insert_sam=self._embed_sam,
             csp_stack = self._csp_stack, 
+            csp_scale=2, 
             **self._base_config)
       else:
         self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
@@ -291,6 +297,7 @@ class YoloPAN(tf.keras.layers.Layer):
             upsample=upsample,
             downsample=downsample,
             inverted=False, 
+            drop_final=self._csp_stack == 0, 
             **self._base_config)
         self.preprocessors[str(level)] = nn_blocks.DarkRouteProcess(
             filters=proc_filters(depth),
@@ -298,6 +305,7 @@ class YoloPAN(tf.keras.layers.Layer):
             insert_spp=False,
             insert_sam=self._embed_sam,
             csp_stack = self._csp_stack, 
+            csp_scale=2, 
             **self._base_config)
 
   def get_raw_depths(self, minimum_depth):

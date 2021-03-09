@@ -15,9 +15,13 @@ def load_weights(convs, layers):
   keys = sorted(layers.keys())
   #print (layers)
 
+  unloaded = []
+  unloaded_convs = []
   for i in keys:  # range(min_key, max_key + 1):
+   
     try:
       cfg = convs.pop(0)
+      print(layers[i].name, cfg)
       #print(cfg.c, cfg.filters, layers[i]._filters)
       weights = cfg.get_weights()
       if len(layers[i].get_weights()) == len(weights):
@@ -30,8 +34,10 @@ def load_weights(convs, layers):
         weights.append(np.zeros([]))
         layers[i].set_weights(weights)
     except BaseException as e:
+      unloaded_convs.append(cfg)
+      unloaded.append(layers[i])
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
-
+  return unloaded, unloaded_convs
 
 def load_weights_backbone(model, net):
   convs = []
@@ -72,18 +78,13 @@ def load_weights_backbone(model, net):
   # sys.exit()
   return
 
-
-def load_weights_fpn(model, net):
+def load_weights_fpn(model, net, csp = False):
   convs = []
   sam = False
   for layer in net:
     if isinstance(layer, convCFG):
       convs.append(layer)
-    # if sam:
-    #   convs[-2], convs[-1] = convs[-1], convs[-2]
-    #   sam = False
-    # if isinstance(layer, samCFG):
-    #     sam = True
+
 
   layers = dict()
   base_key = 0
@@ -100,11 +101,13 @@ def load_weights_fpn(model, net):
       if key > alternate:
         alternate = key
       alternate += 1
-  load_weights(convs, layers)
+  u, v = load_weights(convs, layers)
+  if csp:
+    reorg_csp_convs_fpn(u, v)
   return
 
 
-def load_weights_pan(model, net, out_conv=255):
+def load_weights_pan(model, net, csp = False, out_conv=255):
   convs = []
   cfg_heads = []
   sam = 0
@@ -124,8 +127,6 @@ def load_weights_pan(model, net, out_conv=255):
     if isinstance(layer, samCFG):
       sam += 1
       
-    
-
   layers = dict()
   key = 0
   base_key = 0
@@ -140,11 +141,13 @@ def load_weights_pan(model, net, out_conv=255):
       if key > alternate:
         alternate = key
       alternate += 1
-  load_weights(convs, layers)
+  u, v = load_weights(convs, layers)
+  if csp:
+    reorg_csp_convs_pan(u, v)
   return cfg_heads
 
 
-def load_weights_decoder(model, net):
+def load_weights_decoder(model, net, csp = True):
   layers = dict()
   base_key = 0
   alternate = 0
@@ -152,10 +155,13 @@ def load_weights_decoder(model, net):
     # non sub module conv blocks
     print(layer.name)
     if "input" not in layer.name and "fpn" in layer.name:
-      load_weights_fpn(layer, net[0])
+      load_weights_fpn(layer, net[0], csp = csp)
     elif "input" not in layer.name and "pan" in layer.name:
-      out_convs = load_weights_pan(layer, net[1])
+      out_convs = load_weights_pan(layer, net[1], csp = csp)
   return out_convs
+
+
+
 
 
 def ishead(out_conv, layer):

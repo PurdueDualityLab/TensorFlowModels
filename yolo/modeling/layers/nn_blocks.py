@@ -5,7 +5,7 @@ from yolo.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
 
-TPU_BASE = True
+TPU_BASE = False
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
@@ -1368,6 +1368,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       insert_sam=False, 
       insert_cbam=False, 
       csp_stack = 0, 
+      csp_scale = 2, 
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1446,9 +1447,11 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self.layer_list, self.outputs = self._get_base_layers() 
 
     if csp_stack > 0:
+      self._csp_scale = csp_scale
       csp_stack += (2 * int(insert_spp)) 
-      self._csp_filters = lambda x: x // 2
+      self._csp_filters = lambda x: x // csp_scale
       self._convert_csp(self.layer_list, self.outputs, csp_stack)
+      block_invert = False
     
     self._csp_stack = csp_stack
 
@@ -1513,6 +1516,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       filters_ = self._csp_filters
     else:
       filters_ = self._conv1_filters
+
+    print('conv1', filters_(filters))
     x1 = ConvBN(
       filters=filters_(filters),
       kernel_size=self._conv1_kernel,
@@ -1527,6 +1532,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       filters_ = self._csp_filters
     else:
       filters_ = self._conv2_filters
+    print('conv2', filters_(filters))
     x1 = ConvBN(
         filters=filters_(filters),
         kernel_size=self._conv2_kernel,
@@ -1537,21 +1543,25 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def _csp_route(self, filters, kwargs):
+    print('route_split', filters // self._csp_scale, filters // self._csp_scale)
     x1 = CSPRoute(
-        filters=filters_(filters),
-        filter_scale=2,
+        filters=filters,
+        filter_scale=self._csp_scale,
+        downsample=False, 
         **kwargs)
     return x1
 
   def _csp_connect(self, filters, kwargs):
+    print('connect')
     x1 = CSPConnect(
         filters=filters,
         drop_final=True, 
         drop_first=True,
         **kwargs)
-    return
+    return x1
 
   def _spp(self, filters, kwargs):
+    print('spp')
     x1 = SPP(self._spp_keys)
     return x1
 
@@ -1584,7 +1594,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     csp = False
     self.layers = []
     for layer in self.layer_list:
-      print(layer, self._filters)
       if layer == 'csp_route':
         self.layers.append(self._csp_route(self._filters, _dark_conv_args))
         csp = True
@@ -1610,7 +1619,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     x_prev = x
     output_prev = True
 
-    for layer, output, name in zip(self.layers, self.outputs, self.layer_list):
+    for i, (layer, output) in enumerate(zip(self.layers, self.outputs)):
       if output_prev:
         x_prev = x
       x = layer(x)
@@ -1622,17 +1631,20 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     x = inputs
     x_prev = x
     output_prev = True
-    route = None
+    x_route = None
 
-    for layer, output, name in zip(self.layers, self.outputs, self.layer_list):
+    for i, (layer, output) in enumerate(zip(self.layers, self.outputs)):
       if output_prev:
         x_prev = x
       if i == 0:
         x, x_route = layer(x)
+        print(x.shape, x_route.shape)
       elif i == self._csp_stack - 1:
         x = layer([x, x_route])
+        print(x.shape)
       else:
         x = layer(x)
+        print(x.shape)
       output_prev = output
     return x_prev, x
   
