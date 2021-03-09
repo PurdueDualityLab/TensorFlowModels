@@ -26,12 +26,12 @@ class CenterNetParser(parser.Parser):
         tl_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
         br_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
         ct_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-        tl_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-        br_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-        ct_regrs = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-        tl_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
-        br_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
-        ct_tags = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        tl_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        br_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        ct_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+        tl_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        br_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
+        ct_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
         tag_masks = tf.zeros((self._max_num_instances), dtype=tf.uint8)
 
         # TODO: input size, output size
@@ -90,30 +90,30 @@ class CenterNetParser(parser.Parser):
                 br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[category, ytl, xtl]], [1])
                 ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[category, ytl, xtl]], [1])
 
-            # tl_regrs[tag_ind, :] = [fxtl - xtl, fytl - ytl]
-            # br_regrs[tag_ind, :] = [fxbr - xbr, fybr - ybr]
-            # ct_regrs[tag_ind, :] = [fxct - xct, fyct - yct]
-            # tl_tags[tag_ind] = ytl * output_size[1] + xtl
-            # br_tags[tag_ind] = ybr * output_size[1] + xbr
-            # ct_tags[tag_ind] = yct * output_size[1] + xct
-            tl_regrs = tf.tensor_scatter_nd_update(tl_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxtl - xtl, fytl - ytl])
-            br_regrs = tf.tensor_scatter_nd_update(br_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxbr - xbr, fybr - ybr])
-            ct_regrs = tf.tensor_scatter_nd_update(ct_regrs, [[tag_ind, 0], [tag_ind, 1]], [fxct - xct, fyct - yct])
-            tl_tags = tf.tensor_scatter_nd_update(tl_tags, [[tag_ind]], [ytl * output_size[1] + xtl])
-            br_tags = tf.tensor_scatter_nd_update(br_tags, [[tag_ind]], [ybr * output_size[1] + xbr])
-            ct_tags = tf.tensor_scatter_nd_update(ct_tags, [[tag_ind]], [yct * output_size[1] + xct])
+            # tl_offset[tag_ind, :] = [fxtl - xtl, fytl - ytl]
+            # br_offset[tag_ind, :] = [fxbr - xbr, fybr - ybr]
+            # ct_offset[tag_ind, :] = [fxct - xct, fyct - yct]
+            # tl_size[tag_ind] = ytl * output_size[1] + xtl
+            # br_size[tag_ind] = ybr * output_size[1] + xbr
+            # ct_size[tag_ind] = yct * output_size[1] + xct
+            tl_offset = tf.tensor_scatter_nd_update(tl_offset, [[tag_ind, 0], [tag_ind, 1]], [fxtl - xtl, fytl - ytl])
+            br_offset = tf.tensor_scatter_nd_update(br_offset, [[tag_ind, 0], [tag_ind, 1]], [fxbr - xbr, fybr - ybr])
+            ct_offset = tf.tensor_scatter_nd_update(ct_offset, [[tag_ind, 0], [tag_ind, 1]], [fxct - xct, fyct - yct])
+            tl_size = tf.tensor_scatter_nd_update(tl_size, [[tag_ind]], [ytl * output_size[1] + xtl])
+            br_size = tf.tensor_scatter_nd_update(br_size, [[tag_ind]], [ybr * output_size[1] + xbr])
+            ct_size = tf.tensor_scatter_nd_update(ct_size, [[tag_ind]], [yct * output_size[1] + xct])
 
         labels = {
-            'tl_tags': tl_tags,
-            'br_tags': br_tags,
-            'ct_tags': ct_tags,
+            'tl_size': tl_size,
+            'br_size': br_size,
+            'ct_size': ct_size,
             'tl_heatmaps': tl_heatmaps,
             'br_heatmaps': br_heatmaps,
             'ct_heatmaps': ct_heatmaps,
             'tag_masks': tag_masks,
-            'tl_regrs': tl_regrs,
-            'br_regrs', br_regrs,
-            'ct_regrs': ct_regrs,
+            'tl_offset': tl_offset,
+            'br_offset', br_offset,
+            'ct_offset': ct_offset,
         }
         return image, labels
 
