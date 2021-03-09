@@ -200,7 +200,7 @@ def compute_ciou(box1, box2, yxyx=False):
         tf.math.atan(math_ops.divide_no_nan(box2[..., 2], box2[..., 3])))
     v = 4 * arcterm / (math.pi**2)
 
-    a = math_ops.divide_no_nan(v, ((1 - iou) + v))
+    a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
     ciou = diou - (v * a)
   return iou, ciou
 
