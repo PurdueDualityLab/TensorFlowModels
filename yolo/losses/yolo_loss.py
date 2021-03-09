@@ -65,6 +65,7 @@ class Yolo_Loss(object):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
+               use_reduction_sum = False, 
                new_cords = False, 
                scale_x_y=1.0,
                max_delta=10,    
@@ -126,6 +127,7 @@ class Yolo_Loss(object):
     self._max_delta = max_delta
 
     self._label_smoothing = tf.cast(0.0, tf.float32)
+    self._use_reduction_sum = use_reduction_sum
 
     # used in detection filtering
     self._beta_nms = beta_nms
@@ -332,7 +334,11 @@ class Yolo_Loss(object):
 
     # 9. i beleive tensorflow will take the average of all the batches loss, so 
     # add them and let TF do its thing
-    loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+    if self._use_reduction_sum:
+      loss = tf.reduce_sum(class_loss + conf_loss + loss_box)  
+    else:
+      loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+
     loss_box = tf.reduce_mean(loss_box)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)

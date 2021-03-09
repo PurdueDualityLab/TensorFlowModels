@@ -198,8 +198,11 @@ class YoloTask(base_task.Task):
   def train_step(self, inputs, model, optimizer, metrics=None):
     # get the data point
     image, label = inputs
-    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    #with tf.GradientTape(persistent=True) as tape:
+
+    if self._task_config.model.filter.use_reduction_sum:
+      num_replicas = 1
+    else:
+      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
@@ -277,9 +280,6 @@ class YoloTask(base_task.Task):
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
 
-    # tf.print(logs, end='\n')
-    # ret = '\033[F' * (len(logs.keys()) + 1)
-    # tf.print(ret, end='\n')
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
