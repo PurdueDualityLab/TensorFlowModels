@@ -247,9 +247,10 @@ class Yolo_Loss(object):
     # 3. split up ground_truth into components, xy, wh, confidence, 
     # class -> apply calculations to acchive safe format as predictions
     # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
-    true_box, true_conf, true_class = tf.split(y_true, [4, 1, 1], axis=-1)
+    true_box, true_conf, true_class, best_iou_match = tf.split(y_true, [4, 1, 1, 1], axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
+    best_iou_match = tf.squeeze(best_iou_match, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
@@ -260,16 +261,17 @@ class Yolo_Loss(object):
     # where an object exists will affect the total loss -> found via the 
     # true_confidnce in ground truth
     if self._loss_type == 1:
-      iou, giou = box_ops.compute_giou(true_box, pred_box)
+      iou, liou = box_ops.compute_giou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = math_ops.mul_no_nan(true_conf, (1 - giou) * self._iou_normalizer)
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou) * self._iou_normalizer)
     elif self._loss_type == 2:
-      iou, ciou = box_ops.compute_ciou(true_box, pred_box)
+      iou, liou = box_ops.compute_ciou(true_box, pred_box)
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = math_ops.mul_no_nan(true_conf, (1 - ciou) * self._iou_normalizer)
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou) * self._iou_normalizer)
     else:
       # iou mask computation
       iou = box_ops.compute_iou(true_box, pred_box)
+      liou = iou
       mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
 
       # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
@@ -299,29 +301,18 @@ class Yolo_Loss(object):
     # exists
     pred_conf = obj_gradient_trap(pred_conf)
     pred_conf = math_ops.rm_nan_inf(pred_conf, val=-np.inf)
+
+    if self._new_cords:
+      # objectness scaling 
+      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf)) * self._obj_normalizer)
+      true_conf = tf.stop_gradient(best_iou_match)
+    else:
+      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * mask_iou) * self._obj_normalizer)
+
     bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = math_ops.mul_no_nan((true_conf + (1 - true_conf) * mask_iou), bce)
-    conf_loss = conf_loss * self._obj_normalizer
-
-    # # 6. apply binary cross entropy(bce) to class attributes -> only the indexes 
-    # # where an object exists will affect the total loss -> found via the 
-    # # true_confidnce in ground truth
-    # pred_class = tf.math.sigmoid(pred_class)
-    # pred_class = class_gradient_trap(pred_class)
-    # ce = self.ce(true_class, pred_class)
-    # ce_neg = self.ce((1 - true_class), tf.squeeze(1 - pred_class))
-    # class_loss = math_ops.mul_no_nan(true_conf, tf.reduce_sum(ce + ce_neg, axis = -1))
-
-    # # 7. apply bce to confidence at all points and then strategiacally 
-    # # penalize the network for making predictions of objects at locations 
-    # # were no object exists
-    # pred_conf = tf.math.sigmoid(pred_conf)
-    # pred_conf = obj_gradient_trap(pred_conf)
-    # pred_conf = math_ops.rm_nan_inf(pred_conf)
-    # ce = self.ce(true_conf, tf.squeeze(pred_conf))
-    # ce_neg = self.ce(math_ops.mul_no_nan(mask_iou, (1 - true_conf)) , tf.squeeze(1 - pred_conf))
-    # conf_loss = (ce + ce_neg) * self._obj_normalizer
+      K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    conf_loss = math_ops.mul_no_nan(obj_mask, bce)
+    # conf_loss = conf_loss * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each
     #  batch has a unique loss value

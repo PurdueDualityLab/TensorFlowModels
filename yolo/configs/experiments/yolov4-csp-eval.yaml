@@ -13,7 +13,7 @@ task:
       decoder:
         version: v4
         type: csp
-      darknet_weights_file: 'cache://yolov4-csp.weights'
+      darknet_weights_file: 'cache://yolov4-csp-2.weights'
       darknet_weights_cfg: 'cache://yolov4-csp.cfg'
     num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
@@ -39,9 +39,9 @@ task:
       iou_normalizer: 0.07
       new_cords: true
       scale_xy:
-        '5': 1.05
-        '4': 1.05 
-        '3': 1.05
+        '5': 2.0
+        '4': 2.0 
+        '3': 2.0
   validation_data:
     global_batch_size: 8
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'

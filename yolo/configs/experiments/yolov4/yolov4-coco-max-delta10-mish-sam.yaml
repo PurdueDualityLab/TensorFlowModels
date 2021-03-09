@@ -37,7 +37,7 @@ task:
       use_nms: false
       iou_normalizer: 0.07
       max_delta: 10.0
-      use_reduction_sum: true
+      use_reduction_sum: false
   train_data:
     global_batch_size: 64
     dtype: bfloat16

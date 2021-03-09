@@ -616,20 +616,29 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
 
 
 def _update_tensor_arrays(batch, y, x, anchor_idx, boxes, classes, update_index,
-                          update, i):
+                          update, i, iou = 1.0):
+  
   const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
+  iou = tf.cast(tf.convert_to_tensor([iou]),  dtype=boxes.dtype)
   update_index = update_index.write(i, [batch, y, x, anchor_idx])
-  update = update.write(i, K.concatenate([boxes, const, classes]))
+  update = update.write(i, K.concatenate([boxes, const, classes, iou]))
   i += 1
   return update_index, update, i
 
 
-def _use_tie_breaker(batch, anchors, mask, i, box_id, depth_track, x, y, boxes,
+def _use_tie_breaker(batch, anchors, ious, mask, i, box_id, depth_track, x, y, boxes,
                      classes, update_index, update):
   mask = tf.cast(mask, dtype=boxes.dtype)
   rand_update = 0.0
   for anchor_id in range(tf.shape(anchors)[-1]):
-    index = tf.math.equal(anchors[batch, box_id, anchor_id], mask)
+    anchor = anchors[batch, box_id, anchor_id]
+    iou = ious[batch, box_id, anchor_id]
+    if anchor < 0:
+      break
+
+    index = tf.math.equal(anchor, mask)
+    
+    # tf.print(iou, anchors[batch, box_id, anchor_id])
     if K.any(index):
       # using the boolean index mask to determine exactly which anchor
       #  box was used
@@ -650,7 +659,8 @@ def _use_tie_breaker(batch, anchors, mask, i, box_id, depth_track, x, y, boxes,
                                                           box_id], anchor_idx,
                                                         boxes[batch, box_id],
                                                         classes[batch, box_id],
-                                                        update_index, update, i)
+                                                        update_index, update, i, 
+                                                        iou = iou)
 
       # if used is 2, this cell is filled with a non-optimal box
       # if used is 0, the cell in the ground truth is not yet consumed
@@ -668,7 +678,8 @@ def _use_tie_breaker(batch, anchors, mask, i, box_id, depth_track, x, y, boxes,
           update_index, update, i = _update_tensor_arrays(
               batch, y[batch, box_id], x[batch, box_id], anchor_idx,
               boxes[batch, box_id], classes[batch,
-                                            box_id], update_index, update, i)
+                                            box_id], update_index, 
+                                            update, i, iou = iou)
         else:
           uid = 0
 
@@ -703,6 +714,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   boxes = tf.cast(y_true['bbox'], dtype)
   classes = tf.expand_dims(tf.cast(y_true['classes'], dtype=dtype), axis=-1)
   anchors = tf.cast(y_true['best_anchors'], dtype)
+  ious = tf.cast(y_true['best_iou_match'], dtype)
 
   is_batch = True
   boxes_shape = boxes.get_shape()
@@ -711,14 +723,17 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
     boxes = tf.expand_dims(boxes, 0)
     classes = tf.expand_dims(classes, 0)
     anchors = tf.expand_dims(anchors, 0)
+    ious = tf.expand_dims(ious, 0)
   elif boxes_shape.ndims is None:
     is_batch = False
     boxes = tf.expand_dims(image, 0)
     classes = tf.expand_dims(classes, 0)
     anchors = tf.expand_dims(anchors, 0)
+    ious = tf.expand_dims(ious, 0)
     boxes.set_shape([None] * 3)
     classes.set_shape([None] * 2)
     anchors.set_shape([None] * 3)
+    ious.set_shape([None] * 3)
   elif boxes_shape.ndims != 3:
     raise ValueError('\'box\' (shape %s) must have either 3 or 4 dimensions.')
 
@@ -731,7 +746,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
 
   # init a fixed memeory size grid for this prediction scale
   # [batch, size, size, # of anchors, 1 + 1 + number of anchors per scale]
-  full = tf.zeros([batches, size, size, len_masks, 1 + 4 + 1], dtype=dtype)
+  full = tf.zeros([batches, size, size, len_masks, 1 + 4 + 1 + 1], dtype=dtype)
   # init a grid to use to track which locations have already
   # been used before (for the tie breaker)
   depth_track = tf.zeros((batches, size, size, len_masks), dtype=tf.int32)
@@ -751,8 +766,11 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   const = tf.cast(tf.convert_to_tensor([1.]), dtype=dtype)
   mask = tf.cast(mask, dtype=dtype)
   rand_update = 0.0
+  
+  splits = []
 
   for batch in range(batches):
+    splits.append(i)
     for box_id in range(num_boxes):
       # if the width or height of the box is zero, skip it
       if K.all(tf.math.less_equal(boxes[batch, box_id, 2:4], 0)):
@@ -764,7 +782,7 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
         continue
       if use_tie_breaker:
         update_index, update, depth_track, i = _use_tie_breaker(
-            batch, anchors, mask, i, box_id, depth_track, x, y, boxes, classes,
+            batch, anchors, ious, mask, i, box_id, depth_track, x, y, boxes, classes,
             update_index, update)
       else:
         index = tf.math.equal(anchors[batch, box_id, 0], mask)
@@ -784,7 +802,25 @@ def build_grided_gt(y_true, mask, size, num_classes, dtype, use_tie_breaker):
     update_index = update_index.stack()
     update = update.stack()
     full = tf.tensor_scatter_nd_update(full, update_index, update)
+    
+  #   boxes, confs, classes, ious = tf.split(update, [4, 1, 1, 1], axis=-1)
+  #   classes = tf.squeeze(classes, axis=-1)
+  #   confs = tf.squeeze(confs, axis=-1)
+  #   ious = tf.squeeze(ious, axis=-1)
+  # else:
+  #   boxes = tf.zeros_like(boxes)
+  #   confs = tf.zeros_like(classes)
+  #   classes = tf.zeros_like(classes)
+  #   ious = tf.zeros_like(classes)
+
 
   if not is_batch:
     full = tf.squeeze(full, axis=0)
+  #   boxes = tf.squeeze(boxes, axis=0)
+  #   confs = tf.squeeze(confs, axis=0)
+  #   classes = tf.squeeze(confs, axis=0)
+  #   ious = tf.squeeze(ious, axis=0)
+
+  # tf.print(tf.shape(boxes), splits)
+
   return full

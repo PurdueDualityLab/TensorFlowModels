@@ -231,12 +231,14 @@ class Parser(parser.Parser):
           boxes, self._anchors, width=self._image_w, height=self._image_h)
       best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
                                        -1)
+      ious = pad_max_instances(ious, self._max_num_instances, 0)
       boxes = pad_max_instances(
           boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
       labels = {
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
           'best_anchors': tf.cast(best_anchors, self._dtype),
+          'best_iou_match': ious
       }
       grid = self._build_grid(
           labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
@@ -282,6 +284,7 @@ class Parser(parser.Parser):
     classes = pad_max_instances(data['groundtruth_classes'],
                                 self._max_num_instances, -1)
     best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
+    ious = pad_max_instances(ious, self._max_num_instances, 0)
     area = pad_max_instances(data['groundtruth_area'], self._max_num_instances,
                              0)
     is_crowd = pad_max_instances(
@@ -295,6 +298,7 @@ class Parser(parser.Parser):
         'area': tf.cast(area, self._dtype),
         'is_crowd': is_crowd,
         'best_anchors': tf.cast(best_anchors, self._dtype),
+        'best_iou_match': ious,
         'width': width,
         'height': height,
         'num_detections': tf.shape(data['groundtruth_classes'])[0]
@@ -356,6 +360,7 @@ class Parser(parser.Parser):
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
     label['best_anchors'] = pad_max_instances(
         best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
+    label['best_iou_match'] = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
 
     grid = self._build_grid(
         label, width, batch=True, use_tie_breaker=self._use_tie_breaker)
