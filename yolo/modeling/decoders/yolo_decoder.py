@@ -37,6 +37,7 @@ class YoloFPN(tf.keras.layers.Layer):
                embed_sam = False, 
                csp_stack = False, 
                activation='leaky',
+               fpn_filter_scale = 1, 
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
@@ -72,6 +73,7 @@ class YoloFPN(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._subdivisions = subdivisions
     self._embed_sam = embed_sam
+    self._filter_scale = fpn_filter_scale
     self._csp_stack = csp_stack
 
     self._base_config = dict(
@@ -84,10 +86,11 @@ class YoloFPN(tf.keras.layers.Layer):
         norm_epsilon=self._norm_epsilon,
         norm_momentum=self._norm_momentum)
 
+  # adda  filter scale parameter to the decoder to scale depths by a factor of 2
   def get_raw_depths(self, minimum_depth, inputs):
     depths = []
     for i in range(self._min_level, self._max_level + 1):
-      depths.append(inputs[str(i)][-1])
+      depths.append(inputs[str(i)][-1] / self._filter_scale)
       # minimum_depth *= 2
     return list(reversed(depths))
 
@@ -178,6 +181,7 @@ class YoloPAN(tf.keras.layers.Layer):
                bias_regularizer=None,
                subdivisions=8,
                fpn_input=True,
+               fpn_filter_scale = 1.0, 
                **kwargs):
     """
       Yolo Path Aggregation Network initialization function. Yolo V3 and V4
@@ -216,6 +220,7 @@ class YoloPAN(tf.keras.layers.Layer):
     self._fpn_input = fpn_input
     self._max_level_process_len = max_level_process_len
     self._csp_stack = csp_stack
+    self._fpn_filter_scale = fpn_filter_scale
 
     if max_level_process_len is None:
       self._max_level_process_len = path_process_len
@@ -309,7 +314,7 @@ class YoloPAN(tf.keras.layers.Layer):
 
   def get_raw_depths(self, minimum_depth, inputs):
     depths = []
-    if len(inputs.keys()) > 3:
+    if len(inputs.keys()) > 3 or self._fpn_filter_scale > 1:
       for i in range(self._min_level, self._max_level + 1):
         depths.append(inputs[str(i)][-1] * 2)
     else:
@@ -345,6 +350,7 @@ class YoloDecoder(tf.keras.Model):
                embed_sam=False, 
                csp_stack=False, 
                fpn_path_len=4,
+               fpn_filter_scale = 1,
                path_process_len=6,
                max_level_process_len=None,
                embed_spp=False,
@@ -403,6 +409,7 @@ class YoloDecoder(tf.keras.Model):
         csp_stack = csp_stack, 
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
+        fpn_filter_scale = fpn_filter_scale, 
         norm_momentum=self._norm_momentum,
         norm_epsilon=self._norm_epsilon,
         kernel_initializer=self._kernel_initializer,
