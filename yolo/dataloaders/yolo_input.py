@@ -137,14 +137,24 @@ class Parser(parser.Parser):
 
   def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False):
     mask = self._masks
+    boxes_ = []#dict() 
+    classes_ = []#dict() 
     for key in self._masks.keys():
-      mask[key] = preprocessing_ops.build_grided_gt(raw_true, self._masks[key],
+      grid, boxes, classes, confs, ious = preprocessing_ops.build_grided_gt(raw_true, self._masks[key],
                                                     width // 2**int(key),
                                                     self._num_classes,
                                                     raw_true['bbox'].dtype,
                                                     use_tie_breaker)
-      mask[key] = tf.cast(mask[key], self._dtype)
-    return mask
+
+      mask[key] = tf.cast(grid, self._dtype)
+      boxes_.append(tf.cast(boxes, self._dtype))
+      classes_.append(tf.cast(classes, self._dtype))
+    
+    boxes = tf.concat(boxes_, axis = -2)
+    classes = tf.concat(classes_, axis = -1)
+
+    boxes, classes = preprocessing_ops._shift_zeros_full(boxes, classes, self._max_num_instances, yxyx = False)
+    return mask, boxes, classes
 
   def _parse_train_data(self, data):
     """Generates images and labels that are usable for model training.
@@ -240,10 +250,11 @@ class Parser(parser.Parser):
           'best_anchors': tf.cast(best_anchors, self._dtype),
           'best_iou_match': ious
       }
-      grid = self._build_grid(
+      grid, boxes, classes = self._build_grid(
           labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
       labels.update({'grid_form': grid})
-      labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+      labels['bbox'] = box_utils.xcycwh_to_yxyx(boxes) #labels['bbox'])
+      labels['classes'] = classes
     else:
       boxes = pad_max_instances(
           boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
@@ -305,13 +316,18 @@ class Parser(parser.Parser):
     }
 
     # if self._fixed_size:
-    grid = self._build_grid(
-        labels,
-        self._image_w,
-        batch=False,
-        use_tie_breaker=self._use_tie_breaker)
+    # grid = self._build_grid(
+    #     labels,
+    #     self._image_w,
+    #     batch=False,
+    #     use_tie_breaker=self._use_tie_breaker)
+    # labels.update({'grid_form': grid})
+    # labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+    grid, boxes, classes = self._build_grid(
+        labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
     labels.update({'grid_form': grid})
-    labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+    labels['bbox'] = box_utils.xcycwh_to_yxyx(boxes) #labels['bbox'])
+    labels['classes'] = classes
     return image, labels
 
   def _postprocess_fn(self, image, label):
@@ -362,10 +378,11 @@ class Parser(parser.Parser):
         best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
     label['best_iou_match'] = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
 
-    grid = self._build_grid(
-        label, width, batch=True, use_tie_breaker=self._use_tie_breaker)
+    grid, boxes, classes = self._build_grid(
+        label, self._image_w, use_tie_breaker=self._use_tie_breaker)
     label.update({'grid_form': grid})
-    label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
+    label['bbox'] = box_utils.xcycwh_to_yxyx(boxes) #labels['bbox'])
+    label['classes'] = classes
     return image, label
 
   def postprocess_fn(self, is_training):

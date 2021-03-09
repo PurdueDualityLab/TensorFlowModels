@@ -212,7 +212,6 @@ class Yolo_Loss(object):
           dtype=iou.dtype))
     return tf.stop_gradient(avg_iou)
 
-
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
