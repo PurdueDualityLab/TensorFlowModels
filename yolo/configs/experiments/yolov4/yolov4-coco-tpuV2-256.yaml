@@ -36,9 +36,10 @@ task:
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
-      max_delta: 10
+      max_delta: 5
+      use_reduction_sum: true
   train_data:
-    global_batch_size: 1024 # 64 batch size
+    global_batch_size: 512 # 64 batch size
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     tfds_split: null
     drop_remainder: true
@@ -55,7 +56,7 @@ task:
       mosaic: true
       use_tie_breaker: true
   validation_data:
-    global_batch_size: 1024
+    global_batch_size: 512
     dtype: bfloat16
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     tfds_split: null
@@ -75,19 +76,19 @@ task:
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 31282 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 4
-  steps_per_loop: 100
-  validation_interval: 100 #00
-  summary_interval: 100
-  checkpoint_interval: 100
+  train_steps: 62564 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 8
+  steps_per_loop: 200
+  validation_interval: 200 #00
+  summary_interval: 200
+  checkpoint_interval: 200
   optimizer_config:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [25000, 28125]
+        boundaries: [50000, 56250]
         name: PiecewiseConstantDecay
-        values: [0.04176, 0.004176, 0.0004176]
+        values: [0.02088, 0.002088, 0.0002088]
     optimizer:
       type: sgd
       sgd:
@@ -96,7 +97,7 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 500 #learning rate rises from 0 to 0.0013 over 1000 steps
 # trainer:
 #   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
 #   validation_steps: 625

@@ -1566,6 +1566,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def _sam(self, filters, kwargs):
+    print('sam')
     x1 = SAM(
         filters=-1,
         use_pooling=False,

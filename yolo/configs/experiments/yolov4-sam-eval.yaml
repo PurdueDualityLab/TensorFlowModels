@@ -13,21 +13,29 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://yolov4-sam-leaky.weights'
-      darknet_weights_cfg: 'cache://yolov4-sam-leaky.cfg'
+      darknet_weights_file: 'cache://yolov4-sam-mish.weights'
+      darknet_weights_cfg: 'cache://yolov4-sam-mish.cfg'
     num_classes: 80
-    _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    _boxes: ['[12.0, 16.0]',
+             '[19.0, 36.0]', 
+             '[40.0, 28.0]', 
+             '[36.0, 75.0]', 
+             '[76.0, 55.0]', 
+             '[72.0, 146.0]', 
+             '[142.0, 110.0]', 
+             '[192.0, 243.0]', 
+             '[459.0, 401.0]']
     _input_size: null #[416, 416, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
     use_sam: true
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: false
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
