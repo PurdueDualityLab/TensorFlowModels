@@ -14,6 +14,8 @@ from official.modeling import hyperparams
 from official.core import config_definitions as cfg
 import tensorflow as tf
 
+from yolo.modeling.layers import detection_generator
+
 
 def test_yolo_input_task():
   with tf.device('/CPU:0'):
@@ -76,6 +78,7 @@ def test_pipeline():
   shind = 0
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  dfilter = detection_generator.YoloFilter()
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
     ftime = time.time()
@@ -84,7 +87,9 @@ def test_pipeline():
     print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
-    i2 = drawer(i, j)  #
+    fboxes = dfilter(j['grid_form'])
+
+    i2 = drawer(i, fboxes)  #
     i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
     gt = j['grid_form']

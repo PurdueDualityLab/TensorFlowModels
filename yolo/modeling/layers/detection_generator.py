@@ -184,3 +184,63 @@ class YoloLayer(ks.Model):
         'thresh': self._thresh,
         'max_boxes': self._max_boxes,
     }
+
+
+
+@ks.utils.register_keras_serializable(package='yolo')
+class YoloFilter(ks.Model):
+
+  def __init__(self, classes = 80, **kwargs):
+    super().__init__(**kwargs)
+    self._classes = classes
+    return
+
+  def parse_prediction_path(self, scale_xy, data):
+    shape = tf.shape(data)
+    # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
+    batchsize, height, width = shape[0], shape[1], shape[2]
+
+    boxes, obns_scores, class_scores, obns_scores_2 = tf.split(data, [4, 1, 1, 1], axis=-1)
+    class_scores = tf.cast(tf.one_hot(tf.cast(class_scores, tf.int32), axis = -1, depth = self._classes), boxes.dtype)
+    classes = tf.shape(class_scores)[-1]
+    
+    boxes = box_utils.xcycwh_to_yxyx(boxes)
+    boxes = tf.reshape(boxes, [shape[0], -1, 4])
+    class_scores = tf.reshape(class_scores, [shape[0], -1, classes])
+    obns_scores = tf.reshape(obns_scores, [shape[0], -1])
+    return obns_scores, boxes, class_scores
+
+  def call(self, inputs):
+    boxes = []
+    class_scores = []
+    object_scores = []
+    levels = list(inputs.keys())
+    min_level = int(min(levels))
+    max_level = int(max(levels))
+
+    for i in range(min_level, max_level + 1):
+      key = str(i)
+      object_scores_, boxes_, class_scores_ = self.parse_prediction_path(1.0,inputs[key])
+      boxes.append(boxes_)
+      class_scores.append(class_scores_)
+      object_scores.append(object_scores_)
+
+    boxes = tf.concat(boxes, axis=1)
+    object_scores = K.concatenate(object_scores, axis=1)
+    class_scores = K.concatenate(class_scores, axis=1)
+
+    boxes, class_scores, object_scores = nms_ops.nms(
+        boxes,
+        class_scores,
+        object_scores,
+        200,
+        0.0,
+        1.0,
+        use_classes=True)
+
+    tf.print(object_scores)
+    return {
+        'bbox': boxes,
+        'classes': class_scores,
+        'confidence': object_scores,
+    }

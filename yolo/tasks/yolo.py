@@ -17,6 +17,7 @@ from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
 from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.modeling.layers import detection_generator
 # from yolo.modeling.layers.detection_generator import YoloGTFilter
 
 
@@ -42,6 +43,7 @@ class YoloTask(base_task.Task):
     self._metric_names = []
     self._metrics = []
 
+    self._dfilter = detection_generator.YoloFilter()
     return
 
   def build_model(self):
@@ -255,6 +257,12 @@ class YoloTask(base_task.Task):
     loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
 
+    grid = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label['grid_form'])
+    fbox = self._dfilter(grid)
+    fbox = tf.nest.map_structure(lambda x: tf.cast(x, image.dtype), fbox)
+    label['bbox'] = fbox['bbox']
+    label['classes'] = fbox['classes']
+
     image_shape = tf.shape(image)[1:-1]
 
     label['boxes'] = box_ops.denormalize_boxes(
@@ -446,6 +454,8 @@ class YoloTask(base_task.Task):
 
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
+
+
 
 
 if __name__ == '__main__':
