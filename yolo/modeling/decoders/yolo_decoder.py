@@ -84,11 +84,11 @@ class YoloFPN(tf.keras.layers.Layer):
         norm_epsilon=self._norm_epsilon,
         norm_momentum=self._norm_momentum)
 
-  def get_raw_depths(self, minimum_depth):
+  def get_raw_depths(self, minimum_depth, inputs):
     depths = []
-    for _ in range(self._min_level, self._max_level + 1):
-      depths.append(minimum_depth)
-      minimum_depth *= 2
+    for i in range(self._min_level, self._max_level + 1):
+      depths.append(inputs[str(i)][-1])
+      # minimum_depth *= 2
     return list(reversed(depths))
 
   def build(self, inputs):
@@ -103,7 +103,8 @@ class YoloFPN(tf.keras.layers.Layer):
     self._min_level = min(keys)
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
-    self._depths = self.get_raw_depths(self._min_depth)
+    self._depths = self.get_raw_depths(self._min_depth, inputs)
+    # print(self._depths, inputs)
 
     # directly connect to an input path and process it
     self.preprocessors = dict()
@@ -242,8 +243,8 @@ class YoloPAN(tf.keras.layers.Layer):
     self._min_level = min(keys)
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
-    self._depths = self.get_raw_depths(self._min_depth)
-
+    self._depths = self.get_raw_depths(self._min_depth, inputs)
+    print(self._depths)
     # directly connect to an input path and process it
     self.preprocessors = dict()
     # resample an input and merge it with the output of another path
@@ -306,11 +307,10 @@ class YoloPAN(tf.keras.layers.Layer):
             csp_stack = self._csp_stack, 
             **self._base_config)
 
-  def get_raw_depths(self, minimum_depth):
+  def get_raw_depths(self, minimum_depth, inputs):
     depths = []
-    for _ in range(self._min_level, self._max_level + 1):
-      depths.append(minimum_depth)
-      minimum_depth *= 2
+    for i in range(self._min_level, self._max_level + 1):
+      depths.append(inputs[str(i)][-1])
     if self._fpn_input:
       return depths
     else:
