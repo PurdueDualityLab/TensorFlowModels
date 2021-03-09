@@ -289,7 +289,6 @@ class YoloPAN(tf.keras.layers.Layer):
             block_invert=False, 
             insert_sam=self._embed_sam,
             csp_stack = self._csp_stack, 
-            csp_scale=2, 
             **self._base_config)
       else:
         self.resamples[str(level)] = nn_blocks.PathAggregationBlock(
@@ -305,7 +304,6 @@ class YoloPAN(tf.keras.layers.Layer):
             insert_spp=False,
             insert_sam=self._embed_sam,
             csp_stack = self._csp_stack, 
-            csp_scale=2, 
             **self._base_config)
 
   def get_raw_depths(self, minimum_depth):

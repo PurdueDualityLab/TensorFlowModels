@@ -53,7 +53,6 @@ def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_po
   return pred_xy, pred_wh, pred_box
 
 class Yolo_Loss(object):
-
   def __init__(self,
                classes,
                mask,
@@ -66,6 +65,7 @@ class Yolo_Loss(object):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
+               new_cords = False, 
                scale_x_y=1.0,
                max_delta=10,    
                nms_kind="greedynms",
@@ -130,6 +130,7 @@ class Yolo_Loss(object):
     # used in detection filtering
     self._beta_nms = beta_nms
     self._nms_kind = tf.cast(nms_kind, tf.string)
+    self._new_cords = new_cords
 
     # grid comp
     self._anchor_generator = GridGenerator(
@@ -228,8 +229,12 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, y_pred.dtype)
 
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-    pred_xy, pred_wh, pred_box = get_predicted_box(
-        fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+    if not self._new_cords:
+      pred_xy, pred_wh, pred_box = get_predicted_box(
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+    else:
+      pred_xy, pred_wh, pred_box = get_predicted_box_newcords(
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
 

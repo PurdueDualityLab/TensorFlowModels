@@ -226,8 +226,8 @@ class YoloLossLayer(hyperparams.Config):
   cls_normalizer: float = 1.0
   obj_normalizer: float = 1.0
   max_delta: float = 10.0
+  new_cords: bool = False
   scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'5': 1.05, '4': 1.1, '3': 1.2})
-  # path scales:
 
 
 @dataclasses.dataclass

@@ -6,8 +6,8 @@ import tensorflow.keras.backend as K
 from yolo.ops import loss_utils
 from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
+from yolo.losses import yolo_loss
 from yolo.ops import nms_ops
-
 
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
@@ -26,6 +26,7 @@ class YoloLayer(ks.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                max_boxes=200,
+               new_cords = False, 
                path_scale=None,
                scale_xy=None,
                use_nms=True,
@@ -46,6 +47,7 @@ class YoloLayer(ks.Model):
     self._use_tie_breaker = use_tie_breaker
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
+    self._new_cords = new_cords
     self._path_scale = path_scale or {
         key: 2**int(key) for key, _ in masks.items()
     }
@@ -73,23 +75,6 @@ class YoloLayer(ks.Model):
     x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
     return x
 
-  def parse_yolo_box_predictions(self,
-                                 unscaled_box,
-                                 width,
-                                 height,
-                                 anchor_grid,
-                                 grid_points,
-                                 scale_x_y=1.0):
-
-    ubxy, pred_wh = tf.split(unscaled_box, 2, axis=-1)
-    pred_xy = tf.math.sigmoid(ubxy) * scale_x_y - 0.5 * (scale_x_y - 1)
-    x, y = tf.split(pred_xy, 2, axis=-1)
-    box_xy = tf.concat([x / width, y / height], axis=-1) + grid_points
-    box_wh = tf.math.exp(pred_wh) * anchor_grid
-    pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-    pred_box = box_utils.xcycwh_to_yxyx(pred_box)
-    return pred_box
-
   def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
     shape = tf.shape(inputs)
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
@@ -101,14 +86,25 @@ class YoloLayer(ks.Model):
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
     classes = tf.shape(class_scores)[-1]
+    
+    if not self._new_cords:
+      _,_, boxes = yolo_loss.get_predicted_box(
+          tf.cast(height, data.dtype),
+          tf.cast(width, data.dtype),
+          boxes,
+          anchors,
+          centers,
+          scale_xy)
+    else:
+       _,_, boxes = yolo_loss.get_predicted_box_newcords(
+          tf.cast(height, data.dtype),
+          tf.cast(width, data.dtype),
+          boxes,
+          anchors,
+          centers,
+          scale_xy)
 
-    boxes = self.parse_yolo_box_predictions(
-        boxes,
-        tf.cast(height, data.dtype),
-        tf.cast(width, data.dtype),
-        anchors,
-        centers,
-        scale_x_y=scale_xy)
+    boxes = box_utils.xcycwh_to_yxyx(boxes)
     obns_scores = tf.math.sigmoid(obns_scores)
     class_scores = tf.math.sigmoid(class_scores) * obns_scores
 
@@ -165,6 +161,7 @@ class YoloLayer(ks.Model):
           iou_normalizer=self._iou_normalizer,
           cls_normalizer=self._cls_normalizer,
           obj_normalizer=self._obj_normalizer,
+          new_cords = self._new_cords, 
           path_key=key,
           mask=self._masks[key],
           max_delta=self._max_delta,

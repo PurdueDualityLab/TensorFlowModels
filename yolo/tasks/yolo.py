@@ -413,7 +413,7 @@ class YoloTask(base_task.Task):
       #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        cfgheads = load_weights_decoder(model.decoder, [neck, decoder])
+        cfgheads = load_weights_decoder(model.decoder, [neck, decoder], csp = self._task_config.model.base.decoder.type == 'csp')
         load_weights_prediction_layers(cfgheads, model.head)
         #model.head.trainable = False
 
