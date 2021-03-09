@@ -75,7 +75,7 @@ class ImageClassificationTask(cfg.TaskConfig):
   losses: Losses = Losses()
   gradient_clip_norm: float = 0.0
   logging_dir: str = None
-  load_darknet_weights: bool = True
+  load_darknet_weights: bool = False
   init_checkpoint_modules: str = 'backbone'
 
 

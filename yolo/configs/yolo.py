@@ -228,7 +228,7 @@ class YoloLossLayer(hyperparams.Config):
   max_delta: float = 10.0
   new_cords: bool = False
   use_reduction_sum: bool = False
-  scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'5': 1.05, '4': 1.1, '3': 1.2})
+  scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'7':1.0, '6':1.0, '5': 1.05, '4': 1.1, '3': 1.2})
 
 
 @dataclasses.dataclass
@@ -275,9 +275,9 @@ class YoloTask(cfg.TaskConfig):
   gradient_clip_norm: float = 0.0
   per_category_metrics: bool = False
 
-  load_darknet_weights: bool = True
-  darknet_load_decoder: bool = True
-  init_checkpoint_modules: str = 'backbone'
+  load_darknet_weights: bool = False
+  darknet_load_decoder: bool = False
+  init_checkpoint_modules: str = None #'backbone'
 
 
 @dataclasses.dataclass

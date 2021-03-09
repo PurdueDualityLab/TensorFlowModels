@@ -188,6 +188,51 @@ CSPADARKNET53 = {
 }
 
 
+LARGECSP53 = {
+    'list_names':
+        LISTNAMES,
+    'splits': {
+        'backbone_split': 100,
+        'neck_split': 135
+    },
+    'backbone': [
+        [
+            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 1, 0,
+            False
+        ],
+        [
+            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish', -1,
+            1, 1, False
+        ],
+        [
+            'DarkRes', 'csp', 3, False, 128, None, None, None, None, 'mish', -1,
+            1, 2, False
+        ],
+        [
+            'DarkRes', 'csp', 15, False, 256, None, None, None, None, 'mish', -1,
+            1, 3, True
+        ],
+        [
+            'DarkRes', 'csp', 15, False, 512, None, None, None, None, 'mish', -1,
+            2, 4, True
+        ],
+        [
+            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+            -1, 8, 5, True
+        ],
+        [
+            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+            -1, 16, 6, True
+        ],
+        [
+            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+            -1, 32, 7, True
+        ],
+    ]
+}
+
+
+
 DARKNET53 = {
     'list_names':
         LISTNAMES,
@@ -299,7 +344,8 @@ BACKBONES = {
     'darknet53': DARKNET53,
     'cspdarknet53': CSPDARKNET53,
     'altered_cspdarknet53': CSPADARKNET53,
-    'cspdarknettiny': CSPDARKNETTINY
+    'cspdarknettiny': CSPDARKNETTINY,
+    'csp-large':LARGECSP53,
 }
 
 
@@ -380,6 +426,8 @@ class Darknet(ks.Model):
     endpoints = collections.OrderedDict()
     stack_outputs = [inputs]
     for i, config in enumerate(net):
+      if config.output_name > self._max_size:
+        break 
       if config.output_name in self._csp_level_mod:
         config.stack = 'residual'
       if config.stack is None:
