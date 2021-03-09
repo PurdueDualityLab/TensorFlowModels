@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   model:
-    base: 
+    base:
       backbone:
         type: 'darknet'
         darknet:
@@ -38,8 +38,9 @@ task:
       iou_normalizer: 0.07
       max_delta: 10
   train_data:
-    global_batch_size: 1024 # 64 batch size 
+    global_batch_size: 1024 # 64 batch size
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
+    tfds_split: null
     drop_remainder: true
     dtype: bfloat16
     input_path: ''
@@ -57,6 +58,7 @@ task:
     global_batch_size: 1024
     dtype: bfloat16
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    tfds_split: null
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: false
@@ -142,4 +144,3 @@ trainer:
 #       type: 'linear'
 #       linear:
 #         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
-      
