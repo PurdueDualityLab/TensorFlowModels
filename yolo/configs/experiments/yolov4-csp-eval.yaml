@@ -55,7 +55,7 @@ task:
       fixed_size: true
       image_h: 512
       image_w: 512
-      use_tie_breaker: true
+      use_tie_breaker: False
     shuffle_buffer_size: 10000
   weight_decay: 0.0005
   init_checkpoint: ''
