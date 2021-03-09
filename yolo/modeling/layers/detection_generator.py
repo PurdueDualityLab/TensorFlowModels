@@ -89,22 +89,22 @@ class YoloLayer(ks.Model):
         data, [4, 1, self._classes], axis=-1)
     classes = tf.shape(class_scores)[-1]
     
-    #if not self._new_cords:
-    _,_, boxes = yolo_loss.get_predicted_box(
-        tf.cast(height, data.dtype),
-        tf.cast(width, data.dtype),
-        boxes,
-        anchors,
-        centers,
-        scale_xy)
-    # else:
-    #    _,_, boxes = yolo_loss.get_predicted_box_newcords(
-    #       tf.cast(height, data.dtype),
-    #       tf.cast(width, data.dtype),
-    #       boxes,
-    #       anchors,
-    #       centers,
-    #       scale_xy)
+    if not self._new_cords:
+      _,_, boxes = yolo_loss.get_predicted_box(
+          tf.cast(height, data.dtype),
+          tf.cast(width, data.dtype),
+          boxes,
+          anchors,
+          centers,
+          scale_xy)
+    else:
+       _,_, boxes = yolo_loss.get_predicted_box_newcords(
+          tf.cast(height, data.dtype),
+          tf.cast(width, data.dtype),
+          boxes,
+          anchors,
+          centers,
+          scale_xy)
 
     boxes = box_utils.xcycwh_to_yxyx(boxes)
     obns_scores = tf.math.sigmoid(obns_scores)

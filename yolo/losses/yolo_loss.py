@@ -230,12 +230,12 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, y_pred.dtype)
 
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-    # if not self._new_cords:
-    pred_xy, pred_wh, pred_box = get_predicted_box(
-        fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
-    # else:
-    #   pred_xy, pred_wh, pred_box = get_predicted_box_newcords(
-    #       fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+    if not self._new_cords:
+      pred_xy, pred_wh, pred_box = get_predicted_box(
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+    else:
+      pred_xy, pred_wh, pred_box = get_predicted_box_newcords(
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
 
