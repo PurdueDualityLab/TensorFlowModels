@@ -188,8 +188,8 @@ class DataDecoder(hyperparams.OneOfConfig):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   input_path: str = '' #'gs://tensorflow2/coco_records/train/2017*'
-  tfds_name: str = 'coco'
-  tfds_split: str = 'train'
+  tfds_name: str = None #'coco'
+  tfds_split: str = None #'train'
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
