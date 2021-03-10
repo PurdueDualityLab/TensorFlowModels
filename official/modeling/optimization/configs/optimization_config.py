@@ -46,6 +46,7 @@ class OptimizerConfig(oneof.OneOfConfig):
   adamw: opt_cfg.AdamWeightDecayConfig = opt_cfg.AdamWeightDecayConfig()
   lamb: opt_cfg.LAMBConfig = opt_cfg.LAMBConfig()
   rmsprop: opt_cfg.RMSPropConfig = opt_cfg.RMSPropConfig()
+  sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
 
 
 @dataclasses.dataclass

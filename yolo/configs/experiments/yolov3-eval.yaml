@@ -30,14 +30,14 @@ task:
     filter:
       anchor_generation_scale: 416
       ignore_thresh: 0.7
-      iou_thresh: 0.1
-      nms_thresh: 0.9
+      iou_thresh: 0.25
+      nms_thresh: 0.4
       loss_type: ciou
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 64
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco
@@ -59,7 +59,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 625 # 5063 #625
+  validation_steps: 78 # 5063 #625
   steps_per_loop: 10000
   validation_interval: 1
   summary_interval: 10000

@@ -68,7 +68,7 @@ def build_block_specs(config):
   return specs
 
 
-class layer_factory(object):
+class LayerFactory(object):
   """
   class for quick look up of default layers used by darknet to
   connect, introduce or exit a level. Used in place of an if condition
@@ -122,7 +122,7 @@ CSPDARKNET53 = {
         LISTNAMES,
     'splits': {
         'backbone_split': 106,
-        'neck_split': 138
+        'neck_split': 137 - 5
     },
     'backbone': [
         [
@@ -275,10 +275,12 @@ class Darknet(ks.Model):
       input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
       min_level=None,
       max_level=5,
+      csp_level_mod = [], 
       activation=None,
       use_sync_bn=False,
       norm_momentum=0.99,
       norm_epsilon=0.001,
+      subdivisions=8,
       dilate=False,
       kernel_initializer='glorot_uniform',
       kernel_regularizer=None,
@@ -290,12 +292,13 @@ class Darknet(ks.Model):
     self._model_name = model_id
     self._splits = splits
     self._input_shape = input_specs
-    self._registry = layer_factory()
+    self._registry = LayerFactory()
 
     # default layer look up
     self._min_size = min_level
     self._max_size = max_level
     self._output_specs = None
+    self._csp_level_mod = set(csp_level_mod)
 
     self._kernel_initializer = kernel_initializer
     self._bias_regularizer = bias_regularizer
@@ -305,6 +308,7 @@ class Darknet(ks.Model):
     self._activation = activation
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
+    self._subdivisions = subdivisions
 
     self._default_dict = {
         'kernel_initializer': self._kernel_initializer,
@@ -314,6 +318,7 @@ class Darknet(ks.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
+        'subdivisions': self._subdivisions,
         'dilation_rate': 1,
         'name': None
     }
@@ -338,6 +343,8 @@ class Darknet(ks.Model):
     endpoints = collections.OrderedDict()
     stack_outputs = [inputs]
     for i, config in enumerate(net):
+      if config.output_name in self._csp_level_mod:
+        config.stack = 'residual'
       if config.stack is None:
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
@@ -534,7 +541,8 @@ class Darknet(ks.Model):
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
-        'activation': self._activation
+        'activation': self._activation,
+        'subdivisions': self._subdivisions,
     }
     return layer_config
 
@@ -547,13 +555,19 @@ def build_darknet(
 
   backbone_cfg = model_config.backbone.get()
   norm_activation_config = model_config.norm_activation
-  print(backbone_cfg)
+
+  if hasattr(model_config, 'subdivisions'):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
   model = Darknet(
       model_id=backbone_cfg.model_id,
       min_level=model_config.min_level,
       max_level=model_config.max_level,
-      input_shape=input_specs,
+      input_specs=input_specs,
       dilate=model_config.dilate,
+      subdivisions=subdivisions,
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,

@@ -8,14 +8,16 @@ from official.core import task_factory
 from yolo.configs import yolo as exp_cfg
 
 from official.vision.beta.evaluation import coco_evaluator
+from official.vision.beta.dataloaders import tf_example_decoder
+from official.vision.beta.dataloaders import tfds_detection_decoders
+from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
 from yolo.dataloaders import yolo_input
-from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
 from official.vision.beta.ops import box_ops, preprocess_ops
-from yolo.modeling.layers.detection_generator import YoloGTFilter
+# from yolo.modeling.layers.detection_generator import YoloGTFilter
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
@@ -39,6 +41,7 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
+
     return
 
   def build_model(self):
@@ -49,6 +52,8 @@ class YoloTask(base_task.Task):
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
     masks, path_scales, xy_scales = self._get_masks()
+    print(xy_scales)
+    
     self._get_boxes(gen_boxes=params.is_training)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
@@ -63,7 +68,7 @@ class YoloTask(base_task.Task):
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
-    decoder = tfds_coco_decoder.MSCOCODecoder()
+    # decoder = tfds_coco_decoder.MSCOCODecoder()
     """
     decoder_cfg = params.decoder.get()
     if params.decoder.type == 'simple_decoder':
@@ -77,12 +82,39 @@ class YoloTask(base_task.Task):
         raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
     """
 
+    if params.tfds_name:
+      if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
+        decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
+            params.tfds_name]()
+      else:
+        raise ValueError('TFDS {} is not supported'.format(params.tfds_name))
+    else:
+      decoder_cfg = params.decoder.get()
+      if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      else:
+        raise ValueError('Unknown decoder type: {}!'.format(
+            params.decoder.type))
+
     model = self.task_config.model
 
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    print(masks, path_scales, xy_scales)
+    print(xy_scales)
+
+    gbs = params.global_batch_size
+    if input_context is not None:
+      gbs = input_context.get_per_replica_batch_size(
+          gbs) if input_context else gbs
+    if params.is_training and params.parser.mosaic:
+      params.global_batch_size = 4 * params.global_batch_size // gbs
+
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
         image_h=params.parser.image_h,
@@ -95,13 +127,15 @@ class YoloTask(base_task.Task):
         masks=masks,
         letter_box=params.parser.letter_box,
         cutmix=params.parser.cutmix,
+        mosaic=params.parser.mosaic,
         use_tie_breaker=params.parser.use_tie_breaker,
         min_process_size=params.parser.min_process_size,
         max_process_size=params.parser.max_process_size,
         max_num_instances=params.parser.max_num_instances,
         random_flip=params.parser.random_flip,
         pct_rand=params.parser.pct_rand,
-        seed=params.parser.seed,
+        keep_thresh=params.parser.keep_thresh,
+        mosaic_frequency=params.parser.mosaic_frequency,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,
@@ -116,34 +150,34 @@ class YoloTask(base_task.Task):
         parser_fn=parser.parse_fn(params.is_training),
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
+
+    if params.is_training and params.parser.mosaic:
+      dataset = dataset.unbatch().shuffle(params.global_batch_size * 4 *
+                                          2).batch(
+                                              gbs, drop_remainder=True)
     return dataset
 
-  def build_losses(self, outputs, labels, aux_losses=None):
-    loss = 0.0
-    loss_box = 0.0
-    loss_conf = 0.0
-    loss_class = 0.0
+  def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
     metric_dict = dict()
+    loss = dict()
+    loss_val = 0
+    metric_dict['total_loss'] = 0
 
     grid = labels['grid_form']
     for key in outputs.keys():
-      # _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels, outputs[key])
-      _loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[
-          key](grid[key], outputs[key])
-      #_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _recall50 = self._loss_dict[key](labels[key], outputs[key])
-      loss += _loss
-      loss_box += _loss_box
-      loss_conf += _loss_conf
-      loss_class += _loss_class
+      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou,
+       _recall50) = self._loss_dict[key](grid[key], outputs[key])
+      metric_dict[f'total_loss'] += _loss
+      metric_dict[f'conf_loss_{key}'] = _loss_conf
+      metric_dict[f'box_loss_{key}'] = _loss_box
+      metric_dict[f'class_loss_{key}'] = _loss_class
       metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
       metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
+      loss[f"loss_{key}"] = _loss / num_replicas
+      loss_val += _loss / num_replicas
 
-    metric_dict['box_loss'] = loss_box
-    metric_dict['conf_loss'] = loss_conf
-    metric_dict['class_loss'] = loss_class
-    metric_dict['total_loss'] = loss
 
-    return loss, metric_dict
+    return loss, loss_val, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
@@ -165,37 +199,43 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    #with tf.GradientTape(persistent=True) as tape:
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
-      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-      scaled_loss = loss / num_replicas
+      y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+      scaled_loss_dict, scaled_loss, loss_metrics = self.build_losses(
+          y_pred['raw_output'], label, num_replicas=num_replicas)
+      # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+        # for key in scaled_loss.keys():
+        #   scaled_loss[key] = optimizer.get_scaled_loss(scaled_loss[key])
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
+
     # compute the gradient
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
+
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
+
     if self.task_config.gradient_clip_norm > 0.0:
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
+
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    # custom metrics
-    logs = {'loss': loss}
-
+    logs = {self.loss: loss_metrics['total_loss']}
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
 
     tf.print(logs, end='\n')
-
     ret = '\033[F' * (len(logs.keys()) + 1)
     tf.print(ret, end='\n')
     return logs
@@ -206,11 +246,10 @@ class YoloTask(base_task.Task):
 
     # computer detivative and apply gradients
     y_pred = model(image, training=False)
-    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+    loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    logs = {self.loss: loss_metrics['total_loss']}
 
-    # #custom metrics
-    logs = {'loss': loss}
-    # loss_metrics.update(metrics)
     image_shape = tf.shape(image)[1:-1]
 
     label['boxes'] = box_ops.denormalize_boxes(
@@ -237,14 +276,16 @@ class YoloTask(base_task.Task):
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
+
+    # tf.print(logs, end='\n')
+    # ret = '\033[F' * (len(logs.keys()) + 1)
+    # tf.print(ret, end='\n')
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
     # return super().aggregate_logs(state=state, step_outputs=step_outputs)
 
     if not state:
-      # for metric in self._metrics:
-      #   metric.reset_states()
       self.coco_metric.reset_states()
       state = self.coco_metric
     self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
@@ -263,6 +304,7 @@ class YoloTask(base_task.Task):
     # gen_boxes = params.is_training
     if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
+      params = self.task_config.train_data
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
                          1) * model_base_cfg.boxes_per_scale
@@ -273,7 +315,7 @@ class YoloTask(base_task.Task):
           decoder_fn=decoder.decode,
           parser_fn=None)
       anchors = reader.read(
-          k=9, image_width=params.parser.image_w, input_context=input_context)
+          k=9, image_width=params.parser.image_w, input_context=None)
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
@@ -302,37 +344,37 @@ class YoloTask(base_task.Task):
       for i in range(params.min_level, params.max_level + 1):
         boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
         path_scales[str(i)] = 2**i
-        if xy_exponential:
-          scale_x_y[str(i)] = 1.0 + xy_scale_base * (exp_base**i)
-        else:
-          scale_x_y[str(i)] = 1.0
         start += params.boxes_per_scale
 
       self._masks = boxes
       self._path_scales = path_scales
-      self._x_y_scales = scale_x_y
-      # self._get_gt_boxes_used = YoloGTFilter(self._masks)
+
+      self._x_y_scales = params.filter.scale_xy.as_dict()
 
     metric_names = []
+    loss_names = []
     for key in self._masks.keys():
+      metric_names.append(f'box_loss_{key}')
+      metric_names.append(f'class_loss_{key}')
+      metric_names.append(f'conf_loss_{key}')
+      loss_names.append(f'loss_{key}')
       metric_names.append(f"recall50_{key}")
       metric_names.append(f"avg_iou_{key}")
 
-    metric_names.append('box_loss')
-    metric_names.append('conf_loss')
-    metric_names.append('class_loss')
-    metric_names.append('total_loss')
+    metric_names.append(f'total_loss')
+
+    # metric_names.append('darknet_loss')
     self._metric_names = metric_names
 
     return self._masks, self._path_scales, self._x_y_scales
 
   def initialize(self, model: tf.keras.Model):
+
     if self.task_config.load_darknet_weights:
       from yolo.utils import DarkNetConverter
       from yolo.utils._darknet2tf.load_weights import split_converter
       from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_neck
-      from yolo.utils._darknet2tf.load_weights2 import load_head
+      from yolo.utils._darknet2tf.load_weights2 import load_weights_decoder
       from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
       from yolo.utils.downloads.file_manager import download
 
@@ -371,13 +413,10 @@ class YoloTask(base_task.Task):
       #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        if neck is not None:
-          load_weights_neck(model.decoder.neck, neck)
-          #model.decoder.neck.trainable = False
-        cfgheads = load_head(model.decoder.head, decoder)
-        #model.decoder.head.trainable = False
+        cfgheads = load_weights_decoder(model.decoder, [neck, decoder])
         load_weights_prediction_layers(cfgheads, model.head)
         #model.head.trainable = False
+
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:
@@ -395,7 +434,11 @@ class YoloTask(base_task.Task):
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
+        # if self.task_config.model.subdivisions == 1:
+        #   try:
         status.expect_partial().assert_existing_objects_matched()
+        #except:
+        #print("this checkpoint could not assert all components consumed")
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 
