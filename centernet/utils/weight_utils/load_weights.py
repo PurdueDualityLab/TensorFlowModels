@@ -25,14 +25,15 @@ def load_weights_model(model, weights_dict, backbone_name, decoder_name):
     decoder_name: String, indicating the desired decoder configuration
   """
   print("Loading model weights\n")
-  load_weights_backbone(model.backbone, 
+  n_weights = 0
+  n_weights += load_weights_backbone(model.backbone, 
     weights_dict['model']['_feature_extractor']['_network'],
     backbone_name)
   
-  load_weights_decoder(model.decoder,
+  n_weights += load_weights_decoder(model.decoder,
     weights_dict['model']['_prediction_head_dict'],
     decoder_name)
-  print("Successfully loaded model weights\n")
+  print("Successfully loaded {} model weights.\n".format(n_weights))
 
 def get_backbone_layer_cfgs(weights_dict, backbone_name):
   """ Fetches the config classes for the backbone.
@@ -62,6 +63,8 @@ def load_weights_backbone(backbone, weights_dict, backbone_name):
     backbone: keras.Model backbone
     weights_dict: Dictionary that stores the backbone model weights
     backbone_name: String, indicating the desired backbone configuration
+  Returns:
+    Number of weights loaded in 
   """
   print("Loading backbone weights\n")
   backbone_layers = backbone.layers
@@ -77,7 +80,7 @@ def load_weights_backbone(backbone, weights_dict, backbone_name):
       n_weights_total += n_weights
       if len(cfgs) == 0:
         print("{} Weights have been loaded for {} / {} layers\n".format(n_weights_total, i+1, len(backbone_layers)))
-        return
+        return n_weights_total
       cfg = cfgs.pop(0)
 
 def get_decoder_layer_cfgs(weights_dict, decoder_name):
@@ -108,6 +111,8 @@ def load_weights_decoder(decoder, weights_dict, decoder_name):
     decoder: keras.Model decoder
     weights_dict: Dictionary that stores the decoder model weights
     decoder_name: String, indicating the desired decoder configuration
+  Returns:
+    Number of weights loaded in 
   """
   print("Loading decoder weights\n")
   decoder_layers = decoder.layers
@@ -123,18 +128,22 @@ def load_weights_decoder(decoder, weights_dict, decoder_name):
       n_weights_total += n_weights
       if len(cfgs) == 0:
         print("{} Weights have been loaded for {} / {} layers\n".format(n_weights_total, i+1, len(decoder_layers)))
-        return
+        return n_weights_total
       cfg = cfgs.pop(0)
 
 if __name__ == '__main__':
-  input_specs = tf.keras.layers.InputSpec(shape=[None, 512, 512, 3])
+  input_specs = tf.keras.layers.InputSpec(shape=[1, 512, 512, 3])
   config = CenterNetTask()
   
   model, loss = build_centernet(input_specs=input_specs,
       task_config=config, l2_regularization=0)
 
-  weights_dict = get_model_weights_as_dict(CKPT_PATH)
+  weights_dict, n_weights = get_model_weights_as_dict(CKPT_PATH)
   load_weights_model(model, weights_dict, 'hourglass104_512', 'detection_2d')
   
+  # Note number of weights read and loaded differ by two because
+  # we also read in the checkpoint save_counter and object_graph
+  # that are not weights to the model
+
   # Uncomment line below to write weights dict key names to a file
   # write_dict_as_tree(weights_dict, filename="centernet/utils/weight_utils/MODEL_VARS.txt")

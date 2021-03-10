@@ -6,6 +6,7 @@ import tensorflow.keras as ks
 from centernet.modeling.backbones.hourglass import Hourglass
 from centernet.modeling.backbones.hourglass import build_hourglass
 from centernet.modeling.decoders.centernet_decoder import CenterNetDecoder
+from centernet.modeling.layers.detection_generator import CenterNetLayer
 
 # TODO: import prediction and filtering layers when made
 
@@ -33,19 +34,14 @@ class CenterNet(ks.Model):
 
   def call(self, inputs, training=False):
     features = self._backbone(inputs)
-    # final_backbone_output = features[-1]
     decoded_maps = self._decoder(features)
-
-    # TODO: head + filters
 
     if training:
       return {"raw_output": decoded_maps}
     else:
-      # TODO: uncomment when filter is implemented
-      # predictions = self._filter(raw_predictions)
-      # predictions.update({"raw_output": raw_predictions})
-      # return predictions
-      return {"raw_output": decoded_maps}
+      predictions = self._filter(decoded_maps)
+      predictions.update({"raw_output": decoded_maps})
+      return predictions
 
   @property
   def backbone(self):
@@ -79,7 +75,7 @@ def build_centernet_decoder(input_specs, task_config, num_inputs):
   return model
 
 def build_centernet_filter(model_config):
-  return None
+  return CenterNetLayer()
 
 def build_centernet_head(model_config):
   return None
@@ -97,7 +93,6 @@ def build_centernet(input_specs, task_config, l2_regularization):
   filter = build_centernet_filter(model_config)
 
   model = CenterNet(backbone=backbone, decoder=decoder, head=head, filter=filter)
-
   model.build(input_specs.shape)
 
   # TODO: uncommend when filter is implemented
