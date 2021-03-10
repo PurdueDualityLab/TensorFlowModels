@@ -89,9 +89,11 @@ class CenterNetLayer(ks.Model):
   
   def get_top_k_peaks(self,
                       feature_map_peaks,
+                      batch_size,
+                      width,
+                      num_channels,
                       k=100,
                       per_channel=False):
-    (batch_size, _, width, num_channels) = feature_map_peaks.get_shape()
 
     if per_channel:
       if k == 1:
@@ -138,8 +140,9 @@ class CenterNetLayer(ks.Model):
                 x_indices,
                 channel_indices, 
                 height_width_predictions,
-                offset_predictions):
-    batch_size, num_boxes = y_indices.get_shape()
+                offset_predictions,
+                batch_size,
+                num_boxes):
 
     # TF Lite does not support tf.gather with batch_dims > 0, so we need to use
     # tf_gather_nd instead and here we prepare the indices for that.
@@ -158,8 +161,8 @@ class CenterNetLayer(ks.Model):
     x_indices = tf.cast(x_indices, dtype=tf.float32)
 
     height_width = tf.maximum(new_height_width, 0)
-    heights, widths = tf.unstack(height_width, axis=2)
-    y_offsets, x_offsets = tf.unstack(offsets, axis=2)
+    heights, widths = tf.split(height_width, 2, axis=-1)
+    y_offsets, x_offsets = tf.split(offsets, 2, axis=-1)
 
     detection_classes = channel_indices
 
@@ -177,18 +180,24 @@ class CenterNetLayer(ks.Model):
     ct_heatmaps = inputs['ct_heatmaps'][-1]
     ct_sizes = inputs['ct_size'][-1]
     ct_offsets = inputs['ct_offset'][-1]
-
-    batch_size = ct_heatmaps.get_shape()[0]
+    
+    shape = tf.shape(ct_heatmaps)
+    batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
 
     # Process heatmaps using 3x3 convolution and applying sigmoid
     peaks = self.process_heatmap(ct_heatmaps)
     
-    scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, k=self._max_detections, per_channel=self._detect_per_channel)
+    scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
+                                                                         batch_size,
+                                                                         width,
+                                                                         num_channels, 
+                                                                         k=self._max_detections, 
+                                                                         per_channel=self._detect_per_channel)
 
     boxes, classes, scores, num_det = self.get_boxes(scores, 
-      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets)
+      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, batch_size, self._max_detections)
     
-    boxes = boxes / ct_heatmaps.get_shape()[1]
+    boxes = boxes / tf.cast(height, tf.float32)
 
     boxes = tf.expand_dims(boxes, axis=-2)
     multi_class_scores = tf.gather_nd(
