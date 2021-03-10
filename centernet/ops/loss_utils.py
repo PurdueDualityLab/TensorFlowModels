@@ -4,7 +4,7 @@ def _to_float32(x):
   return tf.cast(x, tf.float32)
 
 def _get_shape(tensor, num_dims):
-  assert len(tensor.shape) == num_dims
+  assert len(tensor.shape.as_list()) == num_dims
   return combined_static_and_dynamic_shape(tensor)
 
 def combined_static_and_dynamic_shape(tensor):
@@ -16,7 +16,7 @@ def combined_static_and_dynamic_shape(tensor):
   Returns:
     A list of size tensor.shape.ndims containing integers or a scalar tensor.
   """
-  static_tensor_shape = tensor.shape
+  static_tensor_shape = tensor.shape.as_list()
   dynamic_tensor_shape = tf.shape(tensor)
   combined_shape = []
   for index, dim in enumerate(static_tensor_shape):
