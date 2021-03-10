@@ -358,6 +358,8 @@ class Darknet(ks.Model):
       input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
       min_level=None,
       max_level=5,
+      width_scale = 1.0, 
+      depth_scale = 1.0, 
       csp_level_mod = [], 
       activation=None,
       use_sync_bn=False,
@@ -392,6 +394,8 @@ class Darknet(ks.Model):
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
     self._subdivisions = subdivisions
+    self._width_scale = width_scale 
+    self._depth_scale = depth_scale
 
     self._default_dict = {
         'kernel_initializer': self._kernel_initializer,
@@ -430,6 +434,10 @@ class Darknet(ks.Model):
         break 
       if config.output_name in self._csp_level_mod:
         config.stack = 'residual'
+
+      config.filters = int(config.filters * self._width_scale)
+      config.repetitions = int(config.repetitions * self._depth_scale)
+      
       if config.stack is None:
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
@@ -651,8 +659,10 @@ def build_darknet(
       min_level=model_config.min_level,
       max_level=model_config.max_level,
       input_specs=input_specs,
-      dilate=model_config.dilate,
+      dilate=backbone_cfg.dilate,
       subdivisions=subdivisions,
+      width_scale=backbone_cfg.width_scale, 
+      depth_scale=backbone_cfg.depth_scale, 
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,

@@ -248,7 +248,6 @@ class Yolo(ModelConfig):
   max_level: int = 5
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
-  dilate: bool = False
   subdivisions: int = 1
   use_sam: bool = False
   filter: YoloLossLayer = YoloLossLayer()

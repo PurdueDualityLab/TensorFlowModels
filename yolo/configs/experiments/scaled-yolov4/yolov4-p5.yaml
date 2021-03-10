@@ -12,7 +12,7 @@ task:
           model_id: 'csp-large'
       decoder:
         version: v4
-        type: csp
+        type: csp-large
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 16
@@ -33,7 +33,7 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
-    use_sam: true
+    use_sam: false
     norm_activation:
       activation: mish
       norm_epsilon: 0.001

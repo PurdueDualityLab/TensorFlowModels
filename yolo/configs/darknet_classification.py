@@ -53,7 +53,6 @@ class ImageClassificationModel(hyperparams.Config):
   add_head_batch_norm: bool = False
   min_level: Optional[int] = None
   max_level: int = 5
-  dilate: bool = False
   subdivisions: int = 8
   darknet_weights_file: str = 'cache://csdarknet53.weights'
   darknet_weights_cfg: str = 'cache://csdarknet53.cfg'

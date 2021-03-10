@@ -37,7 +37,7 @@ task:
     boxes_per_scale: 3
     max_level: 6
     min_level: 3
-    use_sam: true
+    use_sam: false
     norm_activation:
       activation: mish
       norm_epsilon: 0.001

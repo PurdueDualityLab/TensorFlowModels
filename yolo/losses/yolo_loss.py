@@ -245,14 +245,13 @@ class Yolo_Loss(object):
 
     # 3. split up ground_truth into components, xy, wh, confidence, 
     # class -> apply calculations to acchive safe format as predictions
-    # true_box, true_conf, true_class = tf.split(y_true, [4, 1, -1], axis=-1)
     true_box, true_conf, true_class, best_iou_match = tf.split(y_true, [4, 1, 1, 1], axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     best_iou_match = tf.squeeze(best_iou_match, axis=-1)
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
-        depth=tf.shape(pred_class)[-1],  #,80, #self._classes,
+        depth=tf.shape(pred_class)[-1],
         dtype=y_pred.dtype)
 
     pred_box = box_gradient_trap(pred_box, self._max_delta)
@@ -311,7 +310,6 @@ class Yolo_Loss(object):
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-    # conf_loss = conf_loss * self._obj_normalizer
 
     # 8. take the sum of all the dimentions and reduce the loss such that each
     #  batch has a unique loss value
