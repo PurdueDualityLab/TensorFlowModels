@@ -1,10 +1,10 @@
 import tensorflow as tf
 import numpy as np
 import centernet.tasks as tasks
-import centernet.ops.loss_utils as utils
+import centernet.ops.loss_ops as utils
 from centernet.losses import penalty_reduced_logistic_focal_loss
 from centernet.losses import l1_localization_loss
-from centernet.tasks.centernet import CenterNetTask
+from centernet.tasks.centernet_object_detection import CenterNetTask
 
 def gaussian2D(shape, sigma=1):
   m, n = [(ss - 1.) / 2. for ss in shape]
@@ -118,7 +118,7 @@ def generate_heatmaps(batch_size, categories, output_size, detections, gaussian_
 class ObjectDetectionTest(tf.test.TestCase):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.labels_heatmaps = tf.constant([[
+    self.actual = tf.constant([[
       (10, 25, 17, 18, 0)
     ]])
 
@@ -190,4 +190,49 @@ if __name__ == '__main__':
   #plt.imshow(labels_heatmaps[0, 0, ...])
   #plt.show()
   '''
+  actual = tf.constant([[
+      (10, 25, 17, 18, 0)
+    ]], dtype = tf.float32)
+
+  predicted = tf.constant([[
+      (10, 30, 15, 17, 0)
+    ]], dtype = tf.float32)
+  labels = dict()
+  outputs = dict()
+
+  tl_heatmaps, br_heatmaps, ct_heatmaps, tl_regrs, br_regrs, ct_regrs, tl_tags, br_tags, ct_tags = generate_heatmaps(1, 2, (416, 416), predicted)
+  ct_heatmaps = tf.reshape(ct_heatmaps, [1, 416, 416, 2])
+
+  tl_labels_heatmaps, br_labels_heatmaps, ct_labels_heatmaps, tl_regrs_labels, br_regrs_labels, ct_regrs_labels, tl_tags_labels, br_tags_labels, ct_tags_labels = generate_heatmaps(1, 2, (416, 416), actual)
+  ct_labels_heatmaps = tf.reshape(ct_labels_heatmaps, [1, 416, 416, 2])
+
+  tag_masks = [[[True]]]
+  
+  labels = {
+            'tl_size': tl_tags_labels,
+            'br_size': br_tags_labels,
+            'ct_size': ct_tags_labels,
+            'tl_heatmaps': tl_labels_heatmaps,
+            'br_heatmaps': br_labels_heatmaps,
+            'ct_heatmaps': ct_labels_heatmaps,
+            'tag_masks': tag_masks,
+            'tl_offset': tl_regrs_labels,
+            'br_offset': br_regrs_labels,
+            'ct_offset': ct_regrs_labels,
+          }
+
+  outputs = {
+            'tl_size': tl_tags,
+            'br_size': br_tags,
+            'ct_size': ct_tags,
+            'tl_heatmaps': tl_heatmaps,
+            'br_heatmaps': br_heatmaps,
+            'ct_heatmaps': ct_heatmaps,
+            'tag_masks': tag_masks,
+            'tl_offset': tl_regrs,
+            'br_offset': br_regrs,
+            'ct_offset': ct_regrs,
+          }
+  task = CenterNetTask(None)
+  loss,metric = task.build_losses(outputs, labels)
   tf.test.main()

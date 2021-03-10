@@ -39,7 +39,7 @@ class CenterNetTask(base_task.Task):
     num_boxes = utils._to_float32(utils.get_num_instances_from_weights(labels['tag_masks']))  
 
     object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
-    # Loop through each feature output head.
+    
     outputs['ct_heatmaps'] = utils._flatten_spatial_dimensions(outputs['ct_heatmaps'])
     total_loss += object_center_loss(
         flattened_ct_heatmaps, outputs['ct_heatmaps'])  #removed weight parameter (weight = per_pixel_weight)

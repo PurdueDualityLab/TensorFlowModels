@@ -20,6 +20,7 @@ from typing import List
 import dataclasses
 
 from official.modeling import hyperparams
+from official.vision.beta.configs import backbones
 
 
 @dataclasses.dataclass
@@ -32,3 +33,7 @@ class Hourglass(hyperparams.Config):
       default_factory=lambda: [2, 2, 2, 2, 2, 4])
   num_hourglasses: int = 2
   initial_downsample: bool = True
+
+@dataclasses.dataclass
+class Backbone(backbones.Backbone):
+  hourglass: Hourglass = Hourglass()
