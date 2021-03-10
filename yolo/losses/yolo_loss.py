@@ -304,7 +304,7 @@ class Yolo_Loss(object):
     if self._new_cords:
       # objectness scaling 
       obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf)) * self._obj_normalizer)
-      true_conf = tf.stop_gradient(best_iou_match)
+      true_conf = tf.stop_gradient(true_conf * liou) #best_iou_match)
     else:
       obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * mask_iou) * self._obj_normalizer)
 

@@ -43,7 +43,7 @@ class YoloTask(base_task.Task):
     self._metric_names = []
     self._metrics = []
 
-    self._dfilter = detection_generator.YoloFilter()
+    self._dfilter = detection_generator.YoloFilter(classes = self._task_config.model.num_classes)
     return
 
   def build_model(self):
