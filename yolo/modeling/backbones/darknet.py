@@ -201,7 +201,7 @@ LARGECSP53 = {
             False
         ],
         [
-            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish', -1,
+            'DarkRes', 'csp', 1, True, 64, None, None, None, None, 'mish', -1,
             1, 1, False
         ],
         [
@@ -218,15 +218,15 @@ LARGECSP53 = {
         ],
         [
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-            -1, 8, 5, True
+            -1, 4, 5, True
         ],
         [
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-            -1, 16, 6, True
+            -1, 8, 6, True
         ],
         [
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-            -1, 32, 7, True
+            -1, 16, 7, True
         ],
     ]
 }
