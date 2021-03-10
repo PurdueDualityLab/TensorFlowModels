@@ -8,7 +8,7 @@ from official.core import task_factory
 
 from official.vision.beta.evaluation import coco_evaluator
 from centernet.configs import centernet as cfg
-import centernet.ops.loss_utils as utils
+import centernet.ops.loss_ops as utils
 from centernet.losses import penalty_reduced_logistic_focal_loss
 from centernet.losses import l1_localization_loss
 
