@@ -102,7 +102,6 @@ class CenterNetTask(base_task.Task):
     center_loss = tf.reduce_sum(total_loss) / (
         float(len(outputs['ct_heatmaps'])) * num_boxes)
     loss += center_loss
-    metric_dict['ct_loss'] = center_loss
 
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
     # Compute the scale loss.
@@ -118,11 +117,64 @@ class CenterNetTask(base_task.Task):
     offset_loss += tf.reduce_sum(total_offset_loss) / (
         float(len(outputs['ct_size'])) * num_boxes)
 
+    metric_dict['ct_loss'] = center_loss
     metric_dict['ct_scale_loss'] = scale_loss
     metric_dict['ct_offset_loss'] = offset_loss
 
-    print(metric_dict)
-    return loss, metric_dict
+    for key in metric_dict.keys():
+      total_loss += metric_dict[key]
+
+    metric_dict['total_loss'] = total_loss
+    return metric_dict
 
   def build_metrics(self, training=True):
     pass
+
+  def train_step(self, inputs, model, optimizer, metrics=None):
+    # get the data point
+    image, label = inputs
+
+    with tf.GradientTape() as tape:
+      # compute a prediction
+      # cast to float32
+      y_pred = model(image, training=True)
+      y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+      loss_metrics = self.build_losses(y_pred, label)
+
+    #scale the loss for numerical stability
+    if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+      total_loss = optimizer.get_scaled_loss(loss_metrics['total_loss'])
+
+    #compute the gradient
+    train_vars = model.trainable_variables
+    gradients = tape.gradient(total_loss, train_vars)
+
+    #get unscaled loss if the scaled loss was used
+    if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+      gradients = optimizer.get_unscaled_gradients(gradients)
+
+    if self.task_config.gradient_clip_norm > 0.0:
+      gradients, _ = tf.clip_by_global_norm(gradients,
+                                            self.task_config.gradient_clip_norm)
+
+    optimizer.apply_gradients(zip(gradients, train_vars))
+
+    logs = {self.loss: loss_metrics['total_loss']}
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+
+    tf.print(logs, end='\n')
+    ret = '\033[F' * (len(logs.keys()) + 1)
+    tf.print(ret, end='\n')
+    return logs
+
+
+    
+
+
+
+
+
+  
