@@ -272,39 +272,41 @@ class Yolo_Loss(object):
     iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
     ignore_mask = tf.logical_not(iou_mask)
     
-
-    true_mask = iou > self._truth_thresh
+    # TODO: iou > truth_thresh
+    # true_mask = iou > self._truth_thresh
     
-    true_mask = tf.stop_gradient(
-      tf.reduce_any(true_mask, axis = -2, keepdims=False))
-    ignore_mask = tf.logical_or(ignore_mask, true_mask)
+    # true_mask = tf.stop_gradient(
+    #   tf.reduce_any(true_mask, axis = -2, keepdims=False))
+    # ignore_mask = tf.logical_or(ignore_mask, true_mask)
 
 
-    true_mask =  tf.stop_gradient(
-      tf.cast(tf.expand_dims(true_mask, axis = -1), pred_classes.dtype))
+    # true_mask =  tf.stop_gradient(
+    #   tf.cast(tf.expand_dims(true_mask, axis = -1), pred_classes.dtype))
     
-    # compute loss for truth threshold 
-    ciou = tf.transpose(ciou, perm = (0, 1, 2, 4, 3))
-    ciou_max = tf.reduce_max(ciou, axis = -1, keepdims=True)
-    ciou_mask = math_ops.mul_no_nan(true_mask, 
-                                    tf.cast(ciou == ciou_max, 
-                                    pred_classes.dtype))
+    # # compute loss for truth threshold 
+    # ciou = tf.transpose(ciou, perm = (0, 1, 2, 4, 3))
+    # ciou_max = tf.reduce_max(ciou, axis = -1, keepdims=True)
+    # ciou_mask = math_ops.mul_no_nan(true_mask, 
+    #                                 tf.cast(ciou == ciou_max, 
+    #                                 pred_classes.dtype))
 
-    classes = tf.reduce_max(classes * ciou_mask, axis = -1)
-    classes = tf.stop_gradient(tf.one_hot(tf.cast(classes, tf.int32), 
-        depth = tf.shape(pred_classes)[-1]) * true_mask)
-    thresh_class_loss = tf.reduce_sum(
-        tf.keras.losses.binary_crossentropy(tf.expand_dims(classes, axis = -1), 
-        tf.expand_dims(pred_classes, axis = -1)), axis = -1)
-    thresh_box_loss = tf.squeeze((1 - ciou_max), axis = -1)
-    true_mask = tf.squeeze(true_mask, axis = -1)
-    thresh_class_loss = math_ops.mul_no_nan(true_mask, thresh_class_loss)
-    thresh_box_loss = math_ops.mul_no_nan(true_mask, thresh_box_loss)
+    # classes = tf.reduce_max(classes * ciou_mask, axis = -1)
+    # classes = tf.stop_gradient(tf.one_hot(tf.cast(classes, tf.int32), 
+    #     depth = tf.shape(pred_classes)[-1]) * true_mask)
+    # thresh_class_loss = tf.reduce_sum(
+    #     tf.keras.losses.binary_crossentropy(tf.expand_dims(classes, axis = -1), 
+    #     tf.expand_dims(pred_classes, axis = -1)), axis = -1)
+    # thresh_box_loss = tf.squeeze((1 - ciou_max), axis = -1)
+    # true_mask = tf.squeeze(true_mask, axis = -1)
+    # thresh_class_loss = math_ops.mul_no_nan(true_mask, thresh_class_loss)
+    # thresh_box_loss = math_ops.mul_no_nan(true_mask, thresh_box_loss)
     
     ignore_mask = tf.stop_gradient(tf.cast(iou_mask, pred_classes.dtype))
     obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * ignore_mask)) 
     true_conf = tf.stop_gradient(true_conf)
-    return ignore_mask, thresh_class_loss, thresh_box_loss, true_conf, obj_mask
+    #return ignore_mask, thresh_class_loss, thresh_box_loss, true_conf, obj_mask
+    return ignore_mask, 0.0, 0.0, true_conf, obj_mask
+
 
 
   def __call__(self, y_true, y_pred, boxes, classes):
@@ -372,7 +374,7 @@ class Yolo_Loss(object):
             K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing,
             from_logits=False),
-        axis=-1) #* self._cls_normalizer
+        axis=-1)
     class_loss = math_ops.mul_no_nan(true_conf, class_loss)
     class_loss += thresh_class_loss
 

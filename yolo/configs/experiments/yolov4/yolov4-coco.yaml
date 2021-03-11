@@ -33,7 +33,7 @@ task:
     filter:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
-      truth_thresh: 0.7
+      truth_thresh: 1.0
       iou_thresh: 0.25
       nms_thresh: 0.4
       loss_type: ciou
