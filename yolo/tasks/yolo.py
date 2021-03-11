@@ -170,7 +170,10 @@ class YoloTask(base_task.Task):
     scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
-       _recall50) = self._loss_dict[key](grid[key], outputs[key])
+       _recall50) = self._loss_dict[key](grid[key], 
+                                         outputs[key], 
+                                         labels['bbox'], 
+                                         labels['classes'])
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
       metric_dict[f'box_loss_{key}'] = _loss_box
@@ -258,15 +261,15 @@ class YoloTask(base_task.Task):
     loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
 
-    grid = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label['grid_form'])
-    fbox = self._dfilter(grid)
-    fbox = tf.nest.map_structure(lambda x: tf.cast(x, image.dtype), fbox)
+    # grid = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label['grid_form'])
+    # fbox = self._dfilter(grid)
+    # fbox = tf.nest.map_structure(lambda x: tf.cast(x, image.dtype), fbox)
 
-    # boxes_lost = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.math.ceil(fbox['bbox'][..., -1]), axis = -1),tf.reduce_sum(tf.math.ceil(label['bbox'][..., -1]), axis = -1)))
-    # loss_metrics['total_loss'] = boxes_lost
+    # # boxes_lost = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.math.ceil(fbox['bbox'][..., -1]), axis = -1),tf.reduce_sum(tf.math.ceil(label['bbox'][..., -1]), axis = -1)))
+    # # loss_metrics['total_loss'] = boxes_lost
 
-    label['bbox'] = fbox['bbox']
-    label['classes'] = fbox['classes']
+    # label['bbox'] = fbox['bbox']
+    # label['classes'] = fbox['classes']
 
     image_shape = tf.shape(image)[1:-1]
 
@@ -283,7 +286,7 @@ class YoloTask(base_task.Task):
         'detection_classes':
             y_pred['classes'],
         'num_detections':
-            tf.shape(y_pred['bbox'])[:-1],
+            y_pred['num_detections'],#tf.shape(y_pred['bbox'])[:-1],
         'source_id':
             label['source_id'],
     }

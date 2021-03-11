@@ -147,10 +147,14 @@ class YoloLayer(ks.Model):
         self._nms_thresh,
         use_classes=True)
 
+    num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis = -1)
+    # tf.print(num_detections)
+
     return {
         'bbox': boxes,
         'classes': class_scores,
         'confidence': object_scores,
+        'num_detections': num_detections, 
     }
 
   @property
