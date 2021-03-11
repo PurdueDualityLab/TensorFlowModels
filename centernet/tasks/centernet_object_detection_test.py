@@ -4,7 +4,7 @@ import centernet.tasks as tasks
 import centernet.ops.loss_ops as utils
 from centernet.losses import penalty_reduced_logistic_focal_loss
 from centernet.losses import l1_localization_loss
-from centernet.tasks.centernet_object_detection import CenterNetTask
+from centernet.tasks.centernet import CenterNetTask
 
 def gaussian2D(shape, sigma=1):
   m, n = [(ss - 1.) / 2. for ss in shape]
@@ -58,7 +58,7 @@ def generate_heatmaps(batch_size, categories, output_size, detections, gaussian_
   tl_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
   br_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
   ct_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
-  
+
   tl_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
   br_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
   ct_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
@@ -101,7 +101,7 @@ def generate_heatmaps(batch_size, categories, output_size, detections, gaussian_
       draw_gaussian(tl_heatmaps[b_ind, category], [xtl, ytl], radius)
       draw_gaussian(br_heatmaps[b_ind, category], [xbr, ybr], radius)
       draw_gaussian(ct_heatmaps[b_ind, category], [xct, yct], radius, delte = 5)
-      
+
       tl_regrs[ind, :]  = [fxtl - xtl, fytl - ytl]
       br_regrs[ind, :]  = [fxbr - xbr, fybr - ybr]
       ct_regrs[ind, :]  = [fxct - xct, fyct - yct]
@@ -125,8 +125,8 @@ class ObjectDetectionTest(tf.test.TestCase):
     self.predicted = tf.constant([[
       (10, 30, 15, 17, 0)
     ]], dtype = tf.float32)
-      
-  def generate_heatmaps(self, dectections):
+
+  def test_generate_heatmaps(self):
     labels = dict()
     outputs = dict()
 
@@ -137,7 +137,7 @@ class ObjectDetectionTest(tf.test.TestCase):
     ct_labels_heatmaps = tf.reshape(ct_labels_heatmaps, [1, 416, 416, 2])
 
     tag_masks = [[[True]]]
-    
+
     labels = {
               'tl_size': tl_tags_labels,
               'br_size': br_tags_labels,
@@ -163,7 +163,7 @@ class ObjectDetectionTest(tf.test.TestCase):
               'br_offset': br_regrs,
               'ct_offset': ct_regrs,
             }
-    
+
     task = CenterNetTask(None)
     loss, metric = task.build_losses(outputs, labels)
 
@@ -182,7 +182,7 @@ if __name__ == '__main__':
   ]
   tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
   # ct_heatmaps[batch_id, class_id, ...]
-  
+
   plt.imshow(ct_heatmaps[0, 0, ...])
   plt.show()
   # This is to run the test

@@ -17,6 +17,7 @@ from centernet.ops import loss_ops
 from centernet.losses import penalty_reduced_logistic_focal_loss
 from centernet.losses import l1_localization_loss
 
+
 @task_factory.register_task_cls(cfg.CenterNetTask)
 class CenterNetTask(base_task.Task):
 
@@ -91,39 +92,36 @@ class CenterNetTask(base_task.Task):
 
     # TODO: Calculate loss
     flattened_ct_heatmaps = loss_ops._flatten_spatial_dimensions(labels['ct_heatmaps'])
-    num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(labels['tag_masks']))   #gt_weights_list here shouldn't be tag_masks here
+    num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(labels['tag_masks']))
 
     object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
-    # Loop through each feature output head.
-    for pred in outputs['ct_heatmaps']:
-      pred = loss_ops._flatten_spatial_dimensions(pred)
-      total_loss += object_center_loss(
-          flattened_ct_heatmaps, pred)  #removed weight parameter (weight = per_pixel_weight)
+
+    outputs['ct_heatmaps'] = loss_ops._flatten_spatial_dimensions(outputs['ct_heatmaps'])
+    total_loss += object_center_loss(
+        flattened_ct_heatmaps, outputs['ct_heatmaps'])  #removed weight parameter (weight = per_pixel_weight)
     center_loss = tf.reduce_sum(total_loss) / (
         float(len(outputs['ct_heatmaps'])) * num_boxes)
     loss += center_loss
     metric_dict['ct_loss'] = center_loss
 
-    #localization loss for offset and scale loss
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
-    for scale_pred, offset_pred in zip(outputs['ct_size'], outputs['ct_offset']):
-      # Compute the scale loss.
-      scale_pred = loss_ops.get_batch_predictions_from_indices(
-          scale_pred, labels['tag_locs'])
-      total_scale_loss += localization_loss_fn(
-          labels['ct_size'], scale_pred)                #removed  weights=batch_weights
-      # Compute the offset loss.
-      offset_pred = loss_ops.get_batch_predictions_from_indices(
-          offset_pred, labels['tag_locs'])
-      total_offset_loss += localization_loss_fn(
-          labels['ct_offset'], offset_pred)             #removed weights=batch_weights
+    # Compute the scale loss.
+    scale_pred = outputs['ct_size']
+    offset_pred = outputs['ct_offset']
+    total_scale_loss += localization_loss_fn(
+        labels['ct_size'], scale_pred)                #removed  weights=batch_weights
+    # Compute the offset loss.
+    total_offset_loss += localization_loss_fn(
+        labels['ct_offset'], offset_pred)             #removed weights=batch_weights
     scale_loss += tf.reduce_sum(total_scale_loss) / (
         float(len(outputs['ct_size'])) * num_boxes)
     offset_loss += tf.reduce_sum(total_offset_loss) / (
         float(len(outputs['ct_size'])) * num_boxes)
+
     metric_dict['ct_scale_loss'] = scale_loss
     metric_dict['ct_offset_loss'] = offset_loss
 
+    print(metric_dict)
     return loss, metric_dict
 
   def build_metrics(self, training=True):
