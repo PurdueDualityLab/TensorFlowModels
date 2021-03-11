@@ -218,6 +218,7 @@ class YoloLossLayer(hyperparams.Config):
   iou_thresh: float = 0.2
   nms_thresh: float = 0.6
   ignore_thresh: float = 0.5
+  truth_thresh: float = 1.0
   loss_type: str = 'ciou'
   max_boxes: int = 200
   anchor_generation_scale: int = 512

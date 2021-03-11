@@ -10,14 +10,16 @@ import numpy as np
 @tf.custom_gradient
 def gradient_trap(y):
   def trap(dy):
-    tf.print(dy)
+    tf.print(
+      tf.norm(dy)
+      )
     return dy
   return y, trap
 
 @tf.custom_gradient
 def obj_gradient_trap(y, obj_normalizer = 1.0):
   def trap(dy):
-    return dy * obj_normalizer, 0
+    return dy * obj_normalizer, 0.0
   return y, trap
 
 @tf.custom_gradient
@@ -216,11 +218,11 @@ class Yolo_Loss(object):
                 axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
     return tf.stop_gradient(recall)
 
-  def avgiou(self, iou):
+  def avgiou(self, iou, true_conf):
     avg_iou = math_ops.divide_no_nan(
       tf.reduce_sum(iou),
       tf.cast(
-          tf.math.count_nonzero(tf.cast(iou > 0, dtype=iou.dtype)),
+          tf.math.count_nonzero(tf.cast(true_conf, dtype=iou.dtype)),
           dtype=iou.dtype))
     return tf.stop_gradient(avg_iou)
 
@@ -360,6 +362,6 @@ class Yolo_Loss(object):
 
     # 10. store values for use in metrics
     recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
-    avg_iou = self.avgiou(iou)
-    avg_obj = self.avgiou(tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf)
+    avg_iou = self.avgiou(iou * true_conf, true_conf)
+    avg_obj = self.avgiou(tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf, true_conf)
     return loss, loss_box, conf_loss, class_loss, avg_iou, avg_obj, recall50

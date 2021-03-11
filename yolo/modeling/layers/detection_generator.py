@@ -18,6 +18,7 @@ class YoloLayer(ks.Model):
                classes,
                iou_thresh=0.0,
                ignore_thresh=0.7,
+               truth_thresh = 1.0, 
                nms_thresh=0.6,
                max_delta=10.0,
                loss_type='ciou',
@@ -37,6 +38,7 @@ class YoloLayer(ks.Model):
     self._anchors = anchors
     self._thresh = iou_thresh
     self._ignore_thresh = ignore_thresh
+    self._truth_thresh = truth_thresh
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
@@ -158,6 +160,7 @@ class YoloLayer(ks.Model):
       loss_dict[key] = Yolo_Loss(
           classes=self._classes,
           anchors=self._anchors,
+          truth_thresh=self._truth_thresh,
           ignore_thresh=self._ignore_thresh,
           loss_type=self._loss_type,
           iou_normalizer=self._iou_normalizer,
