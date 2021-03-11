@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-import penalty_reduced_logistic_focal_loss as losses
+import centernet.losses.penalty_reduced_logistic_focal_loss as losses
 
 LOG_2 = np.log(2)
 LOG_3 = np.log(3)

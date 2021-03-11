@@ -68,7 +68,7 @@ class L1LocalizationLoss(tf.keras.losses.Loss):
     return absolute_difference(
         y_true,
         y_pred,
-        weights=sample_weight,
+      #  weights=sample_weight,
         reduction=self._get_reduction()
     )
 

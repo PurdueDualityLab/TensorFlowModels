@@ -1,7 +1,10 @@
 import tensorflow as tf
 import numpy as np
 import centernet.tasks as tasks
-import centernet.utils as utils
+import centernet.ops.loss_ops as utils
+from centernet.losses import penalty_reduced_logistic_focal_loss
+from centernet.losses import l1_localization_loss
+from centernet.tasks.centernet import CenterNetTask
 
 def gaussian2D(shape, sigma=1):
   m, n = [(ss - 1.) / 2. for ss in shape]
@@ -49,18 +52,38 @@ def gaussian_radius(det_size, min_overlap):
   return min(r1, r2, r3)
 
 def generate_heatmaps(batch_size, categories, output_size, detections, gaussian_iou=0.7):
+
+  max_tag_len = 1
+
   tl_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
   br_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
   ct_heatmaps = np.zeros((batch_size, categories, output_size[0], output_size[1]), dtype=np.float32)
+
+  tl_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
+  br_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
+  ct_regrs = np.zeros((max_tag_len, 2), dtype=np.float32)
+  tl_tags = np.zeros((max_tag_len), dtype=np.int64)
+  br_tags = np.zeros((max_tag_len), dtype=np.int64)
+  ct_tags = np.zeros((max_tag_len), dtype=np.int64)
+  tag_lens    = np.zeros((batch_size, ), dtype=np.int32)
+
+  width_ratio = 1
+  height_ratio = 1
 
   for b_ind, detection_batches in enumerate(detections):
     for ind, detection in enumerate(detection_batches):
       category = int(detection[-1])
       #category = 0
-
       xtl, ytl = detection[0], detection[1]
       xbr, ybr = detection[2], detection[3]
       xct, yct = (detection[2] + detection[0])/2., (detection[3]+detection[1])/2.
+
+      fxtl = (xtl * width_ratio)
+      fytl = (ytl * height_ratio)
+      fxbr = (xbr * width_ratio)
+      fybr = (ybr * height_ratio)
+      fxct = (xct * width_ratio)
+      fyct = (yct * height_ratio)
 
       xtl = int(xtl)
       ytl = int(ytl)
@@ -79,17 +102,75 @@ def generate_heatmaps(batch_size, categories, output_size, detections, gaussian_
       draw_gaussian(br_heatmaps[b_ind, category], [xbr, ybr], radius)
       draw_gaussian(ct_heatmaps[b_ind, category], [xct, yct], radius, delte = 5)
 
-  return tl_heatmaps, br_heatmaps, ct_heatmaps
+      tl_regrs[ind, :]  = [fxtl - xtl, fytl - ytl]
+      br_regrs[ind, :]  = [fxbr - xbr, fybr - ybr]
+      ct_regrs[ind, :]  = [fxct - xct, fyct - yct]
+      tl_tags[ind]      = ytl * output_size[1] + xtl
+      br_tags[ind]      = ybr * output_size[1] + xbr
+      ct_tags[ind]      = yct * output_size[1] + xct
+
+      ct_regrs = tf.convert_to_tensor(ct_regrs, dtype=np.float32)
+      ct_tags  = tf.convert_to_tensor(ct_tags, dtype=np.int64)
+      ct_heatmaps = tf.convert_to_tensor(ct_heatmaps, dtype=np.float32)
+
+  return tl_heatmaps, br_heatmaps, ct_heatmaps, tl_regrs, br_regrs, ct_regrs, tl_tags, br_tags, ct_tags
 
 class ObjectDetectionTest(tf.test.TestCase):
-    def generate_heatmaps(self, dectections):
-      detections = [[
-        (10, 30, 15, 17, 0)
-      ]]
-      tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
-      pass
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.actual = tf.constant([[
+      (10, 25, 17, 18, 0)
+    ]], dtype = tf.float32)
+
+    self.predicted = tf.constant([[
+      (10, 30, 15, 17, 0)
+    ]], dtype = tf.float32)
+
+  def test_generate_heatmaps(self):
+    labels = dict()
+    outputs = dict()
+
+    tl_heatmaps, br_heatmaps, ct_heatmaps, tl_regrs, br_regrs, ct_regrs, tl_tags, br_tags, ct_tags = generate_heatmaps(1, 2, (416, 416), self.predicted)
+    ct_heatmaps = tf.reshape(ct_heatmaps, [1, 416, 416, 2])
+
+    tl_labels_heatmaps, br_labels_heatmaps, ct_labels_heatmaps, tl_regrs_labels, br_regrs_labels, ct_regrs_labels, tl_tags_labels, br_tags_labels, ct_tags_labels = generate_heatmaps(1, 2, (416, 416), self.actual)
+    ct_labels_heatmaps = tf.reshape(ct_labels_heatmaps, [1, 416, 416, 2])
+
+    tag_masks = [[[True]]]
+
+    labels = {
+              'tl_size': tl_tags_labels,
+              'br_size': br_tags_labels,
+              'ct_size': ct_tags_labels,
+              'tl_heatmaps': tl_labels_heatmaps,
+              'br_heatmaps': br_labels_heatmaps,
+              'ct_heatmaps': ct_labels_heatmaps,
+              'tag_masks': tag_masks,
+              'tl_offset': tl_regrs_labels,
+              'br_offset': br_regrs_labels,
+              'ct_offset': ct_regrs_labels,
+            }
+
+    outputs = {
+              'tl_size': tl_tags,
+              'br_size': br_tags,
+              'ct_size': ct_tags,
+              'tl_heatmaps': tl_heatmaps,
+              'br_heatmaps': br_heatmaps,
+              'ct_heatmaps': ct_heatmaps,
+              'tag_masks': tag_masks,
+              'tl_offset': tl_regrs,
+              'br_offset': br_regrs,
+              'ct_offset': ct_regrs,
+            }
+
+    task = CenterNetTask(None)
+    loss, metric = task.build_losses(outputs, labels)
+
+    pass
 
 if __name__ == '__main__':
+  '''
   # This code is for visualization
   import matplotlib.pyplot as plt
   detections = [[
@@ -101,7 +182,12 @@ if __name__ == '__main__':
   ]
   tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
   # ct_heatmaps[batch_id, class_id, ...]
+
   plt.imshow(ct_heatmaps[0, 0, ...])
   plt.show()
   # This is to run the test
-  # tf.test.main()
+  #plt.imshow(ct_heatmaps[0, 0, ...])
+  #plt.imshow(labels_heatmaps[0, 0, ...])
+  #plt.show()
+  '''
+  tf.test.main()
