@@ -227,7 +227,7 @@ class Yolo_Loss(object):
   def get_mask(self, iou, classes, true_classes, dtype):
     box_match = iou > self._ignore_thresh
     truth_alter = iou > self._truth_thresh
-    class_match = tf.stop_gradient(tf.argmax(tf.sigmoid(classes), axis = -1) == tf.argmax(true_classes, axis = -1))
+    class_match = tf.stop_gradient(tf.argmax(tf.sigmoid(classes), axis = -1) == tf.argmax(tf.cast(true_classes, classes.dtype), axis = -1))
     matched_boxes = tf.logical_and(box_match, class_match)
     unmatched_boxes = tf.logical_not(matched_boxes)
     mask = tf.cast(tf.logical_or(unmatched_boxes, truth_alter), dtype)
