@@ -355,4 +355,5 @@ class Yolo_Loss(object):
     # 10. store values for use in metrics
     recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
     avg_iou = self.avgiou(iou)
-    return loss, loss_box, conf_loss, class_loss, avg_iou, recall50
+    avg_obj = self.avgiou(tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf)
+    return loss, loss_box, conf_loss, class_loss, avg_iou, avg_obj, recall50

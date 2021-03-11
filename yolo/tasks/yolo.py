@@ -169,7 +169,7 @@ class YoloTask(base_task.Task):
 
     scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
-      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou,
+      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
        _recall50) = self._loss_dict[key](grid[key], outputs[key])
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
@@ -177,6 +177,7 @@ class YoloTask(base_task.Task):
       metric_dict[f'class_loss_{key}'] = _loss_class
       metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
       metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
+      metric_dict[f"avg_obj_{key}"] = tf.stop_gradient(_avg_obj)
       loss[f"loss_{key}"] = _loss * scale / num_replicas
       loss_val += _loss * scale / num_replicas
 
@@ -374,6 +375,7 @@ class YoloTask(base_task.Task):
       loss_names.append(f'loss_{key}')
       metric_names.append(f"recall50_{key}")
       metric_names.append(f"avg_iou_{key}")
+      metric_names.append(f"avg_obj_{key}")
 
     metric_names.append(f'total_loss')
 
