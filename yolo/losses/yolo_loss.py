@@ -258,14 +258,15 @@ class Yolo_Loss(object):
     
     iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))
     iou_mask = tf.logical_and(iou_mask, matched_classes)
-
     iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
-    true_mask = tf.cast(iou > self._truth_thresh, pred_classes.dtype)
-
-
-
     ignore_mask = tf.cast(tf.logical_not(iou_mask), pred_classes.dtype)
-    # tf.print(tf.shape(classes), tf.shape(pred_classes), tf.shape(true_mask))
+    
+    true_mask = tf.cast(iou > self._truth_thresh, pred_classes.dtype)
+    true_mask = tf.transpose(true_mask, perm = (0, 1, 2, 4, 3))
+
+
+    
+    tf.print(tf.shape(classes), tf.shape(pred_classes), tf.shape(true_mask))
     return tf.stop_gradient(ignore_mask), tf.stop_gradient(true_mask)
 
 
