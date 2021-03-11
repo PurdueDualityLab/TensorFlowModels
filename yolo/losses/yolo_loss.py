@@ -27,8 +27,6 @@ def box_gradient_trap(y, iou_normalizer = 1.0, max_delta = np.inf):
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
-
-    tf.print(tf.reduce_max(dy))
     return dy, 0.0, 0.0
   return y, trap
 
@@ -40,17 +38,25 @@ def class_gradient_trap(y, class_normalizer = 1.0):
     return dy, 0.0
   return y, trap
 
-def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y):
+def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, iou_normalizer = 1.0, max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = unscaled_box[..., 2:4]
+
+  pred_xy = box_gradient_trap(pred_xy, iou_normalizer, max_delta)
+  pred_wh = box_gradient_trap(pred_wh, iou_normalizer, max_delta)
+  
   box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],axis=-1) + grid_points
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
 
-def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y):
+def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, iou_normalizer = 1.0, max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
+
+  pred_xy = box_gradient_trap(pred_xy, iou_normalizer, max_delta)
+  pred_wh = box_gradient_trap(pred_wh, iou_normalizer, max_delta)
+
   box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
   box_wh = 4 * tf.square(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
@@ -221,7 +227,7 @@ class Yolo_Loss(object):
   def get_mask(self, iou, classes, true_classes, dtype):
     box_match = iou > self._ignore_thresh
     truth_alter = iou > self._truth_thresh
-    class_match = tf.argmax(tf.sigmoid(classes), axis = -1) == tf.argmax(true_classes, axis = -1)
+    class_match = tf.stop_gradient(tf.argmax(tf.sigmoid(classes), axis = -1) == tf.argmax(true_classes, axis = -1))
     matched_boxes = tf.logical_and(box_match, class_match)
     unmatched_boxes = tf.logical_not(matched_boxes)
     mask = tf.cast(tf.logical_or(unmatched_boxes, truth_alter), dtype)
@@ -249,13 +255,12 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, y_pred.dtype)
 
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
-    pred_box = box_gradient_trap(y_pred[..., 0:4], self._iou_normalizer, self._max_delta)
     if not self._new_cords:
       pred_xy, pred_wh, pred_box = get_predicted_box(
-          fwidth, fheight, , anchor_grid, grid_points, self._scale_x_y)
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y, iou_normalizer=self._iou_normalizer, max_delta=self._max_delta)
     else:
       pred_xy, pred_wh, pred_box = get_predicted_box_newcords(
-          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y, iou_normalizer=self._iou_normalizer, max_delta=self._max_delta)
     pred_conf = tf.expand_dims(y_pred[..., 4], axis=-1)
     pred_class = y_pred[..., 5:]
 
