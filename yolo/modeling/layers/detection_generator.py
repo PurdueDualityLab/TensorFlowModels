@@ -238,7 +238,7 @@ class YoloFilter(ks.Model):
         1.0,
         use_classes=True)
 
-    tf.print(object_scores)
+    # tf.print(object_scores)
     return {
         'bbox': boxes,
         'classes': class_scores,

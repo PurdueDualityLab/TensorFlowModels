@@ -15,25 +15,29 @@ def gradient_trap(y):
   return y, trap
 
 @tf.custom_gradient
-def obj_gradient_trap(y):
+def obj_gradient_trap(y, obj_normalizer = 1.0):
   def trap(dy):
-    return dy
+    return dy * obj_normalizer, 0
   return y, trap
 
 @tf.custom_gradient
-def box_gradient_trap(y, max_delta = np.inf):
+def box_gradient_trap(y, iou_normalizer = 1.0, max_delta = np.inf):
   def trap(dy):
+    dy *= iou_normalizer
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
-    return dy, 0.0
+
+    tf.print(tf.reduce_max(dy))
+    return dy, 0.0, 0.0
   return y, trap
 
 @tf.custom_gradient
-def class_gradient_trap(y):
+def class_gradient_trap(y, class_normalizer = 1.0):
   def trap(dy):
+    dy *= class_normalizer
     dy = math_ops.rm_nan_inf(dy)
-    return dy
+    return dy, 0.0
   return y, trap
 
 def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y):
@@ -66,6 +70,7 @@ class Yolo_Loss(object):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_reduction_sum = False, 
+               iou_thresh = 0.213, 
                new_cords = False, 
                scale_x_y=1.0,
                max_delta=10,    
@@ -110,6 +115,7 @@ class Yolo_Loss(object):
     self._num_extras = tf.cast(num_extras, dtype=tf.int32)
     self._truth_thresh = truth_thresh
     self._ignore_thresh = ignore_thresh
+    self._iou_thresh = iou_thresh
     self._masks = mask
 
     self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
@@ -212,13 +218,26 @@ class Yolo_Loss(object):
           dtype=iou.dtype))
     return tf.stop_gradient(avg_iou)
 
+  def get_mask(self, iou, classes, true_classes, dtype):
+    box_match = iou > self._ignore_thresh
+    truth_alter = iou > self._truth_thresh
+    class_match = tf.argmax(tf.sigmoid(classes), axis = -1) == tf.argmax(true_classes, axis = -1)
+    matched_boxes = tf.logical_and(box_match, class_match)
+    unmatched_boxes = tf.logical_not(matched_boxes)
+    mask = tf.cast(tf.logical_or(unmatched_boxes, truth_alter), dtype)
+    mask = math_ops.rm_nan_inf(mask, val=0)
+    return (tf.stop_gradient(mask), 
+            tf.stop_gradient(matched_boxes),
+            tf.stop_gradient(truth_alter))
+
+
   def __call__(self, y_true, y_pred):
     # 1. generate and store constants and format output
     shape = tf.shape(y_pred)
     batch_size, width, height = shape[0], shape[1], shape[2]
     num = tf.shape(y_true)[-2]
 
-    # y_pred = gradient_trap(y_pred)
+    # y_pred = gradient_trap(y_pred)if n:
 
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
@@ -254,24 +273,20 @@ class Yolo_Loss(object):
         depth=tf.shape(pred_class)[-1],
         dtype=y_pred.dtype)
 
-    pred_box = box_gradient_trap(pred_box, self._max_delta)
+    pred_box = box_gradient_trap(pred_box, self._iou_normalizer, self._max_delta)
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes 
     # where an object exists will affect the total loss -> found via the 
     # true_confidnce in ground truth
     if self._loss_type == 1:
       iou, liou = box_ops.compute_giou(true_box, pred_box)
-      mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou) * self._iou_normalizer)
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou)) #* self._iou_normalizer
     elif self._loss_type == 2:
       iou, liou = box_ops.compute_ciou(true_box, pred_box)
-      mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou) * self._iou_normalizer)
+      loss_box = math_ops.mul_no_nan(true_conf, (1 - liou)) # * self._iou_normalizer
     else:
       # iou mask computation
       iou = box_ops.compute_iou(true_box, pred_box)
       liou = iou
-      mask_iou = tf.cast(iou < self._ignore_thresh, dtype=y_pred.dtype)
-
       # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
       scale = (2 - true_box[..., 2] * true_box[..., 3]) * self._iou_normalizer
       true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight,
@@ -281,31 +296,37 @@ class Yolo_Loss(object):
       loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
       loss_box = math_ops.mul_no_nan(true_conf, (loss_wh + loss_xy) * scale)
 
+    
     # 6. apply binary cross entropy(bce) to class attributes -> only the indexes
     # where an object exists will affect the total loss -> found via the 
     # true_confidnce in ground truth
-    pred_class = class_gradient_trap(pred_class)
-    class_loss = self._cls_normalizer * tf.reduce_sum(
+    pred_class = class_gradient_trap(pred_class, self._cls_normalizer)
+    class_loss = tf.reduce_sum(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing,
             from_logits=True),
-        axis=-1)
+        axis=-1) #* self._cls_normalizer
     class_loss = math_ops.mul_no_nan(true_conf, class_loss)
 
     # 7. apply bce to confidence at all points and then strategiacally penalize 
     # the network for making predictions of objects at locations were no object 
     # exists
-    pred_conf = obj_gradient_trap(pred_conf)
-    pred_conf = math_ops.rm_nan_inf(pred_conf, val=-np.inf)
+    pred_conf = obj_gradient_trap(pred_conf, self._obj_normalizer)
+    mask_loss, matched_mask, truth_alter = self.get_mask(iou,
+                                                         pred_class, 
+                                                         true_class, 
+                                                         y_pred.dtype)
 
     if self._new_cords:
       # objectness scaling 
-      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf)) * self._obj_normalizer)
-      true_conf = tf.stop_gradient(true_conf * liou) #best_iou_match)
+      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf))) #* self._obj_normalizer
+      true_conf = tf.where(matched_mask, liou, true_conf)
+      true_conf = tf.where(truth_alter, tf.square(liou), true_conf)
+      true_conf = tf.stop_gradient(true_conf)
     else:
-      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * mask_iou) * self._obj_normalizer)
+      obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * mask_loss)) #* self._obj_normalizer
 
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)

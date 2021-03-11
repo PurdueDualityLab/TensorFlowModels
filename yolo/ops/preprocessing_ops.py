@@ -598,7 +598,8 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
         tf.transpose(iou_raw, perm=[0, 2, 1]),
         k=tf.cast(k, dtype=tf.int32),
         sorted=True)
-    ind_mask = tf.cast(values > iou_thresh, dtype=indexes.dtype)
+    
+    ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
 
     # pad the indexs such that all values less than the thresh are -1
     # add one, multiply the mask to zeros all the bad locations
@@ -609,6 +610,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
     ],
                           axis=-1)
 
+    # iou_index = tf.where(values >= iou_thresh, indexes, -1)
     if not is_batch:
       iou_index = tf.squeeze(iou_index, axis=0)
       values = tf.squeeze(values, axis=0)
@@ -634,6 +636,8 @@ def _use_tie_breaker(batch, anchors, ious, mask, i, box_id, depth_track, x, y, b
     anchor = anchors[batch, box_id, anchor_id]
     iou = ious[batch, box_id, anchor_id]
     if anchor < 0:
+      break
+    if iou < 0:
       break
 
     index = tf.math.equal(anchor, mask)

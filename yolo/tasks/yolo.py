@@ -260,6 +260,10 @@ class YoloTask(base_task.Task):
     grid = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label['grid_form'])
     fbox = self._dfilter(grid)
     fbox = tf.nest.map_structure(lambda x: tf.cast(x, image.dtype), fbox)
+
+    # boxes_lost = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.math.ceil(fbox['bbox'][..., -1]), axis = -1),tf.reduce_sum(tf.math.ceil(label['bbox'][..., -1]), axis = -1)))
+    # loss_metrics['total_loss'] = boxes_lost
+
     label['bbox'] = fbox['bbox']
     label['classes'] = fbox['classes']
 

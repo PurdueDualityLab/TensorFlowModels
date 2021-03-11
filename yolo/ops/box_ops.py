@@ -77,7 +77,6 @@ def compute_iou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
-    iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
   return iou
 
 
@@ -112,7 +111,6 @@ def compute_giou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
-    iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # find the smallest box to encompase both box1 and box2
     c_mins = tf.math.minimum(b1mi, b2mi)  
@@ -162,7 +160,6 @@ def compute_diou(box1, box2, yxyx=False):
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
-    iou = tf.clip_by_value(iou, clip_value_min=0.0, clip_value_max=1.0)
 
     # compute max diagnal of the smallest enclosing box
     c_mins = tf.math.minimum(b1mi, b2mi)  # box1[..., 0:2], box2[..., 0:2])
