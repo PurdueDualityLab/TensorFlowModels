@@ -249,9 +249,10 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, y_pred.dtype)
 
     # 2. split up layer output into components, xy, wh, confidence, class -> then apply activations to the correct items
+    pred_box = box_gradient_trap(y_pred[..., 0:4], self._iou_normalizer, self._max_delta)
     if not self._new_cords:
       pred_xy, pred_wh, pred_box = get_predicted_box(
-          fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
+          fwidth, fheight, , anchor_grid, grid_points, self._scale_x_y)
     else:
       pred_xy, pred_wh, pred_box = get_predicted_box_newcords(
           fwidth, fheight, y_pred[..., 0:4], anchor_grid, grid_points, self._scale_x_y)
@@ -273,7 +274,7 @@ class Yolo_Loss(object):
         depth=tf.shape(pred_class)[-1],
         dtype=y_pred.dtype)
 
-    pred_box = box_gradient_trap(pred_box, self._iou_normalizer, self._max_delta)
+    # pred_box = box_gradient_trap(pred_box, self._iou_normalizer, self._max_delta)
     # 5. apply generalized IOU or mse to the box predictions -> only the indexes 
     # where an object exists will affect the total loss -> found via the 
     # true_confidnce in ground truth
