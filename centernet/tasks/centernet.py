@@ -6,6 +6,7 @@ from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
 from official.vision.beta.evaluation import coco_evaluator
+from official.vision.beta.ops import box_ops
 
 # TODO: Already added to official codebase, change to official version later
 from yolo.dataloaders.decoders import tfds_coco_decoder
@@ -16,6 +17,7 @@ from centernet.modeling.CenterNet import build_centernet
 from centernet.ops import loss_ops
 from centernet.losses import penalty_reduced_logistic_focal_loss
 from centernet.losses import l1_localization_loss
+from centernet.modeling.layers import detection_generator
 
 
 @task_factory.register_task_cls(cfg.CenterNetTask)
@@ -138,7 +140,7 @@ class CenterNetTask(base_task.Task):
       # compute a prediction
       # cast to float32
       y_pred = model(image, training=True)
-      y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+      y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred['raw_output'])
       loss_metrics = self.build_losses(y_pred, label)
 
     #scale the loss for numerical stability
@@ -168,6 +170,37 @@ class CenterNetTask(base_task.Task):
     tf.print(logs, end='\n')
     ret = '\033[F' * (len(logs.keys()) + 1)
     tf.print(ret, end='\n')
+    return logs
+
+  def validation_step(self, inputs, model, metrics=None):
+    # get the data point
+    image, label = inputs
+
+    # computer detivative and apply gradients
+    y_pred = model(image, training=False)
+    y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred['raw_output'])
+    loss_metrics = self.build_losses(y_pred, label)
+    logs = {self.loss: loss_metrics['total_loss']}
+
+    coco_model_outputs = {
+      'detection_boxes':
+          box_ops.denormalize_boxes(
+              tf.cast(y_pred['bbox'], tf.float32), image_shape),
+      'detection_scores':
+          y_pred['confidence'],
+      'detection_classes':
+          y_pred['classes'],
+      'num_detections':
+          tf.shape(y_pred['bbox'])[:-1],
+    }
+
+    logs.update({self.coco_metric.name: (label, coco_model_outputs)})
+
+    if metrics:
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+
     return logs
 
 
