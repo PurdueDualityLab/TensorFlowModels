@@ -234,7 +234,6 @@ class Yolo_Loss(object):
       loss_xy = tf.reduce_sum(K.square(true_xy - pred_xy), axis=-1)
       loss_wh = tf.reduce_sum(K.square(true_wh - pred_wh), axis=-1)
       loss_box = (loss_wh + loss_xy) * scale
-  
     return iou, liou, loss_box
 
   def build_masks(self, pred_boxes, pred_classes, boxes, classes, true_conf):

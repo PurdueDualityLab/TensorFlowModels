@@ -204,9 +204,9 @@ class Parser(parser.Parser):
       zfactor = 0.0
 
     image_shape = tf.shape(image)[:2]
-    boxes = box_ops.denormalize_boxes(boxes, image_shape)
-    boxes = box_ops.jitter_boxes(boxes, 0.025)
-    boxes = box_ops.normalize_boxes(boxes, image_shape)
+    # boxes = box_ops.denormalize_boxes(boxes, image_shape)
+    # boxes = box_ops.jitter_boxes(boxes, 0.025)
+    # boxes = box_ops.normalize_boxes(boxes, image_shape)
 
     image, crop_info = preprocessing_ops.random_op_image(
         image, self._jitter_im, zfactor, 0.0, True)
@@ -281,6 +281,8 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     width = shape[1]
     height = shape[0]
+
+    image_shape = tf.shape(image)[:2]
 
     image, boxes = preprocessing_ops.letter_box(
         image, boxes, target_dim=self._image_w)
