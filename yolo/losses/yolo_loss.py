@@ -193,18 +193,6 @@ class Yolo_Loss(object):
     wh = math_ops.rm_nan_inf(wh)
     return tf.stop_gradient(xy), tf.stop_gradient(wh)
 
-  def ce(self, target, output):
-
-    def _smooth_labels(y_true):
-      return tf.stop_gradient(y_true * (1.0 - self._label_smoothing) +
-                              0.5 * self._label_smoothing)
-
-    target = _smooth_labels(target)
-    output = tf.clip_by_value(output, K.epsilon(), 1. - K.epsilon())
-    # loss = -target * tf.math.log(output + K.epsilon())
-    loss = math_ops.mul_no_nan(-target, tf.math.log(output + K.epsilon()))
-    return loss
-
   def recall(self, pred_conf, true_conf, pct = 0.5):
     recall = tf.reduce_mean(
         tf.math.divide_no_nan(
@@ -256,17 +244,23 @@ class Yolo_Loss(object):
     boxes = box_ops.yxyx_to_xcycwh(boxes)
     pred_boxes = tf.expand_dims(pred_boxes, axis = -3)
 
+    iou, ciou, _ = self.box_loss(boxes, pred_boxes)
+    iou_mask = iou > self._ignore_thresh
+
     classes = tf.expand_dims(classes, axis = 1)
     classes = tf.expand_dims(classes, axis = 1)
     classes = tf.expand_dims(classes, axis = 1)
     pred_classes_max = tf.cast(
       tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
-    matched_classes = tf.equal(classes, pred_classes_max)
-
-    iou, ciou, _ = self.box_loss(boxes, pred_boxes)
-    iou_mask = iou > self._ignore_thresh
+    pred_classes_conf = tf.cast(
+      tf.expand_dims(tf.reduce_max(pred_classes, axis = -1), axis = -1), tf.float32)
     
-    iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))
+    # cconfidence is low
+    pred_classes_mask = tf.cast(pred_classes_conf > 0.25, tf.float32)
+    pred_classes_max = (pred_classes_max * pred_classes_mask) - (1.0 - pred_classes_mask)
+    
+    iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))    
+    matched_classes = tf.equal(classes, pred_classes_max)
     iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
     ignore_mask = tf.logical_not(iou_mask)
@@ -380,7 +374,6 @@ class Yolo_Loss(object):
     # 7. apply bce to confidence at all points and then strategiacally penalize 
     # the network for making predictions of objects at locations were no object 
     # exists
-    # obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * mask_loss)) 
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
