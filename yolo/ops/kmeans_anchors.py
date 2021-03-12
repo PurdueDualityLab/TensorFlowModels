@@ -36,7 +36,6 @@ class AnchorKMeans:
     self._clusters = None
     self._with_color = with_color
 
-  @tf.function
   def iou(self, boxes, clusters):
     n = tf.shape(boxes)[0]
     boxes = tf.repeat(boxes, self._k, axis=0)
@@ -71,7 +70,6 @@ class AnchorKMeans:
   def boxes(self):
     return self._boxes.numpy()
 
-  @tf.function
   def kmeans(self, max_iter, box_num, clusters, k):
     dists = tf.zeros((box_num, k))
     last = tf.zeros((box_num,), dtype=tf.int64)

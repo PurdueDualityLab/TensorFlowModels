@@ -1,0 +1,201 @@
+from tensorflow import keras as ks
+import tensorflow as tf
+
+from yolo.ops.nms_ops import nms
+
+class CenterNetLayer(ks.Model):
+  
+  def __init__(self,
+               max_detections=100,
+               center_thresh=0.1,
+               peak_error=1e-6,
+               class_offset=1,
+               use_nms=True,
+               **kwargs):
+
+    super().__init__(**kwargs)
+    self._max_detections = max_detections
+    self._center_thresh = center_thresh
+    self._peak_error = peak_error
+    self._class_offset = class_offset
+    self._use_nms = use_nms
+  
+  def process_heatmap(self, 
+                      feature_map,
+                      kernel_size=3):
+    feature_map = tf.math.sigmoid(feature_map)
+    if not kernel_size or kernel_size == 1:
+      feature_map_peaks = feature_map
+    else:
+      feature_map_max_pool = tf.nn.max_pool(
+          feature_map, ksize=kernel_size, strides=1, padding='SAME')
+
+      feature_map_peak_mask = tf.math.abs(
+          feature_map - feature_map_max_pool) < self._peak_error
+
+      # Zero out everything that is not a peak.
+      feature_map_peaks = (
+          feature_map * tf.cast(feature_map_peak_mask, tf.float32))
+    
+    return feature_map_peaks
+  
+  def get_row_col_channel_indices_from_flattened_indices(self,
+                                                         indices, 
+                                                         num_cols,
+                                                         num_channels):
+    """Computes row, column and channel indices from flattened indices.
+    Args:
+      indices: An integer tensor of any shape holding the indices in the flattened
+        space.
+      num_cols: Number of columns in the image (width).
+      num_channels: Number of channels in the image.
+    Returns:
+      row_indices: The row indices corresponding to each of the input indices.
+        Same shape as indices.
+      col_indices: The column indices corresponding to each of the input indices.
+        Same shape as indices.
+      channel_indices. The channel indices corresponding to each of the input
+        indices.
+    """
+    # Avoid using mod operator to make the ops more easy to be compatible with
+    # different environments, e.g. WASM.
+    row_indices = (indices // num_channels) // num_cols
+    col_indices = (indices // num_channels) - row_indices * num_cols
+    channel_indices_temp = indices // num_channels
+    channel_indices = indices - channel_indices_temp * num_channels
+
+    return row_indices, col_indices, channel_indices
+
+  def multi_range(self,
+                   limit,
+                   value_repetitions=1,
+                   range_repetitions=1,
+                   dtype=tf.int32):
+    """Creates a sequence with optional value duplication and range repetition.
+    As an example (see the Args section for more details),
+    _multi_range(limit=2, value_repetitions=3, range_repetitions=4) returns:
+    [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1]
+    Args:
+      limit: A 0-D Tensor (scalar). Upper limit of sequence, exclusive.
+      value_repetitions: Integer. The number of times a value in the sequence is
+        repeated. With value_repetitions=3, the result is [0, 0, 0, 1, 1, 1, ..].
+      range_repetitions: Integer. The number of times the range is repeated. With
+        range_repetitions=3, the result is [0, 1, 2, .., 0, 1, 2, ..].
+      dtype: The type of the elements of the resulting tensor.
+    Returns:
+      A 1-D tensor of type `dtype` and size
+        [`limit` * `value_repetitions` * `range_repetitions`] that contains the
+        specified range with given repetitions.
+    """
+    return tf.reshape(
+        tf.tile(
+          tf.expand_dims(tf.range(limit, dtype=dtype), axis=-1),
+          multiples=[range_repetitions, value_repetitions]), [-1])
+  
+  def get_top_k_peaks(self,
+                      feature_map_peaks,
+                      batch_size,
+                      width,
+                      num_classes,
+                      k=100):
+
+    # Flatten the entire prediction per batch
+    # Now the feature_map_peaks are in shape [batch_size, num_classes * width * height]
+    feature_map_peaks_flat = tf.reshape(feature_map_peaks, [batch_size, -1])
+
+    # top_scores and top_indeces have shape [batch_size, k]
+    top_scores, top_indeces = tf.math.top_k(feature_map_peaks_flat, k=k)
+
+    # Get x, y and channel indices corresponding to the top indices in the flat
+    # array.
+    y_indices, x_indices, channel_indices = (
+      self.get_row_col_channel_indices_from_flattened_indices(
+        top_indeces, width, num_classes))
+    return top_scores, y_indices, x_indices, channel_indices
+
+  def get_boxes(self, 
+                detection_scores, 
+                y_indices, 
+                x_indices,
+                channel_indices, 
+                height_width_predictions,
+                offset_predictions,
+                batch_size,
+                num_boxes):
+
+    # TF Lite does not support tf.gather with batch_dims > 0, so we need to use
+    # tf_gather_nd instead and here we prepare the indices for that.
+    combined_indices = tf.stack([
+        self.multi_range(batch_size, value_repetitions=num_boxes),
+        tf.reshape(y_indices, [-1]),
+        tf.reshape(x_indices, [-1])
+    ], axis=1)
+
+    # Get the heights and widths of center points
+    new_height_width = tf.gather_nd(height_width_predictions, combined_indices)
+    new_height_width = tf.reshape(new_height_width, [batch_size, num_boxes, -1])
+    height_width = tf.maximum(new_height_width, 0)
+
+    heights = height_width[..., 0]
+    widths = height_width[..., 1]
+
+    # Get the heights and widths of center points
+    new_offsets = tf.gather_nd(offset_predictions, combined_indices)
+    offsets = tf.reshape(new_offsets, [batch_size, num_boxes, -1])
+
+    y_offsets = offsets[..., 0]
+    x_offsets = offsets[..., 1]
+
+    y_indices = tf.cast(y_indices, dtype=tf.float32)
+    x_indices = tf.cast(x_indices, dtype=tf.float32)
+
+    detection_classes = channel_indices + self._class_offset
+
+    num_detections = tf.reduce_sum(tf.cast(detection_scores > 0, dtype=tf.int32), axis=1)
+
+    boxes = tf.stack([y_indices + y_offsets - heights / 2.0,
+                      x_indices + x_offsets - widths / 2.0,
+                      y_indices + y_offsets + heights / 2.0,
+                      x_indices + x_offsets + widths / 2.0], axis=2)
+
+    return boxes, detection_classes, detection_scores, num_detections
+
+  def call(self, inputs):
+    # Get heatmaps from decoded ourputs via final hourglass stack output
+    ct_heatmaps = inputs['ct_heatmaps'][-1]
+    ct_sizes = inputs['ct_size'][-1]
+    ct_offsets = inputs['ct_offset'][-1]
+    
+    shape = tf.shape(ct_heatmaps)
+    batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
+
+    # Process heatmaps using 3x3 convolution and applying sigmoid
+    peaks = self.process_heatmap(ct_heatmaps)
+    
+    # Get top scores along with their x, y, and class
+    scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
+      batch_size, width, num_channels, k=self._max_detections)
+
+    # Parse the score and indeces into bounding boxes
+    boxes, classes, scores, num_det = self.get_boxes(scores, 
+      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, batch_size, self._max_detections)
+    
+    # Normalize bounding boxes
+    boxes = boxes / tf.cast(height, tf.float32)
+  
+    boxes = tf.expand_dims(boxes, axis=-2)
+    multi_class_scores = tf.gather_nd(
+        peaks, tf.stack([y_indices, x_indices], -1), batch_dims=1)
+
+    boxes, _, scores = nms(boxes=boxes, classes=multi_class_scores, 
+      confidence=scores, k=self._max_detections, limit_pre_thresh=True,
+      pre_nms_thresh=0.1, nms_thresh=0.4)
+
+    num_dets = tf.reduce_sum(tf.cast(scores > 0, dtype=tf.int32), axis=1)
+
+    return {
+      'bbox': boxes,
+      'classes': classes,
+      'confidence': scores,
+      'num_dets': num_det
+    }
