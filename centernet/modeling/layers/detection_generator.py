@@ -290,7 +290,7 @@ class CenterNetLayer(ks.Model):
     shape = tf.shape(ct_heatmaps)
     batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
 
-    # Process heatmaps using 3x3 convolution and applying sigmoid
+    # Process heatmaps using 3x3 max pool and applying sigmoid
     peaks = self.process_heatmap(ct_heatmaps, 
       kernel_size=self._peak_extract_kernel_size, 
       center_thresh=self._center_thresh)
