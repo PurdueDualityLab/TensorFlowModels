@@ -179,7 +179,10 @@ class DrawBoxes(object):
         return False
       cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
                     self._thickness)
+      x = box[0] + (box[1] - box[0])//2 
+      y = box[2] + (box[3] - box[2])//2
 
+      cv2.circle(image, (x, y) , radius=0, color=colors[classes], thickness=self._thickness * 10)
       if conf is not None:
         cv2.putText(image, "%s, %0.3f" % (label_names[classes], conf),
                     (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
@@ -195,6 +198,7 @@ class DrawBoxes(object):
         return False
       cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
                     1)
+      cv2.circle(image, (box[0], box[2]), radius=0, color=colors[classes], thickness=self._thickness)
       return True
 
     if display_name and label_names is not None:

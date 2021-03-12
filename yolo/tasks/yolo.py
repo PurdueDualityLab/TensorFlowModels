@@ -447,13 +447,13 @@ class YoloTask(base_task.Task):
 
       # Restoring checkpoint.
       if self.task_config.init_checkpoint_modules == 'all':
-        # ckpt = tf.train.Checkpoint(**model.checkpoint_items)
+        ckpt = tf.train.Checkpoint(model = model)
         # status = ckpt.restore(ckpt_dir_or_file)
         # status.assert_consumed()
         # optimizer = self.create_optimizer(params.trainer.optimizer_config,
         #                               params.runtime)
         # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-        ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
+        # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial().assert_existing_objects_matched()
 
