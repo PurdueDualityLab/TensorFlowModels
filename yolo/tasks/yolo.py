@@ -454,7 +454,6 @@ class YoloTask(base_task.Task):
         #                               params.runtime)
         # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
         ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
-        status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial().assert_existing_objects_matched()
 
