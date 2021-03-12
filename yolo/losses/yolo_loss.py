@@ -264,14 +264,13 @@ class Yolo_Loss(object):
     matched_classes = tf.equal(classes, pred_classes_max)
 
     iou, ciou, _ = self.box_loss(boxes, pred_boxes)
-
     iou_mask = iou > self._ignore_thresh
     
     iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))
     iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
     ignore_mask = tf.logical_not(iou_mask)
-    
+
     # TODO: iou > truth_thresh
     # true_mask = iou > self._truth_thresh
     
@@ -301,7 +300,7 @@ class Yolo_Loss(object):
     # thresh_class_loss = math_ops.mul_no_nan(true_mask, thresh_class_loss)
     # thresh_box_loss = math_ops.mul_no_nan(true_mask, thresh_box_loss)
     
-    ignore_mask = tf.stop_gradient(tf.cast(iou_mask, pred_classes.dtype))
+    ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, pred_classes.dtype))
     obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * ignore_mask)) 
     true_conf = tf.stop_gradient(true_conf)
     #return ignore_mask, thresh_class_loss, thresh_box_loss, true_conf, obj_mask
