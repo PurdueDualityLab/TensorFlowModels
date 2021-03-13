@@ -153,7 +153,7 @@ class YoloTask(base_task.Task):
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
 
-    if params.is_training and params.parser.mosaic:
+    if params.parser.mosaic and params.is_training:
       dataset = dataset.unbatch().shuffle(params.global_batch_size * 4 *
                                           2).batch(
                                               gbs, drop_remainder=True)
