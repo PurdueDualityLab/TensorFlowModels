@@ -244,10 +244,30 @@ class Parser(parser.Parser):
       ious = pad_max_instances(ious, self._max_num_instances, 0)
       boxes = pad_max_instances(
           boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
+
+      boxes = tf.cast(boxes, self._dtype)
+      bshape = boxes.get_shape().as_list()
+      bshape[0] = self._max_num_instances
+      boxes.set_shape(bshape)
+
+      classes = tf.cast(classes, self._dtype)
+      cshape = classes.get_shape().as_list()
+      cshape[0] = self._max_num_instances
+      classes.set_shape(cshape)
+
+      best_anchors = tf.cast(best_anchors, self._dtype)
+      bashape = best_anchors.get_shape().as_list()
+      bashape[0] = self._max_num_instances
+      best_anchors.set_shape(bashape)
+
+      ishape = ious.get_shape().as_list()
+      ishape[0] = self._max_num_instances
+      ious.set_shape(ishape)
+
       labels = {
-          'bbox': tf.cast(boxes, self._dtype),
-          'classes': tf.cast(classes, self._dtype),
-          'best_anchors': tf.cast(best_anchors, self._dtype),
+          'bbox': boxes,
+          'classes': classes, 
+          'best_anchors': best_anchors,
           'best_iou_match': ious
       }
       grid, boxes, classes = self._build_grid(
