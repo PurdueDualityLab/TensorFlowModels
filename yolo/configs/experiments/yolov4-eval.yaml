@@ -44,7 +44,7 @@ task:
     tfds_split: validation
     dtype: float16
     input_path: ''
-    is_training: true
+    is_training: false
     drop_remainder: true
     parser:
       fixed_size: true
