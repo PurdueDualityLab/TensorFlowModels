@@ -4,29 +4,6 @@ from yolo.ops import box_ops as box_ops
 
 NMS_TILE_SIZE = 512
 
-
-def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, xyxy=True):
-  k = tf.shape(boxes1)[-2]
-
-  boxes1 = tf.expand_dims(boxes1, axis=-2)
-  boxes1 = tf.tile(boxes1, [1, 1, k, 1])
-
-  if boxes2 is not None:
-    boxes2 = tf.expand_dims(boxes2, axis=-2)
-    boxes2 = tf.tile(boxes2, [1, 1, k, 1])
-    boxes2 = tf.transpose(boxes2, perm=(0, 2, 1, 3))
-  else:
-    boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
-
-  if iou_type == 0:  #diou
-    _, iou = box_ops.compute_diou(boxes1, boxes2, yxyx=True)
-  elif iou_type == 1:  #giou
-    _, iou = box_ops.compute_giou(boxes1, boxes2, yxyx=True)
-  else:
-    iou = box_ops.compute_iou(boxes1, boxes2, yxyx=True)
-  return iou
-
-
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
 
@@ -51,7 +28,7 @@ def segment_nms(boxes, classes, confidence, k, iou_thresh):
   mask_y = tf.tile(tf.expand_dims(mrange, axis=-1), [1, k])
   mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
 
-  iou = aggregated_comparitive_iou(boxes, iou_type=0)
+  iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=0)
 
   # duplicate boxes
   iou_mask = iou >= iou_thresh
@@ -85,11 +62,12 @@ def nms(boxes,
         k,
         pre_nms_thresh,
         nms_thresh,
+        prenms_top_k = 2000, 
         limit_pre_thresh=False,
         use_classes=True):
 
   if limit_pre_thresh:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k )
 
   mask = tf.fill(
       tf.shape(confidence), tf.cast(pre_nms_thresh, dtype=confidence.dtype))
@@ -101,10 +79,10 @@ def nms(boxes,
 
   if use_classes:
     confidence = tf.reduce_max(classes, axis=-1)
-  confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
+  confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k )
 
   classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
-  boxes, classes, confidence = segment_nms(boxes, classes, confidence, k,
+  boxes, classes, confidence = segment_nms(boxes, classes, confidence, prenms_top_k,
                                            nms_thresh)
   confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
   classes = tf.squeeze(classes, axis=-1)

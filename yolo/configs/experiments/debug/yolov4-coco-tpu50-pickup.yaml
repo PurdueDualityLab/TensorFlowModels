@@ -31,11 +31,11 @@ task:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
       iou_thresh: 0.25
-      nms_thresh: 0.4
+      nms_thresh: 0.6
       loss_type: giou
       max_boxes: 150
       use_nms: false
-      iou_normalizer: 1.0
+      iou_normalizer: 0.5
       max_delta: 10.0
       use_reduction_sum: False
   train_data:

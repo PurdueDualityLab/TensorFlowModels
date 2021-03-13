@@ -31,9 +31,9 @@ task:
       anchor_generation_scale: 512
       ignore_thresh: 0.7
       iou_thresh: 0.25
-      nms_thresh: 0.4
+      nms_thresh: 0.6
       loss_type: giou
-      max_boxes: 200
+      max_boxes: 150
       use_nms: false
       iou_normalizer: 0.07
   validation_data:
@@ -48,8 +48,8 @@ task:
     drop_remainder: true
     parser:
       fixed_size: true
-      image_h: 416
-      image_w: 416
+      image_h: 512
+      image_w: 512
       letter_box: false
       cutmix: false
       mosaic: true

@@ -42,7 +42,7 @@ class YoloLayer(ks.Model):
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
-    self._nms_thresh = 1 - nms_thresh
+    self._nms_thresh = nms_thresh
     self._max_boxes = max_boxes
     self._max_delta = max_delta
     self._classes = classes
@@ -138,17 +138,31 @@ class YoloLayer(ks.Model):
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
 
-    boxes, class_scores, object_scores = nms_ops.nms(
-        boxes,
-        class_scores,
-        object_scores,
-        self._max_boxes,
-        self._thresh,
-        self._nms_thresh,
-        use_classes=True)
+    if not self._use_nms:
+      boxes, class_scores, object_scores = nms_ops.nms(
+          boxes,
+          class_scores,
+          object_scores,
+          self._max_boxes,
+          self._thresh,
+          self._nms_thresh,
+          prenms_top_k = 500, 
+          use_classes=True)
+    else:
+      boxes = tf.cast(boxes, dtype = tf.float32)
+      class_scores = tf.cast(class_scores, dtype = tf.float32)
+      nms_items = tf.image.combined_non_max_suppression(
+        tf.expand_dims(boxes, axis = -2), 
+        class_scores, 
+        self._max_boxes, 
+        self._max_boxes, 
+        iou_threshold=self._nms_thresh, 
+        score_threshold=self._thresh)
+      boxes = tf.cast(nms_items.nmsed_boxes, object_scores.dtype)
+      class_scores = tf.cast(nms_items.nmsed_classes, object_scores.dtype)
+      object_scores = tf.cast(nms_items.nmsed_scores, object_scores.dtype)
 
     num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis = -1)
-    # tf.print(num_detections)
 
     return {
         'bbox': boxes,
