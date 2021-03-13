@@ -321,7 +321,7 @@ class YoloTask(base_task.Task):
     return self.task_config.model.boxes
 
   def _get_boxes(self, gen_boxes=True):
-    # gen_boxes = params.is_training
+    
     if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       params = self.task_config.train_data
@@ -331,7 +331,6 @@ class YoloTask(base_task.Task):
                          1) * model_base_cfg.boxes_per_scale
       reader = BoxGenInputReader(
           params,
-          dataset_fn=tf.data.TFRecordDataset,
           decoder_fn=decoder.decode,
           parser_fn=None)
       anchors = reader.read(

@@ -43,7 +43,6 @@ task:
     tfds_name: coco
     tfds_split: validation
     dtype: float16
-    input_path: ''
     is_training: false
     drop_remainder: true
     parser:
