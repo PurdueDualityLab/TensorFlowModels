@@ -245,7 +245,6 @@ class Parser(parser.Parser):
       boxes = pad_max_instances(
           boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
       labels = {
-          'source_id': utils.process_source_id(data['source_id']),
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
           'best_anchors': tf.cast(best_anchors, self._dtype),
@@ -260,7 +259,6 @@ class Parser(parser.Parser):
           boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
 
       labels = {
-          'source_id': utils.process_source_id(data['source_id']),
           'bbox': tf.cast(boxes, self._dtype),
           'classes': tf.cast(classes, self._dtype),
       }

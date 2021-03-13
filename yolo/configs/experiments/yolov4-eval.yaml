@@ -45,6 +45,7 @@ task:
     dtype: float16
     input_path: ''
     is_training: true
+    drop_remainder: true
     parser:
       fixed_size: true
       image_h: 416
