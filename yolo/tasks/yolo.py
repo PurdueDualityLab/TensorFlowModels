@@ -332,6 +332,7 @@ class YoloTask(base_task.Task):
       reader = BoxGenInputReader(
           params,
           decoder_fn=decoder.decode,
+          transform_and_batch_fn=lambda x, y: x, 
           parser_fn=None)
       anchors = reader.read(
           k=9, image_width=params.parser.image_w, input_context=None)
