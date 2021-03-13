@@ -67,7 +67,7 @@ def nms(boxes,
         use_classes=True):
 
   if limit_pre_thresh:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k )
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
 
   mask = tf.fill(
       tf.shape(confidence), tf.cast(pre_nms_thresh, dtype=confidence.dtype))

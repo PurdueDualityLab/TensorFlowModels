@@ -196,11 +196,15 @@ def compute_ciou(box1, box2, yxyx=False):
 
     b1x, b1y, b1w, b1h = tf.split(box1, 4, axis = -1)
     b2x, b2y, b2w, b2h = tf.split(box1, 4, axis = -1)
+
     # computer aspect ratio consistency
+    terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
+    termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
     arcterm = tf.square(
-        tf.math.atan(math_ops.divide_no_nan(b1w, b1h)) -
-        tf.math.atan(math_ops.divide_no_nan(b2w, b2h)))
+        tf.math.atan(terma) -
+        tf.math.atan(termb))
     v = tf.squeeze(4 * arcterm / (math.pi**2), axis = -1)
+    v = tf.cast(v, b1w.dtype)
 
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
     ciou = diou - (v * a)
@@ -225,7 +229,7 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, xyxy=True):
     _, iou = compute_diou(boxes1, boxes2, yxyx=True)
   elif iou_type == 1:  #giou
     _, iou = compute_giou(boxes1, boxes2, yxyx=True)
-  elif iou_type == 2:  #giou
+  elif iou_type == 2:  #ciou
     _, iou = compute_ciou(boxes1, boxes2, yxyx=True)
   else:
     iou = compute_iou(boxes1, boxes2, yxyx=True)
