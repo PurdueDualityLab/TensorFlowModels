@@ -29,11 +29,11 @@ task:
     decoder_activation: leaky
     filter:
       anchor_generation_scale: 512
-      ignore_thresh: 0.5
+      ignore_thresh: 0.7
       iou_thresh: 0.25
       nms_thresh: 0.4
       loss_type: giou
-      max_boxes: 200
+      max_boxes: 150
       use_nms: false
       iou_normalizer: 1.0
       max_delta: 10.0
@@ -68,14 +68,14 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/yolov4/yolov4-coco-max-delta10-mish-sam-pickup-run'
+  init_checkpoint: 'gs://tensorflow2/debug/yolov4-coco-tpu50-pickup/ckpt-50050'
   init_checkpoint_modules: 'all'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 50050 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 50000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
   steps_per_loop: 1000
   validation_interval: 1000 #00
@@ -86,9 +86,12 @@ trainer:
       type: stepwise
       stepwise:
         #boundaries: [30000, 33750]
-        boundaries: [40000, 45000]
+        # boundaries: [40000, 45000]
+        # name: PiecewiseConstantDecay
+        # values: [0.00261, 0.000261, 0.0000261]
+        boundaries: [20000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
@@ -97,4 +100,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 0 #learning rate rises from 0 to 0.0013 over 1000 steps

@@ -46,7 +46,45 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
   return box
 
 
+
 # IOU
+def intersect_and_union(box1, box2, yxyx = False):
+  if not yxyx:
+    box1 = xcycwh_to_yxyx(box1)
+    box2 = xcycwh_to_yxyx(box2)
+
+  b1mi, b1ma = tf.split(box1, 2, axis=-1)
+  b2mi, b2ma = tf.split(box2, 2, axis=-1)
+  intersect_mins = tf.math.maximum(b1mi, b2mi)
+  intersect_maxes = tf.math.minimum(b1ma, b2ma)
+  intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins, 0.0)
+  intersection = tf.reduce_prod(intersect_wh, axis=-1) 
+
+  box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
+  box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
+  union = box1_area + box2_area - intersection
+  return intersection, union
+
+def smallest_encompassing_box(box1, box2, yxyx = False):
+  if not yxyx:
+    box1 = xcycwh_to_yxyx(box1)
+    box2 = xcycwh_to_yxyx(box2)
+  
+  b1mi, b1ma = tf.split(box1, 2, axis=-1)
+  b2mi, b2ma = tf.split(box2, 2, axis=-1)
+
+  bcmi = tf.math.minimum(b1mi, b2mi)
+  bcma = tf.math.minimum(b1ma, b2ma)
+
+  bca = tf.reduce_prod(bcma - bcmi, keepdims = True)
+  box_c = tf.concat([bcmi, bcma], axis = -1)
+  box_c = tf.where(bca == 0.0, 0.0, box_c)
+  
+  if not yxyx:
+    box_c = yxyx_to_xcycwh(box_c)
+  return box_c
+
+
 def compute_iou(box1, box2, yxyx=False):
   """Calculates the intersection of union between box1 and box2.
     Args:
@@ -59,25 +97,7 @@ def compute_iou(box1, box2, yxyx=False):
     """
   # get box corners
   with tf.name_scope('iou'):
-    if not yxyx:
-      box1 = xcycwh_to_yxyx(box1)
-      box2 = xcycwh_to_yxyx(box2)
-
-    b1mi, b1ma = tf.split(box1, 2, axis=-1)
-    b2mi, b2ma = tf.split(box2, 2, axis=-1)
-    intersect_mins = tf.math.maximum(b1mi, b2mi)
-    intersect_maxes = tf.math.minimum(b1ma, b2ma)
-    intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
-                                   tf.zeros_like(intersect_mins))
-    intersection = tf.reduce_prod(
-        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
-
-    # box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
-    # box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
-    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
-    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
-    union = box1_area + box2_area - intersection
-
+    intersection, union = intersect_and_union(box1, box2, yxyx = yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
   return iou
 
