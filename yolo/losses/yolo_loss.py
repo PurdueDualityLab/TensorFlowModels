@@ -388,10 +388,14 @@ class Yolo_Loss(object):
 
     # 9. i beleive tensorflow will take the average of all the batches loss, so 
     # add them and let TF do its thing
-    if self._use_reduction_sum:
-      loss = tf.reduce_sum(class_loss + conf_loss + loss_box)  
-    else:
-      loss = tf.reduce_mean(class_loss + conf_loss + loss_box)
+    if not self._use_reduction_sum:
+      loss = tf.reduce_mean(class_loss + conf_loss + loss_box)  
+    else
+      total_instances = tf.reduce_sum(true_conf)
+      loss = class_loss + conf_loss + loss_box
+      loss /= total_instances # avg total instnaces 
+      loss = tf.reduce_sum(loss) # sum over batches
+
 
     loss_box = tf.reduce_mean(loss_box)
     conf_loss = tf.reduce_mean(conf_loss)
