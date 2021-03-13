@@ -91,12 +91,12 @@ trainer:
       type: stepwise
       stepwise:
         #boundaries: [30000, 33750]
-        # boundaries: [40000, 45000]
-        # name: PiecewiseConstantDecay
-        # values: [0.00261, 0.000261, 0.0000261]
-        boundaries: [20000]
+        boundaries: [40000, 45000]
         name: PiecewiseConstantDecay
-        values: [0.000261, 0.0000261]
+        values: [0.00261, 0.000261, 0.0000261]
+        # boundaries: [20000]
+        # name: PiecewiseConstantDecay
+        # values: [0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
