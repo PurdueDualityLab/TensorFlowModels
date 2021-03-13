@@ -348,9 +348,6 @@ class Parser(parser.Parser):
     ishape[0] = self._max_num_instances
     is_crowd.set_shape(ishape)
 
-
-    tf.print(type(self._max_num_instances))
-
     labels = {
         'source_id': utils.process_source_id(data['source_id']),
         'bbox': tf.cast(boxes, self._dtype),
