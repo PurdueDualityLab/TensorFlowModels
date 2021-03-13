@@ -113,34 +113,17 @@ def compute_giou(box1, box2, yxyx=False):
         iou: a `Tensor` who represents the generalized intersection over union.
     """
   with tf.name_scope('giou'):
-    # get box corners
-    if not yxyx:
-      box1 = xcycwh_to_yxyx(box1)
-      box2 = xcycwh_to_yxyx(box2)
-
-    # compute IOU
-    b1mi, b1ma = tf.split(box1, 2, axis=-1)
-    b2mi, b2ma = tf.split(box2, 2, axis=-1)
-    intersect_mins = tf.math.maximum(b1mi, b2mi)
-    intersect_maxes = tf.math.minimum(b1ma, b2ma)
-    intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
-                                   tf.zeros_like(intersect_mins))
-    intersection = tf.reduce_prod(
-        intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
-
-    # box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
-    # box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
-    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
-    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
-    union = box1_area + box2_area - intersection
-
+    # get IOU
+    intersection, union = intersect_and_union(box1, box2, yxyx = yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
 
     # find the smallest box to encompase both box1 and box2
-    c_mins = tf.math.minimum(b1mi, b2mi)  
-    c_maxes = tf.math.maximum(b1ma, b2ma)  
-    c = tf.math.abs(tf.reduce_prod(c_mins - c_maxes, axis=-1))
-
+    boxc = smallest_encompassing_box(box1, box2, yxyx = yxyx)
+    if yxyx:
+      boxc = yxyx_to_xcycwh(boxc)
+    cxcy, cwch = tf.split(boxc, 2, axis = -1)
+    c = tf.math.reduce_prod(cwch)
+    
     # compute giou
     regularization = math_ops.divide_no_nan((c - union), c)
     giou = iou - regularization
