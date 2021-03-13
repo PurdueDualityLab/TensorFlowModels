@@ -50,8 +50,8 @@ task:
       letter_box: false
       cutmix: false
       mosaic: true
-      mosaic_frequency: 0.5
-      keep_thresh: 0.25
+      mosaic_frequency: 0.10
+      keep_thresh: 0.35
       use_tie_breaker: true
   validation_data:
     global_batch_size: 64

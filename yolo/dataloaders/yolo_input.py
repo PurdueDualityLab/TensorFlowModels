@@ -213,7 +213,7 @@ class Parser(parser.Parser):
     boxes, classes = preprocessing_ops.filter_boxes_and_classes(
         boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
-    if self._letter_box:  #and not self._mosaic:
+    if self._letter_box and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
           image, boxes, target_dim=self._image_w)
     else:
@@ -235,7 +235,7 @@ class Parser(parser.Parser):
         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
 
     image = tf.cast(image, self._dtype)
-    if self._fixed_size and not self._mosaic:  #and not self._cutmix
+    if self._fixed_size and not self._mosaic: 
       boxes = box_utils.yxyx_to_xcycwh(boxes)
       best_anchors, ious = preprocessing_ops.get_best_anchor(
           boxes, self._anchors, width=self._image_w, height=self._image_h)
