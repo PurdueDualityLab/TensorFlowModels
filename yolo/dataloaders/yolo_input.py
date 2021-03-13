@@ -213,7 +213,7 @@ class Parser(parser.Parser):
     boxes, classes = preprocessing_ops.filter_boxes_and_classes(
         boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
-    if self._letter_box and not self._mosaic:
+    if self._letter_box: # and not self._mosaic:
       image, boxes = preprocessing_ops.letter_box(
           image, boxes, target_dim=self._image_w)
     else:
@@ -299,13 +299,29 @@ class Parser(parser.Parser):
     shape = tf.shape(data['image'])
     image = data['image'] / 255
     boxes = data['groundtruth_boxes']
+    classes = data['groundtruth_classes']
     width = shape[1]
     height = shape[0]
 
     image_shape = tf.shape(image)[:2]
 
-    image, boxes = preprocessing_ops.letter_box(
-        image, boxes, target_dim=self._image_w)
+    # image, boxes = preprocessing_ops.letter_box(
+    #     image, boxes, target_dim=self._image_w)
+    if self._letter_box and not self._mosaic:
+      image, boxes = preprocessing_ops.letter_box(
+          image, boxes, target_dim=self._image_w)
+    else:
+      height, width = preprocessing_ops.get_image_shape(image)
+      minscale = tf.math.minimum(width, height)
+      image, image_info = preprocessing_ops.random_crop_or_pad(
+          image,
+          target_width=minscale,
+          target_height=minscale,
+          random_patch=True)
+      image = tf.image.resize(image, (self._image_w, self._image_h))
+      boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+          boxes, classes, image_info, keep_thresh=self._keep_thresh)
+
     image = tf.cast(image, self._dtype)
 
     boxes = box_utils.yxyx_to_xcycwh(boxes)
@@ -318,7 +334,7 @@ class Parser(parser.Parser):
     bshape[0] = self._max_num_instances
     boxes.set_shape(bshape)
     
-    classes = data['groundtruth_classes']
+    
     cshape = classes.get_shape().as_list()
     classes = pad_max_instances(classes,
                                 self._max_num_instances, -1)

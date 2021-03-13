@@ -66,6 +66,7 @@ task:
       image_h: 512
       image_w: 512
       fixed_size: true
+      letter_box: false
       use_tie_breaker: true
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/yolov4/yolov4-coco-max-delta10-mish-sam-run3'
