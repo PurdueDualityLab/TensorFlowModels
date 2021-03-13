@@ -390,7 +390,7 @@ class Yolo_Loss(object):
     # add them and let TF do its thing
     if not self._use_reduction_sum:
       loss = tf.reduce_mean(class_loss + conf_loss + loss_box)  
-    else
+    else:
       total_instances = tf.reduce_sum(true_conf)
       loss = class_loss + conf_loss + loss_box
       loss /= total_instances # avg total instnaces 
