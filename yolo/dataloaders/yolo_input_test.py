@@ -74,13 +74,13 @@ import time
 
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
-  print(dataset)
+  print(dataset, dsp)
   shind = 0
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
-  for l, (i, j) in enumerate(dataset):
+  for l, (i, j) in enumerate(dsp):
     ftime = time.time()
     print(ftime - ltime)
 

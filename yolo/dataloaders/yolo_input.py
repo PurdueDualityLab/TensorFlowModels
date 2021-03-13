@@ -292,16 +292,44 @@ class Parser(parser.Parser):
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes, self._anchors, width=self._image_w, height=self._image_h)
+
+    bshape = boxes.get_shape().as_list()
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-    classes = pad_max_instances(data['groundtruth_classes'],
+    bshape[0] = self._max_num_instances
+    boxes.set_shape(bshape)
+    
+    classes = data['groundtruth_classes']
+    cshape = classes.get_shape().as_list()
+    classes = pad_max_instances(classes,
                                 self._max_num_instances, -1)
+    cshape[0] = self._max_num_instances
+    classes.set_shape(cshape)
+
+    bashape = best_anchors.get_shape().as_list()
     best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
+    bashape[0] = self._max_num_instances
+    best_anchors.set_shape(bashape)
+
+    ishape = ious.get_shape().as_list()
     ious = pad_max_instances(ious, self._max_num_instances, 0)
-    area = pad_max_instances(data['groundtruth_area'], self._max_num_instances,
-                             0)
+    ishape[0] = self._max_num_instances
+    ious.set_shape(ishape)
+
+    area = data['groundtruth_area']
+    ashape = area.get_shape().as_list()
+    area = pad_max_instances(area, self._max_num_instances,0)
+    ashape[0] = self._max_num_instances
+    area.set_shape(ashape)
+
+    is_crowd = data['groundtruth_is_crowd']
+    ishape = is_crowd.get_shape().as_list()
     is_crowd = pad_max_instances(
-        tf.cast(data['groundtruth_is_crowd'], tf.int32),
-        self._max_num_instances, 0)
+        tf.cast(is_crowd, tf.int32), self._max_num_instances, 0)
+    ishape[0] = self._max_num_instances
+    is_crowd.set_shape(ishape)
+
+
+    tf.print(type(self._max_num_instances))
 
     labels = {
         'source_id': utils.process_source_id(data['source_id']),
@@ -371,12 +399,34 @@ class Parser(parser.Parser):
     width = randscale * self._net_down_scale
     image = tf.image.resize(image, (width, width))
 
-    label['bbox'] = box_utils.yxyx_to_xcycwh(label['bbox'])
+    boxes = label['bbox']
+    bshape = boxes.get_shape().as_list()
+    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    bshape[-2] = self._max_num_instances
+    boxes.set_shape(bshape)
+    label['bbox'] = boxes
+
+    classes = label['classes']
+    cshape = classes.get_shape().as_list()
+    cshape[-1] = self._max_num_instances
+    classes.set_shape(cshape)
+    label['classes'] = classes
+
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
-    label['best_anchors'] = pad_max_instances(
+
+    bashape = best_anchors.get_shape().as_list()
+    best_anchors = pad_max_instances(
         best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
-    label['best_iou_match'] = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
+    bashape[-2] = self._max_num_instances
+    best_anchors.set_shape(bashape)
+    label['best_anchors'] = best_anchors
+
+    ishape = ious.get_shape().as_list()
+    ious = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
+    ishape[-2] = self._max_num_instances
+    ious.set_shape(ishape)
+    label['best_iou_match'] = ious
 
     grid, boxes, classes = self._build_grid(
         label, self._image_w, use_tie_breaker=self._use_tie_breaker)

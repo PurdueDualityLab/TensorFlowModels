@@ -62,7 +62,7 @@ def nms(boxes,
         k,
         pre_nms_thresh,
         nms_thresh,
-        prenms_top_k = 2000, 
+        prenms_top_k = 500, 
         limit_pre_thresh=False,
         use_classes=True):
 
