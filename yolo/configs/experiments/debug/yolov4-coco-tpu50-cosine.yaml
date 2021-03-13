@@ -35,7 +35,7 @@ task:
       max_boxes: 120
       use_nms: false
       iou_normalizer: 0.75
-      max_delta: 100.0
+      max_delta: 10.0
   train_data:
     global_batch_size: 64
     dtype: bfloat16
