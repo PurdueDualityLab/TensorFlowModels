@@ -28,14 +28,14 @@ task:
     decoder_activation: leaky
     filter:
       anchor_generation_scale: 512
-      ignore_thresh: 0.5
+      ignore_thresh: 0.7
       iou_thresh: 0.25
       nms_thresh: 0.4
-      loss_type: giou
-      max_boxes: 120
+      loss_type: ciou
+      max_boxes: 200
       use_nms: false
-      iou_normalizer: 0.75
-      max_delta: 100.0
+      iou_normalizer: 0.07
+      max_delta: 10.0
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -66,7 +66,7 @@ task:
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/csdarknet53-golden'
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
@@ -86,7 +86,7 @@ trainer:
         #boundaries: [30000, 33750]
         boundaries: [40000, 45000]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.00013, 0.000013]
+        values: [0.0261, 0.00261, 0.000261]
     optimizer:
       type: sgd
       sgd:
