@@ -235,46 +235,6 @@ class Parser(parser.Parser):
         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
 
     image = tf.cast(image, self._dtype)
-    # if self._fixed_size and not self._mosaic: 
-    #   boxes = box_utils.yxyx_to_xcycwh(boxes)
-    #   best_anchors, ious = preprocessing_ops.get_best_anchor(
-    #       boxes, self._anchors, width=self._image_w, height=self._image_h)
-    #   best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
-    #                                    -1)
-    #   ious = pad_max_instances(ious, self._max_num_instances, 0)
-    #   boxes = pad_max_instances(
-    #       boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
-
-    #   boxes = tf.cast(boxes, self._dtype)
-    #   bshape = boxes.get_shape().as_list()
-    #   bshape[0] = self._max_num_instances
-    #   boxes.set_shape(bshape)
-
-    #   classes = tf.cast(classes, self._dtype)
-    #   cshape = classes.get_shape().as_list()
-    #   cshape[0] = self._max_num_instances
-    #   classes.set_shape(cshape)
-
-    #   best_anchors = tf.cast(best_anchors, self._dtype)
-    #   bashape = best_anchors.get_shape().as_list()
-    #   bashape[0] = self._max_num_instances
-    #   best_anchors.set_shape(bashape)
-
-    #   ishape = ious.get_shape().as_list()
-    #   ishape[0] = self._max_num_instances
-    #   ious.set_shape(ishape)
-
-    #   labels = {
-    #       'bbox': boxes,
-    #       'classes': classes, 
-    #       'best_anchors': best_anchors,
-    #       'best_iou_match': ious
-    #   }
-    #   grid, boxes, classes = self._build_grid(
-    #       labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
-    #   labels.update({'grid_form': grid})
-    #   labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    # else:
     boxes = pad_max_instances(
         boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
 
@@ -285,8 +245,6 @@ class Parser(parser.Parser):
 
     return image, labels
 
-  # broken for some reason in task, i think dictionary to coco evaluator has
-  # issues
   def _parse_eval_data(self, data):
     """Generates images and labels that are usable for model training.
         Args:
@@ -305,9 +263,7 @@ class Parser(parser.Parser):
 
     image_shape = tf.shape(image)[:2]
 
-    # image, boxes = preprocessing_ops.letter_box(
-    #     image, boxes, target_dim=self._image_w)
-    if self._letter_box and not self._mosaic:
+    if self._letter_box:
       image, boxes = preprocessing_ops.letter_box(
           image, boxes, target_dim=self._image_w)
     else:
@@ -323,7 +279,6 @@ class Parser(parser.Parser):
           boxes, classes, image_info, keep_thresh=self._keep_thresh)
 
     image = tf.cast(image, self._dtype)
-
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
@@ -377,14 +332,6 @@ class Parser(parser.Parser):
         'num_detections': tf.shape(data['groundtruth_classes'])[0]
     }
 
-    # if self._fixed_size:
-    # grid = self._build_grid(
-    #     labels,
-    #     self._image_w,
-    #     batch=False,
-    #     use_tie_breaker=self._use_tie_breaker)
-    # labels.update({'grid_form': grid})
-    # labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     grid, boxes, classes = self._build_grid(
         labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
     labels.update({'grid_form': grid})
