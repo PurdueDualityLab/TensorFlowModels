@@ -34,7 +34,7 @@ task:
       loss_type: ciou
       max_boxes: 200
       use_nms: false
-      iou_normalizer: 0.5
+      iou_normalizer: 0.75
       max_delta: 10.0
       use_reduction_sum: False
   train_data:
@@ -87,7 +87,7 @@ trainer:
         #boundaries: [30000, 33750]
         boundaries: [40000, 45000]
         name: PiecewiseConstantDecay
-        values: [0.0261, 0.00261, 0.000261]
+        values: [0.00261, 0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
