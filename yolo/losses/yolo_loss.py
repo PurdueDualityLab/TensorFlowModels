@@ -9,6 +9,8 @@ import numpy as np
 
 from functools import partial
 
+TILE_SIZE = 10
+
 @tf.custom_gradient
 def obj_gradient_trap(y, obj_normalizer = 1.0):
   def trap(dy):
@@ -241,10 +243,10 @@ class Yolo_Loss(object):
     return iou, liou, loss_box
 
 
-  def _build_mask_body(self, pred_boxes_, pred_classes_, pred_classes_max, boxes, classes, ignore_mask_, idx, tile_size):
+  def _build_mask_body(self, pred_boxes_, pred_classes_, pred_classes_max, boxes, classes, ignore_mask_, idx):
     batch_size = tf.shape(boxes)[0]
-    box_slice = tf.slice(boxes, [0, idx * tile_size, 0], [batch_size, tile_size, 4])
-    class_slice = tf.slice(classes, [0, idx * tile_size], [batch_size, tile_size])
+    box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0], [batch_size, TILE_SIZE, 4])
+    class_slice = tf.slice(classes, [0, idx * TILE_SIZE], [batch_size, TILE_SIZE])
 
     box_slice = tf.expand_dims(box_slice, axis = -2)
     box_slice = tf.expand_dims(box_slice, axis = 1)
@@ -269,11 +271,11 @@ class Yolo_Loss(object):
     ignore_mask = tf.logical_not(iou_mask)
     
     ignore_mask = tf.logical_and(ignore_mask, ignore_mask_)
-    return pred_boxes_, pred_classes_, pred_classes_max, boxes, classes, ignore_mask, idx + 1, tile_size
+    return pred_boxes_, pred_classes_, pred_classes_max, boxes, classes, ignore_mask, idx + 1
 
-  def _tiled_global_box_search(self, pred_boxes, pred_classes, boxes, classes, true_conf, tile_size = 10):
+  def _tiled_global_box_search(self, pred_boxes, pred_classes, boxes, classes, true_conf):
     num_boxes = tf.shape(boxes)[-2]
-    num_tiles = num_boxes//tile_size
+    num_tiles = num_boxes//TILE_SIZE
     base = tf.cast(tf.ones_like(tf.reduce_sum(pred_boxes, axis = -1)), tf.bool)
     boxes = box_ops.yxyx_to_xcycwh(boxes)
 
@@ -284,12 +286,12 @@ class Yolo_Loss(object):
     pred_classes_mask = tf.cast(pred_classes_conf > 0.25, tf.float32)
     pred_classes_max = (pred_classes_max * pred_classes_mask) - (1.0 - pred_classes_mask)
 
-    def _loop_cond(pred_boxes, pred_classes, pred_classes_max, boxes, classes, ignore_mask, idx, tile_size):
+    def _loop_cond(pred_boxes, pred_classes, pred_classes_max, boxes, classes, ignore_mask, idx):
       return idx < num_tiles
 
-    _, _, _, _, _, ignore_mask, idx, _ = tf.while_loop(
+    _, _, _, _, _, ignore_mask, idx = tf.while_loop(
       _loop_cond, self._build_mask_body, [
-        pred_boxes, pred_classes, pred_classes_max, boxes, classes, base, tf.constant(0), tf.constant(tile_size)]
+        pred_boxes, pred_classes, pred_classes_max, boxes, classes, base, tf.constant(0)]
     )
 
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, pred_classes.dtype))
