@@ -235,53 +235,53 @@ class Parser(parser.Parser):
         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
 
     image = tf.cast(image, self._dtype)
-    if self._fixed_size and not self._mosaic: 
-      boxes = box_utils.yxyx_to_xcycwh(boxes)
-      best_anchors, ious = preprocessing_ops.get_best_anchor(
-          boxes, self._anchors, width=self._image_w, height=self._image_h)
-      best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
-                                       -1)
-      ious = pad_max_instances(ious, self._max_num_instances, 0)
-      boxes = pad_max_instances(
-          boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
+    # if self._fixed_size and not self._mosaic: 
+    #   boxes = box_utils.yxyx_to_xcycwh(boxes)
+    #   best_anchors, ious = preprocessing_ops.get_best_anchor(
+    #       boxes, self._anchors, width=self._image_w, height=self._image_h)
+    #   best_anchors = pad_max_instances(best_anchors, self._max_num_instances,
+    #                                    -1)
+    #   ious = pad_max_instances(ious, self._max_num_instances, 0)
+    #   boxes = pad_max_instances(
+    #       boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
 
-      boxes = tf.cast(boxes, self._dtype)
-      bshape = boxes.get_shape().as_list()
-      bshape[0] = self._max_num_instances
-      boxes.set_shape(bshape)
+    #   boxes = tf.cast(boxes, self._dtype)
+    #   bshape = boxes.get_shape().as_list()
+    #   bshape[0] = self._max_num_instances
+    #   boxes.set_shape(bshape)
 
-      classes = tf.cast(classes, self._dtype)
-      cshape = classes.get_shape().as_list()
-      cshape[0] = self._max_num_instances
-      classes.set_shape(cshape)
+    #   classes = tf.cast(classes, self._dtype)
+    #   cshape = classes.get_shape().as_list()
+    #   cshape[0] = self._max_num_instances
+    #   classes.set_shape(cshape)
 
-      best_anchors = tf.cast(best_anchors, self._dtype)
-      bashape = best_anchors.get_shape().as_list()
-      bashape[0] = self._max_num_instances
-      best_anchors.set_shape(bashape)
+    #   best_anchors = tf.cast(best_anchors, self._dtype)
+    #   bashape = best_anchors.get_shape().as_list()
+    #   bashape[0] = self._max_num_instances
+    #   best_anchors.set_shape(bashape)
 
-      ishape = ious.get_shape().as_list()
-      ishape[0] = self._max_num_instances
-      ious.set_shape(ishape)
+    #   ishape = ious.get_shape().as_list()
+    #   ishape[0] = self._max_num_instances
+    #   ious.set_shape(ishape)
 
-      labels = {
-          'bbox': boxes,
-          'classes': classes, 
-          'best_anchors': best_anchors,
-          'best_iou_match': ious
-      }
-      grid, boxes, classes = self._build_grid(
-          labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
-      labels.update({'grid_form': grid})
-      labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    else:
-      boxes = pad_max_instances(
-          boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
+    #   labels = {
+    #       'bbox': boxes,
+    #       'classes': classes, 
+    #       'best_anchors': best_anchors,
+    #       'best_iou_match': ious
+    #   }
+    #   grid, boxes, classes = self._build_grid(
+    #       labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
+    #   labels.update({'grid_form': grid})
+    #   labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+    # else:
+    boxes = pad_max_instances(
+        boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
 
-      labels = {
-          'bbox': tf.cast(boxes, self._dtype),
-          'classes': tf.cast(classes, self._dtype),
-      }
+    labels = {
+        'bbox': tf.cast(boxes, self._dtype),
+        'classes': tf.cast(classes, self._dtype),
+    }
 
     return image, labels
 
@@ -392,17 +392,6 @@ class Parser(parser.Parser):
     return image, labels
 
   def _postprocess_fn(self, image, label):
-
-    # if self._cutmix:
-    #   batch_size = tf.shape(image)[0]
-    #   if batch_size >= 1:
-    #     image, boxes, classes, num_detections = preprocessing_ops.randomized_cutmix_batch(
-    #         image, label['bbox'],label['classes'])
-    #     label['bbox'] = pad_max_instances(
-    #         boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
-    #     label['classes'] = pad_max_instances(
-    #         classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
-
     if self._mosaic:
       domo = preprocessing_ops.rand_uniform_strong(0, 1, tf.float32)
       if domo >= (1 - self._mosaic_frequency):
@@ -469,6 +458,6 @@ class Parser(parser.Parser):
 
   def postprocess_fn(self, is_training):
     if is_training:  #or self._cutmix
-      return self._postprocess_fn if not self._fixed_size or self._mosaic else None
+      return self._postprocess_fn # if not self._fixed_size or self._mosaic else None
     else:
       return None
