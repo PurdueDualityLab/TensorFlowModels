@@ -68,22 +68,7 @@ class YoloTask(base_task.Task):
     self._loss_dict = losses
     return model
 
-  def build_inputs(self, params, input_context=None):
-    """Build input dataset."""
-    # decoder = tfds_coco_decoder.MSCOCODecoder()
-    """
-    decoder_cfg = params.decoder.get()
-    if params.decoder.type == 'simple_decoder':
-        decoder = tf_example_decoder.TfExampleDecoder(
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    elif params.decoder.type == 'label_map_decoder':
-        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
-            label_map=decoder_cfg.label_map,
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    else:
-        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
-    """
-
+  def get_decoder(self, params):
     if params.tfds_name:
       if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
         decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
@@ -101,8 +86,25 @@ class YoloTask(base_task.Task):
             regenerate_source_id=decoder_cfg.regenerate_source_id)
       else:
         raise ValueError('Unknown decoder type: {}!'.format(
-            params.decoder.type))
+            params.decoder.type)) 
+    return decoder
 
+  def build_inputs(self, params, input_context=None):
+    """Build input dataset."""
+    # decoder = tfds_coco_decoder.MSCOCODecoder()
+    """
+    decoder_cfg = params.decoder.get()
+    if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+    else:
+        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
+    """
+    decoder = self.get_decoder(params)
     model = self.task_config.model
 
     masks, path_scales, xy_scales = self._get_masks()
@@ -323,10 +325,10 @@ class YoloTask(base_task.Task):
     if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       params = self.task_config.train_data
+      decoder = self.get_decoder(params)
       model_base_cfg = self.task_config.model
       self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
                          1) * model_base_cfg.boxes_per_scale
-      decoder = tfds_coco_decoder.MSCOCODecoder()
       reader = BoxGenInputReader(
           params,
           dataset_fn=tf.data.TFRecordDataset,
