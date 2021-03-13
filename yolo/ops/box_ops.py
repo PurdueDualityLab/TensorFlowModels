@@ -72,8 +72,10 @@ def compute_iou(box1, box2, yxyx=False):
     intersection = tf.reduce_prod(
         intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
 
-    box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
-    box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    # box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+    # box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
+    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
@@ -106,8 +108,10 @@ def compute_giou(box1, box2, yxyx=False):
     intersection = tf.reduce_prod(
         intersect_wh, axis=-1)  # intersect_wh[..., 0] * intersect_wh[..., 1]
 
-    box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
-    box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    # box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+    # box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
+    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
@@ -120,6 +124,7 @@ def compute_giou(box1, box2, yxyx=False):
     # compute giou
     regularization = math_ops.divide_no_nan((c - union), c)
     giou = iou - regularization
+    giou = tf.clip_by_value(giou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, giou
 
 
@@ -151,12 +156,13 @@ def compute_diou(box1, box2, yxyx=False):
     b2mi, b2ma = tf.split(box2, 2, axis=-1)
     intersect_mins = tf.math.maximum(b1mi, b2mi)
     intersect_maxes = tf.math.minimum(b1ma, b2ma)
-    intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins,
-                                   tf.zeros_like(intersect_mins))
+    intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins, 0.0)
     intersection = tf.reduce_prod(intersect_wh, axis=-1)
 
-    box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
-    box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    # box1_area = tf.math.abs(tf.reduce_prod(b1ma - b1mi, axis=-1))
+    # box2_area = tf.math.abs(tf.reduce_prod(b2ma - b2mi, axis=-1))
+    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
+    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
     union = box1_area + box2_area - intersection
 
     iou = math_ops.divide_no_nan(intersection, union)
@@ -169,6 +175,7 @@ def compute_diou(box1, box2, yxyx=False):
 
     regularization = math_ops.divide_no_nan(dist, diag_dist)
     diou = iou - regularization
+    diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, diou
 
 
@@ -199,6 +206,7 @@ def compute_ciou(box1, box2, yxyx=False):
 
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
     ciou = diou - (v * a)
+    ciou = tf.clip_by_value(ciou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, ciou
 
 
