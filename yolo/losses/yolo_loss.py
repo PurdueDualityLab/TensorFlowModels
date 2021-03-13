@@ -57,6 +57,10 @@ def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_po
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
 
+def tiled_global_box_search_loss():
+  return 
+
+
 class Yolo_Loss(object):
   def __init__(self,
                classes,
@@ -299,6 +303,55 @@ class Yolo_Loss(object):
     #return ignore_mask, thresh_class_loss, thresh_box_loss, true_conf, obj_mask
     return ignore_mask, 0.0, 0.0, true_conf, obj_mask
 
+  # def _build_mask_body(self, pred_boxes, pred_classes, boxes, classes, ignore_mask_, idx, tile_size):
+  #   box_slice = tf.slice(boxes, [0, idx * tile_size, 0], [batch_size, tile_size, 4])
+
+  #   box_slice = tf.expand_dims(box_slice, axis = -2)
+  #   box_slice = tf.expand_dims(box_slice, axis = 1)
+  #   box_slice = tf.expand_dims(box_slice, axis = 1)
+  #   box_slice = box_ops.yxyx_to_xcycwh(boxes)
+    
+  #   pred_boxes = tf.expand_dims(pred_boxes, axis = -3)
+
+  #   iou, ciou, _ = self.box_loss(box_slice, pred_boxes)
+  #   iou_mask = iou > self._ignore_thresh
+
+  #   classes = tf.expand_dims(classes, axis = 1)
+  #   classes = tf.expand_dims(classes, axis = 1)
+  #   classes = tf.expand_dims(classes, axis = 1)
+  #   pred_classes_max = tf.cast(
+  #     tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
+  #   pred_classes_conf = tf.cast(
+  #     tf.expand_dims(tf.reduce_max(pred_classes, axis = -1), axis = -1), tf.float32)
+    
+  #   # cconfidence is low
+  #   pred_classes_mask = tf.cast(pred_classes_conf > 0.25, tf.float32)
+  #   pred_classes_max = (pred_classes_max * pred_classes_mask) - (1.0 - pred_classes_mask)
+    
+  #   iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))    
+  #   matched_classes = tf.equal(classes, pred_classes_max)
+  #   iou_mask = tf.logical_and(iou_mask, matched_classes)
+  #   iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
+  #   ignore_mask = tf.logical_not(iou_mask)
+    
+  #   ignore_mask = tf.logical_and(ignore_mask, ignore_mask_)
+  #   ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, pred_classes.dtype))
+  #   return ignore_mask, idx + 1
+
+  # def _tiled_global_box_search(self, pred_boxes, pred_classes, boxes, classes, true_conf, tile_size = 10):
+  #   num_boxes = tf.shape(boxes)[-2]
+  #   num_tiles = num_boxes//tile_size
+  #   def _loop_cond(ignore_mask, idx):
+  #     return idx < num_tiles
+    
+
+
+  #   tf.while_loop(
+  #     _loop_cond, self._build_mask_body, [
+  #       pred_boxes, pred_classes, boxes, classes, 
+  #     ]
+  #   )
+  #   return 
 
 
   def __call__(self, y_true, y_pred, boxes, classes):
@@ -342,9 +395,9 @@ class Yolo_Loss(object):
         depth=tf.shape(pred_class)[-1],
         dtype=y_pred.dtype)
 
-    self.print_error(pred_box, "boxes")
-    self.print_error(pred_conf, "confidence")
-    self.print_error(pred_class, "classes")    
+    # self.print_error(pred_box, "boxes")
+    # self.print_error(pred_conf, "confidence")
+    # self.print_error(pred_class, "classes")    
 
     (mask_loss, 
      thresh_class_loss, 

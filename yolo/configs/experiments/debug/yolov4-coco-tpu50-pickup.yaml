@@ -32,7 +32,7 @@ task:
       ignore_thresh: 0.7
       iou_thresh: 0.25
       nms_thresh: 0.6
-      loss_type: ciou
+      loss_type: giou
       max_boxes: 150
       use_nms: false
       iou_normalizer: 0.5
