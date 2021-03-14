@@ -52,8 +52,9 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
+      jitter_im: 0.0
       mosaic_frequency: 0.5
-      keep_thresh: 0.25
+      keep_thresh: 0.0
       use_tie_breaker: true
   validation_data:
     global_batch_size: 64
@@ -63,9 +64,15 @@ task:
     shuffle_buffer_size: 1000
     drop_remainder: true
     parser:
+      fixed_size: true
       image_h: 512
       image_w: 512
-      fixed_size: true
+      letter_box: true
+      cutmix: false
+      mosaic: false
+      jitter_im: 0.0
+      mosaic_frequency: 0.5
+      keep_thresh: 0.0
       use_tie_breaker: true
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/debug/yolov4-coco-tpu50-pickup/ckpt-50050'
@@ -86,12 +93,12 @@ trainer:
       type: stepwise
       stepwise:
         #boundaries: [30000, 33750]
-        # boundaries: [40000, 45000]
-        # name: PiecewiseConstantDecay
-        # values: [0.00261, 0.000261, 0.0000261]
-        boundaries: [20000]
+        boundaries: [40000, 45000]
         name: PiecewiseConstantDecay
-        values: [0.000261, 0.0000261]
+        values: [0.00261, 0.000261, 0.0000261]
+        # boundaries: [20000]
+        # name: PiecewiseConstantDecay
+        # values: [0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
