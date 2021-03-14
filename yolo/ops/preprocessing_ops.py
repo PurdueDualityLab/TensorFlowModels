@@ -532,6 +532,7 @@ def mosaic(images,
            masks=None,
            crop_delta=0.6,
            keep_thresh=0.25):
+           
   full_image, boxes, classes = patch_four_images(images, boxes, classes, image_info)
   height, width = get_image_shape(full_image)
   num_instances = tf.shape(boxes)[-2]
