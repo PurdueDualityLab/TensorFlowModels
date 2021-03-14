@@ -473,14 +473,14 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
 
-  y *= tf.cast(height / clipper, tf.float32)
-  x *= tf.cast(width / clipper, tf.float32)
+  y *= tf.cast(height / clipper, y.dtype)
+  x *= tf.cast(width / clipper, x.dtype)
 
-  y += tf.cast((pad_height / clipper), tf.float32)
-  x += tf.cast((pad_width / clipper), tf.float32)
+  y += tf.cast((pad_height / clipper), y.dtype)
+  x += tf.cast((pad_width / clipper), x.dtype)
 
-  h *= tf.cast(height / clipper, tf.float32)
-  w *= tf.cast(width / clipper, tf.float32)
+  h *= tf.cast(height / clipper, h.dtype)
+  w *= tf.cast(width / clipper, w.dtype)
 
   boxes = tf.concat([x, y, w, h], axis=-1)
 
