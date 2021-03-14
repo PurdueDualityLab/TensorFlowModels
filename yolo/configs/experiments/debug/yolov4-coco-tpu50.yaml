@@ -51,8 +51,9 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
+      jitter_im: 0.0
       mosaic_frequency: 0.5
-      keep_thresh: 0.25
+      keep_thresh: 0.0
       use_tie_breaker: true
   validation_data:
     global_batch_size: 64
@@ -64,6 +65,7 @@ task:
     parser:
       image_h: 512
       image_w: 512
+      letter_box: true
       fixed_size: true
       use_tie_breaker: true
   weight_decay: 0.0005

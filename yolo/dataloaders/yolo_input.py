@@ -208,10 +208,10 @@ class Parser(parser.Parser):
     # boxes = box_ops.jitter_boxes(boxes, 0.025)
     # boxes = box_ops.normalize_boxes(boxes, image_shape)
 
-    # image, crop_info = preprocessing_ops.random_op_image(
-    #     image, self._jitter_im, zfactor, 0.0, True)
-    # boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-    #     boxes, classes, crop_info, keep_thresh=self._keep_thresh)
+    image, crop_info = preprocessing_ops.random_op_image(
+        image, self._jitter_im, 0.0, 0.0, True)
+    boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+        boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
     if self._letter_box: # and not self._mosaic:
       image, boxes, info = preprocessing_ops.letter_box(
@@ -353,7 +353,7 @@ class Parser(parser.Parser):
             label['classes'],
             label['info'],
             self._image_w,
-            crop_delta=0.4,
+            crop_delta= 0.45,
             keep_thresh=self._keep_thresh)
         label['bbox'] = pad_max_instances(
             boxes, self._max_num_instances, pad_axis=-2, pad_value=0)

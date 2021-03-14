@@ -301,9 +301,9 @@ def random_zoom(image, zfactor):
 
 def random_jitter(image, jfactor):
   jx = 1 + tf.random.uniform(
-      minval=-2 * jfactor, maxval=2 * jfactor, shape=(), dtype=tf.float32)
-  jy = 1 + tf.random.uniform(
-      minval=-2 * jfactor, maxval=2 * jfactor, shape=(), dtype=tf.float32)
+      minval=-jfactor, maxval=jfactor, shape=(), dtype=tf.float32)
+  jy =  1 + tf.random.uniform(
+      minval=-jfactor, maxval=jfactor, shape=(), dtype=tf.float32)
 
   height, width = get_image_shape(image)
   width = tf.cast(width, jx.dtype) * jx
@@ -496,7 +496,6 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
 
 def _unletter_shift(images, infos, boxes, classes, xs = 0.5, ys = 0.5):
   num_items = tf.shape(images)[0]
-
   for i in range(num_items):
     image, info = crop_to_bbox(images[i], infos[i, 3], infos[i, 2], infos[i, 1], infos[i, 0])
     box, class_ = filter_boxes_and_classes(boxes[i], classes[i], info)
