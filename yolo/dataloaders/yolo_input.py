@@ -208,14 +208,14 @@ class Parser(parser.Parser):
     # boxes = box_ops.jitter_boxes(boxes, 0.025)
     # boxes = box_ops.normalize_boxes(boxes, image_shape)
 
-    image, crop_info = preprocessing_ops.random_op_image(
-        image, self._jitter_im, zfactor, 0.0, True)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-        boxes, classes, crop_info, keep_thresh=self._keep_thresh)
+    # image, crop_info = preprocessing_ops.random_op_image(
+    #     image, self._jitter_im, zfactor, 0.0, True)
+    # boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+    #     boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
     if self._letter_box: # and not self._mosaic:
-      image, boxes = preprocessing_ops.letter_box(
-          image, boxes, target_dim=self._image_w)
+      image, boxes, info = preprocessing_ops.letter_box(
+          image, boxes, xs = 0.5, ys = 0.5 , target_dim=self._image_w)
     else:
       height, width = preprocessing_ops.get_image_shape(image)
       minscale = tf.math.minimum(width, height)
@@ -227,8 +227,11 @@ class Parser(parser.Parser):
       image = tf.image.resize(image, (self._image_w, self._image_h))
       boxes, classes = preprocessing_ops.filter_boxes_and_classes(
           boxes, classes, image_info, keep_thresh=self._keep_thresh)
+      info = [0, 0, self._image_w, self._image_h]
 
     num_dets = tf.shape(classes)[0]
+
+    # tf.print(info)
 
     # padding
     classes = pad_max_instances(
@@ -241,6 +244,7 @@ class Parser(parser.Parser):
     labels = {
         'bbox': tf.cast(boxes, self._dtype),
         'classes': tf.cast(classes, self._dtype),
+        'info': info, 
     }
 
     return image, labels
@@ -264,8 +268,8 @@ class Parser(parser.Parser):
     image_shape = tf.shape(image)[:2]
 
     if self._letter_box:
-      image, boxes = preprocessing_ops.letter_box(
-          image, boxes, target_dim=self._image_w)
+      image, boxes, info = preprocessing_ops.letter_box(
+          image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
     else:
       height, width = preprocessing_ops.get_image_shape(image)
       minscale = tf.math.minimum(width, height)
@@ -329,6 +333,7 @@ class Parser(parser.Parser):
         'best_iou_match': ious,
         'width': width,
         'height': height,
+        'padd_info': info, 
         'num_detections': tf.shape(data['groundtruth_classes'])[0]
     }
 
@@ -342,10 +347,11 @@ class Parser(parser.Parser):
     if self._mosaic:
       domo = preprocessing_ops.rand_uniform_strong(0, 1, tf.float32)
       if domo >= (1 - self._mosaic_frequency):
-        image, boxes, classes = preprocessing_ops.mosaic(
+        image, boxes, classes, info = preprocessing_ops.mosaic(
             image,
             label['bbox'],
             label['classes'],
+            label['info'],
             self._image_w,
             crop_delta=0.54,
             keep_thresh=self._keep_thresh)
@@ -353,6 +359,7 @@ class Parser(parser.Parser):
             boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
         label['classes'] = pad_max_instances(
             classes, self._max_num_instances, pad_axis=-1, pad_value=-1)
+        label['info'] = info
 
     randscale = self._image_w // self._net_down_scale
     if not self._fixed_size:

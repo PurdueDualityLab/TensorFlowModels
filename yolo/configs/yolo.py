@@ -155,13 +155,13 @@ class Parser(hyperparams.Config):
   pct_rand: float = 0.5
   letter_box: bool = True
   cutmix: bool = False
-  mosaic: bool = False
+  mosaic: bool = True
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = False
   keep_thresh: float = 0.1
-  mosaic_frequency: float = 0.75
+  mosaic_frequency: float = 1.0
   use_tie_breaker: bool = False
 
 

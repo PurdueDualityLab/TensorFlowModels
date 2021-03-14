@@ -47,7 +47,7 @@ task:
       fixed_size: true
       image_h: 608
       image_w: 608
-      letter_box: false
+      letter_box: true
       cutmix: false
       mosaic: true
       mosaic_frequency: 0.10

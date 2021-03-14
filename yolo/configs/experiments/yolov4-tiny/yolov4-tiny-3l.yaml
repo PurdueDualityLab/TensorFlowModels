@@ -58,7 +58,7 @@ task:
       fixed_size: true
       image_h: 512
       image_w: 512
-      letter_box: false
+      letter_box: true
       cutmix: false
       mosaic: true
       use_tie_breaker: true

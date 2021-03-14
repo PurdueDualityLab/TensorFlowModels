@@ -77,7 +77,7 @@ task:
       fixed_size: true
       image_h: 1536
       image_w: 1536
-      letter_box: false
+      letter_box: true
       cutmix: false
       mosaic: true
       keep_thresh: 0.25
