@@ -501,9 +501,9 @@ def _unletter_shift(images, infos, boxes, classes, xs = 0.5, ys = 0.5):
     image, info = crop_to_bbox(images[i], infos[i, 3], infos[i, 2], infos[i, 1], infos[i, 0])
     box, class_ = filter_boxes_and_classes(boxes[i], classes[i], info)
     image, box, _ = letter_box(image, box, xs = xs, ys = ys)
-    images = tf.tensor_scatter_nd_update(images, [[i]], tf.expand_dims(image, axis = 0))
-    boxes = tf.tensor_scatter_nd_update(boxes, [[i]], tf.expand_dims(box, axis = 0))
-    classes = tf.tensor_scatter_nd_update(classes, [[i]], tf.expand_dims(class_, axis = 0))
+    images = tf.tensor_scatter_nd_update(images, [[i]], tf.expand_dims(tf.cast(image, images.dtype), axis = 0))
+    boxes = tf.tensor_scatter_nd_update(boxes, [[i]], tf.expand_dims(tf.cast(box, boxes.dtype), axis = 0))
+    classes = tf.tensor_scatter_nd_update(classes, [[i]], tf.expand_dims(tf.cast(class_, classes.dtype), axis = 0))
   return images, boxes, classes
 
 def patch_four_images(images, boxes, classes, info):
