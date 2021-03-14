@@ -461,6 +461,8 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   if target_dim is None:
     target_dim = clipper
 
+  xs = tf.cast(xs, tf.float32)
+  ys = tf.cast(ys, tf.float32)
   pad_width_p = clipper - width
   pad_height_p = clipper - height
   pad_height = tf.cast(tf.cast(pad_height_p, tf.float32) * ys, tf.int32)
