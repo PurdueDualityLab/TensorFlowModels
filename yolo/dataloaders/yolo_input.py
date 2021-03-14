@@ -408,6 +408,7 @@ class Parser(parser.Parser):
         label, self._image_w, use_tie_breaker=self._use_tie_breaker)
     label.update({'grid_form': grid})
     label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
+    del label['info']
     return image, label
 
   def postprocess_fn(self, is_training):

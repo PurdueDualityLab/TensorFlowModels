@@ -461,12 +461,12 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   if target_dim is None:
     target_dim = clipper
 
-  xs = tf.cast(xs, tf.float32)
-  ys = tf.cast(ys, tf.float32)
+  xs = tf.convert_to_tensor(xs)
+  ys = tf.convert_to_tensor(ys)
   pad_width_p = clipper - width
   pad_height_p = clipper - height
-  pad_height = tf.cast(tf.cast(pad_height_p, tf.float32) * ys, tf.int32)
-  pad_width = tf.cast(tf.cast(pad_width_p, tf.float32) * xs, tf.int32)
+  pad_height = tf.cast(tf.cast(pad_height_p, ys.dtype) * ys, tf.int32)
+  pad_width = tf.cast(tf.cast(pad_width_p, xs.dtype) * xs, tf.int32)
   image = tf.image.pad_to_bounding_box(image, pad_height, pad_width,
                                        clipper, clipper)
 
@@ -487,10 +487,11 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   boxes = box_ops.xcycwh_to_yxyx(boxes)
   image = tf.image.resize(image, (target_dim, target_dim))
 
-  pt_width = tf.cast(pad_width * target_dim/clipper, tf.int32)
-  pt_height = tf.cast(pad_height * target_dim/clipper, tf.int32)
-  pt_width_p = tf.cast(pad_width_p * target_dim/clipper, tf.int32)
-  pt_height_p = tf.cast(pad_height_p * target_dim/clipper, tf.int32)
+  scale = target_dim/clipper
+  pt_width = tf.cast(tf.cast(pad_width, scale.dtype) * scale, tf.int32)
+  pt_height = tf.cast(tf.cast(pad_height, scale.dtype) * scale, tf.int32)
+  pt_width_p = tf.cast(tf.cast(pad_width_p, scale.dtype) * scale, tf.int32)
+  pt_height_p = tf.cast(tf.cast(pad_height_p, scale.dtype) * scale, tf.int32)
   return image, boxes, [pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p]
 
 def _unletter_shift(images, infos, boxes, classes, xs = 0.5, ys = 0.5):
@@ -532,7 +533,7 @@ def mosaic(images,
            masks=None,
            crop_delta=0.6,
            keep_thresh=0.25):
-           
+  crop_delta = tf.convert_to_tensor(crop_delta)
   full_image, boxes, classes = patch_four_images(images, boxes, classes, image_info)
   height, width = get_image_shape(full_image)
   num_instances = tf.shape(boxes)[-2]
@@ -557,8 +558,11 @@ def mosaic(images,
   full_boxes, full_classes = filter_boxes_and_classes(
       full_boxes, full_classes, image_info, keep_thresh=keep_thresh)
   full_image = tf.image.resize(full_image, [output_size, output_size])
+
+  num_items = tf.shape(full_image)[0]
+  info = tf.convert_to_tensor([[0, 0, output_size, output_size]])
   return (tf.cast(full_image, images.dtype), tf.cast(full_boxes, boxes.dtype),
-          tf.cast(full_classes, classes.dtype), tf.convert_to_tensor([[0, 0, output_size, output_size]]))
+          tf.cast(full_classes, classes.dtype), info)
 
 
 def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
