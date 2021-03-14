@@ -146,7 +146,7 @@ class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
   fixed_size: bool = True
-  jitter_im: float = 0.3
+  jitter_im: float = 0.0
   jitter_boxes: float = 0.005
   min_process_size: int = 320
   max_process_size: int = 608
@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
-  keep_thresh: float = 0.0
+  keep_thresh: float = 0.1
   mosaic_frequency: float = 0.75
   use_tie_breaker: bool = False
 
