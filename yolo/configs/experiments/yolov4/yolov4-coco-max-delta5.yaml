@@ -51,7 +51,7 @@ task:
       image_w: 512
       letter_box: true
       cutmix: false
-      mosaic: true
+      mosaic: false
       keep_thresh: 0.25
       mosaic_frequency: 0.60
       use_tie_breaker: true
