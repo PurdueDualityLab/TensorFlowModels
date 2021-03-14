@@ -353,7 +353,7 @@ class Parser(parser.Parser):
             label['classes'],
             label['info'],
             self._image_w,
-            crop_delta=0.54,
+            crop_delta=0.4,
             keep_thresh=self._keep_thresh)
         label['bbox'] = pad_max_instances(
             boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
