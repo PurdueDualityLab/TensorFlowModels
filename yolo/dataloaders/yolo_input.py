@@ -137,24 +137,37 @@ class Parser(parser.Parser):
 
   def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False):
     mask = self._masks
-    # boxes_ = []#dict() 
-    # classes_ = []#dict() 
+    inds = {}
+    upds = {}
+    true_conf = {}
+
     for key in self._masks.keys():
-      grid, boxes, classes, confs, ious = preprocessing_ops.build_grided_gt(raw_true, self._masks[key],
+      # grid = preprocessing_ops.build_grided_gt(raw_true, self._masks[key],
+      #                                               width // 2**int(key),
+      #                                               self._num_classes,
+      #                                               raw_true['bbox'].dtype,
+      #                                               use_tie_breaker)
+
+      indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(raw_true, self._masks[key],
                                                     width // 2**int(key),
                                                     self._num_classes,
                                                     raw_true['bbox'].dtype,
                                                     use_tie_breaker)
+      
+      ishape = indexes.get_shape().as_list()
+      ishape[-2] = self._max_num_instances
+      indexes.set_shape(ishape)
 
-      mask[key] = tf.cast(grid, self._dtype)
-      # boxes_.append(tf.cast(boxes, self._dtype))
-      # classes_.append(tf.cast(classes, self._dtype))
-    
-    # boxes = tf.concat(boxes_, axis = -2)
-    # classes = tf.concat(classes_, axis = -1)
+      ishape = updates.get_shape().as_list()
+      ishape[-2] = self._max_num_instances
+      updates.set_shape(ishape)
+      
+      # mask[key] = tf.cast(grid, self._dtype)
+      inds[key] = indexes
+      upds[key] = tf.cast(updates, self._dtype)
+      true_conf[key] = true_grid
 
-    # boxes, classes = preprocessing_ops._shift_zeros_full(boxes, classes, self._max_num_instances, yxyx = False)
-    return mask, None, None #boxes, classes
+    return mask, inds, upds, true_conf
 
   def _parse_train_data(self, data):
     """Generates images and labels that are usable for model training.
@@ -333,14 +346,17 @@ class Parser(parser.Parser):
         'best_iou_match': ious,
         'width': width,
         'height': height,
-        'padd_info': info, 
+        'info': info, 
         'num_detections': tf.shape(data['groundtruth_classes'])[0]
     }
 
-    grid, boxes, classes = self._build_grid(
+    grid, inds, upds, true_conf = self._build_grid(
         labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
-    labels.update({'grid_form': grid})
+    # labels.update({'grid_form': grid})
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
+    labels['upds'] = upds 
+    labels['inds'] = inds
+    labels['true_conf'] = true_conf
     return image, labels
 
   def _postprocess_fn(self, image, label):
@@ -404,12 +420,39 @@ class Parser(parser.Parser):
     ious.set_shape(ishape)
     label['best_iou_match'] = ious
 
-    grid, boxes, classes = self._build_grid(
+    grid, inds, upds, true_conf = self._build_grid(
         label, self._image_w, use_tie_breaker=self._use_tie_breaker)
-    label.update({'grid_form': grid})
+    # label.update({'grid_form': grid})
     label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
+    label['upds'] = upds 
+    label['inds'] = inds
+    label['true_conf'] = true_conf
     del label['info']
     return image, label
+
+  # def batch_fn(self, image, label):
+  #   best_anchors, ious = preprocessing_ops.get_best_anchor(
+  #       label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
+
+  #   bashape = best_anchors.get_shape().as_list()
+  #   best_anchors = pad_max_instances(
+  #       best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
+  #   bashape[-2] = self._max_num_instances
+  #   best_anchors.set_shape(bashape)
+  #   label['best_anchors'] = best_anchors
+
+  #   ishape = ious.get_shape().as_list()
+  #   ious = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
+  #   ishape[-2] = self._max_num_instances
+  #   ious.set_shape(ishape)
+  #   label['best_iou_match'] = ious
+
+  #   grid, boxes, classes = self._build_grid(
+  #       label, self._image_w, use_tie_breaker=self._use_tie_breaker)
+  #   label.update({'grid_form': grid})
+  #   label['bbox'] = box_utils.xcycwh_to_yxyx(label['bbox'])
+  #   del label['info']
+  #   return image, label
 
   def postprocess_fn(self, is_training):
     if is_training:  #or self._cutmix

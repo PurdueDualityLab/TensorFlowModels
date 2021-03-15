@@ -59,8 +59,9 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
-      keep_thresh: 0.25
+      jitter_im: 0.0
       mosaic_frequency: 0.5
+      keep_thresh: 0.0
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
@@ -74,9 +75,15 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: True
     parser:
+      fixed_size: true
       image_h: 512
       image_w: 512
-      fixed_size: true
+      letter_box: true
+      cutmix: false
+      mosaic: true
+      jitter_im: 0.0
+      mosaic_frequency: 0.5
+      keep_thresh: 0.0
       use_tie_breaker: true
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'

@@ -15,8 +15,8 @@ task:
         type: regular
       # darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       # darknet_weights_cfg: 'cache://csdarknet53.cfg'
-      darknet_weights_file: 'cache://yolov4.weights'
-      darknet_weights_cfg: 'cache://yolov4.cfg'
+      darknet_weights_file: 'cache://yolov4-sam-leaky.weights'
+      darknet_weights_cfg: 'cache://yolov4-sam-leaky.cfg'
     subdivisions: 16
     num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
@@ -24,8 +24,9 @@ task:
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
+    use_sam: true
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
@@ -59,8 +60,9 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
-      keep_thresh: 0.25
-      mosaic_frequency: 0.5
+      jitter_im: 0.0
+      mosaic_frequency: 0.75
+      keep_thresh: 0.5
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8
@@ -74,9 +76,15 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: True
     parser:
+      fixed_size: true
       image_h: 512
       image_w: 512
-      fixed_size: true
+      letter_box: true
+      cutmix: false
+      mosaic: false
+      jitter_im: 0.0
+      mosaic_frequency: 0.5
+      keep_thresh: 0.5
       use_tie_breaker: true
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
@@ -98,7 +106,7 @@ trainer:
       stepwise:
         boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.0000261, 0.0000261, 0.0000261] #[0.00261, 0.000261, 0.0000261]
     optimizer:
       type: sgd
       sgd:
@@ -107,6 +115,6 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 0 #1000 #learning rate rises from 0 to 0.0013 over 1000 steps
       
 

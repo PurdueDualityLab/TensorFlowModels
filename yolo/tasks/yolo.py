@@ -91,19 +91,7 @@ class YoloTask(base_task.Task):
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
-    # decoder = tfds_coco_decoder.MSCOCODecoder()
-    """
-    decoder_cfg = params.decoder.get()
-    if params.decoder.type == 'simple_decoder':
-        decoder = tf_example_decoder.TfExampleDecoder(
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    elif params.decoder.type == 'label_map_decoder':
-        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
-            label_map=decoder_cfg.label_map,
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    else:
-        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
-    """
+
     decoder = self.get_decoder(params)
     model = self.task_config.model
 
@@ -160,8 +148,38 @@ class YoloTask(base_task.Task):
     dataset = dataset.unbatch().shuffle(params.global_batch_size * 4 *
                                         2).batch(
                                             gbs, drop_remainder=True)
+    
+    # dataset = dataset.map(parser.batch_fn)
     print(dataset)
     return dataset
+
+  # def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
+  #   metric_dict = dict()
+  #   loss = dict()
+  #   loss_val = 0
+  #   metric_dict['total_loss'] = 0
+
+  #   grid = labels['grid_form']
+
+  #   scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
+  #   for key in outputs.keys():
+  #     (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
+  #      _recall50) = self._loss_dict[key](grid[key], 
+  #                                        outputs[key], 
+  #                                        labels['bbox'], 
+  #                                        labels['classes'])
+  #     metric_dict[f'total_loss'] += _loss
+  #     metric_dict[f'conf_loss_{key}'] = _loss_conf
+  #     metric_dict[f'box_loss_{key}'] = _loss_box
+  #     metric_dict[f'class_loss_{key}'] = _loss_class
+  #     metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
+  #     metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
+  #     metric_dict[f"avg_obj_{key}"] = tf.stop_gradient(_avg_obj)
+  #     loss[f"loss_{key}"] = _loss * scale / num_replicas
+  #     loss_val += _loss * scale / num_replicas
+
+
+  #   return loss, loss_val, metric_dict
 
   def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
     metric_dict = dict()
@@ -169,15 +187,19 @@ class YoloTask(base_task.Task):
     loss_val = 0
     metric_dict['total_loss'] = 0
 
-    grid = labels['grid_form']
+    grid = labels['true_conf']
+    inds = labels['inds']
+    upds = labels['upds']
 
     scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
        _recall50) = self._loss_dict[key](grid[key], 
-                                         outputs[key], 
+                                         inds[key], 
+                                         upds[key],
                                          labels['bbox'], 
-                                         labels['classes'])
+                                         labels['classes'], 
+                                         outputs[key])
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
       metric_dict[f'box_loss_{key}'] = _loss_box
@@ -190,6 +212,7 @@ class YoloTask(base_task.Task):
 
 
     return loss, loss_val, metric_dict
+
 
   def build_metrics(self, training=True):
     metrics = []

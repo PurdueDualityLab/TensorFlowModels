@@ -75,32 +75,43 @@ import time
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
-  shind = 0
+  shind = 3
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
-  for l, (i, j) in enumerate(dataset):
+
+  data = dataset
+  data = data.take(10)
+  for l, (i, j) in enumerate(data):
     ftime = time.time()
     print(ftime - ltime)
 
     print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
-    fboxes = dfilter(j['grid_form'])
+    # fboxes = dfilter(j['grid_form'])
 
-    i2 = drawer(i, fboxes)  #
-    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+    i2 = drawer(i, j)  #
+    # i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
-    gt = j['grid_form']
+    gt = j['true_conf']
+    inds = j['inds']
 
-    obj3 = gt['3'][..., 4]
-    obj4 = gt['4'][..., 4]
-    obj5 = gt['5'][..., 4]
+    # with tf.device('CPU:0'):
+    #   ind_test = inds['3']
+    #   ind_grid = gt['3']
+    #   ind_test = tf.where(ind_test == -1, 0, ind_test)
+    #   ind_mask = tf.expand_dims(tf.where(ind_test[...,-1] == -1, 0.0, 1.0), axis = -1)
+    #   a = tf.gather_nd(ind_grid, ind_test, batch_dims=1) * ind_mask
 
-    cls3 = gt['3'][..., dip, 5]
-    cls4 = gt['4'][..., dip, 5]
-    cls5 = gt['5'][..., dip, 5]
+    #   # vals = tf.tensor_scatter_nd_add(ind_grid, ind_test, a)
+    #   # print(vals)
+
+
+    obj3 = gt['3'][..., 0]
+    obj4 = gt['4'][..., 0]
+    obj5 = gt['5'][..., 0]
 
     fig, axe = plt.subplots(1, 4)
 
