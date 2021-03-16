@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: bool = True
   aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
-  keep_thresh: float = 0.1
+  keep_thresh: float = 0.0
   mosaic_frequency: float = 1.0
   use_tie_breaker: bool = True
 

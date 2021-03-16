@@ -70,12 +70,12 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
-      jitter_im: 0.0
-      mosaic_frequency: 0.5
+      jitter_im: 0.3
+      mosaic_frequency: 1.0
       keep_thresh: 0.0
       use_tie_breaker: true
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/debug/yolov4-coco-tpu50-pickup/ckpt-50050'
+  init_checkpoint: 'gs://tensorflow2/debug/yolov4-coco-tpu50-mosiac-everything-3/ckpt-50000'
   init_checkpoint_modules: 'all'
   annotation_file: null
   gradient_clip_norm: 0.0
