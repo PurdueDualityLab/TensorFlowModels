@@ -6,8 +6,15 @@
 # and adds the file to the commit. 
 
 echo ">>> Running pylint on your changed python files -- please wait..."
-
 git diff --cached --name-only --diff-filter=ACM | xargs pylint --rcfile=.pylintrc > linter_log.txt
 cat linter_log.txt
-git add linter_log.txt
+
+echo ">>> Running isort on your project repo..."
+isort --recursive .
+
+echo "\n>>> Running mypy on your project repo..."
+mypy .
+
+git add .
+
 exit 0
