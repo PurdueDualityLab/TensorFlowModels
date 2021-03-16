@@ -9,7 +9,7 @@ import numpy as np
 
 from functools import partial
 
-TILE_SIZE = 40
+TILE_SIZE = 50
 
 @tf.custom_gradient
 def obj_gradient_trap(y):

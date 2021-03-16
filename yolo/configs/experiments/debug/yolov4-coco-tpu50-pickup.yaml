@@ -52,8 +52,8 @@ task:
       letter_box: true
       cutmix: false
       mosaic: true
-      jitter_im: 0.0
-      mosaic_frequency: 0.5
+      jitter_im: 0.3
+      mosaic_frequency: 1.0
       keep_thresh: 0.0
       use_tie_breaker: true
   validation_data:
