@@ -653,7 +653,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
 
 def _get_num_reps(batches, num_objs, num_anchors, anchors, boxes, mask):
-  reps = tf.ones([batches, num_objs])
+  reps = tf.ones([batches, num_objs], dtype = boxes.dtype)
   for batch in range(batches):
     for obj_id in range(num_objs):
       num_reps = 0
@@ -814,7 +814,6 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
             update = update.write(i, const)
             count += 1
             i += 1
-            tf.print(count)
       num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])     
 
   if is_batch:
