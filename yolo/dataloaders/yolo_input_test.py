@@ -98,7 +98,7 @@ def test_pipeline():
     gt = j['true_conf']
     inds = j['inds']
 
-    # print(inds['3'][shind])
+    print(inds['3'][shind])
 
     # with tf.device('CPU:0'):
     #   ind_test = inds['3']
@@ -143,7 +143,7 @@ def time_pipeline():
     # print(l , ftime - ltime, end = ", ")
     times.append(ftime - ltime)
     ltime = time.time()
-    if l >= 1000:
+    if l >= 100:
       break
 
   plt.plot(times)
@@ -153,7 +153,7 @@ def time_pipeline():
 
 
 if __name__ == '__main__':
-  test_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

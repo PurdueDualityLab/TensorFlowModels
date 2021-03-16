@@ -723,9 +723,11 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   # number of anchors
   num_anchors = tf.shape(anchors)[-1]
   num_instances = num_boxes
- 
-  indexes = tf.fill([batches * num_instances, 3], -1)
-  gridvals = tf.fill([batches * num_instances , 4 + 1 + 1 + 1 + 1], tf.cast(0.0, boxes.dtype))
+
+  list_indx = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
+  list_ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
+  list_ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
+  
   update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   update = tf.TensorArray(dtype, size=0, dynamic_size=True)
 
@@ -767,9 +769,13 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       if K.any(index):
         anchor_idx = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
         y_, x_ = y[batch, obj_id], x[batch, obj_id]
-        indx = tf.convert_to_tensor([[y_, x_, anchor_idx]])
-        indexes = tf.tensor_scatter_nd_update(indexes, [[batch_ind + count]], indx)
-        gridvals = tf.tensor_scatter_nd_update(gridvals, [[batch_ind + count]], [sample])
+        indx = tf.convert_to_tensor([y_, x_, anchor_idx])
+        #indexes = tf.tensor_scatter_nd_update(indexes, [[batch_ind + count]], indx)
+        #gridvals = tf.tensor_scatter_nd_update(gridvals, [[batch_ind + count]], [sample])
+        list_indx = list_indx.write(i, [batch_ind + count])
+        list_ind_val = list_ind_val.write(i, indx)
+        list_ind_sample = list_ind_sample.write(i, sample)
+
         update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
         update = update.write(i, const)
         count += 1
@@ -807,14 +813,32 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
           if K.any(index):
             anchor_idx = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
             y_, x_ = y[batch, obj_id], x[batch, obj_id]
-            indx = tf.convert_to_tensor([[y_, x_, anchor_idx]])
-            indexes = tf.tensor_scatter_nd_update(indexes, [[batch_ind + count]], indx)
-            gridvals = tf.tensor_scatter_nd_update(gridvals, [[batch_ind + count]], [sample])
+            indx = tf.convert_to_tensor([y_, x_, anchor_idx])
+            # indexes = tf.tensor_scatter_nd_update(indexes, [[batch_ind + count]], indx)
+            # gridvals = tf.tensor_scatter_nd_update(gridvals, [[batch_ind + count]], [sample])
+            # list_indx = list_indx.write(i, [batch_ind + count])
+            # list_ind_val = list_indx.write(i, indx)
+            # list_ind_sample = list_indx.write(i, sample)
+            list_indx = list_indx.write(i, [batch_ind + count])
+            list_ind_val = list_ind_val.write(i, indx)
+            list_ind_sample = list_ind_sample.write(i, sample)
+
             update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
             update = update.write(i, const)
             count += 1
             i += 1
       num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])     
+
+
+  indexes = tf.fill([batches * num_instances, 3], -1)
+  gridvals = tf.fill([batches * num_instances , 4 + 1 + 1 + 1 + 1], tf.cast(0.0, boxes.dtype))
+
+  if tf.math.greater(list_indx.size(), 0):
+    list_indx = list_indx.stack()
+    list_ind_val = list_ind_val.stack()
+    list_ind_sample = list_ind_sample.stack()
+    indexes = tf.tensor_scatter_nd_update(indexes, list_indx, list_ind_val)
+    gridvals = tf.tensor_scatter_nd_update(gridvals, list_indx, list_ind_sample)
 
   if is_batch:
     indexes = tf.reshape(indexes, [batches, -1, 3])
