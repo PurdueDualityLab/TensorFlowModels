@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-# An example hook script to verify what is about to be committed.
-# Called by "git commit" with no arguments.  The hook should
-# exit with non-zero status after issuing an appropriate message if
-# it wants to stop the commit.
-#
-# To enable this hook, rename this file to "pre-commit".
+# Git hook that runs whenever a user types "git commit";
+# It runs pylint on any files that were changed, saves the linter
+# output into a .txt file, prints the contents of the file out, 
+# and adds the file to the commit. 
 
 echo ">>> Running pylint on your changed python files -- please wait..."
 
-git diff --cached --name-only --diff-filter=ACM | xargs pylint --rcfile=.pylint$
+git diff --cached --name-only --diff-filter=ACM | xargs pylint --rcfile=.pylintrc > linter_log.txt
+cat linter_log.txt
+git add linter_log.txt
 exit 0
