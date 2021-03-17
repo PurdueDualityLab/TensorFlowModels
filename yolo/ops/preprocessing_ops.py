@@ -254,10 +254,10 @@ def get_image_shape(image):
 
 
 # do all the ops needed
-def random_op_image(image, jfactor, zfactor, tfactor, letter_box=True):
+def random_op_image(image, jfactor, zfactor_max, zfactor_min, tfactor):
   image, jitter_info = random_jitter(image, jfactor)
   image, translate_info = random_translate(image, tfactor)
-  image, crop_info = random_zoom(image, zfactor)
+  image, crop_info = random_zoom(image, zfactor_max, zfactor_min)
   crop_info.update(translate_info)
   return image, crop_info
 
@@ -289,10 +289,10 @@ def translate_boxes(box, classes, translate_x, translate_y):
   return box, classes
 
 
-def random_zoom(image, zfactor):
-  zx = 1 + tf.random.uniform(
-      minval=-zfactor, maxval=zfactor, shape=(), dtype=tf.float32)
+def random_zoom(image, zfactor_min, zfactor_max):
+  zx = tf.random.uniform(minval=zfactor_min, maxval=zfactor_min, shape=(), dtype=tf.float32)
   zy = zx
+
   height, width = get_image_shape(image)
   width = tf.cast(tf.cast(width, zx.dtype) * zx, width.dtype)
   height = tf.cast(tf.cast(height, zy.dtype) * zy, height.dtype)

@@ -35,29 +35,28 @@ class Parser(parser.Parser):
   def __init__(self,
                image_w=416,
                image_h=416,
-               num_classes=80,
-               fixed_size=False,
-               jitter_im=0.2,
-               jitter_boxes=0.005,
-               letter_box=False,
-               use_tie_breaker=True,
                min_level=3,
                max_level=5,
+               num_classes=80,
                masks=None,
-               cutmix=False,
-               mosaic=True,
-               mosaic_frequency=1,
+               anchors=None,
+               fixed_size=False,
+               letter_box=False,
+               use_tie_breaker=True,
+               random_flip=True,
+               mosaic_frequency=1.0,
+               jitter_im=0.2,
+               jitter_boxes=0.005,
+               aug_rand_transalate=0.0, 
+               aug_rand_zoom=0.0,
+               aug_rand_hue=0.1,
+               aug_rand_saturation=1.5,
+               aug_rand_brightness=1.5,
                max_process_size=608,
                min_process_size=320,
                max_num_instances=200,
                keep_thresh=0.25,
-               random_flip=True,
                pct_rand=0.5,
-               aug_rand_saturation=True,
-               aug_rand_brightness=True,
-               aug_rand_zoom=0.0,
-               aug_rand_hue=True,
-               anchors=None,
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
@@ -112,6 +111,7 @@ class Parser(parser.Parser):
     self._random_flip = random_flip
     self._letter_box = letter_box
 
+    self._aug_rand_translate = aug_rand_transalate
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_zoom = aug_rand_zoom
@@ -142,12 +142,6 @@ class Parser(parser.Parser):
     true_conf = {}
 
     for key in self._masks.keys():
-      # grid = preprocessing_ops.build_grided_gt(raw_true, self._masks[key],
-      #                                               width // 2**int(key),
-      #                                               self._num_classes,
-      #                                               raw_true['bbox'].dtype,
-      #                                               use_tie_breaker)
-
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(raw_true, self._masks[key],
                                                     width // 2**int(key),
                                                     self._num_classes,
@@ -162,11 +156,9 @@ class Parser(parser.Parser):
       ishape[-2] = self._max_num_instances
       updates.set_shape(ishape)
       
-      # mask[key] = tf.cast(grid, self._dtype)
       inds[key] = indexes
       upds[key] = tf.cast(updates, self._dtype)
       true_conf[key] = true_grid
-
     return mask, inds, upds, true_conf
 
   def _parse_train_data(self, data):
@@ -179,19 +171,17 @@ class Parser(parser.Parser):
         """
 
     image = data['image'] / 255
-
-    # / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    if self._aug_rand_hue:
-      delta = preprocessing_ops.rand_uniform_strong(-0.1, 0.1)
+    if self._aug_rand_hue > 0.0:
+      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation:
-      delta = preprocessing_ops.rand_scale(1.5)
+      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness:
-      delta = preprocessing_ops.rand_scale(1.5)
+      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
 
@@ -211,15 +201,16 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    zfactor = self._aug_rand_zoom
+
 
     image_shape = tf.shape(image)[:2]
     boxes = box_ops.denormalize_boxes(boxes, image_shape)
     boxes = box_ops.jitter_boxes(boxes, 0.025)
     boxes = box_ops.normalize_boxes(boxes, image_shape)
 
+
     image, crop_info = preprocessing_ops.random_op_image(
-        image, self._jitter_im, 0.0, 0.0, True)
+        image, self._jitter_im, 0.0, 0.0)
     boxes, classes = preprocessing_ops.filter_boxes_and_classes(
         boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
