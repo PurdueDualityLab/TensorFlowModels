@@ -55,6 +55,16 @@ task:
       mosaic_frequency: 0.5
       keep_thresh: 0.0
       use_tie_breaker: true
+      jitter_boxes: 0.005
+      min_process_size: 320
+      max_process_size: 608
+      max_num_instances: 200
+      random_flip: True
+      pct_rand: 0.5
+      aug_rand_saturation: True
+      aug_rand_brightness: True
+      aug_rand_zoom: True
+      aug_rand_hue: True
   validation_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -68,6 +78,21 @@ task:
       letter_box: true
       fixed_size: true
       use_tie_breaker: true
+      jitter_im: 0.0
+      jitter_boxes: 0.005
+      min_process_size: 320
+      max_process_size: 608
+      max_num_instances: 200
+      random_flip: True
+      pct_rand: 0.5
+      cutmix: False
+      mosaic: True
+      aug_rand_saturation: True
+      aug_rand_brightness: True
+      aug_rand_zoom: True
+      aug_rand_hue: True
+      keep_thresh: 0.0
+      mosaic_frequency: 1.0
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
