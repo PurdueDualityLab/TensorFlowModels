@@ -1,6 +1,6 @@
 import tensorflow as tf
 from official.vision.beta.dataloaders import parser
-
+from yolo.ops import preprocessing_ops
 
 class CenterNetParser(parser.Parser):
     def __init__(
