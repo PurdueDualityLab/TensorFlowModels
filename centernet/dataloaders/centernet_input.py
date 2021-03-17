@@ -101,7 +101,7 @@ class CenterNetParser(parser.Parser):
           'ct_heatmaps': ct_heatmaps,
           'tag_masks': tag_masks,
           'tl_offset': tl_offset,
-          'br_offset', br_offset,
+          'br_offset': br_offset,
           'ct_offset': ct_offset,
       }
       return labels
