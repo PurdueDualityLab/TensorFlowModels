@@ -80,20 +80,20 @@ class YoloHead(tf.keras.layers.Layer):
       raise Exception(
           "model has to be built before number of boxes can be determined")
     return (self._max_level - self._min_level + 1) * self._boxes_per_level
-  
+
   def get_config(self):
     config = dict(
-      classes=self._classes,
-      boxes_per_level=self._boxes_per_level,
-      output_extras=self._output_extras,
-      xy_exponential=self._xy_exponential,
-      exp_base=self._exp_base,
-      xy_scale_base=self._xy_scale_base,
-      norm_momentum=self._norm_momentum,
-      norm_epsilon=self._norm_epsilon,
-      kernel_initializer=self._kernel_initializer,
-      kernel_regularizer=self._kernel_regularizer,
-      bias_regularizer=self._bias_regularizer,
+        classes=self._classes,
+        boxes_per_level=self._boxes_per_level,
+        output_extras=self._output_extras,
+        xy_exponential=self._xy_exponential,
+        exp_base=self._exp_base,
+        xy_scale_base=self._xy_scale_base,
+        norm_momentum=self._norm_momentum,
+        norm_epsilon=self._norm_epsilon,
+        kernel_initializer=self._kernel_initializer,
+        kernel_regularizer=self._kernel_regularizer,
+        bias_regularizer=self._bias_regularizer,
     )
     return config
 

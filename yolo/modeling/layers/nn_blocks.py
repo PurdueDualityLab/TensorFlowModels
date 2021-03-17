@@ -99,7 +99,7 @@ class ConvBN(tf.keras.layers.Layer):
     dilation_rate = self._dilation_rate if isinstance(
         self._dilation_rate, int) else self._dilation_rate[0]
     if self._padding == 'same' and kernel_size != 1:
-      padding = dilation_rate * (kernel_size - 1)
+      padding = (dilation_rate * (kernel_size - 1))
       left_shift = padding // 2
       self._zeropad = tf.keras.layers.ZeroPadding2D([[left_shift, left_shift],
                                                      [left_shift, left_shift]])
@@ -107,6 +107,18 @@ class ConvBN(tf.keras.layers.Layer):
       self._zeropad = Identity()
 
     use_bias = not self._use_bn
+
+    # self.conv = tf.keras.layers.Conv2D(
+    #     filters=self._filters,
+    #     kernel_size=self._kernel_size,
+    #     strides=self._strides,
+    #     padding= self._padding,# 'valid',
+    #     dilation_rate=self._dilation_rate,
+    #     use_bias=use_bias,
+    #     kernel_initializer=self._kernel_initializer,
+    #     bias_initializer=self._bias_initializer,
+    #     kernel_regularizer=self._kernel_regularizer,
+    #     bias_regularizer=self._bias_regularizer)
 
     self.conv = tf.keras.layers.Conv2D(
         filters=self._filters,
@@ -139,8 +151,9 @@ class ConvBN(tf.keras.layers.Layer):
     elif self._activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(self._activation) #tf.keras.layers.Activation(self._activation)
-  
+      self._activation_fn = tf_utils.get_activation(
+          self._activation)  # tf.keras.layers.Activation(self._activation)
+
   def call(self, x):
     x = self._zeropad(x)
     x = self.conv(x)
@@ -170,9 +183,6 @@ class ConvBN(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
-  def __repr__(self):
-    return repr(self.get_config())
-
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class DarkResidual(tf.keras.layers.Layer):
@@ -200,8 +210,8 @@ class DarkResidual(tf.keras.layers.Layer):
 
   def __init__(self,
                filters=1,
-               filter_scale = 2,
-               dilation_rate = 1, 
+               filter_scale=2,
+               dilation_rate=1,
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                kernel_regularizer=None,
@@ -232,7 +242,8 @@ class DarkResidual(tf.keras.layers.Layer):
     # normal params
     self._norm_moment = norm_momentum
     self._norm_epsilon = norm_epsilon
-    self._dilation_rate = dilation_rate if isinstance(dilation_rate, int) else dilation_rate[0]
+    self._dilation_rate = dilation_rate if isinstance(dilation_rate,
+                                                      int) else dilation_rate[0]
     # self._down_stride = 2
 
     # if self._downsample and self._dilation_rate > 1:
@@ -259,8 +270,8 @@ class DarkResidual(tf.keras.layers.Layer):
         'leaky_alpha': self._leaky_alpha
     }
     if self._downsample:
-      if self._dilation_rate > 1: 
-        dilation_rate = self._dilation_rate//2 if self._dilation_rate//2 > 0 else 1
+      if self._dilation_rate > 1:
+        dilation_rate = self._dilation_rate // 2 if self._dilation_rate // 2 > 0 else 1
         down_stride = 1
       else:
         dilation_rate = 1
@@ -280,7 +291,7 @@ class DarkResidual(tf.keras.layers.Layer):
         filters=self._filters // self._filter_scale,
         kernel_size=(1, 1),
         strides=(1, 1),
-        #dilation_rate= self._dilation_rate, 
+        #dilation_rate= self._dilation_rate,
         padding='same',
         **_dark_conv_args)
 
@@ -288,7 +299,7 @@ class DarkResidual(tf.keras.layers.Layer):
         filters=self._filters,
         kernel_size=(3, 3),
         strides=(1, 1),
-        dilation_rate= self._dilation_rate, 
+        dilation_rate=self._dilation_rate,
         padding='same',
         **_dark_conv_args)
 
@@ -298,7 +309,9 @@ class DarkResidual(tf.keras.layers.Layer):
     elif self._sc_activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(self._sc_activation) #tf.keras.layers.Activation(self._sc_activation)
+      self._activation_fn = tf_utils.get_activation(
+          self._sc_activation
+      )  # tf.keras.layers.Activation(self._sc_activation)
     super().build(input_shape)
 
   def call(self, inputs):
@@ -315,7 +328,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'kernel_regularizer': self._kernel_regularizer,
-        "dilation_rate":self._dilation_rate, 
+        'dilation_rate': self._dilation_rate,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
         'norm_moment': self._norm_moment,
@@ -366,7 +379,7 @@ class CSPTiny(tf.keras.layers.Layer):
                bias_regularizer=None,
                kernel_regularizer=None,
                use_bn=True,
-               dilation_rate = 1, 
+               dilation_rate=1,
                use_sync_bn=False,
                group_id=1,
                groups=2,
@@ -509,7 +522,7 @@ class CSPRoute(tf.keras.layers.Layer):
                bias_initializer='zeros',
                bias_regularizer=None,
                kernel_regularizer=None,
-               dilation_rate = 1, 
+               dilation_rate=1,
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -548,8 +561,8 @@ class CSPRoute(tf.keras.layers.Layer):
         'kernel_regularizer': self._kernel_regularizer,
     }
     if self._downsample:
-      if self._dilation_rate > 1: 
-        dilation_rate = self._dilation_rate//2 if self._dilation_rate//2 > 0 else 1
+      if self._dilation_rate > 1:
+        dilation_rate = self._dilation_rate // 2 if self._dilation_rate // 2 > 0 else 1
         down_stride = 1
       else:
         dilation_rate = 1
@@ -559,7 +572,7 @@ class CSPRoute(tf.keras.layers.Layer):
           filters=self._filters,
           kernel_size=(3, 3),
           strides=down_stride,
-          dilation_rate = dilation_rate,
+          dilation_rate=dilation_rate,
           **_dark_conv_args)
     else:
       self._conv1 = ConvBN(
@@ -618,7 +631,7 @@ class CSPConnect(tf.keras.layers.Layer):
                bias_initializer='zeros',
                bias_regularizer=None,
                kernel_regularizer=None,
-               dilation_rate = 1, 
+               dilation_rate=1,
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -776,7 +789,7 @@ class RouteMerge(tf.keras.layers.Layer):
 
   def __init__(
       self,
-      filters=1, 
+      filters=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
       bias_regularizer=None,

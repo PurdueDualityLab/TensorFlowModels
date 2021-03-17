@@ -1,3 +1,4 @@
+import yolo.demos.three_servers.video_server as video_t
 import struct
 import cv2
 import datetime
@@ -44,7 +45,7 @@ class ModelServer(object):
 
     self._pdims = process_dims
     self._max_batch = max_batch
-    self._dynamic_wt = wait_time == "dynamic"
+    self._dynamic_wt = (wait_time == "dynamic" or wait_time is None)
     if not self._dynamic_wt:
       self._wait_time = utils.get_wait_time(wait_time, max_batch)
     else:
@@ -249,39 +250,8 @@ def func(inputs):
   }
 
 
-if __name__ == "__main__":
-  from yolo.utils.run_utils import prep_gpu
-  from yolo.configs import yolo as exp_cfg
-  from yolo.tasks.yolo import YoloTask
-  import tensorflow_datasets as tfds
-  import yolo.utils.export.tensor_rt as trt
-  import matplotlib.pyplot as plt
-  import yolo.demos.three_servers.video_server as video_t
-  prep_gpu()
-
-  from tensorflow.keras.mixed_precision import experimental as mixed_precision
-  mixed_precision.set_policy("mixed_float16")
-
-  # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny', min_level=4)  )
-  # task = YoloTask(config)
-  # model = task.build_model()
-  # task.initialize(model)
-  # model.summary()
-  # model.predict(tf.ones((1, 416, 416, 3), dtype = tf.float16))
-
-  #name = "saved_models/v4/tflite-regualr-no-nms"
-  #name = "saved_models/v4/tflite-tiny-no-nms"
-  name = "saved_models/v4/tiny"
-  new_name = f"{name}_tensorrt"
-  model = trt.TensorRT(
-      saved_model=new_name,
-      save_new_path=new_name,
-      max_workspace_size_bytes=4000000000,
-      max_batch_size=5)  # , precision_mode="INT8", use_calibration=True)
-  model.compile()
-  model.summary()
-  model.set_postprocessor_fn(func)
-
+def run(model, video, disp_h, wait_time, max_batch, que_size):
+  max_batch = 5 if max_batch is None else max_batch
   pfn = preprocess_fn
   pofn = utils.DrawBoxes(
       classes=80, labels=coco.get_coco_names(), display_names=True, thickness=2)
@@ -290,10 +260,10 @@ if __name__ == "__main__":
       model=model,
       preprocess_fn=pfn,
       postprocess_fn=pofn,
-      wait_time=0.00001,
-      max_batch=5)
+      wait_time=wait_time,
+      max_batch=max_batch)
   video = video_t.VideoServer(
-      "videos/nyc.mp4", wait_time=0.00000001, que=1000, disp_h=480)
+      video, wait_time=0.00000001, que=que_size, disp_h=disp_h)
   display = video_t.DisplayThread(
       server, alpha=0.9, wait_time=0.000001, fix_wt=False)
   server.start()
@@ -315,3 +285,39 @@ if __name__ == "__main__":
 
   server.close()
   display.close()
+
+
+if __name__ == "__main__":
+  from yolo.utils.run_utils import prep_gpu
+  from yolo.configs import yolo as exp_cfg
+  from yolo.tasks.yolo import YoloTask
+  import tensorflow_datasets as tfds
+  import yolo.utils.export.tensor_rt as trt
+  import matplotlib.pyplot as plt
+
+  prep_gpu()
+
+  from tensorflow.keras.mixed_precision import experimental as mixed_precision
+  mixed_precision.set_policy("mixed_float16")
+
+  config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base="v4tiny", min_level=4))
+  task = YoloTask(config)
+  model = task.build_model()
+  task.initialize(model)
+  model.summary()
+  model.predict(tf.ones((1, 416, 416, 3), dtype=tf.float16))
+
+  # #name = "saved_models/v4/tflite-regualr-no-nms"
+  # #name = "saved_models/v4/tflite-tiny-no-nms"
+  # name = "saved_models/v4/tiny"
+  # new_name = f"{name}_tensorrt"
+  # model = trt.TensorRT(
+  #     saved_model=new_name,
+  #     save_new_path=new_name,
+  #     max_workspace_size_bytes=4000000000,
+  #     max_batch_size=5)  # , precision_mode="INT8", use_calibration=True)
+  # model.compile()
+  # model.summary()
+  # model.set_postprocessor_fn(func)
+
+  run(model, 0, 416, "dynamic", 5, 10000)

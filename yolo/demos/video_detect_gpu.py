@@ -12,14 +12,16 @@ import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 from yolo.utils.run_utils import support_windows
-from yolo.utils.run_utils import prep_gpu
 from yolo.utils.demos.coco import draw_box
 from yolo.utils.demos.coco import get_draw_fn
 from yolo.utils.demos.coco import gen_colors
 from yolo.utils.demos.coco import get_coco_names
 from yolo.utils.demos.coco import int_scale_boxes
-#from yolo.utils.demos import utils
-from utils.demos import utils
+from yolo.utils.demos import utils
+# from utils.demos import utils
+from yolo.utils.run_utils import prep_gpu
+from yolo.configs import yolo as exp_cfg
+from yolo.tasks.yolo import YoloTask
 
 
 class FastVideo(object):
@@ -76,9 +78,14 @@ class FastVideo(object):
                wait_time=None,
                preprocess_with_gpu=False,
                scale_que=1,
-               policy='float16',
                gpu_device='/GPU:0',
                preprocess_gpu='/GPU:0'):
+
+    file_name = 0 if file_name is None else file_name
+    try:
+      file_name = int(file_name)
+    except BaseException:
+      print(file_name)
     self._cap = cv2.VideoCapture(file_name)
     if not self._cap.isOpened():
       raise IOError('video file was not found')
@@ -107,7 +114,6 @@ class FastVideo(object):
     self._classes = classes
     self._p_width = process_width
     self._p_height = process_height
-    self._policy = policy
     self._model = model
 
     # fast but as close to one 2 one as possible
@@ -148,7 +154,7 @@ class FastVideo(object):
     self._display_que = Queue(1 * scale_que)
     self._running = True
 
-    self._dynamic_wt = wait_time == 'dynamic'
+    self._dynamic_wt = (wait_time == 'dynamic' or wait_time is None)
     if not self._dynamic_wt:
       self._wait_time = utils.get_wait_time(wait_time, max_batch)
     else:
@@ -493,86 +499,42 @@ def get_model(model):
   return ret
 
 
-if __name__ == '__main__':
-  from yolo.utils.run_utils import prep_gpu
-  from yolo.configs import yolo as exp_cfg
-  from yolo.tasks.yolo import YoloTask
-  import yolo.utils.export.tensor_rt as trt
-  prep_gpu()
+# import yolo.utils.export.tensor_rt as trt
+# model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
+# name = "saved_models/v3/tflite-tiny-no-nms"
+# model.save(name, overwrite=True)
+# new_name = f"{name}_tensorrt"
+# model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
+# model.convertModel()
+# model.compile()
+# model.summary()
+# model.set_postprocessor_fn(func)
 
-  from tensorflow.keras.mixed_precision import experimental as mixed_precision
-  mixed_precision.set_policy('mixed_float16')
-  # mixed_precision.set_policy("float32")
+# #name = "saved_models/v4/tflite-regualr-no-nms"
+# name = "saved_models/v4/tflite-tiny-no-nms"
+# # name = "saved_models/v3/tflite-regular-no-nms"
+# # name = "saved_models/v3/tflite-tiny-no-nms"
+# new_name = f"{name}_tensorrt"
+# model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
+# model.compile()
+# model.summary()
+# model.set_postprocessor_fn(func)
 
-  config = exp_cfg.YoloTask(
-      model=exp_cfg.Yolo(
-          _input_size=[416, 416, 3],
-          base='v4',
-          min_level=3,
-          norm_activation=exp_cfg.common.NormActivation(activation='mish', use_sync_bn=False),
-          #norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-          #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-          #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-          _boxes=[
-              '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-              '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-          ],
-          dilate=True,
-          filter=exp_cfg.YoloLossLayer(use_nms=False)))
+# if __name__ == '__main__':
+#   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
+#   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-  # config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base='v4tiny',
-  #                     min_level=4,
-  #                     #norm_activation = exp_cfg.common.NormActivation(activation="mish"),
-  #                     norm_activation = exp_cfg.common.NormActivation(activation="leaky"),
-  #                     _boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-  #                     #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-  #                     #_boxes = ['(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)','(76, 55)', '(72, 146)', '(142, 110)', '(192, 243)','(459, 401)'],
-  #                     filter = exp_cfg.YoloLossLayer(use_nms=False)
-  #                     ))
-  task = YoloTask(config)
-  model = task.build_model()
-  task.initialize(model)
-    
-  # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-  # ckpt = tf.train.Checkpoint(model = model, optimizer = optimizer)
-  # status = ckpt.restore(tf.train.latest_checkpoint("training_dir"))#.expect_partial()
-  # print(dir(status))
-  
-  # manager = tf.train.CheckpointManager(ckpt, "v4tiny_logs", 3)
-  # manager.restore_or_initialize()
-  # print(dir(manager))
-  # status.assert_consumed()
+#   task, model = load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
 
-  # model(tf.ones((1, 416, 416, 3), dtype = tf.float32))
-  # name = "saved_models/v3/tflite-tiny-no-nms"
-  # model.save(name, overwrite=True)
-  # new_name = f"{name}_tensorrt"
-  # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)#, precision_mode="INT8", use_calibration=True)
-  # model.convertModel()
-  # model.compile()
-  # model.summary()
-  # model.set_postprocessor_fn(func)
-
-  # #name = "saved_models/v4/tflite-regualr-no-nms"
-  # name = "saved_models/v4/tflite-tiny-no-nms"
-  # # name = "saved_models/v3/tflite-regular-no-nms"
-  # # name = "saved_models/v3/tflite-tiny-no-nms"
-  # new_name = f"{name}_tensorrt"
-  # model = trt.TensorRT(saved_model=new_name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
-  # model.compile()
-  # model.summary()
-  # model.set_postprocessor_fn(func)
-
-  cap = FastVideo(
-      0,
-      model=model,
-      process_width=416,
-      process_height=416,
-      preprocess_with_gpu=True,
-      print_conf=True,
-      max_batch=5,
-      disp_h=416,
-      scale_que=1,
-      wait_time='dynamic',
-      policy='mixed_float16')
-  cap.run()
+#   cap = FastVideo(
+#       "../videos/nyc.mp4",
+#       model=model,
+#       process_width=416,
+#       process_height=416,
+#       preprocess_with_gpu=True,
+#       print_conf=True,
+#       max_batch=5,
+#       disp_h=416,
+#       scale_que=1,
+#       wait_time='dynamic')
+#   cap.run()

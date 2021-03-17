@@ -43,6 +43,7 @@ def read_file(full_net, config, weights=None):
 
   for i, layer_dict in enumerate(config):
     try:
+      print(layer_dict)
       layer, num_read = build_layer(layer_dict, weights, full_net)
     except Exception as e:
       raise ValueError(f"Cannot read weights for layer [#{i}]") from e

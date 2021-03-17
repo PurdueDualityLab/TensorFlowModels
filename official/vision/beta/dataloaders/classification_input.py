@@ -73,6 +73,7 @@ class Parser(parser.Parser):
       self._dtype = tf.bfloat16
     else:
       raise ValueError('dtype {!r} is not supported!'.format(dtype))
+    
     if aug_policy:
       if aug_policy == 'autoaug':
         self._augmenter = augment.AutoAugment()

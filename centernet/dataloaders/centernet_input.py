@@ -1,5 +1,6 @@
 import tensorflow as tf
 from official.vision.beta.dataloaders import parser
+from centernet.utils import groundtruth
 
 
 class CenterNetParser(parser.Parser):
@@ -62,13 +63,13 @@ class CenterNetParser(parser.Parser):
           height = math.ceil(height * height_ratio)
 
           if gaussian_rad == -1:
-            radius = gaussian_radius((height, width), self._gaussian_iou)
+            radius = groundtruth.gaussian_radius((height, width), self._gaussian_iou)
             radius = max(0, int(radius))
           else:
             radius = gaussian_rad
-          tl_heatmaps = draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
-          br_heatmaps = draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
-          ct_heatmaps = draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
+          tl_heatmaps = groundtruth.draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
+          br_heatmaps = groundtruth.draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
+          ct_heatmaps = groundtruth.draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
 
         else:
           # tl_heatmaps[category, ytl, xtl] = 1
