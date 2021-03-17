@@ -153,9 +153,8 @@ class Parser(hyperparams.Config):
   max_process_size: int = 608
   letter_box: bool = True
   random_flip: bool = True
-  cutmix: bool = False
-  mosaic: bool = True
   pct_rand: float = 0.5
+  aug_rand_transalate: float = 0.0
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_zoom: float = 0.6
