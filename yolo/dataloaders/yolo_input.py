@@ -55,7 +55,7 @@ class Parser(parser.Parser):
                pct_rand=0.5,
                aug_rand_saturation=True,
                aug_rand_brightness=True,
-               aug_rand_zoom=True,
+               aug_rand_zoom=0.0,
                aug_rand_hue=True,
                anchors=None,
                seed=10,
@@ -211,10 +211,7 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    if self._aug_rand_zoom:
-      zfactor = 0.3
-    else:
-      zfactor = 0.0
+    zfactor = self._aug_rand_zoom
 
     image_shape = tf.shape(image)[:2]
     boxes = box_ops.denormalize_boxes(boxes, image_shape)
