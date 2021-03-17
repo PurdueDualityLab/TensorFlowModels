@@ -157,7 +157,7 @@ class Parser(hyperparams.Config):
   aug_rand_transalate: float = 0.0
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
-  aug_rand_zoom: float = 0.6
+  aug_rand_zoom: float = 0.5
   aug_rand_hue: float = 0.1
   keep_thresh: float = 0.0
   mosaic_frequency: float = 1.0

@@ -19,7 +19,6 @@ def rand_scale(val, dtype=tf.float32):
     return scale
   return 1.0 / scale
 
-
 def _boolean_mask(data, mask):
   data = data * tf.cast(mask, data.dtype)
   if tf.shape(tf.shape(data)) == 2:
@@ -254,10 +253,10 @@ def get_image_shape(image):
 
 
 # do all the ops needed
-def random_op_image(image, jfactor, zfactor_max, zfactor_min, tfactor):
+def random_op_image(image, jfactor, zx, zy, tfactor):
   image, jitter_info = random_jitter(image, jfactor)
   image, translate_info = random_translate(image, tfactor)
-  image, crop_info = random_zoom(image, zfactor_max, zfactor_min)
+  image, crop_info = random_zoom(image, zx, zy)
   crop_info.update(translate_info)
   return image, crop_info
 
@@ -289,10 +288,7 @@ def translate_boxes(box, classes, translate_x, translate_y):
   return box, classes
 
 
-def random_zoom(image, zfactor_min, zfactor_max):
-  zx = tf.random.uniform(minval=zfactor_min, maxval=zfactor_min, shape=(), dtype=tf.float32)
-  zy = zx
-
+def random_zoom(image, zx, zy):
   height, width = get_image_shape(image)
   width = tf.cast(tf.cast(width, zx.dtype) * zx, width.dtype)
   height = tf.cast(tf.cast(height, zy.dtype) * zy, height.dtype)

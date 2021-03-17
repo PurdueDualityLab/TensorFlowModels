@@ -45,8 +45,8 @@ class Parser(parser.Parser):
                use_tie_breaker=True,
                random_flip=True,
                mosaic_frequency=1.0,
-               jitter_im=0.2,
-               jitter_boxes=0.005,
+               jitter_im=0.0,
+               jitter_boxes=0.0025,
                aug_rand_transalate=0.0, 
                aug_rand_zoom=0.0,
                aug_rand_hue=0.1,
@@ -177,44 +177,36 @@ class Parser(parser.Parser):
     if self._aug_rand_hue > 0.0:
       delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
       image = tf.image.adjust_hue(image, delta)
-    if self._aug_rand_saturation:
+    if self._aug_rand_saturation > 0.0:
       delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
       image = tf.image.adjust_saturation(image, delta)
-    if self._aug_rand_brightness:
+    if self._aug_rand_brightness > 0.0:
       delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
-
-    # stddev = tf.random.uniform([],
-    #                            minval=0,
-    #                            maxval=40 / 255,
-    #                            seed=self._seed,
-    #                            dtype=tf.float32)
-    # noise = tf.random.normal(
-    #     shape=tf.shape(image), mean=0.0, stddev=stddev, seed=self._seed)
-    # noise = tf.math.minimum(noise, 0.5)
-    # noise = tf.math.maximum(noise, 0)
-    # image += noise
-    # image = tf.clip_by_value(image, 0.0, 1.0)
 
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-
-
     image_shape = tf.shape(image)[:2]
-    boxes = box_ops.denormalize_boxes(boxes, image_shape)
-    boxes = box_ops.jitter_boxes(boxes, 0.025)
-    boxes = box_ops.normalize_boxes(boxes, image_shape)
 
+    if self._jitter_boxes > 0.0:
+      boxes = box_ops.denormalize_boxes(boxes, image_shape)
+      boxes = box_ops.jitter_boxes(boxes, self._jitter_boxes)
+      boxes = box_ops.normalize_boxes(boxes, image_shape)
+
+    if self._aug_rand_zoom > 0.0:
+      zfactor = preprocessing_ops.rand_scale(self._aug_rand_zoom)
+    else:
+      zfactor = 1.0
 
     image, crop_info = preprocessing_ops.random_op_image(
-        image, self._jitter_im, 0.0, 0.0)
+        image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
     boxes, classes = preprocessing_ops.filter_boxes_and_classes(
         boxes, classes, crop_info, keep_thresh=self._keep_thresh)
 
-    if self._letter_box: # and not self._mosaic:
+    if self._letter_box:
       image, boxes, info = preprocessing_ops.letter_box(
           image, boxes, xs = 0.5, ys = 0.5 , target_dim=self._image_w)
     else:
