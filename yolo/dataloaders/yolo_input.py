@@ -217,9 +217,9 @@ class Parser(parser.Parser):
       zfactor = 0.0
 
     image_shape = tf.shape(image)[:2]
-    # boxes = box_ops.denormalize_boxes(boxes, image_shape)
-    # boxes = box_ops.jitter_boxes(boxes, 0.025)
-    # boxes = box_ops.normalize_boxes(boxes, image_shape)
+    boxes = box_ops.denormalize_boxes(boxes, image_shape)
+    boxes = box_ops.jitter_boxes(boxes, 0.025)
+    boxes = box_ops.normalize_boxes(boxes, image_shape)
 
     image, crop_info = preprocessing_ops.random_op_image(
         image, self._jitter_im, 0.0, 0.0, True)
@@ -407,17 +407,17 @@ class Parser(parser.Parser):
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         label['bbox'], self._anchors, width=self._image_w, height=self._image_h)
 
-    bashape = best_anchors.get_shape().as_list()
-    best_anchors = pad_max_instances(
-        best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
-    bashape[-2] = self._max_num_instances
-    best_anchors.set_shape(bashape)
+    # bashape = best_anchors.get_shape().as_list()
+    # best_anchors = pad_max_instances(
+    #     best_anchors, self._max_num_instances, pad_axis=-2, pad_value=-1)
+    # bashape[-2] = self._max_num_instances
+    # best_anchors.set_shape(bashape)
     label['best_anchors'] = best_anchors
 
-    ishape = ious.get_shape().as_list()
-    ious = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
-    ishape[-2] = self._max_num_instances
-    ious.set_shape(ishape)
+    # ishape = ious.get_shape().as_list()
+    # ious = pad_max_instances(ious, self._max_num_instances, pad_axis=-2, pad_value= 0)
+    # ishape[-2] = self._max_num_instances
+    # ious.set_shape(ishape)
     label['best_iou_match'] = ious
 
     grid, inds, upds, true_conf = self._build_grid(

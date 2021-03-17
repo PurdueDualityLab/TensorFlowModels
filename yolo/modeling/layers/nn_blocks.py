@@ -748,18 +748,18 @@ class CSPConnect(tf.keras.layers.Layer):
     }
     if not self._drop_first:
       self._conv1 = ConvBN(
-          filters=self._filters // self._filter_scale,
-          kernel_size=self._kernel_size,
-          strides=(1, 1),
-          **_dark_conv_args)
+        filters=self._filters // self._filter_scale,
+        kernel_size=self._kernel_size,
+        strides=(1, 1),
+        **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
 
     if not self._drop_final:
       self._conv2 = ConvBN(
-          filters=self._filters,
-          kernel_size=(1, 1),
-          strides=(1, 1),
-          **_dark_conv_args)
+        filters=self._filters,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        **_dark_conv_args)
 
 
   def call(self, inputs):
