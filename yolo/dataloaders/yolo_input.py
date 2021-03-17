@@ -211,7 +211,7 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    if self._aug_rand_zoom and not self._mosaic:
+    if self._aug_rand_zoom:
       zfactor = 0.3
     else:
       zfactor = 0.0
