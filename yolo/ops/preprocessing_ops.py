@@ -659,29 +659,42 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
       values = tf.squeeze(values, axis=0)
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
 
-def _get_num_reps(batches, num_objs, num_anchors, anchors, boxes, mask):
+def _get_num_reps(anchors, mask, box_mask):
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
+  box_mask = tf.expand_dims(box_mask, -1)
+  box_mask = tf.expand_dims(box_mask, -1)
+
   anchors = tf.expand_dims(anchors, axis = -1)
+  anchors_primary, anchors_alternate = tf.split(anchors, [1, -1], axis = -2)
+  fillin = tf.zeros_like(anchors_primary) - 1
+  anchors_alternate = tf.concat([fillin, anchors_alternate], axis = -2)
+  
+  viable_primary = tf.logical_and(box_mask, anchors_primary == mask)
+  viable_alternate = tf.logical_and(box_mask, anchors_alternate == mask)
 
-  acheck = anchors == mask
-  # anchor_idk = tf.argmax(acheck, axis = -1)
-  # tf.print(tf.where(acheck))
-  acheck = tf.reduce_any(acheck, axis = -1)
-  reps = tf.reduce_sum(tf.cast(acheck, boxes.dtype), axis = -1)
-  return reps
+  viable_primary = tf.where(viable_primary)
+  viable_alternate = tf.where(viable_alternate)
 
-def _gen_utility(boxes, reps):
+  # tf.print(viable_primary.shape)
+  # tf.print(viable_alternate)
+
+  viable = anchors == mask
+  acheck = tf.reduce_any(viable, axis = -1)
+  reps = tf.reduce_sum(tf.cast(acheck, mask.dtype), axis = -1)
+  return reps, viable_primary, viable_alternate
+
+def _gen_utility(boxes):
   eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis = -1)
   gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis = -1) 
   ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis = -1)
-  rep_mask = reps <= 0
+  # rep_mask = reps <= 0
 
   a = tf.logical_or(eq0, gtlb)
   b = tf.logical_or(a, ltub)
-  c = tf.logical_or(b, rep_mask)
-  return c
+  # b = tf.logical_or(b, rep_mask)
+  return tf.logical_not(b) 
 
 
 
@@ -748,12 +761,10 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
   x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)
   y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype), dtype=tf.int32)
-  if use_tie_breaker:
-    num_reps = _get_num_reps(batches, num_boxes, num_anchors, anchors, boxes, mask)
-  else:
-    num_reps = tf.ones([batches, num_anchors, 1])
-  box_mask = _gen_utility(boxes, num_reps)
-  valid_boxes = tf.cast(tf.where(tf.logical_not(box_mask)), tf.int32)
+  box_mask = _gen_utility(boxes)
+  num_reps, viable_primary, viable_alternate = _get_num_reps(anchors, mask, box_mask)
+  viable_primary = tf.cast(viable_primary, tf.int32)
+  viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   i = 0
   num_boxes_written = tf.zeros([batches], dtype = tf.int32)
@@ -764,24 +775,44 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   update = tf.TensorArray(dtype, size=0, dynamic_size=True)
   
-  num = tf.shape(valid_boxes)[0]
-
-  for val in range(num):
-    idx = valid_boxes[val]
-    batch, obj_id = idx[0], idx[1]
+  num_primary = tf.shape(viable_primary)[0]
+  for val in range(num_primary):
+    idx = viable_primary[val]
+    batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
     batch_ind = batch * num_instances
     count = num_boxes_written[batch]
 
     reps = num_reps[batch, obj_id]
     box = boxes[batch, obj_id]
     classif = classes[batch, obj_id]
-    anchor = anchors[batch, obj_id, 0]
-    index = tf.math.equal(anchor, mask)
-    iou = tf.convert_to_tensor([ious[batch, obj_id, 0]])
+    iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
     reps_ = tf.convert_to_tensor([reps])
     sample = tf.concat([box, const, classif, iou, reps_], axis = -1)    
-    if K.any(index):
-      anchor_idx = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
+    y_, x_ = y[batch, obj_id], x[batch, obj_id]
+    list_indx = list_indx.write(i, [batch_ind + count])
+    list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
+    list_ind_sample = list_ind_sample.write(i, sample)
+
+    update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
+    update = update.write(i, const)
+    count += 1
+    i += 1
+    num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
+  
+  if use_tie_breaker:
+    num_alternate = tf.shape(viable_alternate)[0]
+    for val in range(num_alternate):
+      idx = viable_alternate[val]
+      batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
+      batch_ind = batch * num_instances
+      count = num_boxes_written[batch]
+
+      reps = num_reps[batch, obj_id]
+      box = boxes[batch, obj_id]
+      classif = classes[batch, obj_id]
+      iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
+      reps_ = tf.convert_to_tensor([reps])
+      sample = tf.concat([box, const, classif, iou, reps_], axis = -1)    
       y_, x_ = y[batch, obj_id], x[batch, obj_id]
       list_indx = list_indx.write(i, [batch_ind + count])
       list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
@@ -791,40 +822,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       update = update.write(i, const)
       count += 1
       i += 1
-    num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
-  
-  if use_tie_breaker:
-    for val in range(num):
-      idx = valid_boxes[val]
-      batch, obj_id = idx[0], idx[1]
-      batch_ind = batch * num_instances
-      count = num_boxes_written[batch]
-
-      reps = num_reps[batch, obj_id]
-      box = boxes[batch, obj_id]
-      classif = classes[batch, obj_id]
-      for anchor_id in range(1, num_anchors):
-        if count >= num_instances:
-          break
-        anchor = anchors[batch, obj_id, anchor_id]
-        if anchor < 0:
-          break
-        iou = tf.convert_to_tensor([ious[batch, obj_id, anchor_id]])
-        reps_ = tf.cast(tf.convert_to_tensor([reps]), iou.dtype)
-        sample = tf.concat([box, const, classif, iou, reps_], axis = -1)   
-        index = tf.math.equal(anchor, mask)
-        if K.any(index):
-          anchor_idx = tf.cast(K.argmax(tf.cast(index, dtype=tf.int32)), dtype=tf.int32)
-          y_, x_ = y[batch, obj_id], x[batch, obj_id]
-          list_indx = list_indx.write(i, [batch_ind + count])
-          list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
-          list_ind_sample = list_ind_sample.write(i, sample)
-
-          update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
-          update = update.write(i, const)
-          count += 1
-          i += 1
-      num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count]) 
+      num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
 
   indexes = tf.zeros([batches * num_instances, 3], tf.int32) - 1
   gridvals = tf.zeros([batches * num_instances , 4 + 1 + 1 + 1 + 1], boxes.dtype)

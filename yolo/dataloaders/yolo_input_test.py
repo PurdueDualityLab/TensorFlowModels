@@ -153,7 +153,7 @@ def time_pipeline():
 
 
 if __name__ == '__main__':
-  test_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
