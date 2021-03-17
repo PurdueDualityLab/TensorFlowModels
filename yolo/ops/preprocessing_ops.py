@@ -13,7 +13,7 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32):
 
 
 def rand_scale(val, dtype=tf.float32):
-  scale = rand_uniform_strong(1, val, dtype=dtype)
+  scale = rand_uniform_strong(1.0, val, dtype=dtype)
   do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
   if (do_ret == 1):
     return scale
@@ -481,6 +481,8 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   boxes = tf.concat([x, y, w, h], axis=-1)
 
   boxes = box_ops.xcycwh_to_yxyx(boxes)
+  boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
+
   image = tf.image.resize(image, (target_dim, target_dim))
 
   scale = target_dim/clipper
@@ -552,6 +554,7 @@ def mosaic(images,
   #     full_boxes, full_classes, num_instances, yxyx=True)
 
   crop_delta = rand_uniform_strong(crop_delta, 1.0)  #1 + crop_delta * 3/5)
+  #crop_delta = rand_scale(crop_delta) 
   full_image, image_info = random_crop_or_pad(
       full_image,
       target_width=tf.cast(tf.cast(height, tf.float32) * crop_delta, tf.int32),
