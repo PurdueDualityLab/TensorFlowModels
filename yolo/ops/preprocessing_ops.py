@@ -779,8 +779,11 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   for val in range(num_primary):
     idx = viable_primary[val]
     batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
-    batch_ind = batch * num_instances
+    
     count = num_boxes_written[batch]
+    if count >= num_instances:
+      continue
+    batch_ind = batch * num_instances
 
     reps = num_reps[batch, obj_id]
     box = boxes[batch, obj_id]
@@ -804,8 +807,10 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
     for val in range(num_alternate):
       idx = viable_alternate[val]
       batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
-      batch_ind = batch * num_instances
       count = num_boxes_written[batch]
+      if count >= num_instances:
+        continue
+      batch_ind = batch * num_instances
 
       reps = num_reps[batch, obj_id]
       box = boxes[batch, obj_id]
