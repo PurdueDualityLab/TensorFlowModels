@@ -37,6 +37,11 @@ task:
       iou_normalizer: 0.75
       max_delta: 10.0
       use_reduction_sum: False
+      new_cords: true
+      scale_xy:
+        '5': 2.0
+        '4': 2.0 
+        '3': 2.0
   train_data:
     global_batch_size: 64
     dtype: bfloat16
