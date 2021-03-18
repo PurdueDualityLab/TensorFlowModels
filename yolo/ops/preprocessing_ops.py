@@ -262,7 +262,7 @@ def random_op_image(image, jfactor, zx, zy, tfactor):
 
 
 def random_translate(image, t):
-  with tf.name_scope('translate_image'):
+  with tf.name_scope('random_translate'):
     if t != 0:
       t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
       t_y = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
@@ -278,7 +278,7 @@ def random_translate(image, t):
 
 
 def translate_boxes(box, classes, translate_x, translate_y):
-  with tf.name_scope('translate_boxs'):
+  with tf.name_scope('translate_boxes'):
     box = box_ops.yxyx_to_xcycwh(box)
     x, y, w, h = tf.split(box, 4, axis=-1)
     x = x + translate_x
@@ -310,7 +310,7 @@ def random_jitter(image, jfactor):
 
 
 def random_crop_or_pad(image, target_width, target_height, random_patch=False):
-  with tf.name_scope('resize_crop_filter'):
+  with tf.name_scope('random_crop_or_pad'):
     default_height, default_width = get_image_shape(image)
     dx = (tf.math.maximum(default_width, target_width) -
           tf.math.minimum(default_width, target_width)) // 2
@@ -352,7 +352,7 @@ def crop_to_bbox(image,
                  offset_width,
                  offset_height,
                  fix=False):
-  with tf.name_scope('resize_crop_filter'):
+  with tf.name_scope('crop_to_bbox'):
     height, width = get_image_shape(image)
     image = tf.image.crop_to_bounding_box(image, offset_height, offset_width,
                                           target_height, target_width)
@@ -371,7 +371,7 @@ def crop_to_bbox(image,
 
 def pad_to_bbox(image, target_width, target_height, offset_width,
                 offset_height):
-  with tf.name_scope('resize_crop_filter'):
+  with tf.name_scope('pad_to_bbox'):
     height, width = get_image_shape(image)
     image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
                                          target_height, target_width)
@@ -523,7 +523,7 @@ def patch_four_images(images, boxes, classes, info):
   box2, class2 = translate_boxes(box2 * 0.5, class2, .5, 0)
   box3, class3 = translate_boxes(box3 * 0.5, class3, 0, .5)
   box4, class4 = translate_boxes(box4 * 0.5, class4, .5, .5)
-  
+
   boxes = tf.concat([box1, box2, box3, box4], axis = -2)
   classes = tf.concat([class1, class2, class3, class4], axis = -1)
   boxes, classes = _shift_zeros_full(boxes, classes, num_instances, yxyx=True)
@@ -532,7 +532,7 @@ def patch_four_images(images, boxes, classes, info):
 def mosaic(images,
            boxes,
            classes,
-           image_info, 
+           image_info,
            output_size,
            masks=None,
            crop_delta=0.6,
@@ -584,7 +584,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
       tf.Tensor: y_true with the anchor associated with each ground truth
       box known
     """
-  with tf.name_scope('get_anchor'):
+  with tf.name_scope('get_best_anchor'):
     is_batch = True
     ytrue_shape = y_true.get_shape()
     if ytrue_shape.ndims == 2:
@@ -640,7 +640,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
         tf.transpose(iou_raw, perm=[0, 2, 1]),
         k=tf.cast(k, dtype=tf.int32),
         sorted=True)
-    
+
     ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
 
     # pad the indexs such that all values less than the thresh are -1
@@ -669,7 +669,7 @@ def _get_num_reps(anchors, mask, box_mask):
   anchors_primary, anchors_alternate = tf.split(anchors, [1, -1], axis = -2)
   fillin = tf.zeros_like(anchors_primary) - 1
   anchors_alternate = tf.concat([fillin, anchors_alternate], axis = -2)
-  
+
   viable_primary = tf.logical_and(box_mask, anchors_primary == mask)
   viable_alternate = tf.logical_and(box_mask, anchors_alternate == mask)
 
@@ -686,14 +686,14 @@ def _get_num_reps(anchors, mask, box_mask):
 
 def _gen_utility(boxes):
   eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis = -1)
-  gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis = -1) 
+  gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis = -1)
   ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis = -1)
   # rep_mask = reps <= 0
 
   a = tf.logical_or(eq0, gtlb)
   b = tf.logical_or(a, ltub)
   # b = tf.logical_or(b, rep_mask)
-  return tf.logical_not(b) 
+  return tf.logical_not(b)
 
 
 
@@ -770,15 +770,15 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   list_indx = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   list_ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   list_ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
-  
+
   update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   update = tf.TensorArray(dtype, size=0, dynamic_size=True)
-  
+
   num_primary = tf.shape(viable_primary)[0]
   for val in range(num_primary):
     idx = viable_primary[val]
     batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
-    
+
     count = num_boxes_written[batch]
     if count >= num_instances:
       continue
@@ -789,7 +789,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
     classif = classes[batch, obj_id]
     iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
     reps_ = tf.convert_to_tensor([reps])
-    sample = tf.concat([box, const, classif, iou, reps_], axis = -1)    
+    sample = tf.concat([box, const, classif, iou, reps_], axis = -1)
     y_, x_ = y[batch, obj_id], x[batch, obj_id]
     list_indx = list_indx.write(i, [batch_ind + count])
     list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
@@ -800,7 +800,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
     count += 1
     i += 1
     num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
-  
+
   if use_tie_breaker:
     num_alternate = tf.shape(viable_alternate)[0]
     for val in range(num_alternate):
@@ -816,7 +816,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       classif = classes[batch, obj_id]
       iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
       reps_ = tf.convert_to_tensor([reps])
-      sample = tf.concat([box, const, classif, iou, reps_], axis = -1)    
+      sample = tf.concat([box, const, classif, iou, reps_], axis = -1)
       y_, x_ = y[batch, obj_id], x[batch, obj_id]
       list_indx = list_indx.write(i, [batch_ind + count])
       list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
@@ -855,7 +855,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
 
 # def _update_tensor_arrays(batch, y, x, anchor_idx, boxes, classes, update_index,
 #                           update, i, iou = 1.0):
-  
+
 #   const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
 #   iou = tf.cast(tf.convert_to_tensor([iou]),  dtype=boxes.dtype)
 #   update_index = update_index.write(i, [batch, y, x, anchor_idx])
@@ -877,7 +877,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
 #       break
 
 #     index = tf.math.equal(anchor, mask)
-    
+
 #     # tf.print(iou, anchors[batch, box_id, anchor_id])
 #     if K.any(index):
 #       # using the boolean index mask to determine exactly which anchor
@@ -899,7 +899,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
 #                                                           box_id], anchor_idx,
 #                                                         boxes[batch, box_id],
 #                                                         classes[batch, box_id],
-#                                                         update_index, update, i, 
+#                                                         update_index, update, i,
 #                                                         iou = iou)
 
 #       # if used is 2, this cell is filled with a non-optimal box
@@ -918,7 +918,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
 #           update_index, update, i = _update_tensor_arrays(
 #               batch, y[batch, box_id], x[batch, box_id], anchor_idx,
 #               boxes[batch, box_id], classes[batch,
-#                                             box_id], update_index, 
+#                                             box_id], update_index,
 #                                             update, i, iou = iou)
 #         else:
 #           uid = 0
@@ -1043,7 +1043,5 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
 #   # tf.print(update_index)
 #   if not is_batch:
 #     full = tf.squeeze(full, axis=0)
- 
+
 #   return full
-
-
