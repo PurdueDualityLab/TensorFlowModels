@@ -43,6 +43,7 @@ task:
     input_path: null
     tfds_name: coco
     tfds_split: train
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     is_training: true
     shuffle_buffer_size: 1000
     drop_remainder: true
@@ -53,13 +54,13 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      jitter_im: 0.0
+      jitter_im: 0.1
       jitter_boxes: 0.0025
       aug_rand_hue: 0.1
       aug_rand_transalate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_zoom: 0.4
+      aug_rand_zoom: 0.45
       keep_thresh: 0.0
       mosaic_frequency: 1.0
       use_tie_breaker: True
@@ -69,6 +70,7 @@ task:
     input_path: null
     tfds_name: coco
     tfds_split: validation
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     is_training: false
     shuffle_buffer_size: 1000
     drop_remainder: true

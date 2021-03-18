@@ -43,6 +43,7 @@ task:
     input_path: null
     tfds_name: coco
     tfds_split: train
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     is_training: true
     shuffle_buffer_size: 1000
     drop_remainder: true
@@ -69,6 +70,7 @@ task:
     input_path: null
     tfds_name: coco
     tfds_split: validation
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets'
     is_training: false
     shuffle_buffer_size: 1000
     drop_remainder: true
