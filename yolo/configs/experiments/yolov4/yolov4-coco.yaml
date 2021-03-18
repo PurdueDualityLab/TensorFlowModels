@@ -41,7 +41,7 @@ task:
       max_boxes: 200
       use_nms: false
       iou_normalizer: 0.07
-      use_reduction_sum: False
+      use_reduction_sum: True
   train_data:
     global_batch_size: 64 # 64 batch size 
     tfds_data_dir: ''

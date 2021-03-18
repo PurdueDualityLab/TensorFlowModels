@@ -36,7 +36,7 @@ task:
       use_nms: false
       iou_normalizer: 0.75
       max_delta: 10.0
-      use_reduction_sum: True
+      use_reduction_sum: False
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -54,15 +54,15 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      jitter_im: 0.0
-      jitter_boxes: 0.0
-      aug_rand_hue: 0.0
+      jitter_im: 0.1
+      jitter_boxes: 0.0025
+      aug_rand_hue: 0.1
       aug_rand_transalate: 0.0
-      aug_rand_saturation: 0.0
-      aug_rand_brightness: 0.0
-      aug_rand_zoom: 0.5
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_zoom: 0.45
       keep_thresh: 0.0
-      mosaic_frequency: 0.0
+      mosaic_frequency: 1.0
       use_tie_breaker: True
   validation_data:
     global_batch_size: 64
