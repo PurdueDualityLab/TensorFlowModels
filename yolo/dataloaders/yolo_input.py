@@ -347,7 +347,7 @@ class Parser(parser.Parser):
             label['classes'],
             label['info'],
             self._image_w,
-            crop_delta= self._aug_rand_zoom,
+            crop_delta= self._aug_rand_zoom if self._aug_rand_zoom > 0.0 else 1.0,
             keep_thresh=self._keep_thresh)
         label['bbox'] = pad_max_instances(
             boxes, self._max_num_instances, pad_axis=-2, pad_value=0)
