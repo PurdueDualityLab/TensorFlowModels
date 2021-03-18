@@ -139,6 +139,11 @@ class Yolo_Loss(object):
     self._label_smoothing = tf.cast(0.0, tf.float32)
     self._use_reduction_sum = use_reduction_sum
 
+    if use_reduction_sum: 
+      self._reduction_fn = tf.reduce_sum 
+    else: 
+      self._reduction_fn = tf.reduce_mean
+
     # used in detection filtering
     self._beta_nms = beta_nms
     self._nms_kind = tf.cast(nms_kind, tf.string)
@@ -426,7 +431,7 @@ class Yolo_Loss(object):
     box_loss = tf.cast(
         tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    class_loss = tf.reduce_sum(
+    class_loss = self._reduction_fn(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
@@ -437,11 +442,11 @@ class Yolo_Loss(object):
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=1), dtype=y_pred.dtype)
 
-    bce = ks.losses.binary_crossentropy(
-      K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    bce = self._reduction_fn(ks.losses.binary_crossentropy(
+      K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True), axis = -1)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
     conf_loss = tf.cast(
-        tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+        tf.reduce_sum(conf_loss, axis=(1, 2)), dtype=y_pred.dtype)
 
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
@@ -460,120 +465,6 @@ class Yolo_Loss(object):
       tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf)
 
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50
-
-  # def __call__(self, y_true, y_pred, boxes, classes):
-  #   # 1. generate and store constants and format output
-  #   shape = tf.shape(y_true)
-  #   boxes = tf.cast(boxes, tf.float32)
-  #   classes = tf.cast(classes, tf.float32)
-
-  #   batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
-  #   grid_points, anchor_grid, y_true = self._get_label_attributes(
-  #       width, height, batch_size, y_true, tf.float32)
-  #   fwidth = tf.cast(width, tf.float32)
-  #   fheight = tf.cast(height, tf.float32)
-    
-  #   y_pred = tf.cast(
-  #     tf.reshape(y_pred, 
-  #                [batch_size, width, height, num, -1]), 
-  #                tf.float32)
-  #   pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis = -1)
-  #   pred_class = class_gradient_trap(
-  #                                 tf.sigmoid(pred_class), self._cls_normalizer)
-  #   pred_conf = obj_gradient_trap(pred_conf, self._obj_normalizer)
-  #   pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, 
-  #                                                   fheight, 
-  #                                                   pred_box, 
-  #                                                   anchor_grid, 
-  #                                                   grid_points)
-
-  #   # 3. split up ground_truth into components, xy, wh, confidence, 
-  #   # class -> apply calculations to acchive safe format as predictions
-  #   (true_box, 
-  #    true_conf, 
-  #    true_class, 
-  #    best_iou_match) = tf.split(y_true, [4, 1, 1, 1], axis=-1)
-    
-  #   true_class = tf.squeeze(true_class, axis=-1)
-  #   true_conf = tf.squeeze(true_conf, axis=-1)
-  #   best_iou_match = tf.squeeze(best_iou_match, axis=-1)
-  #   true_class = tf.one_hot(
-  #       tf.cast(true_class, tf.int32),
-  #       depth=tf.shape(pred_class)[-1],
-  #       dtype=y_pred.dtype)
-
-  #   # self.print_error(pred_box, "boxes")
-  #   # self.print_error(pred_conf, "confidence")
-  #   # self.print_error(pred_class, "classes")    
-
-  #   # (mask_loss_, 
-  #   #  thresh_class_loss_, 
-  #   #  thresh_box_loss_, 
-  #   #  true_conf_, 
-  #   #  obj_mask_) = self.build_masks(
-  #   #    pred_box, pred_class, boxes, classes, true_conf)
-    
-  #   (mask_loss, 
-  #    thresh_class_loss, 
-  #    thresh_box_loss, 
-  #    true_conf, 
-  #    obj_mask) = self._tiled_global_box_search(
-  #      pred_box, pred_class, boxes, classes, true_conf)
-
-  #   iou, liou, loss_box = self.box_loss(true_box, pred_box)
-  #   loss_box = math_ops.mul_no_nan(true_conf, loss_box)
-  #   loss_box += thresh_box_loss
-
-  #   # 6. apply binary cross entropy(bce) to class attributes -> only the indexes
-  #   # where an object exists will affect the total loss -> found via the 
-  #   # true_confidnce in ground truth
-  #   class_loss = tf.reduce_sum(
-  #       ks.losses.binary_crossentropy(
-  #           K.expand_dims(true_class, axis=-1),
-  #           K.expand_dims(pred_class, axis=-1),
-  #           label_smoothing=self._label_smoothing,
-  #           from_logits=False),
-  #       axis=-1)
-  #   class_loss = math_ops.mul_no_nan(true_conf, class_loss)
-  #   class_loss += thresh_class_loss
-
-  #   # 7. apply bce to confidence at all points and then strategiacally penalize 
-  #   # the network for making predictions of objects at locations were no object 
-  #   # exists
-  #   bce = ks.losses.binary_crossentropy(
-  #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-  #   conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-
-  #   # 8. take the sum of all the dimentions and reduce the loss such that each
-  #   #  batch has a unique loss value
-  #   loss_box = tf.cast(
-  #       tf.reduce_sum(loss_box, axis=(1, 2, 3)), dtype=y_pred.dtype)
-  #   conf_loss = tf.cast(
-  #       tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-  #   class_loss = tf.cast(
-  #       tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-
-  #   # 9. i beleive tensorflow will take the average of all the batches loss, so 
-  #   # add them and let TF do its thing
-  #   if not self._use_reduction_sum:
-  #     loss = tf.reduce_mean(class_loss + conf_loss + loss_box)  
-  #   else:
-  #     total_instances = tf.reduce_sum(true_conf)
-  #     loss = class_loss + conf_loss + loss_box
-  #     loss /= total_instances # avg total instnaces 
-  #     loss = tf.reduce_sum(loss) # sum over batches
-
-
-  #   loss_box = tf.reduce_mean(loss_box)
-  #   conf_loss = tf.reduce_mean(conf_loss)
-  #   class_loss = tf.reduce_mean(class_loss)
-
-  #   # 10. store values for use in metrics
-  #   recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
-  #   avg_iou = self.avgiou(iou * true_conf, true_conf)
-  #   avg_obj = self.avgiou(
-  #     tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf, true_conf)
-  #   return loss, loss_box, conf_loss, class_loss, avg_iou, avg_obj, recall50
 
 
 
