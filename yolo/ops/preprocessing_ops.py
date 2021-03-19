@@ -492,16 +492,25 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   pt_height_p = tf.cast(tf.cast(pad_height_p, scale.dtype) * scale, tf.int32)
   return image, boxes, [pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p]
 
-def _unletter_shift(images, infos, boxes, classes, xs = 0.5, ys = 0.5):
+def _unletter_shift(images, infos, boxes, classes, xs = 0.5, ys = 0.5, target_shape = 416):
   num_items = tf.shape(images)[0]
   for i in range(num_items):
     image, info = crop_to_bbox(images[i], infos[i, 3], infos[i, 2], infos[i, 1], infos[i, 0])
     box, class_ = filter_boxes_and_classes(boxes[i], classes[i], info)
-    image, box, _ = letter_box(image, box, xs = xs, ys = ys)
+    image, box, _ = letter_box(image, box, xs = xs, ys = ys, target_dim=target_shape)
     images = tf.tensor_scatter_nd_update(images, [[i]], tf.expand_dims(tf.cast(image, images.dtype), axis = 0))
     boxes = tf.tensor_scatter_nd_update(boxes, [[i]], tf.expand_dims(tf.cast(box, boxes.dtype), axis = 0))
     classes = tf.tensor_scatter_nd_update(classes, [[i]], tf.expand_dims(tf.cast(class_, classes.dtype), axis = 0))
   return images, boxes, classes
+
+def max_shape(image1, image2, image3, image4):
+  height1, width1 = get_image_shape(image1)
+  height2, width2 = get_image_shape(image2)
+  height3, width3 = get_image_shape(image3)
+  height4, width4 = get_image_shape(image4)
+
+  maxim = tf.reduce_max([height1, width1, height2, width2, height3, width3, height4, width4])
+  return maxim
 
 def patch_four_images(images, boxes, classes, info):
   num_instances = tf.shape(boxes)[-2]
@@ -510,10 +519,11 @@ def patch_four_images(images, boxes, classes, info):
   box1, box2, box3, box4 = tf.split(boxes, 4, axis=0)
   class1, class2, class3, class4 = tf.split(classes, 4, axis=0)
 
-  image1, box1, class1 = _unletter_shift(image1, info1, box1, class1, xs = 1.0, ys = 1.0)
-  image2, box2, class2 = _unletter_shift(image2, info2, box2, class2, xs = 0.0, ys = 1.0)
-  image3, box3, class3 = _unletter_shift(image3, info3, box3, class3, xs = 1.0, ys = 0.0)
-  image4, box4, class4 = _unletter_shift(image4, info4, box4, class4, xs = 0.0, ys = 0.0)
+  maxim = max_shape(image1, image2, image3, image4)
+  image1, box1, class1 = _unletter_shift(image1, info1, box1, class1, xs = 1.0, ys = 1.0, target_shape=maxim)
+  image2, box2, class2 = _unletter_shift(image2, info2, box2, class2, xs = 0.0, ys = 1.0, target_shape=maxim)
+  image3, box3, class3 = _unletter_shift(image3, info3, box3, class3, xs = 1.0, ys = 0.0, target_shape=maxim)
+  image4, box4, class4 = _unletter_shift(image4, info4, box4, class4, xs = 0.0, ys = 0.0, target_shape=maxim)
 
   patch1 = tf.concat([image1, image2], axis=-2)
   patch2 = tf.concat([image3, image4], axis=-2)
@@ -695,8 +705,6 @@ def _gen_utility(boxes):
   # b = tf.logical_or(b, rep_mask)
   return tf.logical_not(b)
 
-
-
 def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker):
   """
     convert ground truth for use in loss functions
@@ -828,8 +836,10 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       i += 1
       num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
 
+  num_coords = 4 + 1 + 1 + 1 + 1
   indexes = tf.zeros([batches * num_instances, 3], tf.int32) - 1
-  gridvals = tf.zeros([batches * num_instances , 4 + 1 + 1 + 1 + 1], boxes.dtype)
+  gridvals = tf.zeros([batches * num_instances, num_coords], boxes.dtype)
+  full = tf.zeros([batches, size, size, len_masks, 1], dtype=dtype)
 
   if tf.math.greater(list_indx.size(), 0):
     list_indx = list_indx.stack()
@@ -838,17 +848,27 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
     indexes = tf.tensor_scatter_nd_update(indexes, list_indx, list_ind_val)
     gridvals = tf.tensor_scatter_nd_update(gridvals, list_indx, list_ind_sample)
 
-  if is_batch:
-    indexes = tf.reshape(indexes, [batches, -1, 3])
-    gridvals = tf.reshape(gridvals, [batches, -1, 8])
-
-  full = tf.zeros([batches, size, size, len_masks, 1], dtype=dtype)
   if tf.math.greater(update_index.size(), 0):
     update_index = update_index.stack()
     update = update.stack()
     full = tf.tensor_scatter_nd_add(full, update_index, update)
 
-  full = tf.clip_by_value(full, 0.0, 1.0)
+  if is_batch:
+    indexes = tf.reshape(indexes, [batches, -1, 3])
+    gridvals = tf.reshape(gridvals, [batches, -1,  num_coords])
+
   if not is_batch:
     full = tf.squeeze(full, axis=0)
+
+  # if is_batch: 
+  #   reps = tf.gather_nd(full, indexes, batch_dims = 1)
+  # else:
+  #   reps = tf.gather_nd(full, indexes, batch_dims = 0)
+
+  # gridvals = tf.concat([gridvals, reps], axis = -1)
+
+  full = tf.clip_by_value(full, 0.0, 1.0)
   return indexes, gridvals, full
+
+
+

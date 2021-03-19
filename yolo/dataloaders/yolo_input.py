@@ -172,16 +172,16 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    # if self._aug_rand_hue > 0.0:
-    #   delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
-    #   image = tf.image.adjust_hue(image, delta)
-    # if self._aug_rand_saturation > 0.0:
-    #   delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
-    #   image = tf.image.adjust_saturation(image, delta)
-    # if self._aug_rand_brightness > 0.0:
-    #   delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
-    #   image *= delta
-    # image = tf.clip_by_value(image, 0.0, 1.0)
+    if self._aug_rand_hue > 0.0:
+      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
+      image = tf.image.adjust_hue(image, delta)
+    if self._aug_rand_saturation > 0.0:
+      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
+      image = tf.image.adjust_saturation(image, delta)
+    if self._aug_rand_brightness > 0.0:
+      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
+      image *= delta
+    image = tf.clip_by_value(image, 0.0, 1.0)
 
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
@@ -189,38 +189,64 @@ class Parser(parser.Parser):
 
     image_shape = tf.shape(image)[:2]
 
-    if self._jitter_boxes > 0.0:
-      boxes = box_ops.denormalize_boxes(boxes, image_shape)
-      boxes = box_ops.jitter_boxes(boxes, self._jitter_boxes)
-      boxes = box_ops.normalize_boxes(boxes, image_shape)
+    # if self._jitter_boxes > 0.0:
+    #   boxes = box_ops.denormalize_boxes(boxes, image_shape)
+    #   boxes = box_ops.jitter_boxes(boxes, self._jitter_boxes)
+    #   boxes = box_ops.normalize_boxes(boxes, image_shape)
 
-    if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
-      zfactor = preprocessing_ops.rand_uniform_strong(self._aug_rand_zoom, 1.0)
-    elif self._aug_rand_zoom > 0.0:
-      zfactor = preprocessing_ops.rand_scale(self._aug_rand_zoom)
-    else:
-      zfactor = tf.convert_to_tensor(1.0)
+    # if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
+    #   zfactor = preprocessing_ops.rand_uniform_strong(self._aug_rand_zoom, 1.0)
+    # elif self._aug_rand_zoom > 0.0:
+    #   zfactor = preprocessing_ops.rand_scale(self._aug_rand_zoom)
+    # else:
+    #   zfactor = tf.convert_to_tensor(1.0)
 
-    image, crop_info = preprocessing_ops.random_op_image(
-        image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
-    boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-        boxes, classes, crop_info, keep_thresh=self._keep_thresh)
+    # image, crop_info = preprocessing_ops.random_op_image(
+    #     image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
+    # boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+    #     boxes, classes, crop_info, keep_thresh=self._keep_thresh)
+    
+    boxes = box_ops.denormalize_boxes(boxes, image_shape)
 
-    if self._letter_box:
-      image, boxes, info = preprocessing_ops.letter_box(
-          image, boxes, xs = 0.5, ys = 0.5 , target_dim=self._image_w)
-    else:
-      height, width = preprocessing_ops.get_image_shape(image)
-      minscale = tf.math.minimum(width, height)
-      image, image_info = preprocessing_ops.random_crop_or_pad(
-          image,
-          target_width=minscale,
-          target_height=minscale,
-          random_patch=True)
-      image = tf.image.resize(image, (self._image_w, self._image_h))
-      boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-          boxes, classes, image_info, keep_thresh=self._keep_thresh)
-      info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
+    image, image_info = preprocess_ops.resize_and_crop_image(image, 
+                                                             [self._image_h, self._image_w], 
+                                                             [self._image_h, self._image_w], 
+                                                             aug_scale_min=0.5, 
+                                                             aug_scale_max = 2.0)                 
+    
+    offset = image_info[3, :]
+    image_scale = image_info[2, :]
+    info_scale = tf.math.minimum(tf.round(image_info[0, :]*image_scale) - offset, image_info[1, :])
+    info = tf.cast(tf.convert_to_tensor([0, 0, info_scale[0], info_scale[1]]), tf.int32)
+    image_height, image_width, _ = image.get_shape().as_list()
+
+    # tf.print(info, image_info)
+    # Resizes and crops boxes.
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, image_scale,
+                                                 image_info[1, :], offset)
+
+    # Filters out ground truth boxes that are all zeros.
+    indices = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, indices)
+    classes = tf.gather(classes, indices)
+
+    boxes = box_ops.normalize_boxes(boxes, [self._image_h, self._image_w])
+
+    #if self._letter_box:
+    # image, boxes, info = preprocessing_ops.letter_box(
+    #     image, boxes, xs = 0.5, ys = 0.5 , target_dim=self._image_w)
+    # else:
+    #   height, width = preprocessing_ops.get_image_shape(image)
+    #   minscale = tf.math.minimum(width, height)
+    #   image, image_info = preprocessing_ops.random_crop_or_pad(
+    #       image,
+    #       target_width=minscale,
+    #       target_height=minscale,
+    #       random_patch=True)
+    #   image = tf.image.resize(image, (self._image_w, self._image_h))
+    #   boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+    #       boxes, classes, image_info, keep_thresh=self._keep_thresh)
+    #   info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
 
     num_dets = tf.shape(classes)[0]
 
@@ -257,21 +283,47 @@ class Parser(parser.Parser):
 
     image_shape = tf.shape(image)[:2]
 
-    if self._letter_box:
-      image, boxes, info = preprocessing_ops.letter_box(
-          image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
-    else:
-      height, width = preprocessing_ops.get_image_shape(image)
-      minscale = tf.math.minimum(width, height)
-      image, image_info = preprocessing_ops.random_crop_or_pad(
-          image,
-          target_width=minscale,
-          target_height=minscale,
-          random_patch=True)
-      image = tf.image.resize(image, (self._image_w, self._image_h))
-      boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-          boxes, classes, image_info, keep_thresh=self._keep_thresh)
-      info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
+    # if self._letter_box:
+    #   image, boxes, info = preprocessing_ops.letter_box(
+    #       image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
+    # else:
+    #   height, width = preprocessing_ops.get_image_shape(image)
+    #   minscale = tf.math.minimum(width, height)
+    #   image, image_info = preprocessing_ops.random_crop_or_pad(
+    #       image,
+    #       target_width=minscale,
+    #       target_height=minscale,
+    #       random_patch=True)
+    #   image = tf.image.resize(image, (self._image_w, self._image_h))
+    #   boxes, classes = preprocessing_ops.filter_boxes_and_classes(
+    #       boxes, classes, image_info, keep_thresh=self._keep_thresh)
+    #   info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
+
+    boxes = box_ops.denormalize_boxes(boxes, image_shape)
+
+    image, image_info = preprocess_ops.resize_and_crop_image(image, 
+                                                             [self._image_h, self._image_w], 
+                                                             [self._image_h, self._image_w], 
+                                                             aug_scale_min=1.0, 
+                                                             aug_scale_max = 1.0)                 
+    
+    offset = image_info[3, :]
+    image_scale = image_info[2, :]
+    info_scale = tf.math.minimum(tf.round(image_info[0, :]*image_scale) - offset, image_info[1, :])
+    info = tf.cast(tf.convert_to_tensor([0, 0, info_scale[0], info_scale[1]]), tf.int32)
+    image_height, image_width, _ = image.get_shape().as_list()
+
+    # tf.print(info, image_info)
+    # Resizes and crops boxes.
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, image_scale,
+                                                 image_info[1, :], offset)
+
+    # Filters out ground truth boxes that are all zeros.
+    indices = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, indices)
+    classes = tf.gather(classes, indices)
+
+    boxes = box_ops.normalize_boxes(boxes, [self._image_h, self._image_w])
 
     image = tf.cast(image, self._dtype)
     boxes = box_utils.yxyx_to_xcycwh(boxes)
@@ -394,18 +446,18 @@ class Parser(parser.Parser):
     label['upds'] = upds 
     label['inds'] = inds
     label['true_conf'] = true_conf
-    del label['info']
+    # del label['info']
 
-    if self._aug_rand_hue > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
-      image = tf.image.adjust_hue(image, delta)
-    if self._aug_rand_saturation > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
-      image = tf.image.adjust_saturation(image, delta)
-    if self._aug_rand_brightness > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
-      image *= delta
-    image = tf.clip_by_value(image, 0.0, 1.0)
+    # if self._aug_rand_hue > 0.0:
+    #   delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
+    #   image = tf.image.adjust_hue(image, delta)
+    # if self._aug_rand_saturation > 0.0:
+    #   delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
+    #   image = tf.image.adjust_saturation(image, delta)
+    # if self._aug_rand_brightness > 0.0:
+    #   delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
+    #   image *= delta
+    # image = tf.clip_by_value(image, 0.0, 1.0)
     return image, label
 
   def postprocess_fn(self, is_training):
