@@ -60,7 +60,7 @@ task:
       aug_rand_transalate: 0.0
       aug_rand_saturation: 0.0
       aug_rand_brightness: 0.0
-      aug_rand_zoom: 0.0
+      aug_rand_zoom: 0.45
       keep_thresh: 0.0
       mosaic_frequency: 1.0
       use_tie_breaker: True
