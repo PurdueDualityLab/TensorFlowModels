@@ -431,7 +431,7 @@ class Yolo_Loss(object):
     box_loss = tf.cast(
         tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    class_loss = self._reduction_fn(
+    class_loss = tf.reduce_sum(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
@@ -445,9 +445,9 @@ class Yolo_Loss(object):
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-    #conf_loss = self._reduction_fn(conf_loss, axis = -1)
+    conf_loss = self._reduction_fn(conf_loss, axis = -1)
     conf_loss = tf.cast(
-        tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+        tf.reduce_sum(conf_loss, axis=(1, 2)), dtype=y_pred.dtype)
 
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
