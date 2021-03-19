@@ -34,7 +34,7 @@ task:
       loss_type: ciou
       max_boxes: 200
       use_nms: false
-      iou_normalizer: 0.75
+      iou_normalizer: 0.07
       max_delta: 10.0
       use_reduction_sum: False
       new_cords: true
@@ -60,11 +60,11 @@ task:
       letter_box: True
       random_flip: True
       jitter_im: 0.1
-      jitter_boxes: 0.0025
+      jitter_boxes: 0.005
       aug_rand_hue: 0.1
       aug_rand_transalate: 0.0
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
+      aug_rand_saturation: 0.75
+      aug_rand_brightness: 0.75
       aug_rand_zoom: 0.45
       keep_thresh: 0.0
       mosaic_frequency: 1.0
