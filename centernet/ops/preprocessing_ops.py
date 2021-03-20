@@ -3,18 +3,22 @@ import tensorflow as tf
 from yolo.ops import preprocessing_ops
 
 
+LARGE_NUM = 1. / tf.keras.backend.epsilon()
+
 def _smallest_positive_root(a, b, c) -> tf.Tensor:
   """
     Returns the smallest positive root of a quadratic equation.
     This implements the fixed version in https://github.com/princeton-vl/CornerNet.
   """
 
-  discriminant = tf.sqrt(b ** 2 - 4 * a * c)
+  discriminant = b ** 2 - 4 * a * c
+  discriminant_sqrt = tf.sqrt(discriminant)
 
-  root1 = (-b - discriminant) / (2 * a)
-  root2 = (-b + discriminant) / (2 * a)
+  root1 = (-b - discriminant_sqrt) / (2 * a)
+  root2 = (-b + discriminant_sqrt) / (2 * a)
 
-  return (-b + discriminant) / (2) # tf.where(tf.less(root1, 0), root2, root1)
+  return tf.where(tf.less(discriminant, 0), LARGE_NUM, (-b + discriminant_sqrt) / (2))
+  # return tf.where(tf.less(discriminant, 0), LARGE_NUM, tf.where(tf.less(root1, 0), root2, root1))
 
 def gaussian_radius(det_size, min_overlap=0.7) -> int:
   """
@@ -57,6 +61,7 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
   # TODO discuss whether to return scalar or tensor
   # return tf.reduce_min([r1, r2, r3], axis=0)
 
+  print(r1, r2, r3)
   return tf.reduce_min([r1, r2, r3], axis=0)
 
 def _gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
@@ -75,6 +80,39 @@ def _gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
     exponent = (-1 * (x ** 2) - (y ** 2)) / (2 * sigma ** 2)
     return tf.math.exp(exponent)
 
+def cartesian_product(*tensors, repeat=1):
+  """
+  Equivalent of itertools.product except for TensorFlow tensors.
+
+  Example:
+    cartesian_product(tf.range(3), tf.range(4))
+
+    array([[0, 0],
+       [0, 1],
+       [0, 2],
+       [0, 3],
+       [1, 0],
+       [1, 1],
+       [1, 2],
+       [1, 3],
+       [2, 0],
+       [2, 1],
+       [2, 2],
+       [2, 3]], dtype=int32)>
+
+  Params:
+    tensors (list[tf.Tensor]): a list of 1D tensors to compute the product of
+    repeat (int): number of times to repeat the tensors
+      (https://docs.python.org/3/library/itertools.html#itertools.product)
+
+  Returns:
+    An nD tensor where n is the number of tensors
+  """
+  tensors = tensors * repeat
+  print('tensors ',tensors)
+  return tf.reshape(tf.transpose(tf.stack(tf.meshgrid(*tensors, indexing='ij')),
+    [*[i + 1 for i in range(len(tensors))], 0]), (-1, len(tensors)))
+
 # scaling_factor doesn't do anything right now
 def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
     """
@@ -85,32 +123,31 @@ def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
         radius (int): integer for radius of gaussian
         scaling_factor (int): scaling factor for gaussian
     """
-
     diameter = 2 * radius + 1
     gaussian = _gaussian_penalty(radius)
 
     x, y = center
 
-    height, width = heatmap.shape[0:2]
+    height, width = tf.shape(heatmap)[-2:]
 
-    left, right = min(x, radius), min(width - x, radius + 1)
-    top, bottom = min(y, radius), min(height - y, radius + 1)
+    left, right = tf.math.minimum(x, radius), tf.math.minimum(width - x, radius + 1)
+    top, bottom = tf.math.minimum(y, radius), tf.math.minimum(height - y, radius + 1)
 
     print('heatmap ',heatmap)
     print(len(heatmap))
     print('category ',category)
 
-    # why is this 0? where does 0 come from and is it correct to put it here
-    heatmap_category = heatmap[0,category, ...]
-    print('heatmap_category ',heatmap_category)
-
-    # masked_heatmap  = heatmap_category[y - top:y + bottom, x - left:x + right]
-    masked_heatmap  = heatmap[0, category, y - top:y + bottom, x - left:x + right]
-    masked_gaussian = gaussian[radius - top:radius + bottom, radius - left:radius + right]
     # TODO: make sure this replicates original functionality
+    # masked_heatmap  = heatmap[0, category, y - top:y + bottom, x - left:x + right]
+    # masked_gaussian = gaussian[radius - top:radius + bottom, radius - left:radius + right]
     # np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
-    masked_heatmap = tf.math.maximum(masked_heatmap, masked_gaussian * scaling_factor)
-    return masked_heatmap
+
+    # heatmap_mask = cartesian_product([0], [category], tf.range(y - top, y + bottom), tf.range(x - left, x + right))
+    heatmap_mask = cartesian_product([0], [category], tf.range(y - top, y + bottom), tf.range(x - left, x + right))
+    masked_gaussian = tf.reshape(gaussian[radius - top:radius + bottom, radius - left:radius + right], (-1,))
+    heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, masked_gaussian * scaling_factor)
+    return heatmap
+
 # def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
 #     """
 #     Draws a gaussian heatmap around a center point given a radius.
@@ -145,4 +182,3 @@ def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
 #     # np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
 #     masked_heatmap = tf.math.maximum(masked_heatmap, masked_gaussian * scaling_factor)
 #     return masked_heatmap
-
