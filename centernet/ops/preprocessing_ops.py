@@ -73,10 +73,13 @@ def _gaussian_penalty(radius: int, type=tf.float32) -> tf.Tensor:
     Returns:
         tf.Tensor of shape (2 * radius + 1, 2 * radius + 1).
     """
+    radius_shape = tf.shape(radius)
     width = 2 * radius + 1
-    sigma = radius / 3
-    x = tf.reshape(tf.range(width, dtype=type) - radius, (width, 1))
-    y = tf.reshape(tf.range(width, dtype=type) - radius, (1, width))
+    sigma = tf.cast(radius / 3, dtype=type)
+    range_width = tf.map_fn(lambda limit: tf.range(limit), width)
+    range_width = tf.cast(range_width - tf.expand_dims(radius, axis=-1), dtype=type)
+    x = tf.expand_dims(range_width, axis=-1)
+    y = tf.expand_dims(range_width, axis=-2)
     exponent = (-1 * (x ** 2) - (y ** 2)) / (2 * sigma ** 2)
     return tf.math.exp(exponent)
 
@@ -114,19 +117,30 @@ def cartesian_product(*tensors, repeat=1):
     [*[i + 1 for i in range(len(tensors))], 0]), (-1, len(tensors)))
 
 # scaling_factor doesn't do anything right now
-def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
+def draw_gaussian(heatmap, blobs, scaling_factor=1):
     """
     Draws a gaussian heatmap around a center point given a radius.
     Params:
         heatmap (tf.Tensor): heatmap placeholder to fill
-        center (int): integer for center of gaussian
-        radius (int): integer for radius of gaussian
+        blobs (tf.Tensor): a tensor whose last dimension is 5 integers for
+          the batch index, the category of the object, center (x, y), and
+          for radius of the gaussian
         scaling_factor (int): scaling factor for gaussian
     """
+    bn_ind, category, x, y, radius = tf.split(blobs, [1, 1, 1, 1, 1], -1) # blobs
+    bn_ind = bn_ind[0]
+    category = category[0]
+    x = x[0]
+    y = y[0]
+    # radius not indexed on purpose
+
     diameter = 2 * radius + 1
     gaussian = _gaussian_penalty(radius)
 
-    x, y = center
+    # TODO: fix
+    radius = radius[0]
+    diameter = diameter[0]
+    gaussian = gaussian[0]
 
     height, width = tf.shape(heatmap)[-2:]
 
@@ -143,7 +157,7 @@ def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):
     # np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
 
     # heatmap_mask = cartesian_product([0], [category], tf.range(y - top, y + bottom), tf.range(x - left, x + right))
-    heatmap_mask = cartesian_product([0], [category], tf.range(y - top, y + bottom), tf.range(x - left, x + right))
+    heatmap_mask = cartesian_product([bn_ind], [category], tf.range(y - top, y + bottom), tf.range(x - left, x + right))
     masked_gaussian = tf.reshape(gaussian[radius - top:radius + bottom, radius - left:radius + right], (-1,))
     heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, masked_gaussian * scaling_factor)
     return heatmap

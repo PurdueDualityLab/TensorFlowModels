@@ -77,17 +77,18 @@ class CenterNetParser(parser.Parser):
           # test
           #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[b_ind, category], category, [xtl, ytl], radius)
           # inputs heatmap, center, radius, k=1
-            tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
-            br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
-            ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
+            tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [b_ind, category, xtl, ytl, radius])
+            br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [b_ind, category, xbr, ybr, radius])
+            ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [b_ind, category, xct, yct, radius], scaling_factor=5)
 
           else:
+            # TODO: See if this is a typo
             # tl_heatmaps[category, ytl, xtl] = 1
             # br_heatmaps[category, ybr, xbr] = 1
             # ct_heatmaps[category, yct, xct] = 1
             tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, [[b_ind, category, ytl, xtl]], [1])
-            br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[b_ind, category, ytl, xtl]], [1])
-            ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[b_ind, category, ytl, xtl]], [1])
+            br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[b_ind, category, ybr, xbr]], [1])
+            ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[b_ind, category, yct, xct]], [1])
 
           # tl_offset[tag_ind, :] = [fxtl - xtl, fytl - ytl]
           # br_offset[tag_ind, :] = [fxbr - xbr, fybr - ybr]
