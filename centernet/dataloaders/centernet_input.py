@@ -3,7 +3,6 @@ from official.vision.beta.dataloaders import parser
 
 from centernet.ops import preprocessing_ops
 
-
 class CenterNetParser(parser.Parser):
     def __init__(
         self,
@@ -16,23 +15,24 @@ class CenterNetParser(parser.Parser):
         self._gaussian_iou = gaussian_iou
 
     def _generate_heatmap(self, boxes, output_size, input_size):
-      tl_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      br_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      ct_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      tl_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-      br_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-      ct_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-      tl_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
-      br_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
-      ct_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
-      tag_masks = tf.zeros((self._max_num_instances), dtype=tf.uint8)
+      batch_size = tf.shape(boxes)[0]
+      tl_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      br_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      ct_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      tl_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
+      br_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
+      ct_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
+      tl_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
+      br_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
+      ct_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
+      tag_masks = tf.zeros((batch_size, self._max_num_instances), dtype=tf.uint8)
 
       width_ratio = output_size[1] / input_size[1]
       height_ratio = output_size[0] / input_size[0]
 
-      for ind, detection in enumerate(boxes):
+      for tag_ind, detection in enumerate(boxes):
         category = int(detection[-1]) - 1
-        # category = 0
+        category = 0
 
         xtl, ytl = detection[0], detection[1]
         xbr, ybr = detection[2], detection[3]
@@ -55,19 +55,26 @@ class CenterNetParser(parser.Parser):
         ybr = int(fybr)
         xct = int(fxct)
         yct = int(fyct)
+        # temporarily set to true
+        gaussian_bump=True
+        gaussian_rad=1
 
         if gaussian_bump:
           width = detection[2] - detection[0]
           height = detection[3] - detection[1]
 
-          width = math.ceil(width * width_ratio)
-          height = math.ceil(height * height_ratio)
+          width = tf.math.ceil(width * width_ratio)
+          height = tf.math.ceil(height * height_ratio)
 
           if gaussian_rad == -1:
             radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
             radius = max(0, int(radius))
           else:
             radius = gaussian_rad
+        
+        # test
+        #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[b_ind, category], category, [xtl, ytl], radius)
+        # inputs heatmap, center, radius, k=1
           tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, category, [xtl, ytl], radius)
           br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, category, [xbr, ybr], radius)
           ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, category, [xct, yct], radius, scaling_factor=5)
@@ -132,3 +139,36 @@ class CenterNetParser(parser.Parser):
             output_size, input_size
         )
         return image, labels
+
+class ObjectDetectionTest(tf.test.TestCase):
+    def generate_heatmaps(self, dectections):
+      detections = [[
+        (10, 30, 15, 17, 0)
+      ]]
+      
+      tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
+      pass
+
+if __name__ == '__main__':
+  # This code is for visualization
+  import matplotlib.pyplot as plt
+  detections = [[
+    (10, 300, 15, 370, 0),
+    (100, 300, 150, 370, 0),
+    (200, 100, 15, 170, 0),
+  ],
+  # more images can go here if you like
+  ]
+
+  tl_heatmaps, br_heatmaps, ct_heatmaps =  CenterNetParser(2, 200, 0.7)._generate_heatmap(tf.constant([
+    [10, 300, 15, 370, 0],
+    [100, 300, 150, 370, 0],
+    [200, 100, 15, 170, 0],
+    ], dtype=tf.float32), [416, 416], [416, 416])
+
+#   tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
+  # ct_heatmaps[batch_id, class_id, ...]
+  plt.imshow(ct_heatmaps[0, 0, ...])
+  plt.show()
+  # This is to run the test
+  # tf.test.main()
