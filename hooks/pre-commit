@@ -1,19 +1,22 @@
-#!/bin/sh
+  
+#!/bin/bash
 #
 # Git hook that runs whenever a user types "git commit";
 # It runs pylint on any files that were changed, saves the linter
 # output into a .txt file, prints the contents of the file out, 
 # and adds the file to the commit. 
 
-echo ">>> Running pylint on your changed python files -- please wait..."
-git diff --cached --name-only --diff-filter=ACM | xargs pylint --rcfile=.pylintrc > linter_log.txt
-cat linter_log.txt
-
 echo ">>> Running isort on your project repo..."
 isort --recursive .
 
-echo "\n>>> Running mypy on your project repo..."
+echo
+echo ">>> Running mypy on your project repo..."
 mypy .
+
+echo 
+echo ">>> Running pylint on your changed python files -- please wait..."
+bash pylint.sh > linter_log.txt
+cat linter_log.txt
 
 git add .
 
