@@ -35,8 +35,8 @@ class CenterNetParser(parser.Parser):
 
       for b_ind, boxes_batches in enumerate(boxes):
         for tag_ind, detection in enumerate(boxes_batches):
-          category = int(detection[-1]) - 1
-          category = 0
+          category = detection[-1] # TODO: See if subtracting 1 from the class like the paper is unnecessary
+          category = 0 # FIXME: For testing only
 
           xtl, ytl = detection[0], detection[1]
           xbr, ybr = detection[2], detection[3]
@@ -53,12 +53,12 @@ class CenterNetParser(parser.Parser):
           fxct = (xct * width_ratio)
           fyct = (yct * height_ratio)
 
-          xtl = int(fxtl)
-          ytl = int(fytl)
-          xbr = int(fxbr)
-          ybr = int(fybr)
-          xct = int(fxct)
-          yct = int(fyct)
+          xtl = tf.math.floor(fxtl)
+          ytl = tf.math.floor(fytl)
+          xbr = tf.math.floor(fxbr)
+          ybr = tf.math.floor(fybr)
+          xct = tf.math.floor(fxct)
+          yct = tf.math.floor(fyct)
 
           if self._gaussian_bump:
             width = detection[2] - detection[0]
@@ -69,17 +69,16 @@ class CenterNetParser(parser.Parser):
 
             if self._gaussian_rad == -1:
               radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
-              print(radius)
-              radius = max(0, int(radius))
+              radius = tf.math.maximum(0, tf.math.floor(radius))
             else:
               radius = self._gaussian_rad
 
           # test
           #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[b_ind, category], category, [xtl, ytl], radius)
           # inputs heatmap, center, radius, k=1
-            tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [b_ind, category, xtl, ytl, radius])
-            br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [b_ind, category, xbr, ybr, radius])
-            ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [b_ind, category, xct, yct, radius], scaling_factor=5)
+            tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [[b_ind, category, xtl, ytl, radius]])
+            br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [[b_ind, category, xbr, ybr, radius]])
+            ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [[b_ind, category, xct, yct, radius]], scaling_factor=5)
 
           else:
             # TODO: See if this is a typo
@@ -163,6 +162,7 @@ if __name__ == '__main__':
   # more images can go here if you like
   ]
 
+  #labels = tf.function(CenterNetParser(2, 200, 0.7)._generate_heatmap)(
   labels = CenterNetParser(2, 200, 0.7)._generate_heatmap(
     tf.constant(detections, dtype=tf.float32), [416, 416], [416, 416]
   )
