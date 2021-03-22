@@ -16,13 +16,21 @@ You will need to have the following in the root directory of your project:
 - ```hooks``` directory, which contains the ```pre-commit``` hook script
 - ```pylint.sh``` script
 - ```pylintrc``` config file 
+The files are located here in the ```yolo_linter_debug``` branch:
+![necessary_files](./screenshots/necessary_files.png)
 
 In order to get the pre-commit hook to work on your local machine, you can either
-- copy and paste the ```pre-commit``` script into your local ```.git/hooks``` directory,
-OR 
+- copy and paste the ```pre-commit``` script into your local ```.git/hooks``` directory like so:
+![mv_command](./screenshots/mv_command.png)
+, OR 
 - create a symbolic link from the ```hooks``` directory to the ```.git/hooks``` directory
-using the following command:
+using the following command (run the command in project root directory):
 ```ln -s -f ../../hooks/pre-commit .git/hooks/pre-commit```
+
+And that's it! Now when you run ```git commit``` command on your local machine, 
+you will see the following output: 
+
+![git_commit](./screenshots/git_commit.png)
 
 # Important Notes
 - You need to make sure the ```pre-commit``` and the ```pylint.sh``` files are 
