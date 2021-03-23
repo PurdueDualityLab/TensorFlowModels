@@ -5,7 +5,6 @@ from yolo.ops import preprocessing_ops
 
 LARGE_NUM = 1. / tf.keras.backend.epsilon()
 
-@tf.function
 def _smallest_positive_root(a, b, c) -> tf.Tensor:
   """
     Returns the smallest positive root of a quadratic equation.
@@ -21,7 +20,6 @@ def _smallest_positive_root(a, b, c) -> tf.Tensor:
   return tf.where(tf.less(discriminant, 0), LARGE_NUM, (-b + discriminant_sqrt) / (2))
   # return tf.where(tf.less(discriminant, 0), LARGE_NUM, tf.where(tf.less(root1, 0), root2, root1))
 
-@tf.function
 def gaussian_radius(det_size, min_overlap=0.7) -> int:
   """
     Given a bounding box size, returns a lower bound on how far apart the
@@ -66,7 +64,6 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
   print(r1, r2, r3)
   return tf.reduce_min([r1, r2, r3], axis=0)
 
-@tf.function
 def _gaussian_penalty(radius: int, dtype=tf.float32) -> tf.Tensor:
     """
     This represents the penalty reduction around a point.
@@ -121,30 +118,27 @@ def cartesian_product(*tensors, repeat=1):
   return tf.reshape(tf.transpose(tf.stack(tf.meshgrid(*tensors, indexing='ij')),
     [*[i + 1 for i in range(len(tensors))], 0]), (-1, len(tensors)))
 
-@tf.function
 def write_all(ta, index, values):
   for i in range(tf.shape(values)[0]):
     ta = ta.write(index + i, values[i, ...])
   return ta, index + i
 
 # scaling_factor doesn't do anything right now
-@tf.function
 def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     """
     Draws a gaussian heatmap around a center point given a radius.
     Params:
         heatmap (tf.Tensor): heatmap placeholder to fill
-        blobs (tf.Tensor): a tensor whose last dimension is 5 integers for
-          the batch index, the category of the object, center (x, y), and
-          for radius of the gaussian
+        blobs (tf.Tensor): a tensor whose last dimension is 4 integers for
+          the category of the object, center (x, y), and for radius of the
+          gaussian
         scaling_factor (int): scaling factor for gaussian
     """
     blobs = tf.cast(blobs, tf.int32)
-    bn_ind = blobs[..., 0]
-    category = blobs[..., 1]
-    x = blobs[..., 2]
-    y = blobs[..., 3]
-    radius = blobs[..., 4]
+    category = blobs[..., 0]
+    x = blobs[..., 1]
+    y = blobs[..., 2]
+    radius = blobs[..., 3]
     num_boxes = tf.shape(radius)[0]
 
     diameter = 2 * radius + 1
@@ -165,10 +159,9 @@ def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     # np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
     update_count = tf.reduce_sum((bottom + top) * (right + left))
     masked_gaussian_ta = tf.TensorArray(dtype, size=update_count)
-    heatmap_mask_ta = tf.TensorArray(tf.int32, element_shape=tf.TensorShape((4,)), size=update_count)
+    heatmap_mask_ta = tf.TensorArray(tf.int32, element_shape=tf.TensorShape((3,)), size=update_count)
     i = 0
     for j in range(num_boxes):
-      bn_i = bn_ind[j]
       cat = category[j]
       X = x[j]
       Y = y[j]
@@ -180,18 +173,14 @@ def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
 
       gaussian = _gaussian_penalty(R, dtype=dtype)
       masked_gaussian_instance = tf.reshape(gaussian[R - t:R + b, R - l:R + r], (-1,))
-      heatmap_mask_instance = cartesian_product([bn_i], [cat], tf.range(Y - t, Y + b), tf.range(X - l, X + r))
+      heatmap_mask_instance = cartesian_product([cat], tf.range(Y - t, Y + b), tf.range(X - l, X + r))
       masked_gaussian_ta, _ = write_all(masked_gaussian_ta, i, masked_gaussian_instance)
       heatmap_mask_ta, i = write_all(heatmap_mask_ta, i, heatmap_mask_instance)
-    masked_gaussian = masked_gaussian_ta.concat()
-    heatmap_mask = heatmap_mask_ta.concat()
-    print(masked_gaussian, heatmap_mask)
-    heatmap_mask = tf.reshape(heatmap_mask, (-1, 4))
-    masked_gaussian_ta.close()
-    heatmap_mask_ta.close()
-    # masked_gaussian = tf.concat(masked_gaussian, axis = 0)
-    # heatmap_mask = tf.concat(heatmap_mask, axis = 0)
+    masked_gaussian = masked_gaussian_ta.stack()
+    heatmap_mask = heatmap_mask_ta.stack()
+    heatmap_mask = tf.reshape(heatmap_mask, (-1, 3))
     heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, masked_gaussian * scaling_factor)
+    print('after ',heatmap)
     return heatmap
 
 # def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):

@@ -18,89 +18,89 @@ class CenterNetParser(parser.Parser):
         self._gaussian_rad = -1
 
     def _generate_heatmap(self, boxes, output_size, input_size):
-      batch_size = tf.shape(boxes)[0]
-      tl_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      br_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      ct_heatmaps = tf.zeros((batch_size, self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
-      tl_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
-      br_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
-      ct_offset = tf.zeros((batch_size, self._max_num_instances, 2), dtype=tf.float32)
-      tl_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
-      br_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
-      ct_size = tf.zeros((batch_size, self._max_num_instances), dtype=tf.int64)
-      tag_masks = tf.zeros((batch_size, self._max_num_instances), dtype=tf.uint8)
+      boxes = tf.cast(boxes, dtype=tf.float32)
+
+      tl_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      br_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      ct_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
+      tl_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+      br_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+      ct_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
+      tl_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
+      br_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
+      ct_size = tf.zeros((self._max_num_instances), dtype=tf.int64)
+      tag_masks = tf.zeros((self._max_num_instances), dtype=tf.uint8)
 
       width_ratio = output_size[1] / input_size[1]
       height_ratio = output_size[0] / input_size[0]
 
-      for b_ind, boxes_batches in enumerate(boxes):
-        for tag_ind, detection in enumerate(boxes_batches):
-          category = detection[-1] # TODO: See if subtracting 1 from the class like the paper is unnecessary
-          category = 0 # FIXME: For testing only
+      for tag_ind, detection in enumerate(boxes):
+        category = detection[-1] # TODO: See if subtracting 1 from the class like the paper is unnecessary
+        category = 0 # FIXME: For testing only
 
-          xtl, ytl = detection[0], detection[1]
-          xbr, ybr = detection[2], detection[3]
+        xtl, ytl = detection[0], detection[1]
+        xbr, ybr = detection[2], detection[3]
 
-          xct, yct = (
-              (detection[2] + detection[0]) / 2,
-              (detection[3] + detection[1]) / 2
-          )
+        xct, yct = (
+            (detection[2] + detection[0]) / 2,
+            (detection[3] + detection[1]) / 2
+        )
 
-          fxtl = (xtl * width_ratio)
-          fytl = (ytl * height_ratio)
-          fxbr = (xbr * width_ratio)
-          fybr = (ybr * height_ratio)
-          fxct = (xct * width_ratio)
-          fyct = (yct * height_ratio)
+        fxtl = (xtl * width_ratio)
+        fytl = (ytl * height_ratio)
+        fxbr = (xbr * width_ratio)
+        fybr = (ybr * height_ratio)
+        fxct = (xct * width_ratio)
+        fyct = (yct * height_ratio)
 
-          xtl = tf.math.floor(fxtl)
-          ytl = tf.math.floor(fytl)
-          xbr = tf.math.floor(fxbr)
-          ybr = tf.math.floor(fybr)
-          xct = tf.math.floor(fxct)
-          yct = tf.math.floor(fyct)
+        xtl = tf.math.floor(fxtl)
+        ytl = tf.math.floor(fytl)
+        xbr = tf.math.floor(fxbr)
+        ybr = tf.math.floor(fybr)
+        xct = tf.math.floor(fxct)
+        yct = tf.math.floor(fyct)
 
-          if self._gaussian_bump:
-            width = detection[2] - detection[0]
-            height = detection[3] - detection[1]
+        if self._gaussian_bump:
+          width = detection[2] - detection[0]
+          height = detection[3] - detection[1]
 
-            width = tf.math.ceil(width * width_ratio)
-            height = tf.math.ceil(height * height_ratio)
+          width = tf.math.ceil(width * width_ratio)
+          height = tf.math.ceil(height * height_ratio)
 
-            if self._gaussian_rad == -1:
-              radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
-              radius = tf.math.maximum(0, tf.math.floor(radius))
-            else:
-              radius = self._gaussian_rad
-
-          # test
-          #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[b_ind, category], category, [xtl, ytl], radius)
-          # inputs heatmap, center, radius, k=1
-            tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [[b_ind, category, xtl, ytl, radius]])
-            br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [[b_ind, category, xbr, ybr, radius]])
-            ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [[b_ind, category, xct, yct, radius]], scaling_factor=5)
-
+          if self._gaussian_rad == -1:
+            radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
+            radius = tf.math.maximum(0, tf.math.floor(radius))
           else:
-            # TODO: See if this is a typo
-            # tl_heatmaps[category, ytl, xtl] = 1
-            # br_heatmaps[category, ybr, xbr] = 1
-            # ct_heatmaps[category, yct, xct] = 1
-            tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, [[b_ind, category, ytl, xtl]], [1])
-            br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[b_ind, category, ybr, xbr]], [1])
-            ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[b_ind, category, yct, xct]], [1])
+            radius = self._gaussian_rad
 
-          # tl_offset[tag_ind, :] = [fxtl - xtl, fytl - ytl]
-          # br_offset[tag_ind, :] = [fxbr - xbr, fybr - ybr]
-          # ct_offset[tag_ind, :] = [fxct - xct, fyct - yct]
-          # tl_size[tag_ind] = ytl * output_size[1] + xtl
-          # br_size[tag_ind] = ybr * output_size[1] + xbr
-          # ct_size[tag_ind] = yct * output_size[1] + xct
-          tl_offset = tf.tensor_scatter_nd_update(tl_offset, [[b_ind, tag_ind, 0], [b_ind, tag_ind, 1]], [fxtl - xtl, fytl - ytl])
-          br_offset = tf.tensor_scatter_nd_update(br_offset, [[b_ind, tag_ind, 0], [b_ind, tag_ind, 1]], [fxbr - xbr, fybr - ybr])
-          ct_offset = tf.tensor_scatter_nd_update(ct_offset, [[b_ind, tag_ind, 0], [b_ind, tag_ind, 1]], [fxct - xct, fyct - yct])
-          tl_size = tf.tensor_scatter_nd_update(tl_size, [[b_ind, tag_ind]], [ytl * output_size[1] + xtl])
-          br_size = tf.tensor_scatter_nd_update(br_size, [[b_ind, tag_ind]], [ybr * output_size[1] + xbr])
-          ct_size = tf.tensor_scatter_nd_update(ct_size, [[b_ind, tag_ind]], [yct * output_size[1] + xct])
+        # test
+        #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[category], category, [xtl, ytl], radius)
+        # inputs heatmap, center, radius, k=1
+          tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [[category, xtl, ytl, radius]])
+          br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [[category, xbr, ybr, radius]])
+          ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [[category, xct, yct, radius]], scaling_factor=5)
+
+        else:
+          # TODO: See if this is a typo
+          # tl_heatmaps[category, ytl, xtl] = 1
+          # br_heatmaps[category, ybr, xbr] = 1
+          # ct_heatmaps[category, yct, xct] = 1
+          tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, [[category, ytl, xtl]], [1])
+          br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[category, ybr, xbr]], [1])
+          ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[category, yct, xct]], [1])
+
+        # tl_offset[tag_ind, :] = [fxtl - xtl, fytl - ytl]
+        # br_offset[tag_ind, :] = [fxbr - xbr, fybr - ybr]
+        # ct_offset[tag_ind, :] = [fxct - xct, fyct - yct]
+        # tl_size[tag_ind] = ytl * output_size[1] + xtl
+        # br_size[tag_ind] = ybr * output_size[1] + xbr
+        # ct_size[tag_ind] = yct * output_size[1] + xct
+        tl_offset = tf.tensor_scatter_nd_update(tl_offset, [[tag_ind, 0], [tag_ind, 1]], [fxtl - xtl, fytl - ytl])
+        br_offset = tf.tensor_scatter_nd_update(br_offset, [[tag_ind, 0], [tag_ind, 1]], [fxbr - xbr, fybr - ybr])
+        ct_offset = tf.tensor_scatter_nd_update(ct_offset, [[tag_ind, 0], [tag_ind, 1]], [fxct - xct, fyct - yct])
+        tl_size = tf.tensor_scatter_nd_update(tl_size, [[tag_ind]], [ytl * output_size[1] + xtl])
+        br_size = tf.tensor_scatter_nd_update(br_size, [[tag_ind]], [ybr * output_size[1] + xbr])
+        ct_size = tf.tensor_scatter_nd_update(ct_size, [[tag_ind]], [yct * output_size[1] + xct])
 
       labels = {
           'tl_size': tl_size,
@@ -154,12 +154,10 @@ class ObjectDetectionTest(tf.test.TestCase):
 if __name__ == '__main__':
   # This code is for visualization
   import matplotlib.pyplot as plt
-  detections = [[
+  detections = [
     (10, 300, 15, 370, 0),
     (100, 300, 150, 370, 0),
     (200, 100, 15, 170, 0),
-  ],
-  # more images can go here if you like
   ]
 
   #labels = tf.function(CenterNetParser(2, 200, 0.7)._generate_heatmap)(
@@ -172,7 +170,7 @@ if __name__ == '__main__':
 
 #   tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
   # ct_heatmaps[batch_id, class_id, ...]
-  plt.imshow(ct_heatmaps[0, 0, ...])
+  plt.imshow(ct_heatmaps[0, ...])
   plt.show()
   # This is to run the test
   # tf.test.main()
