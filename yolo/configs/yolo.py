@@ -154,9 +154,9 @@ class Parser(hyperparams.Config):
   jitter_im: float = 0.3
   jitter_boxes: float = 0.005
   aug_rand_transalate: float = 0.0
-  aug_rand_saturation: float = 0.75
-  aug_rand_brightness: float = 0.75
-  aug_rand_zoom: float = 0.45
+  aug_rand_saturation: float = 1.5
+  aug_rand_brightness: float = 1.5
+  aug_rand_zoom: float = 0.5
   aug_rand_hue: float = 0.1
   keep_thresh: float = 0.1
   mosaic_frequency: float = 0.0
