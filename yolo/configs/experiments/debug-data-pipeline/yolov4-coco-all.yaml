@@ -80,7 +80,7 @@ task:
       max_num_instances: 400
       letter_box: True
       random_flip: True
-      jitter_im: 0.3
+      jitter_im: 0.1
       jitter_boxes: 0.0025
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
