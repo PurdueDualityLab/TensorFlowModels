@@ -368,8 +368,6 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, tf.float32)
 
 
-    ind_mask = tf.stop_gradient(tf.expand_dims(
-      tf.where(inds[...,-1] == -1, 0.0, 1.0), axis = -1))
     inds = tf.stop_gradient(tf.where(inds == -1, 0, inds))
     boxes =  tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes =  tf.stop_gradient(tf.cast(classes, tf.float32))
@@ -377,7 +375,6 @@ class Yolo_Loss(object):
     true_conf =  tf.stop_gradient(tf.cast(true_conf, tf.float32))
     grid_points, anchor_grid = self._get_label_attributes(
       width, height, batch_size, tf.float32)
-
 
     y_pred = tf.cast(
       tf.reshape(y_pred, 
@@ -397,7 +394,7 @@ class Yolo_Loss(object):
     # 3. split up ground_truth into components, xy, wh, confidence, 
     # class -> apply calculations to acchive safe format as predictions
     (true_box, 
-     _, 
+     ind_mask, 
      true_class, 
      best_iou_match, 
      reps) = tf.split(y_true, [4, 1, 1, 1, 1], axis=-1)
@@ -419,7 +416,7 @@ class Yolo_Loss(object):
 
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     pred_class = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
-    true_class = true_class * ind_mask
+    true_class = math_ops.mul_no_nan(ind_mask, true_class)
 
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), math_ops.divide_no_nan(box_loss, reps))

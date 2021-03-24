@@ -58,8 +58,8 @@ task:
       image_h: 512
       image_w: 512
       letter_box: true
-      cutmix: false
-      mosaic: true
+      
+      
       jitter_im: 0.0
       mosaic_frequency: 0.75
       keep_thresh: 0.5
@@ -80,8 +80,8 @@ task:
       image_h: 512
       image_w: 512
       letter_box: true
-      cutmix: false
-      mosaic: false
+      
+      
       jitter_im: 0.0
       mosaic_frequency: 0.5
       keep_thresh: 0.5

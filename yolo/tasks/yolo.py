@@ -44,6 +44,7 @@ class YoloTask(base_task.Task):
     self._metrics = []
 
     self._dfilter = detection_generator.YoloFilter(classes = self._task_config.model.num_classes)
+
     return
 
   def build_model(self):
@@ -278,21 +279,10 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    # computer detivative and apply gradients
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
-
-    # grid = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), label['grid_form'])
-    # fbox = self._dfilter(grid)
-    # fbox = tf.nest.map_structure(lambda x: tf.cast(x, image.dtype), fbox)
-
-    # # boxes_lost = tf.reduce_mean(tf.math.divide_no_nan(tf.reduce_sum(tf.math.ceil(fbox['bbox'][..., -1]), axis = -1),tf.reduce_sum(tf.math.ceil(label['bbox'][..., -1]), axis = -1)))
-    # # loss_metrics['total_loss'] = boxes_lost
-
-    # label['bbox'] = fbox['bbox']
-    # label['classes'] = fbox['classes']
 
     image_shape = tf.shape(image)[1:-1]
 
@@ -309,9 +299,11 @@ class YoloTask(base_task.Task):
         'detection_classes':
             y_pred['classes'],
         'num_detections':
-            y_pred['num_detections'],#tf.shape(y_pred['bbox'])[:-1],
+            y_pred['num_detections'],
         'source_id':
             label['source_id'],
+        'image_info':
+            label['info'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
@@ -384,13 +376,13 @@ class YoloTask(base_task.Task):
     if self._masks is None or self._path_scales is None or self._x_y_scales is None:
       for i in range(params.min_level, params.max_level + 1):
         boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
-        path_scales[str(i)] = 2**i
         start += params.boxes_per_scale
 
       self._masks = boxes
-      self._path_scales = path_scales
-
+      self._path_scales = params.filter.path_scales.as_dict()
       self._x_y_scales = params.filter.scale_xy.as_dict()
+
+      
 
     metric_names = []
     loss_names = []

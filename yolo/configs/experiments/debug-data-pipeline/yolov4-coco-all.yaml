@@ -27,16 +27,42 @@ task:
       use_sync_bn: true
     decoder_activation: leaky
     filter:
-      anchor_generation_scale: 512
-      ignore_thresh: 0.7
+      ignore_thresh:
+        '5': 0.7
+        '4': 0.7
+        '3': 0.7
+      loss_type:  
+        '5': ciou
+        '4': ciou
+        '3': ciou
+      iou_normalizer: 
+        '5': 0.07
+        '4': 0.07
+        '3': 0.07
+      cls_normalizer: 
+        '5': 1.0
+        '4': 1.0
+        '3': 1.0
+      obj_normalizer: 
+        '5': 0.4
+        '4': 1.0
+        '3': 4.0
+      max_delta: 
+        '5': 5.0
+        '4': 5.0 
+        '3': 5.0
+      new_cords:
+        '5': false
+        '4': false
+        '3': false
+      scale_xy:
+        '5': 1.05
+        '4': 1.1 
+        '3': 1.2
+      max_boxes: 200
+      use_nms: true
       iou_thresh: 0.25
       nms_thresh: 0.6
-      loss_type: ciou
-      max_boxes: 200
-      use_nms: false
-      iou_normalizer: 0.07
-      max_delta: 10.0
-      use_reduction_sum: True
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -54,15 +80,14 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      jitter_im: 0.1
+      jitter_im: 0.3
       jitter_boxes: 0.0025
       aug_rand_hue: 0.1
-      aug_rand_transalate: 0.0
       aug_rand_saturation: 0.75
       aug_rand_brightness: 0.75
       aug_rand_zoom: 0.45
-      keep_thresh: 0.0
-      mosaic_frequency: 1.0
+      keep_thresh: 0.1
+      mosaic_frequency: 0.75
       use_tie_breaker: True
   validation_data:
     global_batch_size: 64

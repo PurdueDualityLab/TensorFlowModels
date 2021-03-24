@@ -139,7 +139,6 @@ class ModelConfig(hyperparams.Config):
       setter.append(value[1:-1])
     self._boxes = setter
 
-
 # dataset parsers
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -152,15 +151,15 @@ class Parser(hyperparams.Config):
   letter_box: bool = True
   random_flip: bool = True
   pct_rand: float = 0.0
-  jitter_im: float = 0.0
-  jitter_boxes: float = 0.000
+  jitter_im: float = 0.3
+  jitter_boxes: float = 0.005
   aug_rand_transalate: float = 0.0
   aug_rand_saturation: float = 0.75
   aug_rand_brightness: float = 0.75
   aug_rand_zoom: float = 0.45
   aug_rand_hue: float = 0.1
-  keep_thresh: float = 0.0
-  mosaic_frequency: float = 1.0
+  keep_thresh: float = 0.1
+  mosaic_frequency: float = 0.75
   use_tie_breaker: bool = True
 
 
@@ -211,25 +210,34 @@ class YoloDecoder(hyperparams.Config):
   embed_spp: bool = False
   xy_exponential: bool = False
 
+def _build_dict(min_level, max_level, value):
+  return lambda:{str(key): value for key in range(min_level, max_level + 1)}
+
+def _build_path_scales(min_level, max_level):
+  return lambda:{str(key): 2**key for key in range(min_level, max_level + 1)}
 
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
-  iou_thresh: float = 0.2
+  min_level: int = 3
+  max_level: int = 5
+  ignore_thresh: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.7))
+  truth_thresh: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
+  loss_type: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 'ciou'))
+  iou_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.75))
+  cls_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
+  obj_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
+  max_delta: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 5.0))
+  new_cords: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, False))
+  scale_xy: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
+  path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
+  use_nms: bool = False
+  iou_thresh: float = 0.25
   nms_thresh: float = 0.6
-  ignore_thresh: float = 0.5
-  truth_thresh: float = 1.0
-  loss_type: str = 'ciou'
   max_boxes: int = 200
   anchor_generation_scale: int = 512
-  use_nms: bool = False
-  iou_normalizer: float = 0.75
-  cls_normalizer: float = 1.0
-  obj_normalizer: float = 1.0
-  max_delta: float = 10.0
-  new_cords: bool = False
   use_reduction_sum: bool = True
-  scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'7':1.0, '6':1.0, '5': 1.05, '4': 1.1, '3': 1.2})
 
+  
 
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
@@ -250,7 +258,7 @@ class Yolo(ModelConfig):
   base: Union[str, YoloBase] = YoloBase()
   subdivisions: int = 1
   use_sam: bool = False
-  filter: YoloLossLayer = YoloLossLayer()
+  filter: YoloLossLayer = YoloLossLayer(min_level=min_level, max_level=max_level)
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
       use_sync_bn=True,

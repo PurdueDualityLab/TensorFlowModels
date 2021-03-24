@@ -51,8 +51,8 @@ task:
       image_w: 512
       seed: 10
       letter_box: true
-      cutmix: false
-      mosaic: true
+      
+      
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8

@@ -187,19 +187,19 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       classes=model_config.num_classes,
       anchors=model_config.boxes,
       iou_thresh=model_config.filter.iou_thresh,
-      truth_thresh=model_config.filter.truth_thresh,
       nms_thresh=model_config.filter.nms_thresh,
       max_boxes=model_config.filter.max_boxes,
+      use_nms=model_config.filter.use_nms,
       path_scale=path_scales,
       scale_xy=xy_scales,
-      use_nms=model_config.filter.use_nms,
-      loss_type=model_config.filter.loss_type,
-      max_delta=model_config.filter.max_delta,
-      new_cords=model_config.filter.new_cords, 
-      iou_normalizer=model_config.filter.iou_normalizer,
-      cls_normalizer=model_config.filter.cls_normalizer,
-      obj_normalizer=model_config.filter.obj_normalizer,
-      ignore_thresh=model_config.filter.ignore_thresh)
+      truth_thresh=model_config.filter.truth_thresh.as_dict(),
+      loss_type=model_config.filter.loss_type.as_dict(),
+      max_delta=model_config.filter.max_delta.as_dict(),
+      new_cords=model_config.filter.new_cords.as_dict(), 
+      iou_normalizer=model_config.filter.iou_normalizer.as_dict(),
+      cls_normalizer=model_config.filter.cls_normalizer.as_dict(),
+      obj_normalizer=model_config.filter.obj_normalizer.as_dict(),
+      ignore_thresh=model_config.filter.ignore_thresh.as_dict())
   return model
 
 

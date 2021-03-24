@@ -79,8 +79,11 @@ class YoloLayer(ks.Model):
     x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
     return x
 
-  def parse_prediction_path(self, generator, len_mask, scale_xy, inputs):
+  def parse_prediction_path(self, key, inputs):
     shape = tf.shape(inputs)
+    generator = self._generator[key]
+    len_mask = self._len_mask[key]
+    scale_xy = self._scale_xy[key]
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     batchsize, height, width = shape[0], shape[1], shape[2]
     data = tf.reshape(inputs,
@@ -91,7 +94,7 @@ class YoloLayer(ks.Model):
         data, [4, 1, self._classes], axis=-1)
     classes = tf.shape(class_scores)[-1]
     
-    if not self._new_cords:
+    if not self._new_cords[key]:
       _,_, boxes = yolo_loss.get_predicted_box(
           tf.cast(height, data.dtype),
           tf.cast(width, data.dtype),
@@ -128,7 +131,7 @@ class YoloLayer(ks.Model):
     for i in range(min_level, max_level + 1):
       key = str(i)
       object_scores_, boxes_, class_scores_ = self.parse_prediction_path(
-          self._generator[key], self._len_mask[key], self._scale_xy[key],
+          key,
           inputs[key])
       boxes.append(boxes_)
       class_scores.append(class_scores_)
@@ -178,17 +181,17 @@ class YoloLayer(ks.Model):
       loss_dict[key] = Yolo_Loss(
           classes=self._classes,
           anchors=self._anchors,
-          truth_thresh=self._truth_thresh,
-          ignore_thresh=self._ignore_thresh,
-          loss_type=self._loss_type,
-          iou_normalizer=self._iou_normalizer,
-          cls_normalizer=self._cls_normalizer,
-          obj_normalizer=self._obj_normalizer,
-          new_cords = self._new_cords, 
+          truth_thresh=self._truth_thresh[key],
+          ignore_thresh=self._ignore_thresh[key],
+          loss_type=self._loss_type[key],
+          iou_normalizer=self._iou_normalizer[key],
+          cls_normalizer=self._cls_normalizer[key],
+          obj_normalizer=self._obj_normalizer[key],
+          new_cords = self._new_cords[key], 
           use_reduction_sum = self._use_reduction_sum, 
-          path_key=key,
+          path_key= key,
           mask=self._masks[key],
-          max_delta=self._max_delta,
+          max_delta=self._max_delta[key],
           scale_anchors=self._path_scale[key],
           scale_x_y=self._scale_xy[key],
           use_tie_breaker=self._use_tie_breaker)
