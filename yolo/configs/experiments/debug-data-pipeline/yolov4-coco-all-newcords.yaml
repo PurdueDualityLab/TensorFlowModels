@@ -77,18 +77,17 @@ task:
       image_w: 512
       image_h: 512
       fixed_size: True
-      max_num_instances: 200
+      max_num_instances: 400
       letter_box: True
       random_flip: True
-      jitter_im: 0.1
-      jitter_boxes: 0.005
+      jitter_im: 0.3
+      jitter_boxes: 0.0025
       aug_rand_hue: 0.1
-      aug_rand_transalate: 0.0
       aug_rand_saturation: 0.75
       aug_rand_brightness: 0.75
       aug_rand_zoom: 0.45
-      keep_thresh: 0.0
-      mosaic_frequency: 1.0
+      keep_thresh: 0.1
+      mosaic_frequency: 0.75
       use_tie_breaker: True
   validation_data:
     global_batch_size: 64
