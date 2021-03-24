@@ -357,8 +357,7 @@ class Yolo_Loss(object):
 
     # tf.print(tf.reduce_sum(count))
     ignore_mask = tf.logical_not(ignore_mask)
-    ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, pred_classes.dtype))
-    tf.print(tf.reduce_sum(ignore_mask))
+    ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
     obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * ignore_mask)) 
     true_conf = tf.stop_gradient(true_conf)
     return ignore_mask, 0.0, 0.0, true_conf, obj_mask
@@ -372,7 +371,7 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, tf.float32)
 
 
-    inds = tf.stop_gradient(tf.where(inds == -1, 0, inds))
+    #inds = tf.stop_gradient(tf.where(inds == -1, 0, inds))
     boxes =  tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes =  tf.stop_gradient(tf.cast(classes, tf.float32))
     y_true =  tf.stop_gradient(tf.cast(y_true, tf.float32))
@@ -438,6 +437,7 @@ class Yolo_Loss(object):
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=1), dtype=y_pred.dtype)
 
+    pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)

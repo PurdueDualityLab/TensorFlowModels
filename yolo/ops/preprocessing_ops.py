@@ -796,8 +796,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
     box = boxes[batch, obj_id]
     classif = classes[batch, obj_id]
     iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
-    reps_ = tf.convert_to_tensor([reps])
-    sample = tf.concat([box, const, classif, iou, reps_], axis = -1)
+    # reps_ = tf.convert_to_tensor([reps])
+    sample = tf.concat([box, const, classif, iou], axis = -1)
     y_, x_ = y[batch, obj_id], x[batch, obj_id]
     list_indx = list_indx.write(i, [batch_ind + count])
     list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
@@ -823,8 +823,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       box = boxes[batch, obj_id]
       classif = classes[batch, obj_id]
       iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
-      reps_ = tf.convert_to_tensor([reps])
-      sample = tf.concat([box, const, classif, iou, reps_], axis = -1)
+      # reps_ = tf.convert_to_tensor([reps])
+      sample = tf.concat([box, const, classif, iou], axis = -1)
       y_, x_ = y[batch, obj_id], x[batch, obj_id]
       list_indx = list_indx.write(i, [batch_ind + count])
       list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
@@ -836,8 +836,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
       i += 1
       num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
 
-  num_coords = 4 + 1 + 1 + 1 + 1
-  indexes = tf.zeros([batches * num_instances, 3], tf.int32) - 1
+  num_coords = 4 + 1 + 1 + 1
+  indexes = tf.zeros([batches * num_instances, 3], tf.int32)
   gridvals = tf.zeros([batches * num_instances, num_coords], boxes.dtype)
   full = tf.zeros([batches, size, size, len_masks, 1], dtype=dtype)
 
@@ -860,12 +860,14 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   if not is_batch:
     full = tf.squeeze(full, axis=0)
 
-  # if is_batch: 
-  #   reps = tf.gather_nd(full, indexes, batch_dims = 1)
-  # else:
-  #   reps = tf.gather_nd(full, indexes, batch_dims = 0)
-
-  # gridvals = tf.concat([gridvals, reps], axis = -1)
+  if is_batch: 
+    reps = tf.gather_nd(full, indexes, batch_dims = 1)
+  else:
+    reps = tf.gather_nd(full, indexes, batch_dims = 0)
+  
+  reps = reps * tf.expand_dims(gridvals[..., 4], axis = -1)
+  reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+  gridvals = tf.concat([gridvals, reps], axis = -1)
 
   full = tf.clip_by_value(full, 0.0, 1.0)
   return indexes, gridvals, full
