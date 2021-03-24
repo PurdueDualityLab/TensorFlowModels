@@ -83,8 +83,8 @@ task:
       jitter_im: 0.3
       jitter_boxes: 0.0025
       aug_rand_hue: 0.1
-      aug_rand_saturation: 0.75
-      aug_rand_brightness: 0.75
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
       aug_rand_zoom: 0.45
       keep_thresh: 0.1
       mosaic_frequency: 0.75
