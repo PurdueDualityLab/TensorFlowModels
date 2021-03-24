@@ -860,16 +860,16 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   if not is_batch:
     full = tf.squeeze(full, axis=0)
 
-  if is_batch: 
-    reps = tf.gather_nd(full, indexes, batch_dims = 1)
-  else:
-    reps = tf.gather_nd(full, indexes, batch_dims = 0)
+  # if is_batch: 
+  #   reps = tf.gather_nd(full, indexes, batch_dims = 1)
+  # else:
+  #   reps = tf.gather_nd(full, indexes, batch_dims = 0)
   
-  reps = reps * tf.expand_dims(gridvals[..., 4], axis = -1)
-  reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
-  gridvals = tf.concat([gridvals, reps], axis = -1)
+  # reps = reps * tf.expand_dims(gridvals[..., 4], axis = -1)
+  # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+  # gridvals = tf.concat([gridvals, reps], axis = -1)
 
-  full = tf.clip_by_value(full, 0.0, 1.0)
+  # full = tf.clip_by_value(full, 0.0, 1.0)
   return indexes, gridvals, full
 
 

@@ -363,9 +363,9 @@ class Yolo_Loss(object):
     return ignore_mask, 0.0, 0.0, true_conf, obj_mask
 
 
-  def __call__(self, true_conf, inds, y_true, boxes, classes, y_pred):
+  def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
-    shape = tf.shape(true_conf)
+    shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
@@ -375,7 +375,9 @@ class Yolo_Loss(object):
     boxes =  tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes =  tf.stop_gradient(tf.cast(classes, tf.float32))
     y_true =  tf.stop_gradient(tf.cast(y_true, tf.float32))
-    true_conf =  tf.stop_gradient(tf.cast(true_conf, tf.float32))
+    true_counts = tf.stop_gradient(tf.cast(true_counts, tf.float32))
+    true_conf = tf.stop_gradient(tf.clip_by_value(true_counts, 0.0, 1.0))
+
     grid_points, anchor_grid = self._get_label_attributes(
       width, height, batch_size, tf.float32)
 
@@ -399,16 +401,9 @@ class Yolo_Loss(object):
     (true_box, 
      ind_mask, 
      true_class, 
-     best_iou_match, 
-     reps) = tf.split(y_true, [4, 1, 1, 1, 1], axis=-1)
+     best_iou_match) = tf.split(y_true, [4, 1, 1, 1], axis=-1)
     true_conf = tf.squeeze(true_conf, axis = -1)
     true_class = tf.squeeze(true_class, axis = -1)
-    reps = tf.squeeze(reps, axis = -1)
-    true_class = tf.one_hot(
-        tf.cast(true_class, tf.int32),
-        depth=tf.shape(pred_class)[-1],
-        dtype=y_pred.dtype)
-
 
     (mask_loss, 
      thresh_class_loss, 
@@ -416,6 +411,14 @@ class Yolo_Loss(object):
      true_conf, 
      obj_mask) = self._tiled_global_box_search(
        pred_box, pred_class, pred_conf, boxes, classes, true_conf)
+
+    reps = tf.gather_nd(true_counts, inds, batch_dims = 1)
+    reps = tf.squeeze(reps, axis = -1)
+    reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+    true_class = tf.one_hot(
+        tf.cast(true_class, tf.int32),
+        depth=tf.shape(pred_class)[-1],
+        dtype=y_pred.dtype)
 
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     pred_class = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
