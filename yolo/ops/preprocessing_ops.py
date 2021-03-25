@@ -580,7 +580,7 @@ def mosaic(images,
           tf.cast(full_classes, classes.dtype), info)
 
 
-def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
+def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
   """
     get the correct anchor that is assoiciated with each box using IOU
     Args:
@@ -641,7 +641,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
         tf.expand_dims(y_true[..., 0:4], axis=-1),
         [1, 1, 1, tf.shape(anchors)[1]])
     truth_comp = tf.transpose(truth_comp, perm=[0, 3, 1, 2])
-
     # compute intersection over union of the boxes, and take the argmax of
     # comuted iou for each box. thus each box is associated with the
     # largest interection over union
@@ -650,6 +649,7 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
         tf.transpose(iou_raw, perm=[0, 2, 1]),
         k=tf.cast(k, dtype=tf.int32),
         sorted=True)
+    
 
     ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
 
@@ -663,6 +663,8 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.213):
                           axis=-1)
 
     # iou_index = tf.where(values >= iou_thresh, indexes, -1)
+
+    # tf.print(ind_mask, summarize = -1)
     if not is_batch:
       iou_index = tf.squeeze(iou_index, axis=0)
       values = tf.squeeze(values, axis=0)

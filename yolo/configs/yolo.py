@@ -265,11 +265,12 @@ class Yolo(ModelConfig):
       norm_momentum=0.99,
       norm_epsilon=0.001)
   decoder_activation: str = 'leaky'
-  _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: [
-      '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)', '(72, 146)',
-      '(142, 110)', '(192, 243)', '(459, 401)'
-  ])
+  # _boxes: Optional[List[str]] = dataclasses.field(default_factory=lambda: [
+  #     '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)', '(72, 146)',
+  #     '(142, 110)', '(192, 243)', '(459, 401)'
+  # ])
 
+  _boxes: Optional[List[str]] = None
 
 # model task
 @dataclasses.dataclass

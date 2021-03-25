@@ -16,6 +16,8 @@ import tensorflow as tf
 
 from yolo.modeling.layers import detection_generator
 
+from official.vision.beta.tasks import retinanet
+from official.vision.beta.configs import retinanet as retcfg
 
 def test_yolo_input_task():
   with tf.device('/CPU:0'):
@@ -32,6 +34,8 @@ def test_yolo_input_task():
                 '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
                 '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
             ],
+            # _boxes = ['[15.0, 23.0]', '[38.0, 57.0]', '[119.0, 67.0]', '[57.0, 141.0]', '[164.0, 156.0]', '[97.0, 277.0]', '[371.0, 184.0]', '[211.0, 352.0]', '[428.0, 419.0]'],
+            # _boxes = None,
             filter=yolocfg.YoloLossLayer(use_nms=False)))
     task = yolo.YoloTask(config)
 
@@ -46,6 +50,22 @@ def test_yolo_input_task():
     test_data = task.build_inputs(config.validation_data)
   return train_data, test_data
 
+
+def test_retinanet_input_task():
+  with tf.device('/CPU:0'):
+    config = retcfg.RetinaNetTask()
+    task = retinanet.RetinaNetTask(config)
+
+    # loading both causes issues, but oen at a time is not issue, why?
+    config.train_data.dtype = 'float32'
+    config.validation_data.dtype = 'float32'
+    config.train_data.tfds_name = 'coco'
+    config.validation_data.tfds_name = 'coco'
+    config.train_data.tfds_split = 'train'
+    config.validation_data.tfds_split = 'validation'
+    train_data = task.build_inputs(config.train_data)
+    test_data = task.build_inputs(config.validation_data)
+  return train_data, test_data
 
 def test_classification_input():
   with tf.device('/CPU:0'):
@@ -72,7 +92,7 @@ def test_classification_pipeline():
 import time
 
 
-def test_pipeline():
+def test_yolo_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   shind = 3
@@ -81,35 +101,15 @@ def test_pipeline():
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
-  data = dataset
+  data = dsp
   data = data.take(10)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
-    print(ftime - ltime)
-
-    print(tf.shape(i))
-    # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-    # j["bbox"] = boxes
-    # fboxes = dfilter(j['grid_form'])
-
     i2 = drawer(i, j)  #
-    # i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
     gt = j['true_conf']
     inds = j['inds']
-
-    # print(inds['3'][shind])
-
-    # with tf.device('CPU:0'):
-    #   ind_test = inds['3']
-    #   ind_grid = gt['3']
-    #   ind_test = tf.where(ind_test == -1, 0, ind_test)
-    #   ind_mask = tf.expand_dims(tf.where(ind_test[...,-1] == -1, 0.0, 1.0), axis = -1)
-    #   a = tf.gather_nd(ind_grid, ind_test, batch_dims=1) * ind_mask
-
-    #   # vals = tf.tensor_scatter_nd_add(ind_grid, ind_test, a)
-    #   # print(vals)
-
 
     obj3 = gt['3'][..., 0]
     obj4 = gt['4'][..., 0]
@@ -151,9 +151,68 @@ def time_pipeline():
 
   print(f"total time {sum(times)}")
 
+def reduce(obj):
+  return tf.math.ceil(tf.clip_by_value(tf.reduce_max(tf.reduce_sum(tf.reshape(obj, [obj.shape[0], obj.shape[1], obj.shape[2], 3, 3, 4]), axis = -1), axis = -1), 0.0, 1.0))
+
+def test_ret_pipeline():
+  dataset, dsp = test_retinanet_input_task()
+  print(dataset, dsp)
+
+  shind = 3
+  dip = 0
+  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  dfilter = detection_generator.YoloFilter()
+  ltime = time.time()
+
+  data = dsp
+  data = data.take(10)
+
+  lim1 = 0
+  lim2 = 3
+  for l, (i, j) in enumerate(data):
+    ftime = time.time()
+
+    i2 = drawer(i, j)  #
+    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+
+    gt = j['box_targets']
+
+    obj3 = gt['3']
+    obj4 = gt['4']
+    obj5 = gt['5']
+    obj6 = gt['6']
+    obj7 = gt['7']
+
+    obj3 = reduce(obj3)
+    obj4 = reduce(obj4)
+    obj5 = reduce(obj5)
+    obj6 = reduce(obj6)
+    obj7 = reduce(obj7)
+
+    fig, axe = plt.subplots(1, 6)
+
+    axe[0].imshow(i2[shind])
+    axe[1].imshow(obj3[shind].numpy())
+    axe[2].imshow(obj4[shind].numpy())
+    axe[3].imshow(obj5[shind].numpy())
+    axe[4].imshow(obj6[shind].numpy())
+    axe[5].imshow(obj7[shind].numpy())
+
+    fig.set_size_inches(18.5, 6.5, forward=True)
+    plt.tight_layout()
+    plt.show()
+
+    ltime = time.time()
+
+    if l >= 10:
+      break
+
+
+
 
 if __name__ == '__main__':
-  test_pipeline()
+  # test_ret_pipeline()
+  test_yolo_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
