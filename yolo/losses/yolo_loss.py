@@ -373,8 +373,8 @@ class Yolo_Loss(object):
                  [batch_size, width, height, num, -1]), 
                  tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis = -1)
-    pred_class = class_gradient_trap(tf.sigmoid(pred_class))
-    pred_conf = obj_gradient_trap(tf.sigmoid(pred_conf))
+    pred_class = class_gradient_trap(tf.sigmoid(pred_class), self._max_delta)
+    pred_conf = obj_gradient_trap(tf.sigmoid(pred_conf), self._max_delta)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, 
                                                     fheight, 
                                                     pred_box, 
@@ -450,8 +450,8 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     loss = box_loss + class_loss + conf_loss + thresh_loss
+    
     loss = tf.reduce_mean(loss)
-
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
