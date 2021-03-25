@@ -100,6 +100,7 @@ def compute_iou(box1, box2, yxyx=False):
   with tf.name_scope('iou'):
     intersection, union = intersect_and_union(box1, box2, yxyx = yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
+    iou = math_ops.rm_nan_inf(iou, val = 0.0)
   return iou
 
 
@@ -122,6 +123,7 @@ def compute_giou(box1, box2, yxyx=False):
     
     intersection, union = intersect_and_union(box1, box2, yxyx = yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
+    iou = math_ops.rm_nan_inf(iou, val = 0.0)
 
     # find the smallest box to encompase both box1 and box2
     boxc = smallest_encompassing_box(box1, box2, yxyx = yxyx)
@@ -158,6 +160,7 @@ def compute_diou(box1, box2, beta = 0.6, yxyx=False):
     boxc = smallest_encompassing_box(box1, box2, yxyx = yxyx)
     
     iou = math_ops.divide_no_nan(intersection, union)
+    iou = math_ops.rm_nan_inf(iou, val = 0.0)
     if yxyx:
       boxc = yxyx_to_xcycwh(boxc)
       box1 = yxyx_to_xcycwh(box1)

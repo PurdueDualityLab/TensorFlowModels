@@ -580,7 +580,7 @@ def mosaic(images,
           tf.cast(full_classes, classes.dtype), info)
 
 
-def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
+def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
   """
     get the correct anchor that is assoiciated with each box using IOU
     Args:
@@ -662,13 +662,41 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     ],
                           axis=-1)
 
-    # iou_index = tf.where(values >= iou_thresh, indexes, -1)
+    true_prod = tf.reduce_prod(true_wh, axis = -1, keepdims = True)
+    iou_index = tf.where(true_prod > 0, iou_index, tf.zeros_like(iou_index) - 1)
 
-    # tf.print(ind_mask, summarize = -1)
+    # tf.print(iou_index, summarize = -1)
     if not is_batch:
       iou_index = tf.squeeze(iou_index, axis=0)
       values = tf.squeeze(values, axis=0)
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
+
+
+def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
+  """
+    get the correct anchor that is assoiciated with each box using IOU
+    Args:
+      y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
+      anchors: list or tensor for the anchor boxes to be used in prediction
+        found via Kmeans
+      width: int for the image width
+      height: int for the image height
+
+    Return:
+      tf.Tensor: y_true with the anchor associated with each ground truth
+      box known
+    """
+  with tf.name_scope('get_best_anchor'):
+    width = tf.cast(width, dtype=y_true.dtype)
+    height = tf.cast(height, dtype=y_true.dtype)
+
+    true_wh = y_true[..., 2:4]
+    hold = tf.zeros_like(true_wh)
+    y_true = tf.concat([hold, true_wh], axis = -1)
+
+    # tf.print(tf.shape(true_wh), tf.shape(anchors))
+  return get_best_anchor2(y_true, anchors, width=width, height=height, iou_thresh=iou_thresh)
+
 
 def _get_num_reps(anchors, mask, box_mask):
   mask = tf.expand_dims(mask, 0)

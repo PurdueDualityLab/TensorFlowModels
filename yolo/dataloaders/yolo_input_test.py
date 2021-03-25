@@ -15,7 +15,7 @@ from official.core import config_definitions as cfg
 import tensorflow as tf
 
 from yolo.modeling.layers import detection_generator
-
+from official.vision.beta.ops import box_ops as bops 
 from official.vision.beta.tasks import retinanet
 from official.vision.beta.configs import retinanet as retcfg
 
@@ -105,30 +105,45 @@ def test_yolo_pipeline():
   data = data.take(10)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
-    i2 = drawer(i, j)  #
-    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+    i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
     gt = j['true_conf']
     inds = j['inds']
+   
 
     obj3 = gt['3'][..., 0]
     obj4 = gt['4'][..., 0]
     obj5 = gt['5'][..., 0]
 
-    fig, axe = plt.subplots(1, 4)
+    for shind in range(3):
+      fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(i2[shind])
-    axe[1].imshow(obj3[shind].numpy())
-    axe[2].imshow(obj4[shind].numpy())
-    axe[3].imshow(obj5[shind].numpy())
+      image = i[shind]
+      boxes = j["bbox"][shind]
+      classes = j["classes"][shind]
+      confidence = j["classes"][shind]
 
-    fig.set_size_inches(18.5, 6.5, forward=True)
-    plt.tight_layout()
-    plt.show()
+      draw_dict = {
+        'bbox' : boxes, 
+        'classes' : classes, 
+        'confidence': confidence, 
+      }
+      image = drawer(image, draw_dict)  
+
+      #print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
+      tf.print(j['upds']['3'][shind], summarize = -1)
+      axe[0].imshow(i_[shind])
+      axe[1].imshow(obj3[shind].numpy())
+      axe[2].imshow(obj4[shind].numpy())
+      axe[3].imshow(obj5[shind].numpy())
+
+      fig.set_size_inches(10.5, 3.5, forward=True)
+      plt.tight_layout()
+      plt.show()
 
     ltime = time.time()
 
-    if l >= 10:
+    if l >= 100:
       break
 
 

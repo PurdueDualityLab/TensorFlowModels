@@ -256,6 +256,7 @@ class DrawBoxes(object):
       conf = conf.numpy()
 
     if not isinstance(image, list):
+      print("here", ndims)
       if ndims == 4:
         images = []
         func = self._parent(image, boxes, classes, conf)
