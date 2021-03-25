@@ -358,6 +358,8 @@ class Yolo_Loss(object):
     # tf.print(tf.reduce_sum(count))
     ignore_mask = tf.logical_not(ignore_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
+
+    # tf.print(tf.reduce_sum(1.0 - ignore_mask[0]), tf.reduce_sum(true_conf[0]))
     obj_mask =  tf.stop_gradient((true_conf + (1 - true_conf) * ignore_mask)) 
     true_conf = tf.stop_gradient(true_conf)
     return ignore_mask, 0.0, 0.0, true_conf, obj_mask
@@ -369,7 +371,6 @@ class Yolo_Loss(object):
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
-
 
     #inds = tf.stop_gradient(tf.where(inds == -1, 0, inds))
     boxes =  tf.stop_gradient(tf.cast(boxes, tf.float32))
@@ -459,9 +460,9 @@ class Yolo_Loss(object):
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
 
-    recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
+    recall50 = self.recall(tf.sigmoid(pred_conf), true_conf, pct = 0.5)
     avg_iou = self.avgiou(iou)
     avg_obj = self.avgiou(
-      tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * true_conf)
+      tf.sigmoid(tf.squeeze(pred_conf, axis = -1)) * (1 - obj_mask))
 
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50

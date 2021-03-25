@@ -872,6 +872,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker)
   # gridvals = tf.concat([gridvals, reps], axis = -1)
 
   # full = tf.clip_by_value(full, 0.0, 1.0)
+
+  # tf.print(tf.reduce_max(full))
   return indexes, gridvals, full
 
 

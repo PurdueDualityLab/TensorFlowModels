@@ -304,8 +304,6 @@ class YoloTask(base_task.Task):
             y_pred['num_detections'],
         'source_id':
             label['source_id'],
-        'image_info':
-            label['info'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
