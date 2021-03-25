@@ -101,7 +101,7 @@ def test_yolo_pipeline():
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
-  data = dsp
+  data = dataset
   data = data.take(10)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
