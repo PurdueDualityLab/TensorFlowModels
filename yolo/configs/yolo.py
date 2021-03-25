@@ -26,6 +26,7 @@ from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
 
 from yolo.configs import backbones
+import numpy as np
 
 COCO_INPUT_PATH_BASE = 'coco'
 IMAGENET_TRAIN_EXAMPLES = 1281167
@@ -226,7 +227,7 @@ class YoloLossLayer(hyperparams.Config):
   iou_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.75))
   cls_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
   obj_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
-  max_delta: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 5.0))
+  max_delta: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, np.inf))
   new_cords: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, False))
   scale_xy: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
   path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
