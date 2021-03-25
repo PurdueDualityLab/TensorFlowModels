@@ -450,7 +450,7 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     loss = box_loss + class_loss + conf_loss + thresh_loss
-    loss = tf.reduce_sum(loss)
+    loss = tf.reduce_mean(loss)
 
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
