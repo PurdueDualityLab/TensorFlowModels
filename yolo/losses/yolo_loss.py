@@ -436,7 +436,8 @@ class Yolo_Loss(object):
             label_smoothing=self._label_smoothing,
             from_logits=False),
         axis=-1) 
-    class_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), math_ops.divide_no_nan(class_loss, reps))
+    # class_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), math_ops.divide_no_nan(class_loss, reps))
+    class_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), class_loss)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=1), dtype=y_pred.dtype)
 
