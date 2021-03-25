@@ -95,13 +95,13 @@ import time
 def test_yolo_pipeline():
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
-  shind = 3
+  # shind = 3
   dip = 0
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
-  data = dataset
+  data = dsp
   data = data.take(10)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
@@ -115,8 +115,8 @@ def test_yolo_pipeline():
     obj4 = gt['4'][..., 0]
     obj5 = gt['5'][..., 0]
 
-    for shind in range(3):
-      fig, axe = plt.subplots(1, 4)
+    for shind in range(1):
+      fig, axe = plt.subplots(1, 5)
 
       image = i[shind]
       boxes = j["bbox"][shind]
@@ -128,16 +128,18 @@ def test_yolo_pipeline():
         'classes' : classes, 
         'confidence': confidence, 
       }
+      print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
       image = drawer(image, draw_dict)  
 
-      #print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
+      
       tf.print(j['upds']['3'][shind], summarize = -1)
       axe[0].imshow(i_[shind])
-      axe[1].imshow(obj3[shind].numpy())
-      axe[2].imshow(obj4[shind].numpy())
-      axe[3].imshow(obj5[shind].numpy())
+      axe[1].imshow(image)
+      axe[2].imshow(obj3[shind].numpy())
+      axe[3].imshow(obj4[shind].numpy())
+      axe[4].imshow(obj5[shind].numpy())
 
-      fig.set_size_inches(10.5, 3.5, forward=True)
+      fig.set_size_inches(18.5, 6.5, forward=True)
       plt.tight_layout()
       plt.show()
 
@@ -173,7 +175,7 @@ def test_ret_pipeline():
   dataset, dsp = test_retinanet_input_task()
   print(dataset, dsp)
 
-  shind = 3
+  shind = 0
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
   dfilter = detection_generator.YoloFilter()
@@ -204,14 +206,15 @@ def test_ret_pipeline():
     obj6 = reduce(obj6)
     obj7 = reduce(obj7)
 
-    fig, axe = plt.subplots(1, 6)
+    fig, axe = plt.subplots(1, 7)
 
     axe[0].imshow(i2[shind])
-    axe[1].imshow(obj3[shind].numpy())
-    axe[2].imshow(obj4[shind].numpy())
-    axe[3].imshow(obj5[shind].numpy())
-    axe[4].imshow(obj6[shind].numpy())
-    axe[5].imshow(obj7[shind].numpy())
+    axe[1].imshow(i[shind])
+    axe[2].imshow(obj3[shind].numpy())
+    axe[3].imshow(obj4[shind].numpy())
+    axe[4].imshow(obj5[shind].numpy())
+    axe[5].imshow(obj6[shind].numpy())
+    axe[6].imshow(obj7[shind].numpy())
 
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()

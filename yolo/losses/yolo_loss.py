@@ -9,7 +9,7 @@ import numpy as np
 
 from functools import partial
 
-TILE_SIZE = 25
+TILE_SIZE = 10
 
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta = np.inf):
@@ -341,7 +341,7 @@ class Yolo_Loss(object):
                                           obns_base, 
                                           tf.constant(0)], 
         parallel_iterations = 20, 
-        maximum_iterations = 10, 
+        maximum_iterations = 20, 
     )
 
     # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))

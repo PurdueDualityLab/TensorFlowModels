@@ -177,8 +177,7 @@ class DrawBoxes(object):
     def draw_box_name(image, box, classes, conf):
       if box[3] == 0:
         return False
-      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
-                    self._thickness)
+      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes], self._thickness)
       x = box[0] + (box[1] - box[0])//2 
       y = box[2] + (box[3] - box[2])//2
 
