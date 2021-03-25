@@ -340,7 +340,8 @@ class Yolo_Loss(object):
                                           loss_base, 
                                           obns_base, 
                                           tf.constant(0)], 
-        parallel_iterations=20
+        parallel_iterations = 20, 
+        maximum_iterations = 10, 
     )
 
     # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
