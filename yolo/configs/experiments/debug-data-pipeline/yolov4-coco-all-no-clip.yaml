@@ -29,9 +29,9 @@ task:
     decoder_activation: leaky
     filter:
       ignore_thresh:
-        '5': 0.5
-        '4': 0.5
-        '3': 0.5
+        '5': 0.7
+        '4': 0.7
+        '3': 0.7
       loss_type:  
         '5': ciou
         '4': ciou
@@ -77,15 +77,15 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      jitter_im: 0.0
-      jitter_boxes: 0.000
+      jitter_im: 0.3
+      jitter_boxes: 0.05
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_zoom: 0.5
-      keep_thresh: 0.0
-      mosaic_frequency: 1.0
       use_tie_breaker: True
+      mosaic: 
+        mosaic_frequency: 0.5
   validation_data:
     global_batch_size: 64
     dtype: bfloat16

@@ -225,9 +225,6 @@ def test_ret_pipeline():
     if l >= 10:
       break
 
-
-
-
 if __name__ == '__main__':
   # test_ret_pipeline()
   test_yolo_pipeline()
