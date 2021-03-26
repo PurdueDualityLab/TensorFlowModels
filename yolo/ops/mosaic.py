@@ -230,7 +230,7 @@ class Mosaic(object):
     return dataset
   
   def _no_apply(self, dataset):
-    return dataset.map(self._add_param)
+    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE)
 
   def mosaic_fn(self, is_training = True):
     if is_training and self._mosaic_frequency > 0.0:

@@ -267,66 +267,7 @@ class Parser(parser.Parser):
     num_dets = tf.shape(classes)[0]
 
     image = tf.cast(image, self._dtype)
-    boxes = box_utils.yxyx_to_xcycwh(boxes)
-
-    best_anchors, ious = preprocessing_ops.get_best_anchor(
-        boxes, self._anchors, width=self._image_w, height=self._image_h)
-
-    bshape = boxes.get_shape().as_list()
-    boxes = pad_max_instances(boxes, self._max_num_instances, 0)
-    bshape[0] = self._max_num_instances
-    boxes.set_shape(bshape)
-    
-    
-    cshape = classes.get_shape().as_list()
-    classes = pad_max_instances(classes,
-                                self._max_num_instances, -1)
-    cshape[0] = self._max_num_instances
-    classes.set_shape(cshape)
-
-    bashape = best_anchors.get_shape().as_list()
-    best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
-    bashape[0] = self._max_num_instances
-    best_anchors.set_shape(bashape)
-
-    ishape = ious.get_shape().as_list()
-    ious = pad_max_instances(ious, self._max_num_instances, 0)
-    ishape[0] = self._max_num_instances
-    ious.set_shape(ishape)
-
-    area = data['groundtruth_area']
-    ashape = area.get_shape().as_list()
-    area = pad_max_instances(area, self._max_num_instances,0)
-    ashape[0] = self._max_num_instances
-    area.set_shape(ashape)
-
-    is_crowd = data['groundtruth_is_crowd']
-    ishape = is_crowd.get_shape().as_list()
-    is_crowd = pad_max_instances(
-        tf.cast(is_crowd, tf.int32), self._max_num_instances, 0)
-    ishape[0] = self._max_num_instances
-    is_crowd.set_shape(ishape)
-
-    labels = {
-        'source_id': utils.process_source_id(data['source_id']),
-        'bbox': tf.cast(boxes, self._dtype),
-        'classes': tf.cast(classes, self._dtype),
-        'area': tf.cast(area, self._dtype),
-        'is_crowd': is_crowd,
-        'best_anchors': tf.cast(best_anchors, self._dtype),
-        'best_iou_match': ious,
-        'width': width,
-        'height': height,
-        'info': info, 
-        'num_detections': num_dets
-    }
-
-    grid, inds, upds, true_conf = self._build_grid(
-        labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
-    labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    labels['upds'] = upds 
-    labels['inds'] = inds
-    labels['true_conf'] = true_conf
+    image, labels = self._build_label(image, boxes, classes, width, height, info, data)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -390,6 +331,11 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, [self._image_h, self._image_w])
 
     image = tf.cast(image, self._dtype)
+    image, labels = self._build_label(image, boxes, classes, width, height, info, data)
+
+    return image, labels
+
+  def _build_label(self, image, boxes, classes, width, height, info, data):
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
@@ -452,6 +398,7 @@ class Parser(parser.Parser):
     labels['inds'] = inds
     labels['true_conf'] = true_conf
     return image, labels
+
 
   def postprocess_fn(self, is_training):
     if is_training:  #or self._cutmix
