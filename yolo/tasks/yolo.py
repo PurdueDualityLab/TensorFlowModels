@@ -13,6 +13,7 @@ from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
 from yolo.dataloaders import yolo_input
+from yolo.ops import mosaic
 from yolo.ops.kmeans_anchors import BoxGenInputReader
 from yolo.ops.box_ops import xcycwh_to_yxyx
 
@@ -101,13 +102,15 @@ class YoloTask(base_task.Task):
 
     print(xy_scales)
 
-    gbs = params.global_batch_size
-    if input_context is not None:
-      gbs = input_context.get_per_replica_batch_size(
-          gbs) if input_context else gbs
-    # if params.is_training and params.parser.mosaic:
     
-    params.global_batch_size = 4 * params.global_batch_size // gbs
+    sample_fn = mosaic.Mosaic(
+      output_size = params.parser.mosaic.output_size, 
+      mosaic_frequency = params.parser.mosaic.mosaic_frequency, 
+      crop_area =  params.parser.mosaic.crop_area,
+      random_crop = params.parser.mosaic.random_crop,
+    )
+
+
 
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
@@ -121,7 +124,6 @@ class YoloTask(base_task.Task):
         letter_box=params.parser.letter_box,
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
-        mosaic_frequency=params.parser.mosaic_frequency,
         jitter_im=params.parser.jitter_im,
         jitter_boxes=params.parser.jitter_boxes,
         aug_rand_transalate=params.parser.aug_rand_transalate, 
@@ -132,7 +134,6 @@ class YoloTask(base_task.Task):
         max_process_size=params.parser.max_process_size,
         min_process_size=params.parser.min_process_size,
         max_num_instances=params.parser.max_num_instances,
-        keep_thresh=params.parser.keep_thresh,
         pct_rand=params.parser.pct_rand,
         dtype=params.dtype)
 
@@ -140,18 +141,11 @@ class YoloTask(base_task.Task):
         params,
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
+        sample_fn=sample_fn.mosaic_fn(is_training=params.is_training), 
         parser_fn=parser.parse_fn(params.is_training),
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
-
-    if params.is_training:
-      dataset = dataset.unbatch().shuffle(params.global_batch_size * 4 *
-                                          2).batch(
-                                              gbs, drop_remainder=True)
-    else:
-      dataset = dataset.unbatch().batch(gbs, drop_remainder=True)
     
-    # dataset = dataset.map(parser.batch_fn)
     print(dataset)
     return dataset
 

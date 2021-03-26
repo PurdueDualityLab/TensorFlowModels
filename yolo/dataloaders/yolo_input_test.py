@@ -101,7 +101,7 @@ def test_yolo_pipeline():
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
-  data = dsp
+  data = dataset
   data = data.take(10)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
@@ -128,7 +128,7 @@ def test_yolo_pipeline():
         'classes' : classes, 
         'confidence': confidence, 
       }
-      print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
+      # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
       image = drawer(image, draw_dict)  
 
       
@@ -139,7 +139,7 @@ def test_yolo_pipeline():
       axe[3].imshow(obj4[shind].numpy())
       axe[4].imshow(obj5[shind].numpy())
 
-      fig.set_size_inches(18.5, 6.5, forward=True)
+      fig.set_size_inches(18.5, 10.5, forward=True)
       plt.tight_layout()
       plt.show()
 
@@ -231,6 +231,7 @@ def test_ret_pipeline():
 if __name__ == '__main__':
   # test_ret_pipeline()
   test_yolo_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
