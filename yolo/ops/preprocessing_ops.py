@@ -946,3 +946,39 @@ def random_crop_image(image,
                      scale,
                      offset], axis = 0)
     return cropped_image, info
+
+
+def random_rotate_image(image, max_angle):
+  angle = tf.random.uniform([],
+                          minval=-max_angle,
+                          maxval=max_angle,
+                          dtype=tf.float32)
+  deg = angle * 3.14 / 360.
+  deg.set_shape(())
+  image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
+  return image, deg
+
+def rotate_boxes(boxes, angle):
+  boxes = box_ops.yxyx_to_xcycwh(boxes)
+  x, y, w, h = tf.split(boxes, 4, axis = -1)
+
+  xscale = tf.math.cos(angle)
+  yscale = tf.math.sin(angle)  
+
+  x -= 0.5
+  y -= 0.5
+
+  r = tf.math.sqrt(x ** 2 + y ** 2)
+
+  tf.print(xscale, yscale)
+  x = r * xscale
+  y = r * yscale
+  w = w  
+  h = h 
+
+  x += 0.5
+  y += 0.5
+
+  boxes = tf.concat([x, y, w, h], axis = -1)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
+  return boxes

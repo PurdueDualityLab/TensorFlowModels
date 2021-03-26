@@ -177,18 +177,6 @@ class Yolo_Loss(object):
     return tf.stop_gradient(grid_points), tf.stop_gradient(
         anchor_grid)
 
-  def _get_predicted_box(self, width, height, unscaled_box, anchor_grid,
-                         grid_points):
-    pred_xy = tf.math.sigmoid(unscaled_box[...,
-                                           0:2]) * self._scale_x_y - 0.5 * (
-                                               self._scale_x_y - 1)
-    pred_wh = unscaled_box[..., 2:4]
-    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
-                      axis=-1) + grid_points
-    box_wh = tf.math.exp(pred_wh) * anchor_grid
-    pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-    return pred_xy, pred_wh, pred_box
-
   def _scale_ground_truth_box(self, box, width, height, anchor_grid,
                               grid_points, dtype):
     xy = tf.nn.relu(box[..., 0:2] - grid_points)
@@ -233,7 +221,7 @@ class Yolo_Loss(object):
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
       liou = iou
-      loss_box = (1 - liou) 
+      loss_box = 1 - iou 
       # # mse loss computation :: yolo_layer.c: scale = (2-truth.w*truth.h)
       # scale = (2 - true_box[..., 2] * true_box[..., 3]) 
       # true_xy, true_wh = self._scale_ground_truth_box(true_box, fwidth, fheight,

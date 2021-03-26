@@ -211,6 +211,9 @@ class Parser(parser.Parser):
       jma = 1 + 2 * self._jitter_im
       image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[0.5, 1.0])
 
+    image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
+    boxes = preprocessing_ops.rotate_boxes(boxes, angle)
+
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])
     
