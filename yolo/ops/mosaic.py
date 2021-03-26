@@ -10,11 +10,6 @@ from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.utils.demos import utils, coco
 import matplotlib.pyplot as plt
 
-
-def _generate_source_id(image_bytes):
-  return tf.strings.as_string(
-      tf.strings.to_hash_bucket_fast(image_bytes, 2**63 - 1))
-
 class Mosaic(object):
   def __init__(self, output_size, is_training = False, mosaic_frequency = 0.75, random_crop = False):
     self._output_size = output_size
@@ -213,11 +208,11 @@ class Mosaic(object):
 
 drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
 decoder = tfds_coco_decoder.MSCOCODecoder()
-mosaic = Mosaic([640, 640], is_training=True)
+mosaic = Mosaic([640, 720], is_training=True)
 
 dataset = tfds.load('coco', split = 'train')
 dataset = dataset.apply(mosaic)
-dataset = dataset.take(100)
+dataset = dataset.take(10)
 
 import time 
 
