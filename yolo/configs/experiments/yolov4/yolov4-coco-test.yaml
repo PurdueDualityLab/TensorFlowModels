@@ -79,14 +79,21 @@ task:
     is_training: true
     shuffle_buffer_size: 10000
     parser:
-      fixed_size: true
-      image_h: 512
       image_w: 512
-      letter_box: true
-      jitter_im: 0.0
-      mosaic_frequency: 0.5
-      keep_thresh: 0.0
-      use_tie_breaker: true
+      image_h: 512
+      fixed_size: True
+      max_num_instances: 200
+      letter_box: True
+      random_flip: True
+      jitter_im: 0.3
+      jitter_boxes: 0.05
+      aug_rand_hue: 0.1
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_zoom: 0.5
+      use_tie_breaker: True
+      mosaic: 
+        mosaic_frequency: 0.5
   validation_data:
     global_batch_size: 8
     tfds_data_dir: ''
@@ -99,14 +106,21 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: True
     parser:
-      fixed_size: true
-      image_h: 512
       image_w: 512
-      letter_box: true
-      jitter_im: 0.0
-      mosaic_frequency: 0.5
-      keep_thresh: 0.0
-      use_tie_breaker: true
+      image_h: 512
+      fixed_size: True
+      max_num_instances: 200
+      letter_box: True
+      random_flip: True
+      jitter_im: 0.3
+      jitter_boxes: 0.05
+      aug_rand_hue: 0.1
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_zoom: 0.5
+      use_tie_breaker: True
+      mosaic: 
+        mosaic_frequency: 0.5
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

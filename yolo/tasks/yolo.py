@@ -110,8 +110,6 @@ class YoloTask(base_task.Task):
       random_crop = params.parser.mosaic.random_crop,
     )
 
-
-
     parser = yolo_input.Parser(
         image_w=params.parser.image_w,
         image_h=params.parser.image_h,

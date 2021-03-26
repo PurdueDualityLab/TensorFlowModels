@@ -132,7 +132,7 @@ def test_yolo_pipeline():
       image = drawer(image, draw_dict)  
 
       
-      tf.print(j['upds']['3'][shind], summarize = -1)
+      # tf.print(j['upds']['3'][shind], summarize = -1)
       axe[0].imshow(i_[shind])
       axe[1].imshow(image)
       axe[2].imshow(obj3[shind].numpy())

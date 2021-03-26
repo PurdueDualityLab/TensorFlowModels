@@ -362,6 +362,13 @@ class Parser(parser.Parser):
     return image, labels
 
   def _build_label(self, image, boxes, classes, width, height, info, data):
+
+
+    imshape = image.get_shape().as_list()
+    imshape[-1] = 3
+    image.set_shape(imshape)
+
+
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
