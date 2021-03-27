@@ -186,9 +186,9 @@ class Parser(parser.Parser):
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
 
-    height, width = preprocessing_ops.get_image_shape(image)
-    image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
-    boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
+    # height, width = preprocessing_ops.get_image_shape(image)
+    # image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
+    # boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
 
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
