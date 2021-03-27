@@ -47,6 +47,7 @@ class Parser(parser.Parser):
                mosaic_frequency=0.0,
                jitter_im=0.0,
                jitter_boxes=0.0025,
+               aug_rand_angle = 15.0, 
                aug_rand_transalate=0.0, 
                aug_rand_zoom=0.0,
                aug_rand_hue=0.1,
@@ -116,6 +117,7 @@ class Parser(parser.Parser):
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_zoom = aug_rand_zoom
     self._aug_rand_hue = aug_rand_hue
+    self._aug_rand_angle = aug_rand_angle
     self._keep_thresh = keep_thresh
     self._mosaic_frequency = mosaic_frequency
 
@@ -186,9 +188,7 @@ class Parser(parser.Parser):
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
 
-    # height, width = preprocessing_ops.get_image_shape(image)
-    # image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
-    # boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
+
 
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
@@ -208,15 +208,21 @@ class Parser(parser.Parser):
       zooms = [0.25, 0.5]
       image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [1.0, 1.0], area_range=zooms)
     else:
-      shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-      shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-      image, boxes, info = preprocessing_ops.letter_box(image, boxes, xs = shiftx, ys = shifty, target_dim=self._image_w)
-      jmi = 1 - 2 * self._jitter_im
-      jma = 1 + 2 * self._jitter_im
-      image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[0.5, 1.0])
+      scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
 
-    
+      if scale < 1.0:
+        shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+        shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+        image, boxes, info = preprocessing_ops.letter_box(image, boxes, xs = shiftx, ys = shifty, target_dim=self._image_w)
+        jmi = 1 - 2 * self._jitter_im
+        jma = 1 + 2 * self._jitter_im
+        image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[self._aug_rand_zoom, 1.0])
+      else:
+        area = preprocessing_ops.rand_uniform_strong(1.0, 1/self._aug_rand_zoom)
+        image, info = preprocessing_ops.random_pad(image, area)
 
+
+  
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])
     
@@ -224,6 +230,18 @@ class Parser(parser.Parser):
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
+
+    if self._aug_rand_angle > 0:
+      height, width = preprocessing_ops.get_image_shape(image)
+      image, angle = preprocessing_ops.random_rotate_image(image, self._aug_rand_angle)
+      boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
+
+      boxes = box_ops.denormalize_boxes(boxes, info[1, :])
+      boxes = box_ops.clip_boxes(boxes, info[1, :])
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
 
     # if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
@@ -245,21 +263,7 @@ class Parser(parser.Parser):
     # boxes = box_ops.denormalize_boxes(boxes, image_shape)
 
     # if self._jitter_boxes > 0.0:
-    #   boxes = box_ops.jitter_boxes(boxes, self._jitter_boxes)
-    
-    
-    # if data['is_mosaic']:
-    #   image, image_info = preprocess_ops.resize_and_crop_image(image, 
-    #                                                           [self._image_h, self._image_w], 
-    #                                                           [self._image_h, self._image_w], 
-    #                                                           aug_scale_min= 1.0, 
-    #                                                           aug_scale_max = 1/self._aug_rand_zoom) 
-    # else:
-    #   image, image_info = preprocess_ops.resize_and_crop_image(image, 
-    #                                                           [self._image_h, self._image_w], 
-    #                                                           [self._image_h, self._image_w], 
-    #                                                           aug_scale_min= self._aug_rand_zoom, 
-    #                                                           aug_scale_max = 1/self._aug_rand_zoom)                 
+    #   boxes = box_ops.jitter_boxes(boxes, self._jitter_boxes)               
     
     # offset = image_info[3, :]
     # image_scale = image_info[2, :]

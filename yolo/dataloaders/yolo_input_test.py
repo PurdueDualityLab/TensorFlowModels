@@ -102,7 +102,7 @@ def test_yolo_pipeline():
   ltime = time.time()
 
   data = dataset
-  data = data.take(10)
+  data = data.take(30)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
     i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
@@ -216,7 +216,7 @@ def test_ret_pipeline():
     axe[5].imshow(obj6[shind].numpy())
     axe[6].imshow(obj7[shind].numpy())
 
-    fig.set_size_inches(18.5, 6.5, forward=True)
+    fig.set_size_inches(10.5, 8.5, forward=True)
     plt.tight_layout()
     plt.show()
 

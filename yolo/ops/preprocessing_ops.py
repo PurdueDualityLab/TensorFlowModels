@@ -369,21 +369,6 @@ def crop_to_bbox(image,
   return image, crop_info
 
 
-def pad_to_bbox(image, target_width, target_height, offset_width,
-                offset_height):
-  with tf.name_scope('pad_to_bbox'):
-    height, width = get_image_shape(image)
-    image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
-                                         target_height, target_width)
-  crop_info = {
-      'original_dims': [height, width],
-      'new_dims': [target_height, target_width],
-      'offset': [offset_height, offset_width],
-      'fixed': False
-  }
-  return image, crop_info
-
-
 def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.01):
   height = image_info['original_dims'][0]
   target_height = image_info['new_dims'][0]
@@ -925,6 +910,7 @@ def random_crop_image(image,
     cropped_image: a Tensor representing the random cropped image. Can be the
       original image if max_attempts is exhausted.
   """
+
   with tf.name_scope('random_crop_image'):
     ishape = tf.shape(image)
     crop_offset, crop_size, _ = tf.image.sample_distorted_bounding_box(
@@ -948,6 +934,34 @@ def random_crop_image(image,
     return cropped_image, info
 
 
+def random_pad(image, area):
+  with tf.name_scope('pad_to_bbox'):
+    height, width = get_image_shape(image)
+
+    rand_area = tf.cast(area, tf.float32) #tf.random.uniform([], 1.0, area)
+    target_height = tf.cast(tf.sqrt(rand_area) * tf.cast(height, rand_area.dtype), tf.int32)
+    target_width = tf.cast(tf.sqrt(rand_area) * tf.cast(width, rand_area.dtype), tf.int32)
+
+    offset_height = tf.random.uniform([], 0 , target_height - height + 1, dtype = tf.int32)
+    offset_width = tf.random.uniform([], 0 , target_width - width + 1, dtype = tf.int32)
+
+    image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
+                                         target_height, target_width)
+  
+  ishape = tf.convert_to_tensor([height, width])
+  oshape = tf.convert_to_tensor([target_height, target_width])
+  offset = tf.convert_to_tensor([offset_height, offset_width])
+
+  scale = tf.cast(ishape[:2]/ishape[:2], tf.float32)
+  offset = tf.cast(-offset, tf.float32) # * scale
+
+  info = tf.stack([tf.cast(ishape[:2], tf.float32), 
+                    tf.cast(oshape[:2], tf.float32),
+                    scale,
+                    offset], axis = 0)
+
+  return image, info
+
 def random_rotate_image(image, max_angle):
   angle = tf.random.uniform([],
                           minval=-max_angle,
@@ -969,13 +983,10 @@ def get_corners(boxes):
   corners = tf.concat([tl, bl, tr, br], axis = -1) 
   return corners
 
-def rotate_boxes(boxes, height, width, angle):
-  corners = get_corners(boxes)
-  boxes = box_ops.yxyx_to_xcycwh(boxes)
-  x_, y_, w_, h_ = tf.split(boxes, 4, axis = -1)
+def rotate_points(x_, y_, angle):
   sx = 0.5 - x_
   sy = 0.5 - y_
-  
+
   r = tf.sqrt(sx**2 + sy **2)
   curr_theta = tf.atan2(sy,sx)
 
@@ -987,14 +998,27 @@ def rotate_boxes(boxes, height, width, angle):
 
   x = -x + 0.5
   y = -y + 0.5
+  return x, y
 
-  cos = tf.math.cos(angle)
-  sin = tf.math.sin(angle)  
-  # w = w_ * cos + h_ * sin 
-  # h = w_ * sin + h_ * cos
-  w = w_
-  h = h_
+def rotate_boxes(boxes, height, width, angle):
+  corners = get_corners(boxes)
+  # boxes = box_ops.yxyx_to_xcycwh(boxes)
+  ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis = -1)
 
-  boxes = tf.concat([x, y, w, h], axis = -1)  
-  boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  tlx, tly = rotate_points(xmin, ymin, angle)
+  blx, bly = rotate_points(xmin, ymax, angle)
+  trx, try_ = rotate_points(xmax, ymin, angle)
+  brx, bry = rotate_points(xmax, ymax, angle)
+
+  xs = tf.concat([tlx, blx, trx, brx], axis = -1)
+  ys = tf.concat([tly, bly, try_, bry], axis = -1)
+
+  xmin = tf.reduce_min(xs, axis = -1, keepdims = True)
+  ymin = tf.reduce_min(ys, axis = -1, keepdims = True)
+  xmax = tf.reduce_max(xs, axis = -1, keepdims = True)
+  ymax = tf.reduce_max(ys, axis = -1, keepdims = True)
+
+
+  boxes = tf.concat([ymin, xmin, ymax, xmax], axis = -1)  
   return boxes
