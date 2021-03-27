@@ -958,27 +958,43 @@ def random_rotate_image(image, max_angle):
   image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
   return image, deg
 
-def rotate_boxes(boxes, angle):
+def get_corners(boxes):
+  ymi, xmi, yma, xma = tf.split(boxes, 4, axis = -1)
+  
+  tl = tf.concat([xmi, ymi], axis = -1) 
+  bl = tf.concat([xmi, yma], axis = -1)
+  tr = tf.concat([xma, ymi], axis = -1) 
+  br = tf.concat([xma, yma], axis = -1)
+
+  corners = tf.concat([tl, bl, tr, br], axis = -1) 
+  return corners
+
+def rotate_boxes(boxes, height, width, angle):
+  corners = get_corners(boxes)
   boxes = box_ops.yxyx_to_xcycwh(boxes)
-  x, y, w, h = tf.split(boxes, 4, axis = -1)
+  x_, y_, w_, h_ = tf.split(boxes, 4, axis = -1)
+  sx = 0.5 - x_
+  sy = 0.5 - y_
+  
+  r = tf.sqrt(sx**2 + sy **2)
+  curr_theta = tf.atan2(sy,sx)
 
-  xscale = tf.math.cos(angle)
-  yscale = tf.math.sin(angle)  
+  cos = tf.math.cos(curr_theta - angle)
+  sin = tf.math.sin(curr_theta - angle)  
 
-  x -= 0.5
-  y -= 0.5
+  x = r * cos
+  y = r * sin
 
-  r = tf.math.sqrt(x ** 2 + y ** 2)
+  x = -x + 0.5
+  y = -y + 0.5
 
-  tf.print(xscale, yscale)
-  x = r * xscale
-  y = r * yscale
-  w = w  
-  h = h 
+  cos = tf.math.cos(angle)
+  sin = tf.math.sin(angle)  
+  # w = w_ * cos + h_ * sin 
+  # h = w_ * sin + h_ * cos
+  w = w_
+  h = h_
 
-  x += 0.5
-  y += 0.5
-
-  boxes = tf.concat([x, y, w, h], axis = -1)
+  boxes = tf.concat([x, y, w, h], axis = -1)  
   boxes = box_ops.xcycwh_to_yxyx(boxes)
   return boxes

@@ -186,6 +186,10 @@ class Parser(parser.Parser):
       image *= delta
     image = tf.clip_by_value(image, 0.0, 1.0)
 
+    height, width = preprocessing_ops.get_image_shape(image)
+    image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
+    boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
+
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
@@ -211,8 +215,7 @@ class Parser(parser.Parser):
       jma = 1 + 2 * self._jitter_im
       image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[0.5, 1.0])
 
-    image, angle = preprocessing_ops.random_rotate_image(image, 7.0)
-    boxes = preprocessing_ops.rotate_boxes(boxes, angle)
+    
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])

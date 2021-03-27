@@ -139,7 +139,7 @@ def test_yolo_pipeline():
       axe[3].imshow(obj4[shind].numpy())
       axe[4].imshow(obj5[shind].numpy())
 
-      fig.set_size_inches(18.5, 10.5, forward=True)
+      fig.set_size_inches(16.5, 5.5, forward=True)
       plt.tight_layout()
       plt.show()
 
