@@ -317,7 +317,7 @@ class Yolo_Loss(object):
       box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0], [batch_size, TILE_SIZE, 4])
       return tf.logical_and(idx < num_tiles, tf.math.greater(tf.reduce_sum(box_slice), 0))
 
-    _, _, _, _, _, _, ignore_mask, obns_loss, truth_loss, count, idx = tf.while_loop(
+    _, _, _, _, _, _, iou_mask, obns_loss, truth_loss, count, idx = tf.while_loop(
       _loop_cond, self._build_mask_body, [pred_boxes, 
                                           pred_classes, 
                                           pred_conf, 
@@ -333,10 +333,12 @@ class Yolo_Loss(object):
     )
 
     # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
-    ignore_mask = tf.logical_not(ignore_mask)
+    ignore_mask = tf.logical_not(iou_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
-    obj_mask = tf.stop_gradient(true_conf + (1 - true_conf) * ignore_mask) 
-    true_conf = tf.stop_gradient(true_conf)
+
+    iou_mask = tf.cast(iou_mask, true_conf.dtype)
+    obj_mask = tf.stop_gradient(true_conf + (1 - true_conf)) # * ignore_mask) 
+    true_conf = tf.stop_gradient(tf.maximum(true_conf, iou_mask))
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
 
