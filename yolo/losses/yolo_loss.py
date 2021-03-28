@@ -236,7 +236,6 @@ class Yolo_Loss(object):
     box_slice = tf.expand_dims(box_slice, axis = -2)
     box_slice = tf.expand_dims(box_slice, axis = 1)
     box_slice = tf.expand_dims(box_slice, axis = 1)
-    # box_slice = box_ops.yxyx_to_xcycwh(box_slice)
     
     pred_boxes = tf.expand_dims(pred_boxes_, axis = -3)
 
@@ -328,7 +327,6 @@ class Yolo_Loss(object):
                                           loss_base, 
                                           obns_base, 
                                           tf.constant(0)], 
-        maximum_iterations = 20, 
     )
 
     # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
@@ -366,11 +364,6 @@ class Yolo_Loss(object):
 
     indexes = tf.reshape(indexes, [-1, 4])
     true_classes = tf.reshape(true_classes, [-1, num_classes])
-
-    # ind_mask = tf.reshape(ind_mask, [-1, 1])
-    # select = tf.where(ind_mask)
-    # indexes = tf.gather_nd(indexes, select)
-    # true_classes = tf.gather_nd(true_classes, select)
 
     true_class = tf.scatter_nd(indexes, true_classes, tf.shape(pred_classes))
     true_class = tf.clip_by_value(true_class, 0.0, 1.0)
