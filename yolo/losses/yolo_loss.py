@@ -259,39 +259,6 @@ class Yolo_Loss(object):
       iou_max = tf.reduce_max(iou_max, axis = -1, keepdims=False)
       iou_max_ = tf.maximum(iou_max, iou_max_)
 
-    # # truth thresh
-    # if self._truth_thresh < 1.0:
-    #   pred_classes = tf.expand_dims(pred_classes_, axis = -2)
-
-    #   truth_mask = iou > self._truth_thresh
-    #   loss_box = math_ops.mul_no_nan(tf.cast(truth_mask, loss_box.dtype), loss_box)
-    #   loss_box = tf.reduce_sum(loss_box, axis = -2)
-
-    #   truth_mask = tf.transpose(truth_mask, perm = (0, 1, 2, 4, 3))    
-    #   class_slice = tf.one_hot(
-    #       tf.cast(class_slice, tf.int32),
-    #       depth=tf.shape(pred_classes)[-1],
-    #       dtype=loss_box.dtype)
-    #   class_loss = tf.reduce_sum(
-    #       ks.losses.binary_crossentropy(
-    #           K.expand_dims(class_slice, axis=-1),
-    #           K.expand_dims(pred_classes, axis=-1),
-    #           label_smoothing=self._label_smoothing,
-    #           from_logits=False),
-    #       axis=-1) 
-    #   class_loss = class_loss * tf.cast(truth_mask, class_loss.dtype)
-    #   class_loss = tf.reduce_sum(class_loss, axis = -1)
-
-    #   obns_grid = tf.cast(tf.reduce_any(truth_mask, axis = -1, keepdims = True), loss_box.dtype)
-    #   pred_conf *= obns_grid
-    #   conf_loss = ks.losses.binary_crossentropy(
-    #     K.expand_dims(obns_grid, axis=-1), K.expand_dims(pred_conf, axis = -1), from_logits=False)
-      
-    #   loss = (loss_box + class_loss) * tf.squeeze(obns_grid, axis = -1)
-    #   conf_loss_ += conf_loss
-    #   loss_ += loss
-    #   count += obns_grid
-
     return pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1
 
   def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes, classes, true_conf):
@@ -458,7 +425,7 @@ class Yolo_Loss(object):
     # class_loss = tf.cast(
     #     tf.reduce_sum(class_loss, axis=1), dtype=y_pred.dtype)
     
-    pred_conf = math_ops.rm_nan_inf(pred_conf, val = -np.inf)
+    pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
