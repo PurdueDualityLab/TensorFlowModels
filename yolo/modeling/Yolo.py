@@ -199,7 +199,8 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       iou_normalizer=model_config.filter.iou_normalizer.as_dict(),
       cls_normalizer=model_config.filter.cls_normalizer.as_dict(),
       obj_normalizer=model_config.filter.obj_normalizer.as_dict(),
-      ignore_thresh=model_config.filter.ignore_thresh.as_dict())
+      ignore_thresh=model_config.filter.ignore_thresh.as_dict(), 
+      objectness_smooth =model_config.filter.objectness_smooth.as_dict())
   return model
 
 

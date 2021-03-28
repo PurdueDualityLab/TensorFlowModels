@@ -167,7 +167,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: float = 1.5
   aug_rand_zoom: float = 0.5 
   aug_rand_hue: float = 0.1
-  aug_rand_angle: float = 7.0
+  aug_rand_angle: float = 15.0
   use_tie_breaker: bool = True
   mosaic: Mosaic = Mosaic()
 
@@ -240,6 +240,7 @@ class YoloLossLayer(hyperparams.Config):
   new_cords: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, False))
   scale_xy: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
   path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
+  objectness_smooth: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, False))
   use_nms: bool = False
   iou_thresh: float = 0.25
   nms_thresh: float = 0.6

@@ -77,6 +77,7 @@ class Yolo_Loss(object):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
+               objectness_smooth = True, 
                use_reduction_sum = False, 
                iou_thresh = 0.213, 
                new_cords = False, 
@@ -90,34 +91,34 @@ class Yolo_Loss(object):
                name=None,
                **kwargs):
     """
-        parameters for the loss functions used at each detection head output
+    parameters for the loss functions used at each detection head output
 
-        Args:
-          mask: list of indexes for which anchors in the anchors list should be 
-            used in prediction
-          anchors: list of tuples (w, h) representing the anchor boxes to be 
-            used in prediction
-          num_extras: number of indexes predicted in addition to 4 for the box 
-            and N + 1 for classes
-          ignore_thresh: float for the threshold for if iou > threshold the 
-            network has made a prediction, and should not be penealized for 
-            p(object) prediction if an object exists at this location
-          truth_thresh: float thresholding the groud truth to get the true mask
-          loss_type: string for the key of the loss to use,
-            options -> mse, giou, ciou
-          iou_normalizer: float used for appropriatly scaling the iou or the 
-            loss used for the box prediction error
-          cls_normalizer: float used for appropriatly scaling the classification 
-            error
-          scale_x_y: float used to scale the predictied x and y outputs
-          nms_kind: string used for filtering the output and ensuring each 
-            object has only one prediction
-          beta_nms: float for the thresholding value to apply in non max 
-            supression(nms) -> not yet implemented
+    Args:
+      mask: list of indexes for which anchors in the anchors list should be 
+        used in prediction
+      anchors: list of tuples (w, h) representing the anchor boxes to be 
+        used in prediction
+      num_extras: number of indexes predicted in addition to 4 for the box 
+        and N + 1 for classes
+      ignore_thresh: float for the threshold for if iou > threshold the 
+        network has made a prediction, and should not be penealized for 
+        p(object) prediction if an object exists at this location
+      truth_thresh: float thresholding the groud truth to get the true mask
+      loss_type: string for the key of the loss to use,
+        options -> mse, giou, ciou
+      iou_normalizer: float used for appropriatly scaling the iou or the 
+        loss used for the box prediction error
+      cls_normalizer: float used for appropriatly scaling the classification 
+        error
+      scale_x_y: float used to scale the predictied x and y outputs
+      nms_kind: string used for filtering the output and ensuring each 
+        object has only one prediction
+      beta_nms: float for the thresholding value to apply in non max 
+        supression(nms) -> not yet implemented
 
-        call Return:
-          float: for the average loss
-        """
+    call Return:
+      float: for the average loss
+    """
     self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
     self._num = tf.cast(len(mask), dtype=tf.int32)
     self._num_extras = tf.cast(num_extras, dtype=tf.int32)
@@ -142,6 +143,7 @@ class Yolo_Loss(object):
     self._max_delta = max_delta
 
     self._label_smoothing = tf.cast(0.0, tf.float32)
+    self._objectness_smooth = objectness_smooth
     self._use_reduction_sum = use_reduction_sum
 
     # used in detection filtering
@@ -169,13 +171,6 @@ class Yolo_Loss(object):
   def print_error(self, pred, key):
     if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred))):
       tf.print("\nerror: stop training ", key)
-
-  def _get_label_attributes(self, width, height, batch_size, dtype):
-    grid_points, anchor_grid = self._anchor_generator(
-        width, height, batch_size, dtype=dtype)
-    
-    return tf.stop_gradient(grid_points), tf.stop_gradient(
-        anchor_grid)
 
   def _scale_ground_truth_box(self, box, width, height, anchor_grid,
                               grid_points, dtype):
@@ -233,7 +228,7 @@ class Yolo_Loss(object):
 
     return iou, liou, loss_box
 
-  def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, ignore_mask_, conf_loss_, loss_, count, idx):
+  def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx):
     batch_size = tf.shape(boxes)[0]
     box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0], [batch_size, TILE_SIZE, 4])
     class_slice = tf.slice(classes, [0, idx * TILE_SIZE], [batch_size, TILE_SIZE])
@@ -255,9 +250,15 @@ class Yolo_Loss(object):
     # cconfidence is low
     iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))    
     matched_classes = tf.equal(class_slice, pred_classes_max)
-    iou_mask = tf.logical_and(iou_mask, matched_classes)
-    iou_mask =  tf.reduce_any(iou_mask, axis = -1, keepdims=False)
+    full_iou_mask = tf.logical_and(iou_mask, matched_classes)
+    iou_mask =  tf.reduce_any(full_iou_mask, axis = -1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
+
+    if self._objectness_smooth:
+      iou_max = tf.transpose(iou, perm = (0, 1, 2, 4, 3))
+      iou_max = iou_max * tf.cast(full_iou_mask, iou_max.dtype)
+      iou_max = tf.reduce_max(iou_max, axis = -1, keepdims=False)
+      iou_max_ = tf.maximum(iou_max, iou_max_)
 
     # truth thresh
     if self._truth_thresh < 1.0:
@@ -292,9 +293,7 @@ class Yolo_Loss(object):
       loss_ += loss
       count += obns_grid
 
-    return pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, ignore_mask_, conf_loss_, loss_, count, idx + 1
-
-  
+    return pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1
 
   def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes, classes, true_conf):
     num_boxes = tf.shape(boxes)[-2]
@@ -312,17 +311,18 @@ class Yolo_Loss(object):
     loss_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1))
     obns_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1, keepdims = True))
 
-    def _loop_cond(pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, ignore_mask_, conf_loss_, loss_, count, idx):
+    def _loop_cond(pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx):
       batch_size = tf.shape(boxes)[0]
       box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0], [batch_size, TILE_SIZE, 4])
       return tf.logical_and(idx < num_tiles, tf.math.greater(tf.reduce_sum(box_slice), 0))
 
-    _, _, _, _, _, _, iou_mask, obns_loss, truth_loss, count, idx = tf.while_loop(
+    _, _, _, _, _, _, iou_max, iou_mask, obns_loss, truth_loss, count, idx = tf.while_loop(
       _loop_cond, self._build_mask_body, [pred_boxes, 
                                           pred_classes, 
                                           pred_conf, 
                                           pred_classes_max, 
                                           boxes, classes, 
+                                          loss_base,
                                           base, 
                                           obns_base, 
                                           loss_base, 
@@ -336,9 +336,14 @@ class Yolo_Loss(object):
     ignore_mask = tf.logical_not(iou_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
 
-    iou_mask = tf.cast(iou_mask, true_conf.dtype)
-    obj_mask = tf.stop_gradient(true_conf + (1 - true_conf) * ignore_mask) 
-    # true_conf = tf.stop_gradient(tf.maximum(true_conf, iou_mask))
+    if not self._objectness_smooth:
+      obj_mask = tf.stop_gradient(true_conf + (1 - true_conf) * ignore_mask) 
+    else:
+      obj_mask = tf.ones_like(true_conf)
+
+    if self._objectness_smooth:
+      true_conf = tf.stop_gradient(tf.maximum(true_conf, iou_max))
+      # tf.print(true_conf, summarize = -1)
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
   def build_class_grid(self, indexes, true_classes, pred_classes, ind_mask):
@@ -363,8 +368,6 @@ class Yolo_Loss(object):
     # true_classes = tf.gather_nd(true_classes, select)
 
     true_class = tf.scatter_nd(indexes, true_classes, tf.shape(pred_classes))
-    #tf.print(tf.reduce_sum(true_class), tf.reduce_sum(true_classes))
-
     true_class = tf.clip_by_value(true_class, 0.0, 1.0)
     return tf.stop_gradient(true_class)
 
@@ -382,9 +385,10 @@ class Yolo_Loss(object):
     y_true =  tf.stop_gradient(tf.cast(y_true, tf.float32))
     true_counts = tf.stop_gradient(tf.cast(true_counts, tf.float32))
     true_conf = tf.stop_gradient(tf.clip_by_value(true_counts, 0.0, 1.0))
-
-    grid_points, anchor_grid = self._get_label_attributes(
-      width, height, batch_size, tf.float32)
+    grid_points, anchor_grid = self._anchor_generator(width, 
+                                                      height, 
+                                                      batch_size, 
+                                                      dtype=tf.float32)
 
     y_pred = tf.cast(
       tf.reshape(y_pred, 
@@ -399,8 +403,6 @@ class Yolo_Loss(object):
                                                     anchor_grid, 
                                                     grid_points)
     
-
-
     # 3. split up ground_truth into components, xy, wh, confidence, 
     # class -> apply calculations to acchive safe format as predictions
     (true_box, 
@@ -409,7 +411,9 @@ class Yolo_Loss(object):
      best_iou_match, 
      num_reps) = tf.split(y_true, [4, 1, 1, 1, 1], axis=-1)
     true_conf = tf.squeeze(true_conf, axis = -1)
+    grid_mask = true_conf
     true_class = tf.squeeze(true_class, axis = -1)
+    true_class = self.build_class_grid(inds, true_class, pred_class, ind_mask)
 
     (mask_loss, 
      thresh_conf_loss, 
@@ -418,8 +422,6 @@ class Yolo_Loss(object):
      true_conf, 
      obj_mask) = self._tiled_global_box_search(
        pred_box, pred_class, pred_conf, boxes, classes, true_conf)
-
-    true_class = self.build_class_grid(inds, true_class, pred_class, ind_mask)
 
     # tf.print(tf.reduce_sum(obj_mask))
     # counts = true_counts + thresh_counts
@@ -438,7 +440,8 @@ class Yolo_Loss(object):
 
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
-    box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), math_ops.divide_no_nan(box_loss, reps))
+    box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), box_loss)
+    box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(
         tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
@@ -449,7 +452,7 @@ class Yolo_Loss(object):
             label_smoothing=self._label_smoothing,
             from_logits=False),
         axis=-1) 
-    class_loss = math_ops.mul_no_nan(true_conf, class_loss)
+    class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     # class_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), class_loss)
@@ -479,8 +482,7 @@ class Yolo_Loss(object):
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
 
-    recall50 = self.recall(pred_conf, true_conf, pct = 0.5)
+    recall50 = self.recall(pred_conf, grid_mask, pct = 0.5)
     avg_iou = self.avgiou(iou)
-    avg_obj = self.avgiou(tf.squeeze(pred_conf, axis = -1) * true_conf)
-
+    avg_obj = self.avgiou(tf.squeeze(pred_conf, axis = -1) * grid_mask)
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50

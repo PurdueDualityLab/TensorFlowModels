@@ -32,6 +32,7 @@ class YoloLayer(ks.Model):
                path_scale=None,
                scale_xy=None,
                use_nms=True,
+               objectness_smooth = False, 
                **kwargs):
     super().__init__(**kwargs)
     self._masks = masks
@@ -42,6 +43,7 @@ class YoloLayer(ks.Model):
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
     self._obj_normalizer = obj_normalizer
+    self._objectness_smooth = objectness_smooth
     self._nms_thresh = nms_thresh
     self._max_boxes = max_boxes
     self._max_delta = max_delta
@@ -188,6 +190,7 @@ class YoloLayer(ks.Model):
           cls_normalizer=self._cls_normalizer[key],
           obj_normalizer=self._obj_normalizer[key],
           new_cords = self._new_cords[key], 
+          objectness_smooth = self._objectness_smooth[key],
           use_reduction_sum = self._use_reduction_sum, 
           path_key= key,
           mask=self._masks[key],

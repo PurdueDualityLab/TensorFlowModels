@@ -357,7 +357,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     # tf.print(tf.shape(true_wh), tf.shape(anchors))
   return get_best_anchor2(y_true, anchors, width=width, height=height, iou_thresh=iou_thresh)
 
-
 def _get_num_reps(anchors, mask, box_mask):
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
