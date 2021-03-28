@@ -56,7 +56,7 @@ class YoloTask(base_task.Task):
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
     masks, path_scales, xy_scales = self._get_masks()
-    print(xy_scales)
+    print(xy_scales, l2_weight_decay)
     
     self._get_boxes(gen_boxes=params.is_training)
 
