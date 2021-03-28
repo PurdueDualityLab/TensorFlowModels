@@ -220,8 +220,6 @@ class Parser(parser.Parser):
       else:
         area = preprocessing_ops.rand_uniform_strong(1.0, 1/self._aug_rand_zoom)
         image, info = preprocessing_ops.random_pad(image, area)
-
-
   
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])
