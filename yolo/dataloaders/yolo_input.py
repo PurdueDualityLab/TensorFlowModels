@@ -205,12 +205,12 @@ class Parser(parser.Parser):
       image = tf.image.resize(image, (height_, width_))
 
     if data['is_mosaic']:
-      zooms = [0.25, 0.5]
+      zooms = [0.25, 0.75]
       image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [1.0, 1.0], area_range=zooms)
     else:
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
 
-      if scale < 1.0:
+      if scale < 0.5:
         shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
         shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
         image, boxes, info = preprocessing_ops.letter_box(image, boxes, xs = shiftx, ys = shifty, target_dim=self._image_w)

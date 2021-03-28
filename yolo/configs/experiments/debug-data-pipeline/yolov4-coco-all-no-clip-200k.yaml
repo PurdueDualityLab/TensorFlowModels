@@ -78,14 +78,14 @@ task:
       letter_box: True
       random_flip: True
       jitter_im: 0.3
-      jitter_boxes: 0.05
+      jitter_boxes: 0.3
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_zoom: 0.5
       use_tie_breaker: True
       mosaic: 
-        mosaic_frequency: 0.7
+        mosaic_frequency: 0.75
   validation_data:
     global_batch_size: 64
     dtype: bfloat16
