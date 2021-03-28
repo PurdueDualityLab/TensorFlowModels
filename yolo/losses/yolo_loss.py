@@ -72,7 +72,7 @@ class Yolo_Loss(object):
                scale_anchors=1,
                num_extras=0,
                ignore_thresh=0.7,
-               truth_thresh=1,
+               truth_thresh=1.0,
                loss_type="ciou",
                iou_normalizer=1.0,
                cls_normalizer=1.0,
@@ -260,38 +260,38 @@ class Yolo_Loss(object):
       iou_max = tf.reduce_max(iou_max, axis = -1, keepdims=False)
       iou_max_ = tf.maximum(iou_max, iou_max_)
 
-    # truth thresh
-    if self._truth_thresh < 1.0:
-      pred_classes = tf.expand_dims(pred_classes_, axis = -2)
+    # # truth thresh
+    # if self._truth_thresh < 1.0:
+    #   pred_classes = tf.expand_dims(pred_classes_, axis = -2)
 
-      truth_mask = iou > self._truth_thresh
-      loss_box = math_ops.mul_no_nan(tf.cast(truth_mask, loss_box.dtype), loss_box)
-      loss_box = tf.reduce_sum(loss_box, axis = -2)
+    #   truth_mask = iou > self._truth_thresh
+    #   loss_box = math_ops.mul_no_nan(tf.cast(truth_mask, loss_box.dtype), loss_box)
+    #   loss_box = tf.reduce_sum(loss_box, axis = -2)
 
-      truth_mask = tf.transpose(truth_mask, perm = (0, 1, 2, 4, 3))    
-      class_slice = tf.one_hot(
-          tf.cast(class_slice, tf.int32),
-          depth=tf.shape(pred_classes)[-1],
-          dtype=loss_box.dtype)
-      class_loss = tf.reduce_sum(
-          ks.losses.binary_crossentropy(
-              K.expand_dims(class_slice, axis=-1),
-              K.expand_dims(pred_classes, axis=-1),
-              label_smoothing=self._label_smoothing,
-              from_logits=False),
-          axis=-1) 
-      class_loss = class_loss * tf.cast(truth_mask, class_loss.dtype)
-      class_loss = tf.reduce_sum(class_loss, axis = -1)
+    #   truth_mask = tf.transpose(truth_mask, perm = (0, 1, 2, 4, 3))    
+    #   class_slice = tf.one_hot(
+    #       tf.cast(class_slice, tf.int32),
+    #       depth=tf.shape(pred_classes)[-1],
+    #       dtype=loss_box.dtype)
+    #   class_loss = tf.reduce_sum(
+    #       ks.losses.binary_crossentropy(
+    #           K.expand_dims(class_slice, axis=-1),
+    #           K.expand_dims(pred_classes, axis=-1),
+    #           label_smoothing=self._label_smoothing,
+    #           from_logits=False),
+    #       axis=-1) 
+    #   class_loss = class_loss * tf.cast(truth_mask, class_loss.dtype)
+    #   class_loss = tf.reduce_sum(class_loss, axis = -1)
 
-      obns_grid = tf.cast(tf.reduce_any(truth_mask, axis = -1, keepdims = True), loss_box.dtype)
-      pred_conf *= obns_grid
-      conf_loss = ks.losses.binary_crossentropy(
-        K.expand_dims(obns_grid, axis=-1), K.expand_dims(pred_conf, axis = -1), from_logits=False)
+    #   obns_grid = tf.cast(tf.reduce_any(truth_mask, axis = -1, keepdims = True), loss_box.dtype)
+    #   pred_conf *= obns_grid
+    #   conf_loss = ks.losses.binary_crossentropy(
+    #     K.expand_dims(obns_grid, axis=-1), K.expand_dims(pred_conf, axis = -1), from_logits=False)
       
-      loss = (loss_box + class_loss) * tf.squeeze(obns_grid, axis = -1)
-      conf_loss_ += conf_loss
-      loss_ += loss
-      count += obns_grid
+    #   loss = (loss_box + class_loss) * tf.squeeze(obns_grid, axis = -1)
+    #   conf_loss_ += conf_loss
+    #   loss_ += loss
+    #   count += obns_grid
 
     return pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1
 
@@ -328,13 +328,13 @@ class Yolo_Loss(object):
                                           loss_base, 
                                           obns_base, 
                                           tf.constant(0)], 
-        parallel_iterations = 20, 
         maximum_iterations = 20, 
     )
 
     # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
     ignore_mask = tf.logical_not(iou_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
+    iou_max = tf.stop_gradient(iou_max)    
 
     if not self._objectness_smooth:
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
@@ -344,8 +344,10 @@ class Yolo_Loss(object):
 
     if self._objectness_smooth:
       true_conf = tf.maximum(true_conf, iou_max)
-    
     true_conf = tf.stop_gradient(true_conf)
+    
+    obns_loss = tf.stop_gradient(obns_loss)
+    truth_loss = tf.stop_gradient(truth_loss)
     count = tf.stop_gradient(count)
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
@@ -416,8 +418,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis = -1)
     grid_mask = true_conf
     true_class = tf.squeeze(true_class, axis = -1)
-    true_class = self.build_class_grid(inds, true_class, pred_class, ind_mask)
-
+    
     (mask_loss, 
      thresh_conf_loss, 
      thresh_loss, 
@@ -425,6 +426,8 @@ class Yolo_Loss(object):
      true_conf, 
      obj_mask) = self._tiled_global_box_search(
        pred_box, pred_class, pred_conf, boxes, classes, true_conf)
+
+    true_class = self.build_class_grid(inds, true_class, pred_class, ind_mask)
 
     # tf.print(tf.reduce_sum(obj_mask))
     # counts = true_counts + thresh_counts
@@ -470,15 +473,15 @@ class Yolo_Loss(object):
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    thresh_loss = math_ops.divide_no_nan(thresh_loss, tf.squeeze(counts, axis = -1))
-    thresh_loss = tf.cast(
-        tf.reduce_sum(thresh_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    # thresh_loss = math_ops.divide_no_nan(thresh_loss, tf.squeeze(counts, axis = -1))
+    # thresh_loss = tf.cast(
+    #     tf.reduce_sum(thresh_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
-    loss = box_loss + class_loss + conf_loss + thresh_loss
+    loss = box_loss + class_loss + conf_loss # + thresh_loss
     
     loss = tf.reduce_mean(loss)
     box_loss = tf.reduce_mean(box_loss)
