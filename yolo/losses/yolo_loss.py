@@ -337,13 +337,16 @@ class Yolo_Loss(object):
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
 
     if not self._objectness_smooth:
-      obj_mask = tf.stop_gradient(true_conf + (1 - true_conf) * ignore_mask) 
+      obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
       obj_mask = tf.ones_like(true_conf)
+    obj_mask = tf.stop_gradient(obj_mask)
 
     if self._objectness_smooth:
-      true_conf = tf.stop_gradient(tf.maximum(true_conf, iou_max))
-      # tf.print(true_conf, summarize = -1)
+      true_conf = tf.maximum(true_conf, iou_max)
+    
+    true_conf = tf.stop_gradient(true_conf)
+    count = tf.stop_gradient(count)
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
   def build_class_grid(self, indexes, true_classes, pred_classes, ind_mask):

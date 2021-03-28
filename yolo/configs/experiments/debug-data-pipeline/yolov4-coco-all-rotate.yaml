@@ -77,7 +77,7 @@ task:
       image_w: 512
       image_h: 512
       fixed_size: True
-      max_num_instances: 500
+      max_num_instances: 200
       letter_box: True
       random_flip: True
       jitter_im: 0.3
@@ -102,7 +102,7 @@ task:
     parser:
       image_w: 512
       image_h: 512
-      max_num_instances: 500
+      max_num_instances: 200
       fixed_size: True
       letter_box: True
   weight_decay: 0.0005
