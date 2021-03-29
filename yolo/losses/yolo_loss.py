@@ -395,6 +395,9 @@ class Yolo_Loss(object):
     reps = tf.gather_nd(counts, inds, batch_dims = 1)
     reps = tf.squeeze(reps, axis = -1)
     reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+    if self._use_reduction_sum:
+      num_objs = tf.cast(
+          tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
@@ -402,25 +405,37 @@ class Yolo_Loss(object):
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(
         tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
+    if self._use_reduction_sum:
+      box_loss = math_ops.divide_no_nan(box_loss, num_objs)
+    
 
-    class_loss = tf.reduce_sum(
-        ks.losses.binary_crossentropy(
+    class_loss = ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
             label_smoothing=self._label_smoothing,
-            from_logits=False),
-        axis=-1) 
+            from_logits=False)
+    if not self._use_reduction_sum:  
+      class_loss = tf.reduce_sum(class_loss, axis=-1) 
+    else:   
+      class_loss = tf.reduce_mean(class_loss, axis=-1) 
     class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    if self._use_reduction_sum:
+      class_loss = math_ops.divide_no_nan(class_loss, num_objs)
     
     pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-    conf_loss = tf.maximum(conf_loss, tf.squeeze(thresh_conf_loss, axis = -1))
     conf_loss = tf.cast(
-        tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+          tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+    if self._use_reduction_sum:
+      temp = tf.cast(
+          tf.reduce_sum(obj_mask, axis=(3)), dtype=y_pred.dtype)
+      num_used = tf.cast(
+          tf.reduce_sum(temp, axis=(1, 2)), dtype=y_pred.dtype)
+      conf_loss = math_ops.divide_no_nan(conf_loss, num_used)
     
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
@@ -428,10 +443,16 @@ class Yolo_Loss(object):
 
     loss = box_loss + class_loss + conf_loss # + thresh_loss
     
-    loss = tf.reduce_mean(loss)
-    box_loss = tf.reduce_mean(box_loss)
-    conf_loss = tf.reduce_mean(conf_loss)
-    class_loss = tf.reduce_mean(class_loss)
+    if not self._use_reduction_sum:
+      loss = tf.reduce_mean(loss)
+      box_loss = tf.reduce_mean(box_loss)
+      conf_loss = tf.reduce_mean(conf_loss)
+      class_loss = tf.reduce_mean(class_loss)
+    else:
+      loss = tf.reduce_sum(loss)
+      box_loss = tf.reduce_sum(box_loss)
+      conf_loss = tf.reduce_sum(conf_loss)
+      class_loss = tf.reduce_sum(class_loss)
 
     recall50 = self.recall(pred_conf, grid_mask, pct = 0.5)
     avg_iou = self.avgiou(iou)
