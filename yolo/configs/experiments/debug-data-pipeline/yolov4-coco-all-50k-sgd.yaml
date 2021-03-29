@@ -88,7 +88,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_zoom: 0.5
-      aug_rand_angle: 7.0
+      aug_rand_angle: 0.0
       use_tie_breaker: True
       mosaic: 
         mosaic_frequency: 0.7
@@ -133,6 +133,7 @@ trainer:
         momentum: 0.949
         name: SGD
     warmup:
-      type: 'linear'
-      linear:
+      type: 'polynomial'
+      polynomial:
+        power: 4
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
