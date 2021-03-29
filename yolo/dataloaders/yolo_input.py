@@ -58,6 +58,7 @@ class Parser(parser.Parser):
                max_num_instances=200,
                keep_thresh=0.25,
                pct_rand=0.5,
+               scale_xy = None, 
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
@@ -123,6 +124,7 @@ class Parser(parser.Parser):
 
     self._seed = seed
     self._fixed_size = fixed_size
+    self._scale_xy = scale_xy
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -146,6 +148,7 @@ class Parser(parser.Parser):
                                                     width // 2**int(key),
                                                     self._num_classes,
                                                     raw_true['bbox'].dtype,
+                                                    self._scale_xy[key],
                                                     use_tie_breaker)
       
       ishape = indexes.get_shape().as_list()

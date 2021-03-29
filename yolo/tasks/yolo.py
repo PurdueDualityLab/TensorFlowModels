@@ -134,6 +134,7 @@ class YoloTask(base_task.Task):
         min_process_size=params.parser.min_process_size,
         max_num_instances=params.parser.max_num_instances,
         pct_rand=params.parser.pct_rand,
+        scale_xy=xy_scales,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(

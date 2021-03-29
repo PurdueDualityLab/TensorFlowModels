@@ -203,7 +203,7 @@ class Yolo_Loss(object):
                   true_conf, 
                   tf.cast(
                     tf.squeeze(
-                      tf.math.sigmoid(pred_conf), 
+                      pred_conf, 
                       axis=-1) > pct, 
                       dtype=true_conf.dtype)),
                 axis=(1, 2, 3)), (tf.reduce_sum(true_conf, axis=(1, 2, 3)))))
@@ -444,7 +444,7 @@ class Yolo_Loss(object):
     if self._use_reduction_sum:
       conf_loss = tf.cast(
             tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-    else
+    else:
       conf_loss = tf.cast(
             tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     
