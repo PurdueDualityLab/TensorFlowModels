@@ -7,22 +7,29 @@ modules in bash when a user types "git commit":
 
 # Dependencies 
 You will need to have the following installed on your machine:
-- isort (use "pip install")
-- mypy (use "pip install")
-- pylint (use "pip install")
+- isort 
+- mypy 
+- pylint
+
+They will be installed through the ```install.sh``` script, or you can 
+install them manually.
 
 # Setup
 ## Required Files 
 You will need to have the following in the root directory of your project:
 - ```hooks``` directory, which contains the ```pre-commit``` hook script
 - ```pylint.sh``` script
-- ```pylintrc``` config file 
-The files are located here in the ```yolo_linter_debug``` branch:
+- ```pylintrc``` config file
+ 
+The files are located [here](https://github.com/PurdueCAM2Project/TensorFlowModels/tree/yolo_debug_linter)
+in the root folder of the ```yolo_linter_debug``` branch:
+
 ![necessary_files](./screenshots/necessary_files.png)
 
 ## install.sh
 You can easily set everything up by navigating into the ```hooks``` folder and running the 
 install script with the following command in your terminal: ```bash install.sh```. 
+
 __NOTE__: make sure your ```install.sh``` file is set up as an executable; if it isn't, run
 the command ```chmod +x install.sh```. 
 
