@@ -12,6 +12,7 @@ You will need to have the following installed on your machine:
 - pylint (use "pip install")
 
 # Setup
+## Required Files 
 You will need to have the following in the root directory of your project:
 - ```hooks``` directory, which contains the ```pre-commit``` hook script
 - ```pylint.sh``` script
@@ -19,7 +20,14 @@ You will need to have the following in the root directory of your project:
 The files are located here in the ```yolo_linter_debug``` branch:
 ![necessary_files](./screenshots/necessary_files.png)
 
-In order to get the pre-commit hook to work on your local machine, you can either
+## install.sh
+You can easily set everything up by navigating into the ```hooks``` folder and running the 
+install script with the following command in your terminal: ```bash install.sh```. 
+__NOTE__: make sure your ```install.sh``` file is set up as an executable; if it isn't, run
+the command ```chmod +x install.sh```. 
+
+## Manual Installation 
+If you want to set things up manually, what you can do is the following:
 - copy and paste the ```pre-commit``` script into your local ```.git/hooks``` directory like so:
 ![mv_command](./screenshots/mv_command.png)
 , OR 
