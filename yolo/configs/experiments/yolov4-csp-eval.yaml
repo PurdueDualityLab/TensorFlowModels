@@ -58,9 +58,9 @@ task:
       #   '4': 5.0 
       #   '3': 5.0
       objectness_smooth: 
-        '5': false
-        '4': false
-        '3': false
+        '5': true
+        '4': true
+        '3': true
       new_cords:
         '5': true
         '4': true
@@ -73,6 +73,7 @@ task:
       use_nms: false
       iou_thresh: 0.2
       nms_thresh: 0.6
+      use_reduction_sum: true
   validation_data:
     global_batch_size: 8
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'

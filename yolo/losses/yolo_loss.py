@@ -11,12 +11,21 @@ from functools import partial
 
 TILE_SIZE = 10
 
+
+@tf.custom_gradient
+def gradient_trap(y):
+  def trap(dy):
+    tf.print(tf.reduce_sum(tf.square(dy)))
+    return dy
+  return y, trap
+
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta = np.inf):
   def trap(dy):
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
+    tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
   return y, trap
 
@@ -27,6 +36,7 @@ def box_gradient_trap(y, max_delta = np.inf):
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
+    tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
   return y, trap
 
@@ -36,6 +46,7 @@ def class_gradient_trap(y, max_delta = np.inf):
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
+    tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
   return y, trap
 
@@ -355,13 +366,15 @@ class Yolo_Loss(object):
                                                       batch_size, 
                                                       dtype=tf.float32)
 
+
+    # y_pred = gradient_trap(y_pred)
     y_pred = tf.cast(
       tf.reshape(y_pred, 
                  [batch_size, width, height, num, -1]), 
                  tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis = -1)
-    pred_class = class_gradient_trap(tf.sigmoid(pred_class), self._max_delta)
-    pred_conf = obj_gradient_trap(tf.sigmoid(pred_conf), self._max_delta)
+    pred_class = class_gradient_trap(tf.sigmoid(pred_class), np.inf)
+    pred_conf = obj_gradient_trap(tf.sigmoid(pred_conf), np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, 
                                                     fheight, 
                                                     pred_box, 
@@ -423,7 +436,7 @@ class Yolo_Loss(object):
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     if self._use_reduction_sum:
       class_loss = math_ops.divide_no_nan(class_loss, num_objs)
-    
+
     pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
