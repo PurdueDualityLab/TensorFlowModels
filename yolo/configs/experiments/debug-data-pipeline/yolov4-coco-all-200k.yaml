@@ -60,6 +60,7 @@ task:
       use_nms: false
       iou_thresh: 0.2
       nms_thresh: 0.6
+      use_reduction_sum: true
   train_data:
     global_batch_size: 64
     dtype: bfloat16
