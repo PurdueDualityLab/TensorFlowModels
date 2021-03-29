@@ -93,7 +93,7 @@ def get_decoder_layer_cfgs(weights_dict, decoder_name):
     weights_dict: Dictionary that stores the decoder model weights
     decoder_name: String, indicating the desired decoder configuration
   Returns:
-    A list containing the config classe of the backbone building block
+    A list containing the config classes of the backbone building block
   """
   print("Fetching decoder config classes\n")
 

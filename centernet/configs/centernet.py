@@ -87,6 +87,9 @@ class CenterNetTask(cfg.TaskConfig):
   subtasks: CenterNetSubTasks = CenterNetSubTasks()
   losses: Losses = Losses()
 
+  annotation_file: Optional[str] = None
+  per_category_metrics: bool = False
+
   weight_decay: float = 5e-4
 
   def _get_output_length_dict(self):

@@ -15,7 +15,7 @@ class CenterNetLayer(ks.Model):
                max_detections=100,
                peak_error=1e-6,
                peak_extract_kernel_size=3,
-               use_nms=True,
+               use_nms=False,
                center_thresh=0.1,
                iou_thresh=0.4,
                class_offset=1,
