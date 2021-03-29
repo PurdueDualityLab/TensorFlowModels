@@ -130,7 +130,7 @@ trainer:
     optimizer:
       type: adam
       adam:
-        beta_2: 0.949
+        beta_1: 0.949
         name: adam
     warmup:
       type: 'linear'
