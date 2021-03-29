@@ -36,9 +36,9 @@ task:
         '4': ciou
         '3': ciou
       iou_normalizer: 
-        '5': 0.5
-        '4': 0.5
-        '3': 0.5
+        '5': 0.07
+        '4': 0.07
+        '3': 0.07
       cls_normalizer: 
         '5': 1.0
         '4': 1.0
@@ -113,7 +113,7 @@ task:
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 50050 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 50000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
   steps_per_loop: 5000
   validation_interval: 5000 #00
@@ -122,11 +122,16 @@ trainer:
   optimizer_config:
     learning_rate:
       type: stepwise
-      stepwise:
-        #boundaries: [30000, 33750]
-        boundaries: [40000, 45000]
-        name: PiecewiseConstantDecay
-        values: [0.0013, 0.00013, 0.000013]
+      # stepwise:
+      #   #boundaries: [30000, 33750]
+      #   boundaries: [40000, 45000]
+      #   name: PiecewiseConstantDecay
+      #   values: [0.01, 0.001, 0.0001]
+      learning_rate:
+        type: 'cosine'
+        cosine:
+          initial_learning_rate: 0.01
+          decay_steps: 49000
     optimizer:
       type: sgd
       sgd:
