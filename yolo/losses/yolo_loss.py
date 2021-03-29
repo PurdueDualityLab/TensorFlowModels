@@ -396,14 +396,6 @@ class Yolo_Loss(object):
     reps = tf.squeeze(reps, axis = -1)
     reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
-    # true_class = tf.one_hot(
-    #     tf.cast(true_class, tf.int32),
-    #     depth=tf.shape(pred_class)[-1],
-    #     dtype=y_pred.dtype)
-
-    # pred_class = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
-    # true_class = math_ops.mul_no_nan(ind_mask, true_class)
-
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), box_loss)
@@ -411,7 +403,7 @@ class Yolo_Loss(object):
     box_loss = tf.cast(
         tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    class_loss = tf.reduce_sum(
+    class_loss = tf.reduce_mean(
         ks.losses.binary_crossentropy(
             K.expand_dims(true_class, axis=-1),
             K.expand_dims(pred_class, axis=-1),
@@ -421,9 +413,6 @@ class Yolo_Loss(object):
     class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-    # class_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), class_loss)
-    # class_loss = tf.cast(
-    #     tf.reduce_sum(class_loss, axis=1), dtype=y_pred.dtype)
     
     pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
     bce = ks.losses.binary_crossentropy(
@@ -432,10 +421,6 @@ class Yolo_Loss(object):
     conf_loss = tf.maximum(conf_loss, tf.squeeze(thresh_conf_loss, axis = -1))
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-
-    # thresh_loss = math_ops.divide_no_nan(thresh_loss, tf.squeeze(counts, axis = -1))
-    # thresh_loss = tf.cast(
-    #     tf.reduce_sum(thresh_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
