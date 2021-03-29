@@ -392,7 +392,7 @@ def _gen_utility(boxes):
 def _gen_offsets(scale_xy, dtype):
   return tf.cast(0.5 * (scale_xy-1), dtype)
 
-def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, use_tie_breaker):
+def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_num_inst, use_tie_breaker):
   """
     convert ground truth for use in loss functions
     Args:
@@ -425,7 +425,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, use_ti
   len_masks = tf.shape(mask)[0]
   # number of anchors
   num_anchors = tf.shape(anchors)[-1]
-  num_instances = num_boxes
+  num_instances = num_boxes * scale_num_inst
 
 
   pull_in = _gen_offsets(scale_xy, boxes.dtype)  

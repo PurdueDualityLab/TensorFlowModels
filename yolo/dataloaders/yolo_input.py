@@ -125,7 +125,7 @@ class Parser(parser.Parser):
     self._seed = seed
     self._fixed_size = fixed_size
     self._scale_xy = scale_xy 
-    # self._scale_xy = {'3':1.2, '4':1.1, '5':1.05}
+    self._scale_up = 2
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -150,14 +150,15 @@ class Parser(parser.Parser):
                                                     self._num_classes,
                                                     raw_true['bbox'].dtype,
                                                     self._scale_xy[key],
+                                                    self._scale_up, 
                                                     use_tie_breaker)
       
       ishape = indexes.get_shape().as_list()
-      ishape[-2] = self._max_num_instances
+      ishape[-2] = self._max_num_instances * self._scale_up
       indexes.set_shape(ishape)
 
       ishape = updates.get_shape().as_list()
-      ishape[-2] = self._max_num_instances
+      ishape[-2] = self._max_num_instances * self._scale_up
       updates.set_shape(ishape)
       
       inds[key] = indexes
