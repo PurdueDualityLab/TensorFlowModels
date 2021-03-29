@@ -52,6 +52,10 @@ task:
         '5': false
         '4': false
         '3': false
+      objectness_smooth: 
+        '5': true
+        '4': true
+        '3': true
       scale_xy:
         '5': 1.05
         '4': 1.1 
@@ -121,12 +125,12 @@ trainer:
       stepwise:
         boundaries: [160000, 180000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261]
+        values: [0.001, 0.0001, 0.00001]
     optimizer:
-      type: sgd
-      sgd:
-        momentum: 0.949
-        name: SGD
+      type: adam
+      adamw:
+        beta_2: 0.949
+        name: adam
     warmup:
       type: 'linear'
       linear:
