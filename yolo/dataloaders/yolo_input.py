@@ -124,7 +124,8 @@ class Parser(parser.Parser):
 
     self._seed = seed
     self._fixed_size = fixed_size
-    self._scale_xy = scale_xy
+    self._scale_xy = scale_xy 
+    # self._scale_xy = {'3':1.2, '4':1.1, '5':1.05}
 
     if dtype == 'float16':
       self._dtype = tf.float16

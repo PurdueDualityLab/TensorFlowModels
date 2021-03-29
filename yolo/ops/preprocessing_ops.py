@@ -531,6 +531,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height, wi
   y = box[1] * height
   x = box[0] * width
 
+  # idk if this is right!!! just testing it now
   if offset > 0: 
     y_ = tf.math.floor(y + offset)
     x_ = x
