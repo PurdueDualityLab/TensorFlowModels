@@ -130,10 +130,11 @@ trainer:
       stepwise:
         boundaries: [40000, 45000]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.00013, 0.000013]
+        values: [0.00013, 0.000013, 0.0000013]
     optimizer:
       type: sgd
       sgd:
+        nesterov: true
         momentum: 0.949
         name: SGD
     warmup:
