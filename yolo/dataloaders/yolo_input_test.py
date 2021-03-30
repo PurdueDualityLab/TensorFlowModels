@@ -227,8 +227,8 @@ def test_ret_pipeline():
 
 if __name__ == '__main__':
   # test_ret_pipeline()
-  test_yolo_pipeline()
-  # time_pipeline()
+  # test_yolo_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
