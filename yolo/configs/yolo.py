@@ -197,7 +197,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = '' #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = None #'coco'
   tfds_split: str = None #'train'
-  global_batch_size: int = 32
+  global_batch_size: int = 64
   is_training: bool = True
   dtype: str = 'float16'
   decoder: DataDecoder = DataDecoder()
