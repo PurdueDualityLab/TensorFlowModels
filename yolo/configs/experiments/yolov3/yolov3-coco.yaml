@@ -16,7 +16,7 @@ task:
       darknet_weights_file: 'cache://darknet53.weights'
       darknet_weights_cfg: 'cache://darknet53.cfg'
     subdivisions: 16
-    num_classes: 80
+    num_classes: 91
     _boxes: ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"]
     _input_size: [416, 416, 3]
     boxes_per_scale: 3

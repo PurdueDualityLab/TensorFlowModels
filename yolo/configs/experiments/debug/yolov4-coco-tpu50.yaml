@@ -82,7 +82,7 @@ task:
   darknet_load_decoder: false
 trainer:
   train_steps: 50050 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 78
+  validation_steps: 625
   steps_per_loop: 1000
   validation_interval: 1000 #00
   summary_interval: 1000
