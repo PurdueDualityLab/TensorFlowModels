@@ -56,7 +56,7 @@ class Parser(parser.Parser):
     self._aug_rand_aspect = aug_rand_aspect
 
     scaler = 256 if self._output_size[0] == None else self._output_size[0]
-    self._scale = tf.cast(((tf.convert_to_tensor(scale) / 256) * scaler),
+    self._scale = tf.cast(((tf.convert_to_tensor(scale) / scaler) * scaler),
                           tf.int32)
 
     self._seed = seed
@@ -147,11 +147,14 @@ class Parser(parser.Parser):
       image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
 
     if self._aug_rand_zoom:
-      scale = tf.random.uniform([],
-                                minval=self._scale[0],
-                                maxval=self._scale[1],
-                                seed=self._seed,
-                                dtype=tf.int32)
+      if self._scale[0] < self._scale[1]:
+        scale = tf.random.uniform([],
+                                  minval=self._scale[0],
+                                  maxval=self._scale[1],
+                                  seed=self._seed,
+                                  dtype=tf.int32)
+      else:
+        scale = self._scale[0]
       if scale > self._output_size[0]:
         image = tf.image.resize_with_crop_or_pad(
             image, target_height=scale, target_width=scale)
