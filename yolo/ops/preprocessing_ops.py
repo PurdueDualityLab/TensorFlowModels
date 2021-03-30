@@ -304,23 +304,22 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     # compute intersection over union of the boxes, and take the argmax of
     # comuted iou for each box. thus each box is associated with the
     # largest interection over union
-    aspect = truth_comp/anchors
-    aspect = tf.maximum(aspect, 1/aspect)
-
-    aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
-    aspect = tf.reduce_max(aspect, axis = -1)
-    values, indexes = tf.math.top_k(
-        tf.transpose(aspect, perm=[0, 2, 1]),
-        k=tf.cast(k, dtype=tf.int32),
-        sorted=True)
-    ind_mask = tf.cast(values < 4.0, dtype=indexes.dtype)
-
-    # iou_raw = box_ops.compute_iou(truth_comp, anchors)
+    # aspect = truth_comp/anchors
+    # aspect = tf.maximum(aspect, 1/aspect)
+    # aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
+    # aspect = tf.reduce_max(aspect, axis = -1)
     # values, indexes = tf.math.top_k(
-    #     tf.transpose(iou_raw, perm=[0, 2, 1]),
+    #     tf.transpose(aspect, perm=[0, 2, 1]),
     #     k=tf.cast(k, dtype=tf.int32),
     #     sorted=True)
-    # ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
+    # ind_mask = tf.cast(values < 4.0, dtype=indexes.dtype)
+
+    iou_raw = box_ops.compute_iou(truth_comp, anchors)
+    values, indexes = tf.math.top_k(
+        tf.transpose(iou_raw, perm=[0, 2, 1]),
+        k=tf.cast(k, dtype=tf.int32),
+        sorted=True)
+    ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
 
     # pad the indexs such that all values less than the thresh are -1
     # add one, multiply the mask to zeros all the bad locations
