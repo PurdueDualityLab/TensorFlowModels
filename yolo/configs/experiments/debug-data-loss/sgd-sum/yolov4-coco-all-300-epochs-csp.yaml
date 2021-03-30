@@ -115,12 +115,14 @@ trainer:
   summary_interval: 50000
   checkpoint_interval: 50000
   optimizer_config:
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
         boundaries: [450000, 562500]
         name: PiecewiseConstantDecay
-        values: [0.01, 0.001, 0.0001]
+        values: [0.001, 0.0001, 0.00001]
     optimizer:
       type: sgd
       sgd:

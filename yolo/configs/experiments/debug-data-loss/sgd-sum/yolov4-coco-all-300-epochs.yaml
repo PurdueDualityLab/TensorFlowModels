@@ -116,6 +116,8 @@ trainer:
   summary_interval: 50000
   checkpoint_interval: 50000
   optimizer_config:
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
