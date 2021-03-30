@@ -485,14 +485,12 @@ class Yolo_Loss(object):
     
     if not self._use_reduction_sum:
       loss = tf.reduce_mean(loss)
-      box_loss = tf.reduce_mean(box_loss)
-      conf_loss = tf.reduce_mean(conf_loss)
-      class_loss = tf.reduce_mean(class_loss)
     else:
       loss = tf.reduce_sum(loss)
-      box_loss = tf.reduce_sum(box_loss)
-      conf_loss = tf.reduce_sum(conf_loss)
-      class_loss = tf.reduce_sum(class_loss)
+      
+    box_loss = tf.reduce_mean(box_loss)
+    conf_loss = tf.reduce_mean(conf_loss)
+    class_loss = tf.reduce_mean(class_loss)
 
     recall50 = self.recall(pred_conf, grid_mask, pct = 0.5)
     avg_iou = self.avgiou(iou)
