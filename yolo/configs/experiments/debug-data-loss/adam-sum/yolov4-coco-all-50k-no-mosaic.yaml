@@ -116,18 +116,19 @@ trainer:
   summary_interval: 5000
   checkpoint_interval: 5000
   optimizer_config:
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
         boundaries: [50000, 56250]
         name: PiecewiseConstantDecay
-        values: [0.01, 0.001, 0.0001]
+        values: [0.001, 0.0001, 0.00001]
     optimizer:
-      type: sgd
-      sgd:
-        momentum: 0.949
-        nesterov: True
-        name: SGD
+      type: adam
+      adam:
+        beta_1: 0.949
+        name: adam
     warmup:
       type: 'polynomial'
       polynomial:
