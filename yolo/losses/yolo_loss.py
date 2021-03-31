@@ -154,7 +154,9 @@ class Yolo_Loss(object):
     self._max_delta = max_delta
 
     self._label_smoothing = tf.cast(0.0, tf.float32)
-    self._objectness_smooth = objectness_smooth
+    # self._objectness_smooth = objectness_smooth
+
+    self._objectness_smooth = float(objectness_smooth)
     self._use_reduction_sum = use_reduction_sum
 
     # used in detection filtering
@@ -247,19 +249,24 @@ class Yolo_Loss(object):
     box_slice = tf.expand_dims(box_slice, axis = -2)
     box_slice = tf.expand_dims(box_slice, axis = 1)
     box_slice = tf.expand_dims(box_slice, axis = 1)
-    
+
+    class_slice = tf.expand_dims(class_slice, axis = 1)
+    class_slice = tf.expand_dims(class_slice, axis = 1)
+    class_slice = tf.expand_dims(class_slice, axis = 1)
+    class_slice = tf.one_hot(
+        tf.cast(class_slice, tf.int32),
+        depth=tf.shape(pred_classes_max)[-1],
+        dtype=pred_classes_max.dtype)
+    # class_slice = tf.reduce_max(class_slice, axis = -2)
+
     pred_boxes = tf.expand_dims(pred_boxes_, axis = -3)
-
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
-    iou_mask = iou > self._ignore_thresh
-
-    class_slice = tf.expand_dims(class_slice, axis = 1)
-    class_slice = tf.expand_dims(class_slice, axis = 1)
-    class_slice = tf.expand_dims(class_slice, axis = 1)
 
     # cconfidence is low
+    iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm = (0, 1, 2, 4, 3))    
     matched_classes = tf.equal(class_slice, pred_classes_max)
+    matched_classes = tf.reduce_any(matched_classes, axis = -1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask =  tf.reduce_any(full_iou_mask, axis = -1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
@@ -278,12 +285,15 @@ class Yolo_Loss(object):
     base = tf.cast(tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1)), tf.bool)
     boxes = box_ops.yxyx_to_xcycwh(boxes)
 
-    pred_classes_max = tf.cast(
-      tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
-    pred_classes_conf = tf.cast(
-      tf.expand_dims(tf.reduce_max(pred_classes, axis = -1), axis = -1), tf.float32)
-    pred_classes_mask = tf.cast(pred_classes_conf > 0.25, tf.float32)
-    pred_classes_max = (pred_classes_max * pred_classes_mask) - (1.0 - pred_classes_mask)
+    # pred_classes_max = tf.cast(
+    #   tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
+    # pred_classes_conf = tf.cast(
+    #   tf.expand_dims(tf.reduce_max(pred_classes, axis = -1), axis = -1), tf.float32)
+    # pred_classes_mask = tf.cast(pred_classes_conf > 0.25, tf.float32)
+    # pred_classes_max = (pred_classes_max * pred_classes_mask) - (1.0 - pred_classes_mask)
+
+    pred_classes_mask = tf.cast(pred_classes > 0.25, tf.float32)
+    pred_classes_mask = tf.expand_dims(pred_classes_mask, axis = -2)
 
     loss_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1))
     obns_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1, keepdims = True))
@@ -297,7 +307,7 @@ class Yolo_Loss(object):
       _loop_cond, self._build_mask_body, [pred_boxes, 
                                           pred_classes, 
                                           pred_conf, 
-                                          pred_classes_max, 
+                                          pred_classes_mask, 
                                           boxes, classes, 
                                           loss_base,
                                           base, 
@@ -312,14 +322,18 @@ class Yolo_Loss(object):
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
     iou_max = tf.stop_gradient(iou_max)    
 
-    if not self._objectness_smooth:
+    # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(tf.maximum(tf.cast(iou_mask, tf.float32),true_conf))))
+    if self._objectness_smooth <= 0.0:
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
       obj_mask = tf.ones_like(true_conf)
     obj_mask = tf.stop_gradient(obj_mask)
 
-    if self._objectness_smooth:
-      true_conf = tf.maximum(true_conf, iou_max)
+    if self._objectness_smooth > 0.0:
+      iou_max = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
+      true_conf = tf.where(tf.logical_and(true_conf == 1.0, iou_max > self._ignore_thresh), iou_max, true_conf)
+      true_conf = tf.where(true_conf == 0.0, iou_max, true_conf)
+      # true_conf = tf.maximum(true_conf, iou_max)
     true_conf = tf.stop_gradient(true_conf)
     
     obns_loss = tf.stop_gradient(obns_loss)
@@ -327,26 +341,19 @@ class Yolo_Loss(object):
     count = tf.stop_gradient(count)
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
-  def build_class_grid(self, indexes, true_classes, pred_classes, ind_mask):
-    num_classes = tf.shape(pred_classes)[-1]
-    true_classes = tf.one_hot(
-        tf.cast(true_classes, tf.int32),
-        depth=num_classes,
-        dtype=pred_classes.dtype)
-    true_classes = math_ops.mul_no_nan(ind_mask, true_classes)
-
+  def build_grid(self, indexes, truths, preds, ind_mask):
+    num_flatten = tf.shape(preds)[-1]
     bhep = tf.reduce_max(tf.ones_like(indexes), axis = -1, keepdims = True)
     bhep = tf.math.cumsum(bhep, axis = 0) - 1
     indexes = tf.concat([bhep, indexes], axis = -1)
     indexes = math_ops.mul_no_nan(tf.cast(ind_mask, indexes.dtype), indexes)
 
     indexes = tf.reshape(indexes, [-1, 4])
-    true_classes = tf.reshape(true_classes, [-1, num_classes])
+    truths = tf.reshape(truths, [-1, num_flatten])
 
-    true_class = tf.scatter_nd(indexes, true_classes, tf.shape(pred_classes))
-    true_class = tf.clip_by_value(true_class, 0.0, 1.0)
-    return tf.stop_gradient(true_class)
-
+    truth_grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
+    truth_grid = tf.clip_by_value(truth_grid, 0.0, 1.0)
+    return tf.stop_gradient(truth_grid)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
@@ -394,37 +401,37 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis = -1)
     grid_mask = true_conf
     true_class = tf.squeeze(true_class, axis = -1)
-    
-    (mask_loss, 
-     thresh_conf_loss, 
-     thresh_loss, 
-     thresh_counts,
-     true_conf, 
-     obj_mask) = self._tiled_global_box_search(
-       pred_box, sigmoid_class, sigmoid_conf, boxes, classes, true_conf)
+    if self._use_reduction_sum:
+      num_objs = tf.cast(
+          tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    # if self._use_reduction_sum:
+    if not self._use_reduction_sum or self._objectness_smooth <= 0.0:
+      (mask_loss, 
+      thresh_conf_loss, 
+      thresh_loss, 
+      thresh_counts,
+      true_conf, 
+      obj_mask) = self._tiled_global_box_search(
+        pred_box, sigmoid_class, sigmoid_conf, boxes, classes, true_conf)
+
     true_class = tf.one_hot(
       tf.cast(true_class, tf.int32),
       depth=tf.shape(pred_class)[-1],
       dtype=pred_class.dtype)
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
-    counts = true_counts
-    # else:
-    #   true_class = self.build_class_grid(inds, true_class, pred_class, ind_mask)
-    #   counts = true_class
 
-    # tf.print(tf.reduce_sum(obj_mask))
-    # counts = true_counts + thresh_counts
-    if not self._use_reduction_sum:
+    if self._use_reduction_sum:
+      counts = true_counts
+    else:
+      true_class = self.build_grid(inds, true_class, pred_class, ind_mask)
+      counts = true_class
       counts = tf.reduce_sum(counts, axis =-1, keepdims = True) 
+
+    if not self._use_reduction_sum:
       reps = tf.gather_nd(counts, inds, batch_dims = 1)
       reps = tf.squeeze(reps, axis = -1)
       reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
-    if self._use_reduction_sum:
-      num_objs = tf.cast(
-          tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
-
+      
     pred_box = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis = -1), box_loss)
@@ -435,42 +442,50 @@ class Yolo_Loss(object):
     if self._use_reduction_sum:
       box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     
-    # if self._use_reduction_sum:
-    pred_class = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
-    class_loss = ks.losses.binary_crossentropy(
-            K.expand_dims(true_class, axis=-1),
-            K.expand_dims(pred_class, axis=-1),
-            label_smoothing=self._label_smoothing,
-            from_logits=True)
-    class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
+    if self._use_reduction_sum and self._objectness_smooth > 0.0:
+      iou = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+      iou_ = tf.expand_dims(iou, axis = -1)
+      iou_ = math_ops.mul_no_nan(ind_mask, iou_)
+      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask)
+      true_conf = tf.squeeze(true_conf, axis = -1)
+      obj_mask = tf.ones_like(true_conf)
+
     if self._use_reduction_sum:
+      pred_class = math_ops.mul_no_nan(ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
+      class_loss = ks.losses.binary_crossentropy(
+              K.expand_dims(true_class, axis=-1),
+              K.expand_dims(pred_class, axis=-1),
+              label_smoothing=self._label_smoothing,
+              from_logits=True)
+      class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
+      # if self._use_reduction_sum:
       class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)
-    else:
+      # else:
+      #   class_loss = tf.cast(
+      #     tf.reduce_sum(class_loss, axis=(2)), dtype=y_pred.dtype)
+      #   class_loss = math_ops.divide_no_nan(class_loss, reps)
       class_loss = tf.cast(
-        tf.reduce_sum(class_loss, axis=(2)), dtype=y_pred.dtype)
-      class_loss = math_ops.divide_no_nan(class_loss, reps)
-    class_loss = tf.cast(
-      tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
-    if self._use_reduction_sum:
+        tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
+      # if self._use_reduction_sum:
       class_loss = math_ops.divide_no_nan(class_loss, num_objs)
-    # else:
-    #   class_loss = ks.losses.binary_crossentropy(
-    #           K.expand_dims(true_class, axis=-1),
-    #           K.expand_dims(pred_class, axis=-1),
-    #           label_smoothing=self._label_smoothing,
-    #           from_logits=False)
-    #   if not self._use_reduction_sum:  
-    #     class_loss = tf.reduce_sum(class_loss, axis=-1) 
-    #   else:   
-    #     class_loss = tf.reduce_mean(class_loss, axis=-1) 
-    #   class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
-    #   class_loss = tf.cast(
-    #       tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-    #   if self._use_reduction_sum:
-    #     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
+    else:
+      class_loss = ks.losses.binary_crossentropy(
+              K.expand_dims(true_class, axis=-1),
+              K.expand_dims(pred_class, axis=-1),
+              label_smoothing=self._label_smoothing,
+              from_logits=True)
+      #if not self._use_reduction_sum:  
+      class_loss = tf.reduce_sum(class_loss, axis=-1) 
+      # else:   
+      #   class_loss = tf.reduce_mean(class_loss, axis=-1) 
+      class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
+      class_loss = tf.cast(
+          tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+      # if self._use_reduction_sum:
+      #   class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
-    # pred_conf = math_ops.rm_nan_inf(pred_conf, val = 0.0)
+  
     bce = ks.losses.binary_crossentropy(
       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
@@ -485,18 +500,20 @@ class Yolo_Loss(object):
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
-    loss = box_loss + class_loss + conf_loss # + thresh_loss
+    loss = box_loss + class_loss + conf_loss
     
     if not self._use_reduction_sum:
       loss = tf.reduce_mean(loss)
+      box_loss = tf.reduce_mean(box_loss)
+      conf_loss = tf.reduce_mean(conf_loss)
+      class_loss = tf.reduce_mean(class_loss)
     else:
       loss = tf.reduce_sum(loss)
-
-    box_loss = tf.reduce_mean(box_loss)
-    conf_loss = tf.reduce_mean(conf_loss)
-    class_loss = tf.reduce_mean(class_loss)
+      box_loss = tf.reduce_sum(box_loss)
+      conf_loss = tf.reduce_sum(conf_loss)
+      class_loss = tf.reduce_sum(class_loss)
 
     recall50 = self.recall(sigmoid_conf, grid_mask, pct = 0.5)
-    avg_iou = self.avgiou(iou)
+    avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis = -1) * grid_mask)
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50

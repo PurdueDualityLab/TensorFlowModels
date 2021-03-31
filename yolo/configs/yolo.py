@@ -240,7 +240,7 @@ class YoloLossLayer(hyperparams.Config):
   new_cords: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, True))
   scale_xy: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 2.0))
   path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
-  objectness_smooth: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, True))
+  objectness_smooth: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.0))
   use_nms: bool = False
   iou_thresh: float = 0.25
   nms_thresh: float = 0.6

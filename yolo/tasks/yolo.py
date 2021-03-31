@@ -149,34 +149,6 @@ class YoloTask(base_task.Task):
     print(dataset)
     return dataset
 
-  # def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
-  #   metric_dict = dict()
-  #   loss = dict()
-  #   loss_val = 0
-  #   metric_dict['total_loss'] = 0
-
-  #   grid = labels['grid_form']
-
-  #   scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
-  #   for key in outputs.keys():
-  #     (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
-  #      _recall50) = self._loss_dict[key](grid[key], 
-  #                                        outputs[key], 
-  #                                        labels['bbox'], 
-  #                                        labels['classes'])
-  #     metric_dict[f'total_loss'] += _loss
-  #     metric_dict[f'conf_loss_{key}'] = _loss_conf
-  #     metric_dict[f'box_loss_{key}'] = _loss_box
-  #     metric_dict[f'class_loss_{key}'] = _loss_class
-  #     metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
-  #     metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
-  #     metric_dict[f"avg_obj_{key}"] = tf.stop_gradient(_avg_obj)
-  #     loss[f"loss_{key}"] = _loss * scale / num_replicas
-  #     loss_val += _loss * scale / num_replicas
-
-
-  #   return loss, loss_val, metric_dict
-
   def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
     metric_dict = dict()
     loss = dict()
