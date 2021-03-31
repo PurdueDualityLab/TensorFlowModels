@@ -5,7 +5,7 @@ runtime:
   num_gpus: 1
 task:
   model:
-    base: 
+    base:
       backbone:
         type: 'darknet'
         darknet:
@@ -32,10 +32,9 @@ task:
       ignore_thresh: 0.7
       loss_type: giou
       max_boxes: 200
-      use_tie_breaker: false
   train_data:
     global_batch_size: 64
-    shuffle_buffer_size: 200
+    shuffle_buffer_size: 10000
     tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
@@ -53,7 +52,7 @@ task:
       aug_rand_zoom: true
       aug_rand_hue: true
       seed: 10
-    shuffle_buffer_size: 10000
+      use_tie_breaker: false
   validation_data:
     global_batch_size: 8
     tfds_data_dir: ''
@@ -70,8 +69,8 @@ task:
       aug_rand_brightness: true
       aug_rand_zoom: true
       aug_rand_hue: true
-      shuffle_buffer_size: 10000
-    shuffle_buffer_size: 2
+      use_tie_breaker: false
+    shuffle_buffer_size: 10000
   weight_decay: 0.0005
   init_checkpoint: ''
   annotation_file: null
