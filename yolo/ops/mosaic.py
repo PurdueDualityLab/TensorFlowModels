@@ -248,7 +248,7 @@ class Mosaic(object):
 if __name__ == "__main__":
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
   decoder = tfds_coco_decoder.MSCOCODecoder()
-  mosaic = Mosaic([640, 720], random_crop=True)
+  mosaic = Mosaic([720, 640], random_crop=True)
 
   dataset = tfds.load('coco', split = 'train')
   dataset = dataset.map(decoder.decode)
