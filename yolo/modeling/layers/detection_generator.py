@@ -150,9 +150,9 @@ class YoloLayer(ks.Model):
           object_scores,
           self._max_boxes,
           self._thresh,
-          1 - self._nms_thresh,
+          self._nms_thresh,
           prenms_top_k = 500, 
-          use_classes=True)
+          use_classes=False)
     else:
       boxes = tf.cast(boxes, dtype = tf.float32)
       class_scores = tf.cast(class_scores, dtype = tf.float32)
@@ -163,6 +163,7 @@ class YoloLayer(ks.Model):
         self._max_boxes, 
         iou_threshold=self._nms_thresh, 
         score_threshold=self._thresh)
+        
       boxes = tf.cast(nms_items.nmsed_boxes, object_scores.dtype)
       class_scores = tf.cast(nms_items.nmsed_classes, object_scores.dtype)
       object_scores = tf.cast(nms_items.nmsed_scores, object_scores.dtype)

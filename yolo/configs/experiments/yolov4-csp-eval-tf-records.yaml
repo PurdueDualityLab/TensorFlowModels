@@ -58,9 +58,9 @@ task:
       #   '4': 5.0 
       #   '3': 5.0
       objectness_smooth: 
-        '5': true
-        '4': true
-        '3': true
+        '5': 1.0
+        '4': 1.0
+        '3': 1.0
       new_cords:
         '5': true
         '4': true
@@ -72,7 +72,7 @@ task:
       max_boxes: 200
       use_nms: true
       iou_thresh: 0.2
-      nms_thresh: 0.6
+      nms_thresh: 0.45
       use_reduction_sum: true
   validation_data:
     global_batch_size: 8

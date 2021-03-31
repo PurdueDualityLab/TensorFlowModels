@@ -257,7 +257,6 @@ class Yolo_Loss(object):
         tf.cast(class_slice, tf.int32),
         depth=tf.shape(pred_classes_max)[-1],
         dtype=pred_classes_max.dtype)
-    # class_slice = tf.reduce_max(class_slice, axis = -2)
 
     pred_boxes = tf.expand_dims(pred_boxes_, axis = -3)
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
@@ -327,15 +326,13 @@ class Yolo_Loss(object):
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
       obj_mask = tf.ones_like(true_conf)
-    obj_mask = tf.stop_gradient(obj_mask)
-
-    if self._objectness_smooth > 0.0:
-      iou_max = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
-      true_conf = tf.where(tf.logical_and(true_conf == 1.0, iou_max > self._ignore_thresh), iou_max, true_conf)
-      true_conf = tf.where(true_conf == 0.0, iou_max, true_conf)
-      # true_conf = tf.maximum(true_conf, iou_max)
-    true_conf = tf.stop_gradient(true_conf)
+      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
+      iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
+      true_conf = tf.where(tf.logical_and(true_conf == 1.0, iou_ > self._ignore_thresh), iou_, true_conf)
+      true_conf = tf.where(true_conf == 0.0, iou_, true_conf)
     
+    obj_mask = tf.stop_gradient(obj_mask)
+    true_conf = tf.stop_gradient(true_conf)
     obns_loss = tf.stop_gradient(obns_loss)
     truth_loss = tf.stop_gradient(truth_loss)
     count = tf.stop_gradient(count)
@@ -351,6 +348,11 @@ class Yolo_Loss(object):
     indexes = tf.reshape(indexes, [-1, 4])
     truths = tf.reshape(truths, [-1, num_flatten])
 
+    # select = tf.where(tf.squeeze(ind_mask, axis = -1) == 1.0)
+    # indexes = tf.gather_nd(indexes, select)
+    # truths = tf.gather_nd(truths, select)
+    
+    # tf.print(truths[0])
     truth_grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     truth_grid = tf.clip_by_value(truth_grid, 0.0, 1.0)
     return tf.stop_gradient(truth_grid)
@@ -362,7 +364,6 @@ class Yolo_Loss(object):
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
 
-    #inds = tf.stop_gradient(tf.where(inds == -1, 0, inds))
     boxes =  tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes =  tf.stop_gradient(tf.cast(classes, tf.float32))
     y_true =  tf.stop_gradient(tf.cast(y_true, tf.float32))
@@ -374,7 +375,15 @@ class Yolo_Loss(object):
                                                       dtype=tf.float32)
 
 
-    # y_pred = gradient_trap(y_pred)
+    (true_box, 
+     ind_mask, 
+     true_class, 
+     best_iou_match, 
+     num_reps) = tf.split(y_true, [4, 1, 1, 1, 1], axis=-1)
+    true_conf = tf.squeeze(true_conf, axis = -1)
+    true_class = tf.squeeze(true_class, axis = -1)
+    grid_mask = true_conf
+
     y_pred = tf.cast(
       tf.reshape(y_pred, 
                  [batch_size, width, height, num, -1]), 
@@ -390,17 +399,7 @@ class Yolo_Loss(object):
                                                     pred_box, 
                                                     anchor_grid, 
                                                     grid_points)
-    
-    # 3. split up ground_truth into components, xy, wh, confidence, 
-    # class -> apply calculations to acchive safe format as predictions
-    (true_box, 
-     ind_mask, 
-     true_class, 
-     best_iou_match, 
-     num_reps) = tf.split(y_true, [4, 1, 1, 1, 1], axis=-1)
-    true_conf = tf.squeeze(true_conf, axis = -1)
-    grid_mask = true_conf
-    true_class = tf.squeeze(true_class, axis = -1)
+
     if self._use_reduction_sum:
       num_objs = tf.cast(
           tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
@@ -420,14 +419,10 @@ class Yolo_Loss(object):
       dtype=pred_class.dtype)
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
 
-    if self._use_reduction_sum:
-      counts = true_counts
-    else:
+    if not self._use_reduction_sum:
       true_class = self.build_grid(inds, true_class, pred_class, ind_mask)
       counts = true_class
       counts = tf.reduce_sum(counts, axis =-1, keepdims = True) 
-
-    if not self._use_reduction_sum:
       reps = tf.gather_nd(counts, inds, batch_dims = 1)
       reps = tf.squeeze(reps, axis = -1)
       reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
@@ -443,9 +438,8 @@ class Yolo_Loss(object):
       box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     
     if self._use_reduction_sum and self._objectness_smooth > 0.0:
-      iou = (1 - self._objectness_smooth) + self._objectness_smooth * iou
-      iou_ = tf.expand_dims(iou, axis = -1)
-      iou_ = math_ops.mul_no_nan(ind_mask, iou_)
+      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis = -1))
       true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask)
       true_conf = tf.squeeze(true_conf, axis = -1)
       obj_mask = tf.ones_like(true_conf)
@@ -458,16 +452,10 @@ class Yolo_Loss(object):
               label_smoothing=self._label_smoothing,
               from_logits=True)
       class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
-      # if self._use_reduction_sum:
       class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)
-      # else:
-      #   class_loss = tf.cast(
-      #     tf.reduce_sum(class_loss, axis=(2)), dtype=y_pred.dtype)
-      #   class_loss = math_ops.divide_no_nan(class_loss, reps)
       class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
-      # if self._use_reduction_sum:
       class_loss = math_ops.divide_no_nan(class_loss, num_objs)
     else:
       class_loss = ks.losses.binary_crossentropy(
@@ -475,15 +463,10 @@ class Yolo_Loss(object):
               K.expand_dims(pred_class, axis=-1),
               label_smoothing=self._label_smoothing,
               from_logits=True)
-      #if not self._use_reduction_sum:  
       class_loss = tf.reduce_sum(class_loss, axis=-1) 
-      # else:   
-      #   class_loss = tf.reduce_mean(class_loss, axis=-1) 
       class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
       class_loss = tf.cast(
           tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
-      # if self._use_reduction_sum:
-      #   class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
   
     bce = ks.losses.binary_crossentropy(

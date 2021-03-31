@@ -84,7 +84,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_zoom: 0.5
-      aug_rand_angle: 5.0
+      aug_rand_angle: 0.0
       use_tie_breaker: True
       mosaic: 
         mosaic_frequency: 0.955
