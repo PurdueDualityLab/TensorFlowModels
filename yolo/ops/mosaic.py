@@ -224,7 +224,7 @@ class Mosaic(object):
 
   def _add_param(self, sample):
     sample['is_mosaic'] = tf.cast(0.0, tf.bool)
-    sample['num_detections'] = tf.expand_dims(tf.shape(sample['groundtruth_boxes'])[1], axis = 0)
+    sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[0]
     return sample
 
   def _apply(self, dataset):
