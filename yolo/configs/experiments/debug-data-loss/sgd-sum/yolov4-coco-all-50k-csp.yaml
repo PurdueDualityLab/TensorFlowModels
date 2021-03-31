@@ -87,7 +87,7 @@ task:
       aug_rand_angle: 0.0
       use_tie_breaker: True
       mosaic: 
-        mosaic_frequency: 0.955
+        mosaic_frequency: 0.75
   validation_data:
     global_batch_size: 8
     dtype: float16
