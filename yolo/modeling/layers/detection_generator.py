@@ -150,7 +150,7 @@ class YoloLayer(ks.Model):
           object_scores,
           self._max_boxes,
           self._thresh,
-          self._nms_thresh,
+          1 - self._nms_thresh,
           prenms_top_k = 500, 
           use_classes=True)
     else:

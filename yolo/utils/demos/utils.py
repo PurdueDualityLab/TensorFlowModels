@@ -210,8 +210,8 @@ class DrawBoxes(object):
     for i in range(boxes.shape[0]):
       if self._draw_fn(image, boxes[i], classes[i], conf[i]):
         i += 1
-      else:
-        return image
+      # else:
+      #   return image
     return image
 
   def _parent(self, image, boxes, classes, conf):
@@ -255,6 +255,7 @@ class DrawBoxes(object):
       conf = conf.numpy()
 
     if not isinstance(image, list):
+  
       if ndims == 4:
         images = []
         func = self._parent(image, boxes, classes, conf)

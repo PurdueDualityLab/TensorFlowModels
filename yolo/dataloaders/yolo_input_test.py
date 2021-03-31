@@ -92,7 +92,7 @@ def test_classification_pipeline():
 import time
 
 
-def test_yolo_pipeline():
+def test_yolo_pipeline(is_training = True):
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
@@ -101,7 +101,7 @@ def test_yolo_pipeline():
   dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
-  data = dataset
+  data = dataset if is_training else dsp
   data = data.take(30)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
@@ -227,8 +227,9 @@ def test_ret_pipeline():
 
 if __name__ == '__main__':
   # test_ret_pipeline()
-  # test_yolo_pipeline()
-  time_pipeline()
+  test_yolo_pipeline(is_training=True)
+  test_yolo_pipeline(is_training=False)
+  # time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

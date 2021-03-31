@@ -71,8 +71,8 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: false
-      iou_thresh: 0.3
-      nms_thresh: 0.6
+      iou_thresh: 0.25
+      nms_thresh: 0.9
       use_reduction_sum: false
   validation_data:
     global_batch_size: 8

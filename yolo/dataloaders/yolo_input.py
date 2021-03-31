@@ -125,6 +125,7 @@ class Parser(parser.Parser):
     self._seed = seed
     self._fixed_size = fixed_size
     self._scale_xy = scale_xy 
+    # self._scale_xy = {'3':2.0, '4':1.75, '5':1.5}
     self._scale_up = 2
 
     if dtype == 'float16':
@@ -138,27 +139,36 @@ class Parser(parser.Parser):
           'Unsupported datatype used in parser only {float16, bfloat16, or float32}'
       )
 
-  def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False):
+  def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False, is_training = True):
     mask = self._masks
     inds = {}
     upds = {}
     true_conf = {}
+    if is_training:
+      scale_up = self._scale_up
+    else:
+      scale_up = 1
 
     for key in self._masks.keys():
+      if is_training:
+        scale_xy = self._scale_xy[key]
+      else:
+        scale_xy = 1
+
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(raw_true, self._masks[key],
                                                     width // 2**int(key),
                                                     self._num_classes,
                                                     raw_true['bbox'].dtype,
-                                                    self._scale_xy[key],
-                                                    self._scale_up, 
+                                                    scale_xy,
+                                                    scale_up, 
                                                     use_tie_breaker)
       
       ishape = indexes.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * self._scale_up
+      ishape[-2] = self._max_num_instances * scale_up
       indexes.set_shape(ishape)
 
       ishape = updates.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * self._scale_up
+      ishape[-2] = self._max_num_instances * scale_up
       updates.set_shape(ishape)
       
       inds[key] = indexes
@@ -267,7 +277,7 @@ class Parser(parser.Parser):
     num_dets = tf.shape(classes)[0]
 
     image = tf.cast(image, self._dtype)
-    image, labels = self._build_label(image, boxes, classes, width, height, info, data)
+    image, labels = self._build_label(image, boxes, classes, width, height, info, data, is_training = True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -291,51 +301,12 @@ class Parser(parser.Parser):
     # if self._letter_box:
     image, boxes, info = preprocessing_ops.letter_box(
         image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
-    # else:
-    #   height, width = preprocessing_ops.get_image_shape(image)
-    #   minscale = tf.math.minimum(width, height)
-    #   image, image_info = preprocessing_ops.random_crop_or_pad(
-    #       image,
-    #       target_width=minscale,
-    #       target_height=minscale,
-    #       random_patch=True)
-    #   image = tf.image.resize(image, (self._image_w, self._image_h))
-    #   boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-    #       boxes, classes, image_info, keep_thresh=self._keep_thresh)
-    #   info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
-
-    # boxes = box_ops.denormalize_boxes(boxes, image_shape)
-
-    # image, image_info = preprocess_ops.resize_and_crop_image(image, 
-    #                                                          [self._image_h, self._image_w], 
-    #                                                          [self._image_h, self._image_w], 
-    #                                                          aug_scale_min=1.0, 
-    #                                                          aug_scale_max = 1.0)                 
-    
-    # offset = image_info[3, :]
-    # image_scale = image_info[2, :]
-    # info_scale = tf.math.minimum(tf.round(image_info[0, :]*image_scale) - offset, image_info[1, :])
-    # info = tf.cast(tf.convert_to_tensor([0, 0, info_scale[0], info_scale[1]]), tf.int32)
-    # image_height, image_width, _ = image.get_shape().as_list()
-
-    # # tf.print(info, image_info)
-    # # Resizes and crops boxes.
-    # boxes = preprocess_ops.resize_and_crop_boxes(boxes, image_scale,
-    #                                              image_info[1, :], offset)
-
-    # # Filters out ground truth boxes that are all zeros.
-    # indices = box_ops.get_non_empty_box_indices(boxes)
-    # boxes = tf.gather(boxes, indices)
-    # classes = tf.gather(classes, indices)
-
-    # boxes = box_ops.normalize_boxes(boxes, [self._image_h, self._image_w])
 
     image = tf.cast(image, self._dtype)
-    image, labels = self._build_label(image, boxes, classes, width, height, info, data)
-
+    image, labels = self._build_label(image, boxes, classes, width, height, info, data, is_training = False)
     return image, labels
 
-  def _build_label(self, image, boxes, classes, width, height, info, data):
+  def _build_label(self, image, boxes, classes, width, height, info, data, is_training = True):
 
 
     imshape = image.get_shape().as_list()
@@ -398,7 +369,7 @@ class Parser(parser.Parser):
     }
 
     grid, inds, upds, true_conf = self._build_grid(
-        labels, self._image_w, use_tie_breaker=self._use_tie_breaker)
+        labels, self._image_w, use_tie_breaker=self._use_tie_breaker, is_training = is_training)
     # labels.update({'grid_form': grid})
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     labels['upds'] = upds 

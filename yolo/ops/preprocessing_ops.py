@@ -485,26 +485,10 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_
                               num_instances, 
                               0.0)
 
-  (ind_val, 
-   ind_sample, 
-   num_written) = write_grid(viable_primary, 
-                             num_reps, 
-                             boxes, 
-                             classes, 
-                             ious, 
-                             ind_val, 
-                             ind_sample, 
-                             height, 
-                             width,
-                             num_written, 
-                             num_instances, 
-                             pull_in)
-  
-  if use_tie_breaker:
-    # tf.print("alternate")
+  if pull_in > 0.0:
     (ind_val, 
     ind_sample, 
-    num_written) = write_grid(viable_alternate, 
+    num_written) = write_grid(viable_primary, 
                               num_reps, 
                               boxes, 
                               classes, 
@@ -516,6 +500,23 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_
                               num_written, 
                               num_instances, 
                               pull_in)
+    
+    if use_tie_breaker:
+      # tf.print("alternate")
+      (ind_val, 
+      ind_sample, 
+      num_written) = write_grid(viable_alternate, 
+                                num_reps, 
+                                boxes, 
+                                classes, 
+                                ious, 
+                                ind_val, 
+                                ind_sample, 
+                                height, 
+                                width,
+                                num_written, 
+                                num_instances, 
+                                pull_in)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
