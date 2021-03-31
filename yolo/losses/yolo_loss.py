@@ -50,26 +50,34 @@ def class_gradient_trap(y, max_delta = np.inf):
     return dy, 0.0
   return y, trap
 
-def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, max_delta = 5.0):
+def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, scaled_box = False, max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = unscaled_box[..., 2:4]
 
   pred_xy = box_gradient_trap(pred_xy, max_delta)
   pred_wh = box_gradient_trap(pred_wh, max_delta)
 
-  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
+  if not scaled_box:
+    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
+  else:
+    box_xy = pred_xy
+    
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
 
-def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, max_delta = 5.0):
+def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, scaled_box = False,  max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
 
   pred_xy = box_gradient_trap(pred_xy, max_delta)
   pred_wh = box_gradient_trap(pred_wh, max_delta)
 
-  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
+  if not scaled_box:
+    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
+  else:
+    box_xy = pred_xy
+
   box_wh = 4 * tf.square(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
@@ -240,6 +248,21 @@ class Yolo_Loss(object):
       # loss_box = (loss_wh + loss_xy) * scale
 
     return iou, liou, loss_box
+  
+  def _scale_boxes(boxes, fwidth, fheight):
+    x, y, w, h = tf.split(boxes, 4, axis = -1)
+
+    mask = tf.where(tf.logical_and(w > 0, h > 0), 1.0, 0.0)
+    x *= fwidth
+    y *= fheight 
+    x = x - tf.math.floor(x)/fwidth
+    y = y - tf.math.floor(y)/fheight
+
+    x *= mask 
+    y *= mask
+
+    scaled_box = tf.concat([x, y, w, h], axis = -1)
+    return scaled_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx):
     batch_size = tf.shape(boxes)[0]
