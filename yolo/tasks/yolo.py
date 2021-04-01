@@ -108,6 +108,8 @@ class YoloTask(base_task.Task):
       mosaic_frequency = params.parser.mosaic.mosaic_frequency, 
       crop_area =  params.parser.mosaic.crop_area,
       random_crop = params.parser.mosaic.random_crop,
+      crop_area_mosaic= params.parser.mosaic.crop_area_mosaic, 
+      random_crop_mosaic= params.parser.mosaic.random_crop_mosaic,
     )
 
     parser = yolo_input.Parser(
@@ -135,6 +137,7 @@ class YoloTask(base_task.Task):
         max_num_instances=params.parser.max_num_instances,
         pct_rand=params.parser.pct_rand,
         scale_xy=xy_scales,
+        use_scale_xy=params.parser.use_scale_xy,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(

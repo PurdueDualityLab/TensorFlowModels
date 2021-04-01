@@ -81,13 +81,16 @@ task:
       jitter_im: 0.3
       jitter_boxes: 0.1
       aug_rand_hue: 0.1
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
+      aug_rand_saturation: 0.75
+      aug_rand_brightness: 0.75
       aug_rand_zoom: 0.5
       aug_rand_angle: 0.0
       use_tie_breaker: True
+      use_scale_xy: False
       mosaic: 
-        mosaic_frequency: 0.75
+        mosaic_frequency: 1.0
+        random_crop: False
+        random_crop_mosaic: False
   validation_data:
     global_batch_size: 8
     dtype: float16

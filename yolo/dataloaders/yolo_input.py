@@ -57,6 +57,7 @@ class Parser(parser.Parser):
                min_process_size=320,
                max_num_instances=200,
                keep_thresh=0.25,
+               use_scale_xy = True, 
                pct_rand=0.5,
                scale_xy = None, 
                seed=10,
@@ -126,7 +127,9 @@ class Parser(parser.Parser):
     self._fixed_size = fixed_size
     self._scale_xy = scale_xy 
     # self._scale_xy = {'3':2.0, '4':1.75, '5':1.5}
-    self._scale_up = 2
+    
+    self._use_scale_xy = use_scale_xy
+    self._scale_up = 2 if self._use_scale_xy else 1
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -150,7 +153,7 @@ class Parser(parser.Parser):
       scale_up = 1
 
     for key in self._masks.keys():
-      if is_training:
+      if is_training and self._use_scale_xy:
         scale_xy = self._scale_xy[key]
       else:
         scale_xy = 1

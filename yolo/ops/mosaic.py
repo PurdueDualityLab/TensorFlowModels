@@ -11,12 +11,20 @@ from yolo.utils.demos import utils, coco
 import matplotlib.pyplot as plt
 
 class Mosaic(object):
-  def __init__(self, output_size, mosaic_frequency = 1.0, crop_area = [0.3, 1.0], random_crop = False):
+  def __init__(self,
+               output_size, 
+               mosaic_frequency = 1.0, 
+               crop_area = [0.5, 1.0], 
+               crop_area_mosaic = [0.5, 1.0],
+               random_crop = False, 
+               random_crop_mosaic = False):
     self._output_size = output_size
     self._mosaic_frequency = mosaic_frequency
     self._random_crop = random_crop
     self._seed = None
     self._crop_area = crop_area 
+    self._random_crop_mosaic = random_crop_mosaic
+    self._crop_area_mosaic = crop_area_mosaic
     return 
   
   def _estimate_shape(self, image):
@@ -170,10 +178,10 @@ class Mosaic(object):
         height, width = self._output_size[0], self._output_size[1]
 
         if self._random_crop:
-          images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[0] = self._crop_image(images[0], box_list[0], class_list[0], is_crowds[0], areas[0], [0.5, 1.0], width, height)
-          images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[1] = self._crop_image(images[1], box_list[1], class_list[1], is_crowds[1], areas[1], [0.5, 1.0], width, height)
-          images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[2] = self._crop_image(images[2], box_list[2], class_list[2], is_crowds[2], areas[2], [0.5, 1.0], width, height)
-          images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[3] = self._crop_image(images[3], box_list[3], class_list[3], is_crowds[3], areas[3], [0.5, 1.0], width, height)
+          images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[0] = self._crop_image(images[0], box_list[0], class_list[0], is_crowds[0], areas[0], self._crop_area, width, height)
+          images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[1] = self._crop_image(images[1], box_list[1], class_list[1], is_crowds[1], areas[1], self._crop_area, width, height)
+          images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[2] = self._crop_image(images[2], box_list[2], class_list[2], is_crowds[2], areas[2], self._crop_area, width, height)
+          images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[3] = self._crop_image(images[3], box_list[3], class_list[3], is_crowds[3], areas[3], self._crop_area, width, height)
 
         images[0], box_list[0], infos[0] = self._letter_box(images[0], box_list[0], xs = 1.0, ys = 1.0)
         images[1], box_list[1], infos[1] = self._letter_box(images[1], box_list[1], xs = 0.0, ys = 1.0)
@@ -192,11 +200,11 @@ class Mosaic(object):
         classes = tf.concat(class_list, axis = 0)
         is_crowd = tf.concat(is_crowds, axis = 0)
         area = tf.concat(areas, axis = 0)
-
-        # if self._random_crop:
-        #   image, boxes, classes, is_crowd, area, info = self._crop_image(image, boxes, classes, is_crowd, area, self._crop_area, width, height)
-        # else:
+        
         image = tf.image.resize(image, (height, width))
+        if self._random_crop_mosaic:
+          image, boxes, classes, is_crowd, area, info = self._crop_image(image, boxes, classes, is_crowd, area, self._crop_area_mosaic, width, height)
+          
 
         sample['image'] = tf.expand_dims(image, axis = 0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis = 0)
