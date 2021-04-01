@@ -187,7 +187,7 @@ class Yolo_Loss(object):
 
     # metric struff
     self._path_key = path_key
-    self._scaled_boxes = True #self._use_reduction_sum and self._objectness_smooth > 0.0
+    self._scaled_boxes = False #self._use_reduction_sum and self._objectness_smooth > 0.0
     return
 
   def print_error(self, pred, key):

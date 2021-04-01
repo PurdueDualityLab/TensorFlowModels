@@ -37,9 +37,9 @@ task:
         '4': ciou
         '3': ciou
       iou_normalizer: 
-        '5': 0.05
-        '4': 0.05
-        '3': 0.05
+        '5': 0.07
+        '4': 0.07
+        '3': 0.07
       cls_normalizer: 
         '5': 0.5
         '4': 0.5
@@ -88,7 +88,8 @@ task:
       aug_rand_angle: 5.0
       use_tie_breaker: True
       mosaic: 
-        mosaic_frequency: 0.95
+        mosaic_frequency: 1.0
+        random_crop: true
   validation_data:
     global_batch_size: 8
     dtype: float16
