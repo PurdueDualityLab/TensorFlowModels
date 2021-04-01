@@ -61,7 +61,7 @@ def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, sca
     box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
   else:
     box_xy = pred_xy
-    
+
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
@@ -187,6 +187,7 @@ class Yolo_Loss(object):
 
     # metric struff
     self._path_key = path_key
+    self._scaled_boxes = True #self._use_reduction_sum and self._objectness_smooth > 0.0
     return
 
   def print_error(self, pred, key):
@@ -249,14 +250,19 @@ class Yolo_Loss(object):
 
     return iou, liou, loss_box
   
-  def _scale_boxes(boxes, fwidth, fheight):
+  def _scale_boxes(self, boxes, fwidth, fheight, indexes = None):
     x, y, w, h = tf.split(boxes, 4, axis = -1)
 
     mask = tf.where(tf.logical_and(w > 0, h > 0), 1.0, 0.0)
+
     x *= fwidth
     y *= fheight 
-    x = x - tf.math.floor(x)/fwidth
-    y = y - tf.math.floor(y)/fheight
+
+    indexes = tf.cast(indexes, boxes.dtype)
+    ind_y, ind_x, _ = tf.split(indexes, 3, axis = -1)
+
+    x = x - ind_x
+    y = y - ind_y
 
     x *= mask 
     y *= mask
@@ -301,11 +307,14 @@ class Yolo_Loss(object):
 
     return pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1
 
-  def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes, classes, true_conf):
+  def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes, classes, true_conf, fwidth, fheight):
     num_boxes = tf.shape(boxes)[-2]
     num_tiles = num_boxes//TILE_SIZE
     base = tf.cast(tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1)), tf.bool)
     boxes = box_ops.yxyx_to_xcycwh(boxes)
+
+    # if self._scaled_boxes:
+    #   boxes = self._scale_boxes(boxes, fwidth, fheight, indexes)
 
     # pred_classes_max = tf.cast(
     #   tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
@@ -421,7 +430,10 @@ class Yolo_Loss(object):
                                                     fheight, 
                                                     pred_box, 
                                                     anchor_grid, 
-                                                    grid_points)
+                                                    grid_points, 
+                                                    scaled_box=self._scaled_boxes)
+    if self._scaled_boxes:
+      true_box = self._scale_boxes(true_box, fwidth, fheight, inds)
 
     if self._use_reduction_sum:
       num_objs = tf.cast(
@@ -434,7 +446,7 @@ class Yolo_Loss(object):
       thresh_counts,
       true_conf, 
       obj_mask) = self._tiled_global_box_search(
-        pred_box, sigmoid_class, sigmoid_conf, boxes, classes, true_conf)
+        pred_box, sigmoid_class, sigmoid_conf, boxes, classes, true_conf, fwidth, fheight)
 
     true_class = tf.one_hot(
       tf.cast(true_class, tf.int32),

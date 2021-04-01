@@ -62,7 +62,7 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.2
+      iou_thresh: 0.25
       nms_thresh: 0.6
       use_reduction_sum: true
   train_data:
@@ -88,7 +88,7 @@ task:
       aug_rand_angle: 2.0
       use_tie_breaker: True
       mosaic: 
-        mosaic_frequency: 0.95
+        mosaic_frequency: 0.75
   validation_data:
     global_batch_size: 8
     dtype: float16
