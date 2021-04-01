@@ -187,7 +187,7 @@ class Yolo_Loss(object):
 
     # metric struff
     self._path_key = path_key
-    self._scaled_boxes = False #self._use_reduction_sum and self._objectness_smooth > 0.0
+    self._scaled_boxes = True #self._use_reduction_sum and self._objectness_smooth > 0.0
     return
 
   def print_error(self, pred, key):
@@ -268,6 +268,7 @@ class Yolo_Loss(object):
     y *= mask
 
     scaled_box = tf.concat([x, y, w, h], axis = -1)
+    #tf.print(tf.concat([scaled_box, boxes], axis = -1), summarize = -1)
     return scaled_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx):
