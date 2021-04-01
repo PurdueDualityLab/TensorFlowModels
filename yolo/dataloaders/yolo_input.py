@@ -224,9 +224,6 @@ class Parser(parser.Parser):
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
 
       if scale < 0.5:
-        # shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-        # shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-        # image, boxes, info = preprocessing_ops.letter_box(image, boxes, xs = shiftx, ys = shifty, target_dim=self._image_w)
         jmi = 1 - 2 * self._jitter_im
         jma = 1 + 2 * self._jitter_im
         image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[self._aug_rand_zoom, 1.0])
