@@ -72,8 +72,8 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 640
+      image_h: 640
       fixed_size: True
       max_num_instances: 200
       letter_box: True
