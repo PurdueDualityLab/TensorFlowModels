@@ -431,10 +431,7 @@ class Yolo_Loss(object):
                                                     fheight, 
                                                     pred_box, 
                                                     anchor_grid, 
-                                                    grid_points, 
-                                                    scaled_box=self._scaled_boxes)
-    if self._scaled_boxes:
-      true_box = self._scale_boxes(true_box, fwidth, fheight, inds)
+                                                    grid_points)
 
     if self._use_reduction_sum:
       num_objs = tf.cast(

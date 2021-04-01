@@ -117,7 +117,7 @@ class Mosaic(object):
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area, width, height):
     image, info = preprocessing_ops.random_crop_image(image, 
                                                           aspect_ratio_range=(self._output_size[1]/self._output_size[0], self._output_size[1]/self._output_size[0]), 
-                                                          area_range= self._crop_area, 
+                                                          area_range= crop_area, 
                                                           seed = self._seed)
     
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
@@ -201,10 +201,9 @@ class Mosaic(object):
         is_crowd = tf.concat(is_crowds, axis = 0)
         area = tf.concat(areas, axis = 0)
         
-        image = tf.image.resize(image, (height, width))
         if self._random_crop_mosaic:
           image, boxes, classes, is_crowd, area, info = self._crop_image(image, boxes, classes, is_crowd, area, self._crop_area_mosaic, width, height)
-          
+        image = tf.image.resize(image, (height, width))
 
         sample['image'] = tf.expand_dims(image, axis = 0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis = 0)
@@ -256,7 +255,7 @@ class Mosaic(object):
 if __name__ == "__main__":
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
   decoder = tfds_coco_decoder.MSCOCODecoder()
-  mosaic = Mosaic([720, 640], random_crop=True)
+  mosaic = Mosaic([640, 640], random_crop=False, random_crop_mosaic=True, crop_area_mosaic=[0.3, 0.35])
 
   dataset = tfds.load('coco', split = 'train')
   dataset = dataset.map(decoder.decode)

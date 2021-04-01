@@ -593,6 +593,10 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height, wi
 
 
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample, height, width, num_written, num_instances, offset):
+
+  # if offset > 0.0:
+  #   const = tf.cast(tf.convert_to_tensor([1. - offset/2]), dtype=boxes.dtype)
+  # else:
   const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
   num_viable = tf.shape(viable)[0]
   for val in range(num_viable):

@@ -115,7 +115,9 @@ class YoloLayer(ks.Model):
 
     boxes = box_utils.xcycwh_to_yxyx(boxes)
     obns_scores = tf.math.sigmoid(obns_scores)
-    class_scores = tf.math.sigmoid(class_scores) * obns_scores
+
+    obns_mask = tf.cast(obns_scores > self._thresh, obns_scores.dtype)
+    class_scores = tf.math.sigmoid(class_scores) * obns_mask * obns_scores
 
     boxes = tf.reshape(boxes, [shape[0], -1, 4])
     class_scores = tf.reshape(class_scores, [shape[0], -1, classes])
@@ -152,7 +154,7 @@ class YoloLayer(ks.Model):
           self._thresh,
           self._nms_thresh,
           prenms_top_k = 500, 
-          use_classes=False)
+          use_classes=True)
     else:
       boxes = tf.cast(boxes, dtype = tf.float32)
       class_scores = tf.cast(class_scores, dtype = tf.float32)

@@ -210,19 +210,9 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    if self._jitter_boxes > 0.0:
-      height_, width_ = preprocessing_ops.get_image_shape(image)
-      
-      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
-      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
-      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
-
-      image = tf.image.resize(image, (height_, width_))
-
     if data['is_mosaic']:
-      zooms = [0.25, 0.75]
-      image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [1.0, 1.0], area_range=zooms)
+      #zooms = [0.25, 0.75]
+      image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [1.0, 1.0], area_range=[1.0, 1.0])
     else:
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
 
@@ -234,6 +224,16 @@ class Parser(parser.Parser):
         area = preprocessing_ops.rand_uniform_strong(1.0, 1/self._aug_rand_zoom)
         image, info = preprocessing_ops.random_pad(image, area)
   
+      if self._jitter_boxes > 0.0:
+        height_, width_ = preprocessing_ops.get_image_shape(image)
+        
+        shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
+        shifty = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
+        width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+        height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+
+        image = tf.image.resize(image, (height_, width_))
+
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])
     

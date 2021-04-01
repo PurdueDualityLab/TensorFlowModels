@@ -9,13 +9,13 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'altered_cspdarknet53'
       decoder:
         version: v4
         type: csp
       darknet_weights_file: 'cache://yolov4-csp-2.weights'
       darknet_weights_cfg: 'cache://yolov4-csp.cfg'
-    num_classes: 91
+    num_classes: 80
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: null #[512, 512, 3]
     boxes_per_scale: 3
@@ -27,7 +27,7 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: false
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       ignore_thresh:
         '5': 0.7
@@ -50,17 +50,17 @@ task:
         '4': 1.0
         '3': 1.0
       obj_normalizer: 
-        '5': 1.0
+        '5': 0.4
         '4': 1.0
-        '3': 1.0
+        '3': 4.0
       # max_delta: 
       #   '5': 5.0
       #   '4': 5.0 
       #   '3': 5.0
       objectness_smooth: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        '5': true
+        '4': true
+        '3': true
       new_cords:
         '5': true
         '4': true
@@ -71,16 +71,18 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.2
-      nms_thresh: 0.45
+      iou_thresh: 0.4
+      nms_thresh: 0.6
       use_reduction_sum: true
   validation_data:
     global_batch_size: 8
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_download: true
+    tfds_name: coco/2017
+    tfds_split: validation
     dtype: float16
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    input_path: ''
     is_training: false
-    shuffle_buffer_size: 10000
-    drop_remainder: true
     parser:
       fixed_size: true
       image_h: 512

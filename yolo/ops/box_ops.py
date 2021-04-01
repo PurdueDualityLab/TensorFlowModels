@@ -140,7 +140,7 @@ def compute_giou(box1, box2, yxyx=False):
   return iou, giou
 
 
-def compute_diou(box1, box2, beta = 0.6, yxyx=False):
+def compute_diou(box1, box2, beta = 1.0, yxyx=False):
   """Calculates the distance intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in

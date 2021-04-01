@@ -147,9 +147,9 @@ class Mosaic(hyperparams.Config):
   output_size:List[int] = dataclasses.field(default_factory=lambda:[640, 640])
   mosaic_frequency:float = 0.75
   crop_area:List[int] = dataclasses.field(default_factory=lambda:[0.5, 1.0])
-  crop_area_mosaic:List[int] = dataclasses.field(default_factory=lambda:[0.3, 0.3])
+  crop_area_mosaic:List[int] = dataclasses.field(default_factory=lambda:[0.25, 0.75])
   random_crop:bool = False
-  random_crop_mosaic: bool = False
+  random_crop_mosaic: bool = True
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -169,9 +169,9 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: float = 0.75
   aug_rand_zoom: float = 0.5 
   aug_rand_hue: float = 0.1
-  aug_rand_angle: float = 2.0
+  aug_rand_angle: float = 5.0
   use_tie_breaker: bool = True
-  use_scale_xy: bool = False
+  use_scale_xy: bool = True
   mosaic: Mosaic = Mosaic()
 
 
@@ -245,7 +245,7 @@ class YoloLossLayer(hyperparams.Config):
   path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
   objectness_smooth: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.0))
   use_nms: bool = False
-  iou_thresh: float = 0.25
+  iou_thresh: float = 0.001
   nms_thresh: float = 0.6
   max_boxes: int = 200
   anchor_generation_scale: int = 512
