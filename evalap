@@ -1,43 +1,43 @@
-2021-04-01 00:59:06.860923: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
-2021-04-01 00:59:08.037743: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
-2021-04-01 00:59:08.038342: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
-2021-04-01 00:59:08.077368: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+2021-04-01 01:11:00.914338: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-04-01 01:11:02.117096: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-04-01 01:11:02.117707: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2021-04-01 01:11:02.151744: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
 pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
 coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
-2021-04-01 00:59:08.077400: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
-2021-04-01 00:59:08.079148: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
-2021-04-01 00:59:08.079204: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
-2021-04-01 00:59:08.079907: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
-2021-04-01 00:59:08.080098: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
-2021-04-01 00:59:08.081835: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
-2021-04-01 00:59:08.082253: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
-2021-04-01 00:59:08.082332: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
-2021-04-01 00:59:08.083076: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
-2021-04-01 00:59:08.083348: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX512F
+2021-04-01 01:11:02.151782: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-04-01 01:11:02.153552: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-04-01 01:11:02.153621: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-04-01 01:11:02.154346: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-04-01 01:11:02.154543: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-04-01 01:11:02.156345: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-04-01 01:11:02.156737: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-04-01 01:11:02.156825: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-04-01 01:11:02.157544: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-04-01 01:11:02.157837: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX512F
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-04-01 00:59:08.084090: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
-2021-04-01 00:59:08.084504: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+2021-04-01 01:11:02.158566: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-04-01 01:11:02.158994: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
 pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
 coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
-2021-04-01 00:59:08.084522: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
-2021-04-01 00:59:08.084538: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
-2021-04-01 00:59:08.084546: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
-2021-04-01 00:59:08.084554: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
-2021-04-01 00:59:08.084561: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
-2021-04-01 00:59:08.084569: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
-2021-04-01 00:59:08.084576: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
-2021-04-01 00:59:08.084583: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
-2021-04-01 00:59:08.085232: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
-2021-04-01 00:59:08.085252: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
-2021-04-01 00:59:08.455486: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
-2021-04-01 00:59:08.455523: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
-2021-04-01 00:59:08.455530: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
-2021-04-01 00:59:08.456603: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 5727 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2070 SUPER, pci bus id: 0000:65:00.0, compute capability: 7.5)
+2021-04-01 01:11:02.159017: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-04-01 01:11:02.159038: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-04-01 01:11:02.159048: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-04-01 01:11:02.159058: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-04-01 01:11:02.159069: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-04-01 01:11:02.159079: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-04-01 01:11:02.159089: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-04-01 01:11:02.159100: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-04-01 01:11:02.159773: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-04-01 01:11:02.159798: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-04-01 01:11:02.586909: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-04-01 01:11:02.586949: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2021-04-01 01:11:02.586956: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2021-04-01 01:11:02.588050: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 5718 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2070 SUPER, pci bus id: 0000:65:00.0, compute capability: 7.5)
 /usr/lib/python3/dist-packages/Crypto/Random/Fortuna/FortunaGenerator.py:28: SyntaxWarning: "is" with a literal. Did you mean "=="?
   if sys.version_info[0] is 2 and  sys.version_info[1] is 1:
 /usr/lib/python3/dist-packages/Crypto/Random/Fortuna/FortunaGenerator.py:28: SyntaxWarning: "is" with a literal. Did you mean "=="?
   if sys.version_info[0] is 2 and  sys.version_info[1] is 1:
-I0401 00:59:09.200357 139884672948032 train_utils.py:285] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+I0401 01:11:03.386043 139640210491200 train_utils.py:285] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
              'batchnorm_spatial_persistent': False,
              'dataset_num_private_threads': None,
              'default_shard_dim': -1,
@@ -96,14 +96,14 @@ I0401 00:59:09.200357 139884672948032 train_utils.py:285] Final experiment param
                                'path_scales': {'3': 8, '4': 16, '5': 32},
                                'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0},
                                'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0},
-                               'use_nms': False,
+                               'use_nms': True,
                                'use_reduction_sum': True},
                     'max_level': 5,
                     'min_level': 3,
                     'norm_activation': {'activation': 'mish',
                                         'norm_epsilon': 0.001,
                                         'norm_momentum': 0.99,
-                                        'use_sync_bn': False},
+                                        'use_sync_bn': True},
                     'num_classes': 91,
                     'subdivisions': 1,
                     'use_sam': False},
@@ -236,50 +236,50 @@ I0401 00:59:09.200357 139884672948032 train_utils.py:285] Final experiment param
              'train_tf_while_loop': True,
              'validation_interval': 1,
              'validation_steps': 625}}
-2021-04-01 00:59:09.200783: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-04-01 01:11:03.386465: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
 INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
 Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: GeForce RTX 2070 SUPER, compute capability 7.5
-I0401 00:59:09.201243 139884672948032 device_compatibility_check.py:120] Mixed precision compatibility check (mixed_float16): OK
+I0401 01:11:03.386996 139640210491200 device_compatibility_check.py:120] Mixed precision compatibility check (mixed_float16): OK
 Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: GeForce RTX 2070 SUPER, compute capability 7.5
 WARNING:tensorflow:From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
 Instructions for updating:
 Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
-W0401 00:59:09.201357 139884672948032 deprecation.py:333] From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+W0401 01:11:03.387122 139640210491200 deprecation.py:333] From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
 Instructions for updating:
 Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
 INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-I0401 00:59:09.204403 139884672948032 mirrored_strategy.py:350] Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-I0401 00:59:09.209169 139884672948032 train_utils.py:214] Running default trainer.
-2021-04-01 00:59:09.213308: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+I0401 01:11:03.390191 139640210491200 mirrored_strategy.py:350] Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+I0401 01:11:03.395105 139640210491200 train_utils.py:214] Running default trainer.
+2021-04-01 01:11:03.399307: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.260208 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.448115 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.261064 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.448901 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.262128 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.449918 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.262569 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.450339 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.330260 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.515281 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.332260 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.517174 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.404459 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.583895 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.405084 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.584508 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.405943 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.585360 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-I0401 00:59:09.406400 139884672948032 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0401 01:11:03.585782 139640210491200 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
 
 !--PREPPING GPU--! 
 1 Physical GPUs, 1 Logical GPUs
 yolo_custom
-{'task': {'init_checkpoint': '', 'model': {'num_classes': 91, '_input_size': None, 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': inf, '4': inf, '5': inf}, 'new_cords': {'3': True, '4': True, '5': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 1.0, '4': 1.0, '5': 1.0}, 'use_nms': False, 'iou_thresh': 0.1, 'nms_thresh': 0.6, 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_reduction_sum': True}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': False, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': '', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 1, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.3, 'jitter_boxes': 0.1, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.5, 'aug_rand_hue': 0.1, 'aug_rand_angle': 2.0, 'use_tie_breaker': True, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.75, 'crop_area': [0.5, 1.0], 'random_crop': True}}}, 'validation_data': {'input_path': 'gs://tensorflow2/coco_records/val/2017*', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 8, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 10000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.3, 'jitter_boxes': 0.1, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.5, 'aug_rand_hue': 0.1, 'aug_rand_angle': 2.0, 'use_tie_breaker': True, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.75, 'crop_area': [0.5, 1.0], 'random_crop': True}}}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': True, 'darknet_load_decoder': True, 'init_checkpoint_modules': None}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': False, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [800000, 900000], 'values': [0.00065, 6.5e-05, 6.5e-06]}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 1000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 10000, 'summary_interval': 10000, 'checkpoint_interval': 10000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 10000, 'validation_steps': 625, 'validation_interval': 1, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'mirrored', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 1, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'float16', 'loss_scale': 'dynamic', 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+{'task': {'init_checkpoint': '', 'model': {'num_classes': 91, '_input_size': None, 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': inf, '4': inf, '5': inf}, 'new_cords': {'3': True, '4': True, '5': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 1.0, '4': 1.0, '5': 1.0}, 'use_nms': True, 'iou_thresh': 0.1, 'nms_thresh': 0.6, 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_reduction_sum': True}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': '', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 1, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.3, 'jitter_boxes': 0.1, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.5, 'aug_rand_hue': 0.1, 'aug_rand_angle': 2.0, 'use_tie_breaker': True, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.75, 'crop_area': [0.5, 1.0], 'random_crop': True}}}, 'validation_data': {'input_path': 'gs://tensorflow2/coco_records/val/2017*', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 8, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 10000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.3, 'jitter_boxes': 0.1, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.5, 'aug_rand_hue': 0.1, 'aug_rand_angle': 2.0, 'use_tie_breaker': True, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.75, 'crop_area': [0.5, 1.0], 'random_crop': True}}}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': True, 'darknet_load_decoder': True, 'init_checkpoint_modules': None}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': False, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [800000, 900000], 'values': [0.00065, 6.5e-05, 6.5e-06]}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 1000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 10000, 'summary_interval': 10000, 'checkpoint_interval': 10000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 10000, 'validation_steps': 625, 'validation_interval': 1, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'mirrored', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 1, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'float16', 'loss_scale': 'dynamic', 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
 {'3': 2.0, '4': 2.0, '5': 2.0} 0.00025
-{'num_classes': 91, '_input_size': None, 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': inf, '4': inf, '5': inf}, 'new_cords': {'3': True, '4': True, '5': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 1.0, '4': 1.0, '5': 1.0}, 'use_nms': False, 'iou_thresh': 0.1, 'nms_thresh': 0.6, 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_reduction_sum': True}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': False, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}
+{'num_classes': 91, '_input_size': None, 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': inf, '4': inf, '5': inf}, 'new_cords': {'3': True, '4': True, '5': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 1.0, '4': 1.0, '5': 1.0}, 'use_nms': True, 'iou_thresh': 0.1, 'nms_thresh': 0.6, 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_reduction_sum': True}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}
 InputSpec(shape=(None, None, None, 3), ndim=4)
-<tensorflow.python.keras.regularizers.L2 object at 0x7f36b9274df0>
+<tensorflow.python.keras.regularizers.L2 object at 0x7efdce0f50a0>
 Model: "cspdarknet53"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
@@ -299,7 +299,7 @@ DarkRes_2_csp_down (CSPRoute)   ((None, None, None,  91136       DarkRes_1_csp_c
 __________________________________________________________________________________________________
 DarkRes_2_0 (DarkResidual)      (None, None, None, 6 41472       DarkRes_2_csp_down[0][0]         WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
   opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
-W0401 00:59:14.403033 139884672948032 loss_scale_optimizer.py:1039] tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
+W0401 01:11:07.974034 139640210491200 loss_scale_optimizer.py:1039] tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
   opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
 
 __________________________________________________________________________________________________
@@ -428,10 +428,13 @@ Trainable params: 64,422,336
 Non-trainable params: 66,304
 _________________________________________________________________
 {'3': 2.0, '4': 2.0, '5': 2.0}
-<PrefetchDataset shapes: ((8, 512, 512, 3), {source_id: (8,), bbox: (8, 200, 4), classes: (8, 200), area: (8, 200), is_crowd: (8, 200), best_anchors: (8, 200, 9), best_iou_match: (8, 200, 9), width: (8,), height: (8,), info: (8, 4), num_detections: (8,), upds: {3: (8, 200, 8), 4: (8, 200, 8), 5: (8, 200, 8)}, inds: {3: (8, 200, 3), 4: (8, 200, 3), 5: (8, 200, 3)}, true_conf: {3: (8, 64, 64, 3, 1), 4: (8, 32, 32, 3, 1), 5: (8, 16, 16, 3, 1)}}), types: (tf.float16, {source_id: tf.int64, bbox: tf.float16, classes: tf.float16, area: tf.float16, is_crowd: tf.int32, best_anchors: tf.float16, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.int32, num_detections: tf.int32, upds: {3: tf.float16, 4: tf.float16, 5: tf.float16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float16, 4: tf.float16, 5: tf.float16}})>I0401 00:59:20.580555 139884672948032 controller.py:362] restoring or initializing model...
-I0401 00:59:20.992173 139884672948032 controller.py:366] restored model from ../checkpoints/yolov4-coco-all-50k/ckpt-62500.
-I0401 00:59:20.992292 139884672948032 controller.py:192] restored from checkpoint: ../checkpoints/yolov4-coco-all-50k/ckpt-62500
-I0401 00:59:20.992326 139884672948032 train_lib.py:96] Starts to execute mode: eval
-I0401 00:59:20.992640 139884672948032 controller.py:252]  eval | step:  62500 | running 625 steps of evaluation...
-2021-04-01 00:59:21.501838: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
-2021-04-01 00:59:21.518759: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3499910000 Hz
+<PrefetchDataset shapes: ((8, 512, 512, 3), {source_id: (8,), bbox: (8, 200, 4), classes: (8, 200), area: (8, 200), is_crowd: (8, 200), best_anchors: (8, 200, 9), best_iou_match: (8, 200, 9), width: (8,), height: (8,), info: (8, 4), num_detections: (8,), upds: {3: (8, 200, 8), 4: (8, 200, 8), 5: (8, 200, 8)}, inds: {3: (8, 200, 3), 4: (8, 200, 3), 5: (8, 200, 3)}, true_conf: {3: (8, 64, 64, 3, 1), 4: (8, 32, 32, 3, 1), 5: (8, 16, 16, 3, 1)}}), types: (tf.float16, {source_id: tf.int64, bbox: tf.float16, classes: tf.float16, area: tf.float16, is_crowd: tf.int32, best_anchors: tf.float16, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.int32, num_detections: tf.int32, upds: {3: tf.float16, 4: tf.float16, 5: tf.float16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float16, 4: tf.float16, 5: tf.float16}})>I0401 01:11:14.070539 139640210491200 controller.py:362] restoring or initializing model...
+I0401 01:11:14.480544 139640210491200 controller.py:366] restored model from ../checkpoints/yolov4-coco-all-50k/ckpt-62500.
+I0401 01:11:14.480672 139640210491200 controller.py:192] restored from checkpoint: ../checkpoints/yolov4-coco-all-50k/ckpt-62500
+I0401 01:11:14.480720 139640210491200 train_lib.py:96] Starts to execute mode: eval
+I0401 01:11:14.481056 139640210491200 controller.py:252]  eval | step:  62500 | running 625 steps of evaluation...
+2021-04-01 01:11:14.998496: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2021-04-01 01:11:15.018710: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3499910000 Hz
+2021-04-01 01:11:43.398686: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-04-01 01:11:44.651542: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-04-01 01:11:45.009137: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11

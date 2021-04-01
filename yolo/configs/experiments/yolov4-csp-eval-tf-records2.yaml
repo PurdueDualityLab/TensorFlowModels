@@ -26,7 +26,7 @@ task:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
-      use_sync_bn: false
+      use_sync_bn: true
     decoder_activation: leaky
     filter:
       ignore_thresh:
@@ -70,8 +70,8 @@ task:
         '4': 2.0 
         '3': 2.0
       max_boxes: 200
-      use_nms: false
-      iou_thresh: 0.1
+      use_nms: true
+      iou_thresh: 0.2
       nms_thresh: 0.6
       use_reduction_sum: true
   validation_data:
