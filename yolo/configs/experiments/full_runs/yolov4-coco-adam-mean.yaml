@@ -56,13 +56,13 @@ task:
         '4': 5.0
         '3': 5.0
       objectness_smooth: 
-        '5': 0.0
-        '4': 0.0
-        '3': 0.0
+        '5': 1.0
+        '4': 1.0
+        '3': 1.0
       scale_xy:
-        '5': 1.05
-        '4': 1.1
-        '3': 1.2
+        '5': 2.0
+        '4': 2.0
+        '3': 2.0
       max_boxes: 200
       use_nms: true
       iou_thresh: 0.001
@@ -90,7 +90,7 @@ task:
       aug_rand_zoom: 0.5
       aug_rand_angle: 5.0
       use_tie_breaker: True
-      use_scale_xy: false
+      use_scale_xy: true
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: False
