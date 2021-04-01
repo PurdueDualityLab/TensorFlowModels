@@ -4,6 +4,7 @@ from yolo.ops import box_ops as box_ops
 
 NMS_TILE_SIZE = 512
 
+
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
 
@@ -62,12 +63,13 @@ def nms(boxes,
         k,
         pre_nms_thresh,
         nms_thresh,
-        prenms_top_k = 500, 
+        prenms_top_k=500,
         limit_pre_thresh=False,
         use_classes=True):
 
   if limit_pre_thresh:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes,
+                                           prenms_top_k)
 
   mask = tf.fill(
       tf.shape(confidence), tf.cast(pre_nms_thresh, dtype=confidence.dtype))
@@ -79,11 +81,12 @@ def nms(boxes,
 
   if use_classes:
     confidence = tf.reduce_max(classes, axis=-1)
-  confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k )
+  confidence, boxes, classes = sort_drop(confidence, boxes, classes,
+                                         prenms_top_k)
 
   classes = tf.cast(tf.argmax(classes, axis=-1), tf.float32)
-  boxes, classes, confidence = segment_nms(boxes, classes, confidence, prenms_top_k,
-                                           nms_thresh)
+  boxes, classes, confidence = segment_nms(boxes, classes, confidence,
+                                           prenms_top_k, nms_thresh)
   confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
   classes = tf.squeeze(classes, axis=-1)
   return boxes, classes, confidence
@@ -113,7 +116,6 @@ def nms(boxes,
 #   classes *= tf.cast(raw, classes.dtype)
 
 #   return boxes, classes, confidence
-
 
 # def nms_filter(boxes,
 #         classes,

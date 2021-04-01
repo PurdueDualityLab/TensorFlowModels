@@ -25,7 +25,7 @@ class YoloFPN(tf.keras.layers.Layer):
 
   def __init__(self,
                fpn_path_len=4,
-               embed_sam = False, 
+               embed_sam=False,
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -123,9 +123,9 @@ class YoloFPN(tf.keras.layers.Layer):
 
       if level == self._min_level:
         self.tails[str(level)] = nn_blocks.FPNTail(
-            filters=depth, 
-            insert_sam=self._embed_sam, 
-            upsample=False, 
+            filters=depth,
+            insert_sam=self._embed_sam,
+            upsample=False,
             **self._base_config)
       else:
         self.tails[str(level)] = nn_blocks.FPNTail(
@@ -155,7 +155,7 @@ class YoloPAN(tf.keras.layers.Layer):
                path_process_len=6,
                max_level_process_len=None,
                embed_spp=False,
-               embed_sam = False, 
+               embed_sam=False,
                activation='leaky',
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -377,7 +377,7 @@ class YoloDecoder(tf.keras.Model):
     self._subdivisions = subdivisions
 
     self._base_config = dict(
-        embed_sam = False, 
+        embed_sam=False,
         activation=self._activation,
         use_sync_bn=self._use_sync_bn,
         norm_momentum=self._norm_momentum,

@@ -127,37 +127,37 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "csp":
     model = YoloDecoder(
-      input_specs,
-      embed_spp=False,
-      embed_fpn=True,
-      max_level_process_len=None,
-      csp_stack=5,
-      fpn_path_len=5, 
-      path_process_len=6,
-      activation=activation,
-      subdivisions=subdivisions,
-      embed_sam=model_config.use_sam,
-      use_sync_bn=model_config.norm_activation.use_sync_bn,
-      norm_momentum=model_config.norm_activation.norm_momentum,
-      norm_epsilon=model_config.norm_activation.norm_epsilon,
-      kernel_regularizer=l2_regularization)
+        input_specs,
+        embed_spp=False,
+        embed_fpn=True,
+        max_level_process_len=None,
+        csp_stack=5,
+        fpn_path_len=5,
+        path_process_len=6,
+        activation=activation,
+        subdivisions=subdivisions,
+        embed_sam=model_config.use_sam,
+        use_sync_bn=model_config.norm_activation.use_sync_bn,
+        norm_momentum=model_config.norm_activation.norm_momentum,
+        norm_epsilon=model_config.norm_activation.norm_epsilon,
+        kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "csp-large":
-      model = YoloDecoder(
-      input_specs,
-      embed_spp=False,
-      embed_fpn=True,
-      max_level_process_len=None,
-      csp_stack=7,
-      fpn_path_len=7, 
-      path_process_len=8,
-      fpn_filter_scale=2,
-      activation=activation,
-      subdivisions=subdivisions,
-      embed_sam=model_config.use_sam,
-      use_sync_bn=model_config.norm_activation.use_sync_bn,
-      norm_momentum=model_config.norm_activation.norm_momentum,
-      norm_epsilon=model_config.norm_activation.norm_epsilon,
-      kernel_regularizer=l2_regularization)
+    model = YoloDecoder(
+        input_specs,
+        embed_spp=False,
+        embed_fpn=True,
+        max_level_process_len=None,
+        csp_stack=7,
+        fpn_path_len=7,
+        path_process_len=8,
+        fpn_filter_scale=2,
+        activation=activation,
+        subdivisions=subdivisions,
+        embed_sam=model_config.use_sam,
+        use_sync_bn=model_config.norm_activation.use_sync_bn,
+        norm_momentum=model_config.norm_activation.norm_momentum,
+        norm_epsilon=model_config.norm_activation.norm_epsilon,
+        kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "spp":
     model = YoloDecoder(
         input_specs,
@@ -192,16 +192,16 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       use_nms=model_config.filter.use_nms,
       path_scale=path_scales,
       scale_xy=xy_scales,
-      use_reduction_sum=model_config.filter.use_reduction_sum, 
+      use_reduction_sum=model_config.filter.use_reduction_sum,
       truth_thresh=model_config.filter.truth_thresh.as_dict(),
       loss_type=model_config.filter.loss_type.as_dict(),
       max_delta=model_config.filter.max_delta.as_dict(),
-      new_cords=model_config.filter.new_cords.as_dict(), 
+      new_cords=model_config.filter.new_cords.as_dict(),
       iou_normalizer=model_config.filter.iou_normalizer.as_dict(),
       cls_normalizer=model_config.filter.cls_normalizer.as_dict(),
       obj_normalizer=model_config.filter.obj_normalizer.as_dict(),
-      ignore_thresh=model_config.filter.ignore_thresh.as_dict(), 
-      objectness_smooth =model_config.filter.objectness_smooth.as_dict())
+      ignore_thresh=model_config.filter.ignore_thresh.as_dict(),
+      objectness_smooth=model_config.filter.objectness_smooth.as_dict())
   return model
 
 

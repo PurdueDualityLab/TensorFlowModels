@@ -144,12 +144,14 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  output_size:List[int] = dataclasses.field(default_factory=lambda:[640, 640])
-  mosaic_frequency:float = 0.75
-  crop_area:List[int] = dataclasses.field(default_factory=lambda:[0.5, 1.0])
-  crop_area_mosaic:List[int] = dataclasses.field(default_factory=lambda:[0.25, 0.75])
-  random_crop:bool = False
+  output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
+  mosaic_frequency: float = 0.75
+  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.5, 1.0])
+  crop_area_mosaic: List[int] = dataclasses.field(
+      default_factory=lambda: [0.25, 0.75])
+  random_crop: bool = False
   random_crop_mosaic: bool = True
+
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -167,7 +169,7 @@ class Parser(hyperparams.Config):
   aug_rand_transalate: float = 0.0
   aug_rand_saturation: float = 0.75
   aug_rand_brightness: float = 0.75
-  aug_rand_zoom: float = 0.5 
+  aug_rand_zoom: float = 0.5
   aug_rand_hue: float = 0.1
   aug_rand_angle: float = 5.0
   use_tie_breaker: bool = True
@@ -197,9 +199,9 @@ class DataDecoder(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  input_path: str = '' #'gs://tensorflow2/coco_records/train/2017*'
-  tfds_name: str = None #'coco'
-  tfds_split: str = None #'train'
+  input_path: str = ''  #'gs://tensorflow2/coco_records/train/2017*'
+  tfds_name: str = None  #'coco'
+  tfds_split: str = None  #'train'
   global_batch_size: int = 64
   is_training: bool = True
   dtype: str = 'float16'
@@ -223,27 +225,41 @@ class YoloDecoder(hyperparams.Config):
   embed_spp: bool = False
   xy_exponential: bool = False
 
+
 def _build_dict(min_level, max_level, value):
-  return lambda:{str(key): value for key in range(min_level, max_level + 1)}
+  return lambda: {str(key): value for key in range(min_level, max_level + 1)}
+
 
 def _build_path_scales(min_level, max_level):
-  return lambda:{str(key): 2**key for key in range(min_level, max_level + 1)}
+  return lambda: {str(key): 2**key for key in range(min_level, max_level + 1)}
+
 
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
   min_level: int = 3
   max_level: int = 5
-  ignore_thresh: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.7))
-  truth_thresh: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
-  loss_type: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 'ciou'))
-  iou_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.75))
-  cls_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
-  obj_normalizer: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 1.0))
-  max_delta: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, np.inf))
-  new_cords: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, True))
-  scale_xy: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 2.0))
-  path_scales: Dict = dataclasses.field(default_factory=_build_path_scales(min_level, max_level))
-  objectness_smooth: Dict = dataclasses.field(default_factory=_build_dict(min_level, max_level, 0.0))
+  ignore_thresh: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 0.7))
+  truth_thresh: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 1.0))
+  loss_type: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 'ciou'))
+  iou_normalizer: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 0.75))
+  cls_normalizer: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 1.0))
+  obj_normalizer: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 1.0))
+  max_delta: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, np.inf))
+  new_cords: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, True))
+  scale_xy: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 2.0))
+  path_scales: Dict = dataclasses.field(
+      default_factory=_build_path_scales(min_level, max_level))
+  objectness_smooth: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, 0.0))
   use_nms: bool = False
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6
@@ -251,7 +267,6 @@ class YoloLossLayer(hyperparams.Config):
   anchor_generation_scale: int = 512
   use_reduction_sum: bool = True
 
-  
 
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
@@ -272,7 +287,8 @@ class Yolo(ModelConfig):
   base: Union[str, YoloBase] = YoloBase()
   subdivisions: int = 1
   use_sam: bool = False
-  filter: YoloLossLayer = YoloLossLayer(min_level=min_level, max_level=max_level)
+  filter: YoloLossLayer = YoloLossLayer(
+      min_level=min_level, max_level=max_level)
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
       use_sync_bn=True,
@@ -285,6 +301,7 @@ class Yolo(ModelConfig):
   # ])
 
   _boxes: Optional[List[str]] = None
+
 
 # model task
 @dataclasses.dataclass
@@ -299,7 +316,7 @@ class YoloTask(cfg.TaskConfig):
 
   load_darknet_weights: bool = False
   darknet_load_decoder: bool = False
-  init_checkpoint_modules: str = None #'backbone'
+  init_checkpoint_modules: str = None  #'backbone'
 
 
 @dataclasses.dataclass

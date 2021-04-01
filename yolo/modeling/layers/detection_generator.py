@@ -9,6 +9,7 @@ from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.losses import yolo_loss
 from yolo.ops import nms_ops
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
 
@@ -18,7 +19,7 @@ class YoloLayer(ks.Model):
                classes,
                iou_thresh=0.0,
                ignore_thresh=0.7,
-               truth_thresh = 1.0, 
+               truth_thresh=1.0,
                nms_thresh=0.6,
                max_delta=10.0,
                loss_type='ciou',
@@ -26,13 +27,13 @@ class YoloLayer(ks.Model):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
-               use_reduction_sum = False, 
+               use_reduction_sum=False,
                max_boxes=200,
-               new_cords = False, 
+               new_cords=False,
                path_scale=None,
                scale_xy=None,
                use_nms=True,
-               objectness_smooth = False, 
+               objectness_smooth=False,
                **kwargs):
     super().__init__(**kwargs)
     self._masks = masks
@@ -95,23 +96,15 @@ class YoloLayer(ks.Model):
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
     classes = tf.shape(class_scores)[-1]
-    
+
     if not self._new_cords[key]:
-      _,_, boxes = yolo_loss.get_predicted_box(
-          tf.cast(height, data.dtype),
-          tf.cast(width, data.dtype),
-          boxes,
-          anchors,
-          centers,
-          scale_xy)
+      _, _, boxes = yolo_loss.get_predicted_box(
+          tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
+          anchors, centers, scale_xy)
     else:
-       _,_, boxes = yolo_loss.get_predicted_box_newcords(
-          tf.cast(height, data.dtype),
-          tf.cast(width, data.dtype),
-          boxes,
-          anchors,
-          centers,
-          scale_xy)
+      _, _, boxes = yolo_loss.get_predicted_box_newcords(
+          tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
+          anchors, centers, scale_xy)
 
     boxes = box_utils.xcycwh_to_yxyx(boxes)
     obns_scores = tf.math.sigmoid(obns_scores)
@@ -135,8 +128,7 @@ class YoloLayer(ks.Model):
     for i in range(min_level, max_level + 1):
       key = str(i)
       object_scores_, boxes_, class_scores_ = self.parse_prediction_path(
-          key,
-          inputs[key])
+          key, inputs[key])
       boxes.append(boxes_)
       class_scores.append(class_scores_)
       object_scores.append(object_scores_)
@@ -153,30 +145,30 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           self._thresh,
           self._nms_thresh,
-          prenms_top_k = 500, 
+          prenms_top_k=500,
           use_classes=True)
     else:
-      boxes = tf.cast(boxes, dtype = tf.float32)
-      class_scores = tf.cast(class_scores, dtype = tf.float32)
+      boxes = tf.cast(boxes, dtype=tf.float32)
+      class_scores = tf.cast(class_scores, dtype=tf.float32)
       nms_items = tf.image.combined_non_max_suppression(
-        tf.expand_dims(boxes, axis = -2), 
-        class_scores, 
-        self._max_boxes, 
-        self._max_boxes, 
-        iou_threshold=self._nms_thresh, 
-        score_threshold=self._thresh)
-        
+          tf.expand_dims(boxes, axis=-2),
+          class_scores,
+          self._max_boxes,
+          self._max_boxes,
+          iou_threshold=self._nms_thresh,
+          score_threshold=self._thresh)
+
       boxes = tf.cast(nms_items.nmsed_boxes, object_scores.dtype)
       class_scores = tf.cast(nms_items.nmsed_classes, object_scores.dtype)
       object_scores = tf.cast(nms_items.nmsed_scores, object_scores.dtype)
 
-    num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis = -1)
+    num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis=-1)
 
     return {
         'bbox': boxes,
         'classes': class_scores,
         'confidence': object_scores,
-        'num_detections': num_detections, 
+        'num_detections': num_detections,
     }
 
   @property
@@ -192,10 +184,10 @@ class YoloLayer(ks.Model):
           iou_normalizer=self._iou_normalizer[key],
           cls_normalizer=self._cls_normalizer[key],
           obj_normalizer=self._obj_normalizer[key],
-          new_cords = self._new_cords[key], 
-          objectness_smooth = self._objectness_smooth[key],
-          use_reduction_sum = self._use_reduction_sum, 
-          path_key= key,
+          new_cords=self._new_cords[key],
+          objectness_smooth=self._objectness_smooth[key],
+          use_reduction_sum=self._use_reduction_sum,
+          path_key=key,
           mask=self._masks[key],
           max_delta=self._max_delta[key],
           scale_anchors=self._path_scale[key],
@@ -216,11 +208,10 @@ class YoloLayer(ks.Model):
     }
 
 
-
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloFilter(ks.Model):
 
-  def __init__(self, classes = 80, **kwargs):
+  def __init__(self, classes=80, **kwargs):
     super().__init__(**kwargs)
     self._classes = classes
     return
@@ -230,10 +221,14 @@ class YoloFilter(ks.Model):
     # reshape the yolo output to (batchsize, width, height, number_anchors, remaining_points)
     batchsize, height, width = shape[0], shape[1], shape[2]
 
-    boxes, obns_scores, class_scores, obns_scores_2 = tf.split(data, [4, 1, 1, 1], axis=-1)
-    class_scores = tf.cast(tf.one_hot(tf.cast(class_scores, tf.int32), axis = -1, depth = self._classes), boxes.dtype)
+    boxes, obns_scores, class_scores, obns_scores_2 = tf.split(
+        data, [4, 1, 1, 1], axis=-1)
+    class_scores = tf.cast(
+        tf.one_hot(
+            tf.cast(class_scores, tf.int32), axis=-1, depth=self._classes),
+        boxes.dtype)
     classes = tf.shape(class_scores)[-1]
-    
+
     boxes = box_utils.xcycwh_to_yxyx(boxes)
     boxes = tf.reshape(boxes, [shape[0], -1, 4])
     class_scores = tf.reshape(class_scores, [shape[0], -1, classes])
@@ -250,7 +245,8 @@ class YoloFilter(ks.Model):
 
     for i in range(min_level, max_level + 1):
       key = str(i)
-      object_scores_, boxes_, class_scores_ = self.parse_prediction_path(1.0,inputs[key])
+      object_scores_, boxes_, class_scores_ = self.parse_prediction_path(
+          1.0, inputs[key])
       boxes.append(boxes_)
       class_scores.append(class_scores_)
       object_scores.append(object_scores_)
@@ -260,13 +256,7 @@ class YoloFilter(ks.Model):
     class_scores = K.concatenate(class_scores, axis=1)
 
     boxes, class_scores, object_scores = nms_ops.nms(
-        boxes,
-        class_scores,
-        object_scores,
-        200,
-        0.0,
-        1.0,
-        use_classes=True)
+        boxes, class_scores, object_scores, 200, 0.0, 1.0, use_classes=True)
 
     # tf.print(object_scores)
     return {

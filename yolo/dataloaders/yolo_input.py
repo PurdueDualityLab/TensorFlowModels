@@ -47,8 +47,8 @@ class Parser(parser.Parser):
                mosaic_frequency=0.0,
                jitter_im=0.0,
                jitter_boxes=0.0025,
-               aug_rand_angle = 15.0, 
-               aug_rand_transalate=0.0, 
+               aug_rand_angle=15.0,
+               aug_rand_transalate=0.0,
                aug_rand_zoom=0.0,
                aug_rand_hue=0.1,
                aug_rand_saturation=1.5,
@@ -57,9 +57,9 @@ class Parser(parser.Parser):
                min_process_size=320,
                max_num_instances=200,
                keep_thresh=0.25,
-               use_scale_xy = True, 
+               use_scale_xy=True,
                pct_rand=0.5,
-               scale_xy = None, 
+               scale_xy=None,
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
@@ -125,9 +125,9 @@ class Parser(parser.Parser):
 
     self._seed = seed
     self._fixed_size = fixed_size
-    self._scale_xy = scale_xy 
+    self._scale_xy = scale_xy
     # self._scale_xy = {'3':2.0, '4':1.75, '5':1.5}
-    
+
     self._use_scale_xy = use_scale_xy
     self._scale_up = 2 if self._use_scale_xy else 1
 
@@ -142,7 +142,12 @@ class Parser(parser.Parser):
           'Unsupported datatype used in parser only {float16, bfloat16, or float32}'
       )
 
-  def _build_grid(self, raw_true, width, batch=False, use_tie_breaker=False, is_training = True):
+  def _build_grid(self,
+                  raw_true,
+                  width,
+                  batch=False,
+                  use_tie_breaker=False,
+                  is_training=True):
     mask = self._masks
     inds = {}
     upds = {}
@@ -158,14 +163,10 @@ class Parser(parser.Parser):
       else:
         scale_xy = 1
 
-      indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(raw_true, self._masks[key],
-                                                    width // 2**int(key),
-                                                    self._num_classes,
-                                                    raw_true['bbox'].dtype,
-                                                    scale_xy,
-                                                    scale_up, 
-                                                    use_tie_breaker)
-      
+      indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
+          raw_true, self._masks[key], width // 2**int(key), self._num_classes,
+          raw_true['bbox'].dtype, scale_xy, scale_up, use_tie_breaker)
+
       ishape = indexes.get_shape().as_list()
       ishape[-2] = self._max_num_instances * scale_up
       indexes.set_shape(ishape)
@@ -173,7 +174,7 @@ class Parser(parser.Parser):
       ishape = updates.get_shape().as_list()
       ishape[-2] = self._max_num_instances * scale_up
       updates.set_shape(ishape)
-      
+
       inds[key] = indexes
       upds[key] = tf.cast(updates, self._dtype)
       true_conf[key] = true_grid
@@ -196,7 +197,8 @@ class Parser(parser.Parser):
     height = shape[0]
 
     if self._aug_rand_hue > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue, self._aug_rand_hue)
+      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
+                                                    self._aug_rand_hue)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
       delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
@@ -212,31 +214,39 @@ class Parser(parser.Parser):
 
     if data['is_mosaic']:
       #zooms = [0.25, 0.75]
-      image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [1.0, 1.0], area_range=[1.0, 1.0])
+      image, info = preprocessing_ops.random_crop_image(
+          image, aspect_ratio_range=[1.0, 1.0], area_range=[1.0, 1.0])
     else:
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
 
       if scale < 0.5:
         jmi = 1 - 2 * self._jitter_im
         jma = 1 + 2 * self._jitter_im
-        image, info = preprocessing_ops.random_crop_image(image, aspect_ratio_range = [jmi, jma], area_range=[self._aug_rand_zoom, 1.0])
+        image, info = preprocessing_ops.random_crop_image(
+            image,
+            aspect_ratio_range=[jmi, jma],
+            area_range=[self._aug_rand_zoom, 1.0])
       else:
-        area = preprocessing_ops.rand_uniform_strong(1.0, 1/self._aug_rand_zoom)
+        area = preprocessing_ops.rand_uniform_strong(1.0,
+                                                     1 / self._aug_rand_zoom)
         image, info = preprocessing_ops.random_pad(image, area)
-  
+
       if self._jitter_boxes > 0.0:
         height_, width_ = preprocessing_ops.get_image_shape(image)
-        
-        shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
-        shifty = 1.0 + preprocessing_ops.rand_uniform_strong(-self._jitter_boxes , self._jitter_boxes)
+
+        shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+            -self._jitter_boxes, self._jitter_boxes)
+        shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+            -self._jitter_boxes, self._jitter_boxes)
         width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
         height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
         image = tf.image.resize(image, (height_, width_))
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :], info[3, :])
-    
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :])
+
     inds = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
@@ -244,7 +254,8 @@ class Parser(parser.Parser):
 
     if self._aug_rand_angle > 0:
       height, width = preprocessing_ops.get_image_shape(image)
-      image, angle = preprocessing_ops.random_rotate_image(image, self._aug_rand_angle)
+      image, angle = preprocessing_ops.random_rotate_image(
+          image, self._aug_rand_angle)
       boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
 
       boxes = box_ops.denormalize_boxes(boxes, info[1, :])
@@ -254,11 +265,11 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-
     #if self._letter_box:
     shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
     shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-    image, boxes, info = preprocessing_ops.letter_box(image, boxes, xs = shiftx, ys = shifty, target_dim=self._image_w)
+    image, boxes, info = preprocessing_ops.letter_box(
+        image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
     # else:
     # height, width = preprocessing_ops.get_image_shape(image)
     # minscale = tf.math.minimum(width, height)
@@ -275,7 +286,8 @@ class Parser(parser.Parser):
     num_dets = tf.shape(classes)[0]
 
     image = tf.cast(image, self._dtype)
-    image, labels = self._build_label(image, boxes, classes, width, height, info, data, is_training = True)
+    image, labels = self._build_label(
+        image, boxes, classes, width, height, info, data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -298,19 +310,26 @@ class Parser(parser.Parser):
 
     # if self._letter_box:
     image, boxes, info = preprocessing_ops.letter_box(
-        image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
+        image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
 
     image = tf.cast(image, self._dtype)
-    image, labels = self._build_label(image, boxes, classes, width, height, info, data, is_training = False)
+    image, labels = self._build_label(
+        image, boxes, classes, width, height, info, data, is_training=False)
     return image, labels
 
-  def _build_label(self, image, boxes, classes, width, height, info, data, is_training = True):
-
+  def _build_label(self,
+                   image,
+                   boxes,
+                   classes,
+                   width,
+                   height,
+                   info,
+                   data,
+                   is_training=True):
 
     imshape = image.get_shape().as_list()
     imshape[-1] = 3
     image.set_shape(imshape)
-
 
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
@@ -321,11 +340,9 @@ class Parser(parser.Parser):
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)
     bshape[0] = self._max_num_instances
     boxes.set_shape(bshape)
-    
-    
+
     cshape = classes.get_shape().as_list()
-    classes = pad_max_instances(classes,
-                                self._max_num_instances, -1)
+    classes = pad_max_instances(classes, self._max_num_instances, -1)
     cshape[0] = self._max_num_instances
     classes.set_shape(cshape)
 
@@ -341,7 +358,7 @@ class Parser(parser.Parser):
 
     area = data['groundtruth_area']
     ashape = area.get_shape().as_list()
-    area = pad_max_instances(area, self._max_num_instances,0)
+    area = pad_max_instances(area, self._max_num_instances, 0)
     ashape[0] = self._max_num_instances
     area.set_shape(ashape)
 
@@ -362,27 +379,27 @@ class Parser(parser.Parser):
         'best_iou_match': ious,
         'width': width,
         'height': height,
-        'info': info, 
+        'info': info,
         'num_detections': tf.shape(data['groundtruth_classes'])[0]
     }
 
     grid, inds, upds, true_conf = self._build_grid(
-        labels, self._image_w, use_tie_breaker=self._use_tie_breaker, is_training = is_training)
+        labels,
+        self._image_w,
+        use_tie_breaker=self._use_tie_breaker,
+        is_training=is_training)
     # labels.update({'grid_form': grid})
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    labels['upds'] = upds 
+    labels['upds'] = upds
     labels['inds'] = inds
     labels['true_conf'] = true_conf
     return image, labels
 
-
   def postprocess_fn(self, is_training):
     if is_training:  #or self._cutmix
-      return None # if not self._fixed_size or self._mosaic else None
+      return None  # if not self._fixed_size or self._mosaic else None
     else:
       return None
-  
-
 
   def sample_fn(self, dataset):
     dataset = dataset.padded_batch(4)

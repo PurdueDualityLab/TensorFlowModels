@@ -7,6 +7,7 @@ from official.vision.beta.ops import spatial_transform_ops
 
 TPU_BASE = True
 
+
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
 
@@ -59,25 +60,24 @@ class ConvBN(tf.keras.layers.Layer):
       **kwargs: Keyword Arguments
     """
 
-  def __init__(
-      self,
-      filters=1,
-      kernel_size=(1, 1),
-      strides=(1, 1),
-      padding='same',
-      dilation_rate=(1, 1),
-      kernel_initializer='glorot_uniform',
-      bias_initializer='zeros',
-      subdivisions=1,
-      bias_regularizer=None,
-      kernel_regularizer=None,
-      use_bn=True,
-      use_sync_bn=False,
-      norm_momentum=0.99,
-      norm_epsilon=0.001,
-      activation='leaky',
-      leaky_alpha=0.1,
-      **kwargs):
+  def __init__(self,
+               filters=1,
+               kernel_size=(1, 1),
+               strides=(1, 1),
+               padding='same',
+               dilation_rate=(1, 1),
+               kernel_initializer='glorot_uniform',
+               bias_initializer='zeros',
+               subdivisions=1,
+               bias_regularizer=None,
+               kernel_regularizer=None,
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               activation='leaky',
+               leaky_alpha=0.1,
+               **kwargs):
 
     # convolution params
     self._filters = filters
@@ -582,7 +582,7 @@ class CSPRoute(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                downsample=True,
-               leaky_alpha = 0.1,
+               leaky_alpha=0.1,
                **kwargs):
 
     super().__init__(**kwargs)
@@ -695,10 +695,10 @@ class CSPConnect(tf.keras.layers.Layer):
                filters,
                filter_scale=2,
                subdivisions=1,
-               drop_final = False,
-               drop_first = False,
+               drop_final=False,
+               drop_first=False,
                activation='mish',
-               kernel_size = (1, 1),
+               kernel_size=(1, 1),
                kernel_initializer='glorot_uniform',
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -708,7 +708,7 @@ class CSPConnect(tf.keras.layers.Layer):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               leaky_alpha = 0.1,
+               leaky_alpha=0.1,
                **kwargs):
 
     super().__init__(**kwargs)
@@ -748,18 +748,18 @@ class CSPConnect(tf.keras.layers.Layer):
     }
     if not self._drop_first:
       self._conv1 = ConvBN(
-        filters=self._filters // self._filter_scale,
-        kernel_size=self._kernel_size,
-        strides=(1, 1),
-        **_dark_conv_args)
+          filters=self._filters // self._filter_scale,
+          kernel_size=self._kernel_size,
+          strides=(1, 1),
+          **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
 
     if not self._drop_final:
       self._conv2 = ConvBN(
-        filters=self._filters,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        **_dark_conv_args)
+          filters=self._filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          **_dark_conv_args)
     return
 
   def call(self, inputs):
@@ -892,27 +892,25 @@ class CSPStack(tf.keras.layers.Layer):
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class PathAggregationBlock(tf.keras.layers.Layer):
 
-  def __init__(
-      self,
-      filters=1,
-      drop_final=True,
-      kernel_initializer='glorot_uniform',
-      bias_initializer='zeros',
-      bias_regularizer=None,
-      subdivisions=1,
-      kernel_regularizer=None,
-      use_bn=True,
-      use_sync_bn=False,
-      inverted = False,
-      norm_momentum=0.99,
-      norm_epsilon=0.001,
-      activation='leaky',
-      leaky_alpha=0.1,
-      downsample=False,
-      upsample=False,
-      upsample_size=2,
-      **kwargs):
-
+  def __init__(self,
+               filters=1,
+               drop_final=True,
+               kernel_initializer='glorot_uniform',
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               subdivisions=1,
+               kernel_regularizer=None,
+               use_bn=True,
+               use_sync_bn=False,
+               inverted=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               activation='leaky',
+               leaky_alpha=0.1,
+               downsample=False,
+               upsample=False,
+               upsample_size=2,
+               **kwargs):
     """
     Args:
       filters: integer for output depth, or the number of features to learn
@@ -996,11 +994,11 @@ class PathAggregationBlock(tf.keras.layers.Layer):
   def _build_reversed(self, input_shape, kwargs):
     if self._downsample:
       self._conv_prev = ConvBN(
-        filters=self._filters,
-        kernel_size=(3, 3),
-        strides=(2, 2),
-        padding='same',
-        **kwargs)
+          filters=self._filters,
+          kernel_size=(3, 3),
+          strides=(2, 2),
+          padding='same',
+          **kwargs)
     else:
       self._conv_prev = ConvBN(
           filters=self._filters,
@@ -1010,19 +1008,19 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           **kwargs)
 
     self._conv_route = ConvBN(
+        filters=self._filters,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding='same',
+        **kwargs)
+
+    if not self._drop_final:
+      self._conv_sync = ConvBN(
           filters=self._filters,
           kernel_size=(1, 1),
           strides=(1, 1),
           padding='same',
           **kwargs)
-
-    if not self._drop_final:
-      self._conv_sync = ConvBN(
-            filters=self._filters,
-            kernel_size=(1, 1),
-            strides=(1, 1),
-            padding='same',
-            **kwargs)
     return
 
   def build(self, input_shape):
@@ -1052,7 +1050,8 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     inputToConvolve, inputToConcat = inputs
     x_prev = self._conv(inputToConvolve)
     if self._upsample:
-      x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
+      x_prev = spatial_transform_ops.nearest_upsampling(x_prev,
+                                                        self._upsample_size)
     x = self._concat([x_prev, inputToConcat])
 
     # used in csp conversion
@@ -1064,7 +1063,8 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     x_route, x_prev = inputs
     x_prev = self._conv_prev(x_prev)
     if self._upsample:
-      x_prev = spatial_transform_ops.nearest_upsampling(x_prev, self._upsample_size)
+      x_prev = spatial_transform_ops.nearest_upsampling(x_prev,
+                                                        self._upsample_size)
     x_route = self._conv_route(x_route)
     x = self._concat([x_route, x_prev])
     if not self._drop_final:
@@ -1117,6 +1117,7 @@ class SPP(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
+
 class SAM(tf.keras.layers.Layer):
   """
   [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
@@ -1124,27 +1125,28 @@ class SAM(tf.keras.layers.Layer):
 
   implementation of the Spatial Attention Model (SAM)
   """
+
   def __init__(self,
-              use_pooling = False,
-              filter_match = False,
-              filters = 1,
-              kernel_size=(1, 1),
-              strides=(1, 1),
-              padding='same',
-              dilation_rate=(1, 1),
-              kernel_initializer='glorot_uniform',
-              bias_initializer='zeros',
-              subdivisions=1,
-              bias_regularizer=None,
-              kernel_regularizer=None,
-              use_bn=True,
-              use_sync_bn=True,
-              norm_momentum=0.99,
-              norm_epsilon=0.001,
-              activation='sigmoid',
-              output_activation =None,
-              leaky_alpha=0.1,
-              **kwargs):
+               use_pooling=False,
+               filter_match=False,
+               filters=1,
+               kernel_size=(1, 1),
+               strides=(1, 1),
+               padding='same',
+               dilation_rate=(1, 1),
+               kernel_initializer='glorot_uniform',
+               bias_initializer='zeros',
+               subdivisions=1,
+               bias_regularizer=None,
+               kernel_regularizer=None,
+               use_bn=True,
+               use_sync_bn=True,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               activation='sigmoid',
+               output_activation=None,
+               leaky_alpha=0.1,
+               **kwargs):
 
     # use_pooling
     self._use_pooling = use_pooling
@@ -1175,7 +1177,7 @@ class SAM(tf.keras.layers.Layer):
   def build(self, input_shape):
     if self._filters == -1:
       self._filters = input_shape[-1]
-    self._conv = ConvBN(filters = self._filters, **self._dark_conv_args)
+    self._conv = ConvBN(filters=self._filters, **self._dark_conv_args)
     if self._output_activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
     elif self._output_activation == 'mish':
@@ -1185,14 +1187,14 @@ class SAM(tf.keras.layers.Layer):
 
   def call(self, inputs):
     if self._use_pooling:
-      depth_max = tf.reduce_max(inputs, axis = -1, keep_dims = True)
-      depth_avg = tf.reduce_mean(inputs, axis = -1, keep_dims = True)
-      input_maps = tf.concat([depth_avg, depth_max], axis = -1)
+      depth_max = tf.reduce_max(inputs, axis=-1, keep_dims=True)
+      depth_avg = tf.reduce_mean(inputs, axis=-1, keep_dims=True)
+      input_maps = tf.concat([depth_avg, depth_max], axis=-1)
     else:
       input_maps = inputs
 
     attention_mask = self._conv(input_maps)
-    return  self._activation_fn(inputs * attention_mask)
+    return self._activation_fn(inputs * attention_mask)
 
 
 class CAM(tf.keras.layers.Layer):
@@ -1202,22 +1204,23 @@ class CAM(tf.keras.layers.Layer):
 
   implementation of the Channel Attention Model (CAM)
   """
+
   def __init__(self,
-              reduction_ratio = 1.0,
-              subdivisions=1,
-              kernel_initializer='glorot_uniform',
-              bias_initializer='zeros',
-              bias_regularizer=None,
-              kernel_regularizer=None,
-              use_bn = False,
-              use_sync_bn = False,
-              use_bias = False,
-              norm_momentum=0.99,
-              norm_epsilon=0.001,
-              mlp_activation='linear',
-              activation='sigmoid',
-              leaky_alpha=0.1,
-              **kwargs):
+               reduction_ratio=1.0,
+               subdivisions=1,
+               kernel_initializer='glorot_uniform',
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               kernel_regularizer=None,
+               use_bn=False,
+               use_sync_bn=False,
+               use_bias=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               mlp_activation='linear',
+               activation='sigmoid',
+               leaky_alpha=0.1,
+               **kwargs):
 
     self._reduction_ratio = reduction_ratio
 
@@ -1232,20 +1235,19 @@ class CAM(tf.keras.layers.Layer):
       self._bn_args = {}
     else:
       self._bn_args = {
-        'subdivisions': subdivisions,
-        'momentum': norm_momentum,
-        'epsilon': norm_epsilon,
+          'subdivisions': subdivisions,
+          'momentum': norm_momentum,
+          'epsilon': norm_epsilon,
       }
 
     self._mlp_args = {
-      'use_bias': use_bias,
-      'kernel_initializer': kernel_initializer,
-      'bias_initializer': bias_initializer,
-      'bias_regularizer': bias_regularizer,
-      'activation': mlp_activation,
-      'kernel_regularizer': kernel_regularizer,
+        'use_bias': use_bias,
+        'kernel_initializer': kernel_initializer,
+        'bias_initializer': bias_initializer,
+        'bias_regularizer': bias_regularizer,
+        'activation': mlp_activation,
+        'kernel_regularizer': kernel_regularizer,
     }
-
 
     self._leaky_alpha = leaky_alpha
     self._activation = activation
@@ -1256,12 +1258,13 @@ class CAM(tf.keras.layers.Layer):
     self._filters = input_shape[-1]
 
     self._mlp = tf.keras.Sequential([
-      tf.keras.layers.Dense(self._filters, **self._mlp_args),
-      self._bn(**self._bn_args),
-      tf.keras.layers.Dense(int(self._filters * self._reduction_ratio), **self._mlp_args),
-      self._bn(**self._bn_args),
-      tf.keras.layers.Dense(self._filters, **self._mlp_args),
-      self._bn(**self._bn_args),
+        tf.keras.layers.Dense(self._filters, **self._mlp_args),
+        self._bn(**self._bn_args),
+        tf.keras.layers.Dense(
+            int(self._filters * self._reduction_ratio), **self._mlp_args),
+        self._bn(**self._bn_args),
+        tf.keras.layers.Dense(self._filters, **self._mlp_args),
+        self._bn(**self._bn_args),
     ])
 
     if self._activation == 'leaky':
@@ -1274,15 +1277,14 @@ class CAM(tf.keras.layers.Layer):
     return
 
   def call(self, inputs):
-    depth_max = self._mlp(tf.reduce_max(inputs, axis = (1, 2)))
-    depth_avg = self._mlp(tf.reduce_mean(inputs, axis = (1, 2)))
+    depth_max = self._mlp(tf.reduce_max(inputs, axis=(1, 2)))
+    depth_avg = self._mlp(tf.reduce_mean(inputs, axis=(1, 2)))
     channel_mask = self._activation_fn(depth_avg + depth_max)
 
-    channel_mask = tf.expand_dims(channel_mask, axis = 1)
-    attention_mask = tf.expand_dims(channel_mask, axis = 1)
+    channel_mask = tf.expand_dims(channel_mask, axis=1)
+    attention_mask = tf.expand_dims(channel_mask, axis=1)
 
     return inputs * attention_mask
-
 
 
 class CBAM(tf.keras.layers.Layer):
@@ -1292,27 +1294,28 @@ class CBAM(tf.keras.layers.Layer):
 
   implementation of the Convolution Block Attention Module (CBAM)
   """
+
   def __init__(self,
-              use_pooling = False,
-              filters = 1,
-              reduction_ratio = 1.0,
-              kernel_size=(1, 1),
-              strides=(1, 1),
-              padding='same',
-              dilation_rate=(1, 1),
-              kernel_initializer='glorot_uniform',
-              bias_initializer='zeros',
-              subdivisions=1,
-              bias_regularizer=None,
-              kernel_regularizer=None,
-              use_bn=True,
-              use_sync_bn=False,
-              norm_momentum=0.99,
-              norm_epsilon=0.001,
-              mlp_activation = None,
-              activation='sigmoid',
-              leaky_alpha=0.1,
-              **kwargs):
+               use_pooling=False,
+               filters=1,
+               reduction_ratio=1.0,
+               kernel_size=(1, 1),
+               strides=(1, 1),
+               padding='same',
+               dilation_rate=(1, 1),
+               kernel_initializer='glorot_uniform',
+               bias_initializer='zeros',
+               subdivisions=1,
+               bias_regularizer=None,
+               kernel_regularizer=None,
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               mlp_activation=None,
+               activation='sigmoid',
+               leaky_alpha=0.1,
+               **kwargs):
 
     # use_pooling
 
@@ -1326,22 +1329,22 @@ class CBAM(tf.keras.layers.Layer):
     }
 
     self._cam_args = {
-      'reduction_ratio': reduction_ratio,
-      'mlp_activation': mlp_activation
+        'reduction_ratio': reduction_ratio,
+        'mlp_activation': mlp_activation
     }
 
     self._common_args = {
-      'kernel_initializer': kernel_initializer,
-      'bias_initializer': bias_initializer,
-      'bias_regularizer': bias_regularizer,
-      'use_bn': use_bn,
-      'use_sync_bn': use_sync_bn,
-      'subdivisions': subdivisions,
-      'norm_momentum': norm_momentum,
-      'norm_epsilon': norm_epsilon,
-      'activation': activation,
-      'kernel_regularizer': kernel_regularizer,
-      'leaky_alpha': leaky_alpha
+        'kernel_initializer': kernel_initializer,
+        'bias_initializer': bias_initializer,
+        'bias_regularizer': bias_regularizer,
+        'use_bn': use_bn,
+        'use_sync_bn': use_sync_bn,
+        'subdivisions': subdivisions,
+        'norm_momentum': norm_momentum,
+        'norm_epsilon': norm_epsilon,
+        'activation': activation,
+        'kernel_regularizer': kernel_regularizer,
+        'leaky_alpha': leaky_alpha
     }
 
     self._cam_args.update(self._common_args)
@@ -1367,8 +1370,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       insert_spp=False,
       insert_sam=False,
       insert_cbam=False,
-      csp_stack = 0,
-      csp_scale = 2,
+      csp_stack=0,
+      csp_scale=2,
       subdivisions=1,
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros',
@@ -1377,7 +1380,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       kernel_regularizer=None,  # default find where is it is stated
       norm_momentum=0.99,
       norm_epsilon=0.001,
-      block_invert = False,
+      block_invert=False,
       activation='leaky',
       leaky_alpha=0.1,
       spp_keys=None,
@@ -1438,7 +1441,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     self._activation = activation
     self._leaky_alpha = leaky_alpha
 
-
     repetitions += (2 * int(insert_spp))
     if repetitions == 1:
       block_invert = True
@@ -1458,14 +1460,13 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     if block_invert:
       self._conv1_filters = lambda x: x
       self._conv2_filters = lambda x: x // 2
-      self._conv1_kernel = (3,3)
-      self._conv2_kernel = (1,1)
+      self._conv1_kernel = (3, 3)
+      self._conv2_kernel = (1, 1)
     else:
       self._conv1_filters = lambda x: x // 2
       self._conv2_filters = lambda x: x
-      self._conv1_kernel = (1,1)
-      self._conv2_kernel = (3,3)
-
+      self._conv1_kernel = (1, 1)
+      self._conv2_kernel = (3, 3)
 
     # insert SPP will always add to the total nuber of layer, never replace
     if insert_spp:
@@ -1484,7 +1485,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     layer_list = []
     outputs = []
     for i in range(self._repetitions):
-      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"]* (i % 2)
+      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"] * (i % 2)
       layer_list.extend(layers)
       outputs = [False] + outputs
     return layer_list, outputs
@@ -1511,7 +1512,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       outputs.insert(-1, False)
     return layer_list
 
-  def _conv1(self, filters, kwargs, csp = False):
+  def _conv1(self, filters, kwargs, csp=False):
     if csp:
       filters_ = self._csp_filters
     else:
@@ -1519,15 +1520,15 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
     print('conv1', filters_(filters))
     x1 = ConvBN(
-      filters=filters_(filters),
-      kernel_size=self._conv1_kernel,
-      strides=(1, 1),
-      padding='same',
-      use_bn=True,
-      **kwargs)
+        filters=filters_(filters),
+        kernel_size=self._conv1_kernel,
+        strides=(1, 1),
+        padding='same',
+        use_bn=True,
+        **kwargs)
     return x1
 
-  def _conv2(self, filters, kwargs, csp = False):
+  def _conv2(self, filters, kwargs, csp=False):
     if csp:
       filters_ = self._csp_filters
     else:
@@ -1553,11 +1554,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
   def _csp_connect(self, filters, kwargs):
     print('connect')
-    x1 = CSPConnect(
-        filters=filters,
-        drop_final=True,
-        drop_first=True,
-        **kwargs)
+    x1 = CSPConnect(filters=filters, drop_final=True, drop_first=True, **kwargs)
     return x1
 
   def _spp(self, filters, kwargs):
@@ -1567,11 +1564,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
   def _sam(self, filters, kwargs):
     print('sam')
-    x1 = SAM(
-        filters=-1,
-        use_pooling=False,
-        use_bn=True,
-        **kwargs)
+    x1 = SAM(filters=-1, use_pooling=False, use_bn=True, **kwargs)
     return x1
 
   def build(self, input_shape):
@@ -1602,9 +1595,9 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         self.layers.append(self._csp_connect(self._filters, _dark_conv_args))
         csp = False
       elif layer == 'conv1':
-        self.layers.append(self._conv1(self._filters, _dark_conv_args, csp = csp))
+        self.layers.append(self._conv1(self._filters, _dark_conv_args, csp=csp))
       elif layer == 'conv2':
-        self.layers.append(self._conv2(self._filters, _dark_conv_args, csp = csp))
+        self.layers.append(self._conv2(self._filters, _dark_conv_args, csp=csp))
       elif layer == 'spp':
         self.layers.append(self._spp(self._filters, _dark_conv_args))
       elif layer == 'sam':

@@ -73,7 +73,7 @@ task:
       use_nms: true
       iou_thresh: 0.001
       nms_thresh: 0.6
-      use_reduction_sum: false
+      use_reduction_sum: true
   validation_data:
     global_batch_size: 8
     dtype: float16

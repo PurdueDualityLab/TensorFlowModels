@@ -117,8 +117,8 @@ class BoxGenInputReader(input_reader.InputReader):
   def read(self,
            k=None,
            image_width=416,
-           input_context=None):# -> tf.data.Dataset:
-    
+           input_context=None):  # -> tf.data.Dataset:
+
     self._is_training = False
     dataset = super().read(input_context=input_context)
 

@@ -15,9 +15,10 @@ from official.core import config_definitions as cfg
 import tensorflow as tf
 
 from yolo.modeling.layers import detection_generator
-from official.vision.beta.ops import box_ops as bops 
+from official.vision.beta.ops import box_ops as bops
 from official.vision.beta.tasks import retinanet
 from official.vision.beta.configs import retinanet as retcfg
+
 
 def test_yolo_input_task():
   with tf.device('/CPU:0'):
@@ -67,6 +68,7 @@ def test_retinanet_input_task():
     test_data = task.build_inputs(config.validation_data)
   return train_data, test_data
 
+
 def test_classification_input():
   with tf.device('/CPU:0'):
     config = dcfg.ImageClassificationTask()
@@ -92,7 +94,7 @@ def test_classification_pipeline():
 import time
 
 
-def test_yolo_pipeline(is_training = True):
+def test_yolo_pipeline(is_training=True):
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
@@ -109,7 +111,6 @@ def test_yolo_pipeline(is_training = True):
 
     gt = j['true_conf']
     inds = j['inds']
-   
 
     obj3 = gt['3'][..., 0]
     obj4 = gt['4'][..., 0]
@@ -124,14 +125,13 @@ def test_yolo_pipeline(is_training = True):
       confidence = j["classes"][shind]
 
       draw_dict = {
-        'bbox' : boxes, 
-        'classes' : classes, 
-        'confidence': confidence, 
+          'bbox': boxes,
+          'classes': classes,
+          'confidence': confidence,
       }
       # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
-      image = drawer(image, draw_dict)  
+      image = drawer(image, draw_dict)
 
-      
       # tf.print(j['inds']['3'][shind], summarize = -1)
       axe[0].imshow(i_[shind])
       axe[1].imshow(image)
@@ -168,8 +168,17 @@ def time_pipeline():
 
   print(f"total time {sum(times)}")
 
+
 def reduce(obj):
-  return tf.math.ceil(tf.clip_by_value(tf.reduce_max(tf.reduce_sum(tf.reshape(obj, [obj.shape[0], obj.shape[1], obj.shape[2], 3, 3, 4]), axis = -1), axis = -1), 0.0, 1.0))
+  return tf.math.ceil(
+      tf.clip_by_value(
+          tf.reduce_max(
+              tf.reduce_sum(
+                  tf.reshape(
+                      obj, [obj.shape[0], obj.shape[1], obj.shape[2], 3, 3, 4]),
+                  axis=-1),
+              axis=-1), 0.0, 1.0))
+
 
 def test_ret_pipeline():
   dataset, dsp = test_retinanet_input_task()
@@ -224,6 +233,7 @@ def test_ret_pipeline():
 
     if l >= 10:
       break
+
 
 if __name__ == '__main__':
   # test_ret_pipeline()

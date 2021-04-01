@@ -44,7 +44,8 @@ class YoloTask(base_task.Task):
     self._metric_names = []
     self._metrics = []
 
-    self._dfilter = detection_generator.YoloFilter(classes = self._task_config.model.num_classes)
+    self._dfilter = detection_generator.YoloFilter(
+        classes=self._task_config.model.num_classes)
 
     return
 
@@ -57,7 +58,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
     print(xy_scales, l2_weight_decay)
-    
+
     self._get_boxes(gen_boxes=params.is_training)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
@@ -88,7 +89,7 @@ class YoloTask(base_task.Task):
             regenerate_source_id=decoder_cfg.regenerate_source_id)
       else:
         raise ValueError('Unknown decoder type: {}!'.format(
-            params.decoder.type)) 
+            params.decoder.type))
     return decoder
 
   def build_inputs(self, params, input_context=None):
@@ -102,14 +103,13 @@ class YoloTask(base_task.Task):
 
     print(xy_scales)
 
-    
     sample_fn = mosaic.Mosaic(
-      output_size = params.parser.mosaic.output_size, 
-      mosaic_frequency = params.parser.mosaic.mosaic_frequency, 
-      crop_area =  params.parser.mosaic.crop_area,
-      random_crop = params.parser.mosaic.random_crop,
-      crop_area_mosaic= params.parser.mosaic.crop_area_mosaic, 
-      random_crop_mosaic= params.parser.mosaic.random_crop_mosaic,
+        output_size=params.parser.mosaic.output_size,
+        mosaic_frequency=params.parser.mosaic.mosaic_frequency,
+        crop_area=params.parser.mosaic.crop_area,
+        random_crop=params.parser.mosaic.random_crop,
+        crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
+        random_crop_mosaic=params.parser.mosaic.random_crop_mosaic,
     )
 
     parser = yolo_input.Parser(
@@ -126,12 +126,12 @@ class YoloTask(base_task.Task):
         random_flip=params.parser.random_flip,
         jitter_im=params.parser.jitter_im,
         jitter_boxes=params.parser.jitter_boxes,
-        aug_rand_transalate=params.parser.aug_rand_transalate, 
+        aug_rand_transalate=params.parser.aug_rand_transalate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_rand_zoom=params.parser.aug_rand_zoom,
         aug_rand_hue=params.parser.aug_rand_hue,
-        aug_rand_angle=params.parser.aug_rand_angle, 
+        aug_rand_angle=params.parser.aug_rand_angle,
         max_process_size=params.parser.max_process_size,
         min_process_size=params.parser.min_process_size,
         max_num_instances=params.parser.max_num_instances,
@@ -144,11 +144,11 @@ class YoloTask(base_task.Task):
         params,
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
-        sample_fn=sample_fn.mosaic_fn(is_training=params.is_training), 
+        sample_fn=sample_fn.mosaic_fn(is_training=params.is_training),
         parser_fn=parser.parse_fn(params.is_training),
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
-    
+
     print(dataset)
     return dataset
 
@@ -162,14 +162,11 @@ class YoloTask(base_task.Task):
     inds = labels['inds']
     upds = labels['upds']
 
-    scale = tf.cast(3/len(list(outputs.keys())), tf.float32)
+    scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
-       _recall50) = self._loss_dict[key](grid[key], 
-                                         inds[key], 
-                                         upds[key],
-                                         labels['bbox'], 
-                                         labels['classes'], 
+       _recall50) = self._loss_dict[key](grid[key], inds[key], upds[key],
+                                         labels['bbox'], labels['classes'],
                                          outputs[key])
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
@@ -181,9 +178,7 @@ class YoloTask(base_task.Task):
       loss[f"loss_{key}"] = _loss * scale / num_replicas
       loss_val += _loss * scale / num_replicas
 
-
     return loss, loss_val, metric_dict
-
 
   def build_metrics(self, training=True):
     metrics = []
@@ -255,7 +250,8 @@ class YoloTask(base_task.Task):
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'],
+                                                      label)
     logs = {self.loss: loss_metrics['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]
@@ -306,7 +302,7 @@ class YoloTask(base_task.Task):
     return self.task_config.model.boxes
 
   def _get_boxes(self, gen_boxes=True):
-    
+
     if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
       # must save the boxes!
       params = self.task_config.train_data
@@ -317,7 +313,7 @@ class YoloTask(base_task.Task):
       reader = BoxGenInputReader(
           params,
           decoder_fn=decoder.decode,
-          transform_and_batch_fn=lambda x, y: x, 
+          transform_and_batch_fn=lambda x, y: x,
           parser_fn=None)
       anchors = reader.read(
           k=9, image_width=params.parser.image_w, input_context=None)
@@ -353,8 +349,6 @@ class YoloTask(base_task.Task):
       self._masks = boxes
       self._path_scales = params.filter.path_scales.as_dict()
       self._x_y_scales = params.filter.scale_xy.as_dict()
-
-      
 
     metric_names = []
     loss_names = []
@@ -419,7 +413,9 @@ class YoloTask(base_task.Task):
       #model.backbone.trainable = False
 
       if self.task_config.darknet_load_decoder:
-        cfgheads = load_weights_decoder(model.decoder, [neck, decoder], csp = self._task_config.model.base.decoder.type == 'csp')
+        cfgheads = load_weights_decoder(
+            model.decoder, [neck, decoder],
+            csp=self._task_config.model.base.decoder.type == 'csp')
         load_weights_prediction_layers(cfgheads, model.head)
         #model.head.trainable = False
 
@@ -434,7 +430,7 @@ class YoloTask(base_task.Task):
 
       # Restoring checkpoint.
       if self.task_config.init_checkpoint_modules == 'all':
-        ckpt = tf.train.Checkpoint(model = model)
+        ckpt = tf.train.Checkpoint(model=model)
         # status = ckpt.restore(ckpt_dir_or_file)
         # status.assert_consumed()
         # optimizer = self.create_optimizer(params.trainer.optimizer_config,
@@ -457,8 +453,6 @@ class YoloTask(base_task.Task):
 
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
-
-
 
 
 if __name__ == '__main__':

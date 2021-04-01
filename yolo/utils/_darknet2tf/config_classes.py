@@ -473,6 +473,7 @@ class samCFG(Config):
   # TODO: If someone has patience, they can make this, but it is unimportant
   def to_tf(self, tensors):
     raise NotImplementedError
+
   #   assert self._from == -2
   #
   #   input = tensors[-2]

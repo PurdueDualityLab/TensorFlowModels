@@ -11,12 +11,14 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32):
     minval, maxval = maxval, minval
   return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
+
 def rand_scale(val, dtype=tf.float32):
   scale = rand_uniform_strong(1.0, val, dtype=dtype)
   do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
   if (do_ret == 1):
     return scale
   return 1.0 / scale
+
 
 def shift_zeros(data, mask, axis=-2, fill=0):
   zeros = tf.zeros_like(data) + fill
@@ -39,6 +41,7 @@ def shift_zeros(data, mask, axis=-2, fill=0):
       zeros, tf.cast(tf.where(nonzero_mask), dtype=tf.int32), data_flat)
   return nonzero_data
 
+
 def shift_zeros2(mask, squeeze=True, fill=0):
   mask = tf.cast(mask, tf.float32)
   if squeeze:
@@ -47,6 +50,7 @@ def shift_zeros2(mask, squeeze=True, fill=0):
   k = tf.shape(mask)[-1]
   mask, ind = tf.math.top_k(mask, k=k, sorted=True)
   return mask, ind
+
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -60,6 +64,7 @@ def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
   value = tf.concat([value, pad_tensor], axis=pad_axis)
   return value
+
 
 def near_edge_adjustment(boxes,
                          y_lower_bound,
@@ -171,6 +176,7 @@ def get_image_shape(image):
     height = shape[0]
   return height, width
 
+
 def random_translate(image, t):
   with tf.name_scope('random_translate'):
     if t != 0:
@@ -186,6 +192,7 @@ def random_translate(image, t):
       t_y = 0.0
   return image, {'translate_offset': [t_y, t_x]}
 
+
 def translate_boxes(box, classes, translate_x, translate_y):
   with tf.name_scope('translate_boxes'):
     box = box_ops.yxyx_to_xcycwh(box)
@@ -197,7 +204,7 @@ def translate_boxes(box, classes, translate_x, translate_y):
   return box, classes
 
 
-def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
+def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
   height, width = get_image_shape(image)
   clipper = tf.math.maximum(width, height)
   if target_dim is None:
@@ -209,8 +216,8 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   pad_height_p = clipper - height
   pad_height = tf.cast(tf.cast(pad_height_p, ys.dtype) * ys, tf.int32)
   pad_width = tf.cast(tf.cast(pad_width_p, xs.dtype) * xs, tf.int32)
-  image = tf.image.pad_to_bounding_box(image, pad_height, pad_width,
-                                       clipper, clipper)
+  image = tf.image.pad_to_bounding_box(image, pad_height, pad_width, clipper,
+                                       clipper)
 
   boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
@@ -231,13 +238,14 @@ def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
 
   image = tf.image.resize(image, (target_dim, target_dim))
 
-  scale = target_dim/clipper
+  scale = target_dim / clipper
   pt_width = tf.cast(tf.cast(pad_width, scale.dtype) * scale, tf.int32)
   pt_height = tf.cast(tf.cast(pad_height, scale.dtype) * scale, tf.int32)
   pt_width_p = tf.cast(tf.cast(pad_width_p, scale.dtype) * scale, tf.int32)
   pt_height_p = tf.cast(tf.cast(pad_height_p, scale.dtype) * scale, tf.int32)
-  return image, boxes, [pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p]
-
+  return image, boxes, [
+      pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p
+  ]
 
 
 def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
@@ -330,7 +338,7 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     ],
                           axis=-1)
 
-    true_prod = tf.reduce_prod(true_wh, axis = -1, keepdims = True)
+    true_prod = tf.reduce_prod(true_wh, axis=-1, keepdims=True)
     iou_index = tf.where(true_prod > 0, iou_index, tf.zeros_like(iou_index) - 1)
 
     # tf.print(iou_index, summarize = -1)
@@ -360,10 +368,12 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 
     true_wh = y_true[..., 2:4]
     hold = tf.zeros_like(true_wh)
-    y_true = tf.concat([hold, true_wh], axis = -1)
+    y_true = tf.concat([hold, true_wh], axis=-1)
 
     # tf.print(tf.shape(true_wh), tf.shape(anchors))
-  return get_best_anchor2(y_true, anchors, width=width, height=height, iou_thresh=iou_thresh)
+  return get_best_anchor2(
+      y_true, anchors, width=width, height=height, iou_thresh=iou_thresh)
+
 
 def _get_num_reps(anchors, mask, box_mask):
   mask = tf.expand_dims(mask, 0)
@@ -372,35 +382,41 @@ def _get_num_reps(anchors, mask, box_mask):
   box_mask = tf.expand_dims(box_mask, -1)
   box_mask = tf.expand_dims(box_mask, -1)
 
-  anchors = tf.expand_dims(anchors, axis = -1)
-  anchors_primary, anchors_alternate = tf.split(anchors, [1, -1], axis = -2)
+  anchors = tf.expand_dims(anchors, axis=-1)
+  anchors_primary, anchors_alternate = tf.split(anchors, [1, -1], axis=-2)
   fillin = tf.zeros_like(anchors_primary) - 1
-  anchors_alternate = tf.concat([fillin, anchors_alternate], axis = -2)
+  anchors_alternate = tf.concat([fillin, anchors_alternate], axis=-2)
 
-  viable_primary = tf.squeeze(tf.logical_and(box_mask, anchors_primary == mask), axis = 0)
-  viable_alternate = tf.squeeze(tf.logical_and(box_mask, anchors_alternate == mask), axis = 0)
+  viable_primary = tf.squeeze(
+      tf.logical_and(box_mask, anchors_primary == mask), axis=0)
+  viable_alternate = tf.squeeze(
+      tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
 
   viable_primary = tf.where(viable_primary)
   viable_alternate = tf.where(viable_alternate)
 
   viable = anchors == mask
-  acheck = tf.reduce_any(viable, axis = -1)
-  reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis = -1), axis = 0)
+  acheck = tf.reduce_any(viable, axis=-1)
+  reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
   return reps, viable_primary, viable_alternate
 
+
 def _gen_utility(boxes):
-  eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis = -1)
-  gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis = -1)
-  ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis = -1)
+  eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
+  gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis=-1)
+  ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis=-1)
 
   a = tf.logical_or(eq0, gtlb)
   b = tf.logical_or(a, ltub)
   return tf.logical_not(b)
 
-def _gen_offsets(scale_xy, dtype):
-  return tf.cast(0.5 * (scale_xy-1), dtype)
 
-def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_num_inst, use_tie_breaker):
+def _gen_offsets(scale_xy, dtype):
+  return tf.cast(0.5 * (scale_xy - 1), dtype)
+
+
+def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
+                        scale_num_inst, use_tie_breaker):
   """
     convert ground truth for use in loss functions
     Args:
@@ -435,97 +451,54 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_
   num_anchors = tf.shape(anchors)[-1]
   num_instances = num_boxes * scale_num_inst
 
-
-  pull_in = _gen_offsets(scale_xy, boxes.dtype)  
+  pull_in = _gen_offsets(scale_xy, boxes.dtype)
   # x + 0.5
   # x - 0.5
   # y + 0.5
-  # y - 0.5  
+  # y - 0.5
 
   # rescale the x and y centers to the size of the grid [size, size]
   mask = tf.cast(mask, dtype=dtype)
   box_mask = _gen_utility(boxes)
-  num_reps, viable_primary, viable_alternate = _get_num_reps(anchors, mask, box_mask)
+  num_reps, viable_primary, viable_alternate = _get_num_reps(
+      anchors, mask, box_mask)
   viable_primary = tf.cast(viable_primary, tf.int32)
   viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
   ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
   ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
-  
-  (ind_val, 
-   ind_sample, 
-   num_written) = write_grid(viable_primary, 
-                             num_reps, 
-                             boxes, 
-                             classes, 
-                             ious, 
-                             ind_val, 
-                             ind_sample, 
-                             height, 
-                             width,
-                             num_written, 
-                             num_instances, 
-                             0.0)
-  
+
+  (ind_val, ind_sample,
+   num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                             ind_val, ind_sample, height, width, num_written,
+                             num_instances, 0.0)
+
   if use_tie_breaker:
     # tf.print("alternate")
-    (ind_val, 
-    ind_sample, 
-    num_written) = write_grid(viable_alternate, 
-                              num_reps, 
-                              boxes, 
-                              classes, 
-                              ious, 
-                              ind_val, 
-                              ind_sample, 
-                              height, 
-                              width,
-                              num_written, 
-                              num_instances, 
-                              0.0)
+    (ind_val, ind_sample,
+     num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
+                               ind_val, ind_sample, height, width, num_written,
+                               num_instances, 0.0)
 
   if pull_in > 0.0:
-    (ind_val, 
-    ind_sample, 
-    num_written) = write_grid(viable_primary, 
-                              num_reps, 
-                              boxes, 
-                              classes, 
-                              ious, 
-                              ind_val, 
-                              ind_sample, 
-                              height, 
-                              width,
-                              num_written, 
-                              num_instances, 
-                              pull_in)
-    
+    (ind_val, ind_sample,
+     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                               ind_val, ind_sample, height, width, num_written,
+                               num_instances, pull_in)
+
     if use_tie_breaker:
       # tf.print("alternate")
-      (ind_val, 
-      ind_sample, 
-      num_written) = write_grid(viable_alternate, 
-                                num_reps, 
-                                boxes, 
-                                classes, 
-                                ious, 
-                                ind_val, 
-                                ind_sample, 
-                                height, 
-                                width,
-                                num_written, 
-                                num_instances, 
-                                pull_in)
+      (ind_val, ind_sample,
+       num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
+                                 ious, ind_val, ind_sample, height, width,
+                                 num_written, num_instances, pull_in)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
 
-  (true_box, 
-   ind_mask, 
-   true_class, 
-   best_iou_match, 
-   num_reps) = tf.split(samples, [4, 1, 1, 1, 1], axis=-1)
+  (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
+      samples, [4, 1, 1, 1, 1], axis=-1)
 
   full = tf.zeros([size, size, len_masks, 1], dtype=dtype)
   full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
@@ -534,20 +507,22 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy, scale_
   samples = _pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
   return indexs, samples, full
 
-def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height, width, num_written):
+
+def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
+                 width, num_written):
   a_ = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
 
   y = box[1] * height
   x = box[0] * width
 
   # idk if this is right!!! just testing it now
-  if offset > 0: 
+  if offset > 0:
     y_ = tf.math.floor(y + offset)
     x_ = x
     if y_ >= 0 and y_ < height and y_ != tf.floor(y):
       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis = -1)
+      grid_idx = tf.concat([y_, x_, a_], axis=-1)
       ind_val = ind_val.write(num_written, grid_idx)
       ind_sample = ind_sample.write(num_written, sample)
       num_written += 1
@@ -557,42 +532,42 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height, wi
     if y_ >= 0 and y_ < height and y_ != tf.floor(y):
       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis = -1)
+      grid_idx = tf.concat([y_, x_, a_], axis=-1)
       ind_val = ind_val.write(num_written, grid_idx)
       ind_sample = ind_sample.write(num_written, sample)
       num_written += 1
-    
+
     y_ = y
     x_ = tf.math.floor(x + offset)
     if x_ >= 0 and x_ < height and x_ != tf.floor(x):
       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis = -1)
+      grid_idx = tf.concat([y_, x_, a_], axis=-1)
       ind_val = ind_val.write(num_written, grid_idx)
       ind_sample = ind_sample.write(num_written, sample)
       num_written += 1
-    
+
     y_ = y
     x_ = tf.math.floor(x - offset)
     if x_ >= 0 and x_ < height and x_ != tf.floor(x):
       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis = -1)
+      grid_idx = tf.concat([y_, x_, a_], axis=-1)
       ind_val = ind_val.write(num_written, grid_idx)
       ind_sample = ind_sample.write(num_written, sample)
       num_written += 1
   else:
     y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
     x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-    grid_idx = tf.concat([y_, x_, a_], axis = -1)
+    grid_idx = tf.concat([y_, x_, a_], axis=-1)
     ind_val = ind_val.write(num_written, grid_idx)
     ind_sample = ind_sample.write(num_written, sample)
     num_written += 1
   return ind_val, ind_sample, num_written
 
 
-
-def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample, height, width, num_written, num_instances, offset):
+def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
+               height, width, num_written, num_instances, offset):
 
   # if offset > 0.0:
   #   const = tf.cast(tf.convert_to_tensor([1. - offset/2]), dtype=boxes.dtype)
@@ -609,8 +584,8 @@ def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample, heig
     box = boxes[obj_id]
     cls_ = classes[obj_id]
     iou = tf.convert_to_tensor([ious[obj_id, anchor]])
-    sample = tf.concat([box, const, cls_, iou, reps], axis = -1)
-    
+    sample = tf.concat([box, const, cls_, iou, reps], axis=-1)
+
     # y_ = tf.convert_to_tensor([tf.cast(box[1] * height, tf.int32)])
     # x_ = tf.convert_to_tensor([tf.cast(box[0] * width, tf.int32)])
     # a_ = tf.convert_to_tensor([tf.cast(anchor_idx, tf.int32)])
@@ -620,7 +595,9 @@ def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample, heig
     # ind_sample = ind_sample.write(num_written, sample)
     # num_written += 1
 
-    ind_val, ind_sample, num_written = write_sample(box, anchor_idx, offset, sample, ind_val, ind_sample, height, width, num_written)
+    ind_val, ind_sample, num_written = write_sample(box, anchor_idx, offset,
+                                                    sample, ind_val, ind_sample,
+                                                    height, width, num_written)
   return ind_val, ind_sample, num_written
 
 
@@ -656,15 +633,15 @@ def random_crop_image(image,
         area_range=area_range,
         max_attempts=max_attempts)
     cropped_image = tf.slice(image, crop_offset, crop_size)
-    
-    
-    scale = tf.cast(ishape[:2]/ishape[:2], tf.float32)
+
+    scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
     offset = tf.cast(crop_offset[:2], tf.float32)
 
-    info = tf.stack([tf.cast(ishape[:2], tf.float32), 
-                     tf.cast(crop_size[:2], tf.float32),
-                     scale,
-                     offset], axis = 0)
+    info = tf.stack([
+        tf.cast(ishape[:2], tf.float32),
+        tf.cast(crop_size[:2], tf.float32), scale, offset
+    ],
+                    axis=0)
     return cropped_image, info
 
 
@@ -672,60 +649,72 @@ def random_pad(image, area):
   with tf.name_scope('pad_to_bbox'):
     height, width = get_image_shape(image)
 
-    rand_area = tf.cast(area, tf.float32) #tf.random.uniform([], 1.0, area)
-    target_height = tf.cast(tf.sqrt(rand_area) * tf.cast(height, rand_area.dtype), tf.int32)
-    target_width = tf.cast(tf.sqrt(rand_area) * tf.cast(width, rand_area.dtype), tf.int32)
+    rand_area = tf.cast(area, tf.float32)  #tf.random.uniform([], 1.0, area)
+    target_height = tf.cast(
+        tf.sqrt(rand_area) * tf.cast(height, rand_area.dtype), tf.int32)
+    target_width = tf.cast(
+        tf.sqrt(rand_area) * tf.cast(width, rand_area.dtype), tf.int32)
 
-    offset_height = tf.random.uniform([], 0 , target_height - height + 1, dtype = tf.int32)
-    offset_width = tf.random.uniform([], 0 , target_width - width + 1, dtype = tf.int32)
+    offset_height = tf.random.uniform([],
+                                      0,
+                                      target_height - height + 1,
+                                      dtype=tf.int32)
+    offset_width = tf.random.uniform([],
+                                     0,
+                                     target_width - width + 1,
+                                     dtype=tf.int32)
 
     image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
                                          target_height, target_width)
-  
+
   ishape = tf.convert_to_tensor([height, width])
   oshape = tf.convert_to_tensor([target_height, target_width])
   offset = tf.convert_to_tensor([offset_height, offset_width])
 
-  scale = tf.cast(ishape[:2]/ishape[:2], tf.float32)
-  offset = tf.cast(-offset, tf.float32) # * scale
+  scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
+  offset = tf.cast(-offset, tf.float32)  # * scale
 
-  info = tf.stack([tf.cast(ishape[:2], tf.float32), 
-                    tf.cast(oshape[:2], tf.float32),
-                    scale,
-                    offset], axis = 0)
+  info = tf.stack([
+      tf.cast(ishape[:2], tf.float32),
+      tf.cast(oshape[:2], tf.float32), scale, offset
+  ],
+                  axis=0)
 
   return image, info
 
+
 def random_rotate_image(image, max_angle):
   angle = tf.random.uniform([],
-                          minval=-max_angle,
-                          maxval=max_angle,
-                          dtype=tf.float32)
+                            minval=-max_angle,
+                            maxval=max_angle,
+                            dtype=tf.float32)
   deg = angle * 3.14 / 360.
   deg.set_shape(())
   image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
   return image, deg
 
-def get_corners(boxes):
-  ymi, xmi, yma, xma = tf.split(boxes, 4, axis = -1)
-  
-  tl = tf.concat([xmi, ymi], axis = -1) 
-  bl = tf.concat([xmi, yma], axis = -1)
-  tr = tf.concat([xma, ymi], axis = -1) 
-  br = tf.concat([xma, yma], axis = -1)
 
-  corners = tf.concat([tl, bl, tr, br], axis = -1) 
+def get_corners(boxes):
+  ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
+
+  tl = tf.concat([xmi, ymi], axis=-1)
+  bl = tf.concat([xmi, yma], axis=-1)
+  tr = tf.concat([xma, ymi], axis=-1)
+  br = tf.concat([xma, yma], axis=-1)
+
+  corners = tf.concat([tl, bl, tr, br], axis=-1)
   return corners
+
 
 def rotate_points(x_, y_, angle):
   sx = 0.5 - x_
   sy = 0.5 - y_
 
-  r = tf.sqrt(sx**2 + sy **2)
-  curr_theta = tf.atan2(sy,sx)
+  r = tf.sqrt(sx**2 + sy**2)
+  curr_theta = tf.atan2(sy, sx)
 
   cos = tf.math.cos(curr_theta - angle)
-  sin = tf.math.sin(curr_theta - angle)  
+  sin = tf.math.sin(curr_theta - angle)
 
   x = r * cos
   y = r * sin
@@ -734,30 +723,27 @@ def rotate_points(x_, y_, angle):
   y = -y + 0.5
   return x, y
 
+
 def rotate_boxes(boxes, height, width, angle):
   corners = get_corners(boxes)
   # boxes = box_ops.yxyx_to_xcycwh(boxes)
-  ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis = -1)
-
+  ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis=-1)
 
   tlx, tly = rotate_points(xmin, ymin, angle)
   blx, bly = rotate_points(xmin, ymax, angle)
   trx, try_ = rotate_points(xmax, ymin, angle)
   brx, bry = rotate_points(xmax, ymax, angle)
 
-  xs = tf.concat([tlx, blx, trx, brx], axis = -1)
-  ys = tf.concat([tly, bly, try_, bry], axis = -1)
+  xs = tf.concat([tlx, blx, trx, brx], axis=-1)
+  ys = tf.concat([tly, bly, try_, bry], axis=-1)
 
-  xmin = tf.reduce_min(xs, axis = -1, keepdims = True)
-  ymin = tf.reduce_min(ys, axis = -1, keepdims = True)
-  xmax = tf.reduce_max(xs, axis = -1, keepdims = True)
-  ymax = tf.reduce_max(ys, axis = -1, keepdims = True)
+  xmin = tf.reduce_min(xs, axis=-1, keepdims=True)
+  ymin = tf.reduce_min(ys, axis=-1, keepdims=True)
+  xmax = tf.reduce_max(xs, axis=-1, keepdims=True)
+  ymax = tf.reduce_max(ys, axis=-1, keepdims=True)
 
-
-  boxes = tf.concat([ymin, xmin, ymax, xmax], axis = -1)  
+  boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
   return boxes
-
-
 
 
 # def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker):
@@ -815,8 +801,6 @@ def rotate_boxes(boxes, height, width, angle):
 #   # number of anchors
 #   num_anchors = tf.shape(anchors)[-1]
 #   num_instances = num_boxes
-
-
 
 #   # rescale the x and y centers to the size of the grid [size, size]
 #   mask = tf.cast(mask, dtype=dtype)
@@ -914,11 +898,11 @@ def rotate_boxes(boxes, height, width, angle):
 #   if not is_batch:
 #     full = tf.squeeze(full, axis=0)
 
-#   # if is_batch: 
+#   # if is_batch:
 #   #   reps = tf.gather_nd(full, indexes, batch_dims = 1)
 #   # else:
 #   #   reps = tf.gather_nd(full, indexes, batch_dims = 0)
-  
+
 #   # reps = reps * tf.expand_dims(gridvals[..., 4], axis = -1)
 #   # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 #   # gridvals = tf.concat([gridvals, reps], axis = -1)
