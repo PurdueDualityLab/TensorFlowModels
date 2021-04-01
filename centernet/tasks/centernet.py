@@ -5,10 +5,11 @@ from absl import logging
 from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
-from official.vision.beta.evaluation import coco_evaluator
 
-# TODO: Already added to official codebase, change to official version later
-from yolo.dataloaders.decoders import tfds_coco_decoder
+from official.vision.beta.evaluation import coco_evaluator
+from official.vision.beta.dataloaders import tf_example_decoder
+from official.vision.beta.dataloaders import tfds_detection_decoders
+from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
 from centernet.configs import centernet as cfg
 from centernet.dataloaders import centernet_input
@@ -26,29 +27,13 @@ class CenterNetTask(base_task.Task):
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
-    decoder = tfds_coco_decoder.MSCOCODecoder()
-    """
-    decoder_cfg = params.decoder.get()
-    if params.decoder.type == 'simple_decoder':
-        decoder = tf_example_decoder.TfExampleDecoder(
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    elif params.decoder.type == 'label_map_decoder':
-        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
-            label_map=decoder_cfg.label_map,
-            regenerate_source_id=decoder_cfg.regenerate_source_id)
-    else:
-        raise ValueError('Unknown decoder type: {}!'.format(params.decoder.type))
-    """
-
+    decoder = self.get_decoder(params)
     model = self.task_config.model
 
-    masks, path_scales, xy_scales = self._get_masks()
-    anchors = self._get_boxes(gen_boxes=params.is_training)
-
-    print(masks, path_scales, xy_scales)
     parser = centernet_input.CenterNetParser(
         num_classes=model.num_classes,
-        gaussian_iou=model.gaussian_iou
+        max_num_instances=model.max_num_instances,
+        gaussian_iou=model.gaussian_iou,
     )
 
     if params.is_training:
@@ -80,8 +65,27 @@ class CenterNetTask(base_task.Task):
     self._loss_dict = losses
     return model
 
-  def build_inputs(self, params, input_context=None):
-    pass
+  def get_decoder(self, params):
+    if params.tfds_name:
+      if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
+        decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
+            params.tfds_name]()
+      else:
+        raise ValueError('TFDS {} is not supported'.format(params.tfds_name))
+    else:
+      decoder_cfg = params.decoder.get()
+      if params.decoder.type == 'simple_decoder':
+        decoder = tf_example_decoder.TfExampleDecoder(
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      elif params.decoder.type == 'label_map_decoder':
+        decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
+            label_map=decoder_cfg.label_map,
+            regenerate_source_id=decoder_cfg.regenerate_source_id)
+      else:
+        raise ValueError('Unknown decoder type: {}!'.format(
+            params.decoder.type)) 
+    return decoder
+
 
   def build_losses(self, outputs, labels, aux_losses=None):
     total_loss = 0.0
@@ -127,12 +131,7 @@ class CenterNetTask(base_task.Task):
 
   def build_metrics(self, training=True):
     metrics = []
-    metric_names = self._metric_names
 
-    for name in metric_names:
-      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
-
-    self._metrics = metrics
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
@@ -150,8 +149,8 @@ class CenterNetTask(base_task.Task):
 
     # computer detivative and apply gradients
     y_pred = model(image, training=False)
-    y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred['raw_output'])
-    loss_metrics = self.build_losses(y_pred, label)
+    y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+    loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
 
     coco_model_outputs = {

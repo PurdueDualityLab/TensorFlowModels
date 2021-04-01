@@ -11,6 +11,7 @@ from official.vision.beta.configs import backbones
 from centernet.tasks.centernet import CenterNetTask
 from centernet.configs import centernet as exp_cfg
 from centernet.utils.weight_utils.load_weights import get_model_weights_as_dict, load_weights_model
+from centernet.dataloaders.centernet_input import CenterNetParser
 
 import tensorflow_datasets as tfds
 
@@ -40,32 +41,19 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
     task = CenterNetTask(config)
     model = task.build_model()
     metrics = task.build_metrics(training=False)
+    strategy = tf.distribute.get_strategy()
 
     weights_dict, _ = get_model_weights_as_dict(CENTERNET_CKPT_PATH)
     load_weights_model(model, weights_dict, 'hourglass104_512', 'detection_2d')
-
-    data_dir = 'D:\Datasets'
-    ds, ds_info = tfds.load(name='coco/2017',
-                            split='validation', 
-                            shuffle_files=True, 
-                            data_dir=data_dir, 
-                            with_info=True, 
-                            download=True)
-
-    strategy = tf.distribute.get_strategy()
-    dataset = orbit.utils.make_distributed_dataset(strategy, ds)
+    
+    dataset = orbit.utils.make_distributed_dataset(strategy, task.build_inputs,
+                                                   config.validation_data)
+    #val_data = task.build_inputs(config.validation_data)
 
     iterator = iter(dataset)
-    print(next(iterator))
-    # logs = task.validation_step(next(iterator), model, metrics=metrics)
-    # print(logs)
+    logs = task.validation_step(next(iterator), model, metrics=metrics)
+    print(logs)
+
 
 if __name__ == '__main__':
   tf.test.main()
-
-  
-  
-
-
-
-

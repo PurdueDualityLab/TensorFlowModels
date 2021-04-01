@@ -24,6 +24,59 @@ from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
 from centernet.configs import backbones
 
+
+@dataclasses.dataclass
+class TfExampleDecoder(hyperparams.Config):
+  regenerate_source_id: bool = False
+
+@dataclasses.dataclass
+class TfExampleDecoderLabelMap(hyperparams.Config):
+  regenerate_source_id: bool = False
+  label_map: str = ''
+
+@dataclasses.dataclass
+class DataDecoder(hyperparams.OneOfConfig):
+  type: Optional[str] = 'simple_decoder'
+  simple_decoder: TfExampleDecoder = TfExampleDecoder()
+  label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
+
+# dataset parsers
+@dataclasses.dataclass
+class Parser(hyperparams.Config):
+  image_w: int = 512
+  image_h: int = 512
+  fixed_size: bool = True
+  max_num_instances: int = 200
+  min_process_size: int = 320
+  max_process_size: int = 608
+  letter_box: bool = True
+  random_flip: bool = True
+  pct_rand: float = 0.0
+  jitter_im: float = 0.0
+  jitter_boxes: float = 0.000
+  aug_rand_transalate: float = 0.0
+  aug_rand_saturation: float = 0.0
+  aug_rand_brightness: float = 0.0
+  aug_rand_zoom: float = 0.0
+  aug_rand_hue: float = 0.0
+  keep_thresh: float = 0.0
+  mosaic_frequency: float = 1.0
+  use_tie_breaker: bool = True
+
+@dataclasses.dataclass
+class DataConfig(cfg.DataConfig):
+  """Input config for training."""
+  input_path: str = 'D:/Datasets/coco/2017/1.1.0/val' #'gs://tensorflow2/coco_records/train/2017*'
+  tfds_name: str = None #'coco'
+  tfds_split: str = 'validation' #'train'
+  global_batch_size: int = 32
+  is_training: bool = True
+  dtype: str = 'float16'
+  decoder: DataDecoder = DataDecoder()
+  parser: Parser = Parser()
+  shuffle_buffer_size: int = 10000
+  tfds_download: bool = True
+
 @dataclasses.dataclass
 class Loss(hyperparams.Config):
   pass
@@ -77,6 +130,8 @@ class CenterNetBase(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class CenterNet(hyperparams.Config):
   num_classes: int = 90
+  gaussian_iou: float = 0.7
+  max_num_instances: int = 200
   input_size: Optional[List[int]] = dataclasses.field(
     default_factory=lambda: [None, None, 3])
   base: Union[str, CenterNetBase] = CenterNetBase()
@@ -84,6 +139,8 @@ class CenterNet(hyperparams.Config):
 @dataclasses.dataclass
 class CenterNetTask(cfg.TaskConfig):
   model: CenterNet = CenterNet()
+  train_data: DataConfig = DataConfig(is_training=True)
+  validation_data: DataConfig = DataConfig(is_training=False)
   subtasks: CenterNetSubTasks = CenterNetSubTasks()
   losses: Losses = Losses()
 

@@ -455,34 +455,46 @@ def filter_boxes_and_classes(boxes, classes, image_info, keep_thresh=0.01):
   return boxes, classes
 
 
-def letter_box(image, boxes, target_dim=None):
+def letter_box(image, boxes, xs = 0.5, ys = 0.5, target_dim=None):
   height, width = get_image_shape(image)
   clipper = tf.math.maximum(width, height)
   if target_dim is None:
     target_dim = clipper
 
-  pad_width = clipper - width
-  pad_height = clipper - height
-  image = tf.image.pad_to_bounding_box(image, pad_height // 2, pad_width // 2,
+  xs = tf.convert_to_tensor(xs)
+  ys = tf.convert_to_tensor(ys)
+  pad_width_p = clipper - width
+  pad_height_p = clipper - height
+  pad_height = tf.cast(tf.cast(pad_height_p, ys.dtype) * ys, tf.int32)
+  pad_width = tf.cast(tf.cast(pad_width_p, xs.dtype) * xs, tf.int32)
+  image = tf.image.pad_to_bounding_box(image, pad_height, pad_width,
                                        clipper, clipper)
 
   boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
 
-  y *= tf.cast(height / clipper, tf.float32)
-  x *= tf.cast(width / clipper, tf.float32)
+  y *= tf.cast(height / clipper, y.dtype)
+  x *= tf.cast(width / clipper, x.dtype)
 
-  y += tf.cast((pad_height / clipper) / 2, tf.float32)
-  x += tf.cast((pad_width / clipper) / 2, tf.float32)
+  y += tf.cast((pad_height / clipper), y.dtype)
+  x += tf.cast((pad_width / clipper), x.dtype)
 
-  h *= tf.cast(height / clipper, tf.float32)
-  w *= tf.cast(width / clipper, tf.float32)
+  h *= tf.cast(height / clipper, h.dtype)
+  w *= tf.cast(width / clipper, w.dtype)
 
   boxes = tf.concat([x, y, w, h], axis=-1)
 
   boxes = box_ops.xcycwh_to_yxyx(boxes)
+  boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
+
   image = tf.image.resize(image, (target_dim, target_dim))
-  return image, boxes
+
+  scale = target_dim/clipper
+  pt_width = tf.cast(tf.cast(pad_width, scale.dtype) * scale, tf.int32)
+  pt_height = tf.cast(tf.cast(pad_height, scale.dtype) * scale, tf.int32)
+  pt_width_p = tf.cast(tf.cast(pad_width_p, scale.dtype) * scale, tf.int32)
+  pt_height_p = tf.cast(tf.cast(pad_height_p, scale.dtype) * scale, tf.int32)
+  return image, boxes, [pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p]
 
 
 def patch_four_images(images):
