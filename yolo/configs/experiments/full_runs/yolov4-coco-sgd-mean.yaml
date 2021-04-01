@@ -90,7 +90,7 @@ task:
       aug_rand_zoom: 0.5
       aug_rand_angle: 5.0
       use_tie_breaker: True
-      use_scale_xy: false
+      use_scale_xy: true
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: False
