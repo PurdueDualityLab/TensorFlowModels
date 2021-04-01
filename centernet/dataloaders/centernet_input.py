@@ -1,7 +1,8 @@
 import tensorflow as tf
 from official.vision.beta.dataloaders import parser
-
-from centernet.ops import preprocessing_ops
+from official.vision.beta.ops import box_ops, preprocess_ops
+from centernet.ops import preprocessing_ops as ops
+from yolo.ops import preprocessing_ops 
 
 class CenterNetParser(parser.Parser):
     def __init__(
@@ -16,6 +17,11 @@ class CenterNetParser(parser.Parser):
         self._gaussian_iou = gaussian_iou
         self._gaussian_bump = True
         self._gaussian_rad = -1
+        self._aug_rand_zoom = aug_rand_zoom
+        self._mosaic_frequency
+        self._jitter_im
+        self._seed
+        self._random_flip
 
     def _generate_heatmap(self, boxes, output_size, input_size):
       boxes = tf.cast(boxes, dtype=tf.float32)
@@ -127,11 +133,38 @@ class CenterNetParser(parser.Parser):
             labels: a dict of Tensors that contains labels.
         """
         # TODO: input size, output size
-        image = decoded_tensors["image"]
+        image = decoded_tensors["image"] / 255
         labels = self._generate_heatmap(
             decoded_tensors["groundtruth_boxes"],
             output_size, input_size
         )
+        boxes = data['groundtruth_boxes']
+
+        image_shape = tf.shape(image)[:2]
+
+        #CROP
+        if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
+          zfactor = preprocessing_ops.rand_uniform_strong(self._aug_rand_zoom, 1.0)
+        elif self._aug_rand_zoom > 0.0:
+          zfactor = preprocessing_ops.rand_scale(self._aug_rand_zoom)
+        else:
+          zfactor = tf.convert_to_tensor(1.0)
+
+        image, crop_info = preprocessing_ops.random_op_image(
+            image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
+
+        
+        #RESIZE
+
+        #CLIP DETECTION TO BOUNDARIES
+
+        #RANDOM HORIZONTAL FLIP
+        if self._random_flip:
+          image, boxes, _ = preprocess_ops.random_horizontal_flip(
+            image, boxes, seed=self._seed)
+
+        
+
         return image, labels
 
     def _parse_eval_data(self, data):
