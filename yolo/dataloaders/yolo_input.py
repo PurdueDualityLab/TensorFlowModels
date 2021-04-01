@@ -153,7 +153,7 @@ class Parser(parser.Parser):
       if is_training:
         scale_xy = self._scale_xy[key]
       else:
-        scale_xy = 1 * self._scale_xy[key]
+        scale_xy = 1
 
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(raw_true, self._masks[key],
                                                     width // 2**int(key),
