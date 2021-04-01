@@ -50,34 +50,26 @@ def class_gradient_trap(y, max_delta = np.inf):
     return dy, 0.0
   return y, trap
 
-def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, scaled_box = False, max_delta = 5.0):
+def get_predicted_box(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = unscaled_box[..., 2:4]
 
   pred_xy = box_gradient_trap(pred_xy, max_delta)
   pred_wh = box_gradient_trap(pred_wh, max_delta)
 
-  if not scaled_box:
-    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
-  else:
-    box_xy = pred_xy
-
+  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
 
-def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, scaled_box = False,  max_delta = 5.0):
+def get_predicted_box_newcords(width, height, unscaled_box, anchor_grid, grid_points, scale_x_y, max_delta = 5.0):
   pred_xy = tf.math.sigmoid(unscaled_box[...,0:2]) * scale_x_y - 0.5 * (scale_x_y - 1)
   pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
 
   pred_xy = box_gradient_trap(pred_xy, max_delta)
   pred_wh = box_gradient_trap(pred_wh, max_delta)
 
-  if not scaled_box:
-    box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
-  else:
-    box_xy = pred_xy
-
+  box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height], axis=-1) + grid_points
   box_wh = 4 * tf.square(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
@@ -187,7 +179,6 @@ class Yolo_Loss(object):
 
     # metric struff
     self._path_key = path_key
-    self._scaled_boxes = False #self._use_reduction_sum and self._objectness_smooth > 0.0
     return
 
   def print_error(self, pred, key):
@@ -313,9 +304,6 @@ class Yolo_Loss(object):
     num_tiles = num_boxes//TILE_SIZE
     base = tf.cast(tf.zeros_like(tf.reduce_sum(pred_boxes, axis = -1)), tf.bool)
     boxes = box_ops.yxyx_to_xcycwh(boxes)
-
-    # if self._scaled_boxes:
-    #   boxes = self._scale_boxes(boxes, fwidth, fheight, indexes)
 
     # pred_classes_max = tf.cast(
     #   tf.expand_dims(tf.argmax(pred_classes, axis = -1), axis = -1), tf.float32)
