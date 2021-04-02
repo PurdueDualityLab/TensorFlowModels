@@ -71,7 +71,7 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.4
+      iou_thresh: 0.001
       nms_thresh: 0.6
       use_reduction_sum: true
   validation_data:
