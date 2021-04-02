@@ -510,6 +510,7 @@ class Yolo_Loss(object):
           from_logits=True)
       class_loss = tf.reduce_sum(class_loss, axis=-1)
       class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
+      class_loss = math_ops.rm_nan_inf(class_loss, val = 0.0)
       class_loss = tf.cast(
           tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
@@ -520,8 +521,10 @@ class Yolo_Loss(object):
       conf_loss = tf.cast(
           tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     else:
+      conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
       conf_loss = tf.cast(
           tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+      
 
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
