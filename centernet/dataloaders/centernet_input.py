@@ -11,6 +11,10 @@ class CenterNetParser(parser.Parser):
         max_num_instances: int,
         gaussian_iou: float,
 
+        aug_rand_saturation=True,
+        aug_rand_brightness=True,
+        aug_rand_zoom=True,
+        aug_rand_hue=True,
     ):
         self._num_classes = num_classes
         self._max_num_instances = max_num_instances
@@ -134,11 +138,13 @@ class CenterNetParser(parser.Parser):
         """
         # TODO: input size, output size
         image = decoded_tensors["image"] / 255
+
         labels = self._generate_heatmap(
             decoded_tensors["groundtruth_boxes"],
             output_size, input_size
         )
-        boxes = data['groundtruth_boxes']
+        boxes = decoded_tensors['groundtruth_boxes']
+        classes = decoded_tensors['groundtruth_classes']
 
         image_shape = tf.shape(image)[:2]
 
@@ -150,20 +156,56 @@ class CenterNetParser(parser.Parser):
         else:
           zfactor = tf.convert_to_tensor(1.0)
 
+        # TODO: random_op_image not defined
         image, crop_info = preprocessing_ops.random_op_image(
             image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
 
         
+        
         #RESIZE
+        shape = tf.shape(image)
+        width = shape[1]
+        height = shape[0]
+        image, boxes, classes = preprocessing_ops.resize_crop_filter(
+            image,
+            boxes,
+            classes,
+            default_width=width,  # randscale * self._net_down_scale,
+            default_height=height,  # randscale * self._net_down_scale,
+            target_width=self._image_w,
+            target_height=self._image_h,
+            randomize=False)
 
         #CLIP DETECTION TO BOUNDARIES
 
+
+        
         #RANDOM HORIZONTAL FLIP
         if self._random_flip:
           image, boxes, _ = preprocess_ops.random_horizontal_flip(
             image, boxes, seed=self._seed)
 
-        
+        # Color and lighting jittering
+        image = tf.image.rgb_to_hsv(image)
+        i_h, i_s, i_v = tf.split(image, 3, axis=-1)
+        if self._aug_rand_hue:
+          delta = preprocessing_ops.rand_uniform_strong(
+              -0.1, 0.1
+          )  # tf.random.uniform([], minval= -0.1,maxval=0.1, seed=self._seed, dtype=tf.float32)
+          i_h = i_h + delta  # Hue
+          i_h = tf.clip_by_value(i_h, 0.0, 1.0)
+        if self._aug_rand_saturation:
+          delta = preprocessing_ops.rand_scale(
+              0.75
+          )  # tf.random.uniform([], minval= 0.5,maxval=1.1, seed=self._seed, dtype=tf.float32)
+          i_s = i_s * delta
+        if self._aug_rand_brightness:
+          delta = preprocessing_ops.rand_scale(
+              0.75
+          )  # tf.random.uniform([], minval= -0.15,maxval=0.15, seed=self._seed, dtype=tf.float32)
+          i_v = i_v * delta
+        image = tf.concat([i_h, i_s, i_v], axis=-1)
+        image = tf.image.hsv_to_rgb(image)
 
         return image, labels
 
