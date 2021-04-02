@@ -118,6 +118,10 @@ urls = {
         'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights',
         'weights',
         '037676f0d929c24e1bd9a0037fe30dc416fc26e0ca2a4491a44d024873316061'),
+    'darknet53.weights': (
+        'https://pjreddie.com/media/files/darknet53.weights',
+        'weights',
+        '51f4d36ee12e4542f52e21e41a7376063e3546097709d6334ba90ebcdb232065'),
 }
 
 
