@@ -122,6 +122,10 @@ urls = {
         'https://pjreddie.com/media/files/darknet53.weights',
         'weights',
         '51f4d36ee12e4542f52e21e41a7376063e3546097709d6334ba90ebcdb232065'),
+    'darknet53.cfg': (
+         'https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/darknet53.cfg',
+         'cfg',
+         '06565ce38a061e1443ce942d286791e113fd3fefea58c57c1d5e5ebafdbd76d6'),
 }
 
 
