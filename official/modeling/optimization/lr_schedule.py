@@ -280,19 +280,17 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
     with tf.name_scope(self.name or "CosineDecay"):
       step = step // self._steps_per_epoch
 
-      initial_learning_rate = ops.convert_to_tensor_v2_with_dispatch(
-          self.initial_learning_rate, name="initial_learning_rate")
+      initial_learning_rate = tf.convert_to_tensor(self.initial_learning_rate)
       dtype = initial_learning_rate.dtype
 
-      decay_steps = math_ops.cast(self.decay_steps, dtype)
-      global_step_recomp = math_ops.cast(step, dtype)
-      global_step_recomp = math_ops.minimum(global_step_recomp, decay_steps)
+      decay_steps = tf.math.cast(self.decay_steps, dtype)
+      global_step_recomp = tf.math.cast(step, dtype)
+      global_step_recomp = tf.math.minimum(global_step_recomp, decay_steps)
       completed_fraction = global_step_recomp / decay_steps
-      cosine_decayed = 0.5 * (1.0 + math_ops.cos(
-          constant_op.constant(math.pi) * completed_fraction))
+      cosine_decayed = 0.5 * (1.0 + tf.math.cos(tf.constant(math.pi) * completed_fraction))
 
       decayed = (1 - self.alpha) * cosine_decayed + self.alpha
-      return math_ops.multiply(initial_learning_rate, decayed)
+      return tf.math.multiply(initial_learning_rate, decayed)
 
   def get_config(self):
     return {
