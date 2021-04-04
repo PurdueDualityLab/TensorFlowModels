@@ -291,6 +291,7 @@ class Mosaic(object):
   
   @staticmethod
   def steps_per_epoch(steps_per_epoch, mosaic_frequency):
+    # 0.667 = 50 % of the images
     steps = (steps_per_epoch/4) * (mosaic_frequency) + steps_per_epoch * (1 - mosaic_frequency)
     steps = tf.math.ceil(steps)
     return steps
