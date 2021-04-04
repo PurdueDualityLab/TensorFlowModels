@@ -257,7 +257,7 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
                initial_learning_rate: float,
                decay_steps: int,
                steps_per_epoch: int = 1.0,
-               alpha: float =0.0,
+               alpha: float = 0.0,
                name: str = "PowerAndLinearDecay"):
     """Initialize configuration of the learning rate schedule.
 
@@ -283,7 +283,7 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
       initial_learning_rate = ops.convert_to_tensor_v2_with_dispatch(
           self.initial_learning_rate, name="initial_learning_rate")
       dtype = initial_learning_rate.dtype
-      
+
       decay_steps = math_ops.cast(self.decay_steps, dtype)
       global_step_recomp = math_ops.cast(step, dtype)
       global_step_recomp = math_ops.minimum(global_step_recomp, decay_steps)

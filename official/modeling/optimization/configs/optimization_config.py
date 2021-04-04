@@ -70,6 +70,7 @@ class LrConfig(oneof.OneOfConfig):
   exponential: lr_cfg.ExponentialLrConfig = lr_cfg.ExponentialLrConfig()
   polynomial: lr_cfg.PolynomialLrConfig = lr_cfg.PolynomialLrConfig()
   cosine: lr_cfg.CosineLrConfig = lr_cfg.CosineLrConfig()
+  cosine_epoch: lr_cfg.CosineLrEpochConfig = lr_cfg.CosineLrEpochConfig()
   power: lr_cfg.DirectPowerLrConfig = lr_cfg.DirectPowerLrConfig()
   power_linear: lr_cfg.PowerAndLinearDecayLrConfig = (
       lr_cfg.PowerAndLinearDecayLrConfig())
