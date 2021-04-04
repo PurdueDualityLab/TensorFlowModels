@@ -288,7 +288,12 @@ class Mosaic(object):
       return self._apply
     else:
       return self._no_apply
-
+  
+  @staticmethod
+  def steps_per_epoch(steps_per_epoch, mosaic_frequency):
+    steps = (steps_per_epoch/4) * (mosaic_frequency) + steps_per_epoch * (1 - mosaic_frequency)
+    steps = tf.math.ceil(steps)
+    return steps
 
 if __name__ == "__main__":
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
