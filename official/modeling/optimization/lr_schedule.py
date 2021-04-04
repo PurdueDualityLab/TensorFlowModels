@@ -277,7 +277,7 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
     self.name = name
 
   def __call__(self, step):
-    with ops.name_scope_v2(self.name or "CosineDecay"):
+    with tf.name_scope(self.name or "CosineDecay"):
       step = step // self._steps_per_epoch
 
       initial_learning_rate = ops.convert_to_tensor_v2_with_dispatch(
