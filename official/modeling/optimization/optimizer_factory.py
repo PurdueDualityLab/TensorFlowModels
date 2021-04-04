@@ -39,6 +39,7 @@ LR_CLS = {
     'polynomial': tf.keras.optimizers.schedules.PolynomialDecay,
     'exponential': tf.keras.optimizers.schedules.ExponentialDecay,
     'cosine': tf.keras.experimental.CosineDecay,
+    'cosine_epoch': lr_schedule.CosineEpoch,
     'power': lr_schedule.DirectPowerDecay,
     'power_linear': lr_schedule.PowerAndLinearDecay,
 }
