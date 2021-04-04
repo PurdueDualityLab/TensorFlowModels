@@ -269,7 +269,7 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
         the learning rate will be multiplied by a linear decay.
       name: Optional, name of warmup schedule.
     """
-    super(CosineDecay, self).__init__()
+    super(CosineEpoch, self).__init__()
     self.initial_learning_rate = initial_learning_rate
     self.steps_per_epoch = steps_per_epoch
     self.decay_steps = decay_steps//steps_per_epoch
