@@ -190,7 +190,7 @@ def random_translate(image, t):
     else:
       t_x = 0.0
       t_y = 0.0
-  return image, {'translate_offset': [t_y, t_x]}
+  return image, t_x, t_y
 
 
 def translate_boxes(box, classes, translate_x, translate_y):
