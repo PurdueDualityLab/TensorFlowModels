@@ -269,11 +269,7 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-    if self._aug_rand_angle > 0:
-      height, width = preprocessing_ops.get_image_shape(image)
-      image, angle = preprocessing_ops.random_rotate_image(
-          image, self._aug_rand_angle)
-      boxes = preprocessing_ops.rotate_boxes(boxes, height, width, angle)
+
 
       # boxes = box_ops.denormalize_boxes(boxes, info[1, :])
       # boxes = box_ops.clip_boxes(boxes, info[1, :])
@@ -288,6 +284,11 @@ class Parser(parser.Parser):
     image, boxes, info = preprocessing_ops.letter_box(
         image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
     
+    if self._aug_rand_angle > 0:
+      image, angle = preprocessing_ops.random_rotate_image(
+          image, self._aug_rand_angle)
+      boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
+
     if self._aug_rand_translate > 0.0:
       image, tx, ty = preprocessing_ops.random_translate(image, self._aug_rand_translate)
       boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
@@ -301,6 +302,8 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
+    image = tf.image.resize(image, (self._image_w, self._image_h))
+
     # else:
     # height, width = preprocessing_ops.get_image_shape(image)
     # minscale = tf.math.minimum(width, height)
@@ -309,7 +312,7 @@ class Parser(parser.Parser):
     #     target_width=minscale,
     #     target_height=minscale,
     #     random_patch=True)
-    # image = tf.image.resize(image, (self._image_w, self._image_h))
+    
     # boxes, classes = preprocessing_ops.filter_boxes_and_classes(
     #     boxes, classes, image_info, keep_thresh=self._keep_thresh)
     # info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
