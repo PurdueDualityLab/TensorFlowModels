@@ -1,6 +1,8 @@
-import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
+import tensorflow_datasets as tfds
+
 from utils.demos import utils
+
 
 """{image: (None, None, 3), 
     image/filename: (), 
@@ -82,8 +84,3 @@ if __name__ == "__main__":
     draw(sample)
     if i > 10:
       break
-    
-
-
-
-

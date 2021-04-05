@@ -18,7 +18,6 @@ import abc
 from typing import Any, Callable, Dict, Tuple
 
 import tensorflow as tf
-
 from tensorflow.python.framework import dtypes
 
 Output = Tuple[tf.Tensor, tf.Tensor]
@@ -284,6 +283,3 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
       return dtypes.float16.max
     else:
       raise AssertionError("Invalid dtype: %s" % self.dtype)
-
-
-

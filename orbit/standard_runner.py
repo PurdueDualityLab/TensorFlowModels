@@ -34,15 +34,13 @@ and `AbstractEvaluator` subclasses in these cases.
 """
 
 import abc
-
+import dataclasses
 from typing import Any, Optional
 
-import dataclasses
+import tensorflow as tf
 
 from orbit import runner
 from orbit.utils import loop_fns
-
-import tensorflow as tf
 
 
 @dataclasses.dataclass(frozen=True)

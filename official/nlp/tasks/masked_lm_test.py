@@ -17,8 +17,7 @@
 
 import tensorflow as tf
 
-from official.nlp.configs import bert
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, encoders
 from official.nlp.data import pretrain_dataloader
 from official.nlp.tasks import masked_lm
 

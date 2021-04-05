@@ -1,11 +1,11 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as ks
 from tensorflow.keras import backend as K
 
+from yolo.ops import box_ops, math_ops
 from yolo.ops.loss_utils import GridGenerator
-from yolo.ops import box_ops
-from yolo.ops import math_ops
-import numpy as np
+
 
 @tf.custom_gradient
 def gradient_trap(y):

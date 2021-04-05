@@ -16,6 +16,7 @@
 """Keras-based relative attention layers."""
 import math
 import string
+
 import tensorflow as tf
 
 _CHR_IDX = string.ascii_lowercase
@@ -497,4 +498,3 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
       query_attention_output = self._output_dense(query_attention_output)
 
     return content_attention_output, query_attention_output
-

@@ -18,8 +18,8 @@
 """Tests for sentence prediction labels."""
 import functools
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.nlp.modeling.ops import segment_extractor
 

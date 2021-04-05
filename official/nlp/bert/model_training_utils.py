@@ -18,9 +18,10 @@ import json
 import os
 import tempfile
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 from tensorflow.python.util import deprecation
+
 from official.common import distribute_utils
 from official.staging.training import grad_utils
 

@@ -14,9 +14,9 @@
 
 """Tests for orbit.utils.common."""
 
-from orbit.utils import common
-
 import tensorflow as tf
+
+from orbit.utils import common
 
 
 class UtilsTest(tf.test.TestCase):

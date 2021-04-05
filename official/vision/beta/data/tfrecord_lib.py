@@ -17,13 +17,12 @@
 import hashlib
 import io
 import itertools
-
-from absl import logging
-import numpy as np
-from PIL import Image
-import tensorflow as tf
-
 import multiprocessing as mp
+
+import numpy as np
+import tensorflow as tf
+from absl import logging
+from PIL import Image
 
 
 def convert_to_feature(value, value_type=None):
@@ -172,4 +171,3 @@ def check_and_make_dir(directory):
   """Creates the directory if it doesn't exist."""
   if not tf.io.gfile.isdir(directory):
     tf.io.gfile.makedirs(directory)
-

@@ -16,12 +16,10 @@
 import os
 
 import numpy as np
-
 import tensorflow as tf
 import tensorflow_hub as hub
 
-from official.nlp.albert import configs
-from official.nlp.albert import export_albert_tfhub
+from official.nlp.albert import configs, export_albert_tfhub
 
 
 class ExportAlbertTfhubTest(tf.test.TestCase):

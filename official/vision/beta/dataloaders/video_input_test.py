@@ -18,12 +18,11 @@ import io
 
 # Import libraries
 import numpy as np
-from PIL import Image
 import tensorflow as tf
+from PIL import Image
 
 from official.vision.beta.configs import video_classification as exp_cfg
 from official.vision.beta.dataloaders import video_input
-
 
 AUDIO_KEY = 'features/audio'
 

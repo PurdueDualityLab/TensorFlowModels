@@ -17,10 +17,9 @@
 import tensorflow as tf
 
 from official.vision.detection.dataloader import anchor
-from official.vision.detection.dataloader.maskrcnn_parser import Parser as MaskrcnnParser
-from official.vision.detection.utils import box_utils
-from official.vision.detection.utils import class_utils
-from official.vision.detection.utils import input_utils
+from official.vision.detection.dataloader.maskrcnn_parser import \
+    Parser as MaskrcnnParser
+from official.vision.detection.utils import box_utils, class_utils, input_utils
 
 
 class Parser(MaskrcnnParser):

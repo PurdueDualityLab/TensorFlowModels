@@ -14,6 +14,7 @@
 # ==============================================================================
 """Build video classification models."""
 from typing import Mapping
+
 import tensorflow as tf
 
 layers = tf.keras.layers

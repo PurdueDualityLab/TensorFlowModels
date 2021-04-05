@@ -17,10 +17,8 @@
 import functools
 import pprint
 
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+from absl import app, flags, logging
 
 from official.common import distribute_utils
 from official.modeling.hyperparams import params_dict
@@ -31,7 +29,8 @@ from official.vision.detection.configs import factory as config_factory
 from official.vision.detection.dataloader import input_reader
 from official.vision.detection.dataloader import mode_keys as ModeKeys
 from official.vision.detection.executor import distributed_executor as executor
-from official.vision.detection.executor.detection_executor import DetectionDistributedExecutor
+from official.vision.detection.executor.detection_executor import \
+    DetectionDistributedExecutor
 from official.vision.detection.modeling import factory as model_factory
 
 hyperparams_flags.initialize_common_flags()

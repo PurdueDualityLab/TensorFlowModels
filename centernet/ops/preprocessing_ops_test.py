@@ -1,9 +1,10 @@
-from absl.testing import parameterized
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
 
 import centernet.utils.groundtruth as preprocessing_ops
 from yolo.ops import box_ops
+
 
 def image_shape_to_grids(height, width):
   """Computes xy-grids given the shape of the image.

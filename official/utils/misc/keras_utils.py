@@ -18,9 +18,8 @@ import multiprocessing
 import os
 import time
 
-from absl import logging
 import tensorflow as tf
-
+from absl import logging
 from tensorflow.python.eager import monitoring
 
 global_batch_size_gauge = monitoring.IntGauge(

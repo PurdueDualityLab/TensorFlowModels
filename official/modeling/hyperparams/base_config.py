@@ -15,13 +15,13 @@
 """Base configurations to standardize experiments."""
 
 import copy
+import dataclasses
 import functools
 from typing import Any, List, Mapping, Optional, Type
-from absl import logging
 
-import dataclasses
 import tensorflow as tf
 import yaml
+from absl import logging
 
 from official.modeling.hyperparams import params_dict
 

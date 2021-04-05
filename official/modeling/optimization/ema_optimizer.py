@@ -14,7 +14,7 @@
 
 """Exponential moving average optimizer."""
 
-from typing import Text, List
+from typing import List, Text
 
 import tensorflow as tf
 

@@ -18,13 +18,11 @@
 import os
 import random
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
-import tensorflow as tf
-
 import sentencepiece as spm
+import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.nlp.xlnet import squad_utils
 
 flags.DEFINE_integer(

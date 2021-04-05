@@ -19,14 +19,12 @@ Residual networks (ResNets) were proposed in:
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl import logging
 import tensorflow as tf
-from official.vision.detection.modeling.architecture import keras_utils
-from official.vision.detection.modeling.architecture import nn_ops
+from absl import logging
+
+from official.vision.detection.modeling.architecture import keras_utils, nn_ops
 
 
 # TODO(b/140112644): Refactor the code with Keras style, i.e. build and call.

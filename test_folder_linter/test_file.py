@@ -1,13 +1,12 @@
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
 import numpy as np
 import pandas as pd
+from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-from NFold_GridSearch import NFold
-from NFold_GridSearch import GridSearch
+from NFold_GridSearch import GridSearch, NFold
 
 np.set_printoptions(threshold=np.inf)
 

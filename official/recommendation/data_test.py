@@ -14,24 +14,19 @@
 # ==============================================================================
 """Test NCF data pipeline."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from collections import defaultdict
 import hashlib
 import os
-
-import mock
+from collections import defaultdict
 
 import numpy as np
 import scipy.stats
 import tensorflow as tf
 
+import mock
 from official.recommendation import constants as rconst
-from official.recommendation import data_preprocessing
-from official.recommendation import movielens
-from official.recommendation import popen_helper
+from official.recommendation import data_preprocessing, movielens, popen_helper
 
 DATASET = "ml-test"
 NUM_USERS = 1000

@@ -19,13 +19,11 @@ Transformer model code source: https://github.com/tensorflow/tensor2tensor
 """
 
 import tensorflow as tf
+
 from official.nlp.modeling.layers import position_embedding
 from official.nlp.modeling.ops import beam_search
-from official.nlp.transformer import attention_layer
-from official.nlp.transformer import embedding_layer
-from official.nlp.transformer import ffn_layer
-from official.nlp.transformer import metrics
-from official.nlp.transformer import model_utils
+from official.nlp.transformer import (attention_layer, embedding_layer,
+                                      ffn_layer, metrics, model_utils)
 from official.nlp.transformer.utils.tokenizer import EOS_ID
 
 # Disable the not-callable lint error, since it claims many objects are not

@@ -14,13 +14,11 @@
 # ==============================================================================
 """Central location for shared argparse convention definitions."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import sys
 import codecs
 import functools
+import sys
 
 from absl import app as absl_app
 from absl import flags

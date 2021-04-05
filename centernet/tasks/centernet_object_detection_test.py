@@ -1,10 +1,12 @@
-import tensorflow as tf
 import numpy as np
-import centernet.tasks as tasks
+import tensorflow as tf
+
 import centernet.ops.loss_ops as utils
-from centernet.losses import penalty_reduced_logistic_focal_loss
-from centernet.losses import l1_localization_loss
+import centernet.tasks as tasks
+from centernet.losses import (l1_localization_loss,
+                              penalty_reduced_logistic_focal_loss)
 from centernet.tasks.centernet import CenterNetTask
+
 
 def gaussian2D(shape, sigma=1):
   m, n = [(ss - 1.) / 2. for ss in shape]

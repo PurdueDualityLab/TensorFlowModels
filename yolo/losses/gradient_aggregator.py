@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+from yolo import run
+
 # TODO: run sub dividied training. take the gradients and added them together in the update
 # once you, when they ask for the result jsut return it, and reset the state
 # i think you need to zip and then add them together.
@@ -79,7 +81,6 @@ class GradientAggregator(tf.Module):
       return self._zeros, self._count
 
 
-from yolo import run
 if __name__ == '__main__':
 
   task, model, params = run.load_model(

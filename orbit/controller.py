@@ -16,15 +16,12 @@
 
 import pprint
 import time
-
 from typing import Callable, Optional, Union
 
+import tensorflow as tf
 from absl import logging
 
-from orbit import runner
-from orbit import utils
-
-import tensorflow as tf
+from orbit import runner, utils
 
 
 def _log(message: str):

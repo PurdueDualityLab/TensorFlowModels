@@ -14,15 +14,15 @@
 # limitations under the License.
 # ==============================================================================
 """Defines the translation task."""
+import dataclasses
 import os
 from typing import Optional
 
-from absl import logging
-import dataclasses
-import sacrebleu
 import tensorflow as tf
-import tensorflow_text as tftxt
+from absl import logging
 
+import sacrebleu
+import tensorflow_text as tftxt
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory

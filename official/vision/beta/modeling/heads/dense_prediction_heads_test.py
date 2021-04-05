@@ -15,10 +15,10 @@
 # ==============================================================================
 """Tests for dense_prediction_heads.py."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
 
 from official.vision.beta.modeling.heads import dense_prediction_heads
 

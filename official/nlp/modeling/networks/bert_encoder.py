@@ -15,6 +15,7 @@
 """Transformer-based text encoder network."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 from official.modeling import activations

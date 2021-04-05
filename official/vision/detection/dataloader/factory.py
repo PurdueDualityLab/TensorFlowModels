@@ -14,14 +14,12 @@
 # ==============================================================================
 """Model architecture factory."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from official.vision.detection.dataloader import maskrcnn_parser
-from official.vision.detection.dataloader import olnmask_parser
-from official.vision.detection.dataloader import retinanet_parser
-from official.vision.detection.dataloader import shapemask_parser
+from official.vision.detection.dataloader import (maskrcnn_parser,
+                                                  olnmask_parser,
+                                                  retinanet_parser,
+                                                  shapemask_parser)
 
 
 def parser_generator(params, mode):

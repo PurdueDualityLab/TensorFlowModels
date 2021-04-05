@@ -15,12 +15,10 @@
 # ==============================================================================
 """Examples of SavedModel export for tf-serving."""
 
-from absl import app
-from absl import flags
 import tensorflow as tf
+from absl import app, flags
 
-from official.nlp.bert import bert_models
-from official.nlp.bert import configs
+from official.nlp.bert import bert_models, configs
 
 flags.DEFINE_integer(
     "sequence_length", None, "Sequence length to parse the tf.Example. If "

@@ -16,6 +16,7 @@
 """Base class for model export."""
 
 import abc
+
 import tensorflow as tf
 
 

@@ -29,21 +29,17 @@ MLP for modeling the user-item latent structures.
 In NeuMF model, it allows GMF and MLP to learn separate embeddings, and combine
 the two models by concatenating their last hidden layer.
 """
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
-
-from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
 from typing import Any, Dict, Text
 
+import tensorflow as tf
+from six.moves import xrange  # pylint: disable=redefined-builtin
+
 from official.recommendation import constants as rconst
-from official.recommendation import movielens
-from official.recommendation import ncf_common
-from official.recommendation import stat_utils
+from official.recommendation import movielens, ncf_common, stat_utils
 
 
 def sparse_to_dense_grads(grads_and_vars):

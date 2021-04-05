@@ -1,11 +1,12 @@
 # !/usr/bin/env python3
 import argparse as _argparse
-from absl.flags import argparse_flags as _argparse_flags
-from absl import flags as _flags
-from . import DarkNetConverter
-from absl import app
 import sys
-from . import main, _parser
+
+from absl import app
+from absl import flags as _flags
+from absl.flags import argparse_flags as _argparse_flags
+
+from . import DarkNetConverter, _parser, main
 
 "Convert a DarkNet config file and weights into a TensorFlow model"
 

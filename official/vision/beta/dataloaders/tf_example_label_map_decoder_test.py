@@ -16,14 +16,14 @@
 
 import io
 import os
+
+import numpy as np
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import numpy as np
 from PIL import Image
-import tensorflow as tf
 
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
-
 
 DUMP_SOURCE_ID = b'123'
 LABEL_MAP_CSV_CONTENT = '0,class_0\n1,class_1\n2,class_2'

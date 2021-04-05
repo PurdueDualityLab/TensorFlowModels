@@ -16,6 +16,7 @@
 """An embedding network supporting packed sequences and position ids."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 from official.modeling import tf_utils

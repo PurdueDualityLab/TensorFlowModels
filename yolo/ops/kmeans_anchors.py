@@ -1,9 +1,8 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-from yolo.ops.box_ops import compute_iou
-from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
+from yolo.ops.box_ops import compute_iou, yxyx_to_xcycwh
 
 
 class AnchorKMeans:

@@ -19,11 +19,13 @@ abstract methods to handle each training stage.
 """
 
 import abc
-from typing import Any, Mapping
-from absl import logging
 import dataclasses
+from typing import Any, Mapping
+
 import six
 import tensorflow as tf
+from absl import logging
+
 from official.modeling.hyperparams import base_config
 from official.modeling.progressive import utils
 

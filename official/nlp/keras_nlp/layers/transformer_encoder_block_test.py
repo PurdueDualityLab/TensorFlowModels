@@ -14,12 +14,14 @@
 # ==============================================================================
 """Tests for Keras-based transformer block layer."""
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
-from official.nlp.keras_nlp.layers.transformer_encoder_block import TransformerEncoderBlock
+from official.nlp.keras_nlp.layers.transformer_encoder_block import \
+    TransformerEncoderBlock
 
 
 @keras_parameterized.run_all_keras_modes

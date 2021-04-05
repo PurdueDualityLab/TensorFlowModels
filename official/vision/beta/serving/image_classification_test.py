@@ -18,10 +18,10 @@
 import io
 import os
 
-from absl.testing import parameterized
 import numpy as np
-from PIL import Image
 import tensorflow as tf
+from absl.testing import parameterized
+from PIL import Image
 
 from official.common import registry_imports  # pylint: disable=unused-import
 from official.core import exp_factory

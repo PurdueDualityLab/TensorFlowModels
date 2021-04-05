@@ -1,22 +1,18 @@
 import tensorflow as tf
+from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from absl import logging
-from official.core import base_task
-from official.core import input_reader
-from official.core import task_factory
-from yolo.configs import yolo as exp_cfg
-
+from official.core import base_task, input_reader, task_factory
+from official.vision.beta.dataloaders import (tf_example_decoder,
+                                              tf_example_label_map_decoder,
+                                              tfds_detection_decoders)
 from official.vision.beta.evaluation import coco_evaluator
-from official.vision.beta.dataloaders import tf_example_decoder
-from official.vision.beta.dataloaders import tfds_detection_decoders
-from official.vision.beta.dataloaders import tf_example_label_map_decoder
-
-from yolo.dataloaders import yolo_input
-from yolo.ops.kmeans_anchors import BoxGenInputReader
-from yolo.ops.box_ops import xcycwh_to_yxyx
-
 from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.configs import yolo as exp_cfg
+from yolo.dataloaders import yolo_input
+from yolo.ops.box_ops import xcycwh_to_yxyx
+from yolo.ops.kmeans_anchors import BoxGenInputReader
+
 # from yolo.modeling.layers.detection_generator import YoloGTFilter
 
 

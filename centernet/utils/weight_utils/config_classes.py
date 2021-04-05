@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import ClassVar, Dict, List, Tuple
+
 import numpy as np
 
-from typing import Tuple, List, Dict, ClassVar
 
 class Config(ABC):
     def get_weights(self):

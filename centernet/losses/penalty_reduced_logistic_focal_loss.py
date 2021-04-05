@@ -1,6 +1,7 @@
 # may be a dupe of retinanet_losses. need to look later
 import tensorflow as tf
 
+
 class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
   """Penalty-reduced pixelwise logistic regression with focal loss.
   The loss is defined in Equation (1) of the Objects as Points[1] paper.

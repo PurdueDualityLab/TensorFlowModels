@@ -19,15 +19,13 @@ The base trainer implements the Orbit `StandardTrainable` and
 interchangable and independent on model architectures and tasks.
 """
 
-from absl import logging
 import gin
-import orbit
 import tensorflow as tf
+from absl import logging
 
-from official.core import base_task
-from official.core import config_definitions
+import orbit
+from official.core import base_task, config_definitions
 from official.modeling import optimization
-
 
 ExperimentConfig = config_definitions.ExperimentConfig
 TrainerConfig = config_definitions.TrainerConfig

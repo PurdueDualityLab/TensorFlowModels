@@ -19,20 +19,16 @@ import json
 import operator
 import os
 
-from absl import app
-from absl import flags
-from absl import logging
 import gin
+import sentencepiece as spm
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from absl import app, flags, logging
 
-import sentencepiece as spm
 from official.nlp import optimization as nlp_optimization
 from official.nlp.configs import encoders
-from official.nlp.projects.triviaqa import evaluation
-from official.nlp.projects.triviaqa import inputs
-from official.nlp.projects.triviaqa import modeling
-from official.nlp.projects.triviaqa import prediction
+from official.nlp.projects.triviaqa import (evaluation, inputs, modeling,
+                                            prediction)
 
 flags.DEFINE_string('data_dir', None, 'Data directory for TensorFlow Datasets.')
 

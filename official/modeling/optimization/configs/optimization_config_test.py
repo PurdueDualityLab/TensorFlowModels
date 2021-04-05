@@ -16,7 +16,8 @@
 
 import tensorflow as tf
 
-from official.modeling.optimization.configs import learning_rate_config as lr_cfg
+from official.modeling.optimization.configs import \
+    learning_rate_config as lr_cfg
 from official.modeling.optimization.configs import optimization_config
 from official.modeling.optimization.configs import optimizer_config as opt_cfg
 

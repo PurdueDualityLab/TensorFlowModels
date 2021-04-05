@@ -15,6 +15,7 @@
 """BERT token classifier."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 

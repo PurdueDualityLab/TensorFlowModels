@@ -32,5 +32,3 @@ class Decoder(decoder.Decoder):
         'image/class/label': serialized_example['label'],
     }
     return sample_dict
-
-

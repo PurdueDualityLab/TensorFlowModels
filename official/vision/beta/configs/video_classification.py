@@ -14,14 +14,13 @@
 # limitations under the License.
 # ==============================================================================
 """Video classification configuration definition."""
-from typing import Optional, Tuple
 import dataclasses
+from typing import Optional, Tuple
+
 from official.core import config_definitions as cfg
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
-from official.vision.beta.configs import backbones_3d
-from official.vision.beta.configs import common
+from official.modeling import hyperparams, optimization
+from official.vision.beta.configs import backbones_3d, common
 
 
 @dataclasses.dataclass

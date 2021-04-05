@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import Optional, List
-
 # Import libraries
 import dataclasses
+from typing import List, Optional
 
 from official.modeling import hyperparams
 

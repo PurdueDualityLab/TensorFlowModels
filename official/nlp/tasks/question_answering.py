@@ -14,23 +14,22 @@
 # limitations under the License.
 # ==============================================================================
 """Question answering task."""
+import dataclasses
 import functools
 import json
 import os
 from typing import List, Optional
 
-from absl import logging
-import dataclasses
-import orbit
 import tensorflow as tf
+from absl import logging
 
+import orbit
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory
 from official.modeling.hyperparams import base_config
-from official.nlp.bert import squad_evaluate_v1_1
-from official.nlp.bert import squad_evaluate_v2_0
-from official.nlp.bert import tokenization
+from official.nlp.bert import (squad_evaluate_v1_1, squad_evaluate_v2_0,
+                               tokenization)
 from official.nlp.configs import encoders
 from official.nlp.data import data_loader_factory
 from official.nlp.data import squad_lib as squad_lib_wp

@@ -3,8 +3,11 @@ This file contains the code to load parsed weights that are in the DarkNet
 format into TensorFlow layers
 """
 import itertools
+
 from tensorflow import keras as ks
-from yolo.modeling.layers.nn_blocks import DarkConv  # pylint: disable=unused-import
+
+from yolo.modeling.layers.nn_blocks import \
+    DarkConv  # pylint: disable=unused-import
 
 
 def split_converter(lst, i, j=None):

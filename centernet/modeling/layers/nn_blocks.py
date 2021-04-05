@@ -1,6 +1,8 @@
 import tensorflow as tf
+
 from official.modeling import tf_utils
-from official.vision.beta.modeling.layers import nn_blocks as official_nn_blocks
+from official.vision.beta.modeling.layers import \
+    nn_blocks as official_nn_blocks
 
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
@@ -301,6 +303,7 @@ class HourglassBlock(tf.keras.layers.Layer):
     layer_config.update(super().get_config())
     return layer_config
 
+@tf.keras.utils.register_keras_serializable(package='centernet')
 class CenterNetDecoderConv(tf.keras.layers.Layer):
   """
   Convolution block for the CenterNet head. This is used to generate

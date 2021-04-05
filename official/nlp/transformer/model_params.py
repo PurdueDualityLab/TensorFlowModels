@@ -16,7 +16,6 @@
 
 from collections import defaultdict
 
-
 BASE_PARAMS = defaultdict(
     lambda: None,  # Set default value to None.
 

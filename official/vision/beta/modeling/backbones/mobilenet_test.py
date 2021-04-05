@@ -16,12 +16,15 @@
 """Tests for MobileNet."""
 
 import itertools
-# Import libraries
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.vision.beta.modeling.backbones import mobilenet
+
+# Import libraries
+
+
 
 
 class MobileNetTest(parameterized.TestCase, tf.test.TestCase):

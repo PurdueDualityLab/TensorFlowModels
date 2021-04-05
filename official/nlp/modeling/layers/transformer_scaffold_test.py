@@ -16,10 +16,10 @@
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
-from official.nlp.modeling.layers import attention
-from official.nlp.modeling.layers import transformer_scaffold
+from official.nlp.modeling.layers import attention, transformer_scaffold
 
 
 # Test class that wraps a standard attention layer. If this layer is called

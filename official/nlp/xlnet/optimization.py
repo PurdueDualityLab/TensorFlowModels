@@ -14,8 +14,9 @@
 # ==============================================================================
 """Functions and classes related to optimization (weight updates)."""
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
+
 from official.nlp import optimization
 
 

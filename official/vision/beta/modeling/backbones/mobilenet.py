@@ -14,16 +14,15 @@
 # ==============================================================================
 """Contains definitions of Mobilenet Networks."""
 
-from typing import Text, Optional, Dict, Any, Tuple
-
 # Import libraries
 import dataclasses
+from typing import Any, Dict, Optional, Text, Tuple
+
 import tensorflow as tf
-from official.modeling import hyperparams
-from official.modeling import tf_utils
+
+from official.modeling import hyperparams, tf_utils
 from official.vision.beta.modeling.backbones import factory
-from official.vision.beta.modeling.layers import nn_blocks
-from official.vision.beta.modeling.layers import nn_layers
+from official.vision.beta.modeling.layers import nn_blocks, nn_layers
 
 layers = tf.keras.layers
 regularizers = tf.keras.regularizers

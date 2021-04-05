@@ -16,8 +16,7 @@
 # Import libraries
 import tensorflow as tf
 
-from official.vision.beta.dataloaders import decoder
-from official.vision.beta.dataloaders import parser
+from official.vision.beta.dataloaders import decoder, parser
 from official.vision.beta.ops import preprocess_ops
 
 

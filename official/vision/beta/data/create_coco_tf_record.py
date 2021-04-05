@@ -30,18 +30,16 @@ Example usage:
 import collections
 import json
 import logging
+import multiprocessing as mp
 import os
 
+import numpy as np
+import tensorflow as tf
 from absl import app  # pylint:disable=unused-import
 from absl import flags
-import numpy as np
-
 from pycocotools import mask
-import tensorflow as tf
 
-import multiprocessing as mp
 from official.vision.beta.data import tfrecord_lib
-
 
 flags.DEFINE_boolean(
     'include_masks', False, 'Whether to include instance segmentations masks '

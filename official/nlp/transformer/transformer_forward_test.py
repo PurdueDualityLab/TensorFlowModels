@@ -15,13 +15,10 @@
 """Forward pass test for Transformer model refactoring."""
 
 import numpy as np
-
 import tensorflow as tf
 
 from official.nlp.modeling import models
-from official.nlp.transformer import metrics
-from official.nlp.transformer import model_params
-from official.nlp.transformer import transformer
+from official.nlp.transformer import metrics, model_params, transformer
 
 
 def _count_params(layer, trainable_only=True):

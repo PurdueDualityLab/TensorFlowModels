@@ -15,19 +15,16 @@
 # ==============================================================================
 """Unit tests for the classifier trainer models."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import os
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
-from official.vision.image_classification import classifier_trainer
-from official.vision.image_classification import dataset_factory
-from official.vision.image_classification import test_utils
+from official.vision.image_classification import (classifier_trainer,
+                                                  dataset_factory, test_utils)
 from official.vision.image_classification.configs import base_configs
 
 

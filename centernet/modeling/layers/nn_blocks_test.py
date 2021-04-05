@@ -1,9 +1,8 @@
-from absl.testing import parameterized
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
 
 from centernet.modeling.layers import nn_blocks
-
 # the following is a literal translation of the PyTorch implementation
 # https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/large_hourglass.py
 from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock

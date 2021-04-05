@@ -17,24 +17,16 @@
 See _example.py for detailed instructions on defining flags.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 
-from six.moves import shlex_quote
-
 from absl import app as absl_app
 from absl import flags
+from six.moves import shlex_quote
 
-from official.utils.flags import _base
-from official.utils.flags import _benchmark
-from official.utils.flags import _conventions
-from official.utils.flags import _device
-from official.utils.flags import _distribution
-from official.utils.flags import _misc
-from official.utils.flags import _performance
+from official.utils.flags import (_base, _benchmark, _conventions, _device,
+                                  _distribution, _misc, _performance)
 
 
 def set_defaults(**kwargs):

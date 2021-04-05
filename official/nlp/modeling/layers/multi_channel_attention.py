@@ -19,6 +19,7 @@
 import math
 
 import tensorflow as tf
+
 from official.modeling import tf_utils
 from official.nlp.modeling.layers import masked_softmax
 

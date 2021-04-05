@@ -18,18 +18,16 @@ import functools
 import json
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
 import tensorflow as tf
+# Import libraries
+from absl import app, flags
+
 from official.nlp.bert import tokenization
-from official.nlp.data import classifier_data_lib
-from official.nlp.data import sentence_retrieval_lib
-# word-piece tokenizer based squad_lib
-from official.nlp.data import squad_lib as squad_lib_wp
 # sentence-piece tokenizer based squad_lib
-from official.nlp.data import squad_lib_sp
-from official.nlp.data import tagging_data_lib
+# word-piece tokenizer based squad_lib
+from official.nlp.data import classifier_data_lib, sentence_retrieval_lib
+from official.nlp.data import squad_lib as squad_lib_wp
+from official.nlp.data import squad_lib_sp, tagging_data_lib
 
 FLAGS = flags.FLAGS
 

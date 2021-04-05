@@ -16,11 +16,12 @@
 """Image classification task definition."""
 import tensorflow as tf
 
-from official.core import input_reader
-from official.core import task_factory
+from official.core import input_reader, task_factory
 from official.vision.beta.dataloaders import classification_input
-from official.vision.beta.projects.yolo.configs import darknet_classification as exp_cfg
-from official.vision.beta.projects.yolo.dataloaders import classification_tfds_decoder as cli
+from official.vision.beta.projects.yolo.configs import \
+    darknet_classification as exp_cfg
+from official.vision.beta.projects.yolo.dataloaders import \
+    classification_tfds_decoder as cli
 from official.vision.beta.tasks import image_classification
 
 
@@ -112,5 +113,3 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
     return logs
-
-

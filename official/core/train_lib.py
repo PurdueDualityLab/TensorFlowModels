@@ -17,14 +17,12 @@
 import os
 from typing import Any, Mapping, Tuple
 
+import tensorflow as tf
 # Import libraries
 from absl import logging
-import orbit
-import tensorflow as tf
 
-from official.core import base_task
-from official.core import config_definitions
-from official.core import train_utils
+import orbit
+from official.core import base_task, config_definitions, train_utils
 
 BestCheckpointExporter = train_utils.BestCheckpointExporter
 maybe_create_best_ckpt_exporter = train_utils.maybe_create_best_ckpt_exporter

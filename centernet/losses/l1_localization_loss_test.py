@@ -1,7 +1,8 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 from centernet import losses
+
 
 class L1LocalizationLossTest(tf.test.TestCase):
 

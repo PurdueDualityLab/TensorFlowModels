@@ -20,16 +20,13 @@ Feature Pyramid Networks were proposed in:
     Feature Pyramid Networks for Object Detection. CVPR 2017.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 
 import tensorflow as tf
 
-from official.vision.detection.modeling.architecture import keras_utils
-from official.vision.detection.modeling.architecture import nn_ops
+from official.vision.detection.modeling.architecture import keras_utils, nn_ops
 from official.vision.detection.ops import spatial_transform_ops
 
 

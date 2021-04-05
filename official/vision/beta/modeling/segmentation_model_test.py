@@ -15,12 +15,11 @@
 # ==============================================================================
 """Tests for segmentation network."""
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
 
-from official.vision.beta.modeling import backbones
-from official.vision.beta.modeling import segmentation_model
+from official.vision.beta.modeling import backbones, segmentation_model
 from official.vision.beta.modeling.decoders import fpn
 from official.vision.beta.modeling.heads import segmentation_heads
 

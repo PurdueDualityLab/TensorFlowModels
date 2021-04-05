@@ -13,16 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Common modeling utilities."""
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+from typing import Optional, Text
 
 import numpy as np
 import tensorflow as tf
 import tensorflow.compat.v1 as tf1
-from typing import Text, Optional
-
 from tensorflow.python.tpu import tpu_function
 
 

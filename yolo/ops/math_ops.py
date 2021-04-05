@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
+
 def rm_nan_inf(x, val=0.0):
   cond = tf.math.logical_or(tf.math.is_nan(x), tf.math.is_inf(x))
   val = tf.cast(val, dtype=x.dtype)

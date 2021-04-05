@@ -36,8 +36,7 @@ model_fn = imported.signatures['serving_default']
 output = model_fn(input_images)
 """
 
-from absl import app
-from absl import flags
+from absl import app, flags
 
 from official.common import registry_imports  # pylint: disable=unused-import
 from official.core import exp_factory

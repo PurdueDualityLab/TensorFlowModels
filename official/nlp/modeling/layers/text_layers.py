@@ -15,8 +15,8 @@
 """Keras Layers for BERT-specific preprocessing."""
 from typing import Any, Dict, List, Optional, Union
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 try:
   import tensorflow_text as text  # pylint: disable=g-import-not-at-top

@@ -28,7 +28,7 @@
 # limitations under the License.
 # ==============================================================================
 """Abstraction of multi-task model."""
-from typing import Text, Dict
+from typing import Dict, Text
 
 import tensorflow as tf
 

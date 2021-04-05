@@ -16,7 +16,6 @@
 # pylint: disable=g-classes-have-attributes
 
 import tensorflow as tf
-
 from tensorflow.python.util import deprecation
 
 _CHR_IDX = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"]

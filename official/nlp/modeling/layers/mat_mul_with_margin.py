@@ -16,6 +16,7 @@
 # pylint: disable=g-classes-have-attributes
 
 from typing import Tuple
+
 # Import libraries
 import tensorflow as tf
 

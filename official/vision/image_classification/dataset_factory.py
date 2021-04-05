@@ -14,22 +14,19 @@
 # limitations under the License.
 # ==============================================================================
 """Dataset utilities for vision tasks using TFDS and tf.data.Dataset."""
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
-from typing import Any, List, Optional, Tuple, Mapping, Union
-
-from absl import logging
 from dataclasses import dataclass
+from typing import Any, List, Mapping, Optional, Tuple, Union
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from absl import logging
 
 from official.modeling.hyperparams import base_config
-from official.vision.image_classification import augment
-from official.vision.image_classification import preprocessing
+from official.vision.image_classification import augment, preprocessing
 
 AUGMENTERS = {
     'autoaugment': augment.AutoAugment,

@@ -15,12 +15,13 @@
 """Anchor box and labeler definition."""
 
 import collections
+
 # Import libraries
 import tensorflow as tf
+
 from official.vision import keras_cv
-from official.vision.detection.utils.object_detection import balanced_positive_negative_sampler
-from official.vision.detection.utils.object_detection import box_list
-from official.vision.detection.utils.object_detection import faster_rcnn_box_coder
+from official.vision.detection.utils.object_detection import (
+    balanced_positive_negative_sampler, box_list, faster_rcnn_box_coder)
 
 
 class Anchor(object):

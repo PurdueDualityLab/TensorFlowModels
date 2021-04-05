@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def update_weights_dict(weights_dict, variable_key, value):
   """ Inserts weight value into a weight dictionary.
 

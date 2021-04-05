@@ -14,12 +14,9 @@
 # ==============================================================================
 """Flags for managing compute devices. Currently only contains TPU flags."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl import flags
-from absl import logging
+from absl import flags, logging
 
 from official.utils.flags._conventions import help_wrap
 

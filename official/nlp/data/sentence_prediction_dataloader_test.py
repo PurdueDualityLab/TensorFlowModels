@@ -16,11 +16,11 @@
 """Tests for official.nlp.data.sentence_prediction_dataloader."""
 import os
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
-
+from absl.testing import parameterized
 from sentencepiece import SentencePieceTrainer
+
 from official.nlp.data import sentence_prediction_dataloader as loader
 
 

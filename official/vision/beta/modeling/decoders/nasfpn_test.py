@@ -15,9 +15,9 @@
 # ==============================================================================
 """Tests for NAS-FPN."""
 
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.vision.beta.modeling.backbones import resnet
 from official.vision.beta.modeling.decoders import nasfpn

@@ -15,10 +15,10 @@
 """BERT cls-token classifier."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
-from official.nlp.modeling import layers
-from official.nlp.modeling import networks
+from official.nlp.modeling import layers, networks
 
 
 @tf.keras.utils.register_keras_serializable(package='Text')

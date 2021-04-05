@@ -17,25 +17,22 @@
 
 import os
 import pprint
-from typing import Any, Tuple, Text, Optional, Mapping
+from typing import Any, Mapping, Optional, Text, Tuple
 
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+from absl import app, flags, logging
+
 from official.common import distribute_utils
-from official.modeling import hyperparams
-from official.modeling import performance
+from official.modeling import hyperparams, performance
 from official.utils import hyperparams_flags
 from official.utils.misc import keras_utils
 from official.vision.image_classification import callbacks as custom_callbacks
-from official.vision.image_classification import dataset_factory
-from official.vision.image_classification import optimizer_factory
-from official.vision.image_classification.configs import base_configs
-from official.vision.image_classification.configs import configs
-from official.vision.image_classification.efficientnet import efficientnet_model
-from official.vision.image_classification.resnet import common
-from official.vision.image_classification.resnet import resnet_model
+from official.vision.image_classification import (dataset_factory,
+                                                  optimizer_factory)
+from official.vision.image_classification.configs import base_configs, configs
+from official.vision.image_classification.efficientnet import \
+    efficientnet_model
+from official.vision.image_classification.resnet import common, resnet_model
 
 
 def get_models() -> Mapping[str, tf.keras.Model]:

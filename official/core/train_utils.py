@@ -14,21 +14,19 @@
 
 """Training utils."""
 import copy
+import dataclasses
 import json
 import os
 import pprint
 from typing import Any, Callable, Dict, List, Optional
 
-from absl import logging
-import dataclasses
 import gin
-import orbit
 import tensorflow as tf
+from absl import logging
 
-from official.core import base_task
-from official.core import base_trainer
-from official.core import config_definitions
-from official.core import exp_factory
+import orbit
+from official.core import (base_task, base_trainer, config_definitions,
+                           exp_factory)
 from official.modeling import hyperparams
 
 

@@ -18,12 +18,11 @@ import collections
 import copy
 from typing import List, Optional
 
-from absl import logging
 import gin
 import tensorflow as tf
+from absl import logging
 
-from official.nlp.modeling import layers
-from official.nlp.modeling import networks
+from official.nlp.modeling import layers, networks
 
 
 @tf.keras.utils.register_keras_serializable(package='Text')

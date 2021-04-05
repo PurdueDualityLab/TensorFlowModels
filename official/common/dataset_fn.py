@@ -28,7 +28,7 @@
 # ==============================================================================
 """Utility library for picking an appropriate dataset function."""
 
-from typing import Any, Callable, Union, Type
+from typing import Any, Callable, Type, Union
 
 import tensorflow as tf
 

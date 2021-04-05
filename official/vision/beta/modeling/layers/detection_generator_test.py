@@ -15,9 +15,9 @@
 """Tests for detection_generator.py."""
 # Import libraries
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.vision.beta.modeling.layers import detection_generator
 from official.vision.beta.ops import anchor

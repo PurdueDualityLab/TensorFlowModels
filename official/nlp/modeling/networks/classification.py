@@ -15,6 +15,7 @@
 """Classification and regression network."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 

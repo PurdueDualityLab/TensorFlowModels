@@ -14,24 +14,20 @@
 # ==============================================================================
 """Custom training loop for running TensorFlow 2.0 models."""
 
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
-
-from absl import flags
-from absl import logging
+# pylint: disable=unused-import,g-import-not-at-top,redefined-outer-name,reimported
+from typing import Any, Callable, Dict, Iterator, List, Optional, Text, Union
 
 import numpy as np
 import tensorflow as tf
+from absl import flags, logging
 
-# pylint: disable=unused-import,g-import-not-at-top,redefined-outer-name,reimported
-from typing import Optional, Dict, List, Text, Callable, Union, Iterator, Any
+from official.common import distribute_utils
 from official.modeling.hyperparams import params_dict
 from official.utils import hyperparams_flags
-from official.common import distribute_utils
 from official.utils.misc import keras_utils
 
 FLAGS = flags.FLAGS

@@ -16,13 +16,12 @@
 
 import os
 import re
-
-from absl import logging
+from typing import Any, Callable, Dict, Optional, Text
 
 # pytype: disable=attribute-error
 # pylint: disable=g-bare-generic,unused-import
 import tensorflow as tf
-from typing import Any, Callable, Dict, Text, Optional
+from absl import logging
 
 from official.nlp.bert import model_training_utils
 from official.nlp.xlnet import data_utils

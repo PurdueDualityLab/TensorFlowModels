@@ -21,11 +21,8 @@ into (image, labels) tuple for RetinaNet.
 # Import libraries
 import tensorflow as tf
 
-from official.vision.beta.dataloaders import parser
-from official.vision.beta.dataloaders import utils
-from official.vision.beta.ops import anchor
-from official.vision.beta.ops import box_ops
-from official.vision.beta.ops import preprocess_ops
+from official.vision.beta.dataloaders import parser, utils
+from official.vision.beta.ops import anchor, box_ops, preprocess_ops
 
 
 class Parser(parser.Parser):

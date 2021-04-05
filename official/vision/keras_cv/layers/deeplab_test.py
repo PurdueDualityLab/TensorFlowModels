@@ -15,8 +15,8 @@
 """Tests for ASPP."""
 
 import tensorflow as tf
-
 from tensorflow.python.keras import keras_parameterized
+
 from official.vision.keras_cv.layers import deeplab
 
 

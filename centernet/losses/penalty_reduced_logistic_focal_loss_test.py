@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 import centernet.losses.penalty_reduced_logistic_focal_loss as losses
 

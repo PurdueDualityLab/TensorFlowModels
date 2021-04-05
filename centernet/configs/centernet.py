@@ -14,15 +14,15 @@
 # limitations under the License.
 # ==============================================================================
 """CenterNet configuration definition."""
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
-
 # Import libraries
 import dataclasses
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
-from official.modeling import hyperparams
+from centernet.configs import backbones
+from official.core import exp_factory
+from official.modeling import hyperparams, optimization
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
-from centernet.configs import backbones
 
 
 @dataclasses.dataclass
@@ -66,21 +66,19 @@ class Parser(hyperparams.Config):
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  input_path: str = 'D:/Datasets/coco/2017/1.1.0/val' #'gs://tensorflow2/coco_records/train/2017*'
+  input_path: str = 'D:\\Datasets\\coco\\2017\\1.1.0*' #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = None #'coco'
-  tfds_split: str = 'validation' #'train'
+  tfds_split: str = 'val' #'train'
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
   decoder: DataDecoder = DataDecoder()
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
-  tfds_download: bool = True
+  tfds_download: bool = False
 
-@dataclasses.dataclass
 class Loss(hyperparams.Config):
   pass
-
 
 @dataclasses.dataclass
 class DetectionLoss(Loss):
@@ -105,13 +103,21 @@ class Losses(hyperparams.Config):
 class CenterNetDecoder(hyperparams.Config):
   heatmap_bias: float = -2.19
 
+@dataclasses.dataclass
+class CenterNetLayer(hyperparams.Config):
+  max_detections: int = 100
+  peak_error: float = 1e-6
+  peak_extract_kernel_size: int = 3
+  use_nms: bool = False
+  center_thresh: float = 0.1
+  iou_thresh: float = 0.4
+  class_offset: int = 1
 
 @dataclasses.dataclass
 class CenterNetDetection(cfg.TaskConfig):
   use_centers: bool = True
   use_corners: bool = False
   predict_3d: bool = False
-
 
 @dataclasses.dataclass
 class CenterNetSubTasks(cfg.TaskConfig):
@@ -126,15 +132,20 @@ class CenterNetSubTasks(cfg.TaskConfig):
 class CenterNetBase(hyperparams.OneOfConfig):
   backbone: backbones.Backbone = backbones.Backbone(type='hourglass')
   decoder: CenterNetDecoder = CenterNetDecoder()
+  odapi_weights: str = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
+  extremenet_weights: str = 'D:\\weights\extremenet'
+  backbone_name: str = 'hourglass104_512'
+  decoder_name: str = 'detection_2d'
 
 @dataclasses.dataclass
 class CenterNet(hyperparams.Config):
+  base: Union[str, CenterNetBase] = CenterNetBase()
   num_classes: int = 90
   gaussian_iou: float = 0.7
   max_num_instances: int = 200
   input_size: Optional[List[int]] = dataclasses.field(
     default_factory=lambda: [None, None, 3])
-  base: Union[str, CenterNetBase] = CenterNetBase()
+  filter: CenterNetLayer = CenterNetLayer()
 
 @dataclasses.dataclass
 class CenterNetTask(cfg.TaskConfig):
@@ -144,10 +155,14 @@ class CenterNetTask(cfg.TaskConfig):
   subtasks: CenterNetSubTasks = CenterNetSubTasks()
   losses: Losses = Losses()
 
-  annotation_file: Optional[str] = None
   per_category_metrics: bool = False
-
   weight_decay: float = 5e-4
+  
+  init_checkpoint: str = None
+  annotation_file: Optional[str] = None
+  gradient_clip_norm: float = 0.0
+  load_odapi_weights: bool = True
+  load_extremenet_weights: bool = False
 
   def _get_output_length_dict(self):
     lengths = {}
@@ -194,3 +209,73 @@ class CenterNetTask(cfg.TaskConfig):
     #   })
 
     return lengths
+
+@exp_factory.register_config_factory('centernet_custom')
+def centernet_custom() -> cfg.ExperimentConfig:
+  """COCO object detection with CenterNet."""
+  train_batch_size = 1
+  eval_batch_size = 1
+  base_default = 1200000
+  num_batches = 1200000 * 64 / train_batch_size
+
+  config = cfg.ExperimentConfig(
+      runtime=cfg.RuntimeConfig(
+          #            mixed_precision_dtype='float16',
+          #            loss_scale='dynamic',
+          num_gpus=2),
+      task=CenterNetTask(
+          model=CenterNet(),
+          train_data=DataConfig(  # input_path=os.path.join(
+              # COCO_INPUT_PATH_BASE, 'train*'),
+              is_training=True,
+              global_batch_size=train_batch_size,
+              parser=Parser(),
+              shuffle_buffer_size=2),
+          validation_data=DataConfig(
+              # input_path=os.path.join(COCO_INPUT_PATH_BASE,
+              #                        'val*'),
+              is_training=False,
+              global_batch_size=eval_batch_size,
+              shuffle_buffer_size=2)),
+      trainer=cfg.TrainerConfig(
+          steps_per_loop=2000,
+          summary_interval=8000,
+          checkpoint_interval=10000,
+          train_steps=num_batches,
+          validation_steps=1000,
+          validation_interval=10,
+          optimizer_config=optimization.OptimizationConfig({
+              'optimizer': {
+                  'type': 'sgd',
+                  'sgd': {
+                      'momentum': 0.9
+                  }
+              },
+              'learning_rate': {
+                  'type': 'stepwise',
+                  'stepwise': {
+                      'boundaries': [
+                          int(400000 / base_default * num_batches),
+                          int(450000 / base_default * num_batches)
+                      ],
+                      'values': [
+                          0.00261 * train_batch_size / 64,
+                          0.000261 * train_batch_size / 64,
+                          0.0000261 * train_batch_size / 64
+                      ]
+                  }
+              },
+              'warmup': {
+                  'type': 'linear',
+                  'linear': {
+                      'warmup_steps': 1000 * 64 // num_batches,
+                      'warmup_learning_rate': 0
+                  }
+              }
+          })),
+      restrictions=[
+          'task.train_data.is_training != None',
+          'task.validation_data.is_training != None'
+      ])
+
+  return config

@@ -14,11 +14,11 @@
 # ==============================================================================
 """Contains common building blocks for neural networks."""
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Text
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple, Union
 
+import tensorflow as tf
 # Import libraries
 from absl import logging
-import tensorflow as tf
 
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import nn_layers

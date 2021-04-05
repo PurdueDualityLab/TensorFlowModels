@@ -1,10 +1,9 @@
 import collections
 import collections.abc
 import io
+from typing import Type, TypeVar, Union
 
 from yolo.utils.downloads.file_manager import PathABC
-
-from typing import Union, Type, TypeVar
 
 T = TypeVar('T', bound='DarkNetModel')
 

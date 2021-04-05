@@ -14,14 +14,12 @@
 # ==============================================================================
 """Tests for optimizer_factory."""
 
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
-
-from absl.testing import parameterized
+from __future__ import absolute_import, division, print_function
 
 import tensorflow as tf
+from absl.testing import parameterized
+
 from official.vision.image_classification import optimizer_factory
 from official.vision.image_classification.configs import base_configs
 

@@ -13,9 +13,8 @@
 # limitations under the License.
 
 """Configuration definitions for multi-task training."""
-from typing import Optional, Tuple
-
 import dataclasses
+from typing import Optional, Tuple
 
 from official.core import config_definitions as cfg
 from official.modeling import hyperparams

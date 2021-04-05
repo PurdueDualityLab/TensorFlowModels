@@ -26,9 +26,10 @@ import collections
 import re
 import string
 
+from absl import logging
+
 # pylint: disable=g-bad-import-order
 
-from absl import logging
 # pylint: enable=g-bad-import-order
 
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utilities for preprocessing TriviaQA data."""
 import bisect
+import dataclasses
 import json
 import operator
 import os
@@ -20,17 +21,15 @@ import re
 import string
 from typing import Any, Dict, Generator, List, Optional, Set, Text, Tuple
 
-from absl import logging
-import apache_beam as beam
-from apache_beam import metrics
-import dataclasses
 import nltk
 import numpy as np
-import tensorflow.io.gfile as gfile
-
 import sentencepiece as spm
-from official.nlp.projects.triviaqa import evaluation
-from official.nlp.projects.triviaqa import sentencepiece_pb2
+import tensorflow.io.gfile as gfile
+from absl import logging
+
+import apache_beam as beam
+from apache_beam import metrics
+from official.nlp.projects.triviaqa import evaluation, sentencepiece_pb2
 
 
 @dataclasses.dataclass

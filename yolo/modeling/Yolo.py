@@ -1,12 +1,12 @@
-from yolo.configs import yolo
-from official.core import registry
-from official.vision.beta.modeling.backbones import factory
-from yolo.modeling.backbones.darknet import build_darknet
-import tensorflow as tf
-import tensorflow.keras as ks
 from typing import *
 
-from yolo.modeling.backbones.darknet import Darknet
+import tensorflow as tf
+import tensorflow.keras as ks
+
+from official.core import registry
+from official.vision.beta.modeling.backbones import factory
+from yolo.configs import yolo
+from yolo.modeling.backbones.darknet import Darknet, build_darknet
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer

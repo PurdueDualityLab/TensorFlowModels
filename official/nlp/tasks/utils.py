@@ -16,9 +16,10 @@
 """Common utils for tasks."""
 from typing import Any, Callable
 
-import orbit
 import tensorflow as tf
 import tensorflow_hub as hub
+
+import orbit
 
 
 def get_encoder_from_hub(hub_model_path: str) -> tf.keras.Model:

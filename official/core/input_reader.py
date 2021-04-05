@@ -16,9 +16,9 @@
 import random
 from typing import Any, Callable, List, Optional
 
-from absl import logging
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from absl import logging
 
 from official.core import config_definitions as cfg
 

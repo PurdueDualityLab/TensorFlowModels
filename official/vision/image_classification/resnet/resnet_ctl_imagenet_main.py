@@ -17,20 +17,17 @@
 import math
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
-import orbit
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
+import orbit
 from official.common import distribute_utils
 from official.modeling import performance
 from official.utils.flags import core as flags_core
-from official.utils.misc import keras_utils
-from official.utils.misc import model_helpers
-from official.vision.image_classification.resnet import common
-from official.vision.image_classification.resnet import imagenet_preprocessing
-from official.vision.image_classification.resnet import resnet_runnable
+from official.utils.misc import keras_utils, model_helpers
+from official.vision.image_classification.resnet import (
+    common, imagenet_preprocessing, resnet_runnable)
 
 flags.DEFINE_boolean(name='use_tf_function', default=True,
                      help='Wrap the train and test step inside a '

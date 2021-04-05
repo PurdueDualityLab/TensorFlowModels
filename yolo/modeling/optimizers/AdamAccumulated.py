@@ -1,7 +1,7 @@
 import tensorflow as tf
-from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
-from tensorflow.python import ops, math_ops, state_ops, control_flow_ops
+from tensorflow.python import control_flow_ops, math_ops, ops, state_ops
 from tensorflow.python.keras import backend_config
+from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 
 __all__ = ['AdamAccumulated']
 

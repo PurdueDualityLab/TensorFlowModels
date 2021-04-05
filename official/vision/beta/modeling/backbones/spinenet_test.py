@@ -14,9 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for SpineNet."""
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.vision.beta.modeling.backbones import spinenet
 

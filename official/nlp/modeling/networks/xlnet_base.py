@@ -15,9 +15,8 @@
 # ==============================================================================
 """Keras-based XLNet Model."""
 
-from absl import logging
-
 import tensorflow as tf
+from absl import logging
 
 from official.nlp.modeling import layers
 from official.nlp.modeling.layers import transformer_xl

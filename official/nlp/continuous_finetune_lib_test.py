@@ -14,18 +14,15 @@
 # ==============================================================================
 import os
 
-from absl import flags
-from absl.testing import flagsaver
-from absl.testing import parameterized
 import tensorflow as tf
+from absl import flags
+from absl.testing import flagsaver, parameterized
 
-# pylint: disable=unused-import
-from official.common import registry_imports
 # pylint: enable=unused-import
+# pylint: disable=unused-import
 from official.common import flags as tfm_flags
-from official.core import task_factory
-from official.core import train_lib
-from official.core import train_utils
+from official.common import registry_imports
+from official.core import task_factory, train_lib, train_utils
 from official.nlp import continuous_finetune_lib
 
 FLAGS = flags.FLAGS

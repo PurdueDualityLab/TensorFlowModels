@@ -14,21 +14,16 @@
 # ==============================================================================
 """Run masked LM/next sentence pre-training for BERT in TF 2.x."""
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import gin
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.modeling import performance
 from official.nlp import optimization
-from official.nlp.bert import bert_models
-from official.nlp.bert import common_flags
-from official.nlp.bert import configs
-from official.nlp.bert import input_pipeline
-from official.nlp.bert import model_training_utils
-
+from official.nlp.bert import (bert_models, common_flags, configs,
+                               input_pipeline, model_training_utils)
 
 flags.DEFINE_string('input_files', None,
                     'File path to retrieve training data for pre-training.')

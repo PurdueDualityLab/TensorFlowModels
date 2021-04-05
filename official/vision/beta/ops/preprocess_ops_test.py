@@ -16,11 +16,12 @@
 """Tests for preprocess_ops.py."""
 
 import io
+
+import numpy as np
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import numpy as np
 from PIL import Image
-import tensorflow as tf
 
 from official.vision.beta.ops import preprocess_ops
 

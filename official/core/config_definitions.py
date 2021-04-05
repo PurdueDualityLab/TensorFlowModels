@@ -14,9 +14,8 @@
 
 """Common configuration settings."""
 
-from typing import Optional, Sequence, Union
-
 import dataclasses
+from typing import Optional, Sequence, Union
 
 from official.modeling.hyperparams import base_config
 from official.modeling.optimization.configs import optimization_config

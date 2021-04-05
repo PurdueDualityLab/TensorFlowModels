@@ -19,7 +19,6 @@ import tensorflow as tf
 
 from official.vision.beta.ops import box_ops
 
-
 NMS_TILE_SIZE = 512
 
 

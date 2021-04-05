@@ -13,19 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 """tf.keras Models for NHNet."""
-from absl import logging
+from typing import Optional, Text
+
 import gin
 import tensorflow as tf
-from typing import Optional, Text
+from absl import logging
 
 from official.modeling import tf_utils
 from official.modeling.hyperparams import params_dict
 from official.nlp.modeling import networks
 from official.nlp.modeling.layers import multi_channel_attention
-from official.nlp.nhnet import configs
-from official.nlp.nhnet import decoder
-from official.nlp.nhnet import utils
 from official.nlp.modeling.ops import beam_search
+from official.nlp.nhnet import configs, decoder, utils
 
 
 def embedding_linear(embedding_matrix, x):

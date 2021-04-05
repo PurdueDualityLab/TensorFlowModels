@@ -19,10 +19,9 @@ import collections
 import json
 import os
 
-from absl import logging
 import tensorflow.compat.v2 as tf
-
 import tensorflow_datasets.public_api as tfds
+from absl import logging
 
 _CITATION = """\
 @article{DBLP:journals/corr/LinMBHPRDZ14,

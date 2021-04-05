@@ -14,10 +14,8 @@
 """Evalutes TriviaQA predictions."""
 import json
 
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+from absl import app, flags, logging
 
 from official.nlp.projects.triviaqa import evaluation
 

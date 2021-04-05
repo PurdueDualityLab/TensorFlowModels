@@ -16,12 +16,14 @@
 
 from typing import Optional
 
-# Import libraries
-
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.modeling import tf_utils
+
+# Import libraries
+
+
 
 
 def make_divisible(value: float,

@@ -1,10 +1,12 @@
 """ bounding box utils file """
 
+import math
+from typing import Tuple, Union
+
 # import libraries
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from typing import Tuple, Union
-import math
+
 from yolo.ops import math_ops
 
 

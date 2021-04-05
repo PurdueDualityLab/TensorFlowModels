@@ -14,16 +14,11 @@
 # ==============================================================================
 """Model architecture factory."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from official.vision.detection.modeling.architecture import fpn
-from official.vision.detection.modeling.architecture import heads
-from official.vision.detection.modeling.architecture import identity
-from official.vision.detection.modeling.architecture import nn_ops
-from official.vision.detection.modeling.architecture import resnet
-from official.vision.detection.modeling.architecture import spinenet
+from official.vision.detection.modeling.architecture import (fpn, heads,
+                                                             identity, nn_ops,
+                                                             resnet, spinenet)
 
 
 def norm_activation_generator(params):

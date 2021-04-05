@@ -16,6 +16,7 @@
 """Feature Pyramid Network and Path Aggregation variants used in YOLO"""
 
 import tensorflow as tf
+
 from yolo.modeling.layers import nn_blocks
 
 

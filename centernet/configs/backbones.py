@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import List
-
 # Import libraries
 import dataclasses
+from typing import List
 
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones

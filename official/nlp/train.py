@@ -15,18 +15,15 @@
 # ==============================================================================
 """TFM common training driver."""
 
-from absl import app
-from absl import flags
 import gin
+from absl import app, flags
 
-from official.common import distribute_utils
-# pylint: disable=unused-import
-from official.common import registry_imports
 # pylint: enable=unused-import
+# pylint: disable=unused-import
+from official.common import distribute_utils
 from official.common import flags as tfm_flags
-from official.core import task_factory
-from official.core import train_lib
-from official.core import train_utils
+from official.common import registry_imports
+from official.core import task_factory, train_lib, train_utils
 from official.modeling import performance
 
 FLAGS = flags.FLAGS

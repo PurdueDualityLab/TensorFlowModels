@@ -16,13 +16,12 @@
 
 import os
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from absl.testing import parameterized
 
-from official.nlp.bert import configs
-from official.nlp.bert import export_tfhub
+from official.nlp.bert import configs, export_tfhub
 
 
 class ExportTfhubTest(tf.test.TestCase, parameterized.TestCase):

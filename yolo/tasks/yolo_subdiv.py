@@ -1,23 +1,18 @@
 import tensorflow as tf
+from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from absl import logging
-from official.core import base_task
-from official.core import input_reader
-from official.core import task_factory
-from yolo.configs import yolo as exp_cfg
-
+from official.core import base_task, input_reader, task_factory
 from official.vision.beta.evaluation import coco_evaluator
-
+from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.configs import yolo as exp_cfg
 from yolo.dataloaders import yolo_input
 from yolo.dataloaders.decoders import tfds_coco_decoder
-from yolo.ops.kmeans_anchors import BoxGenInputReader
+from yolo.losses import gradient_aggregator
 from yolo.ops.box_ops import xcycwh_to_yxyx
-
-from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.ops.kmeans_anchors import BoxGenInputReader
 # from yolo.modeling.layers.detection_generator import YoloGTFilter
 from yolo.tasks import yolo
-from yolo.losses import gradient_aggregator
 
 
 @task_factory.register_task_cls(exp_cfg.YoloSubDivTask)

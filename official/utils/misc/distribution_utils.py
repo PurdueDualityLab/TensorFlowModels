@@ -13,5 +13,4 @@
 # limitations under the License.
 # ==============================================================================
 """Helper functions for running models in a distributed setting."""
-# pylint: disable=wildcard-import
 from official.common.distribute_utils import *

@@ -1,13 +1,11 @@
-from yolo.demos.video_detect_gpu import FastVideo
-from yolo.demos.video_detect_cpu import runner
-
-from centernet.modeling.CenterNet import build_centernet
-from centernet.configs.centernet import CenterNetTask
-
-from centernet.utils.weight_utils.load_weights import get_model_weights_as_dict, load_weights_model
-from centernet.utils.weight_utils.load_weights import load_weights_backbone
-
 import tensorflow as tf
+
+from centernet.configs.centernet import CenterNetTask
+from centernet.modeling.CenterNet import build_centernet
+from centernet.utils.weight_utils.load_weights import (
+    get_model_weights_as_dict, load_weights_backbone, load_weights_model)
+from yolo.demos.video_detect_cpu import runner
+from yolo.demos.video_detect_gpu import FastVideo
 
 CENTERNET_CKPT_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
 EXTREMENET_CKPT_PATH = 'D:\\weights\extremenet'
@@ -45,4 +43,3 @@ if __name__ == '__main__':
   #     wait_time='dynamic')
   # cap.run()
   # runner(model, 0, 512, 512)
-

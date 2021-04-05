@@ -14,10 +14,10 @@
 # ==============================================================================
 """Translate text or files using trained transformer model."""
 
-# Import libraries
-from absl import logging
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl import logging
 
 from official.nlp.transformer.utils import tokenizer
 

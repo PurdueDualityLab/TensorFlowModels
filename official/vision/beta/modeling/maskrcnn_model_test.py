@@ -15,21 +15,19 @@
 # ==============================================================================
 """Tests for maskrcnn_model.py."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
 
 from official.vision.beta.modeling import maskrcnn_model
 from official.vision.beta.modeling.backbones import resnet
 from official.vision.beta.modeling.decoders import fpn
-from official.vision.beta.modeling.heads import dense_prediction_heads
-from official.vision.beta.modeling.heads import instance_heads
-from official.vision.beta.modeling.layers import detection_generator
-from official.vision.beta.modeling.layers import mask_sampler
-from official.vision.beta.modeling.layers import roi_aligner
-from official.vision.beta.modeling.layers import roi_generator
-from official.vision.beta.modeling.layers import roi_sampler
+from official.vision.beta.modeling.heads import (dense_prediction_heads,
+                                                 instance_heads)
+from official.vision.beta.modeling.layers import (detection_generator,
+                                                  mask_sampler, roi_aligner,
+                                                  roi_generator, roi_sampler)
 from official.vision.beta.ops import anchor
 
 

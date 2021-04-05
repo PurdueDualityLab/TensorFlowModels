@@ -15,9 +15,7 @@
 
 import collections
 import re
-
-from lib2to3 import fixer_base
-from lib2to3 import pytree
+from lib2to3 import fixer_base, pytree
 
 
 class LineConditionalFix(fixer_base.BaseFix):

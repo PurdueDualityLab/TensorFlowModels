@@ -1,7 +1,11 @@
 from dataclasses import dataclass, field
 from typing import Dict
 
-from centernet.utils.weight_utils.config_classes import convBnCFG, residualBlockCFG, hourglassCFG, decoderConvCFG
+from centernet.utils.weight_utils.config_classes import (convBnCFG,
+                                                         decoderConvCFG,
+                                                         hourglassCFG,
+                                                         residualBlockCFG)
+
 
 @dataclass
 class BackboneConfigData():
@@ -63,4 +67,3 @@ class DecoderConfigData():
   def get_cfg_list(self, name):
     if name == 'detection_2d':
       return self.detection_2d
-

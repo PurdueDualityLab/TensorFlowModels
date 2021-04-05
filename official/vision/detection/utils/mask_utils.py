@@ -13,14 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Utility functions for segmentations."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import math
 
-import numpy as np
 import cv2
+import numpy as np
 
 
 def paste_instance_masks(masks, detected_boxes, image_height, image_width):

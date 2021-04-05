@@ -1,13 +1,13 @@
-from absl.testing import parameterized
-import tensorflow as tf
-import numpy as np
 import dataclasses
 
+import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
+
+from centernet.configs import centernet
+from centernet.modeling.CenterNet import build_centernet
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
-
-from centernet.modeling.CenterNet import build_centernet
-from centernet.configs import centernet
 
 
 class CenterNetTest(parameterized.TestCase, tf.test.TestCase):

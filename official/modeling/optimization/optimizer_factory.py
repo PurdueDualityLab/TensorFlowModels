@@ -15,14 +15,14 @@
 """Optimizer factory class."""
 from typing import Callable, Union
 
-
 import gin
 import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 
-from official.modeling.optimization import ema_optimizer, SGDAccumulated
-from official.modeling.optimization import lr_schedule
-from official.modeling.optimization.configs import optimization_config as opt_cfg
+from official.modeling.optimization import (SGDAccumulated, ema_optimizer,
+                                            lr_schedule)
+from official.modeling.optimization.configs import \
+    optimization_config as opt_cfg
 from official.nlp import optimization as nlp_optimization
 
 OPTIMIZERS_CLS = {

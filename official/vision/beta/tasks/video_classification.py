@@ -14,11 +14,10 @@
 # limitations under the License.
 # ==============================================================================
 """Video classification task definition."""
-from absl import logging
 import tensorflow as tf
-from official.core import base_task
-from official.core import input_reader
-from official.core import task_factory
+from absl import logging
+
+from official.core import base_task, input_reader, task_factory
 from official.modeling import tf_utils
 from official.vision.beta.configs import video_classification as exp_cfg
 from official.vision.beta.dataloaders import video_input

@@ -15,14 +15,14 @@
 """Tests for tf_example_decoder.py."""
 
 import io
+
+import numpy as np
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import numpy as np
 from PIL import Image
-import tensorflow as tf
 
 from official.vision.beta.dataloaders import tf_example_decoder
-
 
 DUMP_SOURCE_ID = b'123'
 

@@ -19,8 +19,7 @@ import gin
 import tensorflow as tf
 
 from official.nlp import keras_nlp
-from official.nlp.modeling.layers import attention
-from official.nlp.modeling.layers import multi_channel_attention
+from official.nlp.modeling.layers import attention, multi_channel_attention
 from official.nlp.modeling.layers.util import tf_function_if_eager
 
 

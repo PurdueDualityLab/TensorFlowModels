@@ -1,8 +1,9 @@
-import cv2
 import threading as t
-from queue import Queue
-import traceback
 import time
+import traceback
+from queue import Queue
+
+import cv2
 
 from yolo.demos.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils

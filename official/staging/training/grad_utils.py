@@ -14,9 +14,8 @@
 # ==============================================================================
 """Some gradient util functions to help users writing custom training loop."""
 
-from absl import logging
-
 import tensorflow as tf
+from absl import logging
 
 
 def _filter_grads(grads_and_vars):

@@ -14,14 +14,13 @@
 # ==============================================================================
 """Data loader and input processing."""
 
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+from typing import Optional, Text
 
 import tensorflow as tf
 
-from typing import Text, Optional
 from official.modeling.hyperparams import params_dict
 from official.vision.detection.dataloader import factory
 from official.vision.detection.dataloader import mode_keys as ModeKeys

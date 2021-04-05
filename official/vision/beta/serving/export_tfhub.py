@@ -15,17 +15,14 @@
 # ==============================================================================
 """A script to export the image classification as a TF-Hub SavedModel."""
 
-# Import libraries
-from absl import app
-from absl import flags
-
 import tensorflow as tf
+# Import libraries
+from absl import app, flags
 
 from official.common import registry_imports  # pylint: disable=unused-import
 from official.core import exp_factory
 from official.modeling import hyperparams
 from official.vision.beta.serving import image_classification
-
 
 FLAGS = flags.FLAGS
 

@@ -18,8 +18,7 @@
 
 import tensorflow as tf
 
-from official.vision.beta.ops import box_ops
-from official.vision.beta.ops import nms
+from official.vision.beta.ops import box_ops, nms
 
 
 def _generate_detections_v1(boxes,

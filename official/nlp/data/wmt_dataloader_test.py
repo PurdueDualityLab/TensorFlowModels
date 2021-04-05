@@ -15,11 +15,11 @@
 # ==============================================================================
 """Tests for official.nlp.data.wmt_dataloader."""
 import os
-from absl.testing import parameterized
 
 import tensorflow as tf
-
+from absl.testing import parameterized
 from sentencepiece import SentencePieceTrainer
+
 from official.nlp.data import wmt_dataloader
 
 

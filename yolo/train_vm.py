@@ -14,23 +14,20 @@
 # limitations under the License.
 # ==============================================================================
 """TensorFlow Model Garden Vision training driver."""
-from yolo.utils.run_utils import prep_gpu
-
-from absl import app
-from absl import flags
-import gin
 import sys
 
-from official.core import train_utils
-# pylint: disable=unused-import
-from yolo.common import registry_imports
+import gin
+import tensorflow as tf
+from absl import app, flags
+
 # pylint: enable=unused-import
 from official.common import distribute_utils
 from official.common import flags as tfm_flags
-from official.core import task_factory
-from official.core import train_lib
+from official.core import task_factory, train_lib, train_utils
 from official.modeling import performance
-import tensorflow as tf
+# pylint: disable=unused-import
+from yolo.common import registry_imports
+from yolo.utils.run_utils import prep_gpu
 
 FLAGS = flags.FLAGS
 """

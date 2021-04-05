@@ -14,15 +14,14 @@
 # limitations under the License.
 # ==============================================================================
 """Image classification configuration definition."""
+import dataclasses
 import os
 from typing import List, Optional
-import dataclasses
+
 from official.core import config_definitions as cfg
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
-from official.vision.beta.configs import backbones
-from official.vision.beta.configs import common
+from official.modeling import hyperparams, optimization
+from official.vision.beta.configs import backbones, common
 
 
 @dataclasses.dataclass

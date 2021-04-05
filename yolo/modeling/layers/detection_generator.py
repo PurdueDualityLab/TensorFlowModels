@@ -3,10 +3,9 @@ import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.ops import loss_utils
-from yolo.ops import box_ops as box_utils
 from yolo.losses.yolo_loss import Yolo_Loss
-from yolo.ops import nms_ops
+from yolo.ops import box_ops as box_utils
+from yolo.ops import loss_utils, nms_ops
 
 
 @ks.utils.register_keras_serializable(package='yolo')

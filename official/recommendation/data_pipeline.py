@@ -14,9 +14,7 @@
 # ==============================================================================
 """Asynchronous data producer for the NCF pipeline."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import atexit
 import functools
@@ -31,15 +29,13 @@ import typing
 
 import numpy as np
 import six
-from six.moves import queue
 import tensorflow as tf
 from absl import logging
+from six.moves import queue
+from tensorflow.python.tpu.datasets import StreamingFilesDataset
 
 from official.recommendation import constants as rconst
-from official.recommendation import movielens
-from official.recommendation import popen_helper
-from official.recommendation import stat_utils
-from tensorflow.python.tpu.datasets import StreamingFilesDataset
+from official.recommendation import movielens, popen_helper, stat_utils
 
 SUMMARY_TEMPLATE = """General:
 {spacer}Num users: {num_users}

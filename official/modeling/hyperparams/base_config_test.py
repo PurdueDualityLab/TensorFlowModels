@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import dataclasses
 import pprint
 from typing import List, Tuple
 
-from absl.testing import parameterized
-import dataclasses
 import tensorflow as tf
+from absl.testing import parameterized
+
 from official.modeling.hyperparams import base_config
 
 

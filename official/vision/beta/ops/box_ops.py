@@ -18,7 +18,6 @@
 import numpy as np
 import tensorflow as tf
 
-
 EPSILON = 1e-8
 BBOX_XFORM_CLIP = np.log(1000. / 16.)
 

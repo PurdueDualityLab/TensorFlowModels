@@ -16,12 +16,12 @@ import functools
 import json
 import os
 
-from absl import logging
-import apache_beam as beam
 import six
 import tensorflow as tf
 import tensorflow_datasets.public_api as tfds
+from absl import logging
 
+import apache_beam as beam
 from official.nlp.projects.triviaqa import preprocess
 
 _CITATION = """

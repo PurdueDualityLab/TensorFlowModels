@@ -17,9 +17,8 @@ import abc
 from typing import Dict, List, Optional, Text, Union
 
 import tensorflow as tf
-from official.core import base_task
-from official.core import config_definitions
-from official.core import task_factory
+
+from official.core import base_task, config_definitions, task_factory
 from official.modeling import optimization
 from official.modeling.multitask import configs
 

@@ -2,9 +2,10 @@
 This file contains the code to parse DarkNet weight files.
 """
 
+from yolo.utils.downloads.file_manager import get_size, open_if_not_open
+
 from .config_classes import *  # pylint: disable=wildcard-import, unused-wildcard-import
 from .dn2dicts import convertConfigFile
-from yolo.utils.downloads.file_manager import get_size, open_if_not_open
 
 
 def build_layer(layer_dict, file, net):

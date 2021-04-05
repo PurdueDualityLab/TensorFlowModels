@@ -17,18 +17,17 @@
 import copy
 import json
 
+import numpy as np
+import six
+import tensorflow as tf
 # Import libraries
 from absl import logging
-import numpy as np
 from PIL import Image
 from pycocotools import coco
 from pycocotools import mask as mask_api
-import six
-import tensorflow as tf
 
 from official.vision.beta.dataloaders import tf_example_decoder
-from official.vision.beta.ops import box_ops
-from official.vision.beta.ops import mask_ops
+from official.vision.beta.ops import box_ops, mask_ops
 
 
 class COCOWrapper(coco.COCO):

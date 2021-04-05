@@ -1,29 +1,29 @@
+import os
+import sys
+from typing import List, Tuple
+
+import gin
+import tensorflow as tf
+from absl import app, flags
+
+# pylint: enable=unused-import
+from official.common import flags as tfm_flags
+from official.core import task_factory, train_utils
+from official.modeling import performance
+# pylint: disable=unused-import
+from yolo.common import registry_imports
+from yolo.demos import video_detect_cpu as vcu
+from yolo.demos import video_detect_gpu as vgu
 from yolo.utils.run_utils import prep_gpu
+
 # try:
 #
 # except BaseException:
 #   print("GPUs ready")
 
-from absl import app
-from absl import flags
-import gin
-import sys
 
-from official.core import train_utils
-# pylint: disable=unused-import
-from yolo.common import registry_imports
-# pylint: enable=unused-import
-from official.common import flags as tfm_flags
 
-from typing import Tuple, List
-from official.core import train_utils
-from official.modeling import performance
-from official.core import task_factory
-import os
 
-from yolo.demos import video_detect_gpu as vgu
-from yolo.demos import video_detect_cpu as vcu
-import tensorflow as tf
 """
 export GOOGLE_APPLICATION_CREDENTIALS=<key>.json 
 python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4-eval.yaml --video ../videos/nyc.mp4  --max_batch 5 

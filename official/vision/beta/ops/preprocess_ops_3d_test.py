@@ -16,9 +16,10 @@
 
 import io
 import itertools
+
 import numpy as np
-from PIL import Image
 import tensorflow as tf
+from PIL import Image
 
 from official.vision.beta.ops import preprocess_ops_3d
 

@@ -1,9 +1,10 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
-from yolo.ops import box_ops
-from official.vision.beta.ops import preprocess_ops
+import tensorflow_addons as tfa
+
 from official.vision.beta.ops import box_ops as bbox_ops
+from official.vision.beta.ops import preprocess_ops
+from yolo.ops import box_ops
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32):

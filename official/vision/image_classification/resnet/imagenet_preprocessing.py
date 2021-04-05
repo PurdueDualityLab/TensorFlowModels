@@ -31,14 +31,12 @@ color distortion steps.)
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 DEFAULT_IMAGE_SIZE = 224
 NUM_CHANNELS = 3

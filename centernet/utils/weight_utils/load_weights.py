@@ -1,15 +1,18 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-from centernet.modeling.CenterNet import build_centernet
 from centernet.configs.centernet import CenterNetTask
-
-from centernet.utils.weight_utils.tf_to_dict import get_model_weights_as_dict, write_dict_as_tree
-from centernet.utils.weight_utils.config_classes import convBnCFG, residualBlockCFG, hourglassCFG, decoderConvCFG
-from centernet.utils.weight_utils.config_data import BackboneConfigData, DecoderConfigData
-
-from centernet.modeling.layers.nn_blocks import ConvBN, HourglassBlock, CenterNetDecoderConv
-
+from centernet.modeling.CenterNet import build_centernet
+from centernet.modeling.layers.nn_blocks import (CenterNetDecoderConv, ConvBN,
+                                                 HourglassBlock)
+from centernet.utils.weight_utils.config_classes import (convBnCFG,
+                                                         decoderConvCFG,
+                                                         hourglassCFG,
+                                                         residualBlockCFG)
+from centernet.utils.weight_utils.config_data import (BackboneConfigData,
+                                                      DecoderConfigData)
+from centernet.utils.weight_utils.tf_to_dict import (
+    get_model_weights_as_dict, write_dict_as_tree)
 from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock
 
 CKPT_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'

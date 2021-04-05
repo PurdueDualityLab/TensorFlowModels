@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """Dataclasses for optimizer configs."""
+import dataclasses
 from typing import List, Optional
 
-import dataclasses
 from official.modeling.hyperparams import base_config
 
 

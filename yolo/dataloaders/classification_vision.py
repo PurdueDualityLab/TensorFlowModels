@@ -2,12 +2,11 @@
 
 # Import libraries
 import tensorflow as tf
-import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
+import tensorflow_datasets as tfds
 
 from official.vision.beta.dataloaders import parser
-from official.vision.beta.ops import preprocess_ops
-from official.vision.beta.ops import augment
+from official.vision.beta.ops import augment, preprocess_ops
 
 
 class Parser(parser.Parser):

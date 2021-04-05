@@ -17,9 +17,9 @@
 # pylint: disable=g-classes-have-attributes
 import inspect
 
-from absl import logging
 import gin
 import tensorflow as tf
+from absl import logging
 
 from official.nlp import keras_nlp
 from official.nlp.modeling import layers

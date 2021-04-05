@@ -4,7 +4,6 @@ import collections
 import configparser
 import io
 import sys
-
 from typing import Dict, List
 
 if sys.version_info < (3, 10):

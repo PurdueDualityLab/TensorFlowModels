@@ -15,9 +15,9 @@
 """Keras-based transformer scaffold layer."""
 # pylint: disable=g-classes-have-attributes
 
-from absl import logging
 import gin
 import tensorflow as tf
+from absl import logging
 
 from official.nlp.modeling.layers import attention
 

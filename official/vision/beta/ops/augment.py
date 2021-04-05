@@ -18,13 +18,12 @@ AutoAugment Reference: https://arxiv.org/abs/1805.09501
 RandAugment Reference: https://arxiv.org/abs/1909.13719
 """
 import math
-from typing import Any, List, Optional, Text, Tuple, Iterable
+from typing import Any, Iterable, List, Optional, Text, Tuple
 
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.keras.layers.preprocessing import image_preprocessing as image_ops
-
+from tensorflow.python.keras.layers.preprocessing import \
+    image_preprocessing as image_ops
 
 # This signifies the max integer that the controller RNN could predict for the
 # augmentation scheme.

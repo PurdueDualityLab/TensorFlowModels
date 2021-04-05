@@ -23,17 +23,15 @@ Metrics:
      https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/utils/rouge.py
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import math
 
 import numpy as np
 import six
-from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow.compat.v1 as tf
+from six.moves import xrange  # pylint: disable=redefined-builtin
 
 
 def _pad_tensors_to_same_length(x, y):

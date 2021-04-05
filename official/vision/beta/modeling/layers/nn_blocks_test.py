@@ -16,12 +16,12 @@
 """Tests for nn_blocks."""
 
 from typing import Any, Iterable, Tuple
+
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.vision.beta.modeling.layers import nn_blocks
 
 

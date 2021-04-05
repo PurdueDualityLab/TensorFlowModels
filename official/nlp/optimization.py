@@ -16,10 +16,10 @@
 
 import re
 
-from absl import logging
 import gin
 import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
+from absl import logging
 
 
 class WarmUp(tf.keras.optimizers.schedules.LearningRateSchedule):

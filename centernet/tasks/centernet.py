@@ -1,29 +1,29 @@
 import tensorflow as tf
+from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from absl import logging
-from official.core import base_task
-from official.core import input_reader
-from official.core import task_factory
-
-from official.vision.beta.evaluation import coco_evaluator
-from official.vision.beta.dataloaders import tf_example_decoder
-from official.vision.beta.dataloaders import tfds_detection_decoders
-from official.vision.beta.dataloaders import tf_example_label_map_decoder
-
-from centernet.configs import centernet as cfg
+from centernet.configs import centernet as exp_cfg
 from centernet.dataloaders import centernet_input
-from centernet.modeling.CenterNet import build_centernet
+from centernet.losses import (l1_localization_loss,
+                              penalty_reduced_logistic_focal_loss)
 from centernet.ops import loss_ops
-from centernet.losses import penalty_reduced_logistic_focal_loss
-from centernet.losses import l1_localization_loss
+from official.core import base_task, input_reader, task_factory
+from official.vision.beta.dataloaders import (tf_example_decoder,
+                                              tf_example_label_map_decoder,
+                                              tfds_detection_decoders)
+from official.vision.beta.evaluation import coco_evaluator
 
 
-@task_factory.register_task_cls(cfg.CenterNetTask)
+@task_factory.register_task_cls(exp_cfg.CenterNetTask)
 class CenterNetTask(base_task.Task):
 
   def __init__(self, params, logging_dir: str = None):
     super().__init__(params, logging_dir)
+    self._loss_dict = None
+
+    self.coco_metric = None
+    self._metric_names = []
+    self._metrics = []
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
@@ -52,6 +52,7 @@ class CenterNetTask(base_task.Task):
 
   def build_model(self):
     """get an instance of CenterNet"""
+    from centernet.modeling.CenterNet import build_centernet
     params = self.task_config.train_data
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
@@ -64,6 +65,31 @@ class CenterNetTask(base_task.Task):
     model, losses = build_centernet(input_specs, self.task_config, l2_regularizer)
     self._loss_dict = losses
     return model
+
+  def initialize(self, model: tf.keras.Model):
+    """Initializes CenterNet model by loading pretrained weights """
+    if self.task_config.load_odapi_weights and self.task_config.load_extremenet_weights:
+      raise ValueError('Only 1 of odapi or extremenet weights should be loaded')
+    
+    if self.task_config.load_odapi_weights or self.task_config.load_extremenet_weights:
+      from centernet.utils.weight_utils.tf_to_dict import get_model_weights_as_dict
+      from centernet.utils.weight_utils.load_weights import load_weights_model
+      from centernet.utils.weight_utils.load_weights import load_weights_backbone
+
+      # Load entire model weights from the ODAPI checkpoint
+      if self.task_config.load_odapi_weights:
+        weights_file = self.task_config.model.base.odapi_weights
+        weights_dict, n_weights = get_model_weights_as_dict(weights_file)
+        load_weights_model(model, weights_dict, 
+          backbone_name=self.task_config.model.base.backbone_name,
+          decoder_name=self.task_config.model.base.decoder_name)
+
+      # Load backbone weights from ExtremeNet
+      else:
+        weights_file = self.task_config.model.base.extremenet_weights
+        weights_dict, n_weights = get_model_weights_as_dict(weights_file)
+        load_weights_backbone(model.backbone, weights_dict['feature_extractor'], 
+          backbone_name=self.task_config.model.base.backbone_name)
 
   def get_decoder(self, params):
     if params.tfds_name:
@@ -184,7 +210,4 @@ class CenterNetTask(base_task.Task):
                  xy_exponential=True,
                  exp_base=2,
                  xy_scale_base='default_value'):
-    pass
-
-  def initialize(self, model: tf.keras.Model):
     pass

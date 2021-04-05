@@ -14,16 +14,10 @@
 
 """Defines exported symbols for the `orbit.utils` package."""
 
-from orbit.utils.common import create_global_step
-from orbit.utils.common import get_value
-from orbit.utils.common import make_distributed_dataset
-
+from orbit.utils.common import (create_global_step, get_value,
+                                make_distributed_dataset)
 from orbit.utils.epoch_helper import EpochHelper
-
-from orbit.utils.loop_fns import create_loop_fn
-from orbit.utils.loop_fns import create_tf_while_loop_fn
-from orbit.utils.loop_fns import LoopFnWithSummaries
-
+from orbit.utils.loop_fns import (LoopFnWithSummaries, create_loop_fn,
+                                  create_tf_while_loop_fn)
 from orbit.utils.summary_manager import SummaryManager
-
 from orbit.utils.tpu_summaries import OptionalSummariesFunction

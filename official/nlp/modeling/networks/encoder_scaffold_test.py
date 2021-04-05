@@ -14,11 +14,12 @@
 # ==============================================================================
 """Tests for EncoderScaffold network."""
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 from official.modeling import activations
 from official.nlp.modeling import layers
 from official.nlp.modeling.networks import encoder_scaffold

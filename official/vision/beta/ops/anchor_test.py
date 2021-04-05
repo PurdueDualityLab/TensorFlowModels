@@ -14,10 +14,11 @@
 # ==============================================================================
 """Tests for anchor.py."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
+
 from official.vision.beta.ops import anchor
 
 

@@ -21,12 +21,12 @@ https://arxiv.org/abs/1912.05027
 """
 import math
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.modeling import tf_utils
-from official.vision.detection.modeling.architecture import keras_utils
-from official.vision.detection.modeling.architecture import nn_blocks
+from official.vision.detection.modeling.architecture import (keras_utils,
+                                                             nn_blocks)
 
 layers = tf.keras.layers
 

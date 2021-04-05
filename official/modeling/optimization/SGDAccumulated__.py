@@ -1,7 +1,9 @@
 import tensorflow as tf
-from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_ops
-from tensorflow.python import ops 
+from tensorflow.python import ops
 from tensorflow.python.keras.utils import control_flow_util
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   state_ops)
+
 # from tensorflow.python.keras import backend_config
 
 

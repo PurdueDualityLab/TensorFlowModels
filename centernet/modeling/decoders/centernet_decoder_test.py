@@ -1,6 +1,6 @@
-from absl.testing import parameterized
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
 
 from centernet.configs import centernet as cfg
 from centernet.modeling.decoders import centernet_decoder

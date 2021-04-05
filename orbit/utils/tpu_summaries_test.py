@@ -17,10 +17,9 @@
 import functools
 import os
 
-from orbit.utils import common
-from orbit.utils import tpu_summaries
-
 import tensorflow as tf
+
+from orbit.utils import common, tpu_summaries
 
 
 class TrainFunctionWithSummaries(tpu_summaries.OptionalSummariesFunction):

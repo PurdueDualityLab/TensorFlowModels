@@ -26,16 +26,12 @@ $> python build_docs \
 
 import os
 
-from absl import app
-from absl import flags
-from absl import logging
-
 import tensorflow as tf
-from tensorflow_docs.api_generator import doc_controls
-from tensorflow_docs.api_generator import generate_lib
-from tensorflow_docs.api_generator import public_api
+from absl import app, flags, logging
 
 from official.nlp import modeling as tfnlp
+from tensorflow_docs.api_generator import (doc_controls, generate_lib,
+                                           public_api)
 
 FLAGS = flags.FLAGS
 

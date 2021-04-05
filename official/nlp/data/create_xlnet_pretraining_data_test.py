@@ -18,11 +18,10 @@ import os
 import tempfile
 from typing import List
 
-from absl import logging
-from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
+from absl import logging
+from absl.testing import parameterized
 
 from official.nlp.data import create_xlnet_pretraining_data as cpd
 

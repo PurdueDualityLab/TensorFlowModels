@@ -14,9 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for image_classification."""
+import tensorflow as tf
 # pylint: disable=unused-import
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.core import config_definitions as cfg
 from official.core import exp_factory

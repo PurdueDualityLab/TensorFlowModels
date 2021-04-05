@@ -18,17 +18,14 @@ import os
 import time
 from typing import Any, Mapping, Optional
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.common import distribute_utils
-from official.core import config_definitions
-from official.core import task_factory
-from official.core import train_lib
-from official.core import train_utils
+from official.core import (config_definitions, task_factory, train_lib,
+                           train_utils)
 from official.modeling import performance
-from official.modeling.multitask import configs
-from official.modeling.multitask import multitask
+from official.modeling.multitask import configs, multitask
 from official.modeling.multitask import train_lib as multitask_train_lib
 
 

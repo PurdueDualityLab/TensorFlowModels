@@ -1,6 +1,8 @@
-from yolo.modeling.layers.nn_blocks import ConvBN
-from .config_classes import convCFG, samCFG
 import numpy as np
+
+from yolo.modeling.layers.nn_blocks import ConvBN
+
+from .config_classes import convCFG, samCFG
 
 
 def split_converter(lst, i, j=None):

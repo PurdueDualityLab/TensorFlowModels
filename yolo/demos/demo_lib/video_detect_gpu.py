@@ -1,27 +1,22 @@
-import cv2
-import datetime
 import colorsys
-import numpy as np
-import time
-
+import datetime
 import threading as t
+import time
 from queue import Queue
 
+import cv2
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.run_utils import support_windows
-from yolo.utils.demos.coco import draw_box
-from yolo.utils.demos.coco import get_draw_fn
-from yolo.utils.demos.coco import gen_colors
-from yolo.utils.demos.coco import get_coco_names
-from yolo.utils.demos.coco import int_scale_boxes
-from yolo.utils.demos import utils
-# from utils.demos import utils
-from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
+from yolo.utils.demos import utils
+from yolo.utils.demos.coco import (draw_box, gen_colors, get_coco_names,
+                                   get_draw_fn, int_scale_boxes)
+# from utils.demos import utils
+from yolo.utils.run_utils import prep_gpu, support_windows
 
 
 class FastVideo(object):

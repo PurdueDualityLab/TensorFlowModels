@@ -16,6 +16,7 @@
 """Utils for processing video dataset features."""
 
 from typing import Optional, Tuple
+
 import tensorflow as tf
 
 

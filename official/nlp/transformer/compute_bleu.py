@@ -22,14 +22,12 @@ import re
 import sys
 import unicodedata
 
-from absl import app
-from absl import flags
 import six
-from six.moves import range
 import tensorflow as tf
+from absl import app, flags
+from six.moves import range
 
-from official.nlp.transformer.utils import metrics
-from official.nlp.transformer.utils import tokenizer
+from official.nlp.transformer.utils import metrics, tokenizer
 from official.utils.flags import core as flags_core
 
 

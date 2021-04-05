@@ -21,7 +21,6 @@ from official.vision.beta.modeling import factory
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.serving import export_base
 
-
 MEAN_RGB = (0.485 * 255, 0.456 * 255, 0.406 * 255)
 STDDEV_RGB = (0.229 * 255, 0.224 * 255, 0.225 * 255)
 

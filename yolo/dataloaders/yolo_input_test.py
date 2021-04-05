@@ -1,18 +1,21 @@
-from yolo.tasks import image_classification as imc
-from yolo.utils.demos import utils, coco
-from yolo.tasks import yolo
-from yolo.configs import yolo as yolocfg
-from yolo.configs import darknet_classification as dcfg
+import dataclasses
+import time
+
+import matplotlib.pyplot as plt
+import tensorflow as tf
+
+from official.core import config_definitions as cfg
 from official.core import input_reader
-from yolo.dataloaders import yolo_input as YOLO_Detection_Input
+from official.modeling import hyperparams
+from yolo.configs import darknet_classification as dcfg
+from yolo.configs import yolo as yolocfg
 from yolo.dataloaders import classification_input
+from yolo.dataloaders import yolo_input as YOLO_Detection_Input
 from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.ops import box_ops
-import matplotlib.pyplot as plt
-import dataclasses
-from official.modeling import hyperparams
-from official.core import config_definitions as cfg
-import tensorflow as tf
+from yolo.tasks import image_classification as imc
+from yolo.tasks import yolo
+from yolo.utils.demos import coco, utils
 
 
 def test_yolo_input_task():
@@ -63,7 +66,6 @@ def test_classification_pipeline():
   return
 
 
-import time
 
 
 def test_pipeline():

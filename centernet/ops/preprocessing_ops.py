@@ -1,7 +1,7 @@
 # Moved groundtruth.py here
 import tensorflow as tf
-from yolo.ops import preprocessing_ops
 
+from yolo.ops import preprocessing_ops
 
 LARGE_NUM = 1. / tf.keras.backend.epsilon()
 

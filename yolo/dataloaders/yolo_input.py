@@ -7,11 +7,11 @@ into (image, labels) tuple for RetinaNet.
 import tensorflow as tf
 import tensorflow_addons as tfa
 
-from yolo.ops import preprocessing_ops
-from yolo.ops import box_ops as box_utils
-from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser, utils
+from official.vision.beta.ops import box_ops, preprocess_ops
+from yolo.ops import box_ops as box_utils
 from yolo.ops import loss_utils as loss_ops
+from yolo.ops import preprocessing_ops
 
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):

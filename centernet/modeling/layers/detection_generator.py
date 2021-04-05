@@ -1,8 +1,10 @@
-from tensorflow import keras as ks
 import tensorflow as tf
+from tensorflow import keras as ks
 
 from yolo.ops.nms_ops import nms
 
+
+@tf.keras.utils.register_keras_serializable(package='centernet')
 class CenterNetLayer(ks.Model):
   """ CenterNet Detection Generator
 

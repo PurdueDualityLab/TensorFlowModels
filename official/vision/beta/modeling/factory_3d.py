@@ -18,9 +18,9 @@
 import tensorflow as tf
 
 from official.core import registry
-from official.vision.beta.configs import video_classification as video_classification_cfg
-from official.vision.beta.modeling import video_classification_model
-from official.vision.beta.modeling import backbones
+from official.vision.beta.configs import \
+    video_classification as video_classification_cfg
+from official.vision.beta.modeling import backbones, video_classification_model
 
 _REGISTERED_MODEL_CLS = {}
 

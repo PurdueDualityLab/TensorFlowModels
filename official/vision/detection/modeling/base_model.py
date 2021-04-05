@@ -14,18 +14,16 @@
 # ==============================================================================
 """Base Model definition."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import abc
 import functools
 import re
 
 import tensorflow as tf
-from official.vision.detection.modeling import checkpoint_utils
-from official.vision.detection.modeling import learning_rates
-from official.vision.detection.modeling import optimizers
+
+from official.vision.detection.modeling import (checkpoint_utils,
+                                                learning_rates, optimizers)
 
 
 def _make_filter_trainable_variables_fn(frozen_variable_prefix):

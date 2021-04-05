@@ -17,12 +17,11 @@
 
 from typing import Dict, Optional, Tuple, Union
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.vision.beta.configs import video_classification as exp_cfg
-from official.vision.beta.dataloaders import decoder
-from official.vision.beta.dataloaders import parser
+from official.vision.beta.dataloaders import decoder, parser
 from official.vision.beta.ops import preprocess_ops_3d
 
 IMAGE_KEY = 'image/encoded'

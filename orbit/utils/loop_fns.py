@@ -14,9 +14,9 @@
 
 """Utilities for creating loop functions."""
 
-from orbit.utils import tpu_summaries
-
 import tensorflow as tf
+
+from orbit.utils import tpu_summaries
 
 
 def create_loop_fn(step_fn):

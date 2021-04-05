@@ -21,13 +21,13 @@ https://arxiv.org/abs/1912.05027
 """
 import math
 
+import tensorflow as tf
 # Import libraries
 from absl import logging
-import tensorflow as tf
+
 from official.modeling import tf_utils
 from official.vision.beta.modeling.backbones import factory
-from official.vision.beta.modeling.layers import nn_blocks
-from official.vision.beta.modeling.layers import nn_layers
+from official.vision.beta.modeling.layers import nn_blocks, nn_layers
 from official.vision.beta.ops import spatial_transform_ops
 
 layers = tf.keras.layers

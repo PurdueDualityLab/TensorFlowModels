@@ -1,9 +1,11 @@
 """Contains common building blocks for yolo neural networks."""
 from typing import Callable
+
 import tensorflow as tf
-from yolo.modeling.layers import subnormalization
+
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
+from yolo.modeling.layers import subnormalization
 
 TPU_BASE = True
 

@@ -10,9 +10,9 @@ models in the YOLO family (YOLOv3 and older).
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-import numpy as np
+from typing import List, Tuple
 
-from typing import Tuple, List
+import numpy as np
 
 
 class Config(ABC):

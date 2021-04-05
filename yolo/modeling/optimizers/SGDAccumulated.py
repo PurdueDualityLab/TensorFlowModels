@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
-from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_ops
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   state_ops)
+
 # from tensorflow.python import ops
 # from tensorflow.python.keras import backend_config
 

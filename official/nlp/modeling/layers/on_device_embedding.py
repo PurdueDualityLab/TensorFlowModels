@@ -17,5 +17,4 @@
 
 from official.nlp import keras_nlp
 
-
 OnDeviceEmbedding = keras_nlp.layers.OnDeviceEmbedding

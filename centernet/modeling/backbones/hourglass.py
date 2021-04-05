@@ -1,13 +1,13 @@
+from typing import List
+
 import tensorflow as tf
 
 from centernet.configs import backbones as cfg
 from centernet.modeling.layers import nn_blocks
-
 # from official.vision.beta.modeling.backbones import factory
-from official.vision.beta.modeling.layers import nn_blocks as official_nn_blocks
+from official.vision.beta.modeling.layers import \
+    nn_blocks as official_nn_blocks
 from utils import register
-
-from typing import List
 
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
@@ -140,7 +140,7 @@ def build_hourglass(
     input_specs: tf.keras.layers.InputSpec,
     model_config,
     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
-  """Builds ResNet backbone from a config."""
+  """Builds Hourglass backbone from a config."""
   backbone_type = model_config.backbone.type
   backbone_cfg = model_config.backbone.get()
   assert backbone_type == 'hourglass', (f'Inconsistent backbone type '

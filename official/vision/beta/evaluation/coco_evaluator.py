@@ -28,12 +28,13 @@ See also: https://github.com/cocodataset/cocoapi/
 
 import atexit
 import tempfile
-# Import libraries
-from absl import logging
+
 import numpy as np
-from pycocotools import cocoeval
 import six
 import tensorflow as tf
+# Import libraries
+from absl import logging
+from pycocotools import cocoeval
 
 from official.vision.beta.evaluation import coco_utils
 

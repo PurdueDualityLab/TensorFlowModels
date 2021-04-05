@@ -15,9 +15,11 @@
 """Multitask training driver library."""
 # pytype: disable=attribute-error
 import os
-from absl import logging
-import orbit
+
 import tensorflow as tf
+from absl import logging
+
+import orbit
 from official.core import base_task
 from official.core import base_trainer as core_lib
 from official.core import train_utils

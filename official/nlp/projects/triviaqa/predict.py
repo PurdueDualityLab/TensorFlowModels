@@ -18,17 +18,13 @@ import functools
 import json
 import operator
 
-from absl import app
-from absl import flags
-from absl import logging
+import sentencepiece as spm
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from absl import app, flags, logging
 
-import sentencepiece as spm
 from official.nlp.configs import encoders  # pylint: disable=unused-import
-from official.nlp.projects.triviaqa import evaluation
-from official.nlp.projects.triviaqa import inputs
-from official.nlp.projects.triviaqa import prediction
+from official.nlp.projects.triviaqa import evaluation, inputs, prediction
 
 flags.DEFINE_string('data_dir', None, 'TensorFlow Datasets directory.')
 

@@ -1,12 +1,11 @@
-from official.core import registry
-from official.vision.beta.modeling.backbones import factory
 import tensorflow as tf
 import tensorflow.keras as ks
 
-from centernet.modeling.backbones.hourglass import Hourglass
-from centernet.modeling.backbones.hourglass import build_hourglass
+from centernet.modeling.backbones.hourglass import Hourglass, build_hourglass
 from centernet.modeling.decoders.centernet_decoder import CenterNetDecoder
 from centernet.modeling.layers.detection_generator import CenterNetLayer
+from official.core import registry
+from official.vision.beta.modeling.backbones import factory
 
 # TODO: import prediction and filtering layers when made
 
@@ -25,12 +24,6 @@ class CenterNet(ks.Model):
     self._head = head
     self._filter = filter
     return
-  
-  def build(self, input_shape):
-    self._backbone.build(input_shape)
-    nshape = self._backbone.output_specs
-    self._decoder.build(nshape)
-    super().build(input_shape)
 
   def call(self, inputs, training=False):
     features = self._backbone(inputs)
@@ -67,15 +60,21 @@ def build_centernet_decoder(input_specs, task_config, num_inputs):
   # task specific
   task_outputs = task_config._get_output_length_dict()
   model = CenterNetDecoder(
+      input_specs = input_specs
       task_outputs=task_outputs,
       heatmap_bias=heatmap_bias,
       num_inputs=num_inputs)
 
-  model.build(input_specs)
   return model
 
 def build_centernet_filter(model_config):
-  return CenterNetLayer()
+  return CenterNetLayer(max_detections=model_config.filter.max_detections,
+                        peak_error=model_config.filter.peak_error,
+                        peak_extract_kernel_size=model_config.filter.peak_extract_kernel_size,
+                        use_nms=model_config.filter.use_nms,
+                        center_thresh=model_config.filter.center_thresh,
+                        iou_thresh=model_config.filter.iou_thresh,
+                        class_offset=model_config.filter.class_offset)
 
 def build_centernet_head(model_config):
   return None
@@ -88,7 +87,7 @@ def build_centernet(input_specs, task_config, l2_regularization):
   backbone = factory.build_backbone(input_specs, model_config.base,
                                     l2_regularization)
 
-  decoder = build_centernet_decoder(backbone.output_specs.as_list(), task_config, backbone._num_hourglasses)
+  decoder = build_centernet_decoder(backbone.output_specs, task_config, backbone._num_hourglasses)
   head = build_centernet_head(model_config)
   filter = build_centernet_filter(model_config)
 
@@ -99,4 +98,3 @@ def build_centernet(input_specs, task_config, l2_regularization):
   # losses = filter.losses
   losses = None
   return model, losses
-

@@ -1,28 +1,24 @@
-from absl import app
-from absl import flags
-import gin
+import os
 import sys
+from typing import List, Tuple
 
-from official.core import train_utils
-# pylint: disable=unused-import
-from yolo.common import registry_imports
+import cv2
+import gin
+import numpy as np
+import tensorflow as tf
+from absl import app, flags
+
 # pylint: enable=unused-import
 from official.common import flags as tfm_flags
-
-from typing import Tuple, List
-from official.core import train_utils
+from official.core import task_factory, train_utils
 from official.modeling import performance
-from official.core import task_factory
-import os
-import tensorflow as tf
-
+from skimage import io
+# pylint: disable=unused-import
+from yolo.common import registry_imports
 from yolo.run import load_model
 from yolo.utils.demos import utils
-import cv2
-import numpy as np
-from skimage import io
-
 from yolo.utils.run_utils import prep_gpu
+
 try:
   prep_gpu()
 except BaseException:

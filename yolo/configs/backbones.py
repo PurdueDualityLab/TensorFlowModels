@@ -2,6 +2,7 @@
 # Import libraries
 import dataclasses
 from typing import Optional
+
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
 

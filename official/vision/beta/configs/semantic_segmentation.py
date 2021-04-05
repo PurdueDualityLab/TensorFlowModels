@@ -14,19 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 """Semantic segmentation configuration definition."""
+import dataclasses
 import os
 from typing import List, Optional, Union
 
-import dataclasses
 import numpy as np
 
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
+from official.modeling import hyperparams, optimization
 from official.modeling.hyperparams import config_definitions as cfg
-from official.vision.beta.configs import backbones
-from official.vision.beta.configs import common
-from official.vision.beta.configs import decoders
+from official.vision.beta.configs import backbones, common, decoders
 
 
 @dataclasses.dataclass

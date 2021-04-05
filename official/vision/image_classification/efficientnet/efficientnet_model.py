@@ -20,17 +20,15 @@
   ICML'19, https://arxiv.org/abs/1905.11946
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import math
 import os
+from dataclasses import dataclass
 from typing import Any, Dict, Optional, Text, Tuple
 
-from absl import logging
-from dataclasses import dataclass
 import tensorflow as tf
+from absl import logging
 
 from official.modeling import tf_utils
 from official.modeling.hyperparams import base_config

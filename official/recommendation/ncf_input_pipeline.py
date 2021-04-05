@@ -18,11 +18,12 @@ import functools
 
 # pylint: disable=g-bad-import-order
 import tensorflow as tf
-# pylint: enable=g-bad-import-order
 
 from official.recommendation import constants as rconst
-from official.recommendation import data_pipeline
-from official.recommendation import movielens
+from official.recommendation import data_pipeline, movielens
+
+# pylint: enable=g-bad-import-order
+
 
 
 def create_dataset_from_tf_record_files(input_file_pattern,

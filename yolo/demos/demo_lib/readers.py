@@ -1,8 +1,9 @@
-import threading as t
-from queue import Queue
-import time
-import cv2
 import abc
+import threading as t
+import time
+from queue import Queue
+
+import cv2
 
 
 class Reader(object):

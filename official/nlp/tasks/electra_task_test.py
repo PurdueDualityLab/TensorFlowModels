@@ -17,9 +17,7 @@
 
 import tensorflow as tf
 
-from official.nlp.configs import bert
-from official.nlp.configs import electra
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, electra, encoders
 from official.nlp.data import pretrain_dataloader
 from official.nlp.tasks import electra_task
 

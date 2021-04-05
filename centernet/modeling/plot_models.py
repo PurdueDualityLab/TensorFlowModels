@@ -2,10 +2,9 @@ import tensorflow as tf
 
 from centernet.configs import centernet as cfg
 from centernet.modeling.backbones import hourglass
-from centernet.modeling.layers import nn_blocks
-from centernet.modeling.decoders import centernet_decoder
 from centernet.modeling.CenterNet import build_centernet
-
+from centernet.modeling.decoders import centernet_decoder
+from centernet.modeling.layers import nn_blocks
 
 BACKBONE_OUT = "./centernet/modeling/backbone.png"
 DECODER_OUT = "./centernet/modeling/decoder.png"
@@ -38,5 +37,3 @@ if __name__ == '__main__':
 
   hg_block.summary()
   model.summary()
-
-  

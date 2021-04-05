@@ -14,17 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
-import tensorflow as tf
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses
 import os
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
+
+import tensorflow as tf
 
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
+from official.modeling import hyperparams, optimization
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
-
 from yolo.configs import backbones
 
 COCO_INPUT_PATH_BASE = 'coco'

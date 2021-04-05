@@ -13,18 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Runs a simple model on the MNIST dataset."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
 import tensorflow_datasets as tfds
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.utils.flags import core as flags_core
 from official.utils.misc import model_helpers

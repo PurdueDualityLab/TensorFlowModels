@@ -15,11 +15,11 @@
 """Preprocessing ops."""
 
 import math
-from six.moves import range
+
 import tensorflow as tf
+from six.moves import range
 
 from official.vision.beta.ops import box_ops
-
 
 CENTER_CROP_FRACTION = 0.875
 

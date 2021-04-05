@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """Tests for optimizer_factory.py."""
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.modeling.optimization import optimizer_factory
 from official.modeling.optimization.configs import optimization_config

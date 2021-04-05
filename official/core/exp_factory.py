@@ -17,7 +17,6 @@
 from official.core import config_definitions as cfg
 from official.core import registry
 
-
 _REGISTERED_CONFIGS = {}
 
 

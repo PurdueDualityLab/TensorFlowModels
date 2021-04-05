@@ -14,17 +14,17 @@
 # limitations under the License.
 # ==============================================================================
 """Image classification task definition."""
-import tensorflow as tf
-from official.core import input_reader
-from official.core import task_factory
-from yolo.configs import darknet_classification as exp_cfg
-from yolo.dataloaders.decoders import classification_tfds_decoder as cli
-from yolo.dataloaders import classification_input
-from yolo.dataloaders import classification_vision
-from official.vision.beta.tasks import image_classification
-from yolo.losses import cross_entropy_loss
-from official.modeling import tf_utils
 import logging
+
+import tensorflow as tf
+
+from official.core import input_reader, task_factory
+from official.modeling import tf_utils
+from official.vision.beta.tasks import image_classification
+from yolo.configs import darknet_classification as exp_cfg
+from yolo.dataloaders import classification_input, classification_vision
+from yolo.dataloaders.decoders import classification_tfds_decoder as cli
+from yolo.losses import cross_entropy_loss
 
 
 @task_factory.register_task_cls(exp_cfg.ImageClassificationTask)

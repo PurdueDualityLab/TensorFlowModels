@@ -15,6 +15,7 @@
 """Trainer network for dual encoder style models."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 from official.nlp.modeling import layers

@@ -1,14 +1,15 @@
-import tensorflow as tf
-import tensorflow.keras.backend as K
-import socket
-import struct
-from typing import Callable
-import numpy as np
 import colorsys
-import cv2
-from contextlib import closing
 import multiprocessing as mp
 import os
+import socket
+import struct
+from contextlib import closing
+from typing import Callable
+
+import cv2
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras.backend as K
 
 
 def get_device(policy):

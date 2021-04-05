@@ -1,7 +1,9 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
 import centernet.tasks as tasks
 import centernet.utils as utils
+
 
 def gaussian2D(shape, sigma=1):
   m, n = [(ss - 1.) / 2. for ss in shape]

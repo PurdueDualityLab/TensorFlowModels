@@ -17,13 +17,13 @@
 The evaluator implements the Orbit `AbstractEvaluator` interface.
 """
 from typing import Optional, Union
+
 import gin
-import orbit
 import tensorflow as tf
 
+import orbit
 from official.core import train_utils
-from official.modeling.multitask import base_model
-from official.modeling.multitask import multitask
+from official.modeling.multitask import base_model, multitask
 
 
 @gin.configurable

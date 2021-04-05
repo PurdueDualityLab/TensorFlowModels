@@ -16,20 +16,16 @@
 import json
 import os
 
-from absl import flags
-from absl.testing import flagsaver
-from absl.testing import parameterized
 import tensorflow as tf
+from absl import flags
+from absl.testing import flagsaver, parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-from official.common import flags as tfm_flags
 # pylint: disable=unused-import
+from official.common import flags as tfm_flags
 from official.common import registry_imports
 # pylint: enable=unused-import
-from official.core import task_factory
-from official.core import train_lib
-from official.core import train_utils
+from official.core import task_factory, train_lib, train_utils
 
 FLAGS = flags.FLAGS
 

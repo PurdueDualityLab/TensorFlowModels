@@ -14,20 +14,17 @@
 # ==============================================================================
 """Anchor box and labeler definition."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 
 import tensorflow as tf
+
 from official.vision import keras_cv
 from official.vision.detection.utils import box_utils
-from official.vision.detection.utils.object_detection import argmax_matcher
-from official.vision.detection.utils.object_detection import balanced_positive_negative_sampler
-from official.vision.detection.utils.object_detection import box_list
-from official.vision.detection.utils.object_detection import faster_rcnn_box_coder
-from official.vision.detection.utils.object_detection import target_assigner
+from official.vision.detection.utils.object_detection import (
+    argmax_matcher, balanced_positive_negative_sampler, box_list,
+    faster_rcnn_box_coder, target_assigner)
 
 
 class Anchor(object):

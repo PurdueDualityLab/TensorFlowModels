@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def _to_float32(x):
   return tf.cast(x, tf.float32)
 
@@ -65,4 +66,3 @@ def get_batch_predictions_from_indices(batch_predictions, indices):
       values at the given indices.
   """
   return tf.gather_nd(batch_predictions, indices)
-

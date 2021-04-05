@@ -13,16 +13,14 @@
 # limitations under the License.
 
 """Tests for multitask.evaluator."""
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.core import base_task
 from official.core import config_definitions as cfg
-from official.modeling.multitask import evaluator
-from official.modeling.multitask import multitask
+from official.modeling.multitask import evaluator, multitask
 
 
 def all_strategy_combinations():

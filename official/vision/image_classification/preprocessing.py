@@ -14,16 +14,14 @@
 # ==============================================================================
 """Preprocessing functions for images."""
 
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import tensorflow as tf
 from typing import List, Optional, Text, Tuple
 
-from official.vision.image_classification import augment
+import tensorflow as tf
 
+from official.vision.image_classification import augment
 
 # Calculated from the ImageNet training set
 MEAN_RGB = (0.485 * 255, 0.456 * 255, 0.406 * 255)

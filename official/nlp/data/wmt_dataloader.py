@@ -31,15 +31,15 @@
    This batching scheme decreases the fraction of padding tokens per training
    batch, thus improving the training speed significantly.
 """
+import dataclasses
 from typing import Dict, Optional
 
-import dataclasses
 import tensorflow as tf
+
 import tensorflow_text as tftxt
 from official.core import config_definitions as cfg
 from official.core import input_reader
-from official.nlp.data import data_loader
-from official.nlp.data import data_loader_factory
+from official.nlp.data import data_loader, data_loader_factory
 
 # Example grouping constants. Defines length boundaries for each group.
 # These values are the defaults used in Tensor2Tensor.

@@ -6,7 +6,6 @@ Manage the downloading of external files that are used in YOLO networks.
 
 import io
 import os
-
 from typing import Union
 
 # define PathABC type

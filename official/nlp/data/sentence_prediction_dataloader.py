@@ -14,9 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Loads dataset for the sentence prediction (classification) task."""
+import dataclasses
 from typing import List, Mapping, Optional
 
-import dataclasses
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -24,8 +24,7 @@ from official.common import dataset_fn
 from official.core import config_definitions as cfg
 from official.core import input_reader
 from official.nlp import modeling
-from official.nlp.data import data_loader
-from official.nlp.data import data_loader_factory
+from official.nlp.data import data_loader, data_loader_factory
 
 LABEL_TYPES_MAP = {'int': tf.int64, 'float': tf.float32}
 

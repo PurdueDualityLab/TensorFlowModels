@@ -1,4 +1,4 @@
-from yolo.utils.run_utils import prep_gpu, expand_gpu
+from yolo.utils.run_utils import expand_gpu, prep_gpu
 
 expand_gpu()
 try:

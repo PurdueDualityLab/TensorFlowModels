@@ -21,9 +21,8 @@ import math
 import os
 
 import six
-
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.nlp.bert import tokenization
 

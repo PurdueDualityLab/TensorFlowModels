@@ -14,13 +14,12 @@
 """Downloads and prepares TriviaQA dataset."""
 from unittest import mock
 
-from absl import app
-from absl import flags
-from absl import logging
-import apache_beam as beam
 import tensorflow_datasets as tfds
+from absl import app, flags, logging
 
-from official.nlp.projects.triviaqa import dataset  # pylint: disable=unused-import
+import apache_beam as beam
+from official.nlp.projects.triviaqa import \
+    dataset  # pylint: disable=unused-import
 
 flags.DEFINE_integer('sequence_length', 4096, 'Max number of tokens.')
 
