@@ -77,7 +77,7 @@ task:
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
-      aug_rand_angle: 7.0
+      aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
