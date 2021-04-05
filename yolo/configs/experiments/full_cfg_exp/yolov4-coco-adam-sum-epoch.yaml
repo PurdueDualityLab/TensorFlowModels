@@ -77,7 +77,7 @@ task:
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
-      aug_rand_angle: 1.0
+      aug_rand_angle: 7.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -126,7 +126,7 @@ trainer:
       cosine_epoch:
         initial_learning_rate: 0.001
         name: CosineEpoch
-        alpha: 0.01
+        alpha: 0.2
         steps_per_epoch: 1250
         decay_steps: 374000
     optimizer:
