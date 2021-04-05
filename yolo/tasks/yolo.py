@@ -167,7 +167,7 @@ class YoloTask(base_task.Task):
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
        _recall50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                          labels['bbox'], labels['classes'],
-                                         outputs[key], num_replicas)
+                                         outputs[key])
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
       metric_dict[f'box_loss_{key}'] = _loss_box

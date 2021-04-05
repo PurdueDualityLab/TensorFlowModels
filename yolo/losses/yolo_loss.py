@@ -13,11 +13,11 @@ TILE_SIZE = 50
 
 
 @tf.custom_gradient
-def gradient_bs_scale(y, batch_size = 1.0):
+def gradient_trap(y):
 
   def trap(dy):
-    dy *= batch_size
-    return dy, 0.0
+    tf.print(tf.reduce_sum(tf.square(dy)))
+    return dy
 
   return y, trap
 
@@ -415,17 +415,12 @@ class Yolo_Loss(object):
     truth_grid = tf.clip_by_value(truth_grid, 0.0, 1.0)
     return tf.stop_gradient(truth_grid)
 
-  def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred, num_replicas):
+  def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
-    
-    if not self._use_reduction_sum:
-      fbatch_size = tf.cast(batch_size * num_replicas, tf.float32)
-    else:
-      fbatch_size = tf.cast(1.0, tf.float32)
 
     boxes = tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes = tf.stop_gradient(tf.cast(classes, tf.float32))
@@ -485,7 +480,6 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     if self._use_reduction_sum:
       box_loss = math_ops.divide_no_nan(box_loss, num_objs)
-      box_loss = math_ops.rm_nan_inf(box_loss, val = 0.0)
 
     if self._use_reduction_sum and self._objectness_smooth > 0.0:
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
@@ -540,10 +534,8 @@ class Yolo_Loss(object):
 
     if not self._use_reduction_sum:
       loss = tf.reduce_mean(loss)
-      loss = gradient_bs_scale(loss, fbatch_size)
     else:
       loss = tf.reduce_sum(loss)
-    # loss = tf.reduce_sum(loss)
 
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
