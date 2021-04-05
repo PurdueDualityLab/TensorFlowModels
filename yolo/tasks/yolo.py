@@ -167,7 +167,7 @@ class YoloTask(base_task.Task):
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
        _recall50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                          labels['bbox'], labels['classes'],
-                                         outputs[key])
+                                         outputs[key], num_replicas)
       metric_dict[f'total_loss'] += _loss
       metric_dict[f'conf_loss_{key}'] = _loss_conf
       metric_dict[f'box_loss_{key}'] = _loss_box
@@ -200,11 +200,11 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    num_replicas = 1
-    # if self._task_config.model.filter.use_reduction_sum:
-    #   num_replicas = 1
-    # else:
-    #   num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    if self._task_config.model.filter.use_reduction_sum:
+      num_replicas = 1
+    else:
+      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
