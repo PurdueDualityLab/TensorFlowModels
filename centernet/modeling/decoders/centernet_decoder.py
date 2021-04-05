@@ -10,7 +10,7 @@ class CenterNetDecoder(tf.keras.Model):
   CenterNet Decoder
   """
   def __init__(self,
-               input_specs
+               input_specs, 
                task_outputs: dict,
                heatmap_bias: float = -2.19,
                num_inputs: int = 2,
@@ -28,22 +28,30 @@ class CenterNetDecoder(tf.keras.Model):
       and the respective output tensor
     """
     # super().__init__(**kwargs)
-
-    # self._task_outputs = task_outputs
-    # self._heatmap_bias = heatmap_bias
-    # self._num_inputs = num_inputs
-
     # self.outputs_layers = {}
 
-    inputs = [tf.keras.layers.Input(shape=value[1:]) for value in input_specs]
+    self._input_specs = input_specs
+    self._task_outputs = task_outputs
+    self._heatmap_bias = heatmap_bias
+    self._num_inputs = num_inputs
+
+
+    inputs = [tf.keras.layers.Input(shape=value[1:]) for value in self._input_specs]
     outputs = dict()
-    for key in task_outputs:
-      num_filters = self.task_outputs[key]
+
+    for key in self._task_outputs:
+      num_filters = self._task_outputs[key]
       bias = 0
       if 'heatmaps' in key:
         bias = self._heatmap_bias
+        
       outputs[key] = [CenterNetDecoderConv(output_filters=num_filters,
-        name=key, bias_init=bias)() for _ in range(self.num_inputs)]
+        name=key + str(i), bias_init=bias)(inputs[i]) for i in range(self._num_inputs)]
+
+    self._output_specs = {
+      key: [value[i].get_shape() for i in range(num_inputs)] 
+        for key, value in outputs.items()
+    }
 
     super().__init__(inputs=inputs, outputs=outputs, name='CenterNetDecoder')
 
@@ -64,6 +72,10 @@ class CenterNetDecoder(tf.keras.Model):
   #     outputs[key] = [self.outputs_layers[key][i](inputs[i]) for i in range(self._num_inputs)]
     
   #   return outputs
+  
+  # @property
+  # def output_specs(self):
+  #   return self._output_specs
 
   def get_config(self):
     layer_config = {

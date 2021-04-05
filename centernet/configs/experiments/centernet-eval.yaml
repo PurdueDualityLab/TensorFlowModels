@@ -16,7 +16,7 @@ task:
       decoder_name: detection_2d
     num_classes: 90
     gaussian_iou: 0.7
-    input_size: [512, 512, 3] # null
+    _input_size: [512, 512, 3] # null
     filter:
       max_detections: 100
       peak_error: 0.000001

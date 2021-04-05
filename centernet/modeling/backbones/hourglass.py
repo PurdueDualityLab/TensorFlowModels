@@ -115,7 +115,7 @@ class Hourglass(tf.keras.Model):
     self._blocks_per_stage = blocks_per_stage
     self._num_hourglasses = num_hourglasses
     self._initial_downsample = initial_downsample
-    self._output_specs = all_heatmaps[-1].get_shape()
+    self._output_specs = [hm.get_shape() for hm in all_heatmaps]
 
   def get_config(self):
     layer_config = {

@@ -60,7 +60,7 @@ def build_centernet_decoder(input_specs, task_config, num_inputs):
   # task specific
   task_outputs = task_config._get_output_length_dict()
   model = CenterNetDecoder(
-      input_specs = input_specs
+      input_specs = input_specs,
       task_outputs=task_outputs,
       heatmap_bias=heatmap_bias,
       num_inputs=num_inputs)
@@ -92,7 +92,12 @@ def build_centernet(input_specs, task_config, l2_regularization):
   filter = build_centernet_filter(model_config)
 
   model = CenterNet(backbone=backbone, decoder=decoder, head=head, filter=filter)
-  model.build(input_specs.shape)
+
+
+  test_input = tf.zeros(shape=(1, 512, 512, 3), dtype=tf.float32)
+  model(test_input)
+  # model.build(input_specs.shape)
+  model.summary()
 
   # TODO: uncommend when filter is implemented
   # losses = filter.losses

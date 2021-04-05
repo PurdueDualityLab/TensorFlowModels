@@ -139,7 +139,7 @@ class CenterNetParser(parser.Parser):
     }
     return labels
 
-  def _parse_train_data(self, decoded_tensors):
+  def _parse_train_data(self, data):
     """Generates images and labels that are usable for model training.
 
     Args:
@@ -149,12 +149,25 @@ class CenterNetParser(parser.Parser):
         images: the image tensor.
         labels: a dict of Tensors that contains labels.
     """
-    # TODO: input size, output size
-    image = decoded_tensors["image"]
+    # FIXME: This is a copy of parse eval data
+    image = data["image"] / 255
+    boxes = data['groundtruth_boxes']
+    classes = data['groundtruth_classes']
+
+    image, boxes, info = yolo_preprocessing_ops.letter_box(
+      image, boxes, xs = 0.5, ys = 0.5, target_dim=self._image_w)
+
+    image = tf.cast(image, self._dtype)
+    shape = tf.shape(image)
+    height = shape[0]
+    width = shape[1]
+
     labels = self._generate_heatmap(
-        decoded_tensors["groundtruth_boxes"],
-        output_size, input_size
+        boxes=boxes, output_size=[self._image_h, self._image_w], input_size=[height, width]
     )
+
+    labels.update({'bbox': boxes})
+    
     return image, labels
 
   def _parse_eval_data(self, data):

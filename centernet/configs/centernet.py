@@ -25,6 +25,59 @@ from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
 
 
+# default param classes
+@dataclasses.dataclass
+class ModelConfig(hyperparams.Config):
+
+  @property
+  def input_size(self):
+    if self._input_size is None:
+      return [None, None, 3]
+    else:
+      return self._input_size
+
+  @input_size.setter
+  def input_size(self, input_size):
+    self._input_size = input_size
+
+  @property
+  def backbone(self):
+    if isinstance(self.base, str):
+      # TODO: remove the automatic activation setter
+      # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation
+      return CenterNet._DEFAULTS[self.base].backbone
+    else:
+      return self.base.backbone
+
+  @backbone.setter
+  def backbone(self, val):
+    self.base.backbone = val
+
+  @property
+  def decoder(self):
+    if isinstance(self.base, str):
+      return CenterNet._DEFAULTS[self.base].decoder
+    else:
+      return self.base.decoder
+
+  @decoder.setter
+  def decoder(self, val):
+    self.base.decoder = val
+
+  @property
+  def odapi_weights_file(self):
+    if isinstance(self.base, str):
+      return CenterNet._DEFAULTS[self.base].odapi_weights
+    else:
+      return self.base.odapi_weights
+
+  @property
+  def extremenet_weights_file(self):
+    if isinstance(self.base, str):
+      return CenterNet._DEFAULTS[self.base].extremenet_weights
+    else:
+      return self.base.extremenet_weights
+
 @dataclasses.dataclass
 class TfExampleDecoder(hyperparams.Config):
   regenerate_source_id: bool = False
@@ -66,9 +119,9 @@ class Parser(hyperparams.Config):
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  input_path: str = 'D:\\Datasets\\coco\\2017\\1.1.0*' #'gs://tensorflow2/coco_records/train/2017*'
+  input_path: str = '' # 'D:\\Datasets\\coco\\2017\\1.1.0*' #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = None #'coco'
-  tfds_split: str = 'val' #'train'
+  tfds_split: str = None #'train' #'val'
   global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
@@ -138,13 +191,12 @@ class CenterNetBase(hyperparams.OneOfConfig):
   decoder_name: str = 'detection_2d'
 
 @dataclasses.dataclass
-class CenterNet(hyperparams.Config):
+class CenterNet(ModelConfig):
   base: Union[str, CenterNetBase] = CenterNetBase()
   num_classes: int = 90
   gaussian_iou: float = 0.7
   max_num_instances: int = 200
-  input_size: Optional[List[int]] = dataclasses.field(
-    default_factory=lambda: [None, None, 3])
+  _input_size: Optional[List[int]] = None
   filter: CenterNetLayer = CenterNetLayer()
 
 @dataclasses.dataclass

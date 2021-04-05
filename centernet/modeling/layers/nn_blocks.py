@@ -322,9 +322,10 @@ class CenterNetDecoderConv(tf.keras.layers.Layer):
         convolution layer
       name: string, layer name
     """
+    super().__init__(name=name, **kwargs)
     self._output_filters = output_filters
     self._bias_init = bias_init
-    super().__init__(name=name, **kwargs)
+    
   
   def build(self, input_shape):
     n_channels = input_shape[-1]
