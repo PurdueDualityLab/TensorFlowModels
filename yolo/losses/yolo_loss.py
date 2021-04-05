@@ -532,10 +532,12 @@ class Yolo_Loss(object):
 
     loss = box_loss + class_loss + conf_loss
 
-    if not self._use_reduction_sum:
-      loss = tf.reduce_mean(loss)
-    else:
-      loss = tf.reduce_sum(loss)
+    # if not self._use_reduction_sum:
+    #   loss = tf.reduce_mean(loss)
+    # else:
+    #   loss = tf.reduce_sum(loss)
+    loss = tf.reduce_sum(loss)
+
 
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)

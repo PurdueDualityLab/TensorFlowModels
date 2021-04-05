@@ -112,6 +112,8 @@ task:
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
+  best_checkpoint_eval_metric: str = "AP50"
+  best_checkpoint_metric_comp: str = "higher"
   train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 20000
