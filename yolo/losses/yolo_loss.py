@@ -14,7 +14,7 @@ TILE_SIZE = 50
 
 @tf.custom_gradient
 def gradient_bs_scale(y, batch_size = 1.0):
-  
+
   def trap(dy):
     dy *= batch_size
     return dy, 0.0
@@ -540,11 +540,10 @@ class Yolo_Loss(object):
 
     if not self._use_reduction_sum:
       loss = tf.reduce_mean(loss)
+      loss = gradient_bs_scale(loss, fbatch_size)
     else:
       loss = tf.reduce_sum(loss)
     # loss = tf.reduce_sum(loss)
-
-    loss = gradient_bs_scale(loss, fbatch_size)
 
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
