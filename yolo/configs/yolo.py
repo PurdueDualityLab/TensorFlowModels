@@ -155,22 +155,22 @@ class Mosaic(hyperparams.Config):
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 608
-  image_h: int = 608
+  image_w: int = 736
+  image_h: int = 736
   fixed_size: bool = True
   max_num_instances: int = 200
-  min_process_size: int = 416
+  min_process_size: int = 512
   letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
   jitter_im: float = 0.3
-  jitter_boxes: float = 0.4
+  jitter_boxes: float = 0.2
   aug_rand_translate: float = 0.25
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_zoom: float = 0.5
   aug_rand_hue: float = 0.1
-  aug_rand_angle: float = 7.0
+  aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
   mosaic: Mosaic = Mosaic()

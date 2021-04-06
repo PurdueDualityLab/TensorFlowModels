@@ -16,7 +16,7 @@ task:
     subdivisions: 1
     num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: [640, 640, 3]
+    _input_size: [736, 736, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -72,9 +72,9 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 640
-      image_h: 640
-      min_process_size: 640
+      image_w: 736
+      image_h: 736
+      min_process_size: 512
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
