@@ -142,7 +142,7 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     self._scale_up = 2 if self._use_scale_xy else 1
     self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
-    self._scale_w = tf.Variable(initial_value=self._image_w, dtype = tf.int32, synchronization=tf.VariableSynchronization.ON_WRITE)
+    self._scale_w = tf.Variable(initial_value=self._image_w, dtype = tf.int32) #, synchronization=tf.VariableSynchronization.ON_WRITE)
 
     if dtype == 'float16':
       self._dtype = tf.float16
