@@ -92,6 +92,7 @@ class Parser(parser.Parser):
       seed: an `int` for the seed used by tf.random
     """
     self._net_down_scale = 2**max_level
+    min_process_size = min(image_w, min_process_size)
 
     assert min_process_size % self._net_down_scale == 0
     assert image_w % self._net_down_scale == 0
@@ -143,7 +144,7 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     self._scale_up = 2 if self._use_scale_xy else 1
     self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
-    self._scale_w = tf.Variable(initial_value=self._num_points - 1, dtype = tf.int32, synchronization=tf.VariableSynchronization.ON_WRITE)
+    self._scale_w = tf.Variable(initial_value=self._image_w, dtype = tf.int32, synchronization=tf.VariableSynchronization.ON_WRITE)
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -321,10 +322,11 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
 
-    if self._counter % (self._batch_size * 10) == 0:
+    if self._counter % (self._batch_size * 10) == 0 and self._num_points > 0:
       scale_ind = preprocessing_ops.rand_uniform_strong(0, self._num_points, dtype = tf.int32)
       self._scale_w.assign(self._widths[scale_ind] * self._net_down_scale)
       tf.print(self._counter, self._scale_w)
+
 
     process_width = self._scale_w
     process_height = tf.cast(self._image_h * (process_width/self._image_w), tf.int32)
