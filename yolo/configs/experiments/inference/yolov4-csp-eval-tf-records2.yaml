@@ -72,7 +72,7 @@ task:
       max_boxes: 200
       use_nms: true
       iou_thresh: 0.001
-      nms_thresh: 0.5
+      nms_thresh: 0.6
       use_reduction_sum: true
   validation_data:
     global_batch_size: 8
@@ -82,9 +82,9 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      fixed_size: true
       image_h: 512
       image_w: 512
+      letter_box: false
       use_tie_breaker: true
     shuffle_buffer_size: 10000
   weight_decay: 0.0005

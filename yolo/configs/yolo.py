@@ -160,7 +160,7 @@ class Parser(hyperparams.Config):
   fixed_size: bool = True
   max_num_instances: int = 200
   min_process_size: int = 416
-  letter_box: bool = True
+  letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
   jitter_im: float = 0.3

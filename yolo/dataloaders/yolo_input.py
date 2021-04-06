@@ -384,8 +384,12 @@ class Parser(parser.Parser):
     image_shape = tf.shape(image)[:2]
 
     # if self._letter_box:
+    if not self._letter_box:
+      clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
+      image = tf.image.resize(image, (clipper, clipper), preserve_aspect_ratio=False)
+
     image, boxes, info = preprocessing_ops.letter_box(
-        image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
+      image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
 
     image = tf.cast(image, self._dtype)
     image, labels = self._build_label(

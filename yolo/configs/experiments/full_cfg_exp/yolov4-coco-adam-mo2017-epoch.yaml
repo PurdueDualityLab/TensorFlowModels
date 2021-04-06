@@ -87,6 +87,7 @@ task:
       random_flip: True
       use_tie_breaker: True
       use_scale_xy: true
+      letter_box: True
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: True
