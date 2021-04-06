@@ -159,7 +159,7 @@ class Parser(hyperparams.Config):
   image_h: int = 608
   fixed_size: bool = True
   max_num_instances: int = 200
-  min_process_size: int = 720
+  min_process_size: int = 416
   letter_box: bool = True
   random_flip: bool = True
   pct_rand: float = 0.0

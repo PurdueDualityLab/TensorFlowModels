@@ -320,13 +320,18 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
 
-    if self._counter % (self._batch_size * 10) == 0 and self._num_points > 0:
+    #if self._counter % (self._batch_size * 10) == 0 and self._num_points > 0:
+    if self._num_points > 0:
       scale_ind = preprocessing_ops.rand_uniform_strong(0, self._num_points, dtype = tf.int32)
-      self._scale_w.assign(self._widths[scale_ind] * self._net_down_scale)
-      tf.print(self._counter, self._scale_w)
+      process_width = self._widths[scale_ind] * self._net_down_scale
+    else:
+      scale_ind = 0
+      process_width = self._image_w
+    # self._scale_w.assign(self._widths[scale_ind] * self._net_down_scale)
+    # tf.print(self._counter, self._scale_w)
 
-
-    process_width = self._scale_w
+    
+    # process_width = self._scale_w
     process_height = tf.cast(self._image_h * (process_width/self._image_w), tf.int32)
     image = tf.image.resize(image, (process_width, process_height))
     boxes = box_ops.denormalize_boxes(boxes, tf.shape(image)[:2])
@@ -355,7 +360,7 @@ class Parser(parser.Parser):
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, data, is_training=True)
       
-    self._counter.assign_add(1)
+    # self._counter.assign_add(1)
 
     
     return image, labels
