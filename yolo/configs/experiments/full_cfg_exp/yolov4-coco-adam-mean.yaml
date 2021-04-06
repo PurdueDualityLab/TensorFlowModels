@@ -16,7 +16,7 @@ task:
     subdivisions: 1
     num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: [512, 512, 3]
+    _input_size: [608, 608, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -76,8 +76,9 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 608
+      image_h: 608
+      min_process_size: 416
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
@@ -104,11 +105,11 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 608
+      image_h: 608
       fixed_size: True
       letter_box: True
-  weight_decay: 0.0005
+  weight_decay: 0.001
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null

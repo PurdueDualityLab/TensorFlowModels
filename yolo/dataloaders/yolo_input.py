@@ -33,11 +33,13 @@ class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
   def __init__(self,
-               image_w=416,
-               image_h=416,
+               image_w=608,
+               image_h=608,
+               min_process_size=416,
                min_level=3,
                max_level=5,
                num_classes=80,
+               batch_size=64, 
                masks=None,
                anchors=None,
                fixed_size=False,
@@ -53,8 +55,6 @@ class Parser(parser.Parser):
                aug_rand_hue=0.1,
                aug_rand_saturation=1.5,
                aug_rand_brightness=1.5,
-               max_process_size=608,
-               min_process_size=320,
                max_num_instances=200,
                keep_thresh=0.25,
                use_scale_xy=True,
@@ -93,13 +93,25 @@ class Parser(parser.Parser):
     """
     self._net_down_scale = 2**max_level
 
+    assert min_process_size % self._net_down_scale == 0
+    assert image_w % self._net_down_scale == 0
+    assert image_h % self._net_down_scale == 0
+
     self._num_classes = num_classes
     self._image_w = (image_w // self._net_down_scale) * self._net_down_scale
     self._image_h = self._image_w if image_h is None else (
         image_h // self._net_down_scale) * self._net_down_scale
 
-    self._max_process_size = max_process_size
-    self._min_process_size = min_process_size
+    self._batch_size = batch_size
+    process_scale = min_process_size/self._image_w
+
+    self._max_process_width = self._image_w // self._net_down_scale
+    self._min_process_width = min_process_size // self._net_down_scale
+    self._max_process_height = self._image_h // self._net_down_scale
+    self._min_process_height = int(self._image_h * process_scale) // self._net_down_scale
+
+    self._num_points = self._max_process_width - self._min_process_width
+    self._widths = tf.cast(tf.linspace(self._min_process_width, self._max_process_width, self._num_points), tf.int32)
 
     self._anchors = anchors
     self._masks = {
@@ -130,6 +142,8 @@ class Parser(parser.Parser):
 
     self._use_scale_xy = use_scale_xy
     self._scale_up = 2 if self._use_scale_xy else 1
+    self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
+    self._scale_w = tf.Variable(initial_value=self._num_points - 1, dtype = tf.int32, synchronization=tf.VariableSynchronization.ON_WRITE)
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -195,6 +209,10 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     width = shape[1]
     height = shape[0]
+
+    if not self._letter_box:
+      clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
+      image = tf.image.resize(image, (clipper, clipper), preserve_aspect_ratio=False)
 
     if self._aug_rand_hue > 0.0:
       delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
@@ -302,7 +320,21 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
-    image = tf.image.resize(image, (self._image_w, self._image_h))
+
+    if self._counter % (self._batch_size * 10) == 0:
+      scale_ind = preprocessing_ops.rand_uniform_strong(0, self._num_points, dtype = tf.int32)
+      self._scale_w.assign(self._widths[scale_ind] * self._net_down_scale)
+      tf.print(self._counter, self._scale_w)
+
+    process_width = self._scale_w
+    process_height = tf.cast(self._image_h * (process_width/self._image_w), tf.int32)
+    image = tf.image.resize(image, (process_width, process_height))
+    boxes = box_ops.denormalize_boxes(boxes, tf.shape(image)[:2])
+
+    image = tf.image.pad_to_bounding_box(image, 0,0, self._image_h, self._image_w)
+    boxes = box_ops.normalize_boxes(boxes, tf.shape(image)[:2])
+
+
 
     # else:
     # height, width = preprocessing_ops.get_image_shape(image)
@@ -322,6 +354,10 @@ class Parser(parser.Parser):
     image = tf.cast(image, self._dtype)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, data, is_training=True)
+      
+    self._counter.assign_add(1)
+
+    
     return image, labels
 
   def _parse_eval_data(self, data):
