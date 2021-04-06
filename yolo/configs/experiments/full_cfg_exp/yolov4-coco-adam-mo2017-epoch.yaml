@@ -74,7 +74,7 @@ task:
     parser:
       image_w: 608
       image_h: 608
-      min_process_size: 416
+      min_process_size: 608
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
