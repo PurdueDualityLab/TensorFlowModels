@@ -108,8 +108,6 @@ class Parser(parser.Parser):
 
     self._max_process_width = self._image_w // self._net_down_scale
     self._min_process_width = min_process_size // self._net_down_scale
-    self._max_process_height = self._image_h // self._net_down_scale
-    self._min_process_height = int(self._image_h * process_scale) // self._net_down_scale
 
     self._num_points = self._max_process_width - self._min_process_width
     self._widths = tf.cast(tf.linspace(self._min_process_width, self._max_process_width, self._num_points), tf.int32)

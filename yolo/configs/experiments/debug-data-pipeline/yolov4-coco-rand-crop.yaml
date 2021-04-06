@@ -78,7 +78,7 @@ task:
       image_h: 512
       fixed_size: True
       max_num_instances: 200
-      letter_box: False
+      letter_box: true
       random_flip: True
       jitter_im: 0.0
       jitter_boxes: 0.0
