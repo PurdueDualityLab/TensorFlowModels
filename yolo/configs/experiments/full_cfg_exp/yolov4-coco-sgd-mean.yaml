@@ -90,6 +90,7 @@ task:
       random_flip: True
       use_tie_breaker: True
       use_scale_xy: true
+      letter_box: False
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: False
@@ -107,7 +108,7 @@ task:
       image_w: 608
       image_h: 608
       fixed_size: True
-      letter_box: True
+      letter_box: False
   weight_decay: 0.001
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
