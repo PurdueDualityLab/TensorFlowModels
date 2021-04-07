@@ -45,8 +45,17 @@ def get_num_instances_from_weights(groundtruth_weights_list):
     images in the batch. Note that this function is usually used to normalize
     the loss so the minimum return value is 1 to avoid weird behavior.
   """
-  num_instances = tf.reduce_sum(
-      [tf.math.count_nonzero(w) for w in groundtruth_weights_list])
+  # num_instances = tf.reduce_sum(
+  #     [tf.math.count_nonzero(w) for w in groundtruth_weights_list])
+
+  # This can execute in graph mode
+  groundtruth_weights_list = tf.convert_to_tensor(
+    groundtruth_weights_list, dtype=groundtruth_weights_list[0].dtype)
+  num_instances = tf.map_fn(
+    fn=lambda x: tf.math.count_nonzero(x, dtype=groundtruth_weights_list[0].dtype), 
+    elems=groundtruth_weights_list)
+  
+  num_instances = tf.reduce_sum(num_instances)
   num_instances = tf.maximum(num_instances, 1)
   return num_instances
 

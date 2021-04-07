@@ -167,13 +167,13 @@ class CenterNetLayer(hyperparams.Config):
   class_offset: int = 1
 
 @dataclasses.dataclass
-class CenterNetDetection(cfg.TaskConfig):
+class CenterNetDetection(hyperparams.Config):
   use_centers: bool = True
   use_corners: bool = False
   predict_3d: bool = False
 
 @dataclasses.dataclass
-class CenterNetSubTasks(cfg.TaskConfig):
+class CenterNetSubTasks(hyperparams.Config):
   detection: CenterNetDetection = CenterNetDetection()
   # kp_detection: bool = False
   segmentation: bool = False

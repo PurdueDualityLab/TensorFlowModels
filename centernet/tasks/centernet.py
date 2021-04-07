@@ -124,18 +124,18 @@ class CenterNetTask(base_task.Task):
 
     object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
 
-    outputs['ct_heatmaps'] = loss_ops._flatten_spatial_dimensions(outputs['ct_heatmaps'])
+    output_ct_heatmaps = loss_ops._flatten_spatial_dimensions(outputs['ct_heatmaps'][-1])
     total_loss += object_center_loss(
-        flattened_ct_heatmaps, outputs['ct_heatmaps'])  #removed weight parameter (weight = per_pixel_weight)
+        flattened_ct_heatmaps, output_ct_heatmaps)  #removed weight parameter (weight = per_pixel_weight)
     center_loss = tf.reduce_sum(total_loss) / (
-        float(len(outputs['ct_heatmaps'])) * num_boxes)
+        float(len(output_ct_heatmaps)) * num_boxes)
     loss += center_loss
     metric_dict['ct_loss'] = center_loss
 
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
     # Compute the scale loss.
-    scale_pred = outputs['ct_size']
-    offset_pred = outputs['ct_offset']
+    scale_pred = outputs['ct_size'][-1]
+    offset_pred = outputs['ct_offset'][-1]
     total_scale_loss += localization_loss_fn(
         labels['ct_size'], scale_pred)                #removed  weights=batch_weights
     # Compute the offset loss.
