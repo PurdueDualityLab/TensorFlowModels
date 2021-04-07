@@ -98,23 +98,28 @@ class DataDecoder(hyperparams.OneOfConfig):
 class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
-  fixed_size: bool = True
+  num_classes: int = 90
   max_num_instances: int = 200
-  min_process_size: int = 320
-  max_process_size: int = 608
-  letter_box: bool = True
-  random_flip: bool = True
-  pct_rand: float = 0.0
-  jitter_im: float = 0.0
-  jitter_boxes: float = 0.000
-  aug_rand_transalate: float = 0.0
-  aug_rand_saturation: float = 0.0
-  aug_rand_brightness: float = 0.0
-  aug_rand_zoom: float = 0.0
-  aug_rand_hue: float = 0.0
-  keep_thresh: float = 0.0
-  mosaic_frequency: float = 1.0
-  use_tie_breaker: bool = True
+  gaussian_iou: float = 0.7
+  output_dims: int = 128
+  dtype: str = 'float32'
+  # fixed_size: bool = True
+  # max_num_instances: int = 200
+  # min_process_size: int = 320
+  # max_process_size: int = 608
+  # letter_box: bool = True
+  # random_flip: bool = True
+  # pct_rand: float = 0.0
+  # jitter_im: float = 0.0
+  # jitter_boxes: float = 0.000
+  # aug_rand_transalate: float = 0.0
+  # aug_rand_saturation: float = 0.0
+  # aug_rand_brightness: float = 0.0
+  # aug_rand_zoom: float = 0.0
+  # aug_rand_hue: float = 0.0
+  # keep_thresh: float = 0.0
+  # mosaic_frequency: float = 1.0
+  # use_tie_breaker: bool = True
 
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
@@ -194,8 +199,6 @@ class CenterNetBase(hyperparams.OneOfConfig):
 class CenterNet(ModelConfig):
   base: Union[str, CenterNetBase] = CenterNetBase()
   num_classes: int = 90
-  gaussian_iou: float = 0.7
-  max_num_instances: int = 200
   _input_size: Optional[List[int]] = None
   filter: CenterNetLayer = CenterNetLayer()
 

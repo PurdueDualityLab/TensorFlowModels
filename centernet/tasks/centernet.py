@@ -31,9 +31,13 @@ class CenterNetTask(base_task.Task):
     model = self.task_config.model
 
     parser = centernet_input.CenterNetParser(
-        num_classes=model.num_classes,
-        max_num_instances=model.max_num_instances,
-        gaussian_iou=model.gaussian_iou,
+      image_w=params.parser.image_w,
+      image_h=params.parser.image_h,
+      num_classes=model.num_classes,
+      max_num_instances=params.parser.max_num_instances,
+      gaussian_iou=params.parser.gaussian_iou,
+      output_dims=params.parser.output_dims,
+      dtype=params.parser.dtype
     )
 
     reader = input_reader.InputReader(
@@ -109,6 +113,8 @@ class CenterNetTask(base_task.Task):
 
 
   def build_losses(self, outputs, labels, aux_losses=None):
+    print('\n\nOUTPUT: ', outputs, '\n\n')
+    print('\n\nLABEL: ', labels, '\n\n')
     total_loss = 0.0
     total_scale_loss = 0.0
     total_offset_loss = 0.0

@@ -15,7 +15,6 @@ task:
       backbone_name: hourglass104_512
       decoder_name: detection_2d
     num_classes: 90
-    gaussian_iou: 0.7
     _input_size: [512, 512, 3] # null
     filter:
       max_detections: 100
@@ -35,11 +34,13 @@ task:
     is_training: false
     drop_remainder: true
     parser:
-      fixed_size: true
       image_h: 512
       image_w: 512
-      letter_box: true
-      use_tie_breaker: true
+      num_classes: 90
+      max_num_instances: 200
+      gaussian_iou: 0.7
+      output_dims: 128
+      dtype: float32
     shuffle_buffer_size: 10000
   subtasks:
     detection:

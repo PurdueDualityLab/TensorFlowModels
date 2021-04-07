@@ -10,8 +10,9 @@ class CenterNetParser(parser.Parser):
                 image_w: int = 512,
                 image_h: int = 512,
                 num_classes: int = 90,
-                max_num_instances: int = 200,
+                max_num_instances: int = 200, # 200 or 100?
                 gaussian_iou: float = 0.7,
+                output_dims: int = 128, # should be 128 for all models
                 dtype: str = 'float32'):
     
     self._image_w = image_w
@@ -19,6 +20,7 @@ class CenterNetParser(parser.Parser):
     self._num_classes = num_classes
     self._max_num_instances = max_num_instances
     self._gaussian_iou = gaussian_iou
+    self._output_dims = output_dims
     self._gaussian_bump = True
     self._gaussian_rad = -1
 
@@ -33,8 +35,9 @@ class CenterNetParser(parser.Parser):
           'Unsupported datatype used in parser only {float16, bfloat16, or float32}'
       )
   
-  def _generate_heatmap(self, boxes, output_size, input_size):
+  def _generate_heatmap(self, boxes, classes, output_size, input_size):
     boxes = tf.cast(boxes, dtype=tf.float32)
+    classes = tf.cast(classes, dtype=tf.float32)
 
     tl_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
     br_heatmaps = tf.zeros((self._num_classes, output_size[0], output_size[1]), dtype=tf.float32)
@@ -57,9 +60,10 @@ class CenterNetParser(parser.Parser):
 
     for tag_ind in tf.range(num_boxes):
       detection = boxes[tag_ind]
-    
-      category = detection[-1] # TODO: See if subtracting 1 from the class like the paper is unnecessary
-      category = 0 # FIXME: For testing only
+      category = classes[tag_ind]
+
+      # category = detection[-1] # TODO: See if subtracting 1 from the class like the paper is unnecessary
+      # category = 0 # FIXME: For testing only
 
       xtl, ytl = detection[0], detection[1]
       xbr, ybr = detection[2], detection[3]
@@ -150,7 +154,7 @@ class CenterNetParser(parser.Parser):
         labels: a dict of Tensors that contains labels.
     """
     # FIXME: This is a copy of parse eval data
-    image = data["image"] / 255
+    image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -163,7 +167,9 @@ class CenterNetParser(parser.Parser):
     width = shape[1]
 
     labels = self._generate_heatmap(
-        boxes=boxes, output_size=[self._image_h, self._image_w], input_size=[height, width]
+        boxes=boxes, classes=classes, 
+        output_size=[self._output_dims, self._output_dims], 
+        input_size=[self._image_h, self._image_w]
     )
 
     labels.update({'bbox': boxes})
@@ -171,7 +177,7 @@ class CenterNetParser(parser.Parser):
     return image, labels
 
   def _parse_eval_data(self, data):
-    image = data["image"] / 255
+    image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -184,7 +190,9 @@ class CenterNetParser(parser.Parser):
     width = shape[1]
 
     labels = self._generate_heatmap(
-        boxes=boxes, output_size=[self._image_h, self._image_w], input_size=[height, width]
+        boxes=boxes, classes=classes, 
+        output_size=[self._output_dims, self._output_dims], 
+        input_size=[self._image_h, self._image_w]
     )
 
     labels.update({'bbox': boxes})
