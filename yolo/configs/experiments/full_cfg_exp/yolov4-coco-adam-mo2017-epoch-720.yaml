@@ -91,6 +91,7 @@ task:
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: True
+        output_size: [736, 736]
         crop_area_mosaic: [0.25, 1.0]
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.75]
@@ -102,8 +103,8 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 640
-      image_h: 640
+      image_w: 736
+      image_h: 736
       fixed_size: true
       letter_box: false
   weight_decay: 0.001
