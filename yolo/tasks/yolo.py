@@ -451,7 +451,7 @@ class YoloTask(base_task.Task):
         status = ckpt.restore(ckpt_dir_or_file)
         # if self.task_config.model.subdivisions == 1:
         #   try:
-        status.expect_partial()#.assert_existing_objects_matched()
+        status.expect_partial().assert_existing_objects_matched()
         #except:
         #print("this checkpoint could not assert all components consumed")
       else:

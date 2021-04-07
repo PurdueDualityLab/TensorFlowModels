@@ -447,6 +447,12 @@ class Yolo_Loss(object):
     truth_grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     truth_grid = tf.clip_by_value(truth_grid, 0.0, 1.0)
     return tf.stop_gradient(truth_grid)
+  
+  def ce(self, values, labels):
+    labels = labels + K.epsilon()
+    loss = tf.reduce_mean( -math_ops.mul_no_nan(values, tf.math.log(labels)), axis = -1)
+    loss = math_ops.rm_nan(loss, val = 0.0)
+    return loss
 
   def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
@@ -574,7 +580,9 @@ class Yolo_Loss(object):
 
     sigmoid_class = no_grad_sigmoid(pred_class) #tf.sigmoid(pred_class)
     pred_class = class_gradient_trap(sigmoid_class, np.inf)
+
     sigmoid_conf = no_grad_sigmoid(pred_conf) #tf.sigmoid(pred_conf)
+    sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val = 0.0)
     pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points)
@@ -606,8 +614,6 @@ class Yolo_Loss(object):
 
 
     # class_loss = bceloss(true_class, pred_class, tf.expand_dims(grid_mask, axis = -1))
-    # class_loss = tf.reduce_sum(class_loss, axis=-1)
-
     class_loss = ks.losses.binary_crossentropy(
         K.expand_dims(true_class, axis=-1),
         K.expand_dims(pred_class, axis=-1),
@@ -623,10 +629,13 @@ class Yolo_Loss(object):
 
     # conf_loss = bceloss(K.expand_dims(true_conf, axis=-1), pred_conf, K.expand_dims(obj_mask, axis=-1))
 
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
+    
+    bce = tf.where(true_conf > 0.0, 
+                   self.ce(K.expand_dims(true_conf, axis=-1), pred_conf), 
+                   self.ce(1 - K.expand_dims(true_conf, axis=-1), 1 - pred_conf))
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-
     conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
