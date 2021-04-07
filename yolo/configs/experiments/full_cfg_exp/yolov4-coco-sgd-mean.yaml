@@ -66,7 +66,7 @@ task:
       max_boxes: 200
       use_nms: true
       iou_thresh: 0.001
-      nms_thresh: 0.5
+      nms_thresh: 0.6
       use_reduction_sum: false
   train_data:
     global_batch_size: 64
@@ -81,7 +81,7 @@ task:
       jitter_im: 0.3
       jitter_boxes: 0.4
       aug_rand_zoom: 0.5
-      aug_rand_angle: 7.0
+      aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -92,7 +92,7 @@ task:
       use_scale_xy: true
       mosaic: 
         mosaic_frequency: 0.85
-        random_crop: True
+        random_crop: False
         crop_area_mosaic: [0.25, 1.0]
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.75]

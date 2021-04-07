@@ -256,7 +256,7 @@ class Parser(parser.Parser):
           image, info = preprocessing_ops.random_crop_image(
               image,
               aspect_ratio_range=[jmi, jma],
-              area_range=[self._aug_rand_zoom ** 2, 1.0])
+              area_range=[self._aug_rand_zoom ** 2, 2 * self._aug_rand_zoom ** 2])
         else:
           area = preprocessing_ops.rand_uniform_strong(1.0,
                                                       0.5 / self._aug_rand_zoom)
@@ -295,11 +295,26 @@ class Parser(parser.Parser):
       # classes = tf.gather(classes, inds)
       # boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-    #if self._letter_box:
-    shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-    shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-    image, boxes, info = preprocessing_ops.letter_box(
-        image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
+    if self._letter_box:
+      shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+      shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+      image, boxes, info = preprocessing_ops.letter_box(
+          image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
+    else:
+      jmi = 1 #- 2 * self._jitter_im
+      jma = 1 #+ 2 * self._jitter_im
+      image, info = preprocessing_ops.random_crop_image(
+          image,
+          aspect_ratio_range=[jmi, jma],
+          area_range=[ 0.75, 1.0])
+      
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                  info[3, :])
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
     
     if self._aug_rand_angle > 0:
       image, angle = preprocessing_ops.random_rotate_image(
