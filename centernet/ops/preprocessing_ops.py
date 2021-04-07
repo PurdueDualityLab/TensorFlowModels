@@ -149,9 +149,9 @@ def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     left, right = tf.math.minimum(x, radius), tf.math.minimum(width - x, radius + 1)
     top, bottom = tf.math.minimum(y, radius), tf.math.minimum(height - y, radius + 1)
 
-    print('heatmap ',heatmap)
-    print(len(heatmap))
-    print('category ',category)
+    # print('heatmap ',heatmap)
+    # print(len(heatmap))
+    # print('category ',category)
 
     # TODO: make sure this replicates original functionality
     # masked_heatmap  = heatmap[0, category, y - top:y + bottom, x - left:x + right]
@@ -180,7 +180,7 @@ def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     heatmap_mask = heatmap_mask_ta.stack()
     heatmap_mask = tf.reshape(heatmap_mask, (-1, 3))
     heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, masked_gaussian * scaling_factor)
-    print('after ',heatmap)
+    # print('after ',heatmap)
     return heatmap
 
 # def draw_gaussian(heatmap, category, center, radius, scaling_factor=1):

@@ -15,6 +15,7 @@ class CenterNetParser(parser.Parser):
         aug_rand_brightness=True,
         aug_rand_zoom=True,
         aug_rand_hue=True,
+        seed=1,
     ):
         self._num_classes = num_classes
         self._max_num_instances = max_num_instances
@@ -22,10 +23,10 @@ class CenterNetParser(parser.Parser):
         self._gaussian_bump = True
         self._gaussian_rad = -1
         self._aug_rand_zoom = aug_rand_zoom
-        self._mosaic_frequency
-        self._jitter_im
-        self._seed
-        self._random_flip
+        # self._mosaic_frequency
+        # self._jitter_im
+        self._seed = seed
+        # self._random_flip
 
     def _generate_heatmap(self, boxes, output_size, input_size):
       boxes = tf.cast(boxes, dtype=tf.float32)
@@ -78,7 +79,7 @@ class CenterNetParser(parser.Parser):
           height = tf.math.ceil(height * height_ratio)
 
           if self._gaussian_rad == -1:
-            radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
+            radius = ops.gaussian_radius((height, width), self._gaussian_iou)
             radius = tf.math.maximum(0, tf.math.floor(radius))
           else:
             radius = self._gaussian_rad
@@ -86,9 +87,9 @@ class CenterNetParser(parser.Parser):
         # test
         #   tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps[category], category, [xtl, ytl], radius)
         # inputs heatmap, center, radius, k=1
-          tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [[category, xtl, ytl, radius]])
-          br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [[category, xbr, ybr, radius]])
-          ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [[category, xct, yct, radius]], scaling_factor=5)
+          tl_heatmaps = ops.draw_gaussian(tl_heatmaps, [[category, xtl, ytl, radius]])
+          br_heatmaps = ops.draw_gaussian(br_heatmaps, [[category, xbr, ybr, radius]])
+          ct_heatmaps = ops.draw_gaussian(ct_heatmaps, [[category, xct, yct, radius]], scaling_factor=5)
 
         else:
           # TODO: See if this is a typo
@@ -136,6 +137,7 @@ class CenterNetParser(parser.Parser):
             images: the image tensor.
             labels: a dict of Tensors that contains labels.
         """
+        print('running _parse_train_data')
         # TODO: input size, output size
         image = decoded_tensors["image"] / 255
 
@@ -148,20 +150,21 @@ class CenterNetParser(parser.Parser):
 
         image_shape = tf.shape(image)[:2]
 
+        print('image_shape: ', image_shape)
         #CROP
-        if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
-          zfactor = preprocessing_ops.rand_uniform_strong(self._aug_rand_zoom, 1.0)
-        elif self._aug_rand_zoom > 0.0:
+        # if self._aug_rand_zoom > 0.0 and self._mosaic_frequency > 0.0:
+        #   zfactor = preprocessing_ops.rand_uniform_strong(self._aug_rand_zoom, 1.0)
+        if self._aug_rand_zoom > 0.0:
           zfactor = preprocessing_ops.rand_scale(self._aug_rand_zoom)
         else:
           zfactor = tf.convert_to_tensor(1.0)
 
-        # TODO: random_op_image not defined
-        image, crop_info = preprocessing_ops.random_op_image(
-            image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
+        # # TODO: random_op_image not defined
+        # image, crop_info = preprocessing_ops.random_op_image(
+        #     image, self._jitter_im, zfactor, zfactor, self._aug_rand_translate)
 
-        
-        
+        image = tf.image.stateless_random_crop(image, size=[image_shape[0]*zfactor, image_shape[1]*zfactor, 3], seed = seed)
+
         #RESIZE
         shape = tf.shape(image)
         width = shape[1]
@@ -177,9 +180,8 @@ class CenterNetParser(parser.Parser):
             randomize=False)
 
         #CLIP DETECTION TO BOUNDARIES
+        boxes = box_ops.clip_boxes(boxes, shape)
 
-
-        
         #RANDOM HORIZONTAL FLIP
         if self._random_flip:
           image, boxes, _ = preprocess_ops.random_horizontal_flip(
@@ -245,7 +247,9 @@ if __name__ == '__main__':
 
 #   tl_heatmaps, br_heatmaps, ct_heatmaps = generate_heatmaps(1, 2, (416, 416), detections)
   # ct_heatmaps[batch_id, class_id, ...]
-  plt.imshow(ct_heatmaps[0, ...])
-  plt.show()
+
+  # plt.imshow(ct_heatmaps[0, ...])
+  # plt.show()
+
   # This is to run the test
   # tf.test.main()
