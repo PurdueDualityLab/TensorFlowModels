@@ -249,10 +249,15 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
+    if self._task_config.model.filter.use_reduction_sum:
+      num_replicas = 1
+    else:
+      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'],
-                                                      label)
+                                                      label, num_replicas=num_replicas)
     logs = {self.loss: loss_metrics['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]

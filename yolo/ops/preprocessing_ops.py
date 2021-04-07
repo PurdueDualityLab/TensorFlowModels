@@ -503,6 +503,9 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   full = tf.zeros([size, size, len_masks, 1], dtype=dtype)
   full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
 
+  if num_written >= num_instances:
+    tf.print("clipped")
+
   indexs = _pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
   samples = _pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
   return indexs, samples, full

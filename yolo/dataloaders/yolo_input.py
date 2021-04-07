@@ -140,7 +140,10 @@ class Parser(parser.Parser):
     # self._scale_xy = {'3':2.0, '4':1.75, '5':1.5}
 
     self._use_scale_xy = use_scale_xy
-    self._scale_up = 2 if self._use_scale_xy else 1
+    keys = list(self._masks.keys())
+    self._scale_up = {key: len(keys) - i for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
+    # self._scale_up = {key: 2 for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
+
     self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
     self._scale_w = tf.Variable(initial_value=self._image_w, dtype = tf.int32) #, synchronization=tf.VariableSynchronization.ON_WRITE)
 
@@ -168,7 +171,7 @@ class Parser(parser.Parser):
     if is_training:
       scale_up = self._scale_up
     else:
-      scale_up = 1
+      scale_up = {key: 1 for key in self._masks.keys()}
 
     for key in self._masks.keys():
       if is_training and self._use_scale_xy:
@@ -178,14 +181,14 @@ class Parser(parser.Parser):
 
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
           raw_true, self._masks[key], width // 2**int(key), self._num_classes,
-          raw_true['bbox'].dtype, scale_xy, scale_up, use_tie_breaker)
+          raw_true['bbox'].dtype, scale_xy, scale_up[key], use_tie_breaker)
 
       ishape = indexes.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * scale_up
+      ishape[-2] = self._max_num_instances * scale_up[key]
       indexes.set_shape(ishape)
 
       ishape = updates.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * scale_up
+      ishape[-2] = self._max_num_instances * scale_up[key]
       updates.set_shape(ishape)
 
       inds[key] = indexes
