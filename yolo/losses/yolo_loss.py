@@ -137,7 +137,7 @@ def get_predicted_box_newcords(width,
 
   box_xy = tf.stack([pred_xy[..., 0] / width, pred_xy[..., 1] / height],
                     axis=-1) + grid_points
-  box_wh = 4 * tf.square(pred_wh) * anchor_grid
+  box_wh = tf.square(2 * pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return pred_xy, pred_wh, pred_box
 
@@ -506,9 +506,16 @@ class Yolo_Loss(object):
         dtype=pred_class.dtype)
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
 
+    counts = true_counts
+    counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
+    reps = tf.gather_nd(counts, inds, batch_dims=1)
+    reps = tf.squeeze(reps, axis=-1)
+    reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box)
+    box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
@@ -527,6 +534,7 @@ class Yolo_Loss(object):
         K.expand_dims(pred_class, axis=-1),
         label_smoothing=self._label_smoothing,
         from_logits=True)
+    class_loss = math_ops.divide_no_nan(class_loss, reps)
     class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)

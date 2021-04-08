@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
-  mosaic_frequency: float = 1.0 #85
+  mosaic_frequency: float = 0.85
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.3, 0.35])
@@ -173,7 +173,7 @@ class Parser(hyperparams.Config):
   aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
-  anchor_thresh: float = 0.213
+  anchor_thresh: float = 4.0
   mosaic: Mosaic = Mosaic()
 
 

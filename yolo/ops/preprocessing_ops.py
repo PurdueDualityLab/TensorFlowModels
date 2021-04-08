@@ -283,8 +283,8 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 
     # scale thhe boxes
     anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
-    anchors_x = anchors[..., 0] / width
-    anchors_y = anchors[..., 1] / height
+    anchors_x = anchors[..., 0] / height
+    anchors_y = anchors[..., 1] / width
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
     k = tf.shape(anchors)[0]
     # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
@@ -314,14 +314,16 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     # largest interection over union
 
     if iou_thresh >= 1.0:
-      aspect = truth_comp/anchors
+      aspect = truth_comp[..., 2:4]/anchors[...,2:4]
+      aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
       aspect = tf.maximum(aspect, 1/aspect)
       aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
       aspect = tf.reduce_max(aspect, axis = -1)
       values, indexes = tf.math.top_k(
-          tf.transpose(aspect, perm=[0, 2, 1]),
+          tf.transpose(-aspect, perm=[0, 2, 1]),
           k=tf.cast(k, dtype=tf.int32),
           sorted=True)
+      values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
     else:
       iou_raw = box_ops.compute_iou(truth_comp, anchors)

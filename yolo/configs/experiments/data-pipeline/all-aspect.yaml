@@ -82,7 +82,7 @@ task:
       aug_rand_hue: 0.15
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.4
-      aug_rand_translate: 0.05
+      aug_rand_translate: 0.00
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
@@ -90,7 +90,7 @@ task:
       letter_box: False
       anchor_thresh: 4.0
       mosaic: 
-        mosaic_frequency: 0.85
+        mosaic_frequency: 0.95
         random_crop: True
         crop_area: [0.25, 1.0]
         random_crop_mosaic: False

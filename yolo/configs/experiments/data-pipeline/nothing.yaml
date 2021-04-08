@@ -90,7 +90,7 @@ task:
       letter_box: False
       anchor_thresh: 0.2
       mosaic: 
-        mosaic_frequency: 0.85
+        mosaic_frequency: 0.0
         random_crop: True
         crop_area_mosaic: [0.25, 1.0]
         random_crop_mosaic: False
