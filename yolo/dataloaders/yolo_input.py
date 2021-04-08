@@ -60,6 +60,7 @@ class Parser(parser.Parser):
                use_scale_xy=True,
                pct_rand=0.5,
                scale_xy=None,
+               anchor_t = 4.0, 
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
@@ -137,11 +138,12 @@ class Parser(parser.Parser):
     self._seed = seed
     self._fixed_size = fixed_size
     self._scale_xy = scale_xy
+    self._anchor_t = anchor_t
     # self._scale_xy = {'3':2.0, '4':1.75, '5':1.5}
 
     self._use_scale_xy = use_scale_xy
     keys = list(self._masks.keys())
-    self._scale_up = {key: len(keys) - i for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
+    self._scale_up = {key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
     # self._scale_up = {key: 2 for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
 
     self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
@@ -426,7 +428,7 @@ class Parser(parser.Parser):
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
-        boxes, self._anchors, width=self._image_w, height=self._image_h)
+        boxes, self._anchors, width=self._image_w, height=self._image_h, iou_thresh=self._anchor_t)
 
     bshape = boxes.get_shape().as_list()
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)

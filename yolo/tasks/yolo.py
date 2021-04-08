@@ -138,6 +138,7 @@ class YoloTask(base_task.Task):
         pct_rand=params.parser.pct_rand,
         scale_xy=xy_scales,
         use_scale_xy=params.parser.use_scale_xy,
+        anchor_t=params.parser.anchor_thresh,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
