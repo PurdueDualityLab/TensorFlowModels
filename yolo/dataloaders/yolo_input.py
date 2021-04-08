@@ -254,8 +254,8 @@ class Parser(parser.Parser):
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
       if data['is_mosaic']:
         if scale < 0.5:
-          jmi = 1 - 2 * self._jitter_im
-          jma = 1 + 2 * self._jitter_im
+          jmi = 1 - self._jitter_im
+          jma = 1 + self._jitter_im
           image, info = preprocessing_ops.random_crop_image(
               image,
               aspect_ratio_range=[jmi, jma],
@@ -266,15 +266,15 @@ class Parser(parser.Parser):
           image, info = preprocessing_ops.random_pad(image, area)
       else:
         if scale < 0.5:
-          jmi = 1 - 2 * self._jitter_im
-          jma = 1 + 2 * self._jitter_im
+          jmi = 1 - self._jitter_im
+          jma = 1 + self._jitter_im
           image, info = preprocessing_ops.random_crop_image(
               image,
               aspect_ratio_range=[jmi, jma],
               area_range=[self._aug_rand_zoom ** 2, 1.0])
         else:
           area = preprocessing_ops.rand_uniform_strong(1.0,
-                                                      1 / self._aug_rand_zoom)
+                                                      2 / self._aug_rand_zoom)
           image, info = preprocessing_ops.random_pad(image, area)
     else:
       image, info = preprocessing_ops.random_crop_image(
@@ -293,15 +293,6 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-
-
-      # boxes = box_ops.denormalize_boxes(boxes, info[1, :])
-      # boxes = box_ops.clip_boxes(boxes, info[1, :])
-      # inds = box_ops.get_non_empty_box_indices(boxes)
-      # boxes = tf.gather(boxes, inds)
-      # classes = tf.gather(classes, inds)
-      # boxes = box_ops.normalize_boxes(boxes, info[1, :])
-
     if self._letter_box:
       shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
       shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
@@ -313,7 +304,7 @@ class Parser(parser.Parser):
       image, info = preprocessing_ops.random_crop_image(
           image,
           aspect_ratio_range=[jmi, jma],
-          area_range=[ 0.75, 1.0])
+          area_range=[ 0.98, 1.0])
       
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],

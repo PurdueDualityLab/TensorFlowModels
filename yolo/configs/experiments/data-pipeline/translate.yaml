@@ -1,3 +1,5 @@
+## really lowers the AP 
+
 runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
