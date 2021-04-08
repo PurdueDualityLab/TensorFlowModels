@@ -15,7 +15,7 @@ task:
         type: regular
       darknet_weights_file: 'cache://yolov4.weights'
       darknet_weights_cfg: 'cache://yolov4.cfg'
-    num_classes: 91
+    num_classes: 80
     subdivisions: 1
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
     _input_size: null #[512, 512, 3]
@@ -68,10 +68,12 @@ task:
       use_reduction_sum: false
   train_data:
     global_batch_size: 4
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: train
     dtype: float16
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
-    is_training: true
-    shuffle_buffer_size: 10000
+    is_training: false
     drop_remainder: true
     parser:
       image_w: 512
@@ -98,10 +100,12 @@ task:
         crop_area_mosaic: [0.25, 0.75]
   validation_data:
     global_batch_size: 8
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: validation
     dtype: float16
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
     is_training: false
-    shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
       image_w: 512
@@ -113,8 +117,8 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
   gradient_clip_norm: 0.0
-  load_darknet_weights: false
-  darknet_load_decoder: false
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   best_checkpoint_eval_metric: str = "AP50"
   best_checkpoint_metric_comp: str = "higher"

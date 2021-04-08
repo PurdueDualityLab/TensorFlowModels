@@ -61,29 +61,34 @@ def class_gradient_trap(y, max_delta=np.inf):
 
   return y, trap
 
+def ce(values, labels):
+  labels = labels + K.epsilon()
+  loss = tf.reduce_mean( -math_ops.mul_no_nan(values, tf.math.log(labels)), axis = -1)
+  loss = math_ops.rm_nan(loss, val = 0.0)
+  return loss
+
 @tf.custom_gradient
 def bceloss(labels, values, mask):
-  # if from_logits:
+  gt = labels
   vals = values
-  # vals = tf.math.sigmoid(values)
-  loss = labels - vals
-  loss_ = math_ops.mul_no_nan(mask, loss)
-  
-  _loss = tf.square(loss_)
+  m = mask
 
-  # bce = ks.losses.binary_crossentropy(
-  #     K.expand_dims(labels, axis=-1), values, from_logits=True)
-  # _loss = math_ops.mul_no_nan(mask, bce)
+  # loss_ = tf.where(gt > 0.0, ce(gt, vals), ce(1 - gt, 1 - vals))
+  # loss_ = math_ops.mul_no_nan(m, loss_)
+  loss_ = gt - vals
+  loss_ = math_ops.mul_no_nan(m, loss_)
+  loss_ = tf.sqrt(tf.square(loss_))
 
   def delta(dy):
-    # if from_logits:
-    loss = labels - vals
-    loss = math_ops.mul_no_nan(mask, loss)
-    dmask = tf.zeros_like(mask)
-    return loss * dy, tf.zeros_like(labels), dmask
-  
+    dmask = tf.zeros_like(m)
 
-  return _loss, delta
+    loss = vals - gt
+    tf.print(tf.reduce_mean(vals))
+
+    # tf.print(loss)
+    loss = math_ops.mul_no_nan(m, loss)
+    return tf.zeros_like(gt), loss * dy, dmask
+  return loss_, delta
 
 @tf.custom_gradient
 def no_grad_sigmoid(values):
@@ -578,11 +583,13 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    sigmoid_class = no_grad_sigmoid(pred_class) #tf.sigmoid(pred_class)
+    # sigmoid_class = no_grad_sigmoid(pred_class) 
+    sigmoid_class = tf.sigmoid(pred_class)
     pred_class = class_gradient_trap(sigmoid_class, np.inf)
 
-    sigmoid_conf = no_grad_sigmoid(pred_conf) #tf.sigmoid(pred_conf)
-    sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val = 0.0)
+    # sigmoid_conf = no_grad_sigmoid(pred_conf) 
+    sigmoid_conf = tf.sigmoid(pred_conf)
+    # sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val = 0.0)
     pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points)
@@ -614,6 +621,8 @@ class Yolo_Loss(object):
 
 
     # class_loss = bceloss(true_class, pred_class, tf.expand_dims(grid_mask, axis = -1))
+    # class_loss = tf.reduce_sum(class_loss, axis=-1)
+
     class_loss = ks.losses.binary_crossentropy(
         K.expand_dims(true_class, axis=-1),
         K.expand_dims(pred_class, axis=-1),
@@ -632,9 +641,10 @@ class Yolo_Loss(object):
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
     
+    # conf_loss = bceloss(K.expand_dims(true_conf, axis=-1), pred_conf, K.expand_dims(obj_mask))
     bce = tf.where(true_conf > 0.0, 
-                   self.ce(K.expand_dims(true_conf, axis=-1), pred_conf), 
-                   self.ce(1 - K.expand_dims(true_conf, axis=-1), 1 - pred_conf))
+                   ce(K.expand_dims(true_conf, axis=-1), pred_conf), 
+                   ce(1 - K.expand_dims(true_conf, axis=-1), 1 - pred_conf))
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
     conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
     conf_loss = tf.cast(
