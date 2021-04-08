@@ -354,21 +354,6 @@ class Parser(parser.Parser):
     image = tf.image.pad_to_bounding_box(image, 0,0, self._image_h, self._image_w)
     boxes = box_ops.normalize_boxes(boxes, tf.shape(image)[:2])
 
-
-
-    # else:
-    # height, width = preprocessing_ops.get_image_shape(image)
-    # minscale = tf.math.minimum(width, height)
-    # image, image_info = preprocessing_ops.random_crop_or_pad(
-    #     image,
-    #     target_width=minscale,
-    #     target_height=minscale,
-    #     random_patch=True)
-    
-    # boxes, classes = preprocessing_ops.filter_boxes_and_classes(
-    #     boxes, classes, image_info, keep_thresh=self._keep_thresh)
-    # info = tf.convert_to_tensor([0, 0, self._image_w, self._image_h])
-
     num_dets = tf.shape(classes)[0]
 
     image = tf.cast(image, self._dtype)

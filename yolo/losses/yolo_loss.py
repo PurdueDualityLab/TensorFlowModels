@@ -534,10 +534,10 @@ class Yolo_Loss(object):
         K.expand_dims(pred_class, axis=-1),
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    class_loss = math_ops.divide_no_nan(class_loss, reps)
     class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)
+    class_loss = math_ops.divide_no_nan(class_loss, reps)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
