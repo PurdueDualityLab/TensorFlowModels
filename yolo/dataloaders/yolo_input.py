@@ -276,7 +276,11 @@ class Parser(parser.Parser):
           area = preprocessing_ops.rand_uniform_strong(1.0,
                                                       1 / self._aug_rand_zoom)
           image, info = preprocessing_ops.random_pad(image, area)
-
+    else:
+      image, info = preprocessing_ops.random_crop_image(
+              image,
+              aspect_ratio_range=[1, 1],
+              area_range=[0.98, 0.99])
 
 
 
