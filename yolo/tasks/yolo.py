@@ -19,6 +19,7 @@ from yolo.ops.box_ops import xcycwh_to_yxyx
 
 from official.vision.beta.ops import box_ops, preprocess_ops
 from yolo.modeling.layers import detection_generator
+from collections import defaultdict
 # from yolo.modeling.layers.detection_generator import YoloGTFilter
 
 
@@ -154,10 +155,9 @@ class YoloTask(base_task.Task):
     return dataset
 
   def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
-    metric_dict = dict()
-    loss = dict()
+    metric_dict = defaultdict(dict)
     loss_val = 0
-    metric_dict['total_loss'] = 0
+    metric_dict['global']['total_loss']= 0
 
     grid = labels['true_conf']
     inds = labels['inds']
@@ -169,33 +169,37 @@ class YoloTask(base_task.Task):
        _recall50, _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                          labels['bbox'], labels['classes'],
                                          outputs[key])
-      metric_dict[f'total_loss'] += _loss
-      metric_dict[f'conf_loss_{key}'] = _loss_conf
-      metric_dict[f'box_loss_{key}'] = _loss_box
-      metric_dict[f'class_loss_{key}'] = _loss_class
-      metric_dict[f"recall50_{key}"] = tf.stop_gradient(_recall50)
-      metric_dict[f"precision50_{key}"] = tf.stop_gradient(_precision50)
-      metric_dict[f"avg_iou_{key}"] = tf.stop_gradient(_avg_iou)
-      metric_dict[f"avg_obj_{key}"] = tf.stop_gradient(_avg_obj)
-      loss[f"loss_{key}"] = _loss * scale / num_replicas
+      metric_dict['global']['total_loss'] += _loss
+      metric_dict[key]['conf_loss'] = _loss_conf
+      metric_dict[key]['box_loss'] = _loss_box
+      metric_dict[key]['class_loss'] = _loss_class
+      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
+      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
+      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
       loss_val += _loss * scale / num_replicas
 
-    return loss, loss_val, metric_dict
+    return loss_val, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
     metric_names = self._metric_names
 
-    for name in metric_names:
-      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+    for i, key in enumerate(metric_names.keys()):
+      metrics.append([])
+      for name in metric_names[key]:
+        metrics[i].append(tf.keras.metrics.Mean(name, dtype=tf.float32))
 
     self._metrics = metrics
+
+
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
           include_mask=False,
           need_rescale_bboxes=False,
           per_category_metrics=self._task_config.per_category_metrics)
+    
     return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
@@ -212,7 +216,7 @@ class YoloTask(base_task.Task):
       # cast to float32
       y_pred = model(image, training=True)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-      scaled_loss_dict, scaled_loss, loss_metrics = self.build_losses(
+      scaled_loss, loss_metrics = self.build_losses(
           y_pred['raw_output'], label, num_replicas=num_replicas)
       # scaled_loss = loss / num_replicas
 
@@ -236,15 +240,22 @@ class YoloTask(base_task.Task):
 
     optimizer.apply_gradients(zip(gradients, train_vars))
 
-    logs = {self.loss: loss_metrics['total_loss']}
+    logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
-      for m in metrics:
-        m.update_state(loss_metrics[m.name])
-        logs.update({m.name: m.result()})
+      for i, key in enumerate(self._metric_names.keys()):
+        if metrics[i] is not None:
+          logs[key] = dict()
+          for m in metrics[i]:
+            m.update_state(loss_metrics[key][m.name])
+            logs[key].update({m.name: m.result()})
 
-    tf.print(logs, end='\n')
-    ret = '\033[F' * (len(logs.keys()) + 1)
-    tf.print(ret, end='\n')
+      # for m in metrics:
+      #   m.update_state(loss_metrics[m.name])
+      #   logs.update({m.name: m.result()})
+
+    # tf.print(logs, end='\n')
+    # ret = '\033[F' * (len(logs.keys()) * 7 - 14 + 2 + 1)
+    # tf.print(ret, end='\n')
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
@@ -258,9 +269,9 @@ class YoloTask(base_task.Task):
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss_dict, loss, loss_metrics = self.build_losses(y_pred['raw_output'],
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'],
                                                       label, num_replicas=num_replicas)
-    logs = {self.loss: loss_metrics['total_loss']}
+    logs = {self.loss: loss_metrics['global']['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]
 
@@ -284,10 +295,18 @@ class YoloTask(base_task.Task):
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
 
+    # if metrics:
+    #   for m in metrics:
+    #     m.update_state(loss_metrics[m.name])
+    #     logs.update({m.name: m.result()})
+
     if metrics:
-      for m in metrics:
-        m.update_state(loss_metrics[m.name])
-        logs.update({m.name: m.result()})
+      for i, key in enumerate(self._metric_names.keys()):
+        if metrics[i] is not None:
+          logs[key] = dict()
+          for m in metrics[i]:
+            m.update_state(loss_metrics[key][m.name])
+            logs[key].update({m.name: m.result()})
 
     return logs
 
@@ -358,19 +377,19 @@ class YoloTask(base_task.Task):
       self._path_scales = params.filter.path_scales.as_dict()
       self._x_y_scales = params.filter.scale_xy.as_dict()
 
-    metric_names = []
-    loss_names = []
+    metric_names = defaultdict(list)
     for key in self._masks.keys():
-      metric_names.append(f'box_loss_{key}')
-      metric_names.append(f'class_loss_{key}')
-      metric_names.append(f'conf_loss_{key}')
-      loss_names.append(f'loss_{key}')
-      metric_names.append(f"recall50_{key}")
-      metric_names.append(f"precision50_{key}")
-      metric_names.append(f"avg_iou_{key}")
-      metric_names.append(f"avg_obj_{key}")
+      metric_names[key].append(f'box_loss')
+      metric_names[key].append(f'class_loss')
+      metric_names[key].append(f'conf_loss')
+      metric_names[key].append(f"recall50")
+      metric_names[key].append(f"precision50")
+      metric_names[key].append(f"avg_iou")
+      metric_names[key].append(f"avg_obj")
 
-    metric_names.append(f'total_loss')
+    metric_names['global'].append(f'total_loss')
+
+    print(metric_names)
 
     # metric_names.append('darknet_loss')
     self._metric_names = metric_names

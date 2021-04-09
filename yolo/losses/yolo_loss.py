@@ -543,6 +543,7 @@ class Yolo_Loss(object):
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
+    conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
     conf_loss = tf.cast(
         tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
       
