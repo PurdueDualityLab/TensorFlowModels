@@ -666,7 +666,7 @@ class Yolo_Loss(object):
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
 
-    recall50, presicion50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
+    recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50, precision50
