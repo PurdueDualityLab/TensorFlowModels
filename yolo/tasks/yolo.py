@@ -21,6 +21,74 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from yolo.modeling.layers import detection_generator
 from collections import defaultdict
 # from yolo.modeling.layers.detection_generator import YoloGTFilter
+# class YoloMetrics(tf.keras.metrics.Metric):
+#   def __init__(self, metric_names, name = "YoloMetrics", **kwargs):
+#     super(YoloMetrics, self).__init__(name=name, **kwargs)
+#     self._metric_names = metric_names
+#     self._metrics = self._build_metric()
+#     return 
+  
+#   def build_metric(self):
+#     metric_names = self._metric_names
+#     metrics = []
+#     for i, key in enumerate(metric_names.keys()):
+#       metrics.append([])
+#       for name in metric_names[key]:
+#         metrics[i].append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+#     return metrics
+
+#   def update_state(self, loss_metrics):
+#     metrics = self._metrics
+#     for i, key in enumerate(self._metric_names.keys()):
+#       if metrics[i] is not None:
+#         for m in metrics[i]:
+#           m.update_state(loss_metrics[key][m.name])
+#     return 
+
+#   def result(self):
+#     logs = dict()
+#     metrics = self._metrics
+#     for i, key in enumerate(self._metric_names.keys()):
+#       if metrics[i] is not None:
+#         logs[key] = dict()
+#         for m in metrics[i]:
+#           logs[key].update({m.name: m.result()})
+#     return logs
+
+class ListMetrics(object):
+  def __init__(self, metric_names, name = "ListMetrics", **kwargs):
+    # super(ListMetrics, self).__init__(name=name, **kwargs)
+    self.name = name
+    self._metric_names = metric_names
+    self._metrics = self.build_metric()
+    return 
+  
+  def build_metric(self):
+    metric_names = self._metric_names
+    metrics = []
+    for name in metric_names:
+      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+    return metrics
+
+  def update_state(self, loss_metrics):
+    metrics = self._metrics
+    for m in metrics:
+      m.update_state(loss_metrics[m.name])
+    return 
+
+  def result(self):
+    logs = dict()
+    metrics = self._metrics
+    for m in metrics:
+      logs.update({m.name: m.result()})
+    return logs
+  
+  def reset_states(self):
+    # super().reset_states()
+    metrics = self._metrics
+    for m in metrics:
+      m.reset_states()
+    return 
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
@@ -186,9 +254,7 @@ class YoloTask(base_task.Task):
     metric_names = self._metric_names
 
     for i, key in enumerate(metric_names.keys()):
-      metrics.append([])
-      for name in metric_names[key]:
-        metrics[i].append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+      metrics.append(ListMetrics(metric_names[key], name = key))
 
     self._metrics = metrics
 
@@ -242,12 +308,9 @@ class YoloTask(base_task.Task):
 
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
-      for i, key in enumerate(self._metric_names.keys()):
-        if metrics[i] is not None:
-          logs[key] = dict()
-          for m in metrics[i]:
-            m.update_state(loss_metrics[key][m.name])
-            logs[key].update({m.name: m.result()})
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
 
       # for m in metrics:
       #   m.update_state(loss_metrics[m.name])
@@ -301,12 +364,16 @@ class YoloTask(base_task.Task):
     #     logs.update({m.name: m.result()})
 
     if metrics:
-      for i, key in enumerate(self._metric_names.keys()):
-        if metrics[i] is not None:
-          logs[key] = dict()
-          for m in metrics[i]:
-            m.update_state(loss_metrics[key][m.name])
-            logs[key].update({m.name: m.result()})
+      for m in metrics:
+        m.update_state(loss_metrics[m.name])
+        logs.update({m.name: m.result()})
+
+      # for i, key in enumerate(self._metric_names.keys()):
+      #   if metrics[i] is not None:
+      #     logs[key] = dict()
+      #     for m in metrics[i]:
+      #       m.update_state(loss_metrics[key][m.name])
+      #       logs[key].update({m.name: m.result()})
 
     return logs
 
