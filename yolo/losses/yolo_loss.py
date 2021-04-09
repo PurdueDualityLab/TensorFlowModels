@@ -404,8 +404,6 @@ class Yolo_Loss(object):
 
     # grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     grid = tf.clip_by_value(grid, 0.0, 1.0)
-
-    tf.print(tf.reduce_any(tf.math.is_nan(grid)))
     return tf.stop_gradient(grid)
 
   def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
