@@ -122,7 +122,7 @@ trainer:
   validation_steps: 625
   steps_per_loop: 20000
   validation_interval: 20000 #00
-  summary_interval: 20000
+  summary_interval: 2000
   checkpoint_interval: 20000
   optimizer_config:
     ema:
