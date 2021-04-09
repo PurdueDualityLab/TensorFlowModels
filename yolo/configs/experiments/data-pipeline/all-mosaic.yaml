@@ -88,12 +88,12 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       letter_box: False
-      anchor_thresh: 0.2
+      anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 1.0
+        mosaic_frequency: 0.85
         random_crop: True
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: False
+        random_crop_mosaic: True
         crop_area_mosaic: [0.25, 0.75]
   validation_data:
     global_batch_size: 8

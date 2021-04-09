@@ -148,9 +148,9 @@ class Mosaic(hyperparams.Config):
   mosaic_frequency: float = 0.85
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.3, 0.35])
+      default_factory=lambda: [0.25, 0.85])
   random_crop: bool = True
-  random_crop_mosaic: bool = False
+  random_crop_mosaic: bool = True
 
 
 @dataclasses.dataclass
@@ -163,17 +163,17 @@ class Parser(hyperparams.Config):
   letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
-  jitter_im: float = 0.2
+  jitter_im: float = 0.4
   jitter_boxes: float = 0.2
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.7 #1.5
-  aug_rand_brightness: float = 0.4 #1.5
-  aug_rand_hue: float = 0.15 #0.015
+  aug_rand_brightness: float = 0.5 #1.5
+  aug_rand_hue: float = 0.1 #0.015
   aug_rand_zoom: float = 0.5
   aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
-  anchor_thresh: float = 4.0
+  anchor_thresh: float = 0.213
   mosaic: Mosaic = Mosaic()
 
 

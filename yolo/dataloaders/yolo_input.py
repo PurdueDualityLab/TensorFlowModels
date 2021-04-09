@@ -247,21 +247,21 @@ class Parser(parser.Parser):
 
       image = tf.image.resize(image, (height_, width_))
 
-    # if data['is_mosaic']:
-    #   zooms = [0.98, 0.99]
-    #   image, info = preprocessing_ops.random_crop_image(
-    #       image, aspect_ratio_range=[1.0, 1.0], area_range=zooms)
-    # else:
+
     if self._aug_rand_zoom > 0.0:
       scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
       if data['is_mosaic']:
         if scale < 0.5:
-          jmi = 1 - self._jitter_im
-          jma = 1 + self._jitter_im
+          # jmi = 1 - self._jitter_im
+          # jma = 1 + self._jitter_im
+          # image, info = preprocessing_ops.random_crop_image(
+          #     image,
+          #     aspect_ratio_range=[jmi, jma],
+          #     area_range=[self._aug_rand_zoom ** 2, 2 * self._aug_rand_zoom ** 2])
           image, info = preprocessing_ops.random_crop_image(
               image,
-              aspect_ratio_range=[jmi, jma],
-              area_range=[self._aug_rand_zoom ** 2, 2 * self._aug_rand_zoom ** 2])
+              aspect_ratio_range=[1, 1],
+              area_range=[0.98, 0.99])
         else:
           area = preprocessing_ops.rand_uniform_strong(1.0,
                                                       0.5 / self._aug_rand_zoom)

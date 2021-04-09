@@ -140,6 +140,28 @@ class Mosaic(object):
     # image = tf.image.resize(image, (height, width))
     return image, boxes, classes, is_crowd, area, info
 
+  def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area, width, height):
+    image, info = preprocessing_ops.random_crop_mosaic(
+        image,
+        aspect_ratio_range=(self._output_size[1] / self._output_size[0],
+                            self._output_size[1] / self._output_size[0]),
+        area_range=crop_area,
+        seed=self._seed)
+
+    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :])
+
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    is_crowd = tf.gather(is_crowd, inds)
+    area = tf.gather(area, inds)
+
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    # image = tf.image.resize(image, (height, width))
+    return image, boxes, classes, is_crowd, area, info
+
   def _mapped(self, sample):
     if self._mosaic_frequency > 0.0:
       domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
@@ -224,7 +246,7 @@ class Mosaic(object):
         area = tf.concat(areas, axis=0)
 
         if self._random_crop_mosaic:
-          image, boxes, classes, is_crowd, area, info = self._crop_image(
+          image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area, self._crop_area_mosaic,
               width, height)
         image = tf.image.resize(image, (height, width))
@@ -300,9 +322,9 @@ if __name__ == "__main__":
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
   decoder = tfds_coco_decoder.MSCOCODecoder()
   mosaic = Mosaic([640, 640],
-                  random_crop=False,
+                  random_crop=True,
                   random_crop_mosaic=True,
-                  crop_area_mosaic=[0.3, 0.35])
+                  crop_area_mosaic=[0.25, 0.75])
 
   dataset = tfds.load('coco', split='train')
   dataset = dataset.map(decoder.decode)
@@ -329,7 +351,6 @@ if __name__ == "__main__":
         [[1.0, 0.0, 1.0]])
     plt.imshow(im[0])
     plt.show()
-    print(image['num_detections'])
   b = time.time()
 
   print(b - a)

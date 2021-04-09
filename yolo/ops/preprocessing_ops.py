@@ -651,6 +651,71 @@ def random_crop_image(image,
                     axis=0)
     return cropped_image, info
 
+def random_crop_mosaic(image,
+                      aspect_ratio_range=(3. / 4., 4. / 3.),
+                      area_range=(0.08, 1.0),
+                      max_attempts=10,
+                      seed=1):
+  """Randomly crop an arbitrary shaped slice from the input image.
+  Args:
+    image: a Tensor of shape [height, width, 3] representing the input image.
+    aspect_ratio_range: a list of floats. The cropped area of the image must
+      have an aspect ratio = width / height within this range.
+    area_range: a list of floats. The cropped reas of the image must contain
+      a fraction of the input image within this range.
+    max_attempts: the number of attempts at generating a cropped region of the
+      image of the specified constraints. After max_attempts failures, return
+      the entire image.
+    seed: the seed of the random generator.
+  Returns:
+    cropped_image: a Tensor representing the random cropped image. Can be the
+      original image if max_attempts is exhausted.
+  """
+
+  with tf.name_scope('random_crop_image'):
+    ishape = tf.shape(image)
+    crop_offset, crop_size, _ = tf.image.sample_distorted_bounding_box(
+        ishape,
+        tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4]),
+        seed=seed,
+        min_object_covered=area_range[0],
+        aspect_ratio_range=aspect_ratio_range,
+        area_range=area_range,
+        max_attempts=max_attempts)
+  
+    area = -tf.reduce_prod(crop_size)/tf.reduce_prod(ishape[:2])
+
+
+
+    delta = ishape[:2] - crop_size[:2]
+    dx = rand_uniform_strong(0, 1 + 1, tf.int32)
+    dy = rand_uniform_strong(0, 1 + 1, tf.int32)
+    ds = rand_uniform_strong(1, 3, tf.int32)
+
+    # if area < 0.125:
+    #   dsx = ishape[0]//2 - 1
+    #   dsy = ishape[1]//2 - 1
+
+    #   oh = tf.maximum(crop_offset[0] - dy * dsy, crop_offset[0]) 
+    #   ow = tf.maximum(crop_offset[1] - dx * dsx, crop_offset[1]) 
+    #   tf.print(oh, ow, crop_size)
+    # else:
+    oh = tf.maximum(dy * delta[0] - 1, 0) // ds
+    ow = tf.maximum(dx * delta[1] - 1, 0) // ds
+    crop_offset = tf.convert_to_tensor([oh, ow, 0])
+    cropped_image = tf.slice(image, crop_offset, crop_size)
+    
+
+    scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
+    offset = tf.cast(crop_offset[:2], tf.float32)
+
+    info = tf.stack([
+        tf.cast(ishape[:2], tf.float32),
+        tf.cast(crop_size[:2], tf.float32), scale, offset
+    ],
+                    axis=0)
+    return cropped_image, info
+
 
 def random_pad(image, area):
   with tf.name_scope('pad_to_bbox'):
