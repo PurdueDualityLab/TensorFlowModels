@@ -98,7 +98,7 @@ def get_decoder_layer_cfgs(weights_dict, decoder_name):
   Returns:
     A list containing the config classes of the backbone building block
   """
-  print("Fetching decoder config classes\n")
+  print("Fetching decoder config classes for {}\n".format(decoder_name))
 
   cfgs = DecoderConfigData(weights_dict=weights_dict).get_cfg_list(decoder_name)
   return cfgs

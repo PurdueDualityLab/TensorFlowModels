@@ -99,7 +99,7 @@ class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
   num_classes: int = 90
-  max_num_instances: int = 200
+  max_num_instances: int = 128
   gaussian_iou: float = 0.7
   output_dims: int = 128
   dtype: str = 'float32'

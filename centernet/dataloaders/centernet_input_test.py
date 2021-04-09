@@ -1,124 +1,85 @@
-import dataclasses
-
-import matplotlib.pyplot as plt
 import tensorflow as tf
+from absl.testing import parameterized
 
-from official.core import config_definitions as cfg
-from official.core import input_reader
-from official.modeling import hyperparams
-from yolo.configs import yolo as yolocfg
-from yolo.dataloaders import yolo_input as YOLO_Detection_Input
-from yolo.dataloaders.decoders import tfds_coco_decoder
-from yolo.ops import box_ops
-from yolo.tasks import yolo
+from centernet.dataloaders.centernet_input import CenterNetParser
 
 
-@dataclasses.dataclass
-class Parser(hyperparams.Config):
-  image_w: int = 416
-  image_h: int = 416
-  fixed_size: bool = False
-  jitter_im: float = 0.1
-  jitter_boxes: float = 0.005
-  min_level: int = 3
-  max_level: int = 5
-  min_process_size: int = 320
-  max_process_size: int = 608
-  max_num_instances: int = 200
-  random_flip: bool = True
-  pct_rand: float = 0.5
-  aug_rand_saturation: bool = True
-  aug_rand_brightness: bool = True
-  aug_rand_zoom: bool = True
-  aug_rand_hue: bool = True
-  seed: int = 10
-  shuffle_buffer_size: int = 10000
+class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
+  def check_labels_correct(self, boxes, classes, output_size, input_size):
+    parser = CenterNetParser()
+    labels = parser._build_labels(
+      boxes=tf.constant(boxes, dtype=tf.float32), 
+      classes=tf.constant(classes, dtype=tf.float32), 
+      output_size=output_size, input_size=input_size)
+    
+    tl_heatmaps = labels['tl_heatmaps']
+    br_heatmaps = labels['br_heatmaps']
+    ct_heatmaps = labels['ct_heatmaps']
+    tl_offset = labels['tl_offset']
+    br_offset = labels['br_offset']
+    ct_offset = labels['ct_offset']
+    size = labels['size']
+    mask_indices = labels['mask_indices']
+    box_indices = labels['box_indices']
+    
+    boxes = tf.cast(boxes, tf.float32)
+    classes = tf.cast(classes, tf.float32)
+    height_ratio = output_size[0] / input_size[0]
+    width_ratio = output_size[1] / input_size[1]
+    
+    # Shape checks
+    self.assertEqual(tl_heatmaps.shape, (512, 512, 90))
+    self.assertEqual(br_heatmaps.shape, (512, 512, 90))
+    self.assertEqual(ct_heatmaps.shape, (512, 512, 90))
+
+    self.assertEqual(tl_offset.shape, (parser._max_num_instances, 2))
+    self.assertEqual(br_offset.shape, (parser._max_num_instances, 2))
+    self.assertEqual(ct_offset.shape, (parser._max_num_instances, 2))
+
+    self.assertEqual(size.shape, (parser._max_num_instances, 2))
+    self.assertEqual(mask_indices.shape, (parser._max_num_instances))
+    self.assertEqual(box_indices.shape, (parser._max_num_instances, 3))
+    
+    # Not checking heatmaps, but we can visually validate them
+    
+    for i in range(len(boxes)):
+      # Check sizes
+      self.assertAllEqual(size[i], [boxes[i][3] - boxes[i][1], boxes[i][2] - boxes[i][0]])
+
+      # Check box indices
+      y = tf.math.floor((boxes[i][0] + boxes[i][2]) / 2 * height_ratio)
+      x = tf.math.floor((boxes[i][1] + boxes[i][3]) / 2 * width_ratio)
+      self.assertAllEqual(box_indices[i], [classes[i], y, x])
+
+      # check offsets
+      true_y = (boxes[i][0] + boxes[i][2]) / 2 * height_ratio
+      true_x = (boxes[i][1] + boxes[i][3]) / 2 * width_ratio
+      self.assertAllEqual(ct_offset[i], [true_x - x, true_y - y])
+    
+    for i in range(len(boxes), parser._max_num_instances):
+      # Make sure rest are zero
+      self.assertAllEqual(size[i], [0, 0])
+      self.assertAllEqual(box_indices[i], [0, 0, 0])
+      self.assertAllEqual(ct_offset[i], [0, 0])
+    
+    # Check mask indices
+    self.assertAllEqual(tf.cast(mask_indices[3:], tf.int32), 
+      tf.repeat(0, repeats=parser._max_num_instances-3))
+    self.assertAllEqual(tf.cast(mask_indices[:3], tf.int32), 
+      tf.repeat(1, repeats=3))
 
 
-@dataclasses.dataclass
-class DataConfig(cfg.DataConfig):
-  """Input config for training."""
-  input_path: str = ''
-  tfds_name: str = 'coco'
-  tfds_split: str = 'train'
-  global_batch_size: int = 10
-  is_training: bool = True
-  dtype: str = 'float16'
-  decoder = None
-  parser: Parser = Parser()
-  shuffle_buffer_size: int = 10000
-  tfds_download: bool = True
+  def test_generate_heatmap_no_scale(self):
+    boxes = [
+      (10, 300, 15, 370),
+      (100, 300, 150, 370),
+      (15, 100, 200, 170),
+    ]
+    classes = (0, 1, 2)
+    sizes = [512, 512]
 
-
-def test_yolo_input_task():
-  with tf.device('/CPU:0'):
-    config = yolocfg.YoloTask(
-        model=yolocfg.Yolo(
-            base='v4',
-            min_level=3,
-            norm_activation=yolocfg.common.NormActivation(activation='mish'),
-            #norm_activation = yolocfg.common.NormActivation(activation="leaky"),
-            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-            #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-            _boxes=[
-                '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-                '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-            ],
-            filter=yolocfg.YoloLossLayer(use_nms=False)))
-    task = yolo.YoloTask(config)
-
-    # loading both causes issues, but oen at a time is not issue, why?
-    train_data = task.build_inputs(config.train_data)
-    test_data = task.build_inputs(config.validation_data)
-  return train_data, test_data
-
-
-def test_yolo_input():
-  with tf.device('/CPU:0'):
-    params = DataConfig(is_training=True)
-    num_boxes = 9
-
-    decoder = tfds_coco_decoder.MSCOCODecoder()
-
-    #anchors = box_rd.read(k = num_boxes, image_width = params.parser.image_w, input_context=None)
-    anchors = [[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0],
-               [133.0, 127.0], [79.0, 225.0], [301.0, 150.0], [172.0, 286.0],
-               [348.0, 340.0]]
-    # write the boxes to a file
-
-    parser = YOLO_Detection_Input.Parser(
-        image_w=params.parser.image_w,
-        fixed_size=params.parser.fixed_size,
-        jitter_im=params.parser.jitter_im,
-        jitter_boxes=params.parser.jitter_boxes,
-        min_level=params.parser.min_level,
-        max_level=params.parser.max_level,
-        min_process_size=params.parser.min_process_size,
-        max_process_size=params.parser.max_process_size,
-        max_num_instances=params.parser.max_num_instances,
-        random_flip=params.parser.random_flip,
-        pct_rand=params.parser.pct_rand,
-        seed=params.parser.seed,
-        anchors=anchors)
-
-    reader = input_reader.InputReader(
-        params,
-        dataset_fn=tf.data.TFRecordDataset,
-        decoder_fn=decoder.decode,
-        parser_fn=parser.parse_fn(params.is_training))
-    dataset = reader.read(input_context=None)
-  return dataset
-
+    self.check_labels_correct(boxes=boxes, classes=classes, 
+      output_size=sizes, input_size=sizes)
 
 if __name__ == '__main__':
-  dataset, dsp = test_yolo_input_task()
-
-  for l, (i, j) in enumerate(dataset):
-
-    boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
-    i = tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
-    plt.imshow(i[0].numpy())
-    plt.show()
-
-    if l > 30:
-      break
+  tf.test.main()

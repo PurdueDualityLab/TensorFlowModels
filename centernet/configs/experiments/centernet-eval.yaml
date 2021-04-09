@@ -26,7 +26,7 @@ task:
       class_offset: 1
   validation_data:
     tfds_data_dir: 'D:\\Datasets'
-    tfds_name: coco
+    tfds_name: coco/2017
     tfds_split: validation
     global_batch_size: 8
     tfds_download: true
@@ -37,7 +37,7 @@ task:
       image_h: 512
       image_w: 512
       num_classes: 90
-      max_num_instances: 200
+      max_num_instances: 128
       gaussian_iou: 0.7
       output_dims: 128
       dtype: float32
