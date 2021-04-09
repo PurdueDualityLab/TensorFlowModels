@@ -68,29 +68,6 @@ def ce(values, labels):
   return loss
 
 @tf.custom_gradient
-def bceloss(labels, values, mask):
-  gt = labels
-  vals = values
-  m = mask
-
-  # loss_ = tf.where(gt > 0.0, ce(gt, vals), ce(1 - gt, 1 - vals))
-  # loss_ = math_ops.mul_no_nan(m, loss_)
-  loss_ = gt - vals
-  loss_ = math_ops.mul_no_nan(m, loss_)
-  loss_ = tf.sqrt(tf.square(loss_))
-
-  def delta(dy):
-    dmask = tf.zeros_like(m)
-
-    loss = vals - gt
-    tf.print(tf.reduce_mean(vals))
-
-    # tf.print(loss)
-    loss = math_ops.mul_no_nan(m, loss)
-    return tf.zeros_like(gt), loss * dy, dmask
-  return loss_, delta
-
-@tf.custom_gradient
 def no_grad_sigmoid(values):
   vals = tf.math.sigmoid(values)
   def delta(dy):
@@ -443,17 +420,12 @@ class Yolo_Loss(object):
     truths = tf.reshape(truths, [-1, num_flatten])
 
     grid = tf.zeros_like(preds)
+    truths = math_ops.rm_nan_inf(truths)
     grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
 
     # grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     truth_grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(truth_grid)
-  
-  def ce(self, values, labels):
-    labels = labels + K.epsilon()
-    loss = tf.reduce_mean( -math_ops.mul_no_nan(values, tf.math.log(labels)), axis = -1)
-    loss = math_ops.rm_nan(loss, val = 0.0)
-    return loss
 
   def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
@@ -540,10 +512,10 @@ class Yolo_Loss(object):
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
+    pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-    conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
     conf_loss = tf.cast(
         tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
       
