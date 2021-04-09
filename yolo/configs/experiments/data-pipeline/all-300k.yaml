@@ -134,7 +134,7 @@ trainer:
         name: CosineEpoch
         alpha: 0.2
         steps_per_epoch: 294375
-        decay_steps: 
+        decay_steps: 1875
     optimizer:
       type: sgd
       sgd:
