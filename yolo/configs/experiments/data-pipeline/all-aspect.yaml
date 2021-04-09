@@ -118,7 +118,7 @@ task:
 trainer:
   best_checkpoint_eval_metric: str = "AP50"
   best_checkpoint_metric_comp: str = "higher"
-  train_steps: 887100 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 20000
   validation_interval: 20000 #00
@@ -133,8 +133,8 @@ trainer:
         initial_learning_rate: 0.01
         name: CosineEpoch
         alpha: 0.2
-        steps_per_epoch: 2957
-        decay_steps: 878229
+        steps_per_epoch: 494875
+        decay_steps: 
     optimizer:
       type: sgd
       sgd:
@@ -144,4 +144,4 @@ trainer:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 8871 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps
