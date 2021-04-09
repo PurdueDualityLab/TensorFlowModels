@@ -442,7 +442,10 @@ class Yolo_Loss(object):
     indexes = tf.reshape(indexes, [-1, 4])
     truths = tf.reshape(truths, [-1, num_flatten])
 
-    grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
+    grid = tf.zeros_like(preds)
+    grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
+
+    # grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     truth_grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(truth_grid)
   
@@ -543,7 +546,6 @@ class Yolo_Loss(object):
     conf_loss = tf.cast(
         tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
       
-
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer

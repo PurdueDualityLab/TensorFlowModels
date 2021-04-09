@@ -88,6 +88,7 @@ class ConvBN(tf.keras.layers.Layer):
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
+
     self._bias_regularizer = bias_regularizer
     self._subdivisions = subdivisions
 
