@@ -113,48 +113,70 @@ class CenterNetTask(base_task.Task):
     return decoder
 
 
-  def build_losses(self, outputs, labels, aux_losses=None):
+  def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
     total_loss = 0.0
-    total_scale_loss = 0.0
-    total_offset_loss = 0.0
     loss = 0.0
-    scale_loss = 0.0
-    offset_loss = 0.0
 
     metric_dict = dict()
 
-    # # TODO: Calculate loss
-    # flattened_ct_heatmaps = loss_ops._flatten_spatial_dimensions(labels['ct_heatmaps'])
-    # num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(labels['tag_masks']))
+    # Create loss functions
+    object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
+    localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
 
-    # object_center_loss = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
+    # Set up box indicies so that they have a batch element as well
+    box_indices = loss_ops.add_batch_to_indices(labels['box_indices'])
 
-    # output_ct_heatmaps = loss_ops._flatten_spatial_dimensions(outputs['ct_heatmaps'][-1])
-    # total_loss += object_center_loss(
-    #     flattened_ct_heatmaps, output_ct_heatmaps)  #removed weight parameter (weight = per_pixel_weight)
-    # center_loss = tf.reduce_sum(total_loss) / (
-    #     float(len(output_ct_heatmaps)) * num_boxes)
-    # loss += center_loss
-    # metric_dict['ct_loss'] = center_loss
+    box_mask = tf.cast(labels['box_mask'], dtype=tf.float32)
+    num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(labels['box_mask']))
 
-    # localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
-    # # Compute the scale loss.
-    # scale_pred = outputs['ct_size'][-1]
-    # offset_pred = outputs['ct_offset'][-1]
-    # total_scale_loss += localization_loss_fn(
-    #     labels['ct_size'], scale_pred)                #removed  weights=batch_weights
-    # # Compute the offset loss.
-    # total_offset_loss += localization_loss_fn(
-    #     labels['ct_offset'], offset_pred)             #removed weights=batch_weights
-    # scale_loss += tf.reduce_sum(total_scale_loss) / (
-    #     float(len(outputs['ct_size'])) * num_boxes)
-    # offset_loss += tf.reduce_sum(total_offset_loss) / (
-    #     float(len(outputs['ct_size'])) * num_boxes)
-    # metric_dict['ct_scale_loss'] = scale_loss
-    # metric_dict['ct_offset_loss'] = offset_loss
+    # Calculate center heatmap loss
+    pred_ct_heatmap_list = outputs['ct_heatmaps']
+    true_flattened_ct_heatmap = loss_ops._flatten_spatial_dimensions(
+      labels['ct_heatmaps'])
+    
+    total_center_loss = 0.0
+    for ct_heatmap in pred_ct_heatmap_list:
+      pred_flattened_ct_heatmap = loss_ops._flatten_spatial_dimensions(
+        ct_heatmap)
+      total_center_loss += object_center_loss_fn(
+        pred_flattened_ct_heatmap, true_flattened_ct_heatmap)
 
-    metric_dict['total_loss'] = loss
-    return loss, metric_dict
+    center_loss = tf.reduce_sum(total_center_loss) / float(len(pred_ct_heatmap_list) * num_boxes)
+    metric_dict['ct_loss'] = center_loss
+
+    # Calculate scale loss
+    pred_scale_list = outputs['ct_size']
+    true_scale = labels['size']
+
+    total_scale_loss = 0.0
+    for scale_map in pred_scale_list:
+      pred_scale = loss_ops.get_batch_predictions_from_indices(scale_map, box_indices)
+      # Only apply loss for boxes that appear in the ground truth
+      total_scale_loss += tf.reduce_sum(localization_loss_fn(pred_scale, true_scale), axis=-1) * box_mask
+    
+    scale_loss = tf.reduce_sum(total_scale_loss) / float(len(pred_scale_list) * num_boxes)
+    metric_dict['scale_loss'] = scale_loss
+
+    # Calculate offset loss
+    pred_offset_list = outputs['ct_offset']
+    true_offset = labels['ct_offset']
+
+    total_offset_loss = 0.0
+    for offset_map in pred_offset_list:
+      pred_offset = loss_ops.get_batch_predictions_from_indices(offset_map, box_indices)
+      # Only apply loss for boxes that appear in the ground truth
+      total_offset_loss += tf.reduce_sum(localization_loss_fn(pred_offset, true_offset), axis=-1) * box_mask
+    
+    offset_loss = tf.reduce_sum(total_offset_loss) / float(len(pred_offset_list) * num_boxes)
+    metric_dict['ct_offset_loss'] = offset_loss
+
+    loss_weights = self.task_config.losses.detection
+    total_loss = (center_loss + 
+                 loss_weights.scale_weight * scale_loss +
+                 loss_weights.offset_weight * offset_loss)
+
+    metric_dict['total_loss'] = total_loss
+    return total_loss, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
@@ -191,7 +213,9 @@ class CenterNetTask(base_task.Task):
       'detection_classes':
           y_pred['classes'],
       'num_detections':
-          tf.shape(y_pred['bbox'])[:-1],
+          y_pred['num_dets'],
+      'source_id':
+          label['source_id'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
@@ -204,13 +228,12 @@ class CenterNetTask(base_task.Task):
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
-    pass
+    if not state:
+      self.coco_metric.reset_states()
+      state = self.coco_metric
+    self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
+                                  step_outputs[self.coco_metric.name][1])
+    return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
-    pass
-
-  def _get_masks(self,
-                 xy_exponential=True,
-                 exp_base=2,
-                 xy_scale_base='default_value'):
-    pass
+    return self.coco_metric.result()

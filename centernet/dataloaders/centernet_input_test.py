@@ -19,7 +19,7 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     br_offset = labels['br_offset']
     ct_offset = labels['ct_offset']
     size = labels['size']
-    mask_indices = labels['mask_indices']
+    box_mask = labels['box_mask']
     box_indices = labels['box_indices']
     
     boxes = tf.cast(boxes, tf.float32)
@@ -37,8 +37,8 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(ct_offset.shape, (parser._max_num_instances, 2))
 
     self.assertEqual(size.shape, (parser._max_num_instances, 2))
-    self.assertEqual(mask_indices.shape, (parser._max_num_instances))
-    self.assertEqual(box_indices.shape, (parser._max_num_instances, 3))
+    self.assertEqual(box_mask.shape, (parser._max_num_instances))
+    self.assertEqual(box_indices.shape, (parser._max_num_instances, 2))
     
     # Not checking heatmaps, but we can visually validate them
     
@@ -49,7 +49,7 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
       # Check box indices
       y = tf.math.floor((boxes[i][0] + boxes[i][2]) / 2 * height_ratio)
       x = tf.math.floor((boxes[i][1] + boxes[i][3]) / 2 * width_ratio)
-      self.assertAllEqual(box_indices[i], [classes[i], y, x])
+      self.assertAllEqual(box_indices[i], [y, x])
 
       # check offsets
       true_y = (boxes[i][0] + boxes[i][2]) / 2 * height_ratio
@@ -59,13 +59,13 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     for i in range(len(boxes), parser._max_num_instances):
       # Make sure rest are zero
       self.assertAllEqual(size[i], [0, 0])
-      self.assertAllEqual(box_indices[i], [0, 0, 0])
+      self.assertAllEqual(box_indices[i], [0, 0])
       self.assertAllEqual(ct_offset[i], [0, 0])
     
     # Check mask indices
-    self.assertAllEqual(tf.cast(mask_indices[3:], tf.int32), 
+    self.assertAllEqual(tf.cast(box_mask[3:], tf.int32), 
       tf.repeat(0, repeats=parser._max_num_instances-3))
-    self.assertAllEqual(tf.cast(mask_indices[:3], tf.int32), 
+    self.assertAllEqual(tf.cast(box_mask[:3], tf.int32), 
       tf.repeat(1, repeats=3))
 
 

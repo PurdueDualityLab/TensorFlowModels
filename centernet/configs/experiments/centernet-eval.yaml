@@ -28,7 +28,7 @@ task:
     tfds_data_dir: 'D:\\Datasets'
     tfds_name: coco/2017
     tfds_split: validation
-    global_batch_size: 8
+    global_batch_size: 1
     tfds_download: true
     dtype: float16
     is_training: false

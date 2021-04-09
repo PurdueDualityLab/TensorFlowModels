@@ -74,7 +74,7 @@ class CenterNetParser(parser.Parser):
         'size': Tensor of shape [max_num_instances, 2], where the first
           num_boxes entries contain the width and height of an object. All 
           other entires are 0
-        'mask_indices': Tensor of shape [max_num_instances], where the first
+        'box_mask': Tensor of shape [max_num_instances], where the first
           num_boxes entries are 1. All other entires are 0
         'box_indices': Tensor of shape [max_num_instances, 3], where the first
           num_boxes entries contain the class, y-center, and-x center of a
@@ -96,8 +96,8 @@ class CenterNetParser(parser.Parser):
     ct_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
     size      = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
 
-    mask_indices = tf.zeros((self._max_num_instances), dtype=tf.uint32)
-    box_indices  = tf.zeros((self._max_num_instances, 3), dtype=tf.uint32)
+    box_mask = tf.zeros((self._max_num_instances), dtype=tf.int32)
+    box_indices  = tf.zeros((self._max_num_instances, 2), dtype=tf.int32)
 
     # Scaling factor for determining center/corners
     width_ratio = tf.cast(output_w / input_w, tf.float32)
@@ -162,10 +162,10 @@ class CenterNetParser(parser.Parser):
       size      = tf.tensor_scatter_nd_update(size, [[tag_ind, 0], [tag_ind, 1]], [width, height])
 
       # Initialy the mask is zeros, but each valid box needs to be unmasked
-      mask_indices = tf.tensor_scatter_nd_update(mask_indices, [[tag_ind]], [1])
+      box_mask = tf.tensor_scatter_nd_update(box_mask, [[tag_ind]], [1])
 
-      # Contains the class, y, and x coordinate of the box center in the heatmap
-      box_indices = tf.tensor_scatter_nd_update(box_indices, [[tag_ind, 0], [tag_ind, 1], [tag_ind, 2]], [obj_class, yct, xct])
+      # Contains the y and x coordinate of the box center in the heatmap
+      box_indices = tf.tensor_scatter_nd_update(box_indices, [[tag_ind, 0], [tag_ind, 1]], [yct, xct])
 
     # Make heatmaps of shape [height, width, num_classes]
     tl_heatmaps = tf.transpose(tl_heatmaps, perm=[1, 2, 0])
@@ -180,8 +180,8 @@ class CenterNetParser(parser.Parser):
       'br_offset': br_offset,
       'ct_offset': ct_offset,
       'size': size,
-      'mask_indices': mask_indices,
-      'box_indices': box_indices
+      'box_mask': box_mask,
+      'box_indices': box_indices,
     }
     return labels
 
@@ -238,6 +238,11 @@ class CenterNetParser(parser.Parser):
     )
 
     labels.update({'bbox': boxes})
+    labels.update({'boxes': boxes})
+    labels.update({'source_id': data['source_id']})
+    labels.update({'height': data['height']})
+    labels.update({'width': data['width']})
+    labels.update({'classes': classes})
     
     return image, labels
 

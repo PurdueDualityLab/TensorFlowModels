@@ -143,7 +143,8 @@ class DetectionLoss(Loss):
   detection_weight: float = 1.0
   corner_pull_weight: float = 0.1 # alpha
   corner_push_weight: float = 0.1 # beta
-  offset_weight: float = 1 # gamma
+  offset_weight: float = 1.0 # gamma
+  scale_weight: float = 0.1
 
 
 @dataclasses.dataclass
