@@ -133,8 +133,8 @@ trainer:
         initial_learning_rate: 0.01
         name: CosineEpoch
         alpha: 0.2
-        steps_per_epoch: 494875
-        decay_steps: 
+        steps_per_epoch: 1875
+        decay_steps: 494875
     optimizer:
       type: sgd
       sgd:

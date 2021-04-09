@@ -283,27 +283,6 @@ class Yolo_Loss(object):
 
     return iou, liou, loss_box
 
-  def _scale_boxes(self, boxes, fwidth, fheight, indexes=None):
-    x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-    mask = tf.where(tf.logical_and(w > 0, h > 0), 1.0, 0.0)
-
-    x *= fwidth
-    y *= fheight
-
-    indexes = tf.cast(indexes, boxes.dtype)
-    ind_y, ind_x, _ = tf.split(indexes, 3, axis=-1)
-
-    x = x - ind_x
-    y = y - ind_y
-
-    x *= mask
-    y *= mask
-
-    scaled_box = tf.concat([x, y, w, h], axis=-1)
-    #tf.print(tf.concat([scaled_box, boxes], axis = -1), summarize = -1)
-    return scaled_box
-
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf,
                        pred_classes_max, boxes, classes, iou_max_, ignore_mask_,
                        conf_loss_, loss_, count, idx):
@@ -424,8 +403,10 @@ class Yolo_Loss(object):
     grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
 
     # grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
-    truth_grid = tf.clip_by_value(grid, 0.0, 1.0)
-    return tf.stop_gradient(truth_grid)
+    grid = tf.clip_by_value(grid, 0.0, 1.0)
+
+    tf.print(tf.reduce_any(tf.math.is_nan(grid)))
+    return tf.stop_gradient(grid)
 
   def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
@@ -512,7 +493,7 @@ class Yolo_Loss(object):
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
-    pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
+    # pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
@@ -561,13 +542,11 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    # sigmoid_class = no_grad_sigmoid(pred_class) 
     sigmoid_class = tf.sigmoid(pred_class)
     pred_class = class_gradient_trap(sigmoid_class, np.inf)
 
-    # sigmoid_conf = no_grad_sigmoid(pred_conf) 
     sigmoid_conf = tf.sigmoid(pred_conf)
-    # sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val = 0.0)
+    sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val = 0.0)
     pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points)
@@ -599,9 +578,6 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
 
-    # class_loss = bceloss(true_class, pred_class, tf.expand_dims(grid_mask, axis = -1))
-    # class_loss = tf.reduce_sum(class_loss, axis=-1)
-
     class_loss = ks.losses.binary_crossentropy(
         K.expand_dims(true_class, axis=-1),
         K.expand_dims(pred_class, axis=-1),
@@ -615,21 +591,15 @@ class Yolo_Loss(object):
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
 
-    # conf_loss = bceloss(K.expand_dims(true_conf, axis=-1), pred_conf, K.expand_dims(obj_mask, axis=-1))
-
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
-    
-    # conf_loss = bceloss(K.expand_dims(true_conf, axis=-1), pred_conf, K.expand_dims(obj_mask))
     bce = tf.where(true_conf > 0.0, 
                    ce(K.expand_dims(true_conf, axis=-1), pred_conf), 
                    ce(1 - K.expand_dims(true_conf, axis=-1), 1 - pred_conf))
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
-    conf_loss = math_ops.rm_nan_inf(conf_loss, val = 0.0)
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
       
-
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer

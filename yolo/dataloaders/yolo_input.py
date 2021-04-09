@@ -426,15 +426,15 @@ class Parser(parser.Parser):
           area_range=[1.0, 1.0])
 
     if self._aug_rand_angle > 0 or self._aug_rand_translate > 0.0:
+      if self._aug_rand_translate > 0.0:
+        image, tx, ty = preprocessing_ops.random_translate(image, self._aug_rand_translate)
+        boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
+
       if self._aug_rand_angle > 0:
         image, angle = preprocessing_ops.random_rotate_image(
             image, self._aug_rand_angle)
         boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
-
-      if self._aug_rand_translate > 0.0:
-        image, tx, ty = preprocessing_ops.random_translate(image, self._aug_rand_translate)
-        boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
-      
+        
       h_, w_ = preprocessing_ops.get_image_shape(image)
       im_shape = tf.cast([h_, w_], tf.float32)
       boxes = box_ops.denormalize_boxes(boxes, im_shape)
