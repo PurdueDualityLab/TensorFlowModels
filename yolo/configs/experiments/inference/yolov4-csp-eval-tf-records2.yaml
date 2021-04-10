@@ -50,20 +50,20 @@ task:
         '4': 1.0
         '3': 4.0
       new_cords:
-        '5': false
-        '4': false
-        '3': false
+        '5': true
+        '4': true
+        '3': true
       objectness_smooth: 
-        '5': 0.0
-        '4': 0.0
-        '3': 0.0
+        '5': 1.0
+        '4': 1.0
+        '3': 1.0
       scale_xy:
         '5': 2.0
         '4': 2.0 
         '3': 2.0
       max_boxes: 200
-      use_nms: true
-      iou_thresh: 0.001
+      use_nms: false
+      iou_thresh: 0.2
       nms_thresh: 0.6
       use_reduction_sum: false
   train_data:

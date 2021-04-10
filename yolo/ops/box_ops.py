@@ -214,21 +214,27 @@ def compute_ciou(box1, box2, yxyx=False):
   return iou, ciou
 
 
-def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, xyxy=True):
-  k = tf.shape(boxes1)[-2]
+# equal to bbox_overlap but far more versitile
+def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta = 0.6, xyxy=True):
+
+  # if boxes2 is not None: 
+  #   k1 = tf.shape(boxes1)[-2]
+  #   k2 = tf.shape(boxes2)[-2]
+  # else:
+  #   k1 = tf.shape(boxes1)[-2]
+  #   k2 = tf.shape(boxes1)[-2]
 
   boxes1 = tf.expand_dims(boxes1, axis=-2)
-  boxes1 = tf.tile(boxes1, [1, 1, k, 1])
+  #boxes1 = tf.tile(boxes1, [1, 1, k2, 1])
 
   if boxes2 is not None:
-    boxes2 = tf.expand_dims(boxes2, axis=-2)
-    boxes2 = tf.tile(boxes2, [1, 1, k, 1])
-    boxes2 = tf.transpose(boxes2, perm=(0, 2, 1, 3))
+    boxes2 = tf.expand_dims(boxes2, axis=-3)
+    #boxes2 = tf.tile(boxes2, [1, k1, 1, 1])
   else:
     boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
 
   if iou_type == 0:  #diou
-    _, iou = compute_diou(boxes1, boxes2, yxyx=True)
+    _, iou = compute_diou(boxes1, boxes2, beta=beta, yxyx=True)
   elif iou_type == 1:  #giou
     _, iou = compute_giou(boxes1, boxes2, yxyx=True)
   elif iou_type == 2:  #ciou

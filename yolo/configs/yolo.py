@@ -264,6 +264,7 @@ class YoloLossLayer(hyperparams.Config):
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6
   max_boxes: int = 200
+  pre_nms_points: int = 500
   anchor_generation_scale: int = 512
   use_reduction_sum: bool = True
 
