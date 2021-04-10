@@ -65,7 +65,7 @@ task:
       use_nms: true
       iou_thresh: 0.001
       nms_thresh: 0.6
-      use_reduction_sum: true
+      use_reduction_sum: false
   train_data:
     global_batch_size: 4
     dtype: float16
@@ -120,9 +120,9 @@ task:
 trainer:
   train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 20
+  steps_per_loop: 2000
   validation_interval: 20000 #00
-  summary_interval: 20
+  summary_interval: 2000
   checkpoint_interval: 20000
   optimizer_config:
     # ema:
