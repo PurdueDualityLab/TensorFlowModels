@@ -58,13 +58,13 @@ task:
       #   '4': 5.0 
       #   '3': 5.0
       objectness_smooth: 
-        '5': 0.0
-        '4': 0.0
-        '3': 0.0
+        '5': 1.0
+        '4': 1.0
+        '3': 1.0
       new_cords:
-        '5': false
-        '4': false
-        '3': false
+        '5': true
+        '4': true
+        '3': true
       scale_xy:
         '5': 1.05
         '4': 1.1 
@@ -73,7 +73,7 @@ task:
       use_nms: false
       iou_thresh: 0.001
       nms_thresh: 0.6
-      use_reduction_sum: false
+      use_reduction_sum: true
   train_data:
     global_batch_size: 4
     dtype: float16
