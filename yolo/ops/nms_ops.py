@@ -502,6 +502,8 @@ def sorted_non_max_suppression_padded(scores,
                                                     max_output_size,
                                                     iou_threshold)
 
+from official.vision.beta.modeling.layers import detection_generator
+
 def nms(boxes,
         classes,
         confidence,
@@ -514,19 +516,11 @@ def nms(boxes,
 
   # boxes_ = tf.expand_dims(boxes, axis = -2)
   # boxes, confidence, classes, valid = BASE_NMS.complete_nms(boxes_, classes, 
-  #                                 pre_nms_top_k = 500, 
+  #                                 pre_nms_top_k = 5000, 
   #                                 pre_nms_score_threshold=pre_nms_thresh,
   #                                 nms_iou_threshold= nms_thresh,
-  #                                 max_num_detections= 100)
+  #                                 max_num_detections= 200)
 
-
-  mask = tf.fill(
-      tf.shape(confidence), tf.cast(pre_nms_thresh, dtype=confidence.dtype))
-  mask = tf.math.ceil(tf.nn.relu(confidence - mask))
-  confidence = confidence * mask
-  mask = tf.expand_dims(mask, axis=-1)
-  boxes = boxes * mask
-  classes = classes * mask
 
   # if use_classes:
   confidence = tf.reduce_max(classes, axis=-1)
@@ -568,3 +562,7 @@ def nms(boxes,
 
   classes = tf.squeeze(classes, axis = -1)
   return boxes, classes, confidence
+
+
+
+

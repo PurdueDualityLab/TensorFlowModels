@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: mirrored
-  mixed_precision_dtype: float16
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
     base:
@@ -38,13 +36,13 @@ task:
         '4': 0.05
         '3': 0.05
       cls_normalizer: 
-        '5': 0.25
-        '4': 0.25
-        '3': 0.25
-      obj_normalizer: 
-        '5': 0.2
+        '5': 0.5
         '4': 0.5
-        '3': 2.0
+        '3': 0.5
+      obj_normalizer: 
+        '5': 0.4
+        '4': 1.0
+        '3': 4.0
       new_cords:
         '5': true
         '4': true
@@ -59,8 +57,8 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.001
-      pre_nms_points: 5000
+      iou_thresh: 0.2
+      pre_nms_points: 500
       nms_thresh: 0.6
       use_reduction_sum: true
   train_data:

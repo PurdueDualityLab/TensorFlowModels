@@ -254,8 +254,8 @@ class YoloFilter(ks.Model):
       object_scores.append(object_scores_)
 
     boxes = tf.concat(boxes, axis=1)
-    object_scores = K.concatenate(object_scores, axis=1)
-    class_scores = K.concatenate(class_scores, axis=1)
+    object_scores = tf.concat(object_scores, axis=1)
+    class_scores = tf.concat(class_scores, axis=1)
 
     boxes, class_scores, object_scores = nms_ops.nms(
         boxes, class_scores, object_scores, 200, 0.0, 1.0, use_classes=True)

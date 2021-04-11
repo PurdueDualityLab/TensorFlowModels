@@ -189,7 +189,7 @@ class YoloTask(base_task.Task):
     print(dataset)
     return dataset
 
-  def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
+  def build_losses(self, outputs, labels, num_replicas=1, scale_replicas = 1, aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
     metric_dict['global']['total_loss']= 0
@@ -205,13 +205,13 @@ class YoloTask(base_task.Task):
                                          labels['bbox'], labels['classes'],
                                          outputs[key])
       metric_dict['global']['total_loss'] += _loss
-      metric_dict[key]['conf_loss'] = _loss_conf
-      metric_dict[key]['box_loss'] = _loss_box
-      metric_dict[key]['class_loss'] = _loss_class
-      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
-      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
-      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
-      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
+      metric_dict[key]['conf_loss'] = _loss_conf/scale_replicas
+      metric_dict[key]['box_loss'] = _loss_box/scale_replicas
+      metric_dict[key]['class_loss'] = _loss_class/scale_replicas
+      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50/scale_replicas)
+      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50/scale_replicas)
+      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou/scale_replicas)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj/scale_replicas)
       loss_val += _loss * scale / num_replicas
 
     return loss_val, metric_dict
@@ -239,10 +239,11 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
+    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_reduction_sum:
       num_replicas = 1
     else:
-      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+      num_replicas = scale_replicas
 
     with tf.GradientTape() as tape:
       # compute a prediction
@@ -250,7 +251,7 @@ class YoloTask(base_task.Task):
       y_pred = model(image, training=True)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
       scaled_loss, loss_metrics = self.build_losses(
-          y_pred['raw_output'], label, num_replicas=num_replicas)
+          y_pred['raw_output'], label, num_replicas=num_replicas, scale_replicas=scale_replicas)
       # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -283,24 +284,25 @@ class YoloTask(base_task.Task):
       #   m.update_state(loss_metrics[m.name])
       #   logs.update({m.name: m.result()})
 
-    # tf.print(logs, end='\n')
-    # ret = '\033[F' * (len(logs.keys()) * 7 - 14 + 2 + 1)
-    # tf.print(ret, end='\n')
+    tf.print(logs, end='\n')
+    ret = '\033[F' * (len(logs.keys()) * 7 - 14 + 2 + 1)
+    tf.print(ret, end='\n')
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
     # get the data point
     image, label = inputs
 
+    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_reduction_sum:
       num_replicas = 1
     else:
-      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+      num_replicas = scale_replicas
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(y_pred['raw_output'],
-                                                      label, num_replicas=num_replicas)
+                                                      label, num_replicas=num_replicas, scale_replicas=scale_replicas)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]

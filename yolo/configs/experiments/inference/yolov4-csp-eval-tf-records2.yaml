@@ -18,7 +18,7 @@ task:
     num_classes: 91
     subdivisions: 16
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: null #[512, 512, 3]
+    _input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -50,7 +50,7 @@ task:
         '4': 1.0
         '3': 4.0
       new_cords:
-        '5': true
+        '5': false
         '4': true
         '3': true
       objectness_smooth: 
@@ -63,9 +63,10 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: false
-      iou_thresh: 0.001
+      iou_thresh: 0.2
+      pre_nms_points: 500
       nms_thresh: 0.6
-      use_reduction_sum: false
+      use_reduction_sum: true
   train_data:
     global_batch_size: 4
     dtype: float16

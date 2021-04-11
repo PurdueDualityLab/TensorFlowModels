@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: mirrored
-  mixed_precision_dtype: float16
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
     base:
@@ -59,8 +57,8 @@ task:
         '3': 2.0
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.001
-      pre_nms_points: 5000
+      iou_thresh: 0.2
+      pre_nms_points: 500
       nms_thresh: 0.6
       use_reduction_sum: true
   train_data:

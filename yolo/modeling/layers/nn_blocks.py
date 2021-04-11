@@ -329,6 +329,12 @@ class DarkResidual(tf.keras.layers.Layer):
         padding='same',
         **_dark_conv_args)
 
+    # if self._stochastic_depth_drop_rate:
+    #   self._stochastic_depth = nn_layers.StochasticDepth(
+    #       self._stochastic_depth_drop_rate)
+    # else:
+    #   self._stochastic_depth = None
+
     self._shortcut = tf.keras.layers.Add()
     if self._sc_activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
@@ -340,11 +346,15 @@ class DarkResidual(tf.keras.layers.Layer):
       )  # tf.keras.layers.Activation(self._sc_activation)
     super().build(input_shape)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     if self._downsample:
       inputs = self._dconv(inputs)
     x = self._conv1(inputs)
     x = self._conv2(x)
+
+    # if self._stochastic_depth:
+    #   x = self._stochastic_depth(x, training=training)
+
     x = self._shortcut([x, inputs])
     return self._activation_fn(x)
 
@@ -511,7 +521,7 @@ class CSPTiny(tf.keras.layers.Layer):
 
     super().build(input_shape)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     x1 = self._convlayer1(inputs)
     x1_group = tf.split(x1, self._groups, axis=-1)[self._group_id]
     x2 = self._convlayer2(x1_group)  # grouping
@@ -649,7 +659,7 @@ class CSPRoute(tf.keras.layers.Layer):
         strides=(1, 1),
         **_dark_conv_args)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     if self._downsample:
       inputs = self._conv1(inputs)
     y = self._conv2(inputs)
@@ -763,7 +773,7 @@ class CSPConnect(tf.keras.layers.Layer):
           **_dark_conv_args)
     return
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     x_prev, x_csp = inputs
     if not self._drop_first:
       x_prev = self._conv1(x_prev)
@@ -882,7 +892,7 @@ class CSPStack(tf.keras.layers.Layer):
     self._route = CSPRoute(downsample=self._downsample, **_dark_conv_args)
     self._connect = CSPConnect(**_dark_conv_args)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     x, x_route = self._route(inputs)
     for layer in self._model_to_wrap:
       x = layer(x)
@@ -1047,7 +1057,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
 
-  def _call_regular(self, inputs):
+  def _call_regular(self, inputs, training=None):
     inputToConvolve, inputToConcat = inputs
     x_prev = self._conv(inputToConvolve)
     if self._upsample:
@@ -1060,7 +1070,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
       x = self._conv_concat(x)
     return x_prev, x
 
-  def _call_reversed(self, inputs):
+  def _call_reversed(self, inputs, training=None):
     x_route, x_prev = inputs
     x_prev = self._conv_prev(x_prev)
     if self._upsample:
@@ -1072,12 +1082,12 @@ class PathAggregationBlock(tf.keras.layers.Layer):
       x = self._conv_sync(x)
     return x_prev, x
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     # done this way to prevent confusion in the auto graph
     if self._inverted:
-      return self._call_reversed(inputs)
+      return self._call_reversed(inputs, training=training)
     else:
-      return self._call_regular(inputs)
+      return self._call_regular(inputs, training=training)
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -1105,7 +1115,7 @@ class SPP(tf.keras.layers.Layer):
     self._maxpools = maxpools
     super().build(input_shape)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     outputs = []
     for maxpool in self._maxpools:
       outputs.append(maxpool(inputs))
@@ -1186,7 +1196,7 @@ class SAM(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(self._output_activation)
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     if self._use_pooling:
       depth_max = tf.reduce_max(inputs, axis=-1, keep_dims=True)
       depth_avg = tf.reduce_mean(inputs, axis=-1, keep_dims=True)
@@ -1277,7 +1287,7 @@ class CAM(tf.keras.layers.Layer):
 
     return
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     depth_max = self._mlp(tf.reduce_max(inputs, axis=(1, 2)))
     depth_avg = self._mlp(tf.reduce_mean(inputs, axis=(1, 2)))
     channel_mask = self._activation_fn(depth_avg + depth_max)
@@ -1357,7 +1367,7 @@ class CBAM(tf.keras.layers.Layer):
     self._sam = SAM(**self._sam_args)
     return
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     return self._sam(self._cam(inputs))
 
 
@@ -1608,7 +1618,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     print(self._lim)
     super().build(input_shape)
 
-  def _call_regular(self, inputs):
+  def _call_regular(self, inputs, training=None):
     # check efficiency
     x = inputs
     x_prev = x
@@ -1621,7 +1631,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       output_prev = output
     return x_prev, x
 
-  def _call_csp(self, inputs):
+  def _call_csp(self, inputs, training=None):
     # check efficiency
     x = inputs
     x_prev = x
@@ -1643,8 +1653,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       output_prev = output
     return x_prev, x
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
     if self._csp_stack > 0:
-      return self._call_csp(inputs)
+      return self._call_csp(inputs, training=training)
     else:
       return self._call_regular(inputs)
