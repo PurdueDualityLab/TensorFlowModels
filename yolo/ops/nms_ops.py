@@ -489,7 +489,7 @@ class TiledNMS():
     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
 
   
-BASE_NMS = TiledNMS(iou_type='diou')
+BASE_NMS = TiledNMS(iou_type='diou', beta=0.6)
 def sorted_non_max_suppression_padded(scores,
                                       boxes,
                                       classes,
