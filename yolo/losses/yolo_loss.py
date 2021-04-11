@@ -75,6 +75,10 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points):
 def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points):
   (box_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points)
   def delta(dy_xy, dy_wh, dy):
+    # here we do not propgate the scaling of the prediction through the network because in back prop is 
+    # leads to the scaling of the gradient of a box relative to the size of the box and the gradient 
+    # for small boxes this will mean down scaling the gradient leading to poor convergence on small 
+    # objects and also very likely over fitting
     dy_xy_, dy_wh_ = tf.split(dy, 2, axis = -1)
     dy_wh += dy_wh_
     dy_xy += dy_xy_
