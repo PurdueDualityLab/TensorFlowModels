@@ -251,7 +251,7 @@ class YoloTask(base_task.Task):
       y_pred = model(image, training=True)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
       scaled_loss, loss_metrics = self.build_losses(
-          y_pred['raw_output'], label, num_replicas=num_replicas, scale_replicas=scale_replicas)
+          y_pred['raw_output'], label, num_replicas=num_replicas, scale_replicas=1)
       # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -302,7 +302,7 @@ class YoloTask(base_task.Task):
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(y_pred['raw_output'],
-                                                      label, num_replicas=num_replicas, scale_replicas=scale_replicas)
+                                                      label, num_replicas=num_replicas, scale_replicas=1)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]

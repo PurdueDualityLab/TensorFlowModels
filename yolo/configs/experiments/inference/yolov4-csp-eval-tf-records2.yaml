@@ -50,7 +50,7 @@ task:
         '4': 1.0
         '3': 4.0
       new_cords:
-        '5': false
+        '5': true
         '4': true
         '3': true
       objectness_smooth: 

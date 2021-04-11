@@ -502,8 +502,6 @@ def sorted_non_max_suppression_padded(scores,
                                                     max_output_size,
                                                     iou_threshold)
 
-from official.vision.beta.modeling.layers import detection_generator
-
 def nms(boxes,
         classes,
         confidence,
