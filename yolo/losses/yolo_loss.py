@@ -519,7 +519,7 @@ class Yolo_Loss(object):
     if self._objectness_smooth > 0.0:
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
       iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
-      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update = True)
+      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update = False)
       true_conf = tf.squeeze(true_conf, axis=-1)
       obj_mask = tf.ones_like(true_conf)
 
