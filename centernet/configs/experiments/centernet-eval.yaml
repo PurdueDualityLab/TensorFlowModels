@@ -10,8 +10,8 @@ task:
         type: hourglass
       decoder:
         heatmap_bias: -2.19
-      odapi_weights: 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
-      extremenet_weights: 'D:\\weights\extremenet'
+      odapi_weights: '/home/cam2tensorflow/centernet_hg104_512x512_coco17_tpu-8/checkpoint'
+      # extremenet_weights: 'D:\\weights\extremenet'
       backbone_name: hourglass104_512
       decoder_name: detection_2d
     num_classes: 90
@@ -25,10 +25,11 @@ task:
       iou_thresh: 0.4
       class_offset: 1
   validation_data:
-    tfds_data_dir: 'D:\\Datasets'
-    tfds_name: coco/2017
-    tfds_split: validation
-    global_batch_size: 1
+    input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    # tfds_data_dir: 'D:\\Datasets''
+    # tfds_name: coco/2017
+    # tfds_split: validation
+    global_batch_size: 8
     tfds_download: true
     dtype: float16
     is_training: false
@@ -84,4 +85,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+              warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps

@@ -124,7 +124,7 @@ class Parser(hyperparams.Config):
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  input_path: str = '' # 'D:\\Datasets\\coco\\2017\\1.1.0*' #'gs://tensorflow2/coco_records/train/2017*'
+  input_path: str = 'gs://tensorflow2/coco_records/val/2017*'
   tfds_name: str = None #'coco'
   tfds_split: str = None #'train' #'val'
   global_batch_size: int = 32
@@ -134,6 +134,7 @@ class DataConfig(cfg.DataConfig):
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
   tfds_download: bool = False
+  cache: bool = False
 
 class Loss(hyperparams.Config):
   pass
