@@ -39,6 +39,8 @@ task:
       image_w: 512
       num_classes: 90
       max_num_instances: 128
+      use_gaussian_bump: true
+      gaussian_rad: -1
       gaussian_iou: 0.7
       output_dims: 128
       dtype: float32
