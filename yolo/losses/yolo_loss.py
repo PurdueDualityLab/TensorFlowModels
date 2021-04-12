@@ -73,11 +73,13 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_d
   box_xy = grid_points + pred_xy/scaler 
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  return (box_xy, box_wh, pred_box)
+  # return (box_xy, box_wh, pred_box)
+  return (pred_xy, box_wh, pred_box)
 
 @tf.custom_gradient
 def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy):
-  (box_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+  # (box_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+  (pred_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   def delta(dy_xy, dy_wh, dy):
     # here we do not propgate the scaling of the prediction through the network because in back prop is 
     # leads to the scaling of the gradient of a box relative to the size of the box and the gradient 
@@ -97,7 +99,8 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max
     dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(grid_points), 0.0, 0.0
 
-  return (box_xy, box_wh, pred_box), delta
+  # return (box_xy, box_wh, pred_box), delta
+  return (pred_xy, box_wh, pred_box), delta
 
 def get_predicted_box(width,
                       height,
@@ -117,10 +120,11 @@ def get_predicted_box(width,
 
   # the gradient for non of this should be propagated
   if darknet:
-    box_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # box_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    pred_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   else:
-    # TODO: test if scaled loss workes better if scaling operations are not propagated in network. 
-    box_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # box_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    pred_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
 
   return pred_xy, box_wh, pred_box
 
@@ -134,11 +138,13 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_poi
   box_xy = grid_points + pred_xy/scaler 
   box_wh = tf.square(2 * pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  return (box_xy, box_wh, pred_box)
+  # return (box_xy, box_wh, pred_box)
+  return (pred_xy, box_wh, pred_box)
 
 @tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy):
-  (box_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+  # (box_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+  (pred_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   def delta(dy_xy, dy_wh, dy):
     dy_xy_, dy_wh_ = tf.split(dy, 2, axis = -1)
     dy_wh += dy_wh_
@@ -153,7 +159,9 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_p
     delta = tf.cast(max_delta, dy_xy.dtype)
     dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(grid_points), 0.0, 0.0
-  return (box_xy, box_wh, pred_box), delta
+  # return (box_xy, box_wh, pred_box), delta
+  return (pred_xy, box_wh, pred_box), delta
+
 
 def get_predicted_box_newcords(width,
                                height,
@@ -170,12 +178,14 @@ def get_predicted_box_newcords(width,
   # pred_wh = box_gradient_trap(pred_wh, max_delta)
 
   if darknet:
-    box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    pred_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   else:
-    pred_xy_ = pred_xy
-    scale_xy = tf.cast(scale_xy, pred_xy.dtype)
-    pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
-    box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)  
+    # pred_xy_ = pred_xy
+    # scale_xy = tf.cast(scale_xy, pred_xy.dtype)
+    # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+    # box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)  
+    pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy) 
   return pred_xy, box_wh, pred_box
 
 

@@ -50,9 +50,9 @@ task:
         '4': 1.0
         '3': 4.0
       new_cords:
-        '5': false
-        '4': false
-        '3': false
+        '5': true
+        '4': true
+        '3': true
       objectness_smooth: 
         '5': 1.0
         '4': 1.0
@@ -68,7 +68,7 @@ task:
       nms_thresh: 0.6
       use_reduction_sum: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 64
     dtype: float16
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true
