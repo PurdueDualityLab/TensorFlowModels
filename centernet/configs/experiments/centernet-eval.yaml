@@ -10,6 +10,7 @@ task:
         type: hourglass
       decoder:
         heatmap_bias: -2.19
+      # odapi_weights: 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8/checkpoint'
       odapi_weights: '/home/cam2tensorflow/centernet_hg104_512x512_coco17_tpu-8/checkpoint'
       # extremenet_weights: 'D:\\weights\extremenet'
       backbone_name: hourglass104_512
@@ -26,7 +27,7 @@ task:
       class_offset: 1
   validation_data:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
-    # tfds_data_dir: 'D:\\Datasets''
+    # tfds_data_dir: 'D:\\Datasets'
     # tfds_name: coco/2017
     # tfds_split: validation
     global_batch_size: 8

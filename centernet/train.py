@@ -54,7 +54,7 @@ nohup python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_subdiv_cus
 nohup python3 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-1gpu.yaml  >> yolov4-1gpu.log & tail -f yolov4-1gpu.log
 nohup python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov3-1gpu_mosaic --config_file=yolo/configs/experiments/yolov3-1gpu.yaml  >> yolov3-1gpu.log & tail -f yolov3-1gpu.log
 evalaute CenterNet:
-nohup python -m centernet.train --mode=eval --experiment=centernet_custom --model_dir=../checkpoints/centernet- --config_file=centernet/configs/experiments/centernet-eval.yaml  >> centernet-eval.log & tail -f centernet-eval.log
+nohup python -m centernet.train --mode=train_and_eval --experiment=centernet_custom --model_dir=../checkpoints/centernet- --config_file=centernet/configs/experiments/centernet-eval.yaml  >> centernet-eval.log & tail -f centernet-eval.log
 """
 
 
