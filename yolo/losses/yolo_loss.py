@@ -56,17 +56,19 @@ def ce(values, labels):
   loss = math_ops.rm_nan(loss, val = 0.0)
   return loss
 
-# @tf.custom_gradient
-# def no_grad_sigmoid(values):
-#   vals = tf.math.sigmoid(values)
-#   def delta(dy):
-#     return dy
-#   return vals, delta
+@tf.custom_gradient
+def no_grad_sigmoid(values):
+  vals = tf.math.sigmoid(values)
+  def delta(dy):
+    return dy
+  return vals, delta
 
 # conver to a static class
 # no ops in this fn should have grads propagated
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy):
+  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
   pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
+
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy/scaler 
   box_wh = tf.math.exp(pred_wh) * anchor_grid
@@ -126,6 +128,7 @@ def get_predicted_box(width,
 # conver to a static class
 # no ops in this fn should have grads propagated
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy):
+  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy/scaler 
@@ -170,6 +173,7 @@ def get_predicted_box_newcords(width,
     box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   else:
     pred_xy_ = pred_xy
+    scale_xy = tf.cast(scale_xy, pred_xy.dtype)
     pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
     box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)  
   return pred_xy, box_wh, pred_box
@@ -267,7 +271,7 @@ class Yolo_Loss(object):
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
-        darknet= not self._use_reduction_sum,
+        darknet=not self._use_reduction_sum,
         max_delta=self._max_delta)
 
     if not self._new_cords:
