@@ -245,7 +245,7 @@ class Yolo_Loss(object):
 
     box_kwargs = dict(
         scale_x_y=self._scale_x_y,
-        darknet=not self._use_reduction_sum,
+        darknet= True, #not self._use_reduction_sum,
         max_delta=self._max_delta)
 
     if not self._new_cords:
@@ -501,15 +501,15 @@ class Yolo_Loss(object):
 
 
     # scale boxes
-    scale = tf.convert_to_tensor([fheight, fwidth])
-    # pred_xy = pred_xy * scale - scale
-    pred_wh = pred_wh * scale 
-    pred_box = tf.concat([pred_xy, pred_wh], axis = -1)
+#     scale = tf.convert_to_tensor([fheight, fwidth])
+#     # pred_xy = pred_xy * scale - scale
+#     pred_wh = pred_wh * scale 
+#     pred_box = tf.concat([pred_xy, pred_wh], axis = -1)
 
-    true_xy, true_wh = tf.split(true_box, 2, axis = -1)
-    true_xy = true_xy * scale - tf.floor(true_xy * scale)
-    true_wh = true_wh * scale
-    true_box = tf.concat([true_xy, true_wh], axis = -1)
+#     true_xy, true_wh = tf.split(true_box, 2, axis = -1)
+#     true_xy = true_xy * scale - tf.floor(true_xy * scale)
+#     true_wh = true_wh * scale
+#     true_box = tf.concat([true_xy, true_wh], axis = -1)
 
     # tf.print(true_box)
 
