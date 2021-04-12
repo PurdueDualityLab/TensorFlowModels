@@ -39,7 +39,7 @@ class Parser(parser.Parser):
                min_level=3,
                max_level=5,
                num_classes=80,
-               batch_size=64, 
+               batch_size=64,
                masks=None,
                anchors=None,
                fixed_size=False,
@@ -60,7 +60,7 @@ class Parser(parser.Parser):
                use_scale_xy=True,
                pct_rand=0.5,
                scale_xy=None,
-               anchor_t = 4.0, 
+               anchor_t=4.0,
                seed=10,
                dtype='float32'):
     """Initializes parameters for parsing annotations in the dataset.
@@ -105,13 +105,15 @@ class Parser(parser.Parser):
         image_h // self._net_down_scale) * self._net_down_scale
 
     self._batch_size = batch_size
-    process_scale = min_process_size/self._image_w
+    process_scale = min_process_size / self._image_w
 
     self._max_process_width = self._image_w // self._net_down_scale
     self._min_process_width = min_process_size // self._net_down_scale
 
     self._num_points = self._max_process_width - self._min_process_width
-    self._widths = tf.cast(tf.linspace(self._min_process_width, self._max_process_width, self._num_points), tf.int32)
+    self._widths = tf.cast(
+        tf.linspace(self._min_process_width, self._max_process_width,
+                    self._num_points), tf.int32)
 
     self._anchors = anchors
     self._masks = {
@@ -143,11 +145,15 @@ class Parser(parser.Parser):
 
     self._use_scale_xy = use_scale_xy
     keys = list(self._masks.keys())
-    self._scale_up = {key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
+    self._scale_up = {
+        key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
+    } if self._use_scale_xy else {key: 1 for key in keys}
     # self._scale_up = {key: 2 for i, key in enumerate(keys)} if self._use_scale_xy else {key: 1 for key in keys}
 
     self._counter = tf.Variable(initial_value=0.0, dtype=tf.float32)
-    self._scale_w = tf.Variable(initial_value=self._image_w, dtype = tf.int32) #, synchronization=tf.VariableSynchronization.ON_WRITE)
+    self._scale_w = tf.Variable(
+        initial_value=self._image_w,
+        dtype=tf.int32)  #, synchronization=tf.VariableSynchronization.ON_WRITE)
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -234,7 +240,6 @@ class Parser(parser.Parser):
   #     image, boxes, _ = preprocess_ops.random_horizontal_flip(
   #         image, boxes, seed=self._seed)
 
-
   #   if self._jitter_boxes > 0.0:
   #     height_, width_ = preprocessing_ops.get_image_shape(image)
 
@@ -246,7 +251,6 @@ class Parser(parser.Parser):
   #     height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
   #     image = tf.image.resize(image, (height_, width_))
-
 
   #   if self._aug_rand_zoom > 0.0:
   #     scale = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
@@ -278,8 +282,6 @@ class Parser(parser.Parser):
   #             aspect_ratio_range=[1, 1],
   #             area_range=[0.98, 0.99])
 
-
-
   #   boxes = box_ops.denormalize_boxes(boxes, info[0, :])
   #   boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
   #                                                info[3, :])
@@ -301,7 +303,7 @@ class Parser(parser.Parser):
   #         image,
   #         aspect_ratio_range=[jmi, jma],
   #         area_range=[ 0.98, 1.0])
-      
+
   #     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
   #     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
   #                                                 info[3, :])
@@ -309,7 +311,7 @@ class Parser(parser.Parser):
   #     boxes = tf.gather(boxes, inds)
   #     classes = tf.gather(classes, inds)
   #     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    
+
   #   if self._aug_rand_angle > 0:
   #     image, angle = preprocessing_ops.random_rotate_image(
   #         image, self._aug_rand_angle)
@@ -318,7 +320,7 @@ class Parser(parser.Parser):
   #   if self._aug_rand_translate > 0.0:
   #     image, tx, ty = preprocessing_ops.random_translate(image, self._aug_rand_translate)
   #     boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
-    
+
   #   h_, w_ = preprocessing_ops.get_image_shape(image)
   #   im_shape = tf.cast([h_, w_], tf.float32)
   #   boxes = box_ops.denormalize_boxes(boxes, im_shape)
@@ -347,7 +349,7 @@ class Parser(parser.Parser):
   #   image = tf.cast(image, self._dtype)
   #   image, labels = self._build_label(
   #       image, boxes, classes, width, height, info, data, is_training=True)
-      
+
   #   return image, labels
 
   def _parse_train_data(self, data):
@@ -371,13 +373,11 @@ class Parser(parser.Parser):
       jmi = 1 - self._jitter_im
       jma = 1 + self._jitter_im
       image, info = preprocessing_ops.random_crop_image(
-          image,
-          aspect_ratio_range=[jmi, jma],
-          area_range=[0.98, 1.0])
+          image, aspect_ratio_range=[jmi, jma], area_range=[0.98, 1.0])
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -402,14 +402,13 @@ class Parser(parser.Parser):
 
     if self._aug_rand_zoom > 0.0 and not data['is_mosaic']:
       # augmin = self._aug_rand_zoom if not data['is_mosaic'] else 1.0
-      image, info = preprocessing_ops.resize_and_crop_image(image, 
-                                              [self._image_h, self._image_w], 
-                                              [self._image_h, self._image_w], 
-                                              aug_scale_min= self._aug_rand_zoom, 
-                                              aug_scale_max=1/self._aug_rand_zoom)
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min=self._aug_rand_zoom,
+          aug_scale_max=1 / self._aug_rand_zoom)
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -422,19 +421,23 @@ class Parser(parser.Parser):
           image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
       image, info = preprocessing_ops.random_crop_image(
           image,
-          aspect_ratio_range=[self._image_w/self._image_h, self._image_w/self._image_h],
+          aspect_ratio_range=[
+              self._image_w / self._image_h, self._image_w / self._image_h
+          ],
           area_range=[1.0, 1.0])
 
     if self._aug_rand_angle > 0 or self._aug_rand_translate > 0.0:
       if self._aug_rand_translate > 0.0:
-        image, tx, ty = preprocessing_ops.random_translate(image, self._aug_rand_translate)
-        boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
+        image, tx, ty = preprocessing_ops.random_translate(
+            image, self._aug_rand_translate)
+        boxes, classes = preprocessing_ops.translate_boxes(
+            boxes, classes, tx, ty)
 
       if self._aug_rand_angle > 0:
         image, angle = preprocessing_ops.random_rotate_image(
             image, self._aug_rand_angle)
         boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
-        
+
       h_, w_ = preprocessing_ops.get_image_shape(image)
       im_shape = tf.cast([h_, w_], tf.float32)
       boxes = box_ops.denormalize_boxes(boxes, im_shape)
@@ -466,7 +469,7 @@ class Parser(parser.Parser):
     image = tf.cast(image, self._dtype)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, data, is_training=True)
-      
+
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -490,10 +493,11 @@ class Parser(parser.Parser):
     # if self._letter_box:
     if not self._letter_box:
       clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
-      image = tf.image.resize(image, (clipper, clipper), preserve_aspect_ratio=False)
+      image = tf.image.resize(
+          image, (clipper, clipper), preserve_aspect_ratio=False)
 
     image, boxes, info = preprocessing_ops.letter_box(
-      image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
+        image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
 
     image = tf.cast(image, self._dtype)
     image, labels = self._build_label(
@@ -517,7 +521,11 @@ class Parser(parser.Parser):
     boxes = box_utils.yxyx_to_xcycwh(boxes)
 
     best_anchors, ious = preprocessing_ops.get_best_anchor(
-        boxes, self._anchors, width=self._image_w, height=self._image_h, iou_thresh=self._anchor_t)
+        boxes,
+        self._anchors,
+        width=self._image_w,
+        height=self._image_h,
+        iou_thresh=self._anchor_t)
 
     bshape = boxes.get_shape().as_list()
     boxes = pad_max_instances(boxes, self._max_num_instances, 0)

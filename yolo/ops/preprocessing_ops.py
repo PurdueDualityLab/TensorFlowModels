@@ -203,6 +203,7 @@ def translate_boxes(box, classes, translate_x, translate_y):
     box = box_ops.xcycwh_to_yxyx(box)
   return box, classes
 
+
 def translate_image(image, t_y, t_x):
   with tf.name_scope('translate_boxes'):
     height, width = get_image_shape(image)
@@ -324,11 +325,11 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     # largest interection over union
 
     if iou_thresh >= 1.0:
-      aspect = truth_comp[..., 2:4]/anchors[...,2:4]
+      aspect = truth_comp[..., 2:4] / anchors[..., 2:4]
       aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
-      aspect = tf.maximum(aspect, 1/aspect)
+      aspect = tf.maximum(aspect, 1 / aspect)
       aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
-      aspect = tf.reduce_max(aspect, axis = -1)
+      aspect = tf.reduce_max(aspect, axis=-1)
       values, indexes = tf.math.top_k(
           tf.transpose(-aspect, perm=[0, 2, 1]),
           k=tf.cast(k, dtype=tf.int32),
@@ -661,11 +662,12 @@ def random_crop_image(image,
                     axis=0)
     return cropped_image, info
 
+
 def random_crop_mosaic(image,
-                      aspect_ratio_range=(3. / 4., 4. / 3.),
-                      area_range=(0.08, 1.0),
-                      max_attempts=10,
-                      seed=1):
+                       aspect_ratio_range=(3. / 4., 4. / 3.),
+                       area_range=(0.08, 1.0),
+                       max_attempts=10,
+                       seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
@@ -692,10 +694,8 @@ def random_crop_mosaic(image,
         aspect_ratio_range=aspect_ratio_range,
         area_range=area_range,
         max_attempts=max_attempts)
-  
-    area = -tf.reduce_prod(crop_size)/tf.reduce_prod(ishape[:2])
 
-
+    area = -tf.reduce_prod(crop_size) / tf.reduce_prod(ishape[:2])
 
     delta = ishape[:2] - crop_size[:2]
     dx = rand_uniform_strong(0, 1 + 1, tf.int32)
@@ -706,15 +706,14 @@ def random_crop_mosaic(image,
     #   dsx = ishape[0]//2 - 1
     #   dsy = ishape[1]//2 - 1
 
-    #   oh = tf.maximum(crop_offset[0] - dy * dsy, crop_offset[0]) 
-    #   ow = tf.maximum(crop_offset[1] - dx * dsx, crop_offset[1]) 
+    #   oh = tf.maximum(crop_offset[0] - dy * dsy, crop_offset[0])
+    #   ow = tf.maximum(crop_offset[1] - dx * dsx, crop_offset[1])
     #   tf.print(oh, ow, crop_size)
     # else:
     oh = tf.maximum(dy * delta[0] - 1, 0) // ds
     ow = tf.maximum(dx * delta[1] - 1, 0) // ds
     crop_offset = tf.convert_to_tensor([oh, ow, 0])
     cropped_image = tf.slice(image, crop_offset, crop_size)
-    
 
     scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
     offset = tf.cast(crop_offset[:2], tf.float32)
@@ -827,6 +826,7 @@ def rotate_boxes(boxes, height, width, angle):
   boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
   return boxes
 
+
 def resize_and_crop_image(image,
                           desired_size,
                           padded_size,
@@ -872,14 +872,16 @@ def resize_and_crop_image(image,
     random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)
 
     if random_jittering:
-      random_scale = tf.random.uniform(
-          [], aug_scale_min, aug_scale_max, seed=seed)
+      random_scale = tf.random.uniform([],
+                                       aug_scale_min,
+                                       aug_scale_max,
+                                       seed=seed)
       scaled_size = tf.round(random_scale * desired_size)
     else:
       scaled_size = desired_size
 
-    scale = tf.minimum(
-        scaled_size[0] / image_size[0], scaled_size[1] / image_size[1])
+    scale = tf.minimum(scaled_size[0] / image_size[0],
+                       scaled_size[1] / image_size[1])
     scaled_size = tf.round(image_size * scale)
 
     # Computes 2D image_scale.
@@ -889,10 +891,12 @@ def resize_and_crop_image(image,
     # desired_size.
     if random_jittering:
       max_offset_ = scaled_size - desired_size
-      
+
       max_offset = tf.where(
           tf.less(max_offset_, 0), tf.zeros_like(max_offset_), max_offset_)
-      offset = max_offset * tf.random.uniform([2,], 0, 1, seed=seed)
+      offset = max_offset * tf.random.uniform([
+          2,
+      ], 0, 1, seed=seed)
       offset = tf.cast(offset, tf.int32)
     else:
       offset = tf.zeros((2,), tf.int32)
@@ -901,33 +905,32 @@ def resize_and_crop_image(image,
         image, tf.cast(scaled_size, tf.int32), method=method)
 
     if random_jittering:
-      scaled_image = scaled_image[
-          offset[0]:offset[0] + desired_size[0],
-          offset[1]:offset[1] + desired_size[1], :]
+      scaled_image = scaled_image[offset[0]:offset[0] + desired_size[0],
+                                  offset[1]:offset[1] + desired_size[1], :]
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
     dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
     dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
-    output_image = tf.image.pad_to_bounding_box(
-        scaled_image, dy, dx, padded_size[0], padded_size[1])
+    output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
+                                                padded_size[0], padded_size[1])
 
     offset -= tf.convert_to_tensor([dy, dx])
 
     # if tf.reduce_all(offset > 0):
-      
+
     #   dy = rand_uniform_strong(0, 0.25)
     #   dx = rand_uniform_strong(0, 0.25)
 
     #   image, ty, tx = translate_image(image, dx, dy)
 
     #   tf.print(offset, tx, ty)
-    
+
     image_info = tf.stack([
         image_size,
-        tf.constant(desired_size, dtype=tf.float32),
-        image_scale,
-        tf.cast(offset, tf.float32)])
+        tf.constant(desired_size, dtype=tf.float32), image_scale,
+        tf.cast(offset, tf.float32)
+    ])
     return output_image, image_info
 
 

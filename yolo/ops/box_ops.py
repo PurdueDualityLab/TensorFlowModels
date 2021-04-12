@@ -214,9 +214,13 @@ def compute_ciou(box1, box2, yxyx=False):
 
 
 # equal to bbox_overlap but far more versitile
-def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta = 0.6, xyxy=True):
+def aggregated_comparitive_iou(boxes1,
+                               boxes2=None,
+                               iou_type=0,
+                               beta=0.6,
+                               xyxy=True):
 
-  # if boxes2 is not None: 
+  # if boxes2 is not None:
   #   k1 = tf.shape(boxes1)[-2]
   #   k2 = tf.shape(boxes2)[-2]
   # else:
