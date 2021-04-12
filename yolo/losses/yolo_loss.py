@@ -95,6 +95,8 @@ def get_predicted_box(width,
                       scale_x_y,
                       darknet = True, 
                       max_delta=5.0):
+  
+  # TODO: scale_xy should not be propagated in darkent either 
   pred_xy = no_grad_sigmoid(unscaled_box[..., 0:2]) * scale_x_y - 0.5 * (
       scale_x_y - 1)
   pred_wh = unscaled_box[..., 2:4]
@@ -106,6 +108,7 @@ def get_predicted_box(width,
   if darknet:
     box_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points)
   else:
+    # TODO: test if scaled loss workes better if scaling operations are not propagated in network. 
     box_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points)
 
   return pred_xy, box_wh, pred_box
