@@ -23,13 +23,14 @@ from collections import defaultdict
 
 
 class ListMetrics(object):
-  def __init__(self, metric_names, name = "ListMetrics", **kwargs):
+
+  def __init__(self, metric_names, name="ListMetrics", **kwargs):
     # super(ListMetrics, self).__init__(name=name, **kwargs)
     self.name = name
     self._metric_names = metric_names
     self._metrics = self.build_metric()
-    return 
-  
+    return
+
   def build_metric(self):
     metric_names = self._metric_names
     metrics = []
@@ -41,7 +42,7 @@ class ListMetrics(object):
     metrics = self._metrics
     for m in metrics:
       m.update_state(loss_metrics[m.name])
-    return 
+    return
 
   def result(self):
     logs = dict()
@@ -49,13 +50,13 @@ class ListMetrics(object):
     for m in metrics:
       logs.update({m.name: m.result()})
     return logs
-  
+
   def reset_states(self):
     # super().reset_states()
     metrics = self._metrics
     for m in metrics:
       m.reset_states()
-    return 
+    return
 
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
@@ -189,10 +190,15 @@ class YoloTask(base_task.Task):
     print(dataset)
     return dataset
 
-  def build_losses(self, outputs, labels, num_replicas=1, scale_replicas = 1, aux_losses=None):
+  def build_losses(self,
+                   outputs,
+                   labels,
+                   num_replicas=1,
+                   scale_replicas=1,
+                   aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
-    metric_dict['global']['total_loss']= 0
+    metric_dict['global']['total_loss'] = 0
 
     grid = labels['true_conf']
     inds = labels['inds']
@@ -200,18 +206,20 @@ class YoloTask(base_task.Task):
 
     scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
-      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj,
-       _recall50, _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
-                                         labels['bbox'], labels['classes'],
-                                         outputs[key])
+      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj, _recall50,
+       _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
+                                            labels['bbox'], labels['classes'],
+                                            outputs[key])
       metric_dict['global']['total_loss'] += _loss
-      metric_dict[key]['conf_loss'] = _loss_conf/scale_replicas
-      metric_dict[key]['box_loss'] = _loss_box/scale_replicas
-      metric_dict[key]['class_loss'] = _loss_class/scale_replicas
-      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50/scale_replicas)
-      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50/scale_replicas)
-      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou/scale_replicas)
-      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj/scale_replicas)
+      metric_dict[key]['conf_loss'] = _loss_conf / scale_replicas
+      metric_dict[key]['box_loss'] = _loss_box / scale_replicas
+      metric_dict[key]['class_loss'] = _loss_class / scale_replicas
+      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50 /
+                                                      scale_replicas)
+      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50 /
+                                                         scale_replicas)
+      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou / scale_replicas)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj / scale_replicas)
       loss_val += _loss * scale / num_replicas
 
     return loss_val, metric_dict
@@ -221,10 +229,9 @@ class YoloTask(base_task.Task):
     metric_names = self._metric_names
 
     for i, key in enumerate(metric_names.keys()):
-      metrics.append(ListMetrics(metric_names[key], name = key))
+      metrics.append(ListMetrics(metric_names[key], name=key))
 
     self._metrics = metrics
-
 
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
@@ -232,7 +239,7 @@ class YoloTask(base_task.Task):
           include_mask=False,
           need_rescale_bboxes=False,
           per_category_metrics=self._task_config.per_category_metrics)
-    
+
     return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
@@ -251,7 +258,10 @@ class YoloTask(base_task.Task):
       y_pred = model(image, training=True)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
       scaled_loss, loss_metrics = self.build_losses(
-          y_pred['raw_output'], label, num_replicas=num_replicas, scale_replicas=1)
+          y_pred['raw_output'],
+          label,
+          num_replicas=num_replicas,
+          scale_replicas=1)
       # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
@@ -301,8 +311,11 @@ class YoloTask(base_task.Task):
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss, loss_metrics = self.build_losses(y_pred['raw_output'],
-                                                      label, num_replicas=num_replicas, scale_replicas=1)
+    loss, loss_metrics = self.build_losses(
+        y_pred['raw_output'],
+        label,
+        num_replicas=num_replicas,
+        scale_replicas=1)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]

@@ -166,9 +166,9 @@ class Parser(hyperparams.Config):
   jitter_im: float = 0.6
   jitter_boxes: float = 0.2
   aug_rand_translate: float = 0.05
-  aug_rand_saturation: float = 0.7 #1.5
-  aug_rand_brightness: float = 0.6 #1.5
-  aug_rand_hue: float = 0.1 #0.015
+  aug_rand_saturation: float = 0.7  #1.5
+  aug_rand_brightness: float = 0.6  #1.5
+  aug_rand_hue: float = 0.1  #0.015
   aug_rand_zoom: float = 0.5
   aug_rand_angle: float = 7.0
   use_tie_breaker: bool = True

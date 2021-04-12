@@ -28,7 +28,7 @@ class YoloLayer(ks.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_reduction_sum=False,
-               pre_nms_points = 5000, 
+               pre_nms_points=5000,
                max_boxes=200,
                new_cords=False,
                path_scale=None,
