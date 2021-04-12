@@ -148,7 +148,7 @@ class CenterNetParser(parser.Parser):
     width = 0.0
     for tag_ind in tf.range(num_objects):
       box = boxes[tag_ind]
-      obj_class = classes[tag_ind] # TODO: See if subtracting 1 from the class like the paper is unnecessary
+      obj_class = classes[tag_ind] - 1 # TODO: See if subtracting 1 from the class like the paper is unnecessary
 
       ytl, xtl, ybr, xbr = box[0], box[1], box[2], box[3]
 
