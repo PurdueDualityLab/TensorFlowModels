@@ -196,13 +196,16 @@ class CenterNetTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    # computer detivative and apply gradients
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]
+
+    label['boxes'] = box_ops.denormalize_boxes(
+        tf.cast(label['bbox'], tf.float32), image_shape)
+    del label['bbox']
     
     coco_model_outputs = {
       'detection_boxes':

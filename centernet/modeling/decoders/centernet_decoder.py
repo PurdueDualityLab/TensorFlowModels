@@ -27,9 +27,6 @@ class CenterNetDecoder(tf.keras.Model):
       dictionary where the keys-value pairs denote the names of the output
       and the respective output tensor
     """
-    # super().__init__(**kwargs)
-    # self.outputs_layers = {}
-
     self._input_specs = input_specs
     self._task_outputs = task_outputs
     self._heatmap_bias = heatmap_bias
@@ -55,33 +52,10 @@ class CenterNetDecoder(tf.keras.Model):
 
     super().__init__(inputs=inputs, outputs=outputs, name='CenterNetDecoder')
 
-  # def build(self, inputs):
-  #   for key in self._task_outputs:
-  #     num_filters = self._task_outputs[key]
-  #     bias = 0
-  #     if 'heatmaps' in key:
-  #       bias = self._heatmap_bias
-
-  #     self.outputs_layers[key] = [CenterNetDecoderConv(output_filters=num_filters,
-  #       name=key, bias_init=bias) for _ in range(self._num_inputs)] 
-
-  # def call(self, inputs):
-  #   outputs = dict()
-
-  #   for key in self._task_outputs:
-  #     outputs[key] = [self.outputs_layers[key][i](inputs[i]) for i in range(self._num_inputs)]
-    
-  #   return outputs
-  
-  # @property
-  # def output_specs(self):
-  #   return self._output_specs
-
   def get_config(self):
     layer_config = {
       'task_outputs': self._task_outputs,
       'heatmap_bias': self._heatmap_bias
     }
 
-    #layer_config.update(super().get_config())
     return layer_config
