@@ -57,7 +57,6 @@ def intersect_and_union(box1, box2, yxyx=False):
   intersect_mins = tf.math.maximum(b1mi, b2mi)
   intersect_maxes = tf.math.minimum(b1ma, b2ma)
   intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins, 0.0)
-  # intersect_wh = intersect_mins - intersect_maxes
   intersection = tf.reduce_prod(intersect_wh, axis=-1)
 
   box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
