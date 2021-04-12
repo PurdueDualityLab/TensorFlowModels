@@ -180,7 +180,12 @@ class CenterNetTask(base_task.Task):
 
   def build_metrics(self, training=True):
     metrics = []
+    metric_names = self._metric_names
 
+    for name in metric_names:
+      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+
+    self._metrics = metrics
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,
