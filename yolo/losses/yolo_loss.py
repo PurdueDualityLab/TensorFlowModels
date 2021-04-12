@@ -122,6 +122,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_poi
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
   return (box_xy, box_wh, pred_box)
 
+@tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points):
   (box_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points)
   def delta(dy_xy, dy_wh, dy):
