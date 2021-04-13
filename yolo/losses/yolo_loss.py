@@ -9,7 +9,7 @@ import numpy as np
 
 from functools import partial
 
-TILE_SIZE = 10
+TILE_SIZE = 50
 
 
 @tf.custom_gradient
@@ -242,6 +242,7 @@ class Yolo_Loss(object):
                obj_normalizer=1.0,
                objectness_smooth=True,
                use_reduction_sum=False,
+               label_smoothing = 0.0,
                iou_thresh=0.213,
                new_cords=False,
                scale_x_y=1.0,
@@ -305,7 +306,7 @@ class Yolo_Loss(object):
     self._scale_x_y = scale_x_y
     self._max_delta = max_delta
 
-    self._label_smoothing = tf.cast(0.0, tf.float32)
+    self._label_smoothing = tf.cast(label_smoothing, tf.float32)
     # self._objectness_smooth = objectness_smooth
 
     self._objectness_smooth = float(objectness_smooth)
@@ -369,12 +370,12 @@ class Yolo_Loss(object):
             dtype=iou.dtype))
     return tf.stop_gradient(avg_iou)
 
-  def box_loss(self, true_box, pred_box):
+  def box_loss(self, true_box, pred_box, darknet = False):
     if self._loss_type == 1:
-      iou, liou = box_ops.compute_giou(true_box, pred_box)
+      iou, liou = box_ops.compute_giou(true_box, pred_box, darknet = darknet)
       loss_box = (1 - liou)
     elif self._loss_type == 2:
-      iou, liou = box_ops.compute_ciou(true_box, pred_box)
+      iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet = darknet)
       loss_box = (1 - liou)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
@@ -590,7 +591,7 @@ class Yolo_Loss(object):
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = tf.stop_gradient(math_ops.mul_no_nan(ind_mask, true_box))
-    iou, liou, box_loss = self.box_loss(true_box, pred_box)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     # box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
@@ -703,7 +704,7 @@ class Yolo_Loss(object):
 
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
-    iou, liou, box_loss = self.box_loss(true_box, pred_box)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
     box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
@@ -715,7 +716,6 @@ class Yolo_Loss(object):
         from_logits=False)
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
-
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)

@@ -1,11 +1,9 @@
 runtime:
-  distribution_strategy: mirrored
-  mixed_precision_dtype: float16
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
-    base: 
+    base:
       backbone:
         type: 'darknet'
         darknet:
@@ -13,12 +11,12 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://yolov4.weights'
-      darknet_weights_cfg: 'cache://yolov4.cfg'
-    num_classes: 91
+      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
+      darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
+    num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: null #[512, 512, 3]
+    _input_size: [608, 608, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -68,16 +66,16 @@ task:
       pre_nms_points: 5000
       use_reduction_sum: false
   train_data:
-    global_batch_size: 4
+    global_batch_size: 64
     dtype: float16
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
+      image_w: 608
+      image_h: 608
+      min_process_size: 608
       jitter_im: 0.6
       jitter_boxes: 0.2
       aug_rand_zoom: 0.5
@@ -98,50 +96,49 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: True
         crop_area_mosaic: [0.25, 0.95]
+        crop_area_mosaic: [0.25, 0.95]
   validation_data:
     global_batch_size: 8
     dtype: float16
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     is_training: false
     shuffle_buffer_size: 10000
-    drop_remainder: false
+    drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 608
+      image_h: 608
       fixed_size: True
-      letter_box: True
-      anchor_thresh: 0.213
-  weight_decay: 0.001
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
+      letter_box: False
+      anchor_thresh: 0.2
+  weight_decay: 0.0005
+  init_checkpoint: 'gs://tensorflow2/config_testing/all-mean-og/ckpt-165000'
+  init_checkpoint_modules: 'all'
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 140000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 2000
+  steps_per_loop: 5000
   validation_interval: 20000 #00
-  summary_interval: 2000
+  summary_interval: 5000
   checkpoint_interval: 20000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9998
+    ema:
+      average_decay: 0.9998
     learning_rate:
-      type: cosine_epoch
-      cosine_epoch:
-        initial_learning_rate: 0.001
-        name: CosineEpoch
-        alpha: 0.2
-        steps_per_epoch: 1
-        decay_steps: 294375
+      type: stepwise
+      stepwise:
+        boundaries: [40000, 90000]
+        name: PiecewiseConstantDecay
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
-      type: adam
-      adam:
-        beta_1: 0.949
-        # nesterov: True
-        # name: SGD
+      type: sgd
+      sgd:
+        momentum: 0.949
+        nesterov: True
+        name: SGD
     warmup:
       type: 'polynomial'
       polynomial:

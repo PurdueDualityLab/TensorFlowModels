@@ -26,7 +26,8 @@ def yxyx_to_xcycwh(box: tf.Tensor):
   return box
 
 
-def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
+@tf.custom_gradient
+def _xcycwh_to_yxyx(box: tf.Tensor, scale):
   """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, xmax.
     Args:
       box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -41,8 +42,24 @@ def xcycwh_to_yxyx(box: tf.Tensor, split_min_max: bool = False):
     x_min, y_min = tf.split(xy_min, 2, axis=-1)
     x_max, y_max = tf.split(xy_max, 2, axis=-1)
     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
-    if split_min_max:
-      box = tf.split(box, 2, axis=-1)
+    def delta(dbox):
+      #y_min = top, x_min = left, y_max = bottom, x_max = right
+      dt, dl, db, dr = tf.split(dbox, 4, axis = -1)
+      dx = dl + dr 
+      dy = dt + db 
+      dw = (dr - dl) / scale
+      dh = (db - dt) / scale
+
+      dbox = tf.concat([dx, dy, dw, dh], axis = -1)
+      return dbox, 0.0
+  return box, delta
+
+def xcycwh_to_yxyx(box: tf.Tensor, darknet = False):
+  if darknet: 
+    scale = 1.0
+  else:
+    scale = 2.0
+  box = _xcycwh_to_yxyx(box, scale)
   return box
 
 
@@ -104,7 +121,7 @@ def compute_iou(box1, box2, yxyx=False):
   return iou
 
 
-def compute_giou(box1, box2, yxyx=False):
+def compute_giou(box1, box2, yxyx=False, darknet = False):
   """Calculates the generalized intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -117,8 +134,8 @@ def compute_giou(box1, box2, yxyx=False):
   with tf.name_scope('giou'):
     # get IOU
     if not yxyx:
-      box1 = xcycwh_to_yxyx(box1)
-      box2 = xcycwh_to_yxyx(box2)
+      box1 = xcycwh_to_yxyx(box1, darknet = darknet)
+      box2 = xcycwh_to_yxyx(box2, darknet = darknet)
       yxyx = True
 
     intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
@@ -139,7 +156,7 @@ def compute_giou(box1, box2, yxyx=False):
   return iou, giou
 
 
-def compute_diou(box1, box2, beta=1.0, yxyx=False):
+def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet = False):
   """Calculates the distance intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -152,8 +169,8 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False):
   with tf.name_scope('diou'):
     # compute center distance
     if not yxyx:
-      box1 = xcycwh_to_yxyx(box1)
-      box2 = xcycwh_to_yxyx(box2)
+      box1 = xcycwh_to_yxyx(box1, darknet = darknet)
+      box2 = xcycwh_to_yxyx(box2, darknet = darknet)
       yxyx = True
 
     intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
@@ -179,7 +196,7 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False):
   return iou, diou
 
 
-def compute_ciou(box1, box2, yxyx=False):
+def compute_ciou(box1, box2, yxyx=False, darknet = False):
   """Calculates the complete intersection of union between box1 and box2.
     Args:
         box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
@@ -191,7 +208,7 @@ def compute_ciou(box1, box2, yxyx=False):
     """
   with tf.name_scope('ciou'):
     # compute DIOU and IOU
-    iou, diou = compute_diou(box1, box2, yxyx=yxyx)
+    iou, diou = compute_diou(box1, box2, yxyx=yxyx, darknet = darknet)
 
     if yxyx:
       box1 = yxyx_to_xcycwh(box1)
