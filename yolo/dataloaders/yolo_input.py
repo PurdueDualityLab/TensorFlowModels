@@ -318,7 +318,7 @@ class Parser(parser.Parser):
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
           aug_scale_min= self._aug_rand_zoom * 1.5,
-          aug_scale_max=1 / (self._aug_rand_zoom * 1.5))
+          aug_scale_max=2 / (self._aug_rand_zoom * 1.5))
     else:
       shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
       shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
