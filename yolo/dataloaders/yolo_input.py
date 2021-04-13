@@ -182,7 +182,7 @@ class Parser(parser.Parser):
       scale_up = {key: 1 for key in self._masks.keys()}
 
     for key in self._masks.keys():
-      if is_training and self._use_scale_xy:
+      if self._use_scale_xy:
         scale_xy = self._scale_xy[key]
       else:
         scale_xy = 1
@@ -309,12 +309,16 @@ class Parser(parser.Parser):
 
 
     # aspect distorted crop scal independent
-    if self._aug_rand_zoom > 0.0: # and not data['is_mosaic']:
-      # augmin = self._aug_rand_zoom if not data['is_mosaic'] else 1.0
+    if self._aug_rand_zoom > 0.0 and not data['is_mosaic']:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=self._aug_rand_zoom,
+          aug_scale_min= self._aug_rand_zoom,
           aug_scale_max=1 / self._aug_rand_zoom)
+    elif self._aug_rand_zoom > 0.0 and data['is_mosaic']:
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min= self._aug_rand_zoom * 1.5,
+          aug_scale_max=1 / (self._aug_rand_zoom * 1.5))
     else:
       shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
       shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)

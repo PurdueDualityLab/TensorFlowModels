@@ -69,6 +69,37 @@ def no_grad_sigmoid(values):
 
   return vals, delta
 
+@tf.custom_gradient
+def sigmoid_BCE(y, x_prime, label_smoothing):
+  y = y * (1 - label_smoothing) + 0.5 * label_smoothing
+  x = tf.math.sigmoid(x_prime)
+  x = math_ops.rm_nan_inf(x, val=0.0)
+  bce = ks.losses.binary_crossentropy(y, x, from_logits=False)
+
+  def delta(dy):
+    # # bce = -ylog(x) - (1 - y)log(1 - x)
+    # # bce derive
+    # dloss = -math_ops.divide_no_nan(y, x) + math_ops.divide_no_nan((1-y),(1-x))
+    # # 1 / (1 + exp(-x))
+    # dsigmoid = x * (1 - x)
+    # dx = dloss * dsigmoid * tf.expand_dims(dy, axis = -1)
+
+    # # bce derive
+    # dloss = -y * (1 - x) + (1 - y) * x
+    # # 1 / (1 + exp(-x))
+    # dx = dloss * tf.expand_dims(dy, axis = -1)
+    
+    # bce derive
+    dloss = -y + x
+    # 1 / (1 + exp(-x))
+    dx = dloss * tf.expand_dims(dy, axis = -1)
+
+    dy = tf.zeros_like(y)
+    return dy, dx, 0.0
+
+  return bce, delta
+
+
 
 # conver to a static class
 # no ops in this fn should have grads propagated
@@ -668,11 +699,13 @@ class Yolo_Loss(object):
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
     sigmoid_class = tf.sigmoid(pred_class)
-    pred_class = class_gradient_trap(sigmoid_class, np.inf)
+    # pred_class = class_gradient_trap(sigmoid_class, np.inf)
+    pred_class = class_gradient_trap(pred_class, np.inf)
 
     sigmoid_conf = tf.sigmoid(pred_conf)
     sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
-    pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
+    # pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
+    pred_conf = obj_gradient_trap(pred_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points)
 
@@ -709,22 +742,22 @@ class Yolo_Loss(object):
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    class_loss = ks.losses.binary_crossentropy(
-        K.expand_dims(true_class, axis=-1),
-        K.expand_dims(pred_class, axis=-1),
-        label_smoothing=self._label_smoothing,
-        from_logits=False)
+    # class_loss = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_class, axis=-1),
+    #     K.expand_dims(pred_class, axis=-1),
+    #     label_smoothing=self._label_smoothing,
+    #     from_logits=False)
+
+    class_loss = sigmoid_BCE(K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1), self._label_smoothing)
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
-    # bce = tf.where(true_conf > 0.0,
-    #                ce(K.expand_dims(true_conf, axis=-1), pred_conf),
-    #                ce(1 - K.expand_dims(true_conf, axis=-1), 1 - pred_conf))
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
+    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
     conf_loss = math_ops.mul_no_nan(obj_mask, bce)
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
