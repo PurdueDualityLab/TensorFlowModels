@@ -104,7 +104,7 @@ def test_yolo_pipeline(is_training=True):
   ltime = time.time()
 
   data = dataset if is_training else dsp
-  data = data.take(15)
+  data = data.take(30)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
     i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
