@@ -74,9 +74,12 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   y = y * (1 - label_smoothing) + 0.5 * label_smoothing
   x = tf.math.sigmoid(x_prime)
   x = math_ops.rm_nan_inf(x, val=0.0)
-  bce = ks.losses.binary_crossentropy(y, x, from_logits=False)
+  #bce = ks.losses.binary_crossentropy(y, x, from_logits=False)
+  bce = tf.reduce_sum(tf.square(-y + x), axis = -1)
 
   def delta(dy):
+    # safer and faster gradient compute for bce
+
     # # bce = -ylog(x) - (1 - y)log(1 - x)
     # # bce derive
     # dloss = -math_ops.divide_no_nan(y, x) + math_ops.divide_no_nan((1-y),(1-x))
@@ -99,6 +102,12 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
   return bce, delta
 
+@tf.custom_gradient
+def apply_mask(mask, x):
+  masked = math_ops.mul_no_nan(mask, x)
+  def delta(dy):
+    return tf.zeros_like(mask), math_ops.mul_no_nan(mask, dy)
+  return masked, delta
 
 
 # conver to a static class
@@ -694,6 +703,7 @@ class Yolo_Loss(object):
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
 
+    # no gradient
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
@@ -725,7 +735,7 @@ class Yolo_Loss(object):
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
-    true_class = math_ops.mul_no_nan(ind_mask, true_class)
+    true_class = apply_mask(ind_mask, true_class)
 
     true_class = self.build_grid(
         inds, true_class, pred_class, ind_mask, update=False)
@@ -735,10 +745,12 @@ class Yolo_Loss(object):
     reps = tf.squeeze(reps, axis=-1)
     reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
-    pred_box = math_ops.mul_no_nan(ind_mask,
-                                   tf.gather_nd(pred_box, inds, batch_dims=1))
+    # pred_box = math_ops.mul_no_nan(ind_mask,
+    #                                tf.gather_nd(pred_box, inds, batch_dims=1))
+    pred_box = apply_mask(ind_mask,tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
-    box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
+    # box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
@@ -750,7 +762,8 @@ class Yolo_Loss(object):
 
     class_loss = sigmoid_BCE(K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1), self._label_smoothing)
     class_loss = tf.reduce_sum(class_loss, axis=-1)
-    class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
+    # class_loss = math_ops.mul_no_nan(grid_mask, class_loss)
+    class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
@@ -758,7 +771,8 @@ class Yolo_Loss(object):
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
     bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
-    conf_loss = math_ops.mul_no_nan(obj_mask, bce)
+    # conf_loss = math_ops.mul_no_nan(obj_mask, bce)
+    conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
