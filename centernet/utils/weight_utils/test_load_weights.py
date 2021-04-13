@@ -16,9 +16,6 @@ if __name__ == '__main__':
   
   model, loss = build_centernet(input_specs=input_specs,
       task_config=config, l2_regularization=0)
-
-
-  # Test for running validation step on pretrained model
   
   
   # # Test for loading extremenet backbone weights
