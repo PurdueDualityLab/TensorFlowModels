@@ -1,6 +1,7 @@
 runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
+  tpu: 'node-8'
 task:
   model:
     base: 
