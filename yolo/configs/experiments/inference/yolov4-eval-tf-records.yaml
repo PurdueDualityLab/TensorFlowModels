@@ -67,7 +67,7 @@ task:
         '3': 1.2
       max_boxes: 200
       use_nms: true
-      iou_thresh: 0.001
+      iou_thresh: 0.2
       nms_thresh: 0.6
       pre_nms_points: 500
       use_reduction_sum: false
@@ -151,3 +151,52 @@ trainer:
       polynomial:
         power: 4
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+
+# pre rpoc cfg
+# 'train_data': {'block_length': 1,
+#                          'cache': False,
+#                          'cycle_length': None,
+#                          'decoder': {'simple_decoder': {'regenerate_source_id': False},
+#                                      'type': 'simple_decoder'},
+#                          'deterministic': None,
+#                          'drop_remainder': True,
+#                          'dtype': 'float16',
+#                          'enable_tf_data_service': False,
+#                          'global_batch_size': 64,
+#                          'input_path': 'gs://tensorflow2/coco_records/train/2017*',
+#                          'is_training': True,
+#                          'parser': {'anchor_thresh': 0.213,
+#                                     'aug_rand_angle': 0.0,
+#                                     'aug_rand_brightness': 0.5,
+#                                     'aug_rand_hue': 0.1,
+#                                     'aug_rand_saturation': 0.7,
+#                                     'aug_rand_translate': 0.075,
+#                                     'aug_rand_zoom': 0.5,
+#                                     'fixed_size': True,
+#                                     'image_h': 608,
+#                                     'image_w': 608,
+#                                     'jitter_boxes': 0.2,
+#                                     'jitter_im': 0.6,
+#                                     'letter_box': False,
+#                                     'max_num_instances': 200,
+#                                     'min_process_size': 608,
+#                                     'mosaic': {'crop_area': [0.25, 1.0],
+#                                                'crop_area_mosaic': [0.25, 0.95],
+#                                                'mosaic_frequency': 0.85,
+#                                                'output_size': [640, 640],
+#                                                'random_crop': True,
+#                                                'random_crop_mosaic': True},
+#                                     'pct_rand': 0.0,
+#                                     'random_flip': True,
+#                                     'use_scale_xy': False,
+#                                     'use_tie_breaker': True},
+#                          'sharding': True,
+#                          'shuffle_buffer_size': 10000,
+#                          'tf_data_service_address': None,
+#                          'tf_data_service_job_name': None,
+#                          'tfds_as_supervised': False,
+#                          'tfds_data_dir': '',
+#                          'tfds_download': True,
+#                          'tfds_name': None,
+#                          'tfds_skip_decoding_feature': '',
+#                          'tfds_split': None},

@@ -227,6 +227,7 @@ class Parser(parser.Parser):
 
 
 
+    # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
     if self._jitter_boxes > 0.0:
       height_, width_ = preprocessing_ops.get_image_shape(image)
@@ -298,7 +299,7 @@ class Parser(parser.Parser):
       image, info = preprocessing_ops.random_crop_image(
           image,
           aspect_ratio_range=[jmi, jma],
-          area_range=[ 0.98, 1.0])
+          area_range=[ 0.99, 1.0])
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
