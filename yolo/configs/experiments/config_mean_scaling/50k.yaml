@@ -81,12 +81,12 @@ task:
       image_h: 608
       min_process_size: 608
       jitter_im: 0.6
-      jitter_boxes: 0.2
+      jitter_boxes: 0.4
       aug_rand_zoom: 0.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 0.75
-      aug_rand_brightness: 0.75
+      aug_rand_brightness: 0.5
       aug_rand_translate: 0.075
       max_num_instances: 200
       random_flip: True

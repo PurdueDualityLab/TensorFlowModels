@@ -229,18 +229,6 @@ class Parser(parser.Parser):
 
     # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
-    if self._jitter_boxes > 0.0:
-      height_, width_ = preprocessing_ops.get_image_shape(image)
-
-      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._jitter_boxes, self._jitter_boxes)
-      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._jitter_boxes, self._jitter_boxes)
-      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
-
-      image = tf.image.resize(image, (height_, width_))
-
     if self._jitter_im > 0:
       jmi = 1 - self._jitter_im
       jma = 1 + self._jitter_im
@@ -255,6 +243,18 @@ class Parser(parser.Parser):
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    
+    if self._jitter_boxes > 0.0:
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+
+      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._jitter_boxes, self._jitter_boxes)
+      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._jitter_boxes, self._jitter_boxes)
+      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+
+      image = tf.image.resize(image, (height_, width_))
 
     # aspect distorted crop scal independent
     if self._aug_rand_zoom > 0.0 and not data['is_mosaic']:
