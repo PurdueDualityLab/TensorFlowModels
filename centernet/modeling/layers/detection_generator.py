@@ -97,11 +97,11 @@ class CenterNetLayer(ks.Model):
 
       # Zero out everything that is not a peak.
       feature_map_peaks = (
-          feature_map * tf.cast(feature_map_peak_mask, tf.float32))
+          feature_map * tf.cast(feature_map_peak_mask, tf.bfloat16))
     
     # Zero out peaks whose scores do not exceed threshold
     valid_peaks_mask = feature_map_peaks > center_thresh
-    feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, tf.float32)
+    feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, tf.bfloat16)
 
     return feature_map_peaks
   
@@ -271,9 +271,16 @@ class CenterNetLayer(ks.Model):
 
     y_offsets = offsets[..., 0]
     x_offsets = offsets[..., 1]
+    
+    # Casting 
+    y_indices = tf.cast(y_indices, dtype=tf.bfloat16)
+    x_indices = tf.cast(x_indices, dtype=tf.bfloat16)
 
-    y_indices = tf.cast(y_indices, dtype=tf.float32)
-    x_indices = tf.cast(x_indices, dtype=tf.float32)
+    y_offsets = tf.cast(y_offsets, dtype=tf.bfloat16)
+    x_offsets = tf.cast(x_offsets, dtype=tf.bfloat16)
+
+    heights = tf.cast(heights, dtype=tf.bfloat16)
+    widths = tf.cast(widths, dtype=tf.bfloat16)
 
     detection_classes = channel_indices + self._class_offset
 
@@ -307,13 +314,13 @@ class CenterNetLayer(ks.Model):
     # Get top scores along with their x, y, and class
     scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
       batch_size, width, num_channels, k=self._max_detections)
-
+    
     # Parse the score and indices into bounding boxes
     boxes, classes, scores, num_det = self.get_boxes(scores, 
       y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, batch_size, self._max_detections)
     
     # Normalize bounding boxes
-    boxes = boxes / tf.cast(height, tf.float32)
+    boxes = boxes / tf.cast(height, tf.bfloat16)
 
     # Apply nms 
     if self._use_nms:

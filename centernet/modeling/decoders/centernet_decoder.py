@@ -51,6 +51,10 @@ class CenterNetDecoder(tf.keras.Model):
     }
 
     super().__init__(inputs=inputs, outputs=outputs, name='CenterNetDecoder')
+  
+  @property
+  def output_specs(self):
+    return self._output_specs
 
   def get_config(self):
     layer_config = {

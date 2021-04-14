@@ -38,7 +38,7 @@ task:
       gaussian_rad: -1
       gaussian_iou: 0.7
       output_dims: 128
-      dtype: bfloat32
+      dtype: bfloat16
     shuffle_buffer_size: 10000
   subtasks:
     detection:
