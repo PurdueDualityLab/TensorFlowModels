@@ -288,10 +288,14 @@ class CenterNetLayer(ks.Model):
 
   def call(self, inputs):
     # Get heatmaps from decoded outputs via final hourglass stack output
-    ct_heatmaps = inputs['ct_heatmaps'][-1]
-    ct_sizes = inputs['ct_size'][-1]
-    ct_offsets = inputs['ct_offset'][-1]
+    all_ct_heatmaps = inputs['ct_heatmaps']
+    all_ct_sizes = inputs['ct_size']
+    all_ct_offsets = inputs['ct_offset']
     
+    ct_heatmaps = all_ct_heatmaps[-1]
+    ct_sizes = all_ct_sizes[-1]
+    ct_offsets = all_ct_offsets[-1]
+
     shape = tf.shape(ct_heatmaps)
     batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
 
