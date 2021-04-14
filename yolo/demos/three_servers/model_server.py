@@ -330,19 +330,13 @@ if __name__ == "__main__":
   import tensorflow_datasets as tfds
   import matplotlib.pyplot as plt
   import pprint
+  from yolo import run as yolo_run
 
   prep_gpu()
 
   from tensorflow.keras.mixed_precision import experimental as mixed_precision
-  mixed_precision.set_policy("mixed_float16")
-
-  config = exp_cfg.YoloTask(model=exp_cfg.Yolo())
-  task = YoloTask(config)
-
-  model = task.build_model()
-  task.initialize(model)
-  model.summary()
-  model.predict(tf.ones((1, 416, 416, 3), dtype=tf.float16))
+  task, model,_ = yolo_run.load_model('yolo_custom', config_path=['yolo/configs/experiments/yolov4-eval.yaml'])
+  model.make_predict_function()
 
   run_save(model, 'videos/test.mp4', 416, "dynamic", 5, 10000)
 
