@@ -6,6 +6,7 @@ import time
 
 from yolo.demos.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils
+import matplotlib.pyplot as plt
 
 
 class VideoServer(object):
@@ -296,7 +297,7 @@ class saveThread(object):
         success, frame = self._frame_buffer.read()
         if success and frame is not None:
           frame = cv2.convertScaleAbs(frame, alpha=(255.0))
-          cv2.imwrite(f'{self._foldername}/{str(self._count)}.jpg', frame)
+          plt.imsave(f'{self._foldername}/{str(self._count)}.jpg', frame)
           self._count = self._count + 1
       self._running = False
     except Exception as e:
