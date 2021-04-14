@@ -289,19 +289,12 @@ class saveThread(object):
     self._running = False
     if self._thread is not None:
       self._thread.join()
-  def draw_box(self,image, box, color):
-    if box[3] == 0:
-      return False
-    cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), color, 1)
-    return True
   def save(self):
     self._count = 0
     try:
       while self._running:
         success, frame = self._frame_buffer.read()
         if success and frame is not None:
-          box = [5,500,5,500]
-          self.draw_box(frame,box,80)
           cv2.imwrite(f'{self._foldername}/{str(self._count)}.jpg', frame)
           self._count = self._count + 1
       self._running = False

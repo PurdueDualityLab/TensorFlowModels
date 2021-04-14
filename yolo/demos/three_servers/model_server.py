@@ -286,6 +286,42 @@ def run(model, video, disp_h, wait_time, max_batch, que_size):
   server.close()
   display.close()
 
+def run_save(model, video, disp_h, wait_time, max_batch, que_size):
+  max_batch = 5 if max_batch is None else max_batch
+  pfn = preprocess_fn
+  pofn = utils.DrawBoxes(
+      classes=80, labels=coco.get_coco_names(), display_names=True, thickness=2)
+
+  server = ModelServer(
+      model=model,
+      preprocess_fn=pfn,
+      postprocess_fn=pofn,
+      wait_time=wait_time,
+      max_batch=max_batch)
+  video = video_t.VideoServer(
+      video, wait_time=0.00000001, que=que_size, disp_h=disp_h)
+  save = video_t.saveThread(
+      frame_buffer = server)
+  server.start()
+  video.start()
+  save.start()
+
+  # issue at soem point there is a
+  # bottlenecked by the readeing thread.
+  try:
+    while (video.running and save.running):
+      frame = video.get()
+      if not isinstance(frame, type(None)):
+        while not server.put(frame):
+          time.sleep(server.wait_time)
+      time.sleep(server.wait_time)
+  except Exception as e:
+    print(e)
+    traceback.print_exc()
+
+  server.close()
+  save.close()
+
 
 if __name__ == "__main__":
   from yolo.utils.run_utils import prep_gpu
@@ -308,5 +344,5 @@ if __name__ == "__main__":
   model.summary()
   model.predict(tf.ones((1, 416, 416, 3), dtype=tf.float16))
 
-  run(model, 'videos/test.test.mp4', 416, "dynamic", 5, 10000)
+  run_save(model, 'videos/test.mp4', 416, "dynamic", 5, 10000)
 
