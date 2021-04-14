@@ -224,7 +224,8 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
 
 def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
                path_scales):
-  print(model_config.as_dict())
+  import pprint
+  pprint.pprint(model_config.as_dict())
   print(input_specs)
   print(l2_regularization)
 

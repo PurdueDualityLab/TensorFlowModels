@@ -292,32 +292,21 @@ if __name__ == "__main__":
   from yolo.configs import yolo as exp_cfg
   from yolo.tasks.yolo import YoloTask
   import tensorflow_datasets as tfds
-  import yolo.utils.export.tensor_rt as trt
   import matplotlib.pyplot as plt
+  import pprint
 
   prep_gpu()
 
   from tensorflow.keras.mixed_precision import experimental as mixed_precision
   mixed_precision.set_policy("mixed_float16")
 
-  config = exp_cfg.YoloTask(model=exp_cfg.Yolo(base="v4tiny", min_level=4))
+  config = exp_cfg.YoloTask(model=exp_cfg.Yolo())
   task = YoloTask(config)
+
   model = task.build_model()
   task.initialize(model)
   model.summary()
   model.predict(tf.ones((1, 416, 416, 3), dtype=tf.float16))
 
-  # #name = "saved_models/v4/tflite-regualr-no-nms"
-  # #name = "saved_models/v4/tflite-tiny-no-nms"
-  # name = "saved_models/v4/tiny"
-  # new_name = f"{name}_tensorrt"
-  # model = trt.TensorRT(
-  #     saved_model=new_name,
-  #     save_new_path=new_name,
-  #     max_workspace_size_bytes=4000000000,
-  #     max_batch_size=5)  # , precision_mode="INT8", use_calibration=True)
-  # model.compile()
-  # model.summary()
-  # model.set_postprocessor_fn(func)
+  run(model, 'videos/test.test.mp4', 416, "dynamic", 5, 10000)
 
-  run(model, 0, 416, "dynamic", 5, 10000)

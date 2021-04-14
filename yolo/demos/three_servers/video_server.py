@@ -267,13 +267,66 @@ class DisplayThread(object):
     return self._fps
 
 
+class saveThread(object):
+  def __init__(self,
+               folder_name = "frames/",
+               frame_buffer= None,
+              ):
+    if frame_buffer is None:
+      self._frame_buffer = FrameQue(1000)
+    else:
+      self._frame_buffer = frame_buffer
+    self._thread = None
+    self._running = False
+    self._fps = 0
+    self._foldername = folder_name
+    self._count = 0
+  def start(self):
+    self._running = True
+    self._thread = t.Thread(target=self.save, args=())
+    self._thread.start()
+  def close(self):
+    self._running = False
+    if self._thread is not None:
+      self._thread.join()
+  def draw_box(self,image, box, color):
+    if box[3] == 0:
+      return False
+    cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), color, 1)
+    return True
+  def save(self):
+    self._count = 0
+    try:
+      while self._running:
+        success, frame = self._frame_buffer.read()
+        if success and frame is not None:
+          box = [5,500,5,500]
+          self.draw_box(frame,box,80)
+          cv2.imwrite(f'{self._foldername}/{str(self._count)}.jpg', frame)
+          self._count = self._count + 1
+      self._running = False
+    except Exception as e:
+      print(e)
+      self._running = False
+    
+  @property
+  def running(self):
+    return self._running
+  def put(self, frame):
+    return self._frame_buffer.put(frame)
+  def put_all(self, frames):
+    return self._frame_buffer.put_all(frames)
+  @property
+  def fps(self):
+    return self._fps
+
 if __name__ == "__main__":
-  video = VideoServer("videos/nyc.mp4", wait_time=0.000001, que=10)
-  display = DisplayThread(video, wait_time=0.0001)
+  video = VideoServer("videos/test.mp4", wait_time=0.000001, que=10)
+  display = saveThread(frame_buffer=video)
   video.start()
   display.start()
 
-  while (display.running):
+  while (display.running and video.running):
     time.sleep(0.001)
 
   video.close(blocking=False)
