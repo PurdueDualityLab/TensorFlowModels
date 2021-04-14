@@ -295,6 +295,7 @@ class saveThread(object):
       while self._running:
         success, frame = self._frame_buffer.read()
         if success and frame is not None:
+          frame = cv2.convertScaleAbs(frame, alpha=(255.0))
           cv2.imwrite(f'{self._foldername}/{str(self._count)}.jpg', frame)
           self._count = self._count + 1
       self._running = False
