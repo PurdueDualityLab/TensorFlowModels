@@ -144,7 +144,7 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
+  output_size: List[int] = dataclasses.field(default_factory=lambda: [720, 720])
   mosaic_frequency: float = 0.85
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
@@ -155,17 +155,17 @@ class Mosaic(hyperparams.Config):
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 640
-  image_h: int = 640
+  image_w: int = 608
+  image_h: int = 608
   fixed_size: bool = True
   max_num_instances: int = 200
-  min_process_size: int = 640
+  min_process_size: int = 608
   letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
   jitter_im: float = 0.6
   jitter_boxes: float = 0.4
-  aug_rand_translate: float = 0.1
+  aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.75 #1.5
   aug_rand_brightness: float = 0.75 #1.5
   aug_rand_hue: float = 0.1  #0.015
