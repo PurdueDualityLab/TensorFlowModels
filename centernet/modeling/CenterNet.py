@@ -74,7 +74,8 @@ def build_centernet_filter(model_config):
                         use_nms=model_config.filter.use_nms,
                         center_thresh=model_config.filter.center_thresh,
                         iou_thresh=model_config.filter.iou_thresh,
-                        class_offset=model_config.filter.class_offset)
+                        class_offset=model_config.filter.class_offset,
+                        dtype=model_config.filter.dtype)
 
 def build_centernet_head(model_config):
   return None

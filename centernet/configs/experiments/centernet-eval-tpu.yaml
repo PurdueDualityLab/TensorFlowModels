@@ -22,6 +22,7 @@ task:
       center_thresh: 0.1
       iou_thresh: 0.4
       class_offset: 1
+      dtype: bloat16
   validation_data:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     global_batch_size: 8

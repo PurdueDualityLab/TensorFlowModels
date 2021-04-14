@@ -132,10 +132,8 @@ class Hourglass(tf.keras.Model):
   def output_specs(self):
     return self._output_specs
 
-# @factory.register_backbone_builder('hourglass')
-
-
-@register.backbone('hourglass', cfg.Hourglass)
+# @register.backbone('hourglass', cfg.Hourglass)
+@factory.register_backbone_builder('hourglass')
 def build_hourglass(
     input_specs: tf.keras.layers.InputSpec,
     model_config,
