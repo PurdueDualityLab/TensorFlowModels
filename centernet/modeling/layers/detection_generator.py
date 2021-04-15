@@ -24,7 +24,7 @@ class CenterNetLayer(ks.Model):
                center_thresh=0.1,
                iou_thresh=0.4,
                class_offset=1,
-               dtype='float32'
+               dtype='float32',
                **kwargs):
     """
     Args:
@@ -63,13 +63,6 @@ class CenterNetLayer(ks.Model):
     self._iou_thresh = iou_thresh
 
     self._class_offset = class_offset
-
-    if dtype == 'float16':
-      self._dtype = tf.float16
-    elif dtype == 'bfloat16':
-      self._dtype = tf.bfloat16
-    elif dtype == 'float32':
-      self._dtype = tf.float32
   
   def process_heatmap(self, 
                       feature_map,
@@ -92,6 +85,8 @@ class CenterNetLayer(ks.Model):
       A Tensor with the same shape as the input but with non-valid center
         prediction locations masked out.
     """
+
+    # all dtypes in this function are float32 or bool (for masks)
     feature_map = tf.math.sigmoid(feature_map)
     if not kernel_size or kernel_size == 1:
       feature_map_peaks = feature_map
@@ -102,15 +97,16 @@ class CenterNetLayer(ks.Model):
 
       feature_map_peak_mask = tf.math.abs(
           feature_map - feature_map_max_pool) < self._peak_error
-
+      
       # Zero out everything that is not a peak.
       feature_map_peaks = (
-          feature_map * tf.cast(feature_map_peak_mask, self._dtype))
-    
+          feature_map * tf.cast(feature_map_peak_mask, feature_map.dtype))
+
     # Zero out peaks whose scores do not exceed threshold
     valid_peaks_mask = feature_map_peaks > center_thresh
-    feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, self._dtype)
 
+    feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, feature_map_peaks.dtype)
+    
     return feature_map_peaks
   
   def get_row_col_channel_indices_from_flattened_indices(self,
@@ -137,6 +133,8 @@ class CenterNetLayer(ks.Model):
     """
     # Avoid using mod operator to make the ops more easy to be compatible with
     # different environments, e.g. WASM.
+
+    # all inputs and outputs are dtype int32
     row_indices = (indices // num_channels) // num_cols
     col_indices = (indices // num_channels) - row_indices * num_cols
     channel_indices_temp = indices // num_channels
@@ -259,36 +257,33 @@ class CenterNetLayer(ks.Model):
     """
     # TF Lite does not support tf.gather with batch_dims > 0, so we need to use
     # tf_gather_nd instead and here we prepare the indices for that.
+
+    # combined indices dtype=int32
     combined_indices = tf.stack([
         self.multi_range(batch_size, value_repetitions=num_boxes),
         tf.reshape(y_indices, [-1]),
         tf.reshape(x_indices, [-1])
       ], axis=1)
+    
 
-    # Get the heights and widths of center points
     new_height_width = tf.gather_nd(height_width_predictions, combined_indices)
     new_height_width = tf.reshape(new_height_width, [batch_size, num_boxes, -1])
     height_width = tf.maximum(new_height_width, 0)
 
+    # height and widths dtype=float32
     heights = height_width[..., 0]
     widths = height_width[..., 1]
 
     # Get the offsets of center points
     new_offsets = tf.gather_nd(offset_predictions, combined_indices)
     offsets = tf.reshape(new_offsets, [batch_size, num_boxes, -1])
-
+    
+    # offsets are dtype=float32
     y_offsets = offsets[..., 0]
     x_offsets = offsets[..., 1]
     
-    # Casting 
-    y_indices = tf.cast(y_indices, dtype=self._dtype)
-    x_indices = tf.cast(x_indices, dtype=self._dtype)
-
-    y_offsets = tf.cast(y_offsets, dtype=self._dtype)
-    x_offsets = tf.cast(x_offsets, dtype=self._dtype)
-
-    heights = tf.cast(heights, dtype=self._dtype)
-    widths = tf.cast(widths, dtype=self._dtype)
+    y_indices = tf.cast(y_indices, dtype=heights.dtype)
+    x_indices = tf.cast(x_indices, dtype=widths.dtype)
 
     detection_classes = channel_indices + self._class_offset
 
@@ -307,28 +302,34 @@ class CenterNetLayer(ks.Model):
     all_ct_sizes = inputs['ct_size']
     all_ct_offsets = inputs['ct_offset']
     
+    # Heatmaps below are all dtype=float32
     ct_heatmaps = all_ct_heatmaps[-1]
     ct_sizes = all_ct_sizes[-1]
     ct_offsets = all_ct_offsets[-1]
-
+    
     shape = tf.shape(ct_heatmaps)
-    batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
 
+    # Values below from shape array are all dtype=int32
+    batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
+    
+    # Resulting peaks from process_heatmap are dtype=float32
     # Process heatmaps using 3x3 max pool and applying sigmoid
     peaks = self.process_heatmap(ct_heatmaps, 
       kernel_size=self._peak_extract_kernel_size, 
       center_thresh=self._center_thresh)
     
+    # scores are dtype=float32, y, x, and channel indices are dtype=int32
     # Get top scores along with their x, y, and class
     scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
       batch_size, width, num_channels, k=self._max_detections)
     
+    # boxes and scores are dtype=float32, classes and num_dets are dtype=int32
     # Parse the score and indices into bounding boxes
     boxes, classes, scores, num_det = self.get_boxes(scores, 
       y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, batch_size, self._max_detections)
     
     # Normalize bounding boxes
-    boxes = boxes / tf.cast(height, self._dtype)
+    boxes = boxes / tf.cast(height, boxes.dtype)
 
     # Apply nms 
     if self._use_nms:

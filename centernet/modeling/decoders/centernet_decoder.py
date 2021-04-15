@@ -32,7 +32,6 @@ class CenterNetDecoder(tf.keras.Model):
     self._heatmap_bias = heatmap_bias
     self._num_inputs = num_inputs
 
-
     inputs = [tf.keras.layers.Input(shape=value[1:]) for value in self._input_specs]
     outputs = dict()
 

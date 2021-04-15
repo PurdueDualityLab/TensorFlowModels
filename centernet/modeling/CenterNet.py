@@ -94,10 +94,8 @@ def build_centernet(input_specs, task_config, l2_regularization):
 
   model = CenterNet(backbone=backbone, decoder=decoder, head=head, filter=filter)
 
-  test_input = tf.zeros(shape=(1, 512, 512, 3), dtype=tf.bfloat16)
-  model(test_input)
-  # model.build(input_specs.shape)
-  # model.summary()
+  model.build(input_specs.shape)
+  model.summary()
 
   # TODO: uncommend when filter is implemented
   # losses = filter.losses

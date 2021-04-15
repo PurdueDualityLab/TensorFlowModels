@@ -28,9 +28,5 @@ class CenterNetTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(outputs['raw_output']['ct_offset'][0].shape, (5, 128, 128, 2))
     self.assertEqual(outputs['raw_output']['ct_size'][0].shape, (5, 128, 128, 2))
 
-    model.summary()
-    
-
-
 if __name__ == '__main__':
   tf.test.main()
