@@ -90,29 +90,29 @@ class YoloLayer(ks.Model):
     len_mask = self._len_mask[key]
     scale_xy = self._scale_xy[key]
 
-    # reshape the yolo output to (batchsize, 
-    #                             width, 
-    #                             height, 
-    #                             number_anchors, 
+    # reshape the yolo output to (batchsize,
+    #                             width,
+    #                             height,
+    #                             number_anchors,
     #                             remaining_points)
     batchsize, height, width = shape[0], shape[1], shape[2]
     data = tf.reshape(inputs,
                       [batchsize, height, width, len_mask, self._classes + 5])
 
-    # use the grid generator to get the formatted anchor boxes and grid points 
-    # in shape [1, height, width, 2] 
+    # use the grid generator to get the formatted anchor boxes and grid points
+    # in shape [1, height, width, 2]
     centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
 
-    # split the yolo detections into boxes, object score map, classes 
+    # split the yolo detections into boxes, object score map, classes
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
-    
-    # determine the number of classes 
+
+    # determine the number of classes
     classes = tf.shape(class_scores)[-1]
 
-    # configurable to use the new coordinates in scaled Yolo v4 or not 
+    # configurable to use the new coordinates in scaled Yolo v4 or not
     if not self._new_cords[key]:
-      # coordinates from scaled yolov4 
+      # coordinates from scaled yolov4
       _, _, boxes = yolo_loss.get_predicted_box(
           tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
           anchors, centers, scale_xy)
@@ -122,10 +122,10 @@ class YoloLayer(ks.Model):
           tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
           anchors, centers, scale_xy)
 
-    # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax) 
+    # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_utils.xcycwh_to_yxyx(boxes)
 
-    # activate and detection map 
+    # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
 
     # threshold the detection map
@@ -164,7 +164,7 @@ class YoloLayer(ks.Model):
 
     # apply nms
     if not self._use_nms:
-      # TPU supported + DIOU NMS much slower 
+      # TPU supported + DIOU NMS much slower
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,
           class_scores,
@@ -175,7 +175,7 @@ class YoloLayer(ks.Model):
           prenms_top_k=self._pre_nms_points,
           use_classes=True)
     else:
-      # greedy NMS 
+      # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
       nms_items = tf.image.combined_non_max_suppression(
@@ -194,7 +194,7 @@ class YoloLayer(ks.Model):
     # compute the number of valid detections
     num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis=-1)
 
-    # format and return 
+    # format and return
     return {
         'bbox': boxes,
         'classes': class_scores,
@@ -231,7 +231,6 @@ class YoloLayer(ks.Model):
           scale_x_y=self._scale_xy[key],
           use_tie_breaker=self._use_tie_breaker)
     return loss_dict
-  
 
   def get_config(self):
     return {

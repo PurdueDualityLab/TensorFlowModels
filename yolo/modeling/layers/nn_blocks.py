@@ -169,8 +169,7 @@ class ConvBN(tf.keras.layers.Layer):
     elif self._activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(
-          self._activation)  
+      self._activation_fn = tf_utils.get_activation(self._activation)
 
   def call(self, x):
     if not TPU_BASE:

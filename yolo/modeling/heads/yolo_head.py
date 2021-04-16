@@ -4,6 +4,7 @@ from yolo.modeling.layers import nn_blocks
 
 class YoloHead(tf.keras.layers.Layer):
   """YOLO Prediction Head"""
+
   def __init__(self,
                min_level,
                max_level,
@@ -59,16 +60,14 @@ class YoloHead(tf.keras.layers.Layer):
         kernel_initializer=kernel_initializer,
         kernel_regularizer=kernel_regularizer,
         bias_regularizer=bias_regularizer)
-    
+
     self._conv_config = dict(
         filters=self._output_conv,
         kernel_size=(1, 1),
         strides=(1, 1),
         padding="same",
         use_bn=False,
-        **self._base_config
-    )
-
+        **self._base_config)
 
   def build(self, input_shape):
     self._head = dict()
@@ -94,13 +93,12 @@ class YoloHead(tf.keras.layers.Layer):
 
   def get_config(self):
     config = dict(
-        min_level = self._min_level, 
-        max_level = self._max_level, 
+        min_level=self._min_level,
+        max_level=self._max_level,
         classes=self._classes,
         boxes_per_level=self._boxes_per_level,
         output_extras=self._output_extras,
-        **self._base_config
-    )
+        **self._base_config)
     return config
 
   @classmethod
