@@ -19,12 +19,14 @@ class Mosaic(object):
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                random_crop=1.0,
+               keep_thresh = 0.00, 
                random_crop_mosaic=False):
     self._output_size = output_size
     self._mosaic_frequency = mosaic_frequency
     self._random_crop = random_crop
     self._seed = None
     self._crop_area = crop_area
+    self._keep_thresh = keep_thresh
     self._random_crop_mosaic = random_crop_mosaic
     self._crop_area_mosaic = crop_area_mosaic
     return
@@ -110,7 +112,8 @@ class Mosaic(object):
       is_crowd = tf.squeeze(is_crowd, axis=0)
       area = tf.squeeze(area, axis=0)
 
-    indices = box_ops.get_non_empty_box_indices(boxes)
+    # indices = box_ops.get_non_empty_box_indices(boxes)
+    indices = preprocessing_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
     is_crowd = tf.gather(classes, indices)
@@ -127,10 +130,13 @@ class Mosaic(object):
         seed=self._seed)
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    # boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+    #                                              info[3, :])
+    boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :], clip_wh = False, keep_thresh=self._keep_thresh)
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
+    # inds = box_ops.get_non_empty_box_indices(boxes)
+    inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -150,10 +156,13 @@ class Mosaic(object):
         seed=self._seed)
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    # boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+    #                                              info[3, :])
+    boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :], clip_wh=False, keep_thresh=self._keep_thresh)
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
+    # inds = box_ops.get_non_empty_box_indices(boxes)
+    inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
