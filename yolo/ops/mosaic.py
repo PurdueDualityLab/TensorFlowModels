@@ -132,11 +132,8 @@ class Mosaic(object):
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
-    # boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-    #                                              info[3, :], clip_wh = False, keep_thresh=self._keep_thresh)
 
     inds = box_ops.get_non_empty_box_indices(boxes)
-    # inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -158,11 +155,8 @@ class Mosaic(object):
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
-    # boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-    #                                              info[3, :], clip_wh=False, keep_thresh=self._keep_thresh)
 
     inds = box_ops.get_non_empty_box_indices(boxes)
-    # inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
