@@ -3,7 +3,7 @@ from yolo.modeling.layers import nn_blocks
 
 
 class YoloHead(tf.keras.layers.Layer):
-
+  """YOLO Prediction Head"""
   def __init__(self,
                min_level,
                max_level,
@@ -18,6 +18,25 @@ class YoloHead(tf.keras.layers.Layer):
                bias_regularizer=None,
                activation=None,
                **kwargs):
+    """
+    Yolo Prediciton Head initialization function.
+
+    Args:
+      min_level: `int`, the minimum backbone output level
+      max_level: `int`, the maximum backbone output level
+      classes: `int`, number of classes per category
+      boxes_per_level: `int`, number of boxes to predict per level
+      use_sync_bn: if True, use synchronized batch normalization.
+      norm_momentum: `float`, normalization omentum for the moving average.
+      norm_epsilon: `float`, small float added to variance to avoid dividing by
+        zero.
+      activation: `str`, the activation function to use typically leaky or mish
+      kernel_initializer: kernel_initializer for convolutional layers.
+      kernel_regularizer: tf.keras.regularizers.Regularizer object for Conv2D.
+      bias_regularizer: tf.keras.regularizers.Regularizer object for Conv2d.
+      **kwargs: keyword arguments to be passed.
+    """
+
     super().__init__(**kwargs)
     self._min_level = min_level
     self._max_level = max_level
@@ -33,11 +52,6 @@ class YoloHead(tf.keras.layers.Layer):
     self._output_conv = (classes + output_extras + 5) * boxes_per_level
 
     self._base_config = dict(
-        filters=self._output_conv,
-        kernel_size=(1, 1),
-        strides=(1, 1),
-        padding="same",
-        use_bn=False,
         activation=activation,
         subdivisions=subdivisions,
         norm_momentum=norm_momentum,
@@ -45,12 +59,21 @@ class YoloHead(tf.keras.layers.Layer):
         kernel_initializer=kernel_initializer,
         kernel_regularizer=kernel_regularizer,
         bias_regularizer=bias_regularizer)
+    
+    self._conv_config = dict(
+        filters=self._output_conv,
+        kernel_size=(1, 1),
+        strides=(1, 1),
+        padding="same",
+        use_bn=False,
+        **self._base_config
+    )
+
 
   def build(self, input_shape):
     self._head = dict()
     for key in self._key_list:
-      self._head[key] = nn_blocks.ConvBN(**self._base_config)
-    # super().build(input_shape)
+      self._head[key] = nn_blocks.ConvBN(**self._conv_config)
 
   def call(self, inputs):
     outputs = dict()
@@ -74,14 +97,7 @@ class YoloHead(tf.keras.layers.Layer):
         classes=self._classes,
         boxes_per_level=self._boxes_per_level,
         output_extras=self._output_extras,
-        xy_exponential=self._xy_exponential,
-        exp_base=self._exp_base,
-        xy_scale_base=self._xy_scale_base,
-        norm_momentum=self._norm_momentum,
-        norm_epsilon=self._norm_epsilon,
-        kernel_initializer=self._kernel_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
+        **self._base_config
     )
     return config
 
