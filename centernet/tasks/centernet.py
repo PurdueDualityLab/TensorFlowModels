@@ -27,6 +27,7 @@ class CenterNetTask(base_task.Task):
     self._metrics = []
 
   def build_inputs(self, params, input_context=None):
+    print("\nIn build_inputs\n")
     """Build input dataset."""
     decoder = self.get_decoder(params)
     model = self.task_config.model
@@ -51,6 +52,7 @@ class CenterNetTask(base_task.Task):
     return dataset
 
   def build_model(self):
+    print("\nIn build_model\n")
     """get an instance of CenterNet"""
     from centernet.modeling.CenterNet import build_centernet
     params = self.task_config.train_data
@@ -67,6 +69,7 @@ class CenterNetTask(base_task.Task):
     return model
 
   def initialize(self, model: tf.keras.Model):
+    print("\nIn initialize\n")
     """Initializes CenterNet model by loading pretrained weights """
     if self.task_config.load_odapi_weights and self.task_config.load_extremenet_weights:
       raise ValueError('Only 1 of odapi or extremenet weights should be loaded')
@@ -114,6 +117,7 @@ class CenterNetTask(base_task.Task):
 
 
   def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
+    print("\nIn build_losses\n")
     total_loss = 0.0
     loss = 0.0
 
@@ -123,7 +127,7 @@ class CenterNetTask(base_task.Task):
     object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
 
-    # Set up box indicies so that they have a batch element as well
+    # Set up box indices so that they have a batch element as well
     box_indices = loss_ops.add_batch_to_indices(labels['box_indices'])
 
     box_mask = tf.cast(labels['box_mask'], dtype=tf.float32)
@@ -134,10 +138,12 @@ class CenterNetTask(base_task.Task):
     true_flattened_ct_heatmap = loss_ops._flatten_spatial_dimensions(
       labels['ct_heatmaps'])
     
+    true_flattened_ct_heatmap = tf.cast(true_flattened_ct_heatmap, tf.float32)
     total_center_loss = 0.0
     for ct_heatmap in pred_ct_heatmap_list:
       pred_flattened_ct_heatmap = loss_ops._flatten_spatial_dimensions(
         ct_heatmap)
+      pred_flattened_ct_heatmap = tf.cast(pred_flattened_ct_heatmap, tf.float32)
       total_center_loss += object_center_loss_fn(
         pred_flattened_ct_heatmap, true_flattened_ct_heatmap)
 
@@ -147,10 +153,12 @@ class CenterNetTask(base_task.Task):
     # Calculate scale loss
     pred_scale_list = outputs['ct_size']
     true_scale = labels['size']
+    true_scale = tf.cast(true_scale, tf.float32)
 
     total_scale_loss = 0.0
     for scale_map in pred_scale_list:
       pred_scale = loss_ops.get_batch_predictions_from_indices(scale_map, box_indices)
+      pred_scale = tf.cast(pred_scale, tf.float32)
       # Only apply loss for boxes that appear in the ground truth
       total_scale_loss += tf.reduce_sum(localization_loss_fn(pred_scale, true_scale), axis=-1) * box_mask
     
@@ -160,16 +168,19 @@ class CenterNetTask(base_task.Task):
     # Calculate offset loss
     pred_offset_list = outputs['ct_offset']
     true_offset = labels['ct_offset']
+    true_offset = tf.cast(true_offset, tf.float32)
 
     total_offset_loss = 0.0
     for offset_map in pred_offset_list:
       pred_offset = loss_ops.get_batch_predictions_from_indices(offset_map, box_indices)
+      pred_offset = tf.cast(pred_offset, tf.float32)
       # Only apply loss for boxes that appear in the ground truth
       total_offset_loss += tf.reduce_sum(localization_loss_fn(pred_offset, true_offset), axis=-1) * box_mask
     
     offset_loss = tf.reduce_sum(total_offset_loss) / float(len(pred_offset_list) * num_boxes)
     metric_dict['ct_offset_loss'] = offset_loss
-
+    
+    # Aggregate and finalize loss
     loss_weights = self.task_config.losses.detection
     total_loss = (center_loss + 
                  loss_weights.scale_weight * scale_loss +
@@ -179,6 +190,7 @@ class CenterNetTask(base_task.Task):
     return total_loss, metric_dict
 
   def build_metrics(self, training=True):
+    print("\nIn build_metrics\n")
     metrics = []
     metric_names = self._metric_names
 
@@ -195,6 +207,7 @@ class CenterNetTask(base_task.Task):
     return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
+    print("\nIn train_step\n")
     # get the data point
     image, label = inputs
 
@@ -236,10 +249,12 @@ class CenterNetTask(base_task.Task):
   
   def validation_step(self, inputs, model, metrics=None):
     # get the data point
+    print("\nIn validation step\n")
     image, label = inputs
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
+
     loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['total_loss']}
 
@@ -273,6 +288,7 @@ class CenterNetTask(base_task.Task):
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
+    print("\nIn aggregate_logs\n")
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric
@@ -281,4 +297,5 @@ class CenterNetTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
+    print("\nIn reduce_aggregate_logs\n")
     return self.coco_metric.result()

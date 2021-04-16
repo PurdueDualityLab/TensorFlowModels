@@ -7,9 +7,12 @@ from centernet.dataloaders.centernet_input import CenterNetParser
 class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
   def check_labels_correct(self, boxes, classes, output_size, input_size):
     parser = CenterNetParser()
-    labels = parser._build_labels(
-      boxes=tf.constant(boxes, dtype=tf.float32), 
-      classes=tf.constant(classes, dtype=tf.float32), 
+    labels = parser._build_heatmap_and_regressed_features(
+      labels = {
+        'bbox': tf.constant(boxes, dtype=tf.float32),
+        'num_detections': len(boxes),
+        'classes': tf.constant(classes, dtype=tf.float32)
+      },
       output_size=output_size, input_size=input_size)
     
     tl_heatmaps = labels['tl_heatmaps']
@@ -75,7 +78,7 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
       (100, 300, 150, 370),
       (15, 100, 200, 170),
     ]
-    classes = (0, 1, 2)
+    classes = (1, 2, 3)
     sizes = [512, 512]
 
     self.check_labels_correct(boxes=boxes, classes=classes, 

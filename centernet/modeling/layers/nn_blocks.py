@@ -3,7 +3,7 @@ import tensorflow as tf
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import \
     nn_blocks as official_nn_blocks
-from yolo.modeling.layers import subnormalization
+from centernet.modeling.layers import subnormalization
 
 TPU_BASE = True
 
@@ -307,13 +307,6 @@ class HourglassBlock(tf.keras.layers.Layer):
       inner_outputs = self.inner_hg(encoded_downsampled_outputs)
       hg_output = self.decoder_block(inner_outputs)
       return self.upsample_layer(hg_output) + encoded_outputs
-
-      # x_pre_pooled = self.encoder_block1(x)
-      # x_side = self.encoder_block2(x_pre_xpooled)
-      # x_pooled = self.pool(x_pre_pooled)
-      # inner_output = self.inner_hg(x_pooled)
-      # hg_output = self.decoder_block(inner_output)
-      # return self.upsample_layer(hg_output) + x_side
 
   def get_config(self):
     layer_config = {

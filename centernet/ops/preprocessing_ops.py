@@ -17,7 +17,7 @@ def _smallest_positive_root(a, b, c) -> tf.Tensor:
   root1 = (-b - discriminant_sqrt) / (2 * a)
   root2 = (-b + discriminant_sqrt) / (2 * a)
 
-  return tf.where(tf.less(discriminant, 0), LARGE_NUM, (-b + discriminant_sqrt) / (2))
+  return tf.where(tf.less(discriminant, 0), tf.cast(LARGE_NUM, b.dtype), (-b + discriminant_sqrt) / (2))
   # return tf.where(tf.less(discriminant, 0), LARGE_NUM, tf.where(tf.less(root1, 0), root2, root1))
 
 def gaussian_radius(det_size, min_overlap=0.7) -> int:
@@ -179,7 +179,7 @@ def draw_gaussian(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     masked_gaussian = masked_gaussian_ta.stack()
     heatmap_mask = heatmap_mask_ta.stack()
     heatmap_mask = tf.reshape(heatmap_mask, (-1, 3))
-    heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, masked_gaussian * scaling_factor)
+    heatmap = tf.tensor_scatter_nd_max(heatmap, heatmap_mask, tf.cast(masked_gaussian * scaling_factor, heatmap.dtype))
     # print('after ',heatmap)
     return heatmap
 

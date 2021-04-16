@@ -68,9 +68,7 @@ class CenterNetParser(parser.Parser):
       )
   
   def _build_heatmap_and_regressed_features(self, 
-                                            boxes, 
-                                            classes, 
-                                            num_objects, 
+                                            labels,
                                             output_size=[128, 128], 
                                             input_size=[512, 512]):
     """ Generates the ground truth labels for centernet.
@@ -80,12 +78,13 @@ class CenterNetParser(parser.Parser):
     generated.
 
     Args:
-      boxes: A `Tensor` of shape [max_num_instances, num_boxes, 4], where the last dimension
-        corresponds to the top left x, top left y, bottom right x, and
-        bottom left y coordinates of the bounding box
-      classes: A `Tensor` of shape [max_num_instances, num_boxes] that contains the class of each
-        box, given in the same order as the boxes
-      num_objects: A `Tensor` or int that gives the number of objects
+      labels: A dictionary of COCO ground truth labels with at minimum the following fields:
+        bbox: A `Tensor` of shape [max_num_instances, num_boxes, 4], where the last dimension
+          corresponds to the top left x, top left y, bottom right x, and
+          bottom left y coordinates of the bounding box
+        classes: A `Tensor` of shape [max_num_instances, num_boxes] that contains the class of each
+          box, given in the same order as the boxes
+        num_detections: A `Tensor` or int that gives the number of objects in the image
       output_size: A `list` of length 2 containing the desired output height 
         and width of the heatmaps
       input_size: A `list` of length 2 the expected input height and width of 
@@ -120,32 +119,38 @@ class CenterNetParser(parser.Parser):
           These are used to extract the regressed box features from the 
           prediction when computing the loss
     """
-    boxes = tf.cast(boxes, dtype=tf.float32)
-    classes = tf.cast(classes, dtype=tf.float32)
-    input_h, input_w = input_size
-    output_h, output_w = output_size
+
+    # boxes and classes are cast to self._dtype already from build_label
+    boxes = labels['bbox']
+    classes = labels['classes']
+    input_size = tf.cast(input_size, self._dtype)
+    output_size = tf.cast(output_size, self._dtype)
+    input_h, input_w = input_size[0], input_size[1]
+    output_h, output_w = output_size[0], output_size[1]
     
-    # We will transpose these at the end
-    tl_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=tf.float32)
-    br_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=tf.float32)
-    ct_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=tf.float32)
-
-    tl_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-    br_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-    ct_offset = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-    size      = tf.zeros((self._max_num_instances, 2), dtype=tf.float32)
-
+    # We will transpose the heatmaps at the end
+    tl_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=self._dtype)
+    br_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=self._dtype)
+    ct_heatmaps = tf.zeros((self._num_classes, output_h, output_w), dtype=self._dtype)
+    
+    # Maps for offset and size predictions
+    tl_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
+    br_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
+    ct_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
+    size      = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
+    
+    # Masks for valid boxes
     box_mask = tf.zeros((self._max_num_instances), dtype=tf.int32)
     box_indices  = tf.zeros((self._max_num_instances, 2), dtype=tf.int32)
 
     # Scaling factor for determining center/corners
-    width_ratio = tf.cast(output_w / input_w, tf.float32)
-    height_ratio = tf.cast(output_h / input_h, tf.float32)
+    width_ratio = output_w / input_w
+    height_ratio = output_h / input_h
 
-    num_boxes = tf.shape(boxes)[0]
+    num_objects = labels['num_detections']
 
-    height = 0.0
-    width = 0.0
+    height = tf.cast(0.0, self._dtype)
+    width = tf.cast(0.0, self._dtype)
     for tag_ind in tf.range(num_objects):
       box = boxes[tag_ind]
       obj_class = classes[tag_ind] - 1 # TODO: See if subtracting 1 from the class like the paper is unnecessary
@@ -158,6 +163,7 @@ class CenterNetParser(parser.Parser):
       )
 
       # Scale center and corner locations
+      # These should be dtype=float32
       fxtl = (xtl * width_ratio)
       fytl = (ytl * height_ratio)
       fxbr = (xbr * width_ratio)
@@ -166,6 +172,7 @@ class CenterNetParser(parser.Parser):
       fyct = (yct * height_ratio)
 
       # Fit center and corners onto the output image
+      # These should be dtype=float32
       xtl = tf.math.floor(fxtl)
       ytl = tf.math.floor(fytl)
       xbr = tf.math.floor(fxbr)
@@ -175,6 +182,7 @@ class CenterNetParser(parser.Parser):
       
       # Splat gaussian at for the center/corner heatmaps
       if self._use_gaussian_bump:
+        # Check: do we need to normalize these boxes?
         width = box[3] - box[1]
         height = box[2] - box[0]
 
@@ -183,18 +191,21 @@ class CenterNetParser(parser.Parser):
 
         if self._gaussian_rad == -1:
           radius = preprocessing_ops.gaussian_radius((height, width), self._gaussian_iou)
-          radius = tf.math.maximum(0.0, tf.math.floor(radius))
+          radius = tf.math.maximum(tf.cast(0.0, radius.dtype), tf.math.floor(radius))
         else:
           radius = self._gaussian_rad
-
+        
         tl_heatmaps = preprocessing_ops.draw_gaussian(tl_heatmaps, [[obj_class, xtl, ytl, radius]])
         br_heatmaps = preprocessing_ops.draw_gaussian(br_heatmaps, [[obj_class, xbr, ybr, radius]])
         ct_heatmaps = preprocessing_ops.draw_gaussian(ct_heatmaps, [[obj_class, xct, yct, radius]], scaling_factor=5)
 
       else:
-        tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, [[obj_class, ytl, xtl]], [1])
-        br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, [[obj_class, ybr, xbr]], [1])
-        ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, [[obj_class, yct, xct]], [1])
+        tl_heatmaps = tf.tensor_scatter_nd_update(tl_heatmaps, 
+          [[tf.cast(obj_class, tf.int32), tf.cast(ytl, tf.int32), tf.cast(xtl, tf.int32)]], [1])
+        br_heatmaps = tf.tensor_scatter_nd_update(br_heatmaps, 
+          [[tf.cast(obj_class, tf.int32), tf.cast(ybr, tf.int32), tf.cast(xbr, tf.int32)]], [1])
+        ct_heatmaps = tf.tensor_scatter_nd_update(ct_heatmaps, 
+          [[tf.cast(obj_class, tf.int32), tf.cast(yct, tf.int32), tf.cast(xct, tf.int32)]], [1])
       
       # Add box offset and size to the ground truth
       tl_offset = tf.tensor_scatter_nd_update(tl_offset, [[tag_ind, 0], [tag_ind, 1]], [fxtl - xtl, fytl - ytl])
@@ -327,9 +338,8 @@ class CenterNetParser(parser.Parser):
     }
 
     heatmap_feature_labels = self._build_heatmap_and_regressed_features(
-      boxes=boxes, classes=classes, num_objects=num_detections,
-      output_size=[self._output_dims, self._output_dims], 
-      input_size=[self._image_w, self._image_w]
+      labels, output_size=[self._output_dims, self._output_dims], 
+      input_size=[self._image_h, self._image_w]
     )
     labels.update(heatmap_feature_labels)
     return image, labels
