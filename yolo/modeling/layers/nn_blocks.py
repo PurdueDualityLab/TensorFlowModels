@@ -1096,7 +1096,6 @@ class SPP(tf.keras.layers.Layer):
 
   def __init__(self, sizes, **kwargs):
     self._sizes = list(reversed(sizes))
-    # print(self._sizes)
     if len(sizes) == 0:
       raise ValueError('More than one maxpool should be specified in SSP block')
     super().__init__(**kwargs)
@@ -1527,7 +1526,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     else:
       filters_ = self._conv1_filters
 
-    print('conv1', filters_(filters))
     x1 = ConvBN(
         filters=filters_(filters),
         kernel_size=self._conv1_kernel,
@@ -1542,7 +1540,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       filters_ = self._csp_filters
     else:
       filters_ = self._conv2_filters
-    print('conv2', filters_(filters))
+
     x1 = ConvBN(
         filters=filters_(filters),
         kernel_size=self._conv2_kernel,
@@ -1553,7 +1551,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def _csp_route(self, filters, kwargs):
-    print('route_split', filters // self._csp_scale, filters // self._csp_scale)
     x1 = CSPRoute(
         filters=filters,
         filter_scale=self._csp_scale,
@@ -1562,17 +1559,14 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def _csp_connect(self, filters, kwargs):
-    print('connect')
     x1 = CSPConnect(filters=filters, drop_final=True, drop_first=True, **kwargs)
     return x1
 
   def _spp(self, filters, kwargs):
-    print('spp')
     x1 = SPP(self._spp_keys)
     return x1
 
   def _sam(self, filters, kwargs):
-    print('sam')
     x1 = SAM(filters=-1, use_pooling=False, use_bn=True, **kwargs)
     return x1
 
@@ -1613,7 +1607,6 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         self.layers.append(self._sam(-1, _args))
 
     self._lim = len(self.layers)
-    print(self._lim)
     super().build(input_shape)
 
   def _call_regular(self, inputs, training=None):
@@ -1641,13 +1634,10 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         x_prev = x
       if i == 0:
         x, x_route = layer(x)
-        print(x.shape, x_route.shape)
       elif i == self._csp_stack - 1:
         x = layer([x, x_route])
-        print(x.shape)
       else:
         x = layer(x)
-        print(x.shape)
       output_prev = output
     return x_prev, x
 
