@@ -224,9 +224,6 @@ class Parser(parser.Parser):
       clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
       image = tf.image.resize(image, (clipper, clipper), preserve_aspect_ratio=False)
 
-
-
-
     # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
     if self._jitter_im > 0:
@@ -244,7 +241,7 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
     
-    if self._jitter_boxes > 0.0:
+    if self._jitter_boxes > 0.0 and not self._letter_box:
       height_, width_ = preprocessing_ops.get_image_shape(image)
 
       shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(

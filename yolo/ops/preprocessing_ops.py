@@ -934,6 +934,8 @@ def resize_and_crop_image(image,
     return output_image, image_info
 
 
+
+
 # def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker):
 #   """
 #     convert ground truth for use in loss functions
