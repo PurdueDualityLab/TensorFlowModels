@@ -94,6 +94,8 @@ class YoloHead(tf.keras.layers.Layer):
 
   def get_config(self):
     config = dict(
+        min_level = self._min_level, 
+        max_level = self._max_level, 
         classes=self._classes,
         boxes_per_level=self._boxes_per_level,
         output_extras=self._output_extras,
