@@ -277,11 +277,11 @@ class Parser(parser.Parser):
           area_range=[1.0, 1.0])
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                  info[1, :], info[3, :], keep_thresh=self._keep_thresh)
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                  info[1, :], info[3, :])
 
-    inds = preprocessing_ops.get_non_empty_box_indices(boxes) #, info[1, :])                                      
-    # inds = box_ops.get_non_empty_box_indices(boxes)
+    # inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])                                      
+    inds = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
@@ -300,11 +300,11 @@ class Parser(parser.Parser):
           area_range=[ 0.99, 1.0])
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                    info[1, :], info[3, :], keep_thresh=self._keep_thresh)
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                    info[1, :], info[3, :])
 
-      inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])                                      
-      # inds = box_ops.get_non_empty_box_indices(boxes)
+      # inds = preprocessing_ops.get_non_empty_box_indices(boxes, info[1, :])                                      
+      inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
@@ -325,8 +325,8 @@ class Parser(parser.Parser):
     h_, w_ = preprocessing_ops.get_image_shape(image)
     im_shape = tf.cast([h_, w_], tf.float32)
     boxes = box_ops.denormalize_boxes(boxes, im_shape)
-    # boxes = box_ops.clip_boxes(boxes, im_shape)
-    boxes = preprocessing_ops.clip_boxes(boxes, im_shape, keep_thresh=self._keep_thresh)
+    boxes = box_ops.clip_boxes(boxes, im_shape)
+    # boxes = preprocessing_ops.clip_boxes(boxes, im_shape, keep_thresh=self._keep_thresh)
     inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)

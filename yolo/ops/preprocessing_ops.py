@@ -148,47 +148,47 @@ def clip_boxes(boxes,
   boxes = box_ops.yxyx_to_xcycwh(boxes)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
 
-  # y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
-  # x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
-  # y_new = tf.where(y_mask1, height, y)
-  # x_new = tf.where(x_mask1, width, x)
-  # h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
-  # w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
-
-  # boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-  # x, y, w, h = tf.split(boxes, 4, axis=-1)
-  # boxes = box_ops.xcycwh_to_yxyx(boxes)
-  # y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
-
-  # y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
-  # x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
-  
-  # y_new = tf.where(y_mask1, 0.0, y)
-  # x_new = tf.where(x_mask1, 0.0, x)
-  # h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
-  # w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
-
-  # boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-  # boxes = box_ops.xcycwh_to_yxyx(boxes)
-
   y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
   x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
-  y_max = tf.where(y_mask1, height, y_max)
-  x_max = tf.where(x_mask1, width, x_max)
+  y_new = tf.where(y_mask1, height, y)
+  x_new = tf.where(x_mask1, width, x)
+  h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+  w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
 
-  boxes = tf.cast(
-      tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-  boxes = box_ops.yxyx_to_xcycwh(boxes)
+  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
   x, y, w, h = tf.split(boxes, 4, axis=-1)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
+  y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
 
   y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
   x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
   
-  y_min = tf.where(y_mask1, 0.0, y_min)
-  x_min = tf.where(x_mask1, 0.0, x_min)
+  y_new = tf.where(y_mask1, 0.0, y)
+  x_new = tf.where(x_mask1, 0.0, x)
+  h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+  w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
 
-  boxes = tf.cast(
-      tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  # y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
+  # x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
+  # y_max = tf.where(y_mask1, height, y_max)
+  # x_max = tf.where(x_mask1, width, x_max)
+
+  # boxes = tf.cast(
+  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+  # boxes = box_ops.yxyx_to_xcycwh(boxes)
+  # x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+  # y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
+  # x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
+  
+  # y_min = tf.where(y_mask1, 0.0, y_min)
+  # x_min = tf.where(x_mask1, 0.0, x_min)
+
+  # boxes = tf.cast(
+  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
 
   if clip_wh:
     boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
