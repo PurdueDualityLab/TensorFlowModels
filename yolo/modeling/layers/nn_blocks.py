@@ -158,22 +158,11 @@ class ConvBN(tf.keras.layers.Layer):
             momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
-
-        # subnormalization.SubDivSyncBatchNormalization(
-        #     subdivisions=self._subdivisions,
-        #     momentum=self._norm_momentum,
-        #     epsilon=self._norm_epsilon,
-        #     axis=self._bn_axis)
       else:
         self.bn = tf.keras.layers.BatchNormalization(
             momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
-        # self.bn = subnormalization.SubDivBatchNormalization(
-        #     subdivisions=self._subdivisions,
-        #     momentum=self._norm_momentum,
-        #     epsilon=self._norm_epsilon,
-        #     axis=self._bn_axis)
 
     if self._activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
