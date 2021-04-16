@@ -65,8 +65,6 @@ class YoloLayer(ks.Model):
     self._use_nms = use_nms
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
 
-    print("detget", self._scale_xy)
-
     self._generator = {}
     self._len_mask = {}
     for key in self._keys:
@@ -234,6 +232,7 @@ class YoloLayer(ks.Model):
           use_tie_breaker=self._use_tie_breaker)
     return loss_dict
   
+
   def get_config(self):
     return {
         'masks': dict(self._masks),

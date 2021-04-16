@@ -108,7 +108,6 @@ class YoloFPN(tf.keras.layers.Layer):
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth, inputs)
-    # print(self._depths, inputs)
 
     # directly connect to an input path and process it
     self.preprocessors = dict()
@@ -252,7 +251,7 @@ class YoloPAN(tf.keras.layers.Layer):
     self._max_level = max(keys)
     self._min_depth = inputs[str(self._min_level)][-1]
     self._depths = self.get_raw_depths(self._min_depth, inputs)
-    print("\n\n\n\n\n\n\n\n", self._depths)
+
     # directly connect to an input path and process it
     self.preprocessors = dict()
     # resample an input and merge it with the output of another path
