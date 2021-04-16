@@ -154,14 +154,12 @@ class ConvBN(tf.keras.layers.Layer):
 
     if self._use_bn:
       if self._use_sync_bn:
-        self.bn = subnormalization.SubDivSyncBatchNormalization(
-            subdivisions=self._subdivisions,
+        self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
             momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
       else:
-        self.bn = subnormalization.SubDivBatchNormalization(
-            subdivisions=self._subdivisions,
+        self.bn = tf.keras.layers.BatchNormalization(
             momentum=self._norm_momentum,
             epsilon=self._norm_epsilon,
             axis=self._bn_axis)
@@ -172,7 +170,7 @@ class ConvBN(tf.keras.layers.Layer):
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
       self._activation_fn = tf_utils.get_activation(
-          self._activation)  # tf.keras.layers.Activation(self._activation)
+          self._activation)  
 
   def call(self, x):
     if not TPU_BASE:

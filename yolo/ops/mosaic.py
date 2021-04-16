@@ -18,13 +18,15 @@ class Mosaic(object):
                mosaic_frequency=1.0,
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
-               random_crop=False,
+               random_crop=1.0,
+               keep_thresh=0.00,
                random_crop_mosaic=False):
     self._output_size = output_size
     self._mosaic_frequency = mosaic_frequency
     self._random_crop = random_crop
     self._seed = None
     self._crop_area = crop_area
+    self._keep_thresh = keep_thresh
     self._random_crop_mosaic = random_crop_mosaic
     self._crop_area_mosaic = crop_area_mosaic
     return
@@ -110,7 +112,8 @@ class Mosaic(object):
       is_crowd = tf.squeeze(is_crowd, axis=0)
       area = tf.squeeze(area, axis=0)
 
-    indices = box_ops.get_non_empty_box_indices(boxes)
+    # indices = box_ops.get_non_empty_box_indices(boxes)
+    indices = preprocessing_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
     is_crowd = tf.gather(classes, indices)
@@ -138,7 +141,7 @@ class Mosaic(object):
 
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
     # image = tf.image.resize(image, (height, width))
-    return image, boxes, classes, is_crowd, area, info
+    return image, boxes, classes, is_crowd, area, tf.cast(info, tf.int32)
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area,
                          width, height):
@@ -203,7 +206,17 @@ class Mosaic(object):
 
         height, width = self._output_size[0], self._output_size[1]
 
-        if self._random_crop:
+        if self._random_crop >= 1.0:
+          docrop = 1.0
+        elif self._random_crop <= 0.0:
+          docrop = 0.0
+        else:
+          docrop = tf.random.uniform([],
+                                     0.0,
+                                     1.0,
+                                     dtype=tf.float32,
+                                     seed=self._seed)
+        if docrop >= (1 - self._random_crop):
           images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
               0] = self._crop_image(images[0], box_list[0], class_list[0],
                                     is_crowds[0], areas[0], self._crop_area,

@@ -29,6 +29,7 @@ class YoloLayer(ks.Model):
                obj_normalizer=1.0,
                use_reduction_sum=False,
                pre_nms_points=5000,
+               label_smoothing=0.0,
                max_boxes=200,
                new_cords=False,
                path_scale=None,
@@ -54,6 +55,7 @@ class YoloLayer(ks.Model):
     self._use_tie_breaker = use_tie_breaker
     self._use_reduction_sum = use_reduction_sum
     self._pre_nms_points = pre_nms_points
+    self._label_smoothing = label_smoothing
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
     self._new_cords = new_cords
@@ -189,6 +191,7 @@ class YoloLayer(ks.Model):
           new_cords=self._new_cords[key],
           objectness_smooth=self._objectness_smooth[key],
           use_reduction_sum=self._use_reduction_sum,
+          label_smoothing=self._label_smoothing,
           path_key=key,
           mask=self._masks[key],
           max_delta=self._max_delta[key],

@@ -76,7 +76,7 @@ task:
       image_h: 640
       min_process_size: 640
       jitter_im: 0.2
-      jitter_boxes: 0.2
+      jitter_boxes: 0.3
       aug_rand_zoom: 0.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.15

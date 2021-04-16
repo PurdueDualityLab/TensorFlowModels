@@ -77,7 +77,7 @@ task:
       image_h: 640
       min_process_size: 640
       jitter_im: 0.6
-      jitter_boxes: 0.2
+      jitter_boxes: 0.3
       aug_rand_zoom: 0.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
@@ -95,6 +95,7 @@ task:
         random_crop: True
         crop_area: [0.25, 1.0]
         random_crop_mosaic: True
+        crop_area_mosaic: [0.25, 0.95]
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
     global_batch_size: 8

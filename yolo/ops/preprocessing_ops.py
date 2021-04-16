@@ -66,104 +66,266 @@ def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   return value
 
 
-def near_edge_adjustment(boxes,
-                         y_lower_bound,
-                         x_lower_bound,
-                         y_upper_bound,
-                         x_upper_bound,
-                         keep_thresh=0.25,
-                         aggressive=False):
-  x_lower_bound = tf.clip_by_value(x_lower_bound, 0.0, 1.0 - K.epsilon())
-  y_lower_bound = tf.clip_by_value(y_lower_bound, 0.0, 1.0 - K.epsilon())
-  x_upper_bound = tf.clip_by_value(x_upper_bound, 0.0, 1.0 - K.epsilon())
-  y_upper_bound = tf.clip_by_value(y_upper_bound, 0.0, 1.0 - K.epsilon())
+def clip_boxes(boxes, image_shape):
+  """Clips boxes to image boundaries.
 
-  x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
-  y_lower_bound = tf.cast(y_lower_bound, boxes.dtype)
-  x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
-  y_upper_bound = tf.cast(y_upper_bound, boxes.dtype)
+  Args:
+    boxes: a tensor whose last dimension is 4 representing the coordinates
+      of boxes in ymin, xmin, ymax, xmax order.
+    image_shape: a list of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+
+  Returns:
+    clipped_boxes: a tensor whose shape is the same as `boxes` representing the
+      clipped boxes.
+
+  Raises:
+    ValueError: If the last dimension of boxes is not 4.
+  """
+  if boxes.shape[-1] != 4:
+    raise ValueError('boxes.shape[-1] is {:d}, but must be 4.'.format(
+        boxes.shape[-1]))
+
+  with tf.name_scope('clip_boxes'):
+    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
+      height, width = image_shape
+      max_length = [height, width, height, width]
+    else:
+      image_shape = tf.cast(image_shape, dtype=boxes.dtype)
+      height, width = tf.unstack(image_shape, axis=-1)
+      max_length = tf.stack([height, width, height, width], axis=-1)
+
+    clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+    return clipped_boxes
+
+
+def get_non_empty_box_indices(boxes, output_size=None):
+  """Get indices for non-empty boxes."""
+  # Selects indices if box height or width is 0.
+  if output_size is not None:
+    width = tf.cast(output_size[1], boxes.dtype)
+    height = tf.cast(output_size[0], boxes.dtype)
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+    indices = tf.where(
+        tf.logical_and(
+            tf.logical_and(
+                tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
+                tf.logical_and(tf.less(x, width), tf.less(y, height))),
+            tf.logical_and(tf.greater(h, 0), tf.greater(w, 0))))
+  else:
+    height = boxes[:, 2] - boxes[:, 0]
+    width = boxes[:, 3] - boxes[:, 1]
+    indices = tf.where(
+        tf.logical_and(tf.greater(height, 0), tf.greater(width, 0)))
+  return indices[:, 0]
+
+
+def box_area(box):
+  return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
+
+
+def clip_boxes(boxes, image_shape, keep_thresh=0.0, clip_wh=False):
+
+  if isinstance(image_shape, list) or isinstance(image_shape, tuple):
+    height, width = image_shape
+    max_length = [height, width, height, width]
+  else:
+    image_shape = tf.cast(image_shape, dtype=boxes.dtype)
+    height, width = tf.unstack(image_shape, axis=-1)
+    max_length = tf.stack([height, width, height, width], axis=-1)
+
+  # if clip_wh:
+  #   boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+  # else:
+  width = tf.cast(width, boxes.dtype)
+  height = tf.cast(height, boxes.dtype)
   keep_thresh = tf.cast(keep_thresh, boxes.dtype)
 
-  y_min, x_min, y_max, x_max = tf.split(
-      tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-
   # locations where atleast 25% of the image is in frame but the certer is not
-  if keep_thresh == 0:
-    y_mask1 = tf.math.logical_and(y_upper_bound > y_min, y_max > y_upper_bound)
-    x_mask1 = tf.math.logical_and(x_upper_bound > x_min, x_max > x_upper_bound)
-    y_max = tf.where(y_mask1, y_upper_bound, y_max)
-    x_max = tf.where(x_mask1, x_upper_bound, x_max)
-    y_mask1 = tf.math.logical_and(x_max > x_lower_bound, y_min < y_lower_bound)
-    x_mask1 = tf.math.logical_and(x_max > x_lower_bound, x_min < x_lower_bound)
-    y_min = tf.where(y_mask1, y_lower_bound, y_min)
-    x_min = tf.where(x_mask1, x_lower_bound, x_min)
-    boxes = tf.cast(
-        tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-  elif aggressive:
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-    y_mask1 = tf.math.logical_and(
-        (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
-        (y > y_upper_bound))
-    x_mask1 = tf.math.logical_and(
-        (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
-        (x > x_upper_bound))
-    y_max = tf.where(y_mask1, y_upper_bound, y_max)
-    x_max = tf.where(x_mask1, x_upper_bound, x_max)
-    boxes = tf.cast(
-        tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-    y_mask1 = tf.math.logical_and(
-        (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
-        (y < y_lower_bound))
-    x_mask1 = tf.math.logical_and(
-        (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
-        (x < x_lower_bound))
-    y_min = tf.where(y_mask1, y_lower_bound, y_min)
-    x_min = tf.where(x_mask1, x_lower_bound, x_min)
-    boxes = tf.cast(
-        tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+  y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
+  boxes = box_ops.yxyx_to_xcycwh(boxes)
+  x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+  y_mask1 = tf.math.logical_and(
+      (y_min - height > tf.cast(h * keep_thresh, y_min.dtype)), (y > height))
+  x_mask1 = tf.math.logical_and(
+      (x_min - width > tf.cast(w * keep_thresh, x_min.dtype)), (x > width))
+  y_new = tf.where(y_mask1, height, y)
+  x_new = tf.where(x_mask1, width, x)
+  h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+  w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
+
+  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+  x, y, w, h = tf.split(boxes, 4, axis=-1)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
+  y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
+
+  y_mask1 = tf.math.logical_and(
+      (y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)), (y < 0))
+  x_mask1 = tf.math.logical_and(
+      (x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)), (x < 0))
+
+  y_new = tf.where(y_mask1, 0.0, y)
+  x_new = tf.where(x_mask1, 0.0, x)
+  h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+  w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
+
+  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+  boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  # y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
+  # x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
+  # y_max = tf.where(y_mask1, height, y_max)
+  # x_max = tf.where(x_mask1, width, x_max)
+
+  # boxes = tf.cast(
+  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+  # boxes = box_ops.yxyx_to_xcycwh(boxes)
+  # x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+  # y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
+  # x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
+
+  # y_min = tf.where(y_mask1, 0.0, y_min)
+  # x_min = tf.where(x_mask1, 0.0, x_min)
+
+  # boxes = tf.cast(
+  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+
+  if clip_wh:
+    boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
   else:
-    # locations where atleast 25% of the image is in frame but the certer is not
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-    y_mask1 = tf.math.logical_and(
-        (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
-        (y > y_upper_bound))
-    x_mask1 = tf.math.logical_and(
-        (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
-        (x > x_upper_bound))
+    x, y, w, h = tf.split(box_ops.yxyx_to_xcycwh(boxes), 4, axis=-1)
+    cond = tf.logical_and(
+        tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
+        tf.logical_and(tf.less(x, width), tf.less(y, height)))
+    clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+    clipped_b_area = tf.expand_dims(box_area(clipped_boxes), axis=-1)
+    b_area = tf.expand_dims(box_area(boxes), axis=-1)
 
-    y_new = tf.where(y_mask1, y_upper_bound, y)
-    h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
-    x_new = tf.where(x_mask1, x_upper_bound, x)
-    w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
-
-    boxes = tf.cast(
-        tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-    x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-    boxes = box_ops.xcycwh_to_yxyx(boxes)
-    y_min, x_min, y_max, x_max = tf.split(
-        tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-
-    y_mask1 = tf.math.logical_and(
-        (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
-        (y < y_lower_bound))
-    x_mask1 = tf.math.logical_and(
-        (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
-        (x < x_lower_bound))
-
-    y_new = tf.where(y_mask1, y_lower_bound, y)
-    h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
-    x_new = tf.where(x_mask1, x_lower_bound, x)
-    w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
-
-    boxes = tf.cast(
-        tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-    boxes = box_ops.xcycwh_to_yxyx(boxes)
-
+    boxes = tf.where(
+        tf.logical_and(tf.logical_not(cond), clipped_b_area > 0.1 * b_area),
+        clipped_boxes, boxes)
   return boxes
+
+
+def resize_and_crop_boxes(boxes,
+                          image_scale,
+                          output_size,
+                          offset,
+                          keep_thresh=0.0,
+                          clip_wh=False,
+                          aggressive=False):
+
+  boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
+  boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+
+  boxes = clip_boxes(
+      boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
+  return boxes
+
+
+# def near_edge_adjustment(boxes,
+#                          y_lower_bound,
+#                          x_lower_bound,
+#                          y_upper_bound,
+#                          x_upper_bound,
+#                          keep_thresh=0.25,
+#                          aggressive=False):
+#   x_lower_bound = tf.clip_by_value(x_lower_bound, 0.0, 1.0 - K.epsilon())
+#   y_lower_bound = tf.clip_by_value(y_lower_bound, 0.0, 1.0 - K.epsilon())
+#   x_upper_bound = tf.clip_by_value(x_upper_bound, 0.0, 1.0 - K.epsilon())
+#   y_upper_bound = tf.clip_by_value(y_upper_bound, 0.0, 1.0 - K.epsilon())
+
+#   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
+#   y_lower_bound = tf.cast(y_lower_bound, boxes.dtype)
+#   x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
+#   y_upper_bound = tf.cast(y_upper_bound, boxes.dtype)
+#   keep_thresh = tf.cast(keep_thresh, boxes.dtype)
+
+#   y_min, x_min, y_max, x_max = tf.split(
+#       tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+
+#   # locations where atleast 25% of the image is in frame but the certer is not
+#   if keep_thresh == 0:
+#     y_mask1 = tf.math.logical_and(y_upper_bound > y_min, y_max > y_upper_bound)
+#     x_mask1 = tf.math.logical_and(x_upper_bound > x_min, x_max > x_upper_bound)
+#     y_max = tf.where(y_mask1, y_upper_bound, y_max)
+#     x_max = tf.where(x_mask1, x_upper_bound, x_max)
+#     y_mask1 = tf.math.logical_and(x_max > x_lower_bound, y_min < y_lower_bound)
+#     x_mask1 = tf.math.logical_and(x_max > x_lower_bound, x_min < x_lower_bound)
+#     y_min = tf.where(y_mask1, y_lower_bound, y_min)
+#     x_min = tf.where(x_mask1, x_lower_bound, x_min)
+#     boxes = tf.cast(
+#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+#   elif aggressive:
+#     boxes = box_ops.yxyx_to_xcycwh(boxes)
+#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+#     y_mask1 = tf.math.logical_and(
+#         (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
+#         (y > y_upper_bound))
+#     x_mask1 = tf.math.logical_and(
+#         (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
+#         (x > x_upper_bound))
+#     y_max = tf.where(y_mask1, y_upper_bound, y_max)
+#     x_max = tf.where(x_mask1, x_upper_bound, x_max)
+#     boxes = tf.cast(
+#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+#     boxes = box_ops.yxyx_to_xcycwh(boxes)
+#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+#     y_mask1 = tf.math.logical_and(
+#         (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
+#         (y < y_lower_bound))
+#     x_mask1 = tf.math.logical_and(
+#         (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
+#         (x < x_lower_bound))
+#     y_min = tf.where(y_mask1, y_lower_bound, y_min)
+#     x_min = tf.where(x_mask1, x_lower_bound, x_min)
+#     boxes = tf.cast(
+#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+#   else:
+#     # locations where atleast 25% of the image is in frame but the certer is not
+#     boxes = box_ops.yxyx_to_xcycwh(boxes)
+#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+#     y_mask1 = tf.math.logical_and(
+#         (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
+#         (y > y_upper_bound))
+#     x_mask1 = tf.math.logical_and(
+#         (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
+#         (x > x_upper_bound))
+
+#     y_new = tf.where(y_mask1, y_upper_bound, y)
+#     h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+#     x_new = tf.where(x_mask1, x_upper_bound, x)
+#     w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
+
+#     boxes = tf.cast(
+#         tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+#     boxes = box_ops.xcycwh_to_yxyx(boxes)
+#     y_min, x_min, y_max, x_max = tf.split(
+#         tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
+
+#     y_mask1 = tf.math.logical_and(
+#         (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
+#         (y < y_lower_bound))
+#     x_mask1 = tf.math.logical_and(
+#         (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
+#         (x < x_lower_bound))
+
+#     y_new = tf.where(y_mask1, y_lower_bound, y)
+#     h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+#     x_new = tf.where(x_mask1, x_lower_bound, x)
+#     w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
+
+#     boxes = tf.cast(
+#         tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+#     boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+#   return boxes
 
 
 def get_image_shape(image):

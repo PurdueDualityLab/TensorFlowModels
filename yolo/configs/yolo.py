@@ -145,35 +145,35 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
-  mosaic_frequency: float = 0.667
-  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
+  mosaic_frequency: float = 1.0
+  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.75, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 0.95])
-  random_crop: bool = True
+  random_crop: float = 0.5
   random_crop_mosaic: bool = True
 
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 640
-  image_h: int = 640
+  image_w: int = 512
+  image_h: int = 512
   fixed_size: bool = True
   max_num_instances: int = 200
-  min_process_size: int = 640
+  min_process_size: int = 512
   letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
   jitter_im: float = 0.6
-  jitter_boxes: float = 0.2
-  aug_rand_translate: float = 0.05
-  aug_rand_saturation: float = 0.7  #1.5
-  aug_rand_brightness: float = 0.6  #1.5
+  jitter_boxes: float = 0.3
+  aug_rand_translate: float = 0.075
+  aug_rand_saturation: float = 0.75  #1.5
+  aug_rand_brightness: float = 0.5  #1.5
   aug_rand_hue: float = 0.1  #0.015
   aug_rand_zoom: float = 0.5
-  aug_rand_angle: float = 7.0
+  aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
-  use_scale_xy: bool = True
-  anchor_thresh: float = 4.0
+  use_scale_xy: bool = False
+  anchor_thresh: float = 0.213
   mosaic: Mosaic = Mosaic()
 
 
@@ -265,6 +265,7 @@ class YoloLossLayer(hyperparams.Config):
   nms_thresh: float = 0.6
   max_boxes: int = 200
   pre_nms_points: int = 500
+  label_smoothing: float = 0.0
   anchor_generation_scale: int = 512
   use_reduction_sum: bool = True
 
