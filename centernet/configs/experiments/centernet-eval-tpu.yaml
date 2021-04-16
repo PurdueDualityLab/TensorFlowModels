@@ -29,7 +29,7 @@ task:
     tfds_download: true
     dtype: bfloat16
     is_training: false
-    drop_remainder: true
+    drop_remainder: false
     parser:
       image_h: 512
       image_w: 512

@@ -158,6 +158,7 @@ class CenterNetLayer(hyperparams.Config):
   iou_thresh: float = 0.4
   class_offset: int = 1
   dtype: str = 'float32'
+  use_reduction_sum: bool = True
 
 @dataclasses.dataclass
 class CenterNetDetection(hyperparams.Config):

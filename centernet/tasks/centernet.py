@@ -116,7 +116,7 @@ class CenterNetTask(base_task.Task):
     return decoder
 
 
-  def build_losses(self, outputs, labels, num_replicas=1, aux_losses=None):
+  def build_losses(self, outputs, labels, num_replicas=1, scale_replicas=1, aux_losses=None):
     print("\nIn build_losses\n")
     total_loss = 0.0
     loss = 0.0
@@ -248,14 +248,23 @@ class CenterNetTask(base_task.Task):
     return logs
   
   def validation_step(self, inputs, model, metrics=None):
-    # get the data point
     print("\nIn validation step\n")
+    # get the data point
     image, label = inputs
+
+    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    if self._task_config.model.filter.use_reduction_sum:
+      num_replicas = 1
+    else:
+      num_replicas = scale_replicas
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-
-    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    loss, loss_metrics = self.build_losses(
+        y_pred['raw_output'],
+        label,
+        num_replicas=num_replicas,
+        scale_replicas=1)
     logs = {self.loss: loss_metrics['total_loss']}
 
     image_shape = tf.shape(image)[1:-1]
@@ -263,19 +272,19 @@ class CenterNetTask(base_task.Task):
     label['boxes'] = box_ops.denormalize_boxes(
         tf.cast(label['bbox'], tf.float32), image_shape)
     del label['bbox']
-    
+
     coco_model_outputs = {
-      'detection_boxes':
-          box_ops.denormalize_boxes(
-              tf.cast(y_pred['bbox'], tf.float32), image_shape),
-      'detection_scores':
-          y_pred['confidence'],
-      'detection_classes':
-          y_pred['classes'],
-      'num_detections':
-          y_pred['num_dets'],
-      'source_id':
-          label['source_id'],
+        'detection_boxes':
+            box_ops.denormalize_boxes(
+                tf.cast(y_pred['bbox'], tf.float32), image_shape),
+        'detection_scores':
+            y_pred['confidence'],
+        'detection_classes':
+            y_pred['classes'],
+        'num_detections':
+            y_pred['num_dets'],
+        'source_id':
+            label['source_id'],
     }
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
@@ -286,7 +295,6 @@ class CenterNetTask(base_task.Task):
         logs.update({m.name: m.result()})
 
     return logs
-
   def aggregate_logs(self, state=None, step_outputs=None):
     print("\nIn aggregate_logs\n")
     if not state:
