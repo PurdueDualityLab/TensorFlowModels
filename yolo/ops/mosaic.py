@@ -19,7 +19,7 @@ class Mosaic(object):
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                random_crop=1.0,
-               keep_thresh = 0.00, 
+               keep_thresh=0.00,
                random_crop_mosaic=False):
     self._output_size = output_size
     self._mosaic_frequency = mosaic_frequency
@@ -217,7 +217,11 @@ class Mosaic(object):
         elif self._random_crop <= 0.0:
           docrop = 0.0
         else:
-          docrop = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+          docrop = tf.random.uniform([],
+                                     0.0,
+                                     1.0,
+                                     dtype=tf.float32,
+                                     seed=self._seed)
         if docrop >= (1 - self._random_crop):
           images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
               0] = self._crop_image(images[0], box_list[0], class_list[0],

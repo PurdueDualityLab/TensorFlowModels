@@ -29,7 +29,7 @@ class YoloLayer(ks.Model):
                obj_normalizer=1.0,
                use_reduction_sum=False,
                pre_nms_points=5000,
-               label_smoothing = 0.0,
+               label_smoothing=0.0,
                max_boxes=200,
                new_cords=False,
                path_scale=None,
