@@ -247,9 +247,6 @@ def get_predicted_box_newcords(width,
   pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])  
   pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
 
-  # pred_xy = box_gradient_trap(pred_xy, max_delta)
-  # pred_wh = box_gradient_trap(pred_wh, max_delta)
-
   if darknet:
     # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
     pred_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width,
