@@ -221,7 +221,7 @@ class Parser(parser.Parser):
       jmi = 1 - self._jitter_im
       jma = 1 + self._jitter_im
       image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[0.98, 1.0])
+          image, aspect_ratio_range=[jmi, jma], area_range=[0.5, 1.0])
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
@@ -232,26 +232,26 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-    # aspect distorted crop scal independent
-    if not data['is_mosaic']:
-      image, info = preprocessing_ops.resize_and_crop_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=self._aug_scale_min,
-          aug_scale_max=self._aug_scale_max)
-    else:
-      image, info = preprocessing_ops.resize_and_crop_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.5 else 0.5,
-          aug_scale_max=self._aug_scale_max) 
+    # # aspect distorted crop scal independent
+    # if not data['is_mosaic']:
+    #   image, info = preprocessing_ops.resize_and_crop_image(
+    #       image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+    #       aug_scale_min=self._aug_scale_min,
+    #       aug_scale_max=self._aug_scale_max)
+    # else:
+    #   image, info = preprocessing_ops.resize_and_crop_image(
+    #       image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+    #       aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.5 else 0.5,
+    #       aug_scale_max=self._aug_scale_max) 
 
-    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    # boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    # boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+    #                                              info[3, :])
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    # inds = box_ops.get_non_empty_box_indices(boxes)
+    # boxes = tf.gather(boxes, inds)
+    # classes = tf.gather(classes, inds)
+    # boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._jitter_boxes > 0.0 and not self._letter_box:
       height_, width_ = preprocessing_ops.get_image_shape(image)
@@ -268,23 +268,23 @@ class Parser(parser.Parser):
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    if self._letter_box:
-      shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-      shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-      image, boxes, info = preprocessing_ops.letter_box(
-          image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
-    else:
-      image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[1, 1], area_range=[0.99, 1.0])
+    #if self._letter_box:
+    # shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+    # shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+    # image, boxes, info = preprocessing_ops.letter_box(
+    #     image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
+    # else:
+    #   image, info = preprocessing_ops.random_crop_image(
+    #       image, aspect_ratio_range=[1, 1], area_range=[0.99, 1.0])
 
-      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                   info[1, :], info[3, :])
+    #   boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    #   boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+    #                                                info[1, :], info[3, :])
 
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    #   inds = box_ops.get_non_empty_box_indices(boxes)
+    #   boxes = tf.gather(boxes, inds)
+    #   classes = tf.gather(classes, inds)
+    #   boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._aug_rand_translate > 0.0:
       image, tx, ty = preprocessing_ops.random_translate(
@@ -306,15 +306,36 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
 
-    process_width = self._image_w
-    process_height = tf.cast(self._image_h * (process_width / self._image_w),
-                             tf.int32)
-    image = tf.image.resize(image, (process_width, process_height))
-    boxes = box_ops.denormalize_boxes(boxes, tf.shape(image)[:2])
+    # process_width = self._image_w
+    # process_height = tf.cast(self._image_h * (process_width / self._image_w),
+    #                          tf.int32)
+    # image = tf.image.resize(image, (process_width, process_height))
+    # boxes = box_ops.denormalize_boxes(boxes, tf.shape(image)[:2])
 
-    image = tf.image.pad_to_bounding_box(image, 0, 0, self._image_h,
-                                         self._image_w)
-    boxes = box_ops.normalize_boxes(boxes, tf.shape(image)[:2])
+    # image = tf.image.pad_to_bounding_box(image, 0, 0, self._image_h,
+    #                                      self._image_w)
+    # boxes = box_ops.normalize_boxes(boxes, tf.shape(image)[:2])
+
+    # aspect distorted crop scal independent
+    if not data['is_mosaic']:
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min=self._aug_scale_min,
+          aug_scale_max=self._aug_scale_max)
+    else:
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.5 else 0.5,
+          aug_scale_max=self._aug_scale_max) 
+
+    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :])
+
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     num_dets = tf.shape(classes)[0]
 
@@ -455,123 +476,3 @@ class Parser(parser.Parser):
       return None  # if not self._fixed_size or self._mosaic else None
     else:
       return None
-
-  # def _parse_train_data(self, data):
-  #   """Generates images and labels that are usable for model training.
-  #       Args:
-  #         data: a dict of Tensors produced by the decoder.
-  #       Returns:
-  #         images: the image tensor.
-  #         labels: a dict of Tensors that contains labels.
-  #       """
-
-  #   shape = tf.shape(data['image'])
-  #   image = data['image'] / 255
-  #   boxes = data['groundtruth_boxes']
-  #   classes = data['groundtruth_classes']
-  #   width = shape[1]
-  #   height = shape[0]
-
-  #   # aspect distorted crop scal independent
-  #   if self._jitter_im > 0:
-  #     jmi = 1 - self._jitter_im
-  #     jma = 1 + self._jitter_im
-  #     image, info = preprocessing_ops.random_crop_image(
-  #         image, aspect_ratio_range=[jmi, jma], area_range=[0.98, 1.0])
-
-  #     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-  #     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-  #                                                  info[1, :], info[3, :])
-
-  #     inds = box_ops.get_non_empty_box_indices(boxes)
-  #     boxes = tf.gather(boxes, inds)
-  #     classes = tf.gather(classes, inds)
-  #     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-
-  #   if not self._letter_box:
-  #     h_, w_ = preprocessing_ops.get_image_shape(image)
-  #     clipper = tf.reduce_max([h_, w_])
-  #     h_ = preprocessing_ops.rand_uniform_strong(h_, clipper + 1, tf.int32)
-  #     w_ = preprocessing_ops.rand_uniform_strong(w_, clipper + 1, tf.int32)
-
-  #     # tf.print(h_, w_, preprocessing_ops.get_image_shape(image))
-  #     image = tf.image.resize(image, (h_, w_), preserve_aspect_ratio=False)
-  #   else:
-  #     h_, w_ = preprocessing_ops.get_image_shape(image)
-  #     clipper = tf.reduce_max([h_, w_])
-  #     shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-  #     shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-  #     image, boxes, info = preprocessing_ops.letter_box(
-  #         image, boxes, xs=shiftx, ys=shifty, target_dim=clipper)
-
-  #   if self._aug_rand_zoom > 0.0 and not data['is_mosaic']:
-  #     # augmin = self._aug_rand_zoom if not data['is_mosaic'] else 1.0
-  #     image, info = preprocessing_ops.resize_and_crop_image(
-  #         image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-  #         aug_scale_min=self._aug_rand_zoom,
-  #         aug_scale_max=1 / self._aug_rand_zoom)
-  #     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-  #     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-  #                                                  info[1, :], info[3, :])
-
-  #     inds = box_ops.get_non_empty_box_indices(boxes)
-  #     boxes = tf.gather(boxes, inds)
-  #     classes = tf.gather(classes, inds)
-  #     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-  #   else:
-  #     shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-  #     shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-  #     image, boxes, info = preprocessing_ops.letter_box(
-  #         image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
-  #     image, info = preprocessing_ops.random_crop_image(
-  #         image,
-  #         aspect_ratio_range=[
-  #             self._image_w / self._image_h, self._image_w / self._image_h
-  #         ],
-  #         area_range=[1.0, 1.0])
-
-  #   if self._aug_rand_angle > 0 or self._aug_rand_translate > 0.0:
-  #     if self._aug_rand_translate > 0.0:
-  #       image, tx, ty = preprocessing_ops.random_translate(
-  #           image, self._aug_rand_translate)
-  #       boxes, classes = preprocessing_ops.translate_boxes(
-  #           boxes, classes, tx, ty)
-
-  #     if self._aug_rand_angle > 0:
-  #       image, angle = preprocessing_ops.random_rotate_image(
-  #           image, self._aug_rand_angle)
-  #       boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
-
-  #     h_, w_ = preprocessing_ops.get_image_shape(image)
-  #     im_shape = tf.cast([h_, w_], tf.float32)
-  #     boxes = box_ops.denormalize_boxes(boxes, im_shape)
-  #     boxes = box_ops.clip_boxes(boxes, im_shape)
-  #     inds = box_ops.get_non_empty_box_indices(boxes)
-  #     boxes = tf.gather(boxes, inds)
-  #     classes = tf.gather(classes, inds)
-  #     boxes = box_ops.normalize_boxes(boxes, im_shape)
-
-  #   if self._random_flip:
-  #     image, boxes, _ = preprocess_ops.random_horizontal_flip(
-  #         image, boxes, seed=self._seed)
-
-  #   if self._aug_rand_hue > 0.0:
-  #     delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
-  #                                                   self._aug_rand_hue)
-  #     image = tf.image.adjust_hue(image, delta)
-  #   if self._aug_rand_saturation > 0.0:
-  #     delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
-  #     image = tf.image.adjust_saturation(image, delta)
-  #   if self._aug_rand_brightness > 0.0:
-  #     delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
-  #     image *= delta
-  #   image = tf.clip_by_value(image, 0.0, 1.0)
-
-  #   image = tf.image.resize(image, (self._image_h, self._image_w))
-  #   num_dets = tf.shape(classes)[0]
-
-  #   image = tf.cast(image, self._dtype)
-  #   image, labels = self._build_label(
-  #       image, boxes, classes, width, height, info, data, is_training=True)
-
-  #   return image, labels
