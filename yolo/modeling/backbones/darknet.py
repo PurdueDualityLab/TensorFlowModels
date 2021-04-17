@@ -1,3 +1,19 @@
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Lint as: python3
+
 """Contains definitions of Darknet Backbone Networks.
    The models are inspired by ResNet, and CSPNet
 Residual networks (ResNets) were proposed in:
@@ -15,7 +31,6 @@ DarkNets Are used mainly for Object detection in:
 
 import collections
 import tensorflow as tf
-import tensorflow.keras as ks
 
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
@@ -77,11 +92,11 @@ class LayerFactory(object):
 
   def __init__(self):
     self._layer_dict = {
-        'ConvBN': (nn_blocks.ConvBN, self.ConvBN_config_todict),
+        'ConvBN': (nn_blocks.ConvBN, self.conv_bn_config_todict),
         'MaxPool': (tf.keras.layers.MaxPool2D, self.maxpool_config_todict)
     }
 
-  def ConvBN_config_todict(self, config, kwargs):
+  def conv_bn_config_todict(self, config, kwargs):
     dictvals = {
         'filters': config.filters,
         'kernel_size': config.kernel_size,
@@ -346,8 +361,8 @@ BACKBONES = {
 }
 
 
-@ks.utils.register_keras_serializable(package='yolo')
-class Darknet(ks.Model):
+@tf.keras.utils.register_keras_serializable(package='yolo')
+class Darknet(tf.keras.Model):
 
   def __init__(
       self,
@@ -407,7 +422,7 @@ class Darknet(ks.Model):
         'name': None
     }
 
-    inputs = ks.layers.Input(shape=self._input_shape.shape[1:])
+    inputs = tf.keras.layers.Input(shape=self._input_shape.shape[1:])
     output = self._build_struct(layer_specs, inputs)
     super().__init__(inputs=inputs, outputs=output, name=self._model_name)
 
