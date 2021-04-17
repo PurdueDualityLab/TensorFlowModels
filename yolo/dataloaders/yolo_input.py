@@ -319,6 +319,7 @@ class Parser(parser.Parser):
     # boxes = box_ops.normalize_boxes(boxes, tf.shape(image)[:2])
 
     # aspect distorted crop scal independent
+    ### COMMENT TO REVERT
     if not data['is_mosaic']:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
