@@ -232,6 +232,7 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
+    ### UNCOMMENT TO REVERT
     # # aspect distorted crop scal independent
     # if not data['is_mosaic']:
     #   image, info = preprocessing_ops.resize_and_crop_image(
@@ -268,11 +269,12 @@ class Parser(parser.Parser):
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    #if self._letter_box:
-    # shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-    # shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
-    # image, boxes, info = preprocessing_ops.letter_box(
-    #     image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
+    ### UNCOMMENT TO REVERT
+    # if self._letter_box:
+    #   shiftx = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+    #   shifty = preprocessing_ops.rand_uniform_strong(0.0, 1.0)
+    #   image, boxes, info = preprocessing_ops.letter_box(
+    #       image, boxes, xs=shiftx, ys=shifty, target_dim=self._image_w)
     # else:
     #   image, info = preprocessing_ops.random_crop_image(
     #       image, aspect_ratio_range=[1, 1], area_range=[0.99, 1.0])
