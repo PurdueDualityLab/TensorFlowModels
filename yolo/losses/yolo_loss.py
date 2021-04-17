@@ -118,9 +118,8 @@ def apply_mask(mask, x):
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
-  #pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
-
-  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+  pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
+  # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
 
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy / scaler
@@ -172,8 +171,8 @@ def get_predicted_box(width,
                       max_delta=5.0):
 
   # TODO: scale_xy should not be propagated in darkent either
-  # pred_xy = unscaled_box[..., 0:2]  
-  pred_xy = tf.sigmoid(unscaled_box[..., 0:2])  
+  pred_xy = unscaled_box[..., 0:2]  
+  # pred_xy = tf.sigmoid(unscaled_box[..., 0:2])  
   pred_wh = unscaled_box[..., 2:4]
 
   # pred_xy = box_gradient_trap(pred_xy, max_delta)
