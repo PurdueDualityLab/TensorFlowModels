@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
-  mosaic_frequency: float = 1.0
+  mosaic_frequency: float = 0.85
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.75, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 0.95])
@@ -160,17 +160,18 @@ class Parser(hyperparams.Config):
   fixed_size: bool = True
   max_num_instances: int = 200
   min_process_size: int = 512
-  letter_box: bool = False
+  letter_box: bool = True
   random_flip: bool = True
   pct_rand: float = 0.0
   jitter_im: float = 0.6
-  jitter_boxes: float = 0.3
-  aug_rand_translate: float = 0.075
+  aug_scale_aspect: float = 0.3
+  aug_rand_translate: float = 0.00
   aug_rand_saturation: float = 0.75  #1.5
   aug_rand_brightness: float = 0.5  #1.5
   aug_rand_hue: float = 0.1  #0.015
-  aug_rand_zoom: float = 0.5
-  aug_rand_angle: float = 0.0
+  aug_scale_min: float = 0.1
+  aug_scale_max: float = 2.5
+  aug_rand_angle: float = 3.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213
@@ -260,7 +261,7 @@ class YoloLossLayer(hyperparams.Config):
       default_factory=_build_path_scales(min_level, max_level))
   objectness_smooth: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 0.0))
-  use_nms: bool = False
+  nms_type: str = 'greedy'
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6
   max_boxes: int = 200

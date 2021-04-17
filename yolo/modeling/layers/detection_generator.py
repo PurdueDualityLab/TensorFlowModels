@@ -34,7 +34,7 @@ class YoloLayer(ks.Model):
                new_cords=False,
                path_scale=None,
                scale_xy=None,
-               use_nms=True,
+               nms_type='greedy',
                objectness_smooth=False,
                **kwargs):
     super().__init__(**kwargs)
@@ -62,7 +62,21 @@ class YoloLayer(ks.Model):
     self._path_scale = path_scale or {
         key: 2**int(key) for key, _ in masks.items()
     }
-    self._use_nms = use_nms
+
+    self._nms_types = {
+      'greedy':1, 
+      'iou':2, 
+      'giou':3, 
+      'ciou':4, 
+      'diou':5, 
+      'class_indpendent':6
+    }
+    
+    self._nms_type = self._nms_types[nms_type]
+
+    if self._nms_type >= 2 and self._nms_type <= 5:
+      self._nms = nms_ops.TiledNMS(iou_type=nms_type)
+    
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
 
     self._generator = {}
@@ -163,7 +177,7 @@ class YoloLayer(ks.Model):
     class_scores = K.concatenate(class_scores, axis=1)
 
     # apply nms
-    if not self._use_nms:
+    if self._nms_type == 6:
       # TPU supported + DIOU NMS much slower
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,
@@ -174,7 +188,7 @@ class YoloLayer(ks.Model):
           self._nms_thresh,
           prenms_top_k=self._pre_nms_points,
           use_classes=True)
-    else:
+    elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
@@ -185,11 +199,27 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           iou_threshold=self._nms_thresh,
           score_threshold=self._thresh)
-
       # cast the boxes and predicitons abck to original datatype
       boxes = tf.cast(nms_items.nmsed_boxes, object_scores.dtype)
       class_scores = tf.cast(nms_items.nmsed_classes, object_scores.dtype)
       object_scores = tf.cast(nms_items.nmsed_scores, object_scores.dtype)
+
+    else:
+      boxes = tf.cast(boxes, dtype=tf.float32)
+      class_scores = tf.cast(class_scores, dtype=tf.float32)
+      boxes, confidence, classes, valid = self._nms.complete_nms(
+        tf.expand_dims(boxes, axis=-2),
+        class_scores,
+        pre_nms_top_k = self._pre_nms_points,
+        max_num_detections=self._max_boxes,
+        nms_iou_threshold=self._nms_thresh,
+        pre_nms_score_threshold=self._thresh
+      )
+      boxes = tf.cast(boxes, object_scores.dtype)
+      class_scores = tf.cast(classes, object_scores.dtype)
+      object_scores = tf.cast(confidence, object_scores.dtype)
+        
+
 
     # compute the number of valid detections
     num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis=-1)

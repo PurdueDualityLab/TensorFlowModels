@@ -443,7 +443,7 @@ class TiledNMS():
               nms_iou_threshold,
               tf.constant(0)
           ],
-          parallel_iterations=20)
+          parallel_iterations=10)
 
       nmsed_boxes = nmsed_boxes.concat()
       nmsed_scores = nmsed_scores.concat()
@@ -463,8 +463,6 @@ class TiledNMS():
 
 
 BASE_NMS = TiledNMS(iou_type='diou', beta=0.6)
-
-
 def sorted_non_max_suppression_padded(scores, boxes, classes, max_output_size,
                                       iou_threshold):
 
@@ -485,7 +483,7 @@ def nms(boxes,
 
   # boxes_ = tf.expand_dims(boxes, axis = -2)
   # boxes, confidence, classes, valid = BASE_NMS.complete_nms(boxes_, classes,
-  #                                 pre_nms_top_k = 5000,
+  #                                 pre_nms_top_k = prenms_top_k,
   #                                 pre_nms_score_threshold=pre_nms_thresh,
   #                                 nms_iou_threshold= nms_thresh,
   #                                 max_num_detections= 200)

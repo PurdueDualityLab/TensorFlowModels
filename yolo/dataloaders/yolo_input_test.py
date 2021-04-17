@@ -100,7 +100,7 @@ def test_yolo_pipeline(is_training=True):
   # shind = 3
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
-  dfilter = detection_generator.YoloFilter()
+  # dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
   data = dataset if is_training else dsp

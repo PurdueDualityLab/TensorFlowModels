@@ -81,9 +81,6 @@ class YoloTask(base_task.Task):
     self._metric_names = []
     self._metrics = []
 
-    self._dfilter = detection_generator.YoloFilter(
-        classes=self._task_config.model.num_classes)
-
     return
 
   def build_model(self):
@@ -155,7 +152,6 @@ class YoloTask(base_task.Task):
         min_level=model.min_level,
         max_level=model.max_level,
         num_classes=model.num_classes,
-        batch_size=params.global_batch_size,
         masks=masks,
         anchors=anchors,
         fixed_size=params.parser.fixed_size,
@@ -163,11 +159,12 @@ class YoloTask(base_task.Task):
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
         jitter_im=params.parser.jitter_im,
-        jitter_boxes=params.parser.jitter_boxes,
+        aug_scale_aspect=params.parser.aug_scale_aspect,
         aug_rand_transalate=params.parser.aug_rand_translate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
-        aug_rand_zoom=params.parser.aug_rand_zoom,
+        aug_scale_min=params.parser.aug_scale_min,
+        aug_scale_max=params.parser.aug_scale_max,
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         min_process_size=params.parser.min_process_size,
