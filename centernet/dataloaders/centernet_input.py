@@ -292,31 +292,17 @@ class CenterNetParser(parser.Parser):
           prediction when computing the loss
       """
     
+    # Get relevant bounding box and class information from labels
     boxes = labels['bbox']
     classes = labels['classes'] - 1
     num_objects = labels['num_detections']
 
+    # Compute scaling factors for center/corner positions on heatmap
     input_size = tf.cast(input_size, self._dtype)
     output_size = tf.cast(output_size, self._dtype)
     input_h, input_w = input_size[0], input_size[1]
     output_h, output_w = output_size[0], output_size[1]
-    
-    # Heatmaps which we will transpose at the end
-    tl_heatmap = tf.zeros((output_h, output_w, self._num_classes), dtype=self._dtype)
-    br_heatmap = tf.zeros((output_h, output_w, self._num_classes), dtype=self._dtype)
-    ct_heatmap = tf.zeros((output_h, output_w, self._num_classes), dtype=self._dtype)
-    
-    # Maps for offset and size predictions
-    tl_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
-    br_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
-    ct_offset = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
-    size      = tf.zeros((self._max_num_instances, 2), dtype=self._dtype)
-    
-    # Masks for valid boxes
-    box_mask = tf.zeros((self._max_num_instances), dtype=tf.int32)
-    box_indices  = tf.zeros((self._max_num_instances, 2), dtype=tf.int32)
 
-    # Scaling factor for determining center/corners
     width_ratio = output_w / input_w
     height_ratio = output_h / input_h
     
@@ -326,7 +312,7 @@ class CenterNetParser(parser.Parser):
     yct = (ytl + ybr) / 2
     xct = (xtl + xbr) / 2
 
-    # Scaled box coordinates
+    # Scaled box coordinates (could be decimal)
     fxtl = xtl * width_ratio
     fytl = ytl * height_ratio
     fxbr = xbr * width_ratio
@@ -334,7 +320,7 @@ class CenterNetParser(parser.Parser):
     fxct = xct * width_ratio
     fyct = yct * height_ratio
 
-    # Scaled box coordinate positions on heatmaps
+    # Floor the scaled box coordinates to be placed on heatmaps
     xtl = tf.math.floor(fxtl)
     ytl = tf.math.floor(fytl)
     xbr = tf.math.floor(fxbr)
@@ -342,6 +328,7 @@ class CenterNetParser(parser.Parser):
     xct = tf.math.floor(fxct)
     yct = tf.math.floor(fyct)
     
+    # Get the scaled box dimensions for computing the gaussian radius
     box_widths = boxes[..., 3] - boxes[..., 1]
     box_heights = boxes[..., 2] - boxes[..., 0]
 
@@ -349,29 +336,62 @@ class CenterNetParser(parser.Parser):
     box_heights = tf.math.ceil(box_heights * height_ratio)
     box_widths_heights = tf.stack([box_widths, box_heights], axis=-1)
 
+    # Center/corner heatmaps 
+    tl_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
+    br_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
+    ct_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
+    
+    # Maps for offset and size features for each instance of a box
+    tl_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
+    br_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
+    ct_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
+    size = tf.zeros((self._max_num_instances, 2), self._dtype)
+    
+    # Mask for valid box instances and their center indices in the heatmap
+    box_mask = tf.zeros((self._max_num_instances), tf.int32)
+    box_indices  = tf.zeros((self._max_num_instances, 2), tf.int32)
+
     if self._use_gaussian_bump:
+      # Need to gaussians around the centers and corners of the objects
+
+      # First compute the desired gaussian radius
       if self._gaussian_rad == -1:
-        radius = tf.map_fn(fn=lambda x: preprocessing_ops.gaussian_radius(x), elems=box_widths_heights)
-        radius = tf.math.maximum(tf.cast(0.0, radius.dtype), tf.math.floor(radius))
+        radius = tf.map_fn(fn=lambda x: preprocessing_ops.gaussian_radius(x), 
+          elems=box_widths_heights)
+        radius = tf.math.maximum(tf.math.floor(radius), 
+          tf.cast(0.0, radius.dtype))
       else:
-        radius = tf.constant([self._gaussian_rad] * num_objects, dtype=self._dtype)
-          
+        radius = tf.constant([self._gaussian_rad] * num_objects, self._dtype)
+      
+      # These blobs contain information needed to draw the gaussian
       tl_blobs = tf.stack([classes, xtl, ytl, radius], axis=-1)
       br_blobs = tf.stack([classes, xbr, ybr, radius], axis=-1)
       ct_blobs = tf.stack([classes, xct, yct, radius], axis=-1)
+      
+      # Get individual gaussian contributions from each bounding box
+      tl_gaussians = tf.map_fn(
+        fn=lambda x: preprocessing_ops.draw_gaussian(
+          tf.shape(tl_heatmap), x, self._dtype), elems=tl_blobs)
+      br_gaussians = tf.map_fn(
+        fn=lambda x: preprocessing_ops.draw_gaussian(
+          tf.shape(br_heatmap), x, self._dtype), elems=br_blobs)
+      ct_gaussians = tf.map_fn(
+        fn=lambda x: preprocessing_ops.draw_gaussian(
+          tf.shape(ct_heatmap), x, self._dtype), elems=ct_blobs)
 
-      tl_gaussians = tf.map_fn(fn = lambda x: preprocessing_ops.draw_gaussian(tl_heatmap, x), elems=tl_blobs)
-      br_gaussians = tf.map_fn(fn = lambda x: preprocessing_ops.draw_gaussian(br_heatmap, x), elems=br_blobs)
-      ct_gaussians = tf.map_fn(fn = lambda x: preprocessing_ops.draw_gaussian(ct_heatmap, x, 5), elems=ct_blobs)
-
+      # Combine contributions into single heatmaps
       tl_heatmap = tf.math.reduce_max(tl_gaussians, axis=0)
       br_heatmap = tf.math.reduce_max(br_gaussians, axis=0)
       ct_heatmap = tf.math.reduce_max(ct_gaussians, axis=0)
     
-    else:      
-      tl_hm_update_indices = tf.cast(tf.stack([ytl, xtl, classes], axis=-1), tf.int32)
-      br_hm_update_indices = tf.cast(tf.stack([ybr, xbr, classes], axis=-1), tf.int32)
-      ct_hm_update_indices = tf.cast(tf.stack([yct, xct, classes], axis=-1), tf.int32)
+    else:
+      # Instead of a gaussian, insert 1s in the center and corner heatmaps
+      tl_hm_update_indices = tf.cast(
+        tf.stack([ytl, xtl, classes], axis=-1), tf.int32)
+      br_hm_update_indices = tf.cast(
+        tf.stack([ybr, xbr, classes], axis=-1), tf.int32)
+      ct_hm_update_indices = tf.cast(
+        tf.stack([yct, xct, classes], axis=-1), tf.int32)
 
       tl_heatmap = tf.tensor_scatter_nd_update(tl_heatmap, 
         tl_hm_update_indices, [1] * num_objects)
@@ -380,27 +400,35 @@ class CenterNetParser(parser.Parser):
       ct_heatmap = tf.tensor_scatter_nd_update(ct_heatmap, 
         ct_hm_update_indices, [1] * num_objects)
     
-    update_indices = preprocessing_ops.cartesian_product(tf.range(num_objects), tf.range(2))
+    # Indicies used to update offsets and sizes for valid box instances 
+    update_indices = preprocessing_ops.cartesian_product(
+      tf.range(num_objects), tf.range(2))
     update_indices = tf.reshape(update_indices, shape=[num_objects, 2, 2])
 
     tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
     br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
     ct_offset_values = tf.stack([fxct - xct, fyct - yct], axis=-1)
 
-    tl_offset = tf.tensor_scatter_nd_update(tl_offset, update_indices, tl_offset_values)
-    br_offset = tf.tensor_scatter_nd_update(br_offset, update_indices, br_offset_values)
-    ct_offset = tf.tensor_scatter_nd_update(ct_offset, update_indices, ct_offset_values)
+    # Write the offsets of each box instance
+    tl_offset = tf.tensor_scatter_nd_update(
+      tl_offset, update_indices, tl_offset_values)
+    br_offset = tf.tensor_scatter_nd_update(
+      br_offset, update_indices, br_offset_values)
+    ct_offset = tf.tensor_scatter_nd_update(
+      ct_offset, update_indices, ct_offset_values)
 
+    # Write the size of each bounding box 
     size = tf.tensor_scatter_nd_update(size, update_indices, box_widths_heights)
 
-    # Initialy the mask is zeros, but each valid box needs to be unmasked
+    # Initially the mask is zeros, so now we unmask each valid box instance
     mask_indices = tf.expand_dims(tf.range(num_objects), -1)
     mask_values = tf.repeat(1, num_objects)
     box_mask = tf.tensor_scatter_nd_update(box_mask, mask_indices, mask_values)
 
-    # Contains the y and x coordinate of the box center in the heatmap
+    # Write the y and x coordinate of each box center in the heatmap
     box_index_values = tf.cast(tf.stack([yct, xct], axis=-1), dtype=tf.int32)
-    box_indices = tf.tensor_scatter_nd_update(box_indices, update_indices, box_index_values)
+    box_indices = tf.tensor_scatter_nd_update(
+      box_indices, update_indices, box_index_values)
 
     labels = {
       'tl_heatmaps': tl_heatmap,

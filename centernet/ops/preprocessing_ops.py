@@ -185,24 +185,42 @@ def draw_gaussian1(heatmap, blobs, scaling_factor=1, dtype=tf.float32):
     return heatmap
 
 @tf.function
-def draw_gaussian(heatmap, blob, scaling_factor=1):
-  # dummy heatmap to draw onto
-  heatmap_shape = tf.shape(heatmap)
-  gaussian_heatmap = tf.zeros(shape=heatmap_shape, dtype=heatmap.dtype)
+def draw_gaussian(hm_shape, blob, dtype, scaling_factor=1):
+  """ Draws an instance of a 2D gaussian on a heatmap.
+  
+  A heatmap with shape hm_shape and of type dtype is generated with 
+  a gaussian with a given center, radius, and scaling factor
+
+  Args:
+    hm_shape: A `list` of `Tensor` of shape [3] that gives the height, width, 
+      and number of channels in the heatmap
+    blob: A `Tensor` of shape [4] that gives the channel number, x, y, and
+      radius for the desired gaussian to be drawn onto
+    dtype: The desired type of the heatmap
+    scaling_factor: A `int` that can be used to scale the magnitude of the 
+      gaussian
+  Returns:
+    A `Tensor` with shape hm_shape and type dtype with a 2D gaussian
+  """
+  gaussian_heatmap = tf.zeros(shape=hm_shape, dtype=dtype)
 
   blob = tf.cast(blob, tf.int32)
   obj_class, x, y, radius = blob[0], blob[1], blob[2], blob[3]
 
-  height, width = heatmap_shape[0], heatmap_shape[1]
+  height, width = hm_shape[0], hm_shape[1]
 
-  left, right = tf.math.minimum(x, radius), tf.math.minimum(width - x, radius + 1)
-  top, bottom = tf.math.minimum(y, radius), tf.math.minimum(height - y, radius + 1)
+  left = tf.math.minimum(x, radius)
+  right = tf.math.minimum(width - x, radius + 1)
+  top = tf.math.minimum(y, radius)
+  bottom = tf.math.minimum(height - y, radius + 1)
 
-  gaussian = _gaussian_penalty(radius=radius, dtype=heatmap.dtype)
+  gaussian = _gaussian_penalty(radius=radius, dtype=dtype)
   gaussian = gaussian[radius-top:radius+bottom, radius-left:radius+right]
   gaussian = tf.reshape(gaussian, [-1])
 
-  heatmap_indices = cartesian_product(tf.range(y - top, y + bottom), tf.range(x - left, x + right), [obj_class])
-  gaussian_heatmap = tf.tensor_scatter_nd_update(gaussian_heatmap, heatmap_indices, gaussian * scaling_factor)
+  heatmap_indices = cartesian_product(
+    tf.range(y - top, y + bottom), tf.range(x - left, x + right), [obj_class])
+  gaussian_heatmap = tf.tensor_scatter_nd_update(
+    gaussian_heatmap, heatmap_indices, gaussian * scaling_factor)
 
   return gaussian_heatmap
