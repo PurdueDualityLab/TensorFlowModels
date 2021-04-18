@@ -1,9 +1,9 @@
 import tensorflow as tf
 
+from centernet.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import \
     nn_blocks as official_nn_blocks
-from centernet.modeling.layers import subnormalization
 
 TPU_BASE = True
 

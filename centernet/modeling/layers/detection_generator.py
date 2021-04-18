@@ -347,5 +347,5 @@ class CenterNetLayer(ks.Model):
       'bbox': boxes,
       'classes': classes,
       'confidence': scores,
-      'num_dets': num_det
+      'num_dets': num_dets
     }

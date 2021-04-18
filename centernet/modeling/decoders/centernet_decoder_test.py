@@ -3,8 +3,8 @@ import tensorflow as tf
 from absl.testing import parameterized
 
 from centernet.configs import centernet as cfg
-from centernet.modeling.decoders import centernet_decoder
 from centernet.modeling.CenterNet import build_centernet_decoder
+from centernet.modeling.decoders import centernet_decoder
 
 
 class CenterNetDecoderTest(tf.test.TestCase, parameterized.TestCase):
