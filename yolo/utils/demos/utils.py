@@ -175,11 +175,18 @@ class DrawBoxes(object):
   def _get_draw_fn(self, colors, label_names, display_name):
 
     def draw_box_name(image, box, classes, conf):
-      if box[3] == 0:
+      if box[1] - box[0] == 0 or box[3] - box[2] == 0:
         return False
       cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
                     self._thickness)
+      x = (box[1] + box[0]) // 2
+      y = (box[3] + box[2]) // 2
 
+      cv2.circle(
+          image, (x, y),
+          radius=0,
+          color=colors[classes],
+          thickness=self._thickness * 3)
       if conf is not None:
         cv2.putText(image, "%s, %0.3f" % (label_names[classes], conf),
                     (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
@@ -191,10 +198,15 @@ class DrawBoxes(object):
       return True
 
     def draw_box(image, box, classes, conf):
-      if box[3] == 0:
+      if box[1] - box[0] == 0 or box[3] - box[2] == 0:
         return False
       cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
                     1)
+      cv2.circle(
+          image, (box[0], box[2]),
+          radius=0,
+          color=colors[classes],
+          thickness=self._thickness)
       return True
 
     if display_name and label_names is not None:
@@ -207,8 +219,8 @@ class DrawBoxes(object):
     for i in range(boxes.shape[0]):
       if self._draw_fn(image, boxes[i], classes[i], conf[i]):
         i += 1
-      else:
-        return image
+      # else:
+      #   return image
     return image
 
   def _parent(self, image, boxes, classes, conf):
@@ -252,6 +264,7 @@ class DrawBoxes(object):
       conf = conf.numpy()
 
     if not isinstance(image, list):
+
       if ndims == 4:
         images = []
         func = self._parent(image, boxes, classes, conf)

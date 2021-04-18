@@ -165,8 +165,8 @@ CSPADARKNET53 = {
             False
         ],
         [
-            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish', -1,
-            1, 1, False
+            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish',
+            -1, 1, 1, False
         ],
         [
             'DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1,
@@ -186,7 +186,6 @@ CSPADARKNET53 = {
         ],
     ]
 }
-
 
 LARGECSP53 = {
     'list_names':
@@ -209,12 +208,12 @@ LARGECSP53 = {
             1, 2, False
         ],
         [
-            'DarkRes', 'csp', 15, False, 256, None, None, None, None, 'mish', -1,
-            1, 3, True
+            'DarkRes', 'csp', 15, False, 256, None, None, None, None, 'mish',
+            -1, 1, 3, True
         ],
         [
-            'DarkRes', 'csp', 15, False, 512, None, None, None, None, 'mish', -1,
-            2, 4, True
+            'DarkRes', 'csp', 15, False, 512, None, None, None, None, 'mish',
+            -1, 2, 4, True
         ],
         [
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
@@ -230,8 +229,6 @@ LARGECSP53 = {
         ],
     ]
 }
-
-
 
 DARKNET53 = {
     'list_names':
@@ -345,7 +342,7 @@ BACKBONES = {
     'cspdarknet53': CSPDARKNET53,
     'altered_cspdarknet53': CSPADARKNET53,
     'cspdarknettiny': CSPDARKNETTINY,
-    'csp-large':LARGECSP53,
+    'csp-large': LARGECSP53,
 }
 
 
@@ -358,9 +355,9 @@ class Darknet(ks.Model):
       input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
       min_level=None,
       max_level=5,
-      width_scale = 1.0, 
-      depth_scale = 1.0, 
-      csp_level_mod = [], 
+      width_scale=1.0,
+      depth_scale=1.0,
+      csp_level_mod=[],
       activation=None,
       use_sync_bn=False,
       norm_momentum=0.99,
@@ -394,7 +391,7 @@ class Darknet(ks.Model):
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
     self._subdivisions = subdivisions
-    self._width_scale = width_scale 
+    self._width_scale = width_scale
     self._depth_scale = depth_scale
 
     self._default_dict = {
@@ -431,13 +428,13 @@ class Darknet(ks.Model):
     stack_outputs = [inputs]
     for i, config in enumerate(net):
       if config.output_name > self._max_size:
-        break 
+        break
       if config.output_name in self._csp_level_mod:
         config.stack = 'residual'
 
       config.filters = int(config.filters * self._width_scale)
       config.repetitions = int(config.repetitions * self._depth_scale)
-      
+
       if config.stack is None:
         x = self._build_block(
             stack_outputs[config.route], config, name=f"{config.layer}_{i}")
@@ -661,8 +658,8 @@ def build_darknet(
       input_specs=input_specs,
       dilate=backbone_cfg.dilate,
       subdivisions=subdivisions,
-      width_scale=backbone_cfg.width_scale, 
-      depth_scale=backbone_cfg.depth_scale, 
+      width_scale=backbone_cfg.width_scale,
+      depth_scale=backbone_cfg.depth_scale,
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,

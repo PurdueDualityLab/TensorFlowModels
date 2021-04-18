@@ -19,7 +19,7 @@ task:
         type: tiny
       darknet_weights_file: 'cache://yolov4-tiny.weights'
       darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
-    num_classes: 80
+    num_classes: 91
     subdivisions: 1
     _boxes: ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)']
     _input_size: [512, 512, 3]
@@ -57,9 +57,9 @@ task:
       image_h: 512
       image_w: 512
       seed: 10
-      letter_box: false
-      cutmix: false
-      mosaic: false
+      letter_box: true
+      
+      
       use_tie_breaker: true
   validation_data:
     global_batch_size: 8

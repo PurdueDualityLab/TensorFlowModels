@@ -8,6 +8,7 @@ def split_converter(lst, i, j=None):
     return lst.data[:i], lst.data[i:j], lst.data[j:]
   return lst.data[:i], lst.data[i:]
 
+
 def load_weight(cfg, layer):
   weights = cfg.get_weights()
   if len(layer.get_weights()) == len(weights):
@@ -20,6 +21,7 @@ def load_weight(cfg, layer):
     weights.append(np.zeros([]))
     layer.set_weights(weights)
 
+
 def load_weights(convs, layers):
   # min_key = min(layers.keys())
   # max_key = max(layers.keys())
@@ -29,7 +31,7 @@ def load_weights(convs, layers):
   unloaded = []
   unloaded_convs = []
   for i in keys:  # range(min_key, max_key + 1):
-   
+
     try:
       cfg = convs.pop(0)
       print(layers[i].name, cfg)
@@ -49,6 +51,7 @@ def load_weights(convs, layers):
       unloaded.append(layers[i])
       print(f"an error has occured, {layers[i].name}, {i}, {e}")
   return unloaded, unloaded_convs
+
 
 def load_weights_backbone(model, net):
   convs = []
@@ -89,13 +92,13 @@ def load_weights_backbone(model, net):
   # sys.exit()
   return
 
-def load_weights_fpn(model, net, csp = False):
+
+def load_weights_fpn(model, net, csp=False):
   convs = []
   sam = False
   for layer in net:
     if isinstance(layer, convCFG):
       convs.append(layer)
-
 
   layers = dict()
   base_key = 0
@@ -118,7 +121,7 @@ def load_weights_fpn(model, net, csp = False):
   return
 
 
-def load_weights_pan(model, net, csp = False, out_conv=255):
+def load_weights_pan(model, net, csp=False, out_conv=255):
   convs = []
   cfg_heads = []
   sam = 0
@@ -128,7 +131,7 @@ def load_weights_pan(model, net, csp = False, out_conv=255):
         convs.append(layer)
       else:
         cfg_heads.append(layer)
-      
+
     if sam > 0:
       convs[-2], convs[-1] = convs[-1], convs[-2]
       sam += 1
@@ -137,7 +140,7 @@ def load_weights_pan(model, net, csp = False, out_conv=255):
 
     if isinstance(layer, samCFG):
       sam += 1
-      
+
   layers = dict()
   key = 0
   base_key = 0
@@ -158,7 +161,7 @@ def load_weights_pan(model, net, csp = False, out_conv=255):
   return cfg_heads
 
 
-def load_weights_decoder(model, net, csp = False):
+def load_weights_decoder(model, net, csp=False):
   layers = dict()
   base_key = 0
   alternate = 0
@@ -167,12 +170,13 @@ def load_weights_decoder(model, net, csp = False):
       # non sub module conv blocks
       print(layer.name)
       if "input" not in layer.name and "fpn" in layer.name:
-        load_weights_fpn(layer, net[0], csp = csp)
+        load_weights_fpn(layer, net[0], csp=csp)
       elif "input" not in layer.name and "pan" in layer.name:
-        out_convs = load_weights_pan(layer, net[1], csp = csp)
+        out_convs = load_weights_pan(layer, net[1], csp=csp)
     return out_convs
   else:
     return load_csp(net, model)
+
 
 def deconstruct_route_process(mod):
   if isinstance(mod, DarkRouteProcess):
@@ -199,6 +203,7 @@ def deconstruct_route_process(mod):
     return dark_convs
   return None
 
+
 def deconstruct_path_agg(mod):
   if isinstance(mod, PathAggregationBlock):
     print(mod)
@@ -210,7 +215,8 @@ def deconstruct_path_agg(mod):
     return path_convs
   return None
 
-def load_csp(net, model, out_conv = 255):
+
+def load_csp(net, model, out_conv=255):
   cfg_heads = []
   convs = []
 
@@ -225,7 +231,6 @@ def load_csp(net, model, out_conv = 255):
         convs.append(layer)
       else:
         cfg_heads.append(layer)
-
 
   for layer in model.layers:
     # if isinstance(mod, DarkRouteProcess):
@@ -248,8 +253,8 @@ def load_csp(net, model, out_conv = 255):
         except:
           pass
       print(len(blocks), len(convs))
-      
-      blocks = blocks[9:] + blocks[0: 9] 
+
+      blocks = blocks[9:] + blocks[0:9]
       for layer in blocks:
         cfg = convs.pop(0)
         load_weight(cfg, layer)
@@ -273,15 +278,13 @@ def load_csp(net, model, out_conv = 255):
         except:
           pass
       print(len(blocks), len(convs))
-      
+
       for layer in blocks:
         cfg = convs.pop(0)
         load_weight(cfg, layer)
         print(layer.name, layer._filters, layer._kernel_size, cfg)
-  
 
-
-  return cfg_heads 
+  return cfg_heads
 
 
 def ishead(out_conv, layer):

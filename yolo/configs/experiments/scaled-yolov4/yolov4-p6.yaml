@@ -48,7 +48,7 @@ task:
       anchor_generation_scale: 1280
       ignore_thresh: 0.7
       iou_thresh: 0.25
-      nms_thresh: 0.4
+      nms_thresh: 0.6
       loss_type: ciou
       max_boxes: 200
       use_nms: false
@@ -71,9 +71,9 @@ task:
       fixed_size: true
       image_h: 1280
       image_w: 1280
-      letter_box: false
-      cutmix: false
-      mosaic: true
+      letter_box: true
+      
+      
       keep_thresh: 0.25
       mosaic_frequency: 0.5
       use_tie_breaker: true
