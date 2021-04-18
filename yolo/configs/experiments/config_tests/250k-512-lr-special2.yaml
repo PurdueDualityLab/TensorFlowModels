@@ -115,7 +115,7 @@ task:
       use_scale_xy: False
       letter_box: False
       anchor_thresh: 0.213
-  weight_decay: 0.0005
+  weight_decay: 0.001
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
