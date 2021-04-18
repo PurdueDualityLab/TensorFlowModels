@@ -37,18 +37,18 @@ task:
         '3': ciou
       iou_normalizer: 
         '5': 0.07
-        '4': 0.10
-        '3': 0.13
+        '4': 0.07
+        '3': 0.07
       cls_normalizer: 
         '5': 1.0
         '4': 1.0
         '3': 1.0
       obj_normalizer: 
-        '5': 1.0
+        '5': 0.4
         '4': 1.0
-        '3': 1.0
+        '3': 4.0
       max_delta:
-        '5': 5.0
+        '5': 2.0
         '4': 5.0
         '3': 5.0
       new_cords:
@@ -130,8 +130,8 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 20000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
+    # ema:
+    #   average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:

@@ -47,10 +47,6 @@ task:
         '5': 1.0
         '4': 1.0
         '3': 1.0
-      max_delta:
-        '5': 5.0
-        '4': 5.0
-        '3': 5.0
       new_cords:
         '5': false
         '4': false
@@ -80,11 +76,11 @@ task:
       image_w: 512
       image_h: 512
       min_process_size: 512
-      jitter_im: 0.6
-      aug_scale_aspect: 0.2
+      jitter_im: 0.3
+      aug_scale_aspect: 0.0
       aug_scale_min: 0.1
       aug_scale_max: 2.0
-      aug_rand_angle: 3.0
+      aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.5
@@ -99,7 +95,7 @@ task:
         mosaic_frequency: 0.85
         random_crop: True
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: True
+        random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
     global_batch_size: 8
@@ -130,8 +126,8 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 20000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
+    # ema:
+    #   average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:

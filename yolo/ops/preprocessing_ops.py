@@ -763,14 +763,6 @@ def random_crop_mosaic(image,
     dy = rand_uniform_strong(0, 1 + 1, tf.int32)
     ds = rand_uniform_strong(1, 3, tf.int32)
 
-    # if area < 0.125:
-    #   dsx = ishape[0]//2 - 1
-    #   dsy = ishape[1]//2 - 1
-
-    #   oh = tf.maximum(crop_offset[0] - dy * dsy, crop_offset[0])
-    #   ow = tf.maximum(crop_offset[1] - dx * dsx, crop_offset[1])
-    #   tf.print(oh, ow, crop_size)
-    # else:
     oh = tf.maximum(dy * delta[0] - 1, 0) // ds
     ow = tf.maximum(dx * delta[1] - 1, 0) // ds
     crop_offset = tf.convert_to_tensor([oh, ow, 0])

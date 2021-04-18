@@ -113,7 +113,7 @@ task:
       image_h: 416
       fixed_size: True
       use_scale_xy: False
-      letter_box: True
+      letter_box: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
@@ -138,7 +138,7 @@ trainer:
         initial_learning_rate: 0.00131
         name: CosineEpoch
         alpha: 0.2
-        steps_per_epoch: 1875
+        steps_per_epoch: 1
         decay_steps: 249000
     optimizer:
       type: sgd

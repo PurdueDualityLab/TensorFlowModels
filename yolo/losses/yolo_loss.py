@@ -734,7 +734,7 @@ class Yolo_Loss(object):
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
-    true_class = apply_mask(ind_mask, true_class)
+    true_class = tf.stop_gradient(apply_mask(ind_mask, true_class))
 
     true_class = self.build_grid(
         inds, true_class, pred_class, ind_mask, update=False)
@@ -742,7 +742,7 @@ class Yolo_Loss(object):
     counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
     reps = tf.gather_nd(counts, inds, batch_dims=1)
     reps = tf.squeeze(reps, axis=-1)
-    reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+    reps = tf.stop_gradient(tf.where(reps == 0.0, tf.ones_like(reps), reps))
 
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
@@ -750,11 +750,6 @@ class Yolo_Loss(object):
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    # class_loss = ks.losses.binary_crossentropy(
-    #     K.expand_dims(true_class, axis=-1),
-    #     K.expand_dims(pred_class, axis=-1),
-    #     label_smoothing=self._label_smoothing,
-    #     from_logits=False)
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
         self._label_smoothing)
@@ -764,8 +759,6 @@ class Yolo_Loss(object):
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    # bce = ks.losses.binary_crossentropy(
-    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=False)
     bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
     conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
