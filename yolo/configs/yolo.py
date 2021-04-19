@@ -163,7 +163,7 @@ class Parser(hyperparams.Config):
   letter_box: bool = False
   random_flip: bool = True
   pct_rand: float = 0.0
-  jitter_im: float = 0.4
+  jitter_im: float = 0.9
   aug_scale_aspect: float = 0.0
   aug_rand_translate: float = 0.00
   aug_rand_saturation: float = 0.7  #1.5
@@ -171,7 +171,7 @@ class Parser(hyperparams.Config):
   aug_rand_hue: float = 0.15  #0.015
   aug_scale_min: float = 0.1
   aug_scale_max: float = 2.4
-  aug_rand_angle: float = 20.0
+  aug_rand_angle: float = 30.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213

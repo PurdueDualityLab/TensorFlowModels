@@ -131,7 +131,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
 
 @tf.custom_gradient
 def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
-                  max_delta, scale_xy):
+                  max_delta, scale_xy, normalizer):
   # (box_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   (pred_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height,
                                             anchor_grid, grid_points, max_delta,
@@ -147,6 +147,11 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     dy_xy += dy_xy_
     dy_wh *= tf.math.exp(pred_wh)
 
+    # scaling
+    dy_xy *= tf.cast(normalizer, dy_xy.dtype)
+    dy_wh *= tf.cast(normalizer, dy_wh.dtype)
+
+    # gradient clipping
     dy_wh = math_ops.rm_nan_inf(dy_wh)
     delta = tf.cast(max_delta, dy_wh.dtype)
     dy_wh = tf.clip_by_value(dy_wh, -delta, delta)
@@ -155,7 +160,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     delta = tf.cast(max_delta, dy_xy.dtype)
     dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
-        grid_points), 0.0, 0.0
+        grid_points), 0.0, 0.0, 0.0
 
   # return (box_xy, box_wh, pred_box), delta
   return (pred_xy, box_wh, pred_box), delta
@@ -168,7 +173,8 @@ def get_predicted_box(width,
                       grid_points,
                       scale_xy,
                       darknet=True,
-                      max_delta=5.0):
+                      max_delta=5.0, 
+                      normalizer=1.0):
 
   # TODO: scale_xy should not be propagated in darkent either
   pred_xy = unscaled_box[..., 0:2]  
@@ -183,7 +189,7 @@ def get_predicted_box(width,
     # box_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
     pred_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height,
                                               anchor_grid, grid_points,
-                                              max_delta, scale_xy)
+                                              max_delta, scale_xy, normalizer)
   else:
     # box_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
     pred_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height,
@@ -209,7 +215,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
 
 @tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
-                            grid_points, max_delta, scale_xy):
+                            grid_points, max_delta, scale_xy, normalizer):
   # (box_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   (pred_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
@@ -221,6 +227,10 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
+    # scaling
+    dy_xy *= tf.cast(normalizer, dy_xy.dtype)
+    dy_wh *= tf.cast(normalizer, dy_wh.dtype)
+
     # gradient clipping
     dy_wh = math_ops.rm_nan_inf(dy_wh)
     delta = tf.cast(max_delta, dy_wh.dtype)
@@ -230,7 +240,7 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     delta = tf.cast(max_delta, dy_xy.dtype)
     dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
-        grid_points), 0.0, 0.0
+        grid_points), 0.0, 0.0, 0.0
 
   # return (box_xy, box_wh, pred_box), delta
   return (pred_xy, box_wh, pred_box), delta
@@ -243,7 +253,8 @@ def get_predicted_box_newcords(width,
                                grid_points,
                                scale_xy,
                                darknet=False,
-                               max_delta=5.0):
+                               max_delta=5.0, 
+                               normalizer=1.0):
   pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])  
   pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
 
@@ -252,7 +263,7 @@ def get_predicted_box_newcords(width,
     pred_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width,
                                                         height, anchor_grid,
                                                         grid_points, max_delta,
-                                                        scale_xy)
+                                                        scale_xy, normalizer)
   else:
     # pred_xy_ = pred_xy
     # scale_xy = tf.cast(scale_xy, pred_xy.dtype)
@@ -359,6 +370,7 @@ class Yolo_Loss(object):
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
         darknet=not self._use_reduction_sum,
+        normalizer=self._iou_normalizer, 
         max_delta=self._max_delta)
 
     if not self._new_cords:
@@ -749,6 +761,8 @@ class Yolo_Loss(object):
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
+    iou = tf.stop_gradient(iou)
+    liou = tf.stop_gradient(liou)
 
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
@@ -764,7 +778,7 @@ class Yolo_Loss(object):
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    box_loss *= self._iou_normalizer
+    # box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
@@ -778,7 +792,7 @@ class Yolo_Loss(object):
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50, precision50
+    return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50, precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum:

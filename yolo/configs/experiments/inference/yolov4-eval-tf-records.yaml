@@ -83,25 +83,25 @@ task:
       image_h: 512
       min_process_size: 512
       jitter_im: 0.6
-      aug_scale_aspect: 0.3
+      aug_scale_aspect: 0.0
       aug_scale_min: 0.5
-      aug_scale_max: 0.5
+      aug_scale_max: 2.0
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.5
-      aug_rand_translate: 0.075
+      aug_rand_translate: 0.00
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
       use_scale_xy: False
-      letter_box: False
+      letter_box: True
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: True
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: True
+        random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
     global_batch_size: 8
@@ -134,13 +134,11 @@ trainer:
     # ema:
     #   average_decay: 0.9998
     learning_rate:
-      type: cosine_epoch
-      cosine_epoch:
-        initial_learning_rate: 0.001
-        name: CosineEpoch
-        alpha: 0.2
-        steps_per_epoch: 1
-        decay_steps: 294375
+      type: stepwise
+      stepwise:
+        boundaries: [240000, 260000]
+        name: PiecewiseConstantDecay
+        values: [0.00008125, 0.000008125,  0.0000008125] #[0.0013, 0.00013, 0.000013]
     optimizer:
       type: adam
       adam:
