@@ -565,6 +565,13 @@ class CenterNetParser(parser.Parser):
 if __name__ == '__main__':
   # This code is for visualization
   import matplotlib.pyplot as plt
+
+
+  resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='node-8')
+  tf.config.experimental_connect_to_cluster(resolver)
+  tf.tpu.experimental.initialize_tpu_system(resolver)
+  print("All devices: ", tf.config.list_logical_devices('TPU'))
+
   boxes = tf.constant([
     (10, 300, 15, 370), # center (y, x) = (12, 335)
     (100, 300, 150, 370), # center (y, x) = (125, 335)
@@ -578,29 +585,31 @@ if __name__ == '__main__':
 
   parser = CenterNetParser()
 
-  print("testing original build heatmaps function: ")
-  a = time.time()
-  labels1 = parser._build_heatmap_and_regressed_features1(
-    labels = {
-      'bbox': boxes,
-      'num_detections': 3,
-      'classes': classes
-    },
-    output_size=[512, 512], input_size=[512, 512]
-  )
-  b = time.time()
-  print("Time taken: {} ms", (b-a) * 1000)
+  # print("testing original build heatmaps function: ")
+  # a = time.time()
+  # with tf.device('/TPU:0'):
+  #   labels1 = parser._build_heatmap_and_regressed_features1(
+  #     labels = {
+  #       'bbox': boxes,
+  #       'num_detections': 3,
+  #       'classes': classes
+  #     },
+  #     output_size=[512, 512], input_size=[512, 512]
+  #   )
+  # b = time.time()
+  # print("Time taken: {} ms", (b-a) * 1000)
 
   print("testing new build heatmaps function: ")
   a = time.time()
-  labels = parser._build_heatmap_and_regressed_features(
-    labels = {
-      'bbox': boxes,
-      'num_detections': 3,
-      'classes': classes
-    },
-    output_size=[512, 512], input_size=[512, 512]
-  )
+  with tf.device('/TPU:0'):
+    labels = parser._build_heatmap_and_regressed_features(
+       labels = {
+       'bbox': boxes,
+       'num_detections': 3,
+       'classes': classes
+      },
+     output_size=[512, 512], input_size=[512, 512]
+     )
   b = time.time()
   print("Time taken: {} ms", (b-a) * 1000)
 
