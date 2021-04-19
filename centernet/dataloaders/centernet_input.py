@@ -316,7 +316,7 @@ class CenterNetParser(parser.Parser):
     yct = (ytl + ybr) / 2
     xct = (xtl + xbr) / 2
 
-    # Scaled box coordinates (could be decimal)
+    # Scaled box coordinates (could be floating point)
     fxtl = xtl * width_ratio
     fytl = ytl * height_ratio
     fxbr = xbr * width_ratio
@@ -331,15 +331,23 @@ class CenterNetParser(parser.Parser):
     ybr = tf.math.floor(fybr)
     xct = tf.math.floor(fxct)
     yct = tf.math.floor(fyct)
+
+    # Offset computations to make up for discretization error
+    # used for offset maps
+    tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
+    br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
+    ct_offset_values = tf.stack([fxct - xct, fyct - yct], axis=-1)
     
     # Get the scaled box dimensions for computing the gaussian radius
     box_widths = boxes[..., 3] - boxes[..., 1]
     box_heights = boxes[..., 2] - boxes[..., 0]
 
-    box_widths = tf.math.ceil(box_widths * width_ratio)
-    box_heights = tf.math.ceil(box_heights * height_ratio)
-    box_widths_heights = tf.stack([box_widths, box_heights], axis=-1)
+    box_widths = box_widths * width_ratio
+    box_heights = box_heights * height_ratio
 
+    # Used for size map
+    box_widths_heights = tf.stack([box_widths, box_heights], axis=-1)
+    
     # Center/corner heatmaps 
     tl_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
     br_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
@@ -361,12 +369,11 @@ class CenterNetParser(parser.Parser):
       # First compute the desired gaussian radius
       if self._gaussian_rad == -1:
         radius = tf.map_fn(fn=lambda x: preprocessing_ops.gaussian_radius(x), 
-          elems=box_widths_heights)
+          elems=tf.math.ceil(box_widths_heights))
         radius = tf.math.maximum(tf.math.floor(radius), 
-          tf.cast(0.0, radius.dtype))
+          tf.cast(1.0, radius.dtype))
       else:
         radius = tf.constant([self._gaussian_rad] * num_objects, self._dtype)
-      
       # These blobs contain information needed to draw the gaussian
       tl_blobs = tf.stack([classes, xtl, ytl, radius], axis=-1)
       br_blobs = tf.stack([classes, xbr, ybr, radius], axis=-1)
@@ -408,11 +415,6 @@ class CenterNetParser(parser.Parser):
     update_indices = preprocessing_ops.cartesian_product(
       tf.range(num_objects), tf.range(2))
     update_indices = tf.reshape(update_indices, shape=[num_objects, 2, 2])
-    
-    
-    tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
-    br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
-    ct_offset_values = tf.stack([fxct - xct, fyct - yct], axis=-1)
     
     # Write the offsets of each box instance
     tl_offset = tf.tensor_scatter_nd_update(

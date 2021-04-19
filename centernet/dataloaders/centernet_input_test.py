@@ -52,9 +52,9 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     width_ratio = output_size[1] / input_size[1]
     
     # Shape checks
-    self.assertEqual(tl_heatmaps.shape, (512, 512, 90))
-    self.assertEqual(br_heatmaps.shape, (512, 512, 90))
-    self.assertEqual(ct_heatmaps.shape, (512, 512, 90))
+    self.assertEqual(tl_heatmaps.shape, (output_size[0], output_size[1], 90))
+    self.assertEqual(br_heatmaps.shape, (output_size[0], output_size[1], 90))
+    self.assertEqual(ct_heatmaps.shape, (output_size[0], output_size[1], 90))
 
     self.assertEqual(tl_offset.shape, (parser._max_num_instances, 2))
     self.assertEqual(br_offset.shape, (parser._max_num_instances, 2))
@@ -70,7 +70,9 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     
     for i in range(len(boxes)):
       # Check sizes
-      self.assertAllEqual(size[i], [boxes[i][3] - boxes[i][1], boxes[i][2] - boxes[i][0]])
+      self.assertAllEqual(size[i], 
+        [(boxes[i][3] - boxes[i][1]) * width_ratio, 
+        (boxes[i][2] - boxes[i][0]) * height_ratio])
 
       # Check box indices
       y = tf.math.floor((boxes[i][0] + boxes[i][2]) / 2 * height_ratio)
@@ -106,6 +108,32 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
 
     self.check_labels_correct(boxes=boxes, classes=classes, 
       output_size=sizes, input_size=sizes)
+    
+  def test_generate_heatmap_scale_1(self):
+    boxes = [
+      (10, 300, 15, 370),
+      (100, 300, 150, 370),
+      (15, 100, 200, 170),
+    ]
+    classes = (1, 2, 3)
+    output_size = [128, 128]
+    input_size = [512, 512]
+
+    self.check_labels_correct(boxes=boxes, classes=classes, 
+      output_size=output_size, input_size=input_size)
+  
+  def test_generate_heatmap_scale_2(self):
+    boxes = [
+      (10, 300, 15, 370),
+      (100, 300, 150, 370),
+      (15, 100, 200, 170),
+    ]
+    classes = (1, 2, 3)
+    output_size = [128, 128]
+    input_size = [1024, 1024]
+
+    self.check_labels_correct(boxes=boxes, classes=classes, 
+      output_size=output_size, input_size=input_size)
 
 if __name__ == '__main__':
   tf.test.main()
