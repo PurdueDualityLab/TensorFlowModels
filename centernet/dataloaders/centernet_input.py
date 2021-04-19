@@ -400,7 +400,7 @@ class CenterNetParser(parser.Parser):
       ct_heatmap = tf.tensor_scatter_nd_update(ct_heatmap, 
         ct_hm_update_indices, [1] * num_objects)
     
-    # Indicies used to update offsets and sizes for valid box instances 
+    # Indices used to update offsets and sizes for valid box instances 
     update_indices = preprocessing_ops.cartesian_product(
       tf.range(num_objects), tf.range(2))
     update_indices = tf.reshape(update_indices, shape=[num_objects, 2, 2])
