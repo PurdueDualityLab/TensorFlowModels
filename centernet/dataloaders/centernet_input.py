@@ -293,9 +293,9 @@ class CenterNetParser(parser.Parser):
       """
     
     # Get relevant bounding box and class information from labels
-    boxes = labels['bbox']
-    classes = labels['classes'] - 1
     num_objects = labels['num_detections']
+    boxes = labels['bbox'][:num_objects]
+    classes = labels['classes'][:num_objects] - 1
 
     # Compute scaling factors for center/corner positions on heatmap
     input_size = tf.cast(input_size, self._dtype)
@@ -404,11 +404,12 @@ class CenterNetParser(parser.Parser):
     update_indices = preprocessing_ops.cartesian_product(
       tf.range(num_objects), tf.range(2))
     update_indices = tf.reshape(update_indices, shape=[num_objects, 2, 2])
-
+    
+    
     tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
     br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
     ct_offset_values = tf.stack([fxct - xct, fyct - yct], axis=-1)
-
+    
     # Write the offsets of each box instance
     tl_offset = tf.tensor_scatter_nd_update(
       tl_offset, update_indices, tl_offset_values)

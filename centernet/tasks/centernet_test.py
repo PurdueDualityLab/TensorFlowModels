@@ -5,8 +5,6 @@ import orbit
 from centernet.tasks import centernet
 from official.core import exp_factory
 
-CENTERNET_CKPT_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
-
 class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
 
   # def testCenterNetTask(self):
@@ -34,11 +32,11 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
     strategy = tf.distribute.get_strategy()
 
     dataset = orbit.utils.make_distributed_dataset(strategy, task.build_inputs,
-                                                   config.task.train_data)
+                                                   config.task.validation_data)
 
     iterator = iter(dataset)
-    opt_factory = optimization.OptimizerFactory(config.trainer.optimizer_config)
     logs = task.validation_step(next(iterator), model, metrics=metrics)
+    print(logs)
     self.assertIn("loss", logs)
 
 

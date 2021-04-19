@@ -33,7 +33,7 @@ def gaussian_radius(det_size, min_overlap=0.7) -> int:
     Returns:
         int representing desired gaussian radius
     """
-  height, width = det_size
+  height, width = det_size[0], det_size[1]
 
   # Case where detected box is offset from ground truth and no box completely
   # contains the other.
