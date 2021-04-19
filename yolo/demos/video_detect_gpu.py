@@ -172,7 +172,7 @@ class FastVideo(object):
     self._frames = 1
     self._obj_detected = -1
 
-    self._display = video_t.DisplayThread()
+    self._display = video_t.saveFrameThread()
     return
 
   def _preprocess(self, image):
@@ -510,21 +510,24 @@ def get_model(model):
 # model.summary()
 # model.set_postprocessor_fn(func)
 
-# if __name__ == '__main__':
-#   config = [os.path.abspath('yolo/configs/experiments/yolov4-eval.yaml')]
-#   model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
+import os
+from yolo import run
 
-#   task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
+if __name__ == '__main__':
+  config = [os.path.abspath('yolo/configs/experiments/inference/yolov4-eval.yaml')]
+  model_dir = "" #os.path.abspath("../checkpoints/yolo_dt8_norm_iou")
 
-#   cap = FastVideo(
-#       "../videos/nyc.mp4",
-#       model=model,
-#       process_width=416,
-#       process_height=416,
-#       preprocess_with_gpu=True,
-#       print_conf=True,
-#       max_batch=5,
-#       disp_h=416,
-#       scale_que=1,
-#       wait_time='dynamic')
-#   cap.run()
+  task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
+
+  cap = FastVideo(
+      "videos/test.mp4",
+      model=model,
+      process_width=416,
+      process_height=416,
+      preprocess_with_gpu=True,
+      print_conf=True,
+      max_batch=5,
+      disp_h=416,
+      scale_que=1,
+      wait_time='dynamic')
+  cap.run()

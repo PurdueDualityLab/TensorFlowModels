@@ -174,7 +174,30 @@ class VideoPlayer(object):
     return
 
 
-class DisplayThread(object):
+class Thread(object):
+  def __init__(self):
+    __metaclass__ = abc.ABCMeta
+    self._thread = None
+    self._running = False
+    self._wait_time = 0
+    super().__init__()
+    return
+
+  def start(self):
+    pass
+
+  def close(self):
+    pass
+  def running(self):
+    pass
+
+  def put(self):
+    pass
+
+  def put_all(self):
+    pass
+
+class DisplayThread(Thread):
 
   def __init__(self,
                frame_buffer=None,
@@ -268,7 +291,7 @@ class DisplayThread(object):
     return self._fps
 
 
-class saveThread(object):
+class saveFrameThread(Thread):
   def __init__(self,
                folder_name = "frames/",
                frame_buffer= None,
@@ -314,6 +337,52 @@ class saveThread(object):
   @property
   def fps(self):
     return self._fps
+
+class saveVideoThread(Thread):
+  def __init__(self,
+               frame_buffer= None,
+              ):
+    if frame_buffer is None:
+      self._frame_buffer = FrameQue(1000)
+    else:
+      self._frame_buffer = frame_buffer
+    self._thread = None
+    self._running = False
+    self._fps = 0
+    self._count = 0
+  def start(self):
+    self._running = True
+    self._thread = t.Thread(target=self.save, args=())
+    self._thread.start()
+  def close(self):
+    self._running = False
+    if self._thread is not None:
+      self._thread.join()
+  def save(self):
+    self._count = 0
+    out = cv2.VideoWriter("demo.avi", cv2.VideoWriter_fourcc(*'DIVX'), 15, (739, 416)) 
+    try:
+      while self._running:
+        success, frame = self._frame_buffer.read()
+        if success and frame is not None:
+          frame = cv2.convertScaleAbs(frame, alpha=(255.0))
+          out.write(frame)
+      self._running = False
+    except Exception as e:
+      print(e)
+      self._running = False
+    
+  @property
+  def running(self):
+    return self._running
+  def put(self, frame):
+    return self._frame_buffer.put(frame)
+  def put_all(self, frames):
+    return self._frame_buffer.put_all(frames)
+  @property
+  def fps(self):
+    return self._fps
+
 
 if __name__ == "__main__":
   video = VideoServer("videos/test.mp4", wait_time=0.000001, que=10)
