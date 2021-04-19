@@ -5,6 +5,7 @@ import orbit
 from centernet.tasks import centernet
 from official.core import exp_factory
 
+
 class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
 
   # def testCenterNetTask(self):

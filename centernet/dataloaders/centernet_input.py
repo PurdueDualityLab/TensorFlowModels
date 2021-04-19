@@ -33,6 +33,7 @@ class CenterNetParser(parser.Parser):
                gaussian_rad: int = -1,
                gaussian_iou: float = 0.7,
                output_dims: int = 128,
+               class_offset: int = 1,
                dtype: str = 'float32'):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
@@ -48,6 +49,7 @@ class CenterNetParser(parser.Parser):
       gaussian_iou: A `float` number for the minimum desired IOU used when
         determining the gaussian radius of center locations in the heatmap.
       output_dims: A `Tensor` or `int` for output dimensions of the heatmap.
+      class_offset: A `int` for subtracting a value from the ground truth classes
     """
     self._image_w = image_w
     self._image_h = image_h
@@ -57,6 +59,7 @@ class CenterNetParser(parser.Parser):
     self._use_gaussian_bump = use_gaussian_bump
     self._gaussian_rad = -1
     self._output_dims = output_dims
+    self._class_offset = class_offset
 
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -293,9 +296,10 @@ class CenterNetParser(parser.Parser):
       """
     
     # Get relevant bounding box and class information from labels
+    # only keep the first num_objects boxes and classes
     num_objects = labels['num_detections']
     boxes = labels['bbox'][:num_objects]
-    classes = labels['classes'][:num_objects] - 1
+    classes = labels['classes'][:num_objects] - self._class_offset
 
     # Compute scaling factors for center/corner positions on heatmap
     input_size = tf.cast(input_size, self._dtype)
@@ -561,13 +565,16 @@ class CenterNetParser(parser.Parser):
 if __name__ == '__main__':
   # This code is for visualization
   import matplotlib.pyplot as plt
-  boxes = [
+  boxes = tf.constant([
     (10, 300, 15, 370), # center (y, x) = (12, 335)
     (100, 300, 150, 370), # center (y, x) = (125, 335)
     (15, 100, 200, 170), # center (y, x) = (107, 135)
-  ]
+  ], dtype=tf.float32)
 
-  classes = (1, 1, 1)
+  classes = tf.constant((1, 1, 1), dtype=tf.float32)
+
+  boxes = pad_max_instances(boxes, 128, 0)
+  classes = pad_max_instances(classes, 128, -1)
 
   parser = CenterNetParser()
 
@@ -575,9 +582,9 @@ if __name__ == '__main__':
   a = time.time()
   labels1 = parser._build_heatmap_and_regressed_features1(
     labels = {
-      'bbox': tf.constant(boxes, dtype=tf.float32),
-      'num_detections': len(boxes),
-      'classes': tf.constant(classes, dtype=tf.float32)
+      'bbox': boxes,
+      'num_detections': 3,
+      'classes': classes
     },
     output_size=[512, 512], input_size=[512, 512]
   )
@@ -586,11 +593,11 @@ if __name__ == '__main__':
 
   print("testing new build heatmaps function: ")
   a = time.time()
-  labels1 = parser._build_heatmap_and_regressed_features(
+  labels = parser._build_heatmap_and_regressed_features(
     labels = {
-      'bbox': tf.constant(boxes, dtype=tf.float32),
-      'num_detections': len(boxes),
-      'classes': tf.constant(classes, dtype=tf.float32)
+      'bbox': boxes,
+      'num_detections': 3,
+      'classes': classes
     },
     output_size=[512, 512], input_size=[512, 512]
   )

@@ -4,14 +4,35 @@ from absl.testing import parameterized
 from centernet.dataloaders.centernet_input import CenterNetParser
 
 
+def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+  shape = tf.shape(value)
+  if pad_axis < 0:
+    pad_axis = tf.shape(shape)[0] + pad_axis
+  dim1 = shape[pad_axis]
+  take = tf.math.reduce_min([instances, dim1])
+  value, _ = tf.split(
+      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
+  pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
+  nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
+  pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
+  value = tf.concat([value, pad_tensor], axis=pad_axis)
+  return value
+
 class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
   def check_labels_correct(self, boxes, classes, output_size, input_size):
     parser = CenterNetParser()
+    num_dets = len(boxes)
+    boxes = tf.constant(boxes, dtype=tf.float32)
+    classes = tf.constant(classes, dtype=tf.float32)
+
+    boxes = pad_max_instances(boxes, 128, 0)
+    classes = pad_max_instances(classes, 128, -1)
+
     labels = parser._build_heatmap_and_regressed_features(
       labels = {
-        'bbox': tf.constant(boxes, dtype=tf.float32),
-        'num_detections': len(boxes),
-        'classes': tf.constant(classes, dtype=tf.float32)
+        'bbox': boxes,
+        'num_detections': num_dets,
+        'classes': classes
       },
       output_size=output_size, input_size=input_size)
     
@@ -43,7 +64,9 @@ class CenterNetInputTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(box_mask.shape, (parser._max_num_instances))
     self.assertEqual(box_indices.shape, (parser._max_num_instances, 2))
     
-    # Not checking heatmaps, but we can visually validate them
+    self.assertAllInRange(tl_heatmaps, 0, 1)
+    self.assertAllInRange(br_heatmaps, 0, 1)
+    self.assertAllInRange(ct_heatmaps, 0, 1)
     
     for i in range(len(boxes)):
       # Check sizes
