@@ -24,7 +24,7 @@ task:
   validation_data:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     global_batch_size: 8
-    tfds_download: true
+    tfds_download: false
     dtype: bfloat16
     is_training: false
     drop_remainder: false
@@ -37,7 +37,6 @@ task:
       gaussian_rad: -1
       gaussian_iou: 0.7
       output_dims: 128
-      dtype: bfloat16
     shuffle_buffer_size: 100
   subtasks:
     detection:
@@ -51,7 +50,6 @@ task:
       corner_pull_weight: 0.1
       corner_push_weight: 0.1
       offset_weight: 1.0
-    segmentation:
   per_category_metrics: false
   weight_decay: 0.0005
   init_checkpoint: ''

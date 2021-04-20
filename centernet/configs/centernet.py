@@ -286,7 +286,7 @@ def centernet_custom() -> cfg.ExperimentConfig:
           summary_interval=8000,
           checkpoint_interval=10000,
           train_steps=num_batches,
-          validation_steps=1000,
+          validation_steps=625,
           validation_interval=10,
           optimizer_config=optimization.OptimizationConfig({
               'optimizer': {
@@ -328,7 +328,7 @@ def centernet_custom() -> cfg.ExperimentConfig:
 def centernet_tpu() -> cfg.ExperimentConfig:
   """COCO object detection with CenterNet."""
   train_batch_size = 1
-  eval_batch_size = 1
+  eval_batch_size = 8
   base_default = 1200000
   num_batches = 1200000 * 64 / train_batch_size
 
@@ -347,14 +347,14 @@ def centernet_tpu() -> cfg.ExperimentConfig:
               #                        'val*'),
               is_training=False,
               global_batch_size=eval_batch_size,
-              shuffle_buffer_size=10000)),
+              shuffle_buffer_size=100)),
       trainer=cfg.TrainerConfig(
           steps_per_loop=2000,
           summary_interval=8000,
           checkpoint_interval=10000,
           train_steps=num_batches,
-          validation_steps=1000,
-          validation_interval=10,
+          validation_steps=625,
+          validation_interval=1,
           optimizer_config=optimization.OptimizationConfig({
               'optimizer': {
                   'type': 'sgd',

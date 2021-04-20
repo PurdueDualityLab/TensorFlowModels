@@ -48,6 +48,7 @@ class CenterNetTask(base_task.Task):
         parser_fn=parser.parse_fn(params.is_training),
         postprocess_fn=parser.postprocess_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
+    print(dataset)
     return dataset
 
   def build_model(self):
@@ -253,7 +254,6 @@ class CenterNetTask(base_task.Task):
       num_replicas = scale_replicas
     
     y_pred = model(image, training=False)
-    print(y_pred)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(
         y_pred['raw_output'],
