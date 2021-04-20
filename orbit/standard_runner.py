@@ -38,12 +38,11 @@ import dataclasses
 from typing import Any, Optional
 
 import tensorflow as tf
+from absl import logging
 
 from orbit import runner
 from orbit.utils import loop_fns
 
-
-from absl import logging
 
 def _log(message: str):
   """Logs `message` to the `info` log, and also prints to stdout."""
