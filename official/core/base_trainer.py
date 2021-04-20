@@ -322,6 +322,7 @@ class Trainer(orbit.StandardTrainer, orbit.StandardEvaluator):
       return logs
 
     distributed_outputs = self.strategy.run(step_fn, args=(next(iterator),))
+    logging.info(f"(base trainer.py - eval_step) distributed_outputs are: {distributed_outputs}")
     logging.info("(base_trainer.py - eval_step) Got logs from step_fn")
     logging.info("(base_trainer.py - eval_step) Exiting eval_step")
     return tf.nest.map_structure(self.strategy.experimental_local_results,
