@@ -25,6 +25,10 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters(("centernet_tpu",))
   def testCenterNetValidation(self, config_name):
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='node-8')
+    tf.config.experimental_connect_to_cluster(resolver)
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+
     config = exp_factory.get_exp_config(config_name)
 
     task = centernet.CenterNetTask(config.task)
@@ -36,8 +40,11 @@ class CenterNetTaskTest(parameterized.TestCase, tf.test.TestCase):
                                                    config.task.validation_data)
 
     iterator = iter(dataset)
-    logs = task.validation_step(next(iterator), model, metrics=metrics)
-    print(logs)
+
+    with strategy.scope():
+        logs = task.validation_step(next(iterator), model, metrics=metrics)
+        logs = task.validation_step(next(iterator), model, metrics=metrics)
+
     self.assertIn("loss", logs)
 
 

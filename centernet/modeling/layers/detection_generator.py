@@ -24,7 +24,6 @@ class CenterNetLayer(ks.Model):
                center_thresh=0.1,
                iou_thresh=0.4,
                class_offset=1,
-               dtype='float32',
                **kwargs):
     """
     Args:

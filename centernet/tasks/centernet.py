@@ -27,7 +27,6 @@ class CenterNetTask(base_task.Task):
     self._metrics = []
 
   def build_inputs(self, params, input_context=None):
-    print("\nIn build_inputs\n")
     """Build input dataset."""
     decoder = self.get_decoder(params)
     model = self.task_config.model
@@ -52,7 +51,6 @@ class CenterNetTask(base_task.Task):
     return dataset
 
   def build_model(self):
-    print("\nIn build_model\n")
     """get an instance of CenterNet"""
     from centernet.modeling.CenterNet import build_centernet
     params = self.task_config.train_data
@@ -69,7 +67,6 @@ class CenterNetTask(base_task.Task):
     return model
 
   def initialize(self, model: tf.keras.Model):
-    print("\nIn initialize\n")
     """Initializes CenterNet model by loading pretrained weights """
     if self.task_config.load_odapi_weights and self.task_config.load_extremenet_weights:
       raise ValueError('Only 1 of odapi or extremenet weights should be loaded')
@@ -117,7 +114,6 @@ class CenterNetTask(base_task.Task):
 
 
   def build_losses(self, outputs, labels, num_replicas=1, scale_replicas=1, aux_losses=None):
-    print("\nIn build_losses\n")
     total_loss = 0.0
     loss = 0.0
 
@@ -190,7 +186,6 @@ class CenterNetTask(base_task.Task):
     return total_loss, metric_dict
 
   def build_metrics(self, training=True):
-    print("\nIn build_metrics\n")
     metrics = []
     metric_names = self._metric_names
 
@@ -207,7 +202,6 @@ class CenterNetTask(base_task.Task):
     return metrics
 
   def train_step(self, inputs, model, optimizer, metrics=None):
-    print("\nIn train_step\n")
     # get the data point
     image, label = inputs
 
@@ -248,7 +242,6 @@ class CenterNetTask(base_task.Task):
     return logs
   
   def validation_step(self, inputs, model, metrics=None):
-    print("\nIn validation step\n")
     # get the data point
     image, label = inputs
 
@@ -257,7 +250,7 @@ class CenterNetTask(base_task.Task):
       num_replicas = 1
     else:
       num_replicas = scale_replicas
-
+    
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     loss, loss_metrics = self.build_losses(
@@ -289,14 +282,14 @@ class CenterNetTask(base_task.Task):
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
 
-    if metrics:
-      for m in metrics:
-        m.update_state(loss_metrics[m.name])
-        logs.update({m.name: m.result()})
+    # if metrics:
+    #   for m in metrics:
+    #     m.update_state(loss_metrics[m.name])
+    #     logs.update({m.name: m.result()})
 
     return logs
+
   def aggregate_logs(self, state=None, step_outputs=None):
-    print("\nIn aggregate_logs\n")
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric
@@ -305,5 +298,4 @@ class CenterNetTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs):
-    print("\nIn reduce_aggregate_logs\n")
     return self.coco_metric.result()

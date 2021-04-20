@@ -237,7 +237,6 @@ class Controller:
       ValueError: If `steps` is not a positive value or -1.
     """
     self._require("evaluator", for_method="evaluate")
-
     if steps > 0:
       steps_msg = f"running {steps} steps of evaluation..."
     elif steps == -1:
@@ -251,7 +250,9 @@ class Controller:
     start = time.time()
     with self.eval_summary_manager.summary_writer().as_default():
       steps_tensor = tf.convert_to_tensor(steps, dtype=tf.int32)
+      _log(f"(controller.py - evaluate) Running self.evaluator.evaluate()")
       eval_output = self.evaluator.evaluate(steps_tensor)
+      _log(f"(controller.py - evaluate) Done running self.evaluator.evaluate()")
     eval_output = tf.nest.map_structure(utils.get_value, eval_output or {})
     elapsed = time.time() - start
 

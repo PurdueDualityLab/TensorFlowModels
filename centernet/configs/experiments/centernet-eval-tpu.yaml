@@ -1,7 +1,6 @@
 runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
-  tpu: 'node-8'
 task:
   model:
     base: 
@@ -22,7 +21,6 @@ task:
       center_thresh: 0.1
       iou_thresh: 0.4
       class_offset: 1
-      dtype: bloat16
   validation_data:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     global_batch_size: 8
@@ -40,7 +38,7 @@ task:
       gaussian_iou: 0.7
       output_dims: 128
       dtype: bfloat16
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 100
   subtasks:
     detection:
       use_centers: true
@@ -63,7 +61,7 @@ task:
   load_extremenet_weights: false
 trainer:
   train_steps: 10000 # 160 epochs at 64 batchsize -> 500500 * 64/16
-  validation_steps: 625 # 5063 #625
+  validation_steps: -1 # 5063 #625
   steps_per_loop: 10000
   validation_interval: 1
   summary_interval: 10000
