@@ -101,9 +101,7 @@ def run_experiment(distribution_strategy: tf.distribute.Strategy,
           eval_steps=params.trainer.validation_steps,
           eval_interval=params.trainer.validation_interval)
     elif mode == 'eval':
-      logging.info('About to run evaluate from controller')
       controller.evaluate(steps=params.trainer.validation_steps)
-      logging.info('Done running evaluate from controller')
     elif mode == 'continuous_eval':
 
       def timeout_fn():

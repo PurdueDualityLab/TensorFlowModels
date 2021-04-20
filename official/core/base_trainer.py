@@ -299,38 +299,28 @@ class Trainer(orbit.StandardTrainer, orbit.StandardEvaluator):
 
   def eval_begin(self):
     """Sets up metrics."""
-    logging.info("(base_trainer.py - eval_begin) In eval_begin of base trainer")
     for metric in self.validation_metrics + [self.validation_loss]:
       metric.reset_states()
     # Swaps weights to test on weights moving average.
     if self.optimizer and isinstance(
         self.optimizer, optimization.ExponentialMovingAverage):
       self.optimizer.swap_weights()
-    logging.info("(base_trainer.py - eval_begin) Exitingeval_begin of base trainer")
-
 
   def eval_step(self, iterator):
     """See base class."""
-    logging.info("(base_trainer.py - eval_step) In eval_step of base trainer")
     def step_fn(inputs):
-      logging.info("(base_trainer.py - eval_step - step_fn) Running task.validation_step()")
       logs = self.task.validation_step(
           inputs, model=self.model, metrics=self.validation_metrics)
       if self.task.loss in logs:
         self._validation_loss.update_state(logs[self.task.loss])
-      logging.info("(base_trainer.py - eval_step - step_fn) Returning logs from task.validation_step()")
       return logs
 
     distributed_outputs = self.strategy.run(step_fn, args=(next(iterator),))
-    logging.info(f"(base trainer.py - eval_step) distributed_outputs are: {distributed_outputs}")
-    logging.info("(base_trainer.py - eval_step) Got logs from step_fn")
-    logging.info("(base_trainer.py - eval_step) Exiting eval_step")
     return tf.nest.map_structure(self.strategy.experimental_local_results,
                                  distributed_outputs)
 
   def eval_end(self, aggregated_logs=None):
     """Processes evaluation results."""
-    logging.info("(base_trainer.py - eval_end) In eval_end of base trainer")
     logs = {}
     for metric in self.validation_metrics:
       logs[metric.name] = metric.result()
@@ -357,9 +347,7 @@ class Trainer(orbit.StandardTrainer, orbit.StandardEvaluator):
     if self.optimizer and isinstance(
         self.optimizer, optimization.ExponentialMovingAverage):
       self.optimizer.swap_weights()
-    logging.info("(base_trainer.py - eval_end) Exiting eval_end of base trainer")
     return logs
 
   def eval_reduce(self, state=None, step_outputs=None):
-    logging.info("(base_trainer.py - eval_reduce) Starting and Exiting eval_reduce of base trainer")
     return self.task.aggregate_logs(state, step_outputs)

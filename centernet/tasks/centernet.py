@@ -244,7 +244,6 @@ class CenterNetTask(base_task.Task):
   
   def validation_step(self, inputs, model, metrics=None):
     # get the data point
-    print("(centernet_task) - validation step")
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
@@ -288,11 +287,9 @@ class CenterNetTask(base_task.Task):
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
-    print("(centernet_task) - validation_step, logs: ", logs)
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
-    print("(centernet_task) - aggregate_logs")
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric

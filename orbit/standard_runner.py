@@ -38,16 +38,9 @@ import dataclasses
 from typing import Any, Optional
 
 import tensorflow as tf
-from absl import logging
 
 from orbit import runner
 from orbit.utils import loop_fns
-
-
-def _log(message: str):
-  """Logs `message` to the `info` log, and also prints to stdout."""
-  logging.info(message)
-  print(message)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -299,38 +292,26 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
       ValueError: If `options.use_tf_while_loop` is `True` and `num_steps` is
         unspecified.
     """
-    _log("(standard_runner.py - evaluate) In standard evaluator 'evaluate' function")
     if self._eval_options.use_tf_while_loop and num_steps == -1:
-      _log("Value error")
       raise ValueError("Looping until exhausted is not supported if "
                        "`options.use_tf_while_loop` is `True`")
 
-    _log("(standard_runner.py - evaluate) About to run eval_begin()")
     outputs = self.eval_begin()  # pylint: disable=assignment-from-no-return
     
-    _log("(standard_runner.py - evaluate) Done running eval_begin()")
     has_state = outputs is not None
     if self._eval_loop_fn is None:
-      _log("(standard_runner.py - evaluate) self._eval_loop_fn is None, about to run create_eval_loop_fn")
       self._eval_loop_fn = _create_eval_loop_fn(
           self.eval_step, has_state=has_state, options=self._eval_options)
-      _log("(standard_runner.py - evaluate) Done running create_eval_loop_fn")
 
-    _log("(standard_runner.py - evaluate) Convering eval_dataset into eval_iterator")
     eval_iter = tf.nest.map_structure(iter, self.eval_dataset)
-    _log("(standard_runner.py - evaluate) Done convering eval_dataset into eval_iterator")
     if self._eval_options.use_tf_while_loop and not has_state:
       self._eval_loop_fn(eval_iter, num_steps)
     else:
-      _log("(standard_runner.py - evaluate) Getting outputs from eval_loop_fn")
       outputs = self._eval_loop_fn(
           eval_iter, num_steps, state=outputs, reduce_fn=self.eval_reduce)
-    _log("(standard_runner.py - evaluate) Done getting outputs")
     if outputs is None:
-      _log("(standard_runner.py - evaluate) outputs is None")
       return self.eval_end()
     else:
-      _log("(standard_runner.py - evaluate) outputs is not None")
       return self.eval_end(outputs)
 
   def eval_begin(self) -> Any:
@@ -389,7 +370,6 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
       written to logs and as TensorBoard summaries. It can also be a
       nested dictionary, yielding a hierarchy of summary directories.
     """
-    _log("eval_end()")
     pass
 
   def eval_reduce(self,

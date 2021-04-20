@@ -250,9 +250,7 @@ class Controller:
     start = time.time()
     with self.eval_summary_manager.summary_writer().as_default():
       steps_tensor = tf.convert_to_tensor(steps, dtype=tf.int32)
-      _log(f"(controller.py - evaluate) Running self.evaluator.evaluate()")
       eval_output = self.evaluator.evaluate(steps_tensor)
-      _log(f"(controller.py - evaluate) Done running self.evaluator.evaluate()")
     eval_output = tf.nest.map_structure(utils.get_value, eval_output or {})
     elapsed = time.time() - start
 
