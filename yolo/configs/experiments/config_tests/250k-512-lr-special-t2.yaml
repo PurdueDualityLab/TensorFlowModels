@@ -97,7 +97,7 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.85
-        random_crop: 1.0
+        random_crop: 0.5
         crop_area: [0.25, 1.0]
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
