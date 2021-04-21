@@ -380,11 +380,11 @@ class CenterNetParser(parser.Parser):
       'num_detections': num_detections
     }
 
-    heatmap_feature_labels = self._build_heatmap_and_regressed_features(
-      labels, output_size=[self._output_dims, self._output_dims], 
-      input_size=[self._image_h, self._image_w]
-    )
-    labels.update(heatmap_feature_labels)
+    # heatmap_feature_labels = self._build_heatmap_and_regressed_features(
+    #   labels, output_size=[self._output_dims, self._output_dims], 
+    #   input_size=[self._image_h, self._image_w]
+    # )
+    # labels.update(heatmap_feature_labels)
     return image, labels
 
   def postprocess_fn(self, is_training):

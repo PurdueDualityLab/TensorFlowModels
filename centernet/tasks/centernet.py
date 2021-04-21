@@ -4,7 +4,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from centernet.configs import centernet as exp_cfg
 from centernet.dataloaders import centernet_input
-from centernet.losses import (l1_localization_loss,
+from centernet.losses import (gt_builder, l1_localization_loss,
                               penalty_reduced_logistic_focal_loss)
 from centernet.ops import loss_ops
 from official.core import base_task, input_reader, task_factory
@@ -119,21 +119,22 @@ class CenterNetTask(base_task.Task):
     loss = 0.0
 
     metric_dict = dict()
+    gt_label = gt_builder._build_heatmap_and_regressed_features(labels)
 
     # Create loss functions
     object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
 
     # Set up box indices so that they have a batch element as well
-    box_indices = loss_ops.add_batch_to_indices(labels['box_indices'])
+    box_indices = loss_ops.add_batch_to_indices(gt_label['box_indices'])
 
-    box_mask = tf.cast(labels['box_mask'], dtype=tf.float32)
-    num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(labels['box_mask']))
+    box_mask = tf.cast(gt_label['box_mask'], dtype=tf.float32)
+    num_boxes = loss_ops._to_float32(loss_ops.get_num_instances_from_weights(gt_label['box_mask']))
 
     # Calculate center heatmap loss
     pred_ct_heatmap_list = outputs['ct_heatmaps']
     true_flattened_ct_heatmap = loss_ops._flatten_spatial_dimensions(
-      labels['ct_heatmaps'])
+      gt_label['ct_heatmaps'])
     
     true_flattened_ct_heatmap = tf.cast(true_flattened_ct_heatmap, tf.float32)
     total_center_loss = 0.0
@@ -149,7 +150,7 @@ class CenterNetTask(base_task.Task):
 
     # Calculate scale loss
     pred_scale_list = outputs['ct_size']
-    true_scale = labels['size']
+    true_scale = gt_label['size']
     true_scale = tf.cast(true_scale, tf.float32)
 
     total_scale_loss = 0.0
@@ -164,7 +165,7 @@ class CenterNetTask(base_task.Task):
 
     # Calculate offset loss
     pred_offset_list = outputs['ct_offset']
-    true_offset = labels['ct_offset']
+    true_offset = gt_label['ct_offset']
     true_offset = tf.cast(true_offset, tf.float32)
 
     total_offset_loss = 0.0
