@@ -164,8 +164,8 @@ class CenterNetParser(parser.Parser):
 
     # Offset computations to make up for discretization error
     # used for offset maps
-    tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
-    br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
+    # tl_offset_values = tf.stack([fxtl - xtl, fytl - ytl], axis=-1)
+    # br_offset_values = tf.stack([fxbr - xbr, fybr - ybr], axis=-1)
     ct_offset_values = tf.stack([fxct - xct, fyct - yct], axis=-1)
     
     # Get the scaled box dimensions for computing the gaussian radius
@@ -179,13 +179,13 @@ class CenterNetParser(parser.Parser):
     box_widths_heights = tf.stack([box_widths, box_heights], axis=-1)
     
     # Center/corner heatmaps 
-    tl_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
-    br_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
+    # tl_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
+    # br_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
     ct_heatmap = tf.zeros((output_h, output_w, self._num_classes), self._dtype)
     
     # Maps for offset and size features for each instance of a box
-    tl_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
-    br_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
+    # tl_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
+    # br_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
     ct_offset = tf.zeros((self._max_num_instances, 2), self._dtype)
     size = tf.zeros((self._max_num_instances, 2), self._dtype)
     
@@ -205,39 +205,39 @@ class CenterNetParser(parser.Parser):
       else:
         radius = tf.constant([self._gaussian_rad] * num_objects, self._dtype)
       # These blobs contain information needed to draw the gaussian
-      tl_blobs = tf.stack([classes, xtl, ytl, radius], axis=-1)
-      br_blobs = tf.stack([classes, xbr, ybr, radius], axis=-1)
+      # tl_blobs = tf.stack([classes, xtl, ytl, radius], axis=-1)
+      # br_blobs = tf.stack([classes, xbr, ybr, radius], axis=-1)
       ct_blobs = tf.stack([classes, xct, yct, radius], axis=-1)
       
       # Get individual gaussian contributions from each bounding box
-      tl_gaussians = tf.map_fn(
-        fn=lambda x: preprocessing_ops.draw_gaussian(
-          tf.shape(tl_heatmap), x, self._dtype), elems=tl_blobs)
-      br_gaussians = tf.map_fn(
-        fn=lambda x: preprocessing_ops.draw_gaussian(
-          tf.shape(br_heatmap), x, self._dtype), elems=br_blobs)
+      # tl_gaussians = tf.map_fn(
+      #   fn=lambda x: preprocessing_ops.draw_gaussian(
+      #     tf.shape(tl_heatmap), x, self._dtype), elems=tl_blobs)
+      # br_gaussians = tf.map_fn(
+      #   fn=lambda x: preprocessing_ops.draw_gaussian(
+      #     tf.shape(br_heatmap), x, self._dtype), elems=br_blobs)
       ct_gaussians = tf.map_fn(
         fn=lambda x: preprocessing_ops.draw_gaussian(
           tf.shape(ct_heatmap), x, self._dtype), elems=ct_blobs)
 
       # Combine contributions into single heatmaps
-      tl_heatmap = tf.math.reduce_max(tl_gaussians, axis=0)
-      br_heatmap = tf.math.reduce_max(br_gaussians, axis=0)
+      # tl_heatmap = tf.math.reduce_max(tl_gaussians, axis=0)
+      # br_heatmap = tf.math.reduce_max(br_gaussians, axis=0)
       ct_heatmap = tf.math.reduce_max(ct_gaussians, axis=0)
     
     else:
       # Instead of a gaussian, insert 1s in the center and corner heatmaps
-      tl_hm_update_indices = tf.cast(
-        tf.stack([ytl, xtl, classes], axis=-1), tf.int32)
-      br_hm_update_indices = tf.cast(
-        tf.stack([ybr, xbr, classes], axis=-1), tf.int32)
+      # tl_hm_update_indices = tf.cast(
+      #   tf.stack([ytl, xtl, classes], axis=-1), tf.int32)
+      # br_hm_update_indices = tf.cast(
+      #   tf.stack([ybr, xbr, classes], axis=-1), tf.int32)
       ct_hm_update_indices = tf.cast(
         tf.stack([yct, xct, classes], axis=-1), tf.int32)
 
-      tl_heatmap = tf.tensor_scatter_nd_update(tl_heatmap, 
-        tl_hm_update_indices, [1] * num_objects)
-      br_heatmap = tf.tensor_scatter_nd_update(br_heatmap, 
-        br_hm_update_indices, [1] * num_objects)
+      # tl_heatmap = tf.tensor_scatter_nd_update(tl_heatmap, 
+      #   tl_hm_update_indices, [1] * num_objects)
+      # br_heatmap = tf.tensor_scatter_nd_update(br_heatmap, 
+      #   br_hm_update_indices, [1] * num_objects)
       ct_heatmap = tf.tensor_scatter_nd_update(ct_heatmap, 
         ct_hm_update_indices, [1] * num_objects)
     
@@ -247,10 +247,10 @@ class CenterNetParser(parser.Parser):
     update_indices = tf.reshape(update_indices, shape=[num_objects, 2, 2])
     
     # Write the offsets of each box instance
-    tl_offset = tf.tensor_scatter_nd_update(
-      tl_offset, update_indices, tl_offset_values)
-    br_offset = tf.tensor_scatter_nd_update(
-      br_offset, update_indices, br_offset_values)
+    # tl_offset = tf.tensor_scatter_nd_update(
+    #   tl_offset, update_indices, tl_offset_values)
+    # br_offset = tf.tensor_scatter_nd_update(
+    #   br_offset, update_indices, br_offset_values)
     ct_offset = tf.tensor_scatter_nd_update(
       ct_offset, update_indices, ct_offset_values)
 
@@ -268,11 +268,11 @@ class CenterNetParser(parser.Parser):
       box_indices, update_indices, box_index_values)
 
     labels = {
-      'tl_heatmaps': tl_heatmap,
-      'br_heatmaps': br_heatmap,
+      # 'tl_heatmaps': tl_heatmap,
+      # 'br_heatmaps': br_heatmap,
       'ct_heatmaps': ct_heatmap,
-      'tl_offset': tl_offset,
-      'br_offset': br_offset,
+      # 'tl_offset': tl_offset,
+      # 'br_offset': br_offset,
       'ct_offset': ct_offset,
       'size': size,
       'box_mask': box_mask,
