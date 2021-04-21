@@ -120,9 +120,11 @@ class CenterNetTask(base_task.Task):
     loss_params = self.task_config.losses
 
     metric_dict = dict()
-    # gt_label = tf.vectorized_map(
-    #   fn=gt_builder._build_heatmap_and_regressed_features,
-    #   elems=labels)
+    
+    # TODO: actually compute loss 
+    # returning 0 for now, just trying to run eval
+    metric_dict['total_loss'] = total_loss
+    return total_loss, metric_dict
 
     gt_label = tf.map_fn(
       fn=lambda x: gt_builder._build_heatmap_and_regressed_features(
@@ -136,9 +138,16 @@ class CenterNetTask(base_task.Task):
         gaussian_iou=loss_params.gaussian_iou,
         class_offset=loss_params.class_offset,
         dtype=loss_params.dtype),
-      elems=labels
+      elems=labels,
+      dtype={
+          'ct_heatmaps': tf.float32, 
+          'ct_offset': tf.float32, 
+          'size': tf.float32, 
+          'box_mask': tf.int32, 
+          'box_indices': tf.int32
+        }
     )
-
+    
     # Create loss functions
     object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
     localization_loss_fn = l1_localization_loss.L1LocalizationLoss(reduction=tf.keras.losses.Reduction.NONE)
@@ -313,7 +322,6 @@ class CenterNetTask(base_task.Task):
       self.coco_metric.reset_states()
       state = self.coco_metric
     
-    print(step_outputs)
     self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
                                   step_outputs[self.coco_metric.name][1])
     return state
