@@ -142,7 +142,15 @@ class SegmentationLoss(Loss):
 class Losses(hyperparams.Config):
   detection: DetectionLoss = DetectionLoss()
   segmentation: SegmentationLoss = SegmentationLoss()
-
+  image_h: int = 512
+  image_w: int = 512
+  output_dims: int = 128
+  max_num_instances: int = 128
+  use_gaussian_bump: bool = True
+  gaussian_rad: int = -1
+  gaussian_iou: float = 0.7
+  class_offset: int = 1
+  dtype: str = 'float32'
 
 @dataclasses.dataclass
 class CenterNetDecoder(hyperparams.Config):

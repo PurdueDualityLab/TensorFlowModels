@@ -117,11 +117,27 @@ class CenterNetTask(base_task.Task):
   def build_losses(self, outputs, labels, num_replicas=1, scale_replicas=1, aux_losses=None):
     total_loss = 0.0
     loss = 0.0
+    loss_params = self.task_config.losses
 
     metric_dict = dict()
-    gt_label = tf.vectorized_map(
-      fn=gt_builder._build_heatmap_and_regressed_features,
-      elems=labels)
+    # gt_label = tf.vectorized_map(
+    #   fn=gt_builder._build_heatmap_and_regressed_features,
+    #   elems=labels)
+
+    gt_label = tf.map_fn(
+      fn=lambda x: gt_builder._build_heatmap_and_regressed_features(
+        labels=x,
+        output_size=[loss_params.image_h, loss_params.image_w],
+        input_size=[loss_params.output_dims, loss_params.output_dims],
+        num_classes=self.task_config.model.num_classes,
+        max_num_instances=loss_params.max_num_instances,
+        use_gaussian_bump=loss_params.use_gaussian_bump,
+        gaussian_rad=loss_params.gaussian_rad,
+        gaussian_iou=loss_params.gaussian_iou,
+        class_offset=loss_params.class_offset,
+        dtype=loss_params.dtype),
+      elems=labels
+    )
 
     # Create loss functions
     object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)

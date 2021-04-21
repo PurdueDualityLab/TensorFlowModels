@@ -50,6 +50,15 @@ task:
       corner_pull_weight: 0.1
       corner_push_weight: 0.1
       offset_weight: 1.0
+    image_h: 512
+    image_w: 512
+    output_dims: 128
+    max_num_instances: 128
+    use_gaussian_bump: true
+    gaussian_rad: -1
+    gaussian_iou: 0.7
+    class_offset: 1
+    dtype: float32
   per_category_metrics: false
   weight_decay: 0.0005
   init_checkpoint: ''
