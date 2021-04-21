@@ -222,26 +222,38 @@ class Parser(parser.Parser):
 
     # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
-    # if self._letter_box:
-    if self._jitter_im > 0 and not data['is_mosaic']:
-      jmi = 1 - self._jitter_im
-      jma = 1 + self._jitter_im
-      image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[0.5, 1.0])
+    if self._letter_box:
+      if self._jitter_im > 0 and not data['is_mosaic']:
+        jmi = 1 - self._jitter_im
+        jma = 1 + self._jitter_im
+        image, info = preprocessing_ops.random_crop_image(
+            image, aspect_ratio_range=[jmi, jma], area_range=[0.5, 1.0])
 
-      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                  info[1, :], info[3, :])
+        boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+        boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                    info[1, :], info[3, :])
 
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    elif self._jitter_im > 0:
-      jmi = 1 - self._jitter_im
-      jma = 1 + self._jitter_im
+        inds = box_ops.get_non_empty_box_indices(boxes)
+        boxes = tf.gather(boxes, inds)
+        classes = tf.gather(classes, inds)
+        boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      elif self._jitter_im > 0:
+        jmi = 1 - self._jitter_im
+        jma = 1 + self._jitter_im
+        image, info = preprocessing_ops.random_crop_mosaic(
+            image, aspect_ratio_range=[jmi, jma], area_range=[0.25, 1.0])
+
+        boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+        boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                    info[1, :], info[3, :])
+
+        inds = box_ops.get_non_empty_box_indices(boxes)
+        boxes = tf.gather(boxes, inds)
+        classes = tf.gather(classes, inds)
+        boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    elif data['is_mosaic']:
       image, info = preprocessing_ops.random_crop_mosaic(
-          image, aspect_ratio_range=[jmi, jma], area_range=[0.25, 1.0])
+          image, aspect_ratio_range=[1, 1], area_range=[0.25, 1.0])
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
@@ -251,30 +263,17 @@ class Parser(parser.Parser):
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    # else:
-    #   if data['is_mosaic']:
-    #     image, info = preprocessing_ops.random_crop_mosaic(
-    #         image, aspect_ratio_range=[1, 1], area_range=[0.25, 1.0])
 
-    #     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    #     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-    #                                                 info[1, :], info[3, :])
+      # height_, width_ = preprocessing_ops.get_image_shape(image)
 
-    #     inds = box_ops.get_non_empty_box_indices(boxes)
-    #     boxes = tf.gather(boxes, inds)
-    #     classes = tf.gather(classes, inds)
-    #     boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      # shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+      #     -self._jitter_im, self._jitter_im)
+      # shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+      #     -self._jitter_im, self._jitter_im)
+      # width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+      # height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
-    #   height_, width_ = preprocessing_ops.get_image_shape(image)
-
-    #   shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-    #       -self._jitter_im, self._jitter_im)
-    #   shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-    #       -self._jitter_im, self._jitter_im)
-    #   width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-    #   height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
-
-    #   image = tf.image.resize(image, (height_, width_))
+      # image = tf.image.resize(image, (height_, width_))
 
     if self._jitter_boxes > 0.0:
       height_, width_ = preprocessing_ops.get_image_shape(image)
@@ -384,7 +383,7 @@ class Parser(parser.Parser):
     else:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.3 else 0.3,
+          aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
           aug_scale_max=self._aug_scale_max) 
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
