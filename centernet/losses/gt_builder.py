@@ -1,10 +1,16 @@
 import tensorflow as tf
 
+from centernet.ops import preprocessing_ops
 
 def _build_heatmap_and_regressed_features(labels,
                                           output_size=[128, 128], 
                                           input_size=[512, 512],
                                           dtype=tf.float32,
+                                          num_classes=90,
+                                          max_num_instances=128,
+                                          use_gaussian_bump=True,
+                                          gaussian_rad=-1,
+                                          gaussian_iou=0.7,
                                           class_offset=1):
     """ Generates the ground truth labels for centernet.
     
@@ -58,8 +64,8 @@ def _build_heatmap_and_regressed_features(labels,
     # Get relevant bounding box and class information from labels
     # only keep the first num_objects boxes and classes
     num_objects = labels['num_detections']
-    boxes = labels['bbox'][:num_objects]
-    classes = labels['classes'][:num_objects] - class_offset
+    boxes = labels['bbox']
+    classes = labels['classes'] - class_offset
 
     # Compute scaling factors for center/corner positions on heatmap
     input_size = tf.cast(input_size, dtype)
@@ -128,12 +134,14 @@ def _build_heatmap_and_regressed_features(labels,
 
       # First compute the desired gaussian radius
       if gaussian_rad == -1:
+        print(box_widths_heights)
         radius = tf.map_fn(fn=lambda x: preprocessing_ops.gaussian_radius(x), 
           elems=tf.math.ceil(box_widths_heights))
+        print(radius)
         radius = tf.math.maximum(tf.math.floor(radius), 
           tf.cast(1.0, radius.dtype))
       else:
-        radius = tf.constant([gaussian_rad] * num_objects, dtype)
+        radius = tf.constant([gaussian_rad] * max_num_instances, dtype)
       # These blobs contain information needed to draw the gaussian
       # tl_blobs = tf.stack([classes, xtl, ytl, radius], axis=-1)
       # br_blobs = tf.stack([classes, xbr, ybr, radius], axis=-1)

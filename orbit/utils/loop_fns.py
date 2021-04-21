@@ -74,6 +74,7 @@ def create_loop_fn(step_fn):
           outputs = step_fn(iterator)
           if reduce_fn is not None:
             state = reduce_fn(state, outputs)
+            print(state)
           step += 1
         return state
     except (StopIteration, tf.errors.OutOfRangeError):

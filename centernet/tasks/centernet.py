@@ -119,7 +119,9 @@ class CenterNetTask(base_task.Task):
     loss = 0.0
 
     metric_dict = dict()
-    gt_label = gt_builder._build_heatmap_and_regressed_features(labels)
+    gt_label = tf.vectorized_map(
+      fn=gt_builder._build_heatmap_and_regressed_features,
+      elems=labels)
 
     # Create loss functions
     object_center_loss_fn = penalty_reduced_logistic_focal_loss.PenaltyReducedLogisticFocalLoss(reduction=tf.keras.losses.Reduction.NONE)
@@ -294,6 +296,8 @@ class CenterNetTask(base_task.Task):
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric
+    
+    print(step_outputs)
     self.coco_metric.update_state(step_outputs[self.coco_metric.name][0],
                                   step_outputs[self.coco_metric.name][1])
     return state
