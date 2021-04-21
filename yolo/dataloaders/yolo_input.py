@@ -276,6 +276,18 @@ class Parser(parser.Parser):
 
     #   image = tf.image.resize(image, (height_, width_))
 
+    if self._jitter_boxes > 0.0:
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+
+      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._jitter_boxes, self._jitter_boxes)
+      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._jitter_boxes, self._jitter_boxes)
+      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+
+      image = tf.image.resize(image, (height_, width_))
+
     ### UNCOMMENT TO REVERT
     # # aspect distorted crop scal independent
     # if not data['is_mosaic']:
