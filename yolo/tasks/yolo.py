@@ -513,7 +513,6 @@ class YoloTask(base_task.Task):
         # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial().assert_existing_objects_matched()
-
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
@@ -522,6 +521,16 @@ class YoloTask(base_task.Task):
         status.expect_partial().assert_existing_objects_matched()
         #except:
         #print("this checkpoint could not assert all components consumed")
+      elif self.task_config.init_checkpoint_modules == 'decoder':
+        ckpt = tf.train.Checkpoint(backbone=model.backbone, decoder=model.decoder)
+        # status = ckpt.restore(ckpt_dir_or_file)
+        # status.assert_consumed()
+        # optimizer = self.create_optimizer(params.trainer.optimizer_config,
+        #                               params.runtime)
+        # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+        # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
+        status = ckpt.restore(ckpt_dir_or_file)
+        status.expect_partial().assert_existing_objects_matched()
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 
