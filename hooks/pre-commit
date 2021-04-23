@@ -15,7 +15,7 @@ mypy .
 
 echo 
 echo ">>> Running pylint on your changed python files -- please wait..."
-bash pylint.sh > linter_log.txt
+python pylint_script.py > linter_log.txt
 cat linter_log.txt
 
 git add .
