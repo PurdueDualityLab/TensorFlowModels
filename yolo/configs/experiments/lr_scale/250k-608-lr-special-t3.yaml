@@ -16,7 +16,7 @@ task:
     subdivisions: 1
     num_classes: 91
     _boxes: ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0,55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
-    _input_size: [512, 512, 3]
+    _input_size: [608, 608, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -77,17 +77,17 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
-      jitter_im: 0.3 # aspect shift not crop
-      aug_scale_aspect: 0.0
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      image_w: 608
+      image_h: 608
+      min_process_size: 608
+      jitter_im: 0.6
+      aug_scale_aspect: 0.1
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
-      aug_rand_saturation: 0.7
-      aug_rand_brightness: 0.5
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
       aug_rand_translate: 0.00
       max_num_instances: 200
       random_flip: True
@@ -109,13 +109,13 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 608
+      image_h: 608
       fixed_size: True
       use_scale_xy: False
       letter_box: False
       anchor_thresh: 0.213
-  weight_decay: 0.001
+  weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
@@ -128,10 +128,10 @@ trainer:
   steps_per_loop: 10000
   summary_interval: 10000
   validation_interval: 20000 #00
-  checkpoint_interval: 20000
+  checkpoint_interval: 10000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9998
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
@@ -148,4 +148,4 @@ trainer:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 2000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 4000 #learning rate rises from 0 to 0.0013 over 1000 steps

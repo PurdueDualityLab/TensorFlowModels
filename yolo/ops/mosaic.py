@@ -219,19 +219,39 @@ class Mosaic(object):
                                     dtype=tf.float32,
                                     seed=self._seed)
         if docrop > (1 - self._random_crop):
-          tf.print("here")
           images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
               0] = self._crop_image(images[0], box_list[0], class_list[0],
                                     is_crowds[0], areas[0], self._crop_area,
                                     width, height)
+                                    
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[
               1] = self._crop_image(images[1], box_list[1], class_list[1],
                                     is_crowds[1], areas[1], self._crop_area,
                                     width, height)
+
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[
               2] = self._crop_image(images[2], box_list[2], class_list[2],
                                     is_crowds[2], areas[2], self._crop_area,
                                     width, height)
+        
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[
               3] = self._crop_image(images[3], box_list[3], class_list[3],
                                     is_crowds[3], areas[3], self._crop_area,

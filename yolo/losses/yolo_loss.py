@@ -467,6 +467,11 @@ class Yolo_Loss(object):
     pred_boxes = tf.expand_dims(pred_boxes_, axis=-3)
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
 
+    # mask off zero boxes
+    mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
+    iou *= mask
+
+
     # cconfidence is low
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
