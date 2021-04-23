@@ -93,7 +93,8 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     print(xy_scales, l2_weight_decay)
 
-    self._get_boxes(gen_boxes=params.is_training)
+    anchors = self._get_boxes(gen_boxes=params.is_training)
+    print(anchors)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                             model_base_cfg.input_size)
@@ -530,7 +531,7 @@ class YoloTask(base_task.Task):
         # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
         # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
-        status.expect_partial().assert_existing_objects_matched()
+        status.expect_partial()#.assert_existing_objects_matched()
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 
