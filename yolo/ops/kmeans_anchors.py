@@ -6,46 +6,16 @@ from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
 
 # https://github.com/AlexeyAB/darknet/blob/master/scripts/gen_anchors.py
-# def IOU(x,centroids):
-#     similarities = []
-#     k = len(centroids)
-#     for centroid in centroids:
-#         c_w,c_h = centroid
-#         w,h = x
-#         if c_w>=w and c_h>=h:
-#             similarity = w*h/(c_w*c_h)
-#         elif c_w>=w and c_h<=h:
-#             similarity = w*c_h/(w*h + (c_w-w)*c_h)
-#         elif c_w<=w and c_h>=h:
-#             similarity = c_w*h/(w*h + c_w*(c_h-h))
-#         else: #means both w,h are bigger than c_w and c_h respectively
-#             similarity = (c_w*c_h)/(w*h)
-#         similarities.append(similarity) # will become (k,) shape
-#     return np.array(similarities) 
-
-# def avg_IOU(X,centroids):
-#     n,d = X.shape
-#     sum = 0.
-#     for i in range(X.shape[0]):
-#         #note IOU() will return array which contains IoU for each centroid and X[i] // slightly ineffective, but I am too lazy
-#         sum+= max(IOU(X[i],centroids)) 
-#     return sum/n
 
 def IOU(X,centroids):
   w, h = tf.split(X, 2, axis = -1)
-  c_w, c_h = tf.split(X, 2, axis = -1)
+  c_w, c_h = tf.split(centroids, 2, axis = -1)
 
   similarity = (c_w * c_h)/(w * h)
-  simialrity = tf.where(tf.logical_and(c_w >= w, c_h >= h), w * h/(c_w * c_h), simialrity)
-  simialrity = tf.where(tf.logical_and(c_w >= w, c_h <= h), w*c_h/(w*h + (c_w-w)*c_h), simialrity)
-  simialrity = tf.where(tf.logical_and(c_w <= w, c_h >= h), c_w*h/(w*h + c_w*(c_h-h)), simialrity)
-  # n,d = X.shape
-  # sum = 0.
-  # for i in range(X.shape[0]):
-  #   #note IOU() will return array which contains IoU for each centroid and X[i] // slightly ineffective, but I am too lazy
-  #   sum+= max(IOU(X[i],centroids)) 
-  # return sum/n
-  return simialrity
+  similarity = tf.where(tf.logical_and(c_w >= w, c_h >= h), w * h/(c_w * c_h), similarity)
+  similarity = tf.where(tf.logical_and(c_w >= w, c_h <= h), w*c_h/(w*h + (c_w-w)*c_h), similarity)
+  similarity = tf.where(tf.logical_and(c_w <= w, c_h >= h), c_w*h/(w*h + c_w*(c_h-h)), similarity)
+  return tf.squeeze(similarity, axis = -1)
 
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
@@ -87,13 +57,13 @@ class AnchorKMeans:
     clusters = tf.reshape(clusters, (n, self._k, -1))
     clusters = tf.cast(clusters, tf.float32)
 
-    zeros = tf.cast(tf.zeros(boxes.shape), dtype=tf.float32)
+    # zeros = tf.cast(tf.zeros(boxes.shape), dtype=tf.float32)
 
     # boxes = tf.concat([zeros, boxes], axis=-1)
     # clusters = tf.concat([zeros, clusters], axis=-1)
     return IOU(boxes, clusters)
 
-  def get_box_from_dataset(self, dataset):
+  def get_box_from_dataset(self, dataset, image_w = 512):
     box_ls = None
     if not isinstance(dataset, list):
       dataset = [dataset]

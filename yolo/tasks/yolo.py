@@ -390,7 +390,7 @@ class YoloTask(base_task.Task):
           transform_and_batch_fn=lambda x, y: x,
           parser_fn=None)
       anchors = reader.read(
-          k=9, image_width=params.parser.image_w, input_context=None)
+          k=self._num_boxes, image_width=params.parser.image_w, input_context=None)
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
@@ -531,7 +531,7 @@ class YoloTask(base_task.Task):
         # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
         # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
-        status.expect_partial()#.assert_existing_objects_matched()
+        status.expect_partial() #.assert_existing_objects_matched()
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 

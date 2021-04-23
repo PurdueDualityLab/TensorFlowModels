@@ -29,6 +29,7 @@ task:
       use_sync_bn: true
     decoder_activation: leaky
     filter:
+      anchor_generation_scale: 512
       ignore_thresh:
         '5': 0.7
         '4': 0.7
@@ -75,11 +76,11 @@ task:
     global_batch_size: 8
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
-    tfds_name: coco/2017
+    tfds_name: coco
     tfds_split: train
     dtype: float16
     input_path: ''
-    is_training: false
+    is_training: true
     parser:
       image_w: 512
       image_h: 512
