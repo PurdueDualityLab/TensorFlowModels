@@ -374,9 +374,13 @@ class TiledNMS():
                    nmsed_scores, max_num_detections, num_classes_for_box,
                    pre_nms_score_threshold, nms_iou_threshold, i):
 
+    
     boxes_shape = tf.shape(boxes)
+    scores_shape = tf.shape(scores)
     batch_size, _, num_classes_for_box, _ = boxes_shape[0], boxes_shape[
         1], boxes_shape[2], boxes_shape[3]  #boxes.get_shape().as_list()
+    
+    _, num, _ = scores_shape[0], scores_shape[1], scores_shape[2]
 
     boxes_i = boxes[:, :, tf.math.minimum(num_classes_for_box - 1, i), :]
     scores_i = scores[:, :, i]
@@ -389,7 +393,7 @@ class TiledNMS():
         boxes_i,
         scores_i,
         min_score_threshold=tf.cast(pre_nms_score_threshold, boxes_i.dtype))
-
+  
     (nmsed_scores_i, nmsed_boxes_i) = self._sorted_non_max_suppression_padded(
         tf.cast(scores_i, tf.float32),
         tf.cast(boxes_i, tf.float32),
@@ -403,6 +407,7 @@ class TiledNMS():
                                       tf.transpose(nmsed_scores_i, perm=(1, 0)))
     nmsed_classes = nmsed_classes.write(
         i, tf.transpose(nmsed_classes_i, perm=(1, 0)))
+
     return (boxes, scores, indices, nmsed_boxes, nmsed_classes, nmsed_scores,
             max_num_detections, num_classes_for_box, pre_nms_score_threshold,
             nms_iou_threshold, i + 1)
@@ -443,7 +448,8 @@ class TiledNMS():
               nms_iou_threshold,
               tf.constant(0)
           ],
-          parallel_iterations=10)
+          swap_memory=True,
+          parallel_iterations=1000)
 
       nmsed_boxes = nmsed_boxes.concat()
       nmsed_scores = nmsed_scores.concat()
@@ -460,6 +466,7 @@ class TiledNMS():
       valid_detections = tf.reduce_sum(
           input_tensor=tf.cast(tf.greater(nmsed_scores, -1), tf.int32), axis=1)
     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
+
 
 
 BASE_NMS = TiledNMS(iou_type='diou', beta=0.6)

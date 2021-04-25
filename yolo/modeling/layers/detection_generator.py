@@ -69,7 +69,7 @@ class YoloLayer(ks.Model):
       'giou':3, 
       'ciou':4, 
       'diou':5, 
-      'class_indpendent':6
+      'class_independent':6
     }
     
     self._nms_type = self._nms_types[nms_type]
