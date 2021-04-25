@@ -80,7 +80,7 @@ task:
       pre_nms_points: 5000
       use_reduction_sum: false
   train_data:
-    global_batch_size: 2 #64
+    global_batch_size: 64
     dtype: float16
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true
