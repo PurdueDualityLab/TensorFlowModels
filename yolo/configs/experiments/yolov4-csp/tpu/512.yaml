@@ -88,10 +88,10 @@ task:
       image_w: 512
       image_h: 512
       min_process_size: 512
-      jitter_im: 0.6
+      jitter_im: 0.2
       aug_scale_aspect: 0.0
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
