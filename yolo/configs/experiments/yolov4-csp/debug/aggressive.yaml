@@ -101,7 +101,7 @@ task:
       random_flip: True
       use_tie_breaker: True
       use_scale_xy: False
-      letter_box: True
+      letter_box: False
       anchor_thresh: 0.2
       mosaic: 
         mosaic_frequency: 0.85
@@ -121,7 +121,7 @@ task:
       image_h: 512
       fixed_size: True
       use_scale_xy: False
-      letter_box: True
+      letter_box: False
       anchor_thresh: 0.2
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
