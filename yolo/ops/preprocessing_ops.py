@@ -711,6 +711,8 @@ def random_crop_image(image,
         aspect_ratio_range=aspect_ratio_range,
         area_range=area_range,
         max_attempts=max_attempts)
+
+    #[n, n, 0], [n,n, -1]
     cropped_image = tf.slice(image, crop_offset, crop_size)
 
     scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
