@@ -173,7 +173,123 @@ class VideoPlayer(object):
     return
 
 
-class DisplayThread(object):
+# class DisplayThread(object):
+
+#   def __init__(self,
+#                frame_buffer=None,
+#                wait_time=0.0001,
+#                alpha=0.1,
+#                fix_wt=False,
+#                use_colab=False):
+#     if frame_buffer is None:
+#       self._frame_buffer = FrameQue(1000)
+#     else:
+#       self._frame_buffer = frame_buffer
+#     self._thread = None
+#     self._running = False
+#     self._wait_time = wait_time
+#     self._fps = 0
+#     self._prev_fps = 0
+#     self._fix_wt = fix_wt
+#     self._alpha = alpha
+#     self._use_colab = use_colab
+#     return
+
+#   def start(self):
+#     self._running = True
+#     self._thread = t.Thread(target=self.display, args=())
+#     self._thread.start()
+#     return
+
+#   def close(self):
+#     print()
+#     self._running = False
+#     if self._thread is not None:
+#       self._thread.join()
+#     return
+
+#   def display(self):
+#     try:
+#       start = time.time()
+#       l = 0
+#       tick = 0
+#       display_fps = 0
+
+#       while (self._running):
+#         # success, frame = self._frame_buffer.read()
+#         success, frame = self._frame_buffer.read()
+#         if success and frame is not None:
+#           cv2.imshow("frame", frame)
+
+#           if cv2.waitKey(1) & 0xFF == ord("q"):
+#             break
+
+#           del frame
+#           l += 1
+#           if time.time() - start - tick >= 1:
+#             tick += 1
+#             # store the fps to diplayed to the user
+#             self._prev_fps = self._fps * self._alpha + self._prev_fps * (
+#                 1 - self._alpha)
+#             self._fps = l
+#             l = 0
+
+#           if not self._fix_wt:
+#             if (self._prev_fps <= self._fps):
+#               self._wait_time = self._wait_time - 0.02 * self._wait_time
+#             else:
+#               self._wait_time = self._wait_time + 0.01 * self._wait_time
+
+#           if hasattr(self._frame_buffer, "wait_time"):
+#             self._frame_buffer.wait_time = self._wait_time
+
+#         time.sleep(self._wait_time)
+#       self._running = False
+#       cv2.destroyAllWindows()
+#     except Exception as e:
+#       print(e)
+#       self._running = False
+#       cv2.destroyAllWindows()
+#     return
+
+#   @property
+#   def running(self):
+#     return self._running
+
+#   def put(self, frame):
+#     return self._frame_buffer.put(frame)
+
+#   def put_all(self, frames):
+#     return self._frame_buffer.put_all(frames)
+
+#   @property
+#   def fps(self):
+#     return self._fps
+
+class Thread(object):
+  def __init__(self):
+    __metaclass__ = abc.ABCMeta
+    self._thread = None
+    self._running = False
+    self._wait_time = 0
+    super().__init__()
+    return
+
+  def start(self):
+    pass
+
+  def close(self):
+    pass
+  def running(self):
+    pass
+
+  def put(self):
+    pass
+
+  def put_all(self):
+    pass
+
+class DisplayThread(Thread):
 
   def __init__(self,
                frame_buffer=None,
@@ -262,6 +378,107 @@ class DisplayThread(object):
   def put_all(self, frames):
     return self._frame_buffer.put_all(frames)
 
+  @property
+  def fps(self):
+    return self._fps
+
+
+class saveFrameThread(Thread):
+  def __init__(self,
+               folder_name = "frames/",
+               frame_buffer= None,
+              ):
+    if frame_buffer is None:
+      self._frame_buffer = FrameQue(1000)
+    else:
+      self._frame_buffer = frame_buffer
+    self._thread = None
+    self._running = False
+    self._fps = 0
+    self._foldername = folder_name
+    self._count = 0
+  def start(self):
+    self._running = True
+    self._thread = t.Thread(target=self.save, args=())
+    self._thread.start()
+  def close(self):
+    self._running = False
+    if self._thread is not None:
+      self._thread.join()
+  def save(self):
+    self._count = 0
+    try:
+      while self._running:
+        success, frame = self._frame_buffer.read()
+        if success and frame is not None:
+          frame = cv2.convertScaleAbs(frame, alpha=(255.0))
+          plt.imsave(f'{self._foldername}/{str(self._count)}.jpg', frame)
+          self._count = self._count + 1
+      self._running = False
+    except Exception as e:
+      print(e)
+      self._running = False
+    
+  @property
+  def running(self):
+    return self._running
+  def put(self, frame):
+    return self._frame_buffer.put(frame)
+  def put_all(self, frames):
+    return self._frame_buffer.put_all(frames)
+  @property
+  def fps(self):
+    return self._fps
+
+class saveVideoThread(Thread):
+  def __init__(self,
+               frame_buffer= None,
+               file_name = "demo.avi", 
+               draw_fps = 30, 
+               resolution = (739, 416), 
+              ):
+    if frame_buffer is None:
+      self._frame_buffer = FrameQue(1000)
+    else:
+      self._frame_buffer = frame_buffer
+    self._thread = None
+    self._running = False
+    self._file_name = file_name
+    self._draw_fps = draw_fps
+    self._draw_write_res = resolution
+    self._fps = 0
+    self._count = 0
+
+  def start(self):
+    self._running = True
+    self._thread = t.Thread(target=self.save, args=())
+    self._thread.start()
+  def close(self):
+    self._running = False
+    if self._thread is not None:
+      self._thread.join()
+  
+  def save(self):
+    self._count = 0
+    out = cv2.VideoWriter(self._file_name, cv2.VideoWriter_fourcc(*'DIVX'), self._draw_fps, self._draw_write_res) 
+    try:
+      while self._running:
+        success, frame = self._frame_buffer.read()
+        if success and frame is not None:
+          frame = cv2.convertScaleAbs(frame, alpha=(255.0))
+          out.write(frame)
+      self._running = False
+    except Exception as e:
+      print(e)
+      self._running = False
+    
+  @property
+  def running(self):
+    return self._running
+  def put(self, frame):
+    return self._frame_buffer.put(frame)
+  def put_all(self, frames):
+    return self._frame_buffer.put_all(frames)
   @property
   def fps(self):
     return self._fps

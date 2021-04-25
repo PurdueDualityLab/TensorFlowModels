@@ -1,10 +1,9 @@
 runtime:
-  distribution_strategy: 'multi_worker_mirrored'
-  mixed_precision_dtype: 'float32'
-  #loss_scale: "dynamic"
-  num_gpus: 8
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
+  num_gpus: 1
 task:
-  load_darknet_weights: false
   model:
     num_classes: 1000
     input_size: [256, 256, 3]
@@ -13,11 +12,9 @@ task:
       darknet:
         model_id: 'cspdarknet53'
     norm_activation:
-      activation: 'mish'  
-      use_sync_bn: true
-    subdivisions: 1
-    darknet_weights_file: ''
-    darknet_weights_cfg: ''
+      activation: 'leaky'  
+    darknet_weights_file: 'cache://csdarknet53.weights'
+    darknet_weights_cfg: 'cache://csdarknet53.cfg'
   losses:
     l2_weight_decay: 0.0005
     one_hot: True
@@ -25,27 +22,25 @@ task:
   train_data:
     tfds_name: imagenet2012
     tfds_split: train
-    tfds_data_dir: /depot/davisjam/data/tensorflow_datasets/
-    #input_path: 'imagenet-2012-tfrecord/train*'
+    tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
     is_training: true
-    global_batch_size: 256
-    dtype: 'float32'
+    global_batch_size: 8
+    dtype: 'float16'
     parser:
       aug_rand: true
   validation_data:
     tfds_name: imagenet2012
     tfds_split: validation
-    tfds_data_dir: /depot/davisjam/data/tensorflow_datasets/
-    #input_path: 'imagenet-2012-tfrecord/valid*'
-    is_training: true
-    global_batch_size: 256
-    dtype: 'float32'
+    tfds_data_dir: /media/vbanna/DATA_SHARE/tfds
+    is_training: false
+    global_batch_size: 8
+    dtype: 'float16'
     drop_remainder: false
     parser:
-      aug_rand: true
+      aug_rand: false
 trainer:
-  train_steps: 600000 # epochs: 120
-  validation_steps: 200 # size of validation data
+  train_steps: 1200000 # epochs: 120
+  validation_steps: 400 # size of validation data
   validation_interval: 10000
   steps_per_loop: 10000
   summary_interval: 10000
@@ -58,10 +53,10 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.2
-        end_learning_rate: 0.0002
+        initial_learning_rate: 0.001
+        end_learning_rate: 0.00001
         power: 4.0
-        decay_steps: 599000
+        decay_steps: 1199000
     warmup:
       type: 'linear'
       linear:

@@ -74,6 +74,7 @@ class FastVideo(object):
                disp_h=720,
                classes=80,
                labels=None,
+               save_file= None, 
                print_conf=True,
                max_batch=None,
                wait_time=None,
@@ -173,6 +174,15 @@ class FastVideo(object):
     self._obj_detected = -1
 
     self._display = video_t.DisplayThread()
+
+    if save_file is not None:
+      fps = self._cap.get(cv2.CAP_PROP_FPS)
+      print(f"saving to {save_file}")
+      self._save_t = video_t.saveVideoThread(file_name=save_file, 
+                                           draw_fps=fps, 
+                                           resolution=(self._width, self._height))
+    else:
+      self._save_t = None
     return
 
   def _preprocess(self, image):
@@ -267,9 +277,15 @@ class FastVideo(object):
 
         # there is potential for the images to be processed in batches, so for each image in the batch draw the boxes and the predictions and the confidence
         for im in iter(image):
-          while not self._display.put(im):
-            time.sleep(self._wait_time)
-          self._display_fps = self._display.fps
+          if self._save_t is None:
+            while not self._display.put(im):
+              time.sleep(self._wait_time)
+            self._display_fps = self._display.fps
+          else:
+            while not self._save_t.put(im):
+              time.sleep(self._wait_time)
+            self._display_fps = self._save_t.fps
+          
 
     except ValueError:
       self._running = False
