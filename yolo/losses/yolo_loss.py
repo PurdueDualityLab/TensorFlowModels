@@ -61,13 +61,12 @@ def ce(values, labels):
 
 
 @tf.custom_gradient
-def no_grad_sigmoid(values):
-  vals = tf.math.sigmoid(values)
-
+def grad_sigmoid(values):
+  #vals = tf.math.sigmoid(values)
   def delta(dy):
-    return dy
-
-  return vals, delta
+    t = tf.math.sigmoid(values)
+    return dy * t * (1 - t)
+  return values, delta
 
 
 @tf.custom_gradient
@@ -94,12 +93,11 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
     # dx = dloss * tf.expand_dims(dy, axis = -1)
 
     # bce + sigmoid derivative
-    dloss = -y + x
+    dloss = (-y + x) 
     dx = dloss * tf.expand_dims(dy, axis=-1)
 
     dy = tf.zeros_like(y)
     return dy, dx, 0.0
-
   return bce, delta
 
 
@@ -205,8 +203,8 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
-  # pred_xy = tf.math.sigmoid(pred_xy)  
-  # pred_wh = tf.math.sigmoid(pred_wh)
+  pred_xy = tf.math.sigmoid(pred_xy)  
+  pred_wh = tf.math.sigmoid(pred_wh)
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy / scaler
@@ -258,10 +256,10 @@ def get_predicted_box_newcords(width,
                                darknet=False,
                                max_delta=5.0, 
                                normalizer=1.0):
-  pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])  
-  pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
-  # pred_xy = unscaled_box[..., 0:2]  
-  # pred_wh = unscaled_box[..., 2:4]
+  # pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])  
+  # pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
+  pred_xy = unscaled_box[..., 0:2]  
+  pred_wh = unscaled_box[..., 2:4]
 
   if darknet:
     # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
@@ -539,10 +537,12 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
-      true_conf = tf.where(
-          tf.logical_and(true_conf == 1.0, iou_ > self._ignore_thresh), iou_,
-          true_conf)
-      true_conf = tf.where(true_conf == 0.0, iou_, true_conf)
+      true_conf = tf.where(iou_mask, iou_, true_conf)
+      
+      # true_conf = tf.where(
+      #     tf.logical_and(true_conf == 1.0, iou_ > self._ignore_thresh), iou_,
+      #     true_conf)
+      # true_conf = tf.where(true_conf == 0.0, iou_, true_conf)
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
@@ -704,6 +704,14 @@ class Yolo_Loss(object):
     return loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50, precision50
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    # 0. if smoothign is used, they prop the gradient of the sigmoid first 
+    #    but the sigmoid, if it is not enabled, they do not use the gradient of 
+    #    the sigmoid
+    if self._objectness_smooth > 0.0:
+      # if smoothing is enabled they for some reason 
+      # take the sigmoid many times
+      y_pred = grad_sigmoid(y_pred)
+
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
@@ -725,6 +733,7 @@ class Yolo_Loss(object):
     grid_mask = true_conf
 
     # no gradient
+
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
