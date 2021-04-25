@@ -210,15 +210,23 @@ class Parser(parser.Parser):
     width = shape[1]
     height = shape[0]
 
-    if not self._letter_box:
-      clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
-      image = tf.image.resize(
-          image, (clipper, clipper), preserve_aspect_ratio=False)
-    # else:
-    #   shiftx = 0.5
-    #   shifty = 0.5 
-    #   image, boxes, _ = preprocessing_ops.letter_box(
-    #       image, boxes, xs=shiftx, ys=shifty)
+    # if not self._letter_box:
+    #   height, width = preprocessing_ops.get_image_shape(image)
+    #   clipper = tf.reduce_max((height, width))
+    #   image = tf.image.resize(
+    #       image, (clipper, clipper), preserve_aspect_ratio=False)
+      
+    #   w_scale = width/clipper
+    #   h_scale = height/clipper
+
+    #if not self._letter_box:
+    height, width = preprocessing_ops.get_image_shape(image)
+    clipper = tf.reduce_max((height, width))
+    image = tf.image.resize(
+        image, (clipper, clipper), preserve_aspect_ratio=False)
+    
+    w_scale = width/clipper
+    h_scale = height/clipper
 
     # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
@@ -276,6 +284,7 @@ class Parser(parser.Parser):
       # height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
       # image = tf.image.resize(image, (height_, width_))
+
     if self._jitter_im > 0 and not data['is_mosaic']:
       jmi = 1 - self._jitter_im
       jma = 1 + self._jitter_im
@@ -304,6 +313,14 @@ class Parser(parser.Parser):
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+
+    if self._letter_box:
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+      image = tf.image.resize(
+        image, (height_, width_), preserve_aspect_ratio=False)
+
 
     if self._jitter_boxes > 0.0:
       height_, width_ = preprocessing_ops.get_image_shape(image)

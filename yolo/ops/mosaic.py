@@ -123,7 +123,6 @@ class Mosaic(object):
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area, width,
                   height):
 
-    # smthing wrong
     image, info = preprocessing_ops.random_crop_image(
         image,
         aspect_ratio_range=(self._output_size[1] / self._output_size[0],
