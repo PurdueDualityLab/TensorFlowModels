@@ -88,7 +88,7 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 >  
 > An example table for image classification results  
 ### Object Detection
-| Model Name | Width | latency  |FPS (GPU)  | mAP   |   
+| Model Name | Width | latency  |FPS (GPU)  | AP50   |   
 |:------------:|:------------:|:----------:|:-------------------:|:----------------:|  
 | Yolov3 | 416 |35ms     | 40        | 59.7% |  
 | Yolov3-spp | 608 |40ms     | 30        | 61.7% |
