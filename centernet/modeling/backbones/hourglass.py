@@ -37,7 +37,6 @@ class Hourglass(tf.keras.Model):
     x_inter = input
 
     # Create some intermediate and postlayers to generate the heatmaps
-    # (document and make cleaner later)
     inp_filters = channel_dims_per_stage[0]
 
     # Create prelayers if downsampling input

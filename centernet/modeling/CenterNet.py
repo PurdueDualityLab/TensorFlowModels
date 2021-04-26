@@ -7,7 +7,6 @@ from centernet.modeling.layers.detection_generator import CenterNetLayer
 from official.core import registry
 from official.vision.beta.modeling.backbones import factory
 
-# TODO: import prediction and filtering layers when made
 
 class CenterNet(ks.Model):
 
@@ -74,7 +73,9 @@ def build_centernet_filter(model_config):
                         use_nms=model_config.filter.use_nms,
                         center_thresh=model_config.filter.center_thresh,
                         iou_thresh=model_config.filter.iou_thresh,
-                        class_offset=model_config.filter.class_offset)
+                        class_offset=model_config.filter.class_offset,
+                        net_down_scale=model_config.filter.net_down_scale,
+                        input_image_dims=model_config.filter.input_image_dims)
 
 def build_centernet_head(model_config):
   return None
@@ -96,7 +97,5 @@ def build_centernet(input_specs, task_config, l2_regularization):
   model.build(input_specs.shape)
   model.summary()
 
-  # TODO: uncommend when filter is implemented
-  # losses = filter.losses
   losses = None
   return model, losses

@@ -24,6 +24,8 @@ class CenterNetLayer(ks.Model):
                center_thresh=0.1,
                iou_thresh=0.4,
                class_offset=1,
+               net_down_scale=4,
+               input_image_dims=512,
                **kwargs):
     """
     Args:
@@ -42,6 +44,7 @@ class CenterNetLayer(ks.Model):
       iou_thresh: A float for the threshold IOU when filtering bounding boxes.
       class_offset: An integer indicating to add an offset to the class 
         prediction if the dataset labels have been shifted.
+      net_down_scale: An integer that specifies 
 
     call Returns:
       Dictionary with keys 'bbox', 'classes', 'confidence', and 'num_dets'
@@ -62,6 +65,10 @@ class CenterNetLayer(ks.Model):
     self._iou_thresh = iou_thresh
 
     self._class_offset = class_offset
+
+    # Box normalization parameters
+    self._net_down_scale = net_down_scale
+    self._input_image_dims = input_image_dims
   
   def process_heatmap(self, 
                       feature_map,
@@ -303,11 +310,9 @@ class CenterNetLayer(ks.Model):
     return boxes, detection_classes, detection_scores, num_detections
   
   def convert_strided_predictions_to_normalized_boxes(self,
-                                                      boxes, 
-                                                      stride=4.0,
-                                                      true_image_dims=512):
-    boxes = boxes * tf.cast(stride, boxes.dtype)
-    boxes = boxes / tf.cast(true_image_dims, boxes.dtype)
+                                                      boxes):
+    boxes = boxes * tf.cast(self._net_down_scale, boxes.dtype)
+    boxes = boxes / tf.cast(self._input_image_dims, boxes.dtype)
     boxes = tf.clip_by_value(boxes, 0.0, 1.0)
     return boxes
 
