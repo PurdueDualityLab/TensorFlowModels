@@ -161,7 +161,7 @@ class CenterNetLayer(hyperparams.Config):
   max_detections: int = 100
   peak_error: float = 1e-6
   peak_extract_kernel_size: int = 3
-  use_nms: bool = False
+  use_nms: bool = True
   center_thresh: float = 0.1
   iou_thresh: float = 0.4
   class_offset: int = 1

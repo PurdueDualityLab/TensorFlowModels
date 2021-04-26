@@ -351,7 +351,7 @@ class CenterNetDecoderConv(tf.keras.layers.Layer):
 
     # Initialize bias to the last Conv2D Layer
     self.conv2 = tf.keras.layers.Conv2D(filters=self._output_filters,
-      kernel_size=(1, 1), 
+      kernel_size=(1, 1), padding='valid',
       bias_initializer=tf.constant_initializer(self._bias_init))
 
   def call(self, x):

@@ -257,17 +257,20 @@ class CenterNetLayer(ks.Model):
     # TF Lite does not support tf.gather with batch_dims > 0, so we need to use
     # tf_gather_nd instead and here we prepare the indices for that.
 
+    # shapes of heatmap output
+    shape = tf.shape(height_width_predictions)
+    height, width = shape[1], shape[2]
+
     # combined indices dtype=int32
     combined_indices = tf.stack([
         self.multi_range(batch_size, value_repetitions=num_boxes),
         tf.reshape(y_indices, [-1]),
         tf.reshape(x_indices, [-1])
       ], axis=1)
-    
 
     new_height_width = tf.gather_nd(height_width_predictions, combined_indices)
-    new_height_width = tf.reshape(new_height_width, [batch_size, num_boxes, -1])
-    height_width = tf.maximum(new_height_width, 0)
+    new_height_width = tf.reshape(new_height_width, [batch_size, num_boxes, 2])
+    height_width = tf.maximum(new_height_width, 0.0)
 
     # height and widths dtype=float32
     heights = height_width[..., 0]
@@ -275,7 +278,7 @@ class CenterNetLayer(ks.Model):
 
     # Get the offsets of center points
     new_offsets = tf.gather_nd(offset_predictions, combined_indices)
-    offsets = tf.reshape(new_offsets, [batch_size, num_boxes, -1])
+    offsets = tf.reshape(new_offsets, [batch_size, num_boxes, 2])
     
     # offsets are dtype=float32
     y_offsets = offsets[..., 0]
@@ -287,11 +290,17 @@ class CenterNetLayer(ks.Model):
     detection_classes = channel_indices + self._class_offset
 
     num_detections = tf.reduce_sum(tf.cast(detection_scores > 0, dtype=tf.int32), axis=1)
+    
+    ymin = y_indices + y_offsets - heights / 2.0
+    xmin = x_indices + x_offsets - widths / 2.0
+    ymax = y_indices + y_offsets + heights / 2.0
+    xmax = x_indices + x_offsets + widths / 2.0
 
-    boxes = tf.stack([y_indices + y_offsets - heights / 2.0,
-                      x_indices + x_offsets - widths / 2.0,
-                      y_indices + y_offsets + heights / 2.0,
-                      x_indices + x_offsets + widths / 2.0], axis=2)
+    ymin = tf.clip_by_value(ymin, 0., tf.cast(height, ymin.dtype))
+    xmin = tf.clip_by_value(xmin, 0., tf.cast(width, xmin.dtype))
+    ymax = tf.clip_by_value(ymax, 0., tf.cast(height, ymax.dtype))
+    xmax = tf.clip_by_value(xmax, 0., tf.cast(width, xmax.dtype))
+    boxes = tf.stack([ymin, xmin, ymax, xmax], axis=2)
 
     return boxes, detection_classes, detection_scores, num_detections
 
@@ -329,6 +338,7 @@ class CenterNetLayer(ks.Model):
     
     # Normalize bounding boxes
     boxes = boxes / tf.cast(height, boxes.dtype)
+    boxes = tf.clip_by_value(boxes, 0.0, 1.0)
 
     # Apply nms 
     if self._use_nms:
