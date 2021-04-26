@@ -24,7 +24,7 @@ task:
     is_training: False
     global_batch_size: 2048
     dtype: 'float16'
-    drop_remainder: False
+    drop_remainder: true
 trainer:
   train_steps: 56160
   validation_steps: 25

@@ -61,7 +61,7 @@ task:
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true
     shuffle_buffer_size: 10000
-    drop_remainder: false
+    drop_remainder: true
     parser:
       fixed_size: true
       image_h: 896
@@ -78,7 +78,7 @@ task:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     is_training: false
     shuffle_buffer_size: 10000
-    drop_remainder: false
+    drop_remainder: true
     parser:
       image_h: 896
       image_w: 896

@@ -32,7 +32,7 @@ task:
     is_training: false
     global_batch_size: 4096
     dtype: 'bfloat16'
-    drop_remainder: false
+    drop_remainder: true
 trainer:
   train_steps: 62400
   validation_steps: 13

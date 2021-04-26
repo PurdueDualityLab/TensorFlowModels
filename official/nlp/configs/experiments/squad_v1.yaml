@@ -13,7 +13,7 @@ task:
   validation_data:
     do_lower_case: true
     doc_stride: 128
-    drop_remainder: false
+    drop_remainder: true
     global_batch_size: 48
     input_path: ''
     is_training: false

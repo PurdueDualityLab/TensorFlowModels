@@ -72,7 +72,7 @@ task:
     num_test_crops: 3
     global_batch_size: 64
     dtype: 'bfloat16'
-    drop_remainder: false
+    drop_remainder: true
 trainer:
   optimizer_config:
     learning_rate:

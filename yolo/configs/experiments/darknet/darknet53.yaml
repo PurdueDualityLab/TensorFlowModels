@@ -35,7 +35,7 @@ task:
     is_training: false
     global_batch_size: 128
     dtype: 'float16'
-    drop_remainder: false
+    drop_remainder: true
     parser:
       aug_rand: true
 trainer:

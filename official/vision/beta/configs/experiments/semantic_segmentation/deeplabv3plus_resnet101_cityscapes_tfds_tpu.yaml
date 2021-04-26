@@ -50,7 +50,7 @@ task:
     is_training: false
     global_batch_size: 16
     dtype: 'float32'
-    drop_remainder: false
+    drop_remainder: true
     resize_eval_groundtruth: true
 trainer:
   optimizer_config:

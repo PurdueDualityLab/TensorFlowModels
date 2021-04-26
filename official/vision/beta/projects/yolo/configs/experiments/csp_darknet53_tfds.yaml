@@ -33,7 +33,7 @@ task:
     is_training: true
     global_batch_size: 16  # default = 128
     dtype: 'float16'
-    drop_remainder: false
+    drop_remainder: true
     shuffle_buffer_size: 100
 trainer:
   train_steps: 9600000  # epochs: 120, 1200000 * 128/batchsize
