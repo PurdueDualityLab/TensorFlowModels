@@ -227,6 +227,7 @@ def resize_and_crop_boxes(boxes,
       boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
   return boxes
 
+
 def get_image_shape(image):
   shape = tf.shape(image)
   if tf.shape(shape)[0] == 4:
@@ -723,6 +724,7 @@ def random_crop_image(image,
     ],
                     axis=0)
     return cropped_image, info
+
 
 def random_crop_mosaic(image,
                        aspect_ratio_range=(3. / 4., 4. / 3.),

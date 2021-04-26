@@ -266,7 +266,9 @@ class VideoPlayer(object):
 #   def fps(self):
 #     return self._fps
 
+
 class Thread(object):
+
   def __init__(self):
     __metaclass__ = abc.ABCMeta
     self._thread = None
@@ -280,6 +282,7 @@ class Thread(object):
 
   def close(self):
     pass
+
   def running(self):
     pass
 
@@ -288,6 +291,7 @@ class Thread(object):
 
   def put_all(self):
     pass
+
 
 class DisplayThread(Thread):
 
@@ -384,10 +388,12 @@ class DisplayThread(Thread):
 
 
 class saveFrameThread(Thread):
-  def __init__(self,
-               folder_name = "frames/",
-               frame_buffer= None,
-              ):
+
+  def __init__(
+      self,
+      folder_name="frames/",
+      frame_buffer=None,
+  ):
     if frame_buffer is None:
       self._frame_buffer = FrameQue(1000)
     else:
@@ -397,14 +403,17 @@ class saveFrameThread(Thread):
     self._fps = 0
     self._foldername = folder_name
     self._count = 0
+
   def start(self):
     self._running = True
     self._thread = t.Thread(target=self.save, args=())
     self._thread.start()
+
   def close(self):
     self._running = False
     if self._thread is not None:
       self._thread.join()
+
   def save(self):
     self._count = 0
     try:
@@ -418,25 +427,31 @@ class saveFrameThread(Thread):
     except Exception as e:
       print(e)
       self._running = False
-    
+
   @property
   def running(self):
     return self._running
+
   def put(self, frame):
     return self._frame_buffer.put(frame)
+
   def put_all(self, frames):
     return self._frame_buffer.put_all(frames)
+
   @property
   def fps(self):
     return self._fps
 
+
 class saveVideoThread(Thread):
-  def __init__(self,
-               frame_buffer= None,
-               file_name = "demo.avi", 
-               draw_fps = 30, 
-               resolution = (739, 416), 
-              ):
+
+  def __init__(
+      self,
+      frame_buffer=None,
+      file_name="demo.avi",
+      draw_fps=30,
+      resolution=(739, 416),
+  ):
     if frame_buffer is None:
       self._frame_buffer = FrameQue(1000)
     else:
@@ -453,14 +468,16 @@ class saveVideoThread(Thread):
     self._running = True
     self._thread = t.Thread(target=self.save, args=())
     self._thread.start()
+
   def close(self):
     self._running = False
     if self._thread is not None:
       self._thread.join()
-  
+
   def save(self):
     self._count = 0
-    out = cv2.VideoWriter(self._file_name, cv2.VideoWriter_fourcc(*'DIVX'), self._draw_fps, self._draw_write_res) 
+    out = cv2.VideoWriter(self._file_name, cv2.VideoWriter_fourcc(*'DIVX'),
+                          self._draw_fps, self._draw_write_res)
     try:
       while self._running:
         success, frame = self._frame_buffer.read()
@@ -471,14 +488,17 @@ class saveVideoThread(Thread):
     except Exception as e:
       print(e)
       self._running = False
-    
+
   @property
   def running(self):
     return self._running
+
   def put(self, frame):
     return self._frame_buffer.put(frame)
+
   def put_all(self, frames):
     return self._frame_buffer.put_all(frames)
+
   @property
   def fps(self):
     return self._fps

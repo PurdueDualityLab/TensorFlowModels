@@ -215,7 +215,7 @@ class Parser(parser.Parser):
     #   clipper = tf.reduce_max((height, width))
     #   image = tf.image.resize(
     #       image, (clipper, clipper), preserve_aspect_ratio=False)
-      
+
     #   w_scale = width/clipper
     #   h_scale = height/clipper
 
@@ -224,9 +224,9 @@ class Parser(parser.Parser):
     clipper = tf.reduce_max((height, width))
     image = tf.image.resize(
         image, (clipper, clipper), preserve_aspect_ratio=False)
-    
-    w_scale = width/clipper
-    h_scale = height/clipper
+
+    w_scale = width / clipper
+    h_scale = height / clipper
 
     # MAYBE SWAP JIITER im AND JITTER BOX, DO IM FIRST AND BOX SECOND
     # aspect distorted crop scal independent
@@ -274,16 +274,16 @@ class Parser(parser.Parser):
     #   classes = tf.gather(classes, inds)
     #   boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-      # height_, width_ = preprocessing_ops.get_image_shape(image)
+    # height_, width_ = preprocessing_ops.get_image_shape(image)
 
-      # shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-      #     -self._jitter_im, self._jitter_im)
-      # shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-      #     -self._jitter_im, self._jitter_im)
-      # width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-      # height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+    # shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #     -self._jitter_im, self._jitter_im)
+    # shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #     -self._jitter_im, self._jitter_im)
+    # width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+    # height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
-      # image = tf.image.resize(image, (height_, width_))
+    # image = tf.image.resize(image, (height_, width_))
 
     if self._jitter_im > 0 and not data['is_mosaic']:
       jmi = 1 - self._jitter_im
@@ -293,7 +293,7 @@ class Parser(parser.Parser):
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                  info[1, :], info[3, :])
+                                                   info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -307,7 +307,7 @@ class Parser(parser.Parser):
 
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                  info[1, :], info[3, :])
+                                                   info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -319,8 +319,7 @@ class Parser(parser.Parser):
       height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
       width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
       image = tf.image.resize(
-        image, (height_, width_), preserve_aspect_ratio=False)
-
+          image, (height_, width_), preserve_aspect_ratio=False)
 
     if self._jitter_boxes > 0.0:
       height_, width_ = preprocessing_ops.get_image_shape(image)
@@ -345,7 +344,7 @@ class Parser(parser.Parser):
     #   image, info = preprocessing_ops.resize_and_crop_image(
     #       image, [self._image_h, self._image_w], [self._image_h, self._image_w],
     #       aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.5 else 0.5,
-    #       aug_scale_max=self._aug_scale_max) 
+    #       aug_scale_max=self._aug_scale_max)
 
     # boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     # boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
@@ -409,7 +408,6 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
-
     # process_width = self._image_w
     # process_height = tf.cast(self._image_h * (process_width / self._image_w),
     #                          tf.int32)
@@ -430,8 +428,9 @@ class Parser(parser.Parser):
     else:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min= self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=self._aug_scale_max) 
+          aug_scale_min=self._aug_scale_min
+          if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max=self._aug_scale_max)
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],

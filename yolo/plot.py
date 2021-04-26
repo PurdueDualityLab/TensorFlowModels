@@ -24,15 +24,15 @@ import os
 from yolo.demos import video_detect_gpu as vgu
 from yolo.demos import video_detect_cpu as vcu
 
-
 import tensorflow as tf
-
 
 from yolo.ops import box_ops
 import tensorflow.keras as ks
 
+
 def build(sample):
-  return 
+  return
+
 
 def loss(y_pred, y_true):
   pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
@@ -42,21 +42,24 @@ def loss(y_pred, y_true):
   box_loss = 1 - liou
 
   class_loss = ks.losses.binary_crossentropy(
-        tf.expand_dims(true_class, axis=-1),
-        tf.expand_dims(pred_class, axis=-1),
-        label_smoothing=0.0,
-        from_logits=False)
+      tf.expand_dims(true_class, axis=-1),
+      tf.expand_dims(pred_class, axis=-1),
+      label_smoothing=0.0,
+      from_logits=False)
 
   conf_loss = ks.losses.binary_crossentropy(
-        tf.expand_dims(true_conf, axis=-1),
-        tf.expand_dims(pred_conf, axis=-1),
-        label_smoothing=0.0,
-        from_logits=False)
-  
+      tf.expand_dims(true_conf, axis=-1),
+      tf.expand_dims(pred_conf, axis=-1),
+      label_smoothing=0.0,
+      from_logits=False)
+
   loss = box_loss + class_loss + conf_loss
   return loss
 
+
 import matplotlib.pyplot as plt
+
+
 def main(_):
   prep_gpu()
 
@@ -66,9 +69,9 @@ def main(_):
   space = tf.reshape(linspace, [-1, 1, 1, 1, 1, 1, 1])
   space = tf.tile(space, [1, points, 1, 1, 1, 1, 1])
   space = tf.tile(space, [1, 1, points, 1, 1, 1, 1])
-  space = tf.tile(space, [1, 1,  1, points, 1, 1, 1])
-  space = tf.tile(space, [1, 1,  1, 1, points, 1, 1])
-  space = tf.tile(space, [1, 1,  1, 1, 1, points, 1])
+  space = tf.tile(space, [1, 1, 1, points, 1, 1, 1])
+  space = tf.tile(space, [1, 1, 1, 1, points, 1, 1])
+  space = tf.tile(space, [1, 1, 1, 1, 1, points, 1])
 
   # x_pred = []
   # x_true = []
@@ -81,7 +84,7 @@ def main(_):
   #           for val6 in linspace:
   #             y_pred = [val1, val2, val3, val4, val5, val6]
   #             y_true = [0.5, 0.5, 1, 1, 1, 1]
-              
+
   #             x_pred.append(y_pred)
   #             x_true.append(y_true)
 
@@ -94,7 +97,5 @@ def main(_):
   # print(x_pred, loss_val)
 
 
-
 if __name__ == '__main__':
   app.run(main)
-

@@ -64,19 +64,19 @@ class YoloLayer(ks.Model):
     }
 
     self._nms_types = {
-      'greedy':1, 
-      'iou':2, 
-      'giou':3, 
-      'ciou':4, 
-      'diou':5, 
-      'class_independent':6
+        'greedy': 1,
+        'iou': 2,
+        'giou': 3,
+        'ciou': 4,
+        'diou': 5,
+        'class_independent': 6
     }
-    
+
     self._nms_type = self._nms_types[nms_type]
 
     if self._nms_type >= 2 and self._nms_type <= 5:
       self._nms = nms_ops.TiledNMS(iou_type=nms_type)
-    
+
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
 
     self._generator = {}
@@ -208,18 +208,15 @@ class YoloLayer(ks.Model):
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
       boxes, confidence, classes, valid = self._nms.complete_nms(
-        tf.expand_dims(boxes, axis=-2),
-        class_scores,
-        pre_nms_top_k = self._pre_nms_points,
-        max_num_detections=self._max_boxes,
-        nms_iou_threshold=self._nms_thresh,
-        pre_nms_score_threshold=self._thresh
-      )
+          tf.expand_dims(boxes, axis=-2),
+          class_scores,
+          pre_nms_top_k=self._pre_nms_points,
+          max_num_detections=self._max_boxes,
+          nms_iou_threshold=self._nms_thresh,
+          pre_nms_score_threshold=self._thresh)
       boxes = tf.cast(boxes, object_scores.dtype)
       class_scores = tf.cast(classes, object_scores.dtype)
       object_scores = tf.cast(confidence, object_scores.dtype)
-        
-
 
     # compute the number of valid detections
     num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis=-1)

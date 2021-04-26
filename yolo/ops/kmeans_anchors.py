@@ -7,15 +7,22 @@ from official.core import input_reader
 
 # https://github.com/AlexeyAB/darknet/blob/master/scripts/gen_anchors.py
 
-def IOU(X,centroids):
-  w, h = tf.split(X, 2, axis = -1)
-  c_w, c_h = tf.split(centroids, 2, axis = -1)
 
-  similarity = (c_w * c_h)/(w * h)
-  similarity = tf.where(tf.logical_and(c_w >= w, c_h >= h), w * h/(c_w * c_h), similarity)
-  similarity = tf.where(tf.logical_and(c_w >= w, c_h <= h), w*c_h/(w*h + (c_w-w)*c_h), similarity)
-  similarity = tf.where(tf.logical_and(c_w <= w, c_h >= h), c_w*h/(w*h + c_w*(c_h-h)), similarity)
-  return tf.squeeze(similarity, axis = -1)
+def IOU(X, centroids):
+  w, h = tf.split(X, 2, axis=-1)
+  c_w, c_h = tf.split(centroids, 2, axis=-1)
+
+  similarity = (c_w * c_h) / (w * h)
+  similarity = tf.where(
+      tf.logical_and(c_w >= w, c_h >= h), w * h / (c_w * c_h), similarity)
+  similarity = tf.where(
+      tf.logical_and(c_w >= w, c_h <= h), w * c_h / (w * h + (c_w - w) * c_h),
+      similarity)
+  similarity = tf.where(
+      tf.logical_and(c_w <= w, c_h >= h), c_w * h / (w * h + c_w * (c_h - h)),
+      similarity)
+  return tf.squeeze(similarity, axis=-1)
+
 
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
@@ -63,7 +70,7 @@ class AnchorKMeans:
     # clusters = tf.concat([zeros, clusters], axis=-1)
     return IOU(boxes, clusters)
 
-  def get_box_from_dataset(self, dataset, image_w = 512):
+  def get_box_from_dataset(self, dataset, image_w=512):
     box_ls = None
     if not isinstance(dataset, list):
       dataset = [dataset]
