@@ -109,10 +109,17 @@ class FastVideo(object):
     # self._cap.set(cv2.CAP_PROP_FPS, int(30))
     print(self._cap.get(3), self._cap.get(4))
 
+    self._letter_box = True  
+
     self._preprocess_function = preprocess_function
     self._height = int(self._cap.get(4)) if disp_h is None else disp_h
     self._og_height = int(self._cap.get(4))
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
+    
+    if self._letter_box:
+      self._height = self._height
+      self._width = self._height
+    
     self._classes = classes
     self._p_width = process_width
     self._p_height = process_height
@@ -173,6 +180,8 @@ class FastVideo(object):
     self._frames = 1
     self._obj_detected = -1
 
+    
+
     self._display = video_t.DisplayThread()
 
     if save_file is not None:
@@ -190,6 +199,8 @@ class FastVideo(object):
       image = tf.image.flip_left_right(image)
     image = tf.cast(image, dtype=tf.float32)
     image = image / 255
+    if self._letter_box:
+      image = tf.image.pad_to_bounding_box(image, 0, 0, max(image.shape[2], image.shape[1]), max(image.shape[2], image.shape[1]))
     return image
 
   def read(self, lock=None):
@@ -361,7 +372,7 @@ class FastVideo(object):
           image = preprocess(image)
           pimage = tf.image.resize(image, (self._p_width, self._p_height))
           pred = predfunc(pimage)
-          if image.shape[1] != self._height:
+          if image.shape[1] != self._height: # and not self._letter_box:
             image = tf.image.resize(pimage, (self._height, self._width))
         b = datetime.datetime.now()
 
