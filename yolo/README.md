@@ -101,6 +101,7 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 | Yolov4-p6 | 1280 |--ms     | N/A        | N/A |  
 | Yolov4-p7 | 1536 |--ms     | N/A        | N/A | 
 
+NOTE: latency and FPS testing was done using an RTX 2070 super
 
 ### Image Classification    
 | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
