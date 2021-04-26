@@ -107,7 +107,12 @@ NOTE: latency and FPS testing was done using an RTX 2070 super
 | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
 |------------|----------|----------------|----------------|  
 | CSPDarknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 77% | 94% |  
+| CSPDarknet-tiny | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
+| CSPDarknet-p5 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
+| CSPDarknet-p6 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
+| CSPDarknet-p7 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 | Darknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A |  
+| Darknet-tiny | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 
 ## Requirements
 
