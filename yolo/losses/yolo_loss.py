@@ -475,8 +475,8 @@ class Yolo_Loss(object):
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
 
     # mask off zero boxes
-    mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
-    iou *= mask
+    # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
+    # iou *= mask
 
 
     # cconfidence is low
@@ -534,7 +534,7 @@ class Yolo_Loss(object):
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
     iou_max = tf.stop_gradient(iou_max)
 
-    # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(tf.maximum(tf.cast(iou_mask, tf.float32),true_conf))))
+    # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(tf.maximum(tf.cast(iou_mask, tf.float32),true_conf)))
     if not smoothed:
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
