@@ -86,7 +86,7 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 > * Add links to [TensorBoard.dev](https://tensorboard.dev/) for visualizing metrics.  
 >  
 > An example table for image classification results  
-### object
+### Object Detection
 | Model Name | Width | latency  |FPS (GPU)  | mAP   |   
 |:------------:|:------------:|:----------:|:-------------------:|:----------------:|  
 | Yolov3 | 416 |35ms     | 40        | 59.7% |  
@@ -101,12 +101,11 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 | Yolov4-p7 | 1536 |--ms     | N/A        | N/A | 
 
 
-> ### Image Classification  
->  
-> | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
-> |------------|----------|----------------|----------------|  
-> | CSPDarknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 77% | 94% |  
-> | Darknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A |  
+### Image Classification    
+| Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
+|------------|----------|----------------|----------------|  
+| CSPDarknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 77% | 94% |  
+| Darknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A |  
 
 ## Requirements
 
