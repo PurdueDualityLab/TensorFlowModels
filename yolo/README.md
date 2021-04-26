@@ -2,6 +2,7 @@
 
 [![Paper](http://img.shields.io/badge/Paper-arXiv.1804.02767-B3181B?logo=arXiv)](https://arxiv.org/abs/1804.02767)
 [![Paper](http://img.shields.io/badge/Paper-arXiv.2004.10934-B3181B?logo=arXiv)](https://arxiv.org/abs/2004.10934)
+[![Paper](http://img.shields.io/badge/Paper-arXiv.2011.08036-B3181B?logo=arXiv)](https://arxiv.org/abs/2011.08036)
 
 This repository is the unofficial implementation of the following paper. However, we spent painstaking hours ensuring that every aspect that we constructed was the exact same as the original paper and the original repository.
 
