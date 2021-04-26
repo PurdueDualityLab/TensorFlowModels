@@ -37,7 +37,7 @@ def test_yolo_input_task():
             ],
             # _boxes = ['[15.0, 23.0]', '[38.0, 57.0]', '[119.0, 67.0]', '[57.0, 141.0]', '[164.0, 156.0]', '[97.0, 277.0]', '[371.0, 184.0]', '[211.0, 352.0]', '[428.0, 419.0]'],
             # _boxes = None,
-            filter=yolocfg.YoloLossLayer(use_nms=False)))
+            filter=yolocfg.YoloLossLayer(nms_type="greedy")))
     task = yolo.YoloTask(config)
 
     # loading both causes issues, but oen at a time is not issue, why?
@@ -100,7 +100,7 @@ def test_yolo_pipeline(is_training=True):
   # shind = 3
   dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
-  dfilter = detection_generator.YoloFilter()
+  # dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
   data = dataset if is_training else dsp

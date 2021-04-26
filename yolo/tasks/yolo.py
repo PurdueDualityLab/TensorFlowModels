@@ -81,9 +81,6 @@ class YoloTask(base_task.Task):
     self._metric_names = []
     self._metrics = []
 
-    self._dfilter = detection_generator.YoloFilter(
-        classes=self._task_config.model.num_classes)
-
     return
 
   def build_model(self):
@@ -96,7 +93,8 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     print(xy_scales, l2_weight_decay)
 
-    self._get_boxes(gen_boxes=params.is_training)
+    anchors = self._get_boxes(gen_boxes=params.is_training)
+    print(anchors)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                             model_base_cfg.input_size)
@@ -155,7 +153,6 @@ class YoloTask(base_task.Task):
         min_level=model.min_level,
         max_level=model.max_level,
         num_classes=model.num_classes,
-        batch_size=params.global_batch_size,
         masks=masks,
         anchors=anchors,
         fixed_size=params.parser.fixed_size,
@@ -163,11 +160,12 @@ class YoloTask(base_task.Task):
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
         jitter_im=params.parser.jitter_im,
-        jitter_boxes=params.parser.jitter_boxes,
+        aug_scale_aspect=params.parser.aug_scale_aspect,
         aug_rand_transalate=params.parser.aug_rand_translate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
-        aug_rand_zoom=params.parser.aug_rand_zoom,
+        aug_scale_min=params.parser.aug_scale_min,
+        aug_scale_max=params.parser.aug_scale_max,
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         min_process_size=params.parser.min_process_size,
@@ -392,7 +390,7 @@ class YoloTask(base_task.Task):
           transform_and_batch_fn=lambda x, y: x,
           parser_fn=None)
       anchors = reader.read(
-          k=9, image_width=params.parser.image_w, input_context=None)
+          k=self._num_boxes, image_width=params.parser.image_w, input_context=None)
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
@@ -516,7 +514,6 @@ class YoloTask(base_task.Task):
         # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial().assert_existing_objects_matched()
-
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
@@ -525,6 +522,16 @@ class YoloTask(base_task.Task):
         status.expect_partial().assert_existing_objects_matched()
         #except:
         #print("this checkpoint could not assert all components consumed")
+      elif self.task_config.init_checkpoint_modules == 'decoder':
+        ckpt = tf.train.Checkpoint(backbone=model.backbone, decoder=model.decoder)
+        # status = ckpt.restore(ckpt_dir_or_file)
+        # status.assert_consumed()
+        # optimizer = self.create_optimizer(params.trainer.optimizer_config,
+        #                               params.runtime)
+        # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+        # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
+        status = ckpt.restore(ckpt_dir_or_file)
+        status.expect_partial() #.assert_existing_objects_matched()
       else:
         assert "Only 'all' or 'backbone' can be used to initialize the model."
 

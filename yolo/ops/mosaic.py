@@ -122,6 +122,7 @@ class Mosaic(object):
 
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area, width,
                   height):
+
     image, info = preprocessing_ops.random_crop_image(
         image,
         aspect_ratio_range=(self._output_size[1] / self._output_size[0],
@@ -140,7 +141,7 @@ class Mosaic(object):
     area = tf.gather(area, inds)
 
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    # image = tf.image.resize(image, (height, width))
+    image = tf.image.resize(image, (height, width))
     return image, boxes, classes, is_crowd, area, tf.cast(info, tf.int32)
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area,
@@ -206,29 +207,50 @@ class Mosaic(object):
 
         height, width = self._output_size[0], self._output_size[1]
 
-        if self._random_crop >= 1.0:
-          docrop = 1.0
-        elif self._random_crop <= 0.0:
-          docrop = 0.0
-        else:
-          docrop = tf.random.uniform([],
-                                     0.0,
-                                     1.0,
-                                     dtype=tf.float32,
-                                     seed=self._seed)
-        if docrop >= (1 - self._random_crop):
+        # if self._random_crop >= 1.0:
+        #   docrop = 1.0
+        # elif self._random_crop <= 0.0:
+        #   docrop = 0.0
+        # else:S
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
               0] = self._crop_image(images[0], box_list[0], class_list[0],
                                     is_crowds[0], areas[0], self._crop_area,
                                     width, height)
+                                    
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[
               1] = self._crop_image(images[1], box_list[1], class_list[1],
                                     is_crowds[1], areas[1], self._crop_area,
                                     width, height)
+
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[
               2] = self._crop_image(images[2], box_list[2], class_list[2],
                                     is_crowds[2], areas[2], self._crop_area,
                                     width, height)
+        
+        docrop = tf.random.uniform([],
+                                    0.0,
+                                    1.0,
+                                    dtype=tf.float32,
+                                    seed=self._seed)
+        if docrop > (1 - self._random_crop):
           images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[
               3] = self._crop_image(images[3], box_list[3], class_list[3],
                                     is_crowds[3], areas[3], self._crop_area,

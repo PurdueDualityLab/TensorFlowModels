@@ -105,6 +105,8 @@ def define_flags():
 
   flags.DEFINE_integer('scale_que', default=1, help='preprocess on the gpu')
 
+  flags.DEFINE_string(
+      'save_file', default=None, help='The tf.data service address')
 
 def load_model(experiment='yolo_custom', config_path=[], model_dir=''):
   CFG = train_utils.ParseConfigOptions(
@@ -175,6 +177,7 @@ def main(_):
         preprocess_with_gpu=FLAGS.preprocess_gpu,
         classes=params.task.model.num_classes,
         print_conf=FLAGS.print_conf,
+        save_file=FLAGS.save_file, 
         max_batch=FLAGS.max_batch,
         disp_h=FLAGS.out_resolution,
         scale_que=FLAGS.scale_que,

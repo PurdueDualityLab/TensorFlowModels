@@ -457,8 +457,9 @@ class Darknet(ks.Model):
         stack_outputs.append(x)
       if (config.is_output and self._min_size is None):
         endpoints[str(config.output_name)] = x
-      elif self._min_size is not None and config.output_name >= self._min_size and \
-       config.output_name <= self._max_size:
+      elif (self._min_size is not None and
+            config.output_name >= self._min_size and
+            config.output_name <= self._max_size):
         endpoints[str(config.output_name)] = x
 
     self._output_specs = {l: endpoints[l].get_shape() for l in endpoints.keys()}
@@ -482,10 +483,8 @@ class Darknet(ks.Model):
     self._default_dict['name'] = f"{name}_csp_down"
     if self._dilate:
       self._default_dict['dilation_rate'] = config.dilation_rate
-      #config.repetitions += 1
     else:
       self._default_dict['dilation_rate'] = 1
-      #config.repetitions += 1
 
     # swap/add dialation
     x, x_route = nn_blocks.CSPRoute(
@@ -495,7 +494,6 @@ class Darknet(ks.Model):
         **self._default_dict)(
             inputs)
 
-    #print(config.repetitions - self._default_dict["dilation_rate"]//2)
     dilated_reps = config.repetitions - self._default_dict['dilation_rate'] // 2
     for i in range(dilated_reps):
       self._default_dict['name'] = f"{name}_{i}"

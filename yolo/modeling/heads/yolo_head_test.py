@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for resnet."""
+"""Tests for yolo."""
 
 # Import libraries
 from absl.testing import parameterized
@@ -29,7 +29,7 @@ from yolo.modeling.heads import yolo_head as heads
 class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
 
   def test_network_creation(self):
-    """Test creation of ResNet family models."""
+    """Test creation of YOLO family models."""
     tf.keras.backend.set_image_data_format('channels_last')
     input_shape = {
         '3': [1, 52, 52, 256],
@@ -38,7 +38,7 @@ class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
     }
     classes = 100
     bps = 3
-    head = heads.YoloHead(classes=classes, boxes_per_level=bps)
+    head = heads.YoloHead(3, 5, classes=classes, boxes_per_level=bps)
 
     inputs = {}
     for key in input_shape.keys():
@@ -62,7 +62,7 @@ class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
     }
     classes = 100
     bps = 3
-    head = heads.YoloHead(classes=classes, boxes_per_level=bps)
+    head = heads.YoloHead(3, 5, classes=classes, boxes_per_level=bps)
 
     inputs = {}
     for key in input_shape.keys():

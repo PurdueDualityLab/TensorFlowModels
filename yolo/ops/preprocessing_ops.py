@@ -227,107 +227,6 @@ def resize_and_crop_boxes(boxes,
       boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
   return boxes
 
-
-# def near_edge_adjustment(boxes,
-#                          y_lower_bound,
-#                          x_lower_bound,
-#                          y_upper_bound,
-#                          x_upper_bound,
-#                          keep_thresh=0.25,
-#                          aggressive=False):
-#   x_lower_bound = tf.clip_by_value(x_lower_bound, 0.0, 1.0 - K.epsilon())
-#   y_lower_bound = tf.clip_by_value(y_lower_bound, 0.0, 1.0 - K.epsilon())
-#   x_upper_bound = tf.clip_by_value(x_upper_bound, 0.0, 1.0 - K.epsilon())
-#   y_upper_bound = tf.clip_by_value(y_upper_bound, 0.0, 1.0 - K.epsilon())
-
-#   x_lower_bound = tf.cast(x_lower_bound, boxes.dtype)
-#   y_lower_bound = tf.cast(y_lower_bound, boxes.dtype)
-#   x_upper_bound = tf.cast(x_upper_bound, boxes.dtype)
-#   y_upper_bound = tf.cast(y_upper_bound, boxes.dtype)
-#   keep_thresh = tf.cast(keep_thresh, boxes.dtype)
-
-#   y_min, x_min, y_max, x_max = tf.split(
-#       tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-
-#   # locations where atleast 25% of the image is in frame but the certer is not
-#   if keep_thresh == 0:
-#     y_mask1 = tf.math.logical_and(y_upper_bound > y_min, y_max > y_upper_bound)
-#     x_mask1 = tf.math.logical_and(x_upper_bound > x_min, x_max > x_upper_bound)
-#     y_max = tf.where(y_mask1, y_upper_bound, y_max)
-#     x_max = tf.where(x_mask1, x_upper_bound, x_max)
-#     y_mask1 = tf.math.logical_and(x_max > x_lower_bound, y_min < y_lower_bound)
-#     x_mask1 = tf.math.logical_and(x_max > x_lower_bound, x_min < x_lower_bound)
-#     y_min = tf.where(y_mask1, y_lower_bound, y_min)
-#     x_min = tf.where(x_mask1, x_lower_bound, x_min)
-#     boxes = tf.cast(
-#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-#   elif aggressive:
-#     boxes = box_ops.yxyx_to_xcycwh(boxes)
-#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-#     y_mask1 = tf.math.logical_and(
-#         (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
-#         (y > y_upper_bound))
-#     x_mask1 = tf.math.logical_and(
-#         (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
-#         (x > x_upper_bound))
-#     y_max = tf.where(y_mask1, y_upper_bound, y_max)
-#     x_max = tf.where(x_mask1, x_upper_bound, x_max)
-#     boxes = tf.cast(
-#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-#     boxes = box_ops.yxyx_to_xcycwh(boxes)
-#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-#     y_mask1 = tf.math.logical_and(
-#         (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
-#         (y < y_lower_bound))
-#     x_mask1 = tf.math.logical_and(
-#         (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
-#         (x < x_lower_bound))
-#     y_min = tf.where(y_mask1, y_lower_bound, y_min)
-#     x_min = tf.where(x_mask1, x_lower_bound, x_min)
-#     boxes = tf.cast(
-#         tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-#   else:
-#     # locations where atleast 25% of the image is in frame but the certer is not
-#     boxes = box_ops.yxyx_to_xcycwh(boxes)
-#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-#     y_mask1 = tf.math.logical_and(
-#         (y_upper_bound - y_min > tf.cast(h * 0.5 * keep_thresh, y_min.dtype)),
-#         (y > y_upper_bound))
-#     x_mask1 = tf.math.logical_and(
-#         (x_upper_bound - x_min > tf.cast(w * 0.5 * keep_thresh, x_min.dtype)),
-#         (x > x_upper_bound))
-
-#     y_new = tf.where(y_mask1, y_upper_bound, y)
-#     h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
-#     x_new = tf.where(x_mask1, x_upper_bound, x)
-#     w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
-
-#     boxes = tf.cast(
-#         tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-#     x, y, w, h = tf.split(tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-#     boxes = box_ops.xcycwh_to_yxyx(boxes)
-#     y_min, x_min, y_max, x_max = tf.split(
-#         tf.cast(boxes, x_lower_bound.dtype), 4, axis=-1)
-
-#     y_mask1 = tf.math.logical_and(
-#         (y_max - y_lower_bound > tf.cast(h * 0.5 * keep_thresh, y_max.dtype)),
-#         (y < y_lower_bound))
-#     x_mask1 = tf.math.logical_and(
-#         (x_max - x_lower_bound > tf.cast(w * 0.5 * keep_thresh, x_max.dtype)),
-#         (x < x_lower_bound))
-
-#     y_new = tf.where(y_mask1, y_lower_bound, y)
-#     h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
-#     x_new = tf.where(x_mask1, x_lower_bound, x)
-#     w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
-
-#     boxes = tf.cast(
-#         tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-#     boxes = box_ops.xcycwh_to_yxyx(boxes)
-
-#   return boxes
-
-
 def get_image_shape(image):
   shape = tf.shape(image)
   if tf.shape(shape)[0] == 4:
@@ -812,6 +711,7 @@ def random_crop_image(image,
         aspect_ratio_range=aspect_ratio_range,
         area_range=area_range,
         max_attempts=max_attempts)
+
     cropped_image = tf.slice(image, crop_offset, crop_size)
 
     scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
@@ -823,7 +723,6 @@ def random_crop_image(image,
     ],
                     axis=0)
     return cropped_image, info
-
 
 def random_crop_mosaic(image,
                        aspect_ratio_range=(3. / 4., 4. / 3.),
@@ -864,14 +763,6 @@ def random_crop_mosaic(image,
     dy = rand_uniform_strong(0, 1 + 1, tf.int32)
     ds = rand_uniform_strong(1, 3, tf.int32)
 
-    # if area < 0.125:
-    #   dsx = ishape[0]//2 - 1
-    #   dsy = ishape[1]//2 - 1
-
-    #   oh = tf.maximum(crop_offset[0] - dy * dsy, crop_offset[0])
-    #   ow = tf.maximum(crop_offset[1] - dx * dsx, crop_offset[1])
-    #   tf.print(oh, ow, crop_size)
-    # else:
     oh = tf.maximum(dy * delta[0] - 1, 0) // ds
     ow = tf.maximum(dx * delta[1] - 1, 0) // ds
     crop_offset = tf.convert_to_tensor([oh, ow, 0])
@@ -1072,21 +963,16 @@ def resize_and_crop_image(image,
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
-    dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
-    dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
+    if random_jittering:
+      dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
+      dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
+    else:
+      dy = 0
+      dx = 0
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
 
     offset -= tf.convert_to_tensor([dy, dx])
-
-    # if tf.reduce_all(offset > 0):
-
-    #   dy = rand_uniform_strong(0, 0.25)
-    #   dx = rand_uniform_strong(0, 0.25)
-
-    #   image, ty, tx = translate_image(image, dx, dy)
-
-    #   tf.print(offset, tx, ty)
 
     image_info = tf.stack([
         image_size,

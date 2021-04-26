@@ -25,7 +25,7 @@ task:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
-      use_sync_bn: false
+      use_sync_bn: true
     decoder_activation: leaky
     filter:
       ignore_thresh:

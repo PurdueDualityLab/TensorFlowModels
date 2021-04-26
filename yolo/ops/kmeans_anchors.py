@@ -5,6 +5,17 @@ from yolo.ops.box_ops import compute_iou
 from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
 
+# https://github.com/AlexeyAB/darknet/blob/master/scripts/gen_anchors.py
+
+def IOU(X,centroids):
+  w, h = tf.split(X, 2, axis = -1)
+  c_w, c_h = tf.split(centroids, 2, axis = -1)
+
+  similarity = (c_w * c_h)/(w * h)
+  similarity = tf.where(tf.logical_and(c_w >= w, c_h >= h), w * h/(c_w * c_h), similarity)
+  similarity = tf.where(tf.logical_and(c_w >= w, c_h <= h), w*c_h/(w*h + (c_w-w)*c_h), similarity)
+  similarity = tf.where(tf.logical_and(c_w <= w, c_h >= h), c_w*h/(w*h + c_w*(c_h-h)), similarity)
+  return tf.squeeze(similarity, axis = -1)
 
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
@@ -46,13 +57,13 @@ class AnchorKMeans:
     clusters = tf.reshape(clusters, (n, self._k, -1))
     clusters = tf.cast(clusters, tf.float32)
 
-    zeros = tf.cast(tf.zeros(boxes.shape), dtype=tf.float32)
+    # zeros = tf.cast(tf.zeros(boxes.shape), dtype=tf.float32)
 
-    boxes = tf.concat([zeros, boxes], axis=-1)
-    clusters = tf.concat([zeros, clusters], axis=-1)
-    return compute_iou(boxes, clusters)
+    # boxes = tf.concat([zeros, boxes], axis=-1)
+    # clusters = tf.concat([zeros, clusters], axis=-1)
+    return IOU(boxes, clusters)
 
-  def get_box_from_dataset(self, dataset):
+  def get_box_from_dataset(self, dataset, image_w = 512):
     box_ls = None
     if not isinstance(dataset, list):
       dataset = [dataset]

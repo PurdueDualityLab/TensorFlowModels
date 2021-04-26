@@ -9,7 +9,7 @@ task:
   model:
     dropout_rate: 0.5
     norm_activation:
-      use_sync_bn: false
+      use_sync_bn: true
     backbone:
       resnet_3d:
         block_specs: !!python/tuple
