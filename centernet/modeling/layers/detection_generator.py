@@ -223,7 +223,6 @@ class CenterNetLayer(ks.Model):
                 channel_indices, 
                 height_width_predictions,
                 offset_predictions,
-                batch_size,
                 num_boxes):
     """ Organizes prediction information into the final bounding boxes.
 
@@ -242,7 +241,6 @@ class CenterNetLayer(ks.Model):
         containing the object size predictions.
       offset_predictions: A Tensor with shape [batch_size, height, width, 2] 
         containing the object local offset predictions.
-      batch_size: An integer for the batch size of the input.
       num_boxes: The number of boxes.
 
     Returns:
@@ -259,7 +257,7 @@ class CenterNetLayer(ks.Model):
 
     # shapes of heatmap output
     shape = tf.shape(height_width_predictions)
-    height, width = shape[1], shape[2]
+    batch_size, height, width = shape[0], shape[1], shape[2]
 
     # combined indices dtype=int32
     combined_indices = tf.stack([
@@ -303,6 +301,15 @@ class CenterNetLayer(ks.Model):
     boxes = tf.stack([ymin, xmin, ymax, xmax], axis=2)
 
     return boxes, detection_classes, detection_scores, num_detections
+  
+  def convert_strided_predictions_to_normalized_boxes(self,
+                                                      boxes, 
+                                                      stride=4.0,
+                                                      true_image_dims=512):
+    boxes = boxes * tf.cast(stride, boxes.dtype)
+    boxes = boxes / tf.cast(true_image_dims, boxes.dtype)
+    boxes = tf.clip_by_value(boxes, 0.0, 1.0)
+    return boxes
 
   def call(self, inputs):
     # Get heatmaps from decoded outputs via final hourglass stack output
@@ -310,35 +317,29 @@ class CenterNetLayer(ks.Model):
     all_ct_sizes = inputs['ct_size']
     all_ct_offsets = inputs['ct_offset']
     
-    # Heatmaps below are all dtype=float32
     ct_heatmaps = all_ct_heatmaps[-1]
     ct_sizes = all_ct_sizes[-1]
     ct_offsets = all_ct_offsets[-1]
     
     shape = tf.shape(ct_heatmaps)
 
-    # Values below from shape array are all dtype=int32
     batch_size, height, width, num_channels = shape[0], shape[1], shape[2], shape[3]
     
-    # Resulting peaks from process_heatmap are dtype=float32
     # Process heatmaps using 3x3 max pool and applying sigmoid
     peaks = self.process_heatmap(ct_heatmaps, 
       kernel_size=self._peak_extract_kernel_size, 
       center_thresh=self._center_thresh)
     
-    # scores are dtype=float32, y, x, and channel indices are dtype=int32
     # Get top scores along with their x, y, and class
     scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
       batch_size, width, num_channels, k=self._max_detections)
     
-    # boxes and scores are dtype=float32, classes and num_dets are dtype=int32
     # Parse the score and indices into bounding boxes
     boxes, classes, scores, num_det = self.get_boxes(scores, 
-      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, batch_size, self._max_detections)
+      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, self._max_detections)
     
     # Normalize bounding boxes
-    boxes = boxes / tf.cast(height, boxes.dtype)
-    boxes = tf.clip_by_value(boxes, 0.0, 1.0)
+    boxes = self.convert_strided_predictions_to_normalized_boxes(boxes)
 
     # Apply nms 
     if self._use_nms:

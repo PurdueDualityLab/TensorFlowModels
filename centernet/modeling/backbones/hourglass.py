@@ -52,7 +52,7 @@ class Hourglass(tf.keras.Model):
         filters=input_channel_dims,
         kernel_size=prelayer_kernel_size,
         strides=prelayer_strides,
-        padding='same',
+        padding='valid',
         activation='relu',
     )(x_inter)
     x_inter = official_nn_blocks.ResidualBlock(
