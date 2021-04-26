@@ -96,7 +96,6 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 | Yolov4-sam | 608 |--ms     | 30        | N/A |  
 | Yolov4-csp | 512 |--ms     | 60        | N/A | 
 | Yolov4-tiny | 416 |--ms     | 165        | N/A |  
-
 | Yolov4-p5 | 896 |--ms     | N/A        | N/A |  
 | Yolov4-p6 | 1280 |--ms     | N/A        | N/A |  
 | Yolov4-p7 | 1536 |--ms     | N/A        | N/A | 
