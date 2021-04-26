@@ -2,18 +2,18 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  load_darknet_weights: false
   model:
     num_classes: 1000
     input_size: [256, 256, 3]
     backbone:
       type: 'darknet'
       darknet:
-        model_id: 'csp-large'
+        model_id: 'cspdarknet53'
+        dilate: True
     norm_activation:
       activation: 'mish'  
       use_sync_bn: true
-    min_level: 3
+    min_level: 2
     max_level: 5
     subdivisions: 1
     darknet_weights_file: ''
@@ -67,3 +67,4 @@ trainer:
       type: 'linear'
       linear:
         warmup_steps: 250 #learning rate rises from 0 to 0.1 over 1000 steps
+

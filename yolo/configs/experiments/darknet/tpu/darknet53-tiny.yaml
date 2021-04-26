@@ -2,22 +2,17 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  load_darknet_weights: false
   model:
     num_classes: 1000
-    input_size: [256, 256, 3]
+    input_size: [416, 416, 3]
     backbone:
       type: 'darknet'
       darknet:
-        model_id: 'csp-large'
+        model_id: 'cspdarknettiny'
     norm_activation:
-      activation: 'mish'  
+      activation: 'leaky'  
       use_sync_bn: true
-    min_level: 3
-    max_level: 5
     subdivisions: 1
-    darknet_weights_file: ''
-    darknet_weights_cfg: ''
   losses:
     l2_weight_decay: 0.0005
     one_hot: True

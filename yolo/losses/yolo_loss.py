@@ -478,7 +478,6 @@ class Yolo_Loss(object):
     # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
     # iou *= mask
 
-
     # cconfidence is low
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
@@ -542,11 +541,6 @@ class Yolo_Loss(object):
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
       true_conf = tf.where(iou_mask, iou_, true_conf)
-      
-      # true_conf = tf.where(
-      #     tf.logical_and(true_conf == 1.0, iou_ > self._ignore_thresh), iou_,
-      #     true_conf)
-      # true_conf = tf.where(true_conf == 0.0, iou_, true_conf)
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)

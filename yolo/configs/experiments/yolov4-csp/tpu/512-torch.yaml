@@ -24,7 +24,7 @@ task:
              '[142.0, 110.0]', 
              '[192.0, 243.0]', 
              '[459.0, 401.0]']
-    _input_size: [512, 512, 3]
+    _input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -85,9 +85,9 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
+      image_w: 640
+      image_h: 640
+      min_process_size: 640
       jitter_im: 0.2
       aug_scale_aspect: 0.0
       aug_scale_min: 0.5
@@ -100,7 +100,7 @@ task:
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
-      use_scale_xy: False
+      use_scale_xy: True
       letter_box: True
       anchor_thresh: 0.2
       mosaic: 
@@ -117,10 +117,10 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
+      image_w: 640
+      image_h: 640
       fixed_size: True
-      use_scale_xy: False
+      use_scale_xy: True
       letter_box: True
       anchor_thresh: 0.2
   weight_decay: 0.0005
