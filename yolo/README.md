@@ -92,15 +92,22 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 | Yolov3 | 416 |35ms     | 40        | 59.7% |  
 | Yolov3-spp | 608 |40ms     | 30        | 61.7% |
 | Yolov3-tiny | 416 |20ms     | 60        | not tested yet |   
-| Yolov4 | 416 |--ms     | 60        | not tested yet |  
+| Yolov4 | 512 |--ms     | 60        | 62.25% |  
+| Yolov4-sam | 608 |--ms     | 30        | N/A |  
+| Yolov4-csp | 512 |--ms     | 60        | N/A | 
+| Yolov4-tiny | 416 |--ms     | 165        | N/A |  
+
+| Yolov4-p5 | 896 |--ms     | N/A        | N/A |  
+| Yolov4-p6 | 1280 |--ms     | N/A        | N/A |  
+| Yolov4-p7 | 1536 |--ms     | N/A        | N/A | 
 
 
 > ### Image Classification  
 >  
 > | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
 > |------------|----------|----------------|----------------|  
-> | Yolov3 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 70% | 90% |  
-> | Yolov4 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 70% | 90% |  
+> | CSPDarknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 77% | 94% |  
+> | Darknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A |  
 
 ## Requirements
 
