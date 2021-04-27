@@ -549,8 +549,9 @@ class Yolo_Loss(object):
     else:
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
-      iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
-      true_conf = tf.where(iou_mask, iou_, true_conf)
+      iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
+      #true_conf = tf.where(iou_mask, iou_, true_conf)
+      true_conf = iou_ #tf.where(tf.logical_and(iou_ - tf.squeeze(pred_conf, axis = -1) == 0, true_conf == 1), true_conf, iou_)
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
@@ -798,6 +799,7 @@ class Yolo_Loss(object):
     if self._cls_normalizer > 0:
       # cls_normalizer is only applied to the true label
       # for indexs wit no object the normalizer is not applied
+      # also not applied if class multipliers (not used, not currently support)
       class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
