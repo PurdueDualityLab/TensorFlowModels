@@ -468,13 +468,17 @@ class Yolo_Loss(object):
     class_slice = tf.expand_dims(class_slice, axis=1)
     class_slice = tf.expand_dims(class_slice, axis=1)
     class_slice = tf.expand_dims(class_slice, axis=1)
+
     class_slice = tf.one_hot(
         tf.cast(class_slice, tf.int32),
         depth=tf.shape(pred_classes_max)[-1],
         dtype=pred_classes_max.dtype)
 
+    # tf.print(tf.reduce_sum(class_slice, axis = -1))
+
     pred_boxes = tf.expand_dims(pred_boxes_, axis=-3)
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
+
 
     # mask off zero boxes
     # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
@@ -484,7 +488,10 @@ class Yolo_Loss(object):
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
     matched_classes = tf.equal(class_slice, pred_classes_max)
+    matched_classes = tf.logical_and(matched_classes,
+                                    tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
+
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)

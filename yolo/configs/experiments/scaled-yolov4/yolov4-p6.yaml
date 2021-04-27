@@ -34,7 +34,7 @@ task:
              '[616,618]', 
              '[1024,1024]']
     _input_size: [1280, 1280, 3]
-    boxes_per_scale: 3
+    boxes_per_scale: 4
     max_level: 6
     min_level: 3
     use_sam: false
