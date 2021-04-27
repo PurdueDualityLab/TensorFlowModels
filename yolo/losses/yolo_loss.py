@@ -581,7 +581,7 @@ class Yolo_Loss(object):
     grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(grid)
 
-  def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
+  def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
@@ -794,6 +794,11 @@ class Yolo_Loss(object):
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
         self._label_smoothing)
+    
+    if self._cls_normalizer > 0:
+      # cls_normalizer is only applied to the true label
+      # for indexs wit no object the normalizer is not applied
+      class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
@@ -806,7 +811,7 @@ class Yolo_Loss(object):
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
     # box_loss *= self._iou_normalizer
-    class_loss *= self._cls_normalizer
+    # class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
     loss = box_loss + class_loss + conf_loss
@@ -824,7 +829,7 @@ class Yolo_Loss(object):
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum:
-      return self.call_pytorch(true_counts, inds, y_true, boxes, classes,
+      return self.call_scaled(true_counts, inds, y_true, boxes, classes,
                                y_pred)
     else:
       return self.call_darknet(true_counts, inds, y_true, boxes, classes,
