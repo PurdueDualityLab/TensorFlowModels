@@ -552,10 +552,10 @@ class Yolo_Loss(object):
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
       # true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
-      true_conf = tf.where(
-              tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
-                                          true_conf == 1), true_conf, iou_)
+      true_conf = iou_
+      # true_conf = tf.where(
+      #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
+      #                                     true_conf == 1), true_conf, iou_)
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
