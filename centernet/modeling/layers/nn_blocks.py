@@ -18,194 +18,6 @@ class Identity(tf.keras.layers.Layer):
   def call(self, input):
     return input
 
-
-# @tf.keras.utils.register_keras_serializable(package='centernet')
-# class ConvBN(tf.keras.layers.Layer):
-#   """
-#     Modified Convolution layer to match that of the DarkNet Library.
-#     The Layer is a standards combination of Conv BatchNorm Activation,
-#     however, the use of bias in the conv is determined by the use of batch
-#     normalization.
-#     Cross Stage Partial networks (CSPNets) were proposed in:
-#     [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu,
-#           Ping-Yang Chen, Jun-Wei Hsieh
-#         CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
-#           arXiv:1911.11929
-#     Args:
-#       filters: integer for output depth, or the number of features to learn
-#       kernel_size: integer or tuple for the shape of the weight matrix or kernel
-#         to learn
-#       strides: integer of tuple how much to move the kernel after each kernel
-#         use
-#       padding: string 'valid' or 'same', if same, then pad the image, else do
-#         not
-#       dialtion_rate: tuple to indicate how much to modulate kernel weights and
-#         how many pixels in a feature map to skip
-#       kernel_initializer: string to indicate which function to use to initialize
-#         weights
-#       bias_initializer: string to indicate which function to use to initialize
-#         bias
-#       kernel_regularizer: string to indicate which function to use to
-#         regularizer weights
-#       bias_regularizer: string to indicate which function to use to regularizer
-#         bias
-#       use_bn: boolean for whether to use batch normalization
-#       use_sync_bn: boolean for whether sync batch normalization statistics
-#         of all batch norm layers to the models global statistics
-#         (across all input batches)
-#       norm_momentum: float for moment to use for batch normalization
-#       norm_epsilon: float for batch normalization epsilon
-#       activation: string or None for activation function to use in layer,
-#         if None activation is replaced by linear
-#       leaky_alpha: float to use as alpha if activation function is leaky
-#       **kwargs: Keyword Arguments
-#     """
-
-#   def __init__(self,
-#                filters=1,
-#                kernel_size=(1, 1),
-#                strides=(1, 1),
-#                padding='same',
-#                dilation_rate=(1, 1),
-#                kernel_initializer='glorot_uniform',
-#                bias_initializer='zeros',
-#                subdivisions=1,
-#                bias_regularizer=None,
-#                kernel_regularizer=None,
-#                use_bn=True,
-#                use_sync_bn=False,
-#                norm_momentum=0.99,
-#                norm_epsilon=0.001,
-#                activation='leaky',
-#                leaky_alpha=0.1,
-#                **kwargs):
-
-#     # convolution params
-#     self._filters = filters
-#     self._kernel_size = kernel_size
-#     self._strides = strides
-#     self._padding = padding
-#     self._dilation_rate = dilation_rate
-#     self._kernel_initializer = kernel_initializer
-#     self._bias_initializer = bias_initializer
-#     self._kernel_regularizer = kernel_regularizer
-
-#     self._bias_regularizer = bias_regularizer
-#     self._subdivisions = subdivisions
-
-#     # batch normalization params
-#     self._use_bn = use_bn
-#     self._use_sync_bn = use_sync_bn
-#     self._norm_momentum = norm_momentum
-#     self._norm_epsilon = norm_epsilon
-
-#     if tf.keras.backend.image_data_format() == 'channels_last':
-#       # format: (batch_size, height, width, channels)
-#       self._bn_axis = -1
-#     else:
-#       # format: (batch_size, channels, width, height)
-#       self._bn_axis = 1
-
-#     # activation params
-#     self._activation = activation
-#     self._leaky_alpha = leaky_alpha
-
-#     super().__init__(**kwargs)
-
-#   def build(self, input_shape):
-#     use_bias = not self._use_bn
-
-#     if not TPU_BASE:
-#       kernel_size = self._kernel_size if isinstance(
-#           self._kernel_size, int) else self._kernel_size[0]
-#       dilation_rate = self._dilation_rate if isinstance(
-#           self._dilation_rate, int) else self._dilation_rate[0]
-#       if self._padding == 'same' and kernel_size != 1:
-#         padding = (dilation_rate * (kernel_size - 1))
-#         left_shift = padding // 2
-#         self._paddings = tf.constant([[0, 0], [left_shift, left_shift],
-#                                       [left_shift, left_shift], [0, 0]])
-#         # self._zeropad = tf.keras.layers.ZeroPadding2D()
-#       else:
-#         self._paddings = tf.constant([[0, 0], [0, 0], [0, 0], [0, 0]])
-
-#       self.conv = tf.keras.layers.Conv2D(
-#           filters=self._filters,
-#           kernel_size=self._kernel_size,
-#           strides=self._strides,
-#           padding='valid',
-#           dilation_rate=self._dilation_rate,
-#           use_bias=use_bias,
-#           kernel_initializer=self._kernel_initializer,
-#           bias_initializer=self._bias_initializer,
-#           kernel_regularizer=self._kernel_regularizer,
-#           bias_regularizer=self._bias_regularizer)
-#     else:
-#       self.conv = tf.keras.layers.Conv2D(
-#           filters=self._filters,
-#           kernel_size=self._kernel_size,
-#           strides=self._strides,
-#           padding=self._padding,  # 'valid',
-#           dilation_rate=self._dilation_rate,
-#           use_bias=use_bias,
-#           kernel_initializer=self._kernel_initializer,
-#           bias_initializer=self._bias_initializer,
-#           kernel_regularizer=self._kernel_regularizer,
-#           bias_regularizer=self._bias_regularizer)
-
-#     if self._use_bn:
-#       if self._use_sync_bn:
-#         self.bn = subnormalization.SubDivSyncBatchNormalization(
-#             subdivisions=self._subdivisions,
-#             momentum=self._norm_momentum,
-#             epsilon=self._norm_epsilon,
-#             axis=self._bn_axis)
-#       else:
-#         self.bn = subnormalization.SubDivBatchNormalization(
-#             subdivisions=self._subdivisions,
-#             momentum=self._norm_momentum,
-#             epsilon=self._norm_epsilon,
-#             axis=self._bn_axis)
-
-#     if self._activation == 'leaky':
-#       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
-#     elif self._activation == 'mish':
-#       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
-#     else:
-#       self._activation_fn = tf_utils.get_activation(
-#           self._activation)  # tf.keras.layers.Activation(self._activation)
-
-#   def call(self, x):
-#     if not TPU_BASE:
-#       x = tf.pad(x, self._paddings, mode='CONSTANT', constant_values=0)
-#     x = self.conv(x)
-#     if self._use_bn:
-#       x = self.bn(x)
-#     x = self._activation_fn(x)
-#     return x
-
-#   def get_config(self):
-#     # used to store/share parameters to reconstruct the model
-#     layer_config = {
-#         'filters': self._filters,
-#         'kernel_size': self._kernel_size,
-#         'strides': self._strides,
-#         'padding': self._padding,
-#         'dilation_rate': self._dilation_rate,
-#         'kernel_initializer': self._kernel_initializer,
-#         'bias_initializer': self._bias_initializer,
-#         'bias_regularizer': self._bias_regularizer,
-#         'kernel_regularizer': self._kernel_regularizer,
-#         'use_bn': self._use_bn,
-#         'use_sync_bn': self._use_sync_bn,
-#         'norm_momentum': self._norm_momentum,
-#         'norm_epsilon': self._norm_epsilon,
-#         'activation': self._activation,
-#         'leaky_alpha': self._leaky_alpha
-#     }
-#     layer_config.update(super().get_config())
-#     return layer_config
-
 @tf.keras.utils.register_keras_serializable(package='centernet')
 class CenterNetResidualBlock(tf.keras.layers.Layer):
   """A residual block."""
@@ -402,6 +214,46 @@ class ConvBN(tf.keras.layers.Layer):
                activation='leaky',
                leaky_alpha=0.1,
                **kwargs):
+    """
+    Modified Convolution layer based on the DarkNet Library, with changes
+    such that it is compatiable with the CenterNet backbone.
+    The Layer is a standards combination of Conv BatchNorm Activation,
+    however, the use of bias in the conv is determined by the use of batch
+    normalization.
+    Cross Stage Partial networks (CSPNets) were proposed in:
+    [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu,
+          Ping-Yang Chen, Jun-Wei Hsieh
+        CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
+          arXiv:1911.11929
+    Args:
+      filters: integer for output depth, or the number of features to learn
+      kernel_size: integer or tuple for the shape of the weight matrix or kernel
+        to learn
+      strides: integer of tuple how much to move the kernel after each kernel
+        use
+      padding: string 'valid' or 'same', if same, then pad the image, else do
+        not
+      dialtion_rate: tuple to indicate how much to modulate kernel weights and
+        how many pixels in a feature map to skip
+      kernel_initializer: string to indicate which function to use to initialize
+        weights
+      bias_initializer: string to indicate which function to use to initialize
+        bias
+      kernel_regularizer: string to indicate which function to use to
+        regularizer weights
+      bias_regularizer: string to indicate which function to use to regularizer
+        bias
+      use_bn: boolean for whether to use batch normalization
+      use_sync_bn: boolean for whether sync batch normalization statistics
+        of all batch norm layers to the models global statistics
+        (across all input batches)
+      norm_momentum: float for moment to use for batch normalization
+      norm_epsilon: float for batch normalization epsilon
+      activation: string or None for activation function to use in layer,
+        if None activation is replaced by linear
+      leaky_alpha: float to use as alpha if activation function is leaky
+      **kwargs: Keyword Arguments
+    """
 
     # convolution params
     self._filters = filters

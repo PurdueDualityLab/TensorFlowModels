@@ -3,9 +3,6 @@ import tensorflow.keras as ks
 
 from yolo.ops.nms_ops import nms
 
-# from tensorflow import keras as ks
-
-
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
 class CenterNetLayer(ks.Model):
@@ -108,10 +105,10 @@ class CenterNetLayer(ks.Model):
       feature_map_peaks = (
           feature_map * tf.cast(feature_map_peak_mask, feature_map.dtype))
 
-    # Zero out peaks whose scores do not exceed threshold
-    valid_peaks_mask = feature_map_peaks > center_thresh
+    # # Zero out peaks whose scores do not exceed threshold
+    # valid_peaks_mask = feature_map_peaks > center_thresh
 
-    feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, feature_map_peaks.dtype)
+    # feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, feature_map_peaks.dtype)
     
     return feature_map_peaks
   
@@ -293,8 +290,6 @@ class CenterNetLayer(ks.Model):
     x_indices = tf.cast(x_indices, dtype=widths.dtype)
 
     detection_classes = channel_indices + self._class_offset
-
-    num_detections = tf.reduce_sum(tf.cast(detection_scores > 0, dtype=tf.int32), axis=1)
     
     ymin = y_indices + y_offsets - heights / 2.0
     xmin = x_indices + x_offsets - widths / 2.0
@@ -307,7 +302,7 @@ class CenterNetLayer(ks.Model):
     xmax = tf.clip_by_value(xmax, 0., tf.cast(width, xmax.dtype))
     boxes = tf.stack([ymin, xmin, ymax, xmax], axis=2)
 
-    return boxes, detection_classes, detection_scores, num_detections
+    return boxes, detection_classes, detection_scores
   
   def convert_strided_predictions_to_normalized_boxes(self,
                                                       boxes):
@@ -340,7 +335,7 @@ class CenterNetLayer(ks.Model):
       batch_size, width, num_channels, k=self._max_detections)
     
     # Parse the score and indices into bounding boxes
-    boxes, classes, scores, num_det = self.get_boxes(scores, 
+    boxes, classes, scores = self.get_boxes(scores, 
       y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, self._max_detections)
     
     # Normalize bounding boxes

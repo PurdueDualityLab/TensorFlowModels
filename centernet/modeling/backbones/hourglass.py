@@ -119,7 +119,8 @@ class Hourglass(tf.keras.Model):
         # inters
         x_downsampled = nn_blocks.CenterNetResidualBlock(
             filters=inp_filters, use_projection=False, strides=1,
-            norm_momentum=BATCH_NORM_MOMENTUM, norm_epsilon=BATCH_NORM_EPSILON
+            use_sync_bn=True, norm_momentum=BATCH_NORM_MOMENTUM, 
+            norm_epsilon=BATCH_NORM_EPSILON
         )(x_downsampled)
     # yapf: enable
 
