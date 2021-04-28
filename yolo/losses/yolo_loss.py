@@ -203,10 +203,10 @@ def get_predicted_box(width,
 # no ops in this fn should have grads propagated
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
-  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
+  # scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
-  # pred_xy = tf.math.sigmoid(pred_xy)
-  # pred_wh = tf.math.sigmoid(pred_wh)
+  pred_xy = tf.math.sigmoid(pred_xy)
+  pred_wh = tf.math.sigmoid(pred_wh)
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy / scaler
@@ -258,10 +258,10 @@ def get_predicted_box_newcords(width,
                                darknet=False,
                                max_delta=5.0,
                                normalizer=1.0):
-  pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])
-  pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
-  # pred_xy = unscaled_box[..., 0:2]
-  # pred_wh = unscaled_box[..., 2:4]
+  # pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])
+  # pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
+  pred_xy = unscaled_box[..., 0:2]
+  pred_wh = unscaled_box[..., 2:4]
 
   if darknet:
     # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
@@ -550,7 +550,8 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
-      #true_conf = tf.where(iou_mask, iou_, true_conf)
+      # true_conf = tf.where(iou_mask, iou_, true_conf)
+      # true_conf = iou_
       true_conf = tf.where(
               tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
                                           true_conf == 1), true_conf, iou_)
@@ -718,10 +719,10 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first
     #    but the sigmoid, if it is not enabled, they do not use the gradient of
     #    the sigmoid
-    # if self._objectness_smooth > 0.0:
-    #   # if smoothing is enabled they for some reason
-    #   # take the sigmoid many times
-    #   y_pred = grad_sigmoid(y_pred)
+    if self._new_cords > 0.0:
+      # if smoothing is enabled they for some reason
+      # take the sigmoid many times
+      y_pred = grad_sigmoid(y_pred)
 
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
