@@ -167,6 +167,7 @@ class CenterNetLayer(hyperparams.Config):
   class_offset: int = 1
   net_down_scale: int = 4
   input_image_dims: int = 512
+  use_reduction_sum: bool = True
 
 @dataclasses.dataclass
 class CenterNetDetection(hyperparams.Config):
