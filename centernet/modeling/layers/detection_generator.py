@@ -105,11 +105,6 @@ class CenterNetLayer(ks.Model):
       feature_map_peaks = (
           feature_map * tf.cast(feature_map_peak_mask, feature_map.dtype))
 
-    # # Zero out peaks whose scores do not exceed threshold
-    # valid_peaks_mask = feature_map_peaks > center_thresh
-
-    # feature_map_peaks = feature_map_peaks * tf.cast(valid_peaks_mask, feature_map_peaks.dtype)
-    
     return feature_map_peaks
   
   def get_row_col_channel_indices_from_flattened_indices(self,
@@ -290,7 +285,6 @@ class CenterNetLayer(ks.Model):
     x_indices = tf.cast(x_indices, dtype=widths.dtype)
 
     detection_classes = channel_indices + self._class_offset
-    
     ymin = y_indices + y_offsets - heights / 2.0
     xmin = x_indices + x_offsets - widths / 2.0
     ymax = y_indices + y_offsets + heights / 2.0
