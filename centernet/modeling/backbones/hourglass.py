@@ -4,11 +4,12 @@ import tensorflow as tf
 
 from centernet.configs import backbones as cfg
 from centernet.modeling.layers import nn_blocks
-# from official.vision.beta.modeling.backbones import factory
-from official.vision.beta.modeling.layers import \
-    nn_blocks as official_nn_blocks
+# from official.vision.beta.modeling.layers import \
+#     nn_blocks as official_nn_blocks
 from utils import register
 
+BATCH_NORM_MOMENTUM = 0.1
+BATCH_NORM_EPSILON = 1e-5
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
 class Hourglass(tf.keras.Model):
@@ -34,12 +35,10 @@ class Hourglass(tf.keras.Model):
     """
     # yapf: disable
     input = tf.keras.layers.Input(shape=input_specs.shape[1:], name='input')
-    x_inter = input
 
-    # Create some intermediate and postlayers to generate the heatmaps
     inp_filters = channel_dims_per_stage[0]
 
-    # Create prelayers if downsampling input
+    # Create downsampling layers
     if initial_downsample:
       prelayer_kernel_size = 7
       prelayer_strides = 2
@@ -47,17 +46,24 @@ class Hourglass(tf.keras.Model):
       prelayer_kernel_size = 3
       prelayer_strides = 1
 
-    x_inter = nn_blocks.ConvBN(
-        filters=input_channel_dims,
-        kernel_size=prelayer_kernel_size,
-        strides=prelayer_strides,
-        padding='valid',
-        activation='relu',
-    )(x_inter)
-    x_inter = official_nn_blocks.ResidualBlock(
-        filters=inp_filters, use_projection=True, strides=prelayer_strides,
-    )(x_inter)
+    x_downsampled = nn_blocks.ConvBN(filters=input_channel_dims,
+                                     kernel_size=prelayer_kernel_size,
+                                     strides=prelayer_strides,
+                                     padding='valid',
+                                     activation='relu',
+                                     use_sync_bn=True,
+                                     norm_momentum=BATCH_NORM_MOMENTUM,
+                                     norm_epsilon=BATCH_NORM_EPSILON)(input)
 
+    x_downsampled = nn_blocks.CenterNetResidualBlock(
+      filters=inp_filters, 
+      use_projection=True, 
+      strides=prelayer_strides,
+      use_sync_bn=True,
+      norm_momentum=BATCH_NORM_MOMENTUM, 
+      norm_epsilon=BATCH_NORM_EPSILON)(x_downsampled)
+
+    # Used for storing each hourglass heatmap output
     all_heatmaps = []
 
     for i in range(num_hourglasses):
@@ -65,15 +71,18 @@ class Hourglass(tf.keras.Model):
       x_hg = nn_blocks.HourglassBlock(
           channel_dims_per_stage=channel_dims_per_stage,
           blocks_per_stage=blocks_per_stage,
-      )(x_inter)
+      )(x_downsampled)
 
       # cnvs
       x_hg = nn_blocks.ConvBN(
           filters=inp_filters,
           kernel_size=(3, 3),
           strides=(1, 1),
-          padding='same',
+          padding='valid',
           activation='relu',
+          use_sync_bn=True,
+          norm_momentum=BATCH_NORM_MOMENTUM,
+          norm_epsilon=BATCH_NORM_EPSILON
       )(x_hg)
 
       all_heatmaps.append(x_hg)
@@ -86,8 +95,11 @@ class Hourglass(tf.keras.Model):
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
-            activation='linear'
-        )(x_inter)
+            activation='identity',
+            use_sync_bn=True,
+            norm_momentum=BATCH_NORM_MOMENTUM,
+            norm_epsilon=BATCH_NORM_EPSILON
+        )(x_downsampled)
 
         # inters_
         inter_hg_conv2 = nn_blocks.ConvBN(
@@ -95,16 +107,20 @@ class Hourglass(tf.keras.Model):
             kernel_size=(1, 1),
             strides=(1, 1),
             padding='same',
-            activation='linear'
+            activation='identity',
+            use_sync_bn=True,
+            norm_momentum=BATCH_NORM_MOMENTUM,
+            norm_epsilon=BATCH_NORM_EPSILON
         )(x_hg)
 
-        x_inter = tf.keras.layers.Add()([inter_hg_conv1, inter_hg_conv2])
-        x_inter = tf.keras.layers.ReLU()(x_inter)
+        x_downsampled = tf.keras.layers.Add()([inter_hg_conv1, inter_hg_conv2])
+        x_downsampled = tf.keras.layers.ReLU()(x_downsampled)
 
         # inters
-        x_inter = official_nn_blocks.ResidualBlock(
-            filters=inp_filters, use_projection=False, strides=1
-        )(x_inter)
+        x_downsampled = nn_blocks.CenterNetResidualBlock(
+            filters=inp_filters, use_projection=False, strides=1,
+            norm_momentum=BATCH_NORM_MOMENTUM, norm_epsilon=BATCH_NORM_EPSILON
+        )(x_downsampled)
     # yapf: enable
 
     super().__init__(inputs=input, outputs=all_heatmaps, **kwargs)

@@ -356,11 +356,11 @@ class CenterNetLayer(ks.Model):
         confidence=scores, k=self._max_detections, limit_pre_thresh=True,
         pre_nms_thresh=self._center_thresh, nms_thresh=self._iou_thresh)
 
-    num_dets = tf.reduce_sum(tf.cast(scores > 0, dtype=tf.int32), axis=1)
+    num_det = tf.reduce_sum(tf.cast(scores > 0, dtype=tf.int32), axis=1)
 
     return {
       'bbox': boxes,
       'classes': classes,
       'confidence': scores,
-      'num_dets': num_dets
+      'num_dets': num_det
     }

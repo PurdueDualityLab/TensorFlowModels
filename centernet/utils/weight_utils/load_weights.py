@@ -3,8 +3,9 @@ import tensorflow as tf
 
 from centernet.configs.centernet import CenterNetTask
 from centernet.modeling.CenterNet import build_centernet
-from centernet.modeling.layers.nn_blocks import (CenterNetDecoderConv, ConvBN,
-                                                 HourglassBlock)
+from centernet.modeling.layers.nn_blocks import (CenterNetDecoderConv,
+                                                 CenterNetResidualBlock,
+                                                 ConvBN, HourglassBlock)
 from centernet.utils.weight_utils.config_classes import (convBnCFG,
                                                          decoderConvCFG,
                                                          hourglassCFG,
@@ -13,7 +14,6 @@ from centernet.utils.weight_utils.config_data import (BackboneConfigData,
                                                       DecoderConfigData)
 from centernet.utils.weight_utils.tf_to_dict import (
     get_model_weights_as_dict, write_dict_as_tree)
-from official.vision.beta.modeling.layers.nn_blocks import ResidualBlock
 
 CKPT_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
 SAVED_MODEL_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\saved_model'
@@ -73,11 +73,11 @@ def load_weights_backbone(backbone, weights_dict, backbone_name):
   backbone_layers = backbone.layers
   cfgs = get_backbone_layer_cfgs(weights_dict, backbone_name)
   n_weights_total = 0
-
+  
   cfg = cfgs.pop(0)
   for i in range(len(backbone_layers)):
     layer = backbone_layers[i]    
-    if isinstance(layer, (ConvBN, HourglassBlock, ResidualBlock)):
+    if isinstance(layer, (ConvBN, HourglassBlock, CenterNetResidualBlock)):
       n_weights = cfg.load_weights(layer)
       print("Loading weights for: {}, weights loaded: {}".format(cfg, n_weights))
       n_weights_total += n_weights
