@@ -25,7 +25,13 @@ class ODAPIDetectionGenerator(tf.keras.Model):
                                       inputs['ct_offset'][-1]))
     boxes = convert_strided_predictions_to_normalized_boxes(
           boxes_strided, 4)
-    return boxes
+    return {
+      'bbox': boxes,
+      'classes': channel_indices,
+      'confidence': detection_scores,
+      'num_dets': num_detections
+    }
+
 
 def row_col_channel_indices_from_flattened_indices(indices, num_cols,
                                                    num_channels):

@@ -17,12 +17,12 @@ class CenterNetLayer(ks.Model):
                max_detections=100,
                peak_error=1e-6,
                peak_extract_kernel_size=3,
-               use_nms=False,
-               center_thresh=0.1,
-               iou_thresh=0.4,
                class_offset=1,
                net_down_scale=4,
                input_image_dims=512,
+               use_nms=False,
+               nms_pre_thresh=0.1,
+               nms_thresh=0.4,
                **kwargs):
     """
     Args:
@@ -36,9 +36,6 @@ class CenterNetLayer(ks.Model):
         locations that have responses greater than its 8-connected neighbors
       use_nms: Boolean for whether or not to use non-maximum suppression to
         filter the bounding boxes.
-      center_thresh: A float that sets the threshold for a heatmap peak to be 
-        considered a valid detection.
-      iou_thresh: A float for the threshold IOU when filtering bounding boxes.
       class_offset: An integer indicating to add an offset to the class 
         prediction if the dataset labels have been shifted.
       net_down_scale: An integer that specifies 
@@ -56,21 +53,20 @@ class CenterNetLayer(ks.Model):
     self._peak_error = peak_error
     self._peak_extract_kernel_size = peak_extract_kernel_size
 
-    # Non-maximum suppression parameters
-    self._use_nms = use_nms
-    self._center_thresh = center_thresh
-    self._iou_thresh = iou_thresh
-
+    # Used for adjusting class prediction
     self._class_offset = class_offset
 
     # Box normalization parameters
     self._net_down_scale = net_down_scale
     self._input_image_dims = input_image_dims
+
+    self._use_nms = use_nms
+    self._nms_pre_thresh = nms_pre_thresh
+    self._nms_thresh = nms_thresh
   
   def process_heatmap(self, 
                       feature_map,
-                      kernel_size,
-                      center_thresh):
+                      kernel_size):
     """ Processes the heatmap into peaks for box selection.
 
     Given a heatmap, this function first masks out nearby heatmap locations of
@@ -82,14 +78,12 @@ class CenterNetLayer(ks.Model):
       feature_map: A Tensor with shape [batch_size, height, width, num_classes] 
         which is the center heatmap predictions.
       kernel_size: An integer value for max-pool kernel size.
-      center_thresh: The threshold value for valid center location scores.
 
     Returns:
       A Tensor with the same shape as the input but with non-valid center
         prediction locations masked out.
     """
 
-    # all dtypes in this function are float32 or bool (for masks)
     feature_map = tf.math.sigmoid(feature_map)
     if not kernel_size or kernel_size == 1:
       feature_map_peaks = feature_map
@@ -201,7 +195,6 @@ class CenterNetLayer(ks.Model):
         channel indices corresponding to top_scores.
     """
     # Flatten the entire prediction per batch
-    # Now the feature_map_peaks are in shape [batch_size, num_classes * width * height]
     feature_map_peaks_flat = tf.reshape(feature_map_peaks, [batch_size, -1])
 
     # top_scores and top_indices have shape [batch_size, k]
@@ -216,7 +209,6 @@ class CenterNetLayer(ks.Model):
     return top_scores, y_indices, x_indices, channel_indices
 
   def get_boxes(self, 
-                detection_scores, 
                 y_indices, 
                 x_indices,
                 channel_indices, 
@@ -228,8 +220,6 @@ class CenterNetLayer(ks.Model):
     NOTE: Repurposed from Google OD API.
 
     Args:
-      detection_scores: A Tensor with shape [batch_size, k] containing the 
-        top-k scores.
       y_indices: A Tensor with shape [batch_size, k] containing the top-k 
         y-indices corresponding to top_scores.
       x_indices: A Tensor with shape [batch_size, k] containing the top-k 
@@ -247,8 +237,6 @@ class CenterNetLayer(ks.Model):
         bounding box coordinates in [y_min, x_min, y_max, x_max] format.
       detection_classes: A Tensor with shape [batch_size, 100] that gives the 
         class prediction for each box.
-      detection_scores: A Tensor with shape [batch_size, 100] that gives the 
-        confidence score for each box.
       num_detections: Number of non-zero confidence detections made.
     """
     # TF Lite does not support tf.gather with batch_dims > 0, so we need to use
@@ -296,7 +284,7 @@ class CenterNetLayer(ks.Model):
     xmax = tf.clip_by_value(xmax, 0., tf.cast(width, xmax.dtype))
     boxes = tf.stack([ymin, xmin, ymax, xmax], axis=2)
 
-    return boxes, detection_classes, detection_scores
+    return boxes, detection_classes
   
   def convert_strided_predictions_to_normalized_boxes(self,
                                                       boxes):
@@ -321,29 +309,27 @@ class CenterNetLayer(ks.Model):
     
     # Process heatmaps using 3x3 max pool and applying sigmoid
     peaks = self.process_heatmap(ct_heatmaps, 
-      kernel_size=self._peak_extract_kernel_size, 
-      center_thresh=self._center_thresh)
+      kernel_size=self._peak_extract_kernel_size)
     
     # Get top scores along with their x, y, and class
     scores, y_indices, x_indices, channel_indices = self.get_top_k_peaks(peaks, 
       batch_size, width, num_channels, k=self._max_detections)
     
     # Parse the score and indices into bounding boxes
-    boxes, classes, scores = self.get_boxes(scores, 
-      y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, self._max_detections)
+    boxes, classes = self.get_boxes(y_indices, x_indices, channel_indices, ct_sizes, ct_offsets, self._max_detections)
     
     # Normalize bounding boxes
     boxes = self.convert_strided_predictions_to_normalized_boxes(boxes)
 
     # Apply nms 
-    if self._use_nms:
-      boxes = tf.expand_dims(boxes, axis=-2)
-      multi_class_scores = tf.gather_nd(peaks, 
-        tf.stack([y_indices, x_indices], -1), batch_dims=1)
+    # if self._use_nms:
+    #   boxes = tf.expand_dims(boxes, axis=-2)
+    #   multi_class_scores = tf.gather_nd(peaks, 
+    #     tf.stack([y_indices, x_indices], -1), batch_dims=1)
 
-      boxes, _, scores = nms(boxes=boxes, classes=multi_class_scores, 
-        confidence=scores, k=self._max_detections, limit_pre_thresh=True,
-        pre_nms_thresh=self._center_thresh, nms_thresh=self._iou_thresh)
+    #   boxes, _, scores = nms(boxes=boxes, classes=multi_class_scores, 
+    #     confidence=scores, k=self._max_detections, limit_pre_thresh=True,
+    #     pre_nms_thresh=0.1, nms_thresh=0.4)
 
     num_det = tf.reduce_sum(tf.cast(scores > 0, dtype=tf.int32), axis=1)
 

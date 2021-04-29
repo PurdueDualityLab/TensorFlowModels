@@ -1,15 +1,33 @@
+"""
+This file contains the layers (Config objects) that are used for parsing the
+ODAPI checkpoint weights for CenterNet. 
+
+Currently, the parser is incomplete and has only been tested on  
+CenterNet Hourglass-104 512x512.
+"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, List, Tuple
 
 import numpy as np
+import tensorflow as tf
 
 
 class Config(ABC):
   def get_weights(self):
+    """
+    This function generates the weights needed to be loaded into the layer. 
+    """
     return None
   
-  def load_weights(self, layer):
+  def load_weights(self, layer: tf.keras.layers.Layer) -> int:
+    """
+    Given a layer, this function retrives the weights for that layer in an 
+    appropriate format, and loads them into the layer. Additionally, 
+    the number of weights loaded are returned. If the weights are in an
+    incorrect format, a ValueError will be raised by set_weights().
+    """
     weights = self.get_weights() 
     layer.set_weights(weights)
     n_weights = 0

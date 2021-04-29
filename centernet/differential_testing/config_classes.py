@@ -175,3 +175,30 @@ class ODAPIhourglassCFG(Config):
       n_weights += self.load_block_weights(inner_layer, inner_weights_dict)
     
     return n_weights
+  
+@dataclass
+class ODAPIdecoderConvCFG(Config):
+  weights_dict: Dict = field(repr=False, default=None)
+
+  conv_1_weights: np.array = field(repr=False, default=None)
+  conv_2_bias: np.array = field(repr=False, default=None)
+
+  conv_2_weights: np.array = field(repr=False, default=None)
+  conv_1_bias: np.array = field(repr=False, default=None)
+
+  def __post_init__(self):
+    conv_1_weights_dict = self.weights_dict['layer_with_weights-0'] 
+    conv_2_weights_dict = self.weights_dict['layer_with_weights-1'] 
+
+    self.conv_1_weights = conv_1_weights_dict['kernel']
+    self.conv_1_bias = conv_1_weights_dict['bias']
+    self.conv_2_weights = conv_2_weights_dict['kernel']
+    self.conv_2_bias = conv_2_weights_dict['bias']
+  
+  def get_weights(self):
+    return [
+      self.conv_1_weights,
+      self.conv_1_bias,
+      self.conv_2_weights,
+      self.conv_2_bias
+    ]

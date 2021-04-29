@@ -70,12 +70,12 @@ def build_centernet_filter(model_config):
   return CenterNetLayer(max_detections=model_config.filter.max_detections,
                         peak_error=model_config.filter.peak_error,
                         peak_extract_kernel_size=model_config.filter.peak_extract_kernel_size,
-                        use_nms=model_config.filter.use_nms,
-                        center_thresh=model_config.filter.center_thresh,
-                        iou_thresh=model_config.filter.iou_thresh,
                         class_offset=model_config.filter.class_offset,
                         net_down_scale=model_config.filter.net_down_scale,
-                        input_image_dims=model_config.filter.input_image_dims)
+                        input_image_dims=model_config.filter.input_image_dims,
+                        use_nms=model_config.filter.use_nms,
+                        nms_pre_thresh=model_config.filter.nms_pre_thresh,
+                        nms_thresh=model_config.filter.nms_thresh)
 
 def build_centernet_head(model_config):
   return None

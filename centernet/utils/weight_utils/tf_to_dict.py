@@ -1,3 +1,8 @@
+"""
+This file contains functions used to convert a TF checkpoint into a dictionary, 
+which streamlines the way of loading weights from one model to another.
+"""
+
 import tensorflow as tf
 
 

@@ -1,3 +1,8 @@
+"""
+This file contains functions used to load the ODAPI CenterNet checkpoint 
+weights into CenterNet model. 
+"""
+
 import numpy as np
 import tensorflow as tf
 

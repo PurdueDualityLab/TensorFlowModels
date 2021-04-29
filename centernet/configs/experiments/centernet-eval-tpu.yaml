@@ -17,10 +17,13 @@ task:
       max_detections: 100
       peak_error: 0.000001
       peak_extract_kernel_size: 3
-      use_nms: false
-      center_thresh: 0.1
-      iou_thresh: 0.4
       class_offset: 1
+      net_down_scale: 4  
+      input_image_dims: 512
+      use_nms: False
+      nms_pre_thresh: 0.1
+      nms_thresh: 0.4
+      use_reduction_sum: True
   validation_data:
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     global_batch_size: 8

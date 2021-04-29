@@ -161,12 +161,12 @@ class CenterNetLayer(hyperparams.Config):
   max_detections: int = 100
   peak_error: float = 1e-6
   peak_extract_kernel_size: int = 3
-  use_nms: bool = True
-  center_thresh: float = 0.1
-  iou_thresh: float = 0.4
   class_offset: int = 1
-  net_down_scale: int = 4
+  net_down_scale: int = 4  
   input_image_dims: int = 512
+  use_nms: bool = False
+  nms_pre_thresh: float = 0.1
+  nms_thresh: float = 0.4
   use_reduction_sum: bool = True
 
 @dataclasses.dataclass
