@@ -203,11 +203,10 @@ def get_predicted_box(width,
 # no ops in this fn should have grads propagated
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
-  
+  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
+
   # pred_xy = tf.math.sigmoid(pred_xy)
   # pred_wh = tf.math.sigmoid(pred_wh)
-  
-  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy / scaler
@@ -483,19 +482,19 @@ class Yolo_Loss(object):
 
     # mask off zero boxes
     # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
+    # iou *= mask
 
     # cconfidence is low
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
-    # mask = tf.transpose(mask, perm=(0, 1, 2, 4, 3))
     matched_classes = tf.equal(class_slice, pred_classes_max)
     matched_classes = tf.logical_and(matched_classes,
                                     tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
+    
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
-    # full_iou_mask = tf.logical_and(full_iou_mask, tf.cast(mask, full_iou_mask.dtype))
-
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
+
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
     if self._objectness_smooth:
@@ -721,7 +720,7 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first
     #    but the sigmoid, if it is not enabled, they do not use the gradient of
     #    the sigmoid
-    # if self._new_cords > 0.0:
+    # if self._objectness_smooth > 0.0:
     #   # if smoothing is enabled they for some reason
     #   # take the sigmoid many times
     #   y_pred = grad_sigmoid(y_pred)
@@ -791,7 +790,7 @@ class Yolo_Loss(object):
     reps = tf.stop_gradient(tf.where(reps == 0.0, tf.ones_like(reps), reps))
 
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
