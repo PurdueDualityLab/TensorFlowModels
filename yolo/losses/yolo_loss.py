@@ -62,9 +62,9 @@ def ce(values, labels):
 
 @tf.custom_gradient
 def grad_sigmoid(values):
-  #vals = tf.math.sigmoid(values)
+  t = tf.math.sigmoid(values)
   def delta(dy):
-    t = tf.math.sigmoid(values)
+    #t = tf.math.sigmoid(values)
     return dy * t * (1 - t)
 
   return values, delta
@@ -258,10 +258,12 @@ def get_predicted_box_newcords(width,
                                darknet=False,
                                max_delta=5.0,
                                normalizer=1.0):
-  pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])
-  pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
-  # pred_xy = unscaled_box[..., 0:2]
-  # pred_wh = unscaled_box[..., 2:4]
+  # pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])
+  # pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
+  pred_xy = unscaled_box[..., 0:2]
+  pred_wh = unscaled_box[..., 2:4]
+  pred_xy = tf.math.sigmoid(pred_xy)
+  pred_wh = tf.math.sigmoid(pred_wh)
 
   if darknet:
     # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
@@ -500,6 +502,7 @@ class Yolo_Loss(object):
     if self._objectness_smooth:
       iou_max = tf.transpose(iou, perm=(0, 1, 2, 4, 3))
       iou_max = iou_max * tf.cast(full_iou_mask, iou_max.dtype)
+      # iou_max = iou_max * tf.cast(matched_classes, iou_max.dtype)
       iou_max = tf.reduce_max(iou_max, axis=-1, keepdims=False)
       iou_max_ = tf.maximum(iou_max, iou_max_)
 
@@ -550,11 +553,14 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
-      true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
+      # true_conf = tf.where(iou_mask, iou_, true_conf)
+      # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(iou_))
+      # tf.print(tf.reduce_sum(tf.cast(iou_mask, tf.int32)), tf.reduce_sum(true_conf), summarize = -1)
+      true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
       #                                     true_conf == 1), true_conf, iou_)
+      
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
@@ -720,10 +726,10 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first
     #    but the sigmoid, if it is not enabled, they do not use the gradient of
     #    the sigmoid
-    # if self._objectness_smooth > 0.0:
-    #   # if smoothing is enabled they for some reason
-    #   # take the sigmoid many times
-    #   y_pred = grad_sigmoid(y_pred)
+    if self._new_cords:
+      # if smoothing is enabled they for some reason
+      # take the sigmoid many times
+      y_pred = grad_sigmoid(y_pred)
 
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
@@ -801,7 +807,7 @@ class Yolo_Loss(object):
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
         self._label_smoothing)
     
-    if self._cls_normalizer > 0:
+    if self._cls_normalizer < 1.0:
       # cls_normalizer is only applied to the true label
       # for indexs wit no object the normalizer is not applied
       # also not applied if class multipliers (not used, not currently support)
