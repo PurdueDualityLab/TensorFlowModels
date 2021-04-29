@@ -482,18 +482,18 @@ class Yolo_Loss(object):
 
 
     # mask off zero boxes
-    mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
+    # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
 
     # cconfidence is low
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
-    mask = tf.transpose(mask, perm=(0, 1, 2, 4, 3))
+    # mask = tf.transpose(mask, perm=(0, 1, 2, 4, 3))
     matched_classes = tf.equal(class_slice, pred_classes_max)
     matched_classes = tf.logical_and(matched_classes,
                                     tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
-    full_iou_mask = tf.logical_and(full_iou_mask, tf.cast(mask, full_iou_mask.dtype))
+    # full_iou_mask = tf.logical_and(full_iou_mask, tf.cast(mask, full_iou_mask.dtype))
 
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
@@ -616,7 +616,8 @@ class Yolo_Loss(object):
     sigmoid_conf = tf.sigmoid(pred_conf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
-                                                    anchor_grid, grid_points)
+                                                    anchor_grid, grid_points, 
+                                                    darknet=False)
 
     # num_objs = tf.cast(
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
@@ -760,7 +761,8 @@ class Yolo_Loss(object):
     # pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
-                                                    anchor_grid, grid_points, darknet=True)
+                                                    anchor_grid, grid_points, 
+                                                    darknet=True)
 
     (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
      obj_mask) = self._tiled_global_box_search(
