@@ -555,7 +555,7 @@ class Yolo_Loss(object):
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
       # true_conf = tf.where(iou_mask, iou_, true_conf)
       # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(iou_))
-      # tf.print(tf.reduce_sum(tf.cast(iou_mask, tf.int32)), tf.reduce_sum(true_conf), summarize = -1)
+      tf.print(tf.reduce_sum(tf.cast(iou_mask, tf.int32)), tf.reduce_sum(true_conf), summarize = -1)
       true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
@@ -726,10 +726,10 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first
     #    but the sigmoid, if it is not enabled, they do not use the gradient of
     #    the sigmoid
-    if self._new_cords:
-      # if smoothing is enabled they for some reason
-      # take the sigmoid many times
-      y_pred = grad_sigmoid(y_pred)
+    # if self._new_cords:
+    #   # if smoothing is enabled they for some reason
+    #   # take the sigmoid many times
+    #   y_pred = grad_sigmoid(y_pred)
 
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
