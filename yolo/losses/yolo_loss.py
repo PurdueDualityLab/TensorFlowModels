@@ -551,8 +551,8 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
-      true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
+      # true_conf = tf.where(iou_mask, iou_, true_conf)
+      true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
       #                                     true_conf == 1), true_conf, iou_)
@@ -791,7 +791,7 @@ class Yolo_Loss(object):
     reps = tf.stop_gradient(tf.where(reps == 0.0, tf.ones_like(reps), reps))
 
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
