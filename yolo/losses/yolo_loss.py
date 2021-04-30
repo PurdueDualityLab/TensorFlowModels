@@ -554,7 +554,6 @@ class Yolo_Loss(object):
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
       # true_conf = tf.where(iou_mask, iou_, true_conf)
       # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(iou_))
-      tf.print(tf.reduce_sum(tf.cast(iou_mask, tf.int32)), tf.reduce_sum(true_conf), summarize = -1)
       true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
@@ -801,6 +800,13 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     iou = tf.stop_gradient(iou)
     liou = tf.stop_gradient(liou)
+
+    if self._objectness_smooth > 0.0:
+      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
+      true_conf_ = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
+      true_conf_ = tf.squeeze(true_conf_, axis=-1)
+      true_conf = tf.where(true_conf_ > true_conf, true_conf_, true_conf)
 
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
