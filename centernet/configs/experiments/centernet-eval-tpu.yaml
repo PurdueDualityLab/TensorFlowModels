@@ -21,7 +21,7 @@ task:
       net_down_scale: 4  
       input_image_dims: 512
       use_nms: False
-      nms_pre_thresh: 0.1
+      nms_pre_thresh: 0.3
       nms_thresh: 0.4
       use_reduction_sum: True
   validation_data:

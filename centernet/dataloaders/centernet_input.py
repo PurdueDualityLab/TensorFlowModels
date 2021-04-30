@@ -320,16 +320,15 @@ class CenterNetParser(parser.Parser):
       images: the image tensor.
       labels: a dict of Tensors that contains labels.
     """
-
-    channel_means: [104.01362025, 114.03422265, 119.9165958]
-    channel_stds: [73.6027665 , 69.89082075, 70.9150767]
+    image = tf.cast(data['image'], dtype=tf.float32)
+    channel_means = [104.01362025, 114.03422265, 119.9165958] #bgr
+    channel_stds = [73.6027665 , 69.89082075, 70.9150767]     #bgr
     
-    red, green, blue = tf.unstack(image, axis=-1)
-    image = tf.stack([blue, green, red], axis=-1)
+    red, green, blue = tf.unstack(image, num=3, axis=2)
+    image = tf.stack([blue, green, red], axis=2)
 
     image = normalize_image(image, offset=channel_means, scale=channel_stds)
 
-    # image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
