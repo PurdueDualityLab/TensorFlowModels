@@ -552,9 +552,8 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
-      # true_conf = tf.where(iou_mask, iou_, true_conf)
-      # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(iou_))
-      true_conf = iou_
+      true_conf = tf.where(iou_mask, iou_, true_conf)
+      # true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
       #                                     true_conf == 1), true_conf, iou_)
@@ -675,12 +674,12 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
-    if self._objectness_smooth > 0.0:
-      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
-      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
-      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
-      true_conf = tf.squeeze(true_conf, axis=-1)
-      obj_mask = tf.ones_like(true_conf)
+    # if self._objectness_smooth > 0.0:
+    #   iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+    #   iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
+    #   true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
+    #   true_conf = tf.squeeze(true_conf, axis=-1)
+    #   obj_mask = tf.ones_like(true_conf)
 
     pred_class = math_ops.mul_no_nan(
         ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
@@ -750,18 +749,15 @@ class Yolo_Loss(object):
     grid_mask = true_conf
 
     # no gradient
-
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
     sigmoid_class = tf.sigmoid(pred_class)
-    # pred_class = class_gradient_trap(sigmoid_class, np.inf)
     pred_class = class_gradient_trap(pred_class, np.inf)
 
     sigmoid_conf = tf.sigmoid(pred_conf)
     sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
-    # pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points, 
@@ -811,7 +807,6 @@ class Yolo_Loss(object):
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
         self._label_smoothing)
-    
     if self._cls_normalizer < 1.0:
       # cls_normalizer is only applied to the true label
       # for indexs wit no object the normalizer is not applied
@@ -840,7 +835,10 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(class_loss)
 
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
-    avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
+    if self._objectness_smooth: 
+      avg_iou = self.avgiou(true_conf)
+    else:
+      avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
             precision50)
