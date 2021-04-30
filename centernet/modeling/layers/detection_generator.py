@@ -322,14 +322,14 @@ class CenterNetLayer(ks.Model):
     boxes = self.convert_strided_predictions_to_normalized_boxes(boxes)
 
     # Apply nms 
-    # if self._use_nms:
-    #   boxes = tf.expand_dims(boxes, axis=-2)
-    #   multi_class_scores = tf.gather_nd(peaks, 
-    #     tf.stack([y_indices, x_indices], -1), batch_dims=1)
+    if self._use_nms:
+      boxes = tf.expand_dims(boxes, axis=-2)
+      multi_class_scores = tf.gather_nd(peaks, 
+        tf.stack([y_indices, x_indices], -1), batch_dims=1)
 
-    #   boxes, _, scores = nms(boxes=boxes, classes=multi_class_scores, 
-    #     confidence=scores, k=self._max_detections, limit_pre_thresh=True,
-    #     pre_nms_thresh=0.1, nms_thresh=0.4)
+      boxes, _, scores = nms(boxes=boxes, classes=multi_class_scores, 
+        confidence=scores, k=self._max_detections, limit_pre_thresh=True,
+        pre_nms_thresh=0.1, nms_thresh=0.4)
 
     num_det = tf.reduce_sum(tf.cast(scores > 0, dtype=tf.int32), axis=1)
 

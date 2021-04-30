@@ -4,12 +4,8 @@ import tensorflow as tf
 
 from centernet.configs import backbones as cfg
 from centernet.modeling.layers import nn_blocks
-# from official.vision.beta.modeling.layers import \
-#     nn_blocks as official_nn_blocks
 from utils import register
 
-BATCH_NORM_MOMENTUM = 0.1
-BATCH_NORM_EPSILON = 1e-5
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
 class Hourglass(tf.keras.Model):
@@ -18,27 +14,35 @@ class Hourglass(tf.keras.Model):
   """
 
   def __init__(
-      self,
-      input_channel_dims: int,
-      channel_dims_per_stage: List[int],
-      blocks_per_stage: List[int],
-      num_hourglasses: int,
-      initial_downsample: bool = True,
-      input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
-      **kwargs):
+    self,
+    input_channel_dims: int,
+    channel_dims_per_stage: List[int],
+    blocks_per_stage: List[int],
+    num_hourglasses: int,
+    initial_downsample: bool = True,
+    norm_momentum=0.1,
+    norm_episilon=1e-5,
+    input_specs=tf.keras.layers.InputSpec(shape=[None, None, None, 3]),
+    **kwargs):
     """
     Args:
-        channel_dims_per_stage: list of filter sizes for Residual blocks
-        blocks_per_stage: list of residual block repetitions per down/upsample
-        num_hourglasses: integer, number of hourglass modules in backbone
-        pre_layers: tf.keras layer to process input before stacked hourglasses
+        input_channel_dims: integer, number of filters used to downsample the 
+          input image
+        channel_dims_per_stage: list, containing of number of filters for the
+          residual blocks in the hourglass blocks
+        blocks_per_stage: list of residual block repetitions to use in the
+          hourglass blocks
+        num_hourglasses: integer, number of hourglass blocks in backbone
+        initial_downsample: bool, whether or not to downsample the input
+        norm_momentum: float, momentum for the batch normalization layers
+        norm_episilon: float, epsilon for the batch normalization layers
     """
     # yapf: disable
     input = tf.keras.layers.Input(shape=input_specs.shape[1:], name='input')
 
     inp_filters = channel_dims_per_stage[0]
 
-    # Create downsampling layers
+    # Downsample the input
     if initial_downsample:
       prelayer_kernel_size = 7
       prelayer_strides = 2
@@ -46,81 +50,76 @@ class Hourglass(tf.keras.Model):
       prelayer_kernel_size = 3
       prelayer_strides = 1
 
-    x_downsampled = nn_blocks.ConvBN(filters=input_channel_dims,
-                                     kernel_size=prelayer_kernel_size,
-                                     strides=prelayer_strides,
-                                     padding='valid',
-                                     activation='relu',
-                                     use_sync_bn=True,
-                                     norm_momentum=BATCH_NORM_MOMENTUM,
-                                     norm_epsilon=BATCH_NORM_EPSILON)(input)
+    x_downsampled = nn_blocks.CenterNetConvBN(
+      filters=input_channel_dims,
+      kernel_size=prelayer_kernel_size,
+      strides=prelayer_strides,
+      padding='valid',
+      activation='relu',
+      use_sync_bn=True,
+      norm_momentum=norm_momentum,
+      norm_epsilon=norm_episilon)(input)
 
     x_downsampled = nn_blocks.CenterNetResidualBlock(
       filters=inp_filters, 
       use_projection=True, 
       strides=prelayer_strides,
       use_sync_bn=True,
-      norm_momentum=BATCH_NORM_MOMENTUM, 
-      norm_epsilon=BATCH_NORM_EPSILON)(x_downsampled)
+      norm_momentum=norm_momentum, 
+      norm_epsilon=norm_episilon)(x_downsampled)
 
-    # Used for storing each hourglass heatmap output
     all_heatmaps = []
-
     for i in range(num_hourglasses):
-      # Create hourglass stacks
+      # Create an hourglass stack
       x_hg = nn_blocks.HourglassBlock(
-          channel_dims_per_stage=channel_dims_per_stage,
-          blocks_per_stage=blocks_per_stage,
+        channel_dims_per_stage=channel_dims_per_stage,
+        blocks_per_stage=blocks_per_stage,
       )(x_downsampled)
 
-      # cnvs
-      x_hg = nn_blocks.ConvBN(
-          filters=inp_filters,
-          kernel_size=(3, 3),
-          strides=(1, 1),
-          padding='valid',
-          activation='relu',
-          use_sync_bn=True,
-          norm_momentum=BATCH_NORM_MOMENTUM,
-          norm_epsilon=BATCH_NORM_EPSILON
+      x_hg = nn_blocks.CenterNetConvBN(
+        filters=inp_filters,
+        kernel_size=(3, 3),
+        strides=(1, 1),
+        padding='valid',
+        activation='relu',
+        use_sync_bn=True,
+        norm_momentum=norm_momentum,
+        norm_epsilon=norm_episilon
       )(x_hg)
 
       all_heatmaps.append(x_hg)
 
-      # between hourglasses, we insert intermediate layers
+      # Intermediate conv and residual layers between hourglasses
       if i < num_hourglasses - 1:
-        # cnvs_
-        inter_hg_conv1 = nn_blocks.ConvBN(
-            filters=inp_filters,
-            kernel_size=(1, 1),
-            strides=(1, 1),
-            padding='same',
-            activation='identity',
-            use_sync_bn=True,
-            norm_momentum=BATCH_NORM_MOMENTUM,
-            norm_epsilon=BATCH_NORM_EPSILON
+        inter_hg_conv1 = nn_blocks.CenterNetConvBN(
+          filters=inp_filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          activation='identity',
+          use_sync_bn=True,
+          norm_momentum=norm_momentum,
+          norm_epsilon=norm_episilon
         )(x_downsampled)
 
-        # inters_
-        inter_hg_conv2 = nn_blocks.ConvBN(
-            filters=inp_filters,
-            kernel_size=(1, 1),
-            strides=(1, 1),
-            padding='same',
-            activation='identity',
-            use_sync_bn=True,
-            norm_momentum=BATCH_NORM_MOMENTUM,
-            norm_epsilon=BATCH_NORM_EPSILON
+        inter_hg_conv2 = nn_blocks.CenterNetConvBN(
+          filters=inp_filters,
+          kernel_size=(1, 1),
+          strides=(1, 1),
+          padding='same',
+          activation='identity',
+          use_sync_bn=True,
+          norm_momentum=norm_momentum,
+          norm_epsilon=norm_episilon
         )(x_hg)
 
         x_downsampled = tf.keras.layers.Add()([inter_hg_conv1, inter_hg_conv2])
         x_downsampled = tf.keras.layers.ReLU()(x_downsampled)
 
-        # inters
         x_downsampled = nn_blocks.CenterNetResidualBlock(
-            filters=inp_filters, use_projection=False, strides=1,
-            use_sync_bn=True, norm_momentum=BATCH_NORM_MOMENTUM, 
-            norm_epsilon=BATCH_NORM_EPSILON
+          filters=inp_filters, use_projection=False, strides=1,
+          use_sync_bn=True, norm_momentum=norm_momentum, 
+          norm_epsilon=norm_episilon
         )(x_downsampled)
     # yapf: enable
 
@@ -131,15 +130,19 @@ class Hourglass(tf.keras.Model):
     self._blocks_per_stage = blocks_per_stage
     self._num_hourglasses = num_hourglasses
     self._initial_downsample = initial_downsample
+    self._norm_momentum = norm_momentum
+    self._norm_episilon = norm_episilon
     self._output_specs = [hm.get_shape() for hm in all_heatmaps]
 
   def get_config(self):
     layer_config = {
-        'input_channel_dims': self._input_channel_dims,
-        'channel_dims_per_stage': self._channel_dims_per_stage,
-        'blocks_per_stage': self._blocks_per_stage,
-        'num_hourglasses': self._num_hourglasses,
-        'initial_downsample': self._initial_downsample
+      'input_channel_dims': self._input_channel_dims,
+      'channel_dims_per_stage': self._channel_dims_per_stage,
+      'blocks_per_stage': self._blocks_per_stage,
+      'num_hourglasses': self._num_hourglasses,
+      'initial_downsample': self._initial_downsample,
+      'norm_momentum': self._norm_momentum,
+      'norm_episilon': self._norm_episilon
     }
     layer_config.update(super().get_config())
     return layer_config
@@ -150,10 +153,9 @@ class Hourglass(tf.keras.Model):
 
 # @factory.register_backbone_builder('hourglass')
 @register.backbone('hourglass', cfg.Hourglass)
-def build_hourglass(
-    input_specs: tf.keras.layers.InputSpec,
-    model_config,
-    l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
+def build_hourglass(input_specs: tf.keras.layers.InputSpec,
+                    model_config,
+                    l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
   """Builds Hourglass backbone from a config."""
   backbone_type = model_config.backbone.type
   backbone_cfg = model_config.backbone.get()
@@ -161,9 +163,11 @@ def build_hourglass(
                                         f'{backbone_type}')
 
   return Hourglass(
-      input_channel_dims=backbone_cfg.input_channel_dims,
-      channel_dims_per_stage=backbone_cfg.channel_dims_per_stage,
-      blocks_per_stage=backbone_cfg.blocks_per_stage,
-      num_hourglasses=backbone_cfg.num_hourglasses,
-      initial_downsample=backbone_cfg.initial_downsample,
-      input_specs=input_specs)
+    input_channel_dims=backbone_cfg.input_channel_dims,
+    channel_dims_per_stage=backbone_cfg.channel_dims_per_stage,
+    blocks_per_stage=backbone_cfg.blocks_per_stage,
+    num_hourglasses=backbone_cfg.num_hourglasses,
+    initial_downsample=backbone_cfg.initial_downsample,
+    norm_momentum=backbone_cfg.norm_momentum,
+    norm_episilon=backbone_cfg.norm_episilon,
+    input_specs=input_specs)

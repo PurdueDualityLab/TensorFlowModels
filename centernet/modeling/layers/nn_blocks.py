@@ -1,13 +1,9 @@
 import tensorflow as tf
 
-from centernet.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import \
     nn_blocks as official_nn_blocks
 
-TPU_BASE = False
-BATCH_NORM_MOMENTUM = 0.1
-BATCH_NORM_EPSILON = 1e-5
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
 class Identity(tf.keras.layers.Layer):
@@ -37,7 +33,8 @@ class CenterNetResidualBlock(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                **kwargs):
-    """A residual block with BN after convolutions.
+    """A residual block with BN after convolutions. Modified with padding for 
+    the CenterNet model.
 
     Args:
       filters: `int` number of filters for the first two convolutions. Note that
@@ -195,7 +192,7 @@ class CenterNetResidualBlock(tf.keras.layers.Layer):
     return self._activation_fn(x + shortcut)
 
 @tf.keras.utils.register_keras_serializable(package='centernet')
-class ConvBN(tf.keras.layers.Layer):
+class CenterNetConvBN(tf.keras.layers.Layer):
   def __init__(self,
                filters=1,
                kernel_size=(1, 1),
@@ -219,7 +216,7 @@ class ConvBN(tf.keras.layers.Layer):
     such that it is compatiable with the CenterNet backbone.
     The Layer is a standards combination of Conv BatchNorm Activation,
     however, the use of bias in the conv is determined by the use of batch
-    normalization.
+    normalization. Modified with padding for the CenterNet model.
     Cross Stage Partial networks (CSPNets) were proposed in:
     [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu,
           Ping-Yang Chen, Jun-Wei Hsieh
@@ -377,17 +374,23 @@ class HourglassBlock(tf.keras.layers.Layer):
                channel_dims_per_stage,
                blocks_per_stage,
                strides=1,
+               norm_momentum=0.1,
+               norm_epsilon=1e-5,
                **kwargs):
     """
     Args:
       channel_dims_per_stage: list of filter sizes for Residual blocks
       blocks_per_stage: list of residual block repetitions per down/upsample
       strides: integer, stride parameter to the Residual block
+      norm_momentum: float, momentum for the batch normalization layers
+      norm_episilon: float, epsilon for the batch normalization layers
     """
     self._order = len(channel_dims_per_stage) - 1
     self._channel_dims_per_stage = channel_dims_per_stage
     self._blocks_per_stage = blocks_per_stage
     self._strides = strides
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
 
     assert len(channel_dims_per_stage) == len(blocks_per_stage), 'filter ' \
         'size and residual block repetition lists must have the same length'
@@ -401,7 +404,17 @@ class HourglassBlock(tf.keras.layers.Layer):
   
   def make_repeated_residual_blocks(self, reps, out_channels,
                                     residual_channels=None,
-                                    initial_stride=1, initial_skip=False):
+                                    initial_stride=1):
+    """
+    Args:
+      reps: int for desired number of residual blocks 
+      out_channels: int, filter depth of the final residual block
+      residual_channels: int, filter depth for the first reps - 1 residual 
+        blocks. If None, defaults to the same value as out_channels. If not 
+        equal to out_channels, then uses a projection shortcut in the final 
+        residual block
+      initial_stride: int, stride for the first residual block
+    """
     blocks = []
 
     if residual_channels is None:
@@ -414,7 +427,7 @@ class HourglassBlock(tf.keras.layers.Layer):
       blocks.append(CenterNetResidualBlock(
               filters=residual_channels, strides=stride, 
               use_projection=skip_conv, use_sync_bn=True,
-              norm_momentum=BATCH_NORM_MOMENTUM, norm_epsilon=BATCH_NORM_EPSILON))
+              norm_momentum=self._norm_momentum, norm_epsilon=self._norm_epsilon))
     
     if reps == 1:
       stride = initial_stride
@@ -426,7 +439,7 @@ class HourglassBlock(tf.keras.layers.Layer):
     blocks.append(CenterNetResidualBlock(
           filters=out_channels, strides=stride, 
           use_projection=skip_conv, use_sync_bn=True,
-          norm_momentum=BATCH_NORM_MOMENTUM, norm_epsilon=BATCH_NORM_EPSILON))
+          norm_momentum=self._norm_momentum, norm_epsilon=self._norm_epsilon))
     
     return tf.keras.Sequential(blocks)
 
@@ -442,7 +455,7 @@ class HourglassBlock(tf.keras.layers.Layer):
         out_channels=self._filters)
 
       self.encoder_block2 = self.make_repeated_residual_blocks(reps=self._reps, 
-        out_channels=self._filters_downsampled, initial_stride=2, initial_skip=self._filters != self._filters_downsampled)
+        out_channels=self._filters_downsampled, initial_stride=2)
 
       # recursively define inner hourglasses
       self.inner_hg = type(self)(

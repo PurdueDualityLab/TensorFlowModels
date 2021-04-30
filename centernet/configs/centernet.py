@@ -164,7 +164,7 @@ class CenterNetLayer(hyperparams.Config):
   class_offset: int = 1
   net_down_scale: int = 4  
   input_image_dims: int = 512
-  use_nms: bool = False
+  use_nms: bool = True
   nms_pre_thresh: float = 0.1
   nms_thresh: float = 0.4
   use_reduction_sum: bool = True
