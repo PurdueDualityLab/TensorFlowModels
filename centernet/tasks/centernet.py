@@ -121,7 +121,7 @@ class CenterNetTask(base_task.Task):
 
     metric_dict = dict()
     
-    # TODO: actually compute loss 
+    # TODO: The loss components in centernet/losses are tested but 
     # returning 0 for now, just trying to run eval
     metric_dict['total_loss'] = total_loss
     return total_loss, metric_dict

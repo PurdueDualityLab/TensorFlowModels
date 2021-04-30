@@ -4,6 +4,7 @@ import tensorflow as tf
 
 from centernet.ops import preprocessing_ops
 from official.vision.beta.dataloaders import parser, utils
+from official.vision.beta.ops.preprocess_ops import normalize_image
 from yolo.ops import preprocessing_ops as yolo_preprocessing_ops
 
 
@@ -319,7 +320,16 @@ class CenterNetParser(parser.Parser):
       images: the image tensor.
       labels: a dict of Tensors that contains labels.
     """
-    image = data['image'] / 255
+
+    channel_means: [104.01362025, 114.03422265, 119.9165958]
+    channel_stds: [73.6027665 , 69.89082075, 70.9150767]
+    
+    red, green, blue = tf.unstack(image, axis=-1)
+    image = tf.stack([blue, green, red], axis=-1)
+
+    image = normalize_image(image, offset=channel_means, scale=channel_stds)
+
+    # image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
