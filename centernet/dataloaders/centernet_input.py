@@ -7,6 +7,8 @@ from official.vision.beta.dataloaders import parser, utils
 from official.vision.beta.ops.preprocess_ops import normalize_image
 from yolo.ops import preprocessing_ops as yolo_preprocessing_ops
 
+from typing import List
+
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)

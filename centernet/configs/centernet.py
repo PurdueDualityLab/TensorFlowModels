@@ -98,6 +98,7 @@ class DataDecoder(hyperparams.OneOfConfig):
 class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
+  max_num_instances: int = 128
   bgr_ordering: bool = True
   channel_means: List[int] = dataclasses.field(
       default_factory=lambda: [104.01362025, 114.03422265, 119.9165958])
