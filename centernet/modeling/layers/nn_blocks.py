@@ -34,7 +34,8 @@ class CenterNetResidualBlock(tf.keras.layers.Layer):
                norm_epsilon=0.001,
                **kwargs):
     """A residual block with BN after convolutions. Modified with padding for 
-    the CenterNet model.
+    the CenterNet model. The input is first padded with 0 along the top, bottom, 
+    left, and right prior to the first convolutional layer.
 
     Args:
       filters: `int` number of filters for the first two convolutions. Note that
@@ -216,7 +217,9 @@ class CenterNetConvBN(tf.keras.layers.Layer):
     such that it is compatiable with the CenterNet backbone.
     The Layer is a standards combination of Conv BatchNorm Activation,
     however, the use of bias in the conv is determined by the use of batch
-    normalization. Modified with padding for the CenterNet model.
+    normalization. Modified with padding for the CenterNet model. The input is 
+    first padded with 0 along the top, bottom, left, and right prior to the 
+    first convolutional layer.
     Cross Stage Partial networks (CSPNets) were proposed in:
     [1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu,
           Ping-Yang Chen, Jun-Wei Hsieh

@@ -34,10 +34,10 @@ class CenterNetTask(base_task.Task):
     parser = centernet_input.CenterNetParser(
       image_w=params.parser.image_w,
       image_h=params.parser.image_h,
-      num_classes=model.num_classes,
       max_num_instances=params.parser.max_num_instances,
-      gaussian_iou=params.parser.gaussian_iou,
-      output_dims=params.parser.output_dims,
+      bgr_ordering=params.parser.bgr_ordering,
+      channel_means=params.parser.channel_means,
+      channel_stds=params.parser.channel_stds,
       dtype=params.parser.dtype
     )
 

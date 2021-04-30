@@ -93,17 +93,16 @@ class DataDecoder(hyperparams.OneOfConfig):
   simple_decoder: TfExampleDecoder = TfExampleDecoder()
   label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
 
-# dataset parsers
+# dataset parser
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
-  num_classes: int = 90
-  max_num_instances: int = 128
-  use_gaussian_bump: bool = True
-  gaussian_rad: int = -1
-  gaussian_iou: float = 0.7
-  output_dims: int = 128
+  bgr_ordering: bool = True
+  channel_means: List[int] = dataclasses.field(
+      default_factory=lambda: [104.01362025, 114.03422265, 119.9165958])
+  channel_stds: List[int] = dataclasses.field(
+      default_factory=lambda: [73.6027665, 69.89082075, 70.9150767])
   dtype: str = 'float32'
 
 @dataclasses.dataclass
@@ -164,7 +163,7 @@ class CenterNetLayer(hyperparams.Config):
   class_offset: int = 1
   net_down_scale: int = 4  
   input_image_dims: int = 512
-  use_nms: bool = True
+  use_nms: bool = False
   nms_pre_thresh: float = 0.1
   nms_thresh: float = 0.4
   use_reduction_sum: bool = True

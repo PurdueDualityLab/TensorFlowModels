@@ -4,12 +4,25 @@ from centernet.configs.centernet import CenterNetTask
 from centernet.modeling.CenterNet import build_centernet
 from centernet.utils.weight_utils.load_weights import (
     get_model_weights_as_dict, load_weights_backbone, load_weights_model)
+from official.vision.beta.ops.preprocess_ops import normalize_image
 from yolo.demos.video_detect_cpu import runner
 from yolo.demos.video_detect_gpu import FastVideo
 from yolo.utils.run_utils import prep_gpu
 
 CENTERNET_CKPT_PATH = 'D:\\weights\centernet_hg104_512x512_coco17_tpu-8\checkpoint'
 CLIP_PATH = r'D:\\Documents\Research\Software\nyc_demo_fast.mp4'
+
+def preprocess_fn(image, 
+                  channel_means=(104.01362025, 114.03422265, 119.9165958), 
+                  channel_stds=(73.6027665 , 69.89082075, 70.9150767)):
+
+  image = tf.cast(image, dtype=tf.float32)
+  red, green, blue = tf.unstack(image, num=3, axis=3)
+  image = tf.stack([blue, green, red], axis=3)
+  image = normalize_image(image, offset=channel_means, scale=channel_stds)
+
+  return image
+
 
 if __name__ == '__main__':
   prep_gpu()
@@ -25,6 +38,7 @@ if __name__ == '__main__':
   cap = FastVideo(
       CLIP_PATH, # set to 0 if using webcam
       model=model,
+      preprocess_function=preprocess_fn,
       process_width=512,
       process_height=512,
       preprocess_with_gpu=False,

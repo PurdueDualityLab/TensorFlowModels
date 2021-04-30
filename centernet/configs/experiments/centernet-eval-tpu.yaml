@@ -34,12 +34,11 @@ task:
     parser:
       image_h: 512
       image_w: 512
-      num_classes: 90
       max_num_instances: 128
-      use_gaussian_bump: true
-      gaussian_rad: -1
-      gaussian_iou: 0.7
-      output_dims: 128
+      bgr_ordering: True
+      channel_means: [104.01362025, 114.03422265, 119.9165958]
+      channel_stds: [73.6027665, 69.89082075, 70.9150767]
+      dtype: 'float32'
     shuffle_buffer_size: 100
   subtasks:
     detection:
