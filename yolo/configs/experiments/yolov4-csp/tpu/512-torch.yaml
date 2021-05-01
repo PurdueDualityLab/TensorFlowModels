@@ -27,6 +27,7 @@ task:
       use_sync_bn: true
     decoder_activation: mish
     filter:
+      anchor_generation_scale: 640
       ignore_thresh:
         '5': 0.7
         '4': 0.7
