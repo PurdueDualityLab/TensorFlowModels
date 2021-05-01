@@ -90,8 +90,8 @@ task:
       min_process_size: 512
       jitter_im: 0.1
       aug_scale_aspect: 0.0
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_min: 0.666
+      aug_scale_max: 1.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
@@ -106,7 +106,7 @@ task:
       mosaic: 
         mosaic_frequency: 0.85
         random_crop: 0.5
-        crop_area: [0.25, 1.0]
+        crop_area: [0.5, 1.0]
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
