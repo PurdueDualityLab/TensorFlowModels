@@ -15,7 +15,15 @@ task:
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
     num_classes: 91
-    _boxes: null
+    _boxes: ['[18.0, 28.0]', 
+             '[46.0, 68.0]', 
+             '[68.0, 166.0]', 
+             '[142.0, 80.0]', 
+             '[194.0, 186.0]', 
+             '[115.0, 327.0]', 
+             '[440.0, 219.0]', 
+             '[251.0, 417.0]', 
+             '[508.0, 498.0]']
     _input_size: [608, 608, 3]
     boxes_per_scale: 3
     max_level: 5
