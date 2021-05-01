@@ -10,7 +10,7 @@ task:
           model_id: 'cspdarknet53'
       decoder:
         version: v4
-        type: regular
+        type: csp
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1

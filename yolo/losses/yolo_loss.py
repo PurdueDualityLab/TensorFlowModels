@@ -539,7 +539,6 @@ class Yolo_Loss(object):
          ],
          parallel_iterations=20)
 
-    # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
     ignore_mask = tf.logical_not(iou_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
     iou_max = tf.stop_gradient(iou_max)
