@@ -674,12 +674,12 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
-    # if self._objectness_smooth > 0.0:
-    #   iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
-    #   iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
-    #   true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
-    #   true_conf = tf.squeeze(true_conf, axis=-1)
-    #   obj_mask = tf.ones_like(true_conf)
+    if self._objectness_smooth > 0.0:
+      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
+      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
+      true_conf = tf.squeeze(true_conf, axis=-1)
+      obj_mask = tf.ones_like(true_conf)
 
     pred_class = math_ops.mul_no_nan(
         ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
@@ -797,12 +797,12 @@ class Yolo_Loss(object):
     iou = tf.stop_gradient(iou)
     liou = tf.stop_gradient(liou)
 
-    if self._objectness_smooth > 0.0:
-      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
-      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
-      true_conf_ = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
-      true_conf_ = tf.squeeze(true_conf_, axis=-1)
-      true_conf = tf.where(true_conf_ > true_conf, true_conf_, true_conf)
+    # if self._objectness_smooth > 0.0:
+    #   iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
+    #   iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
+    #   true_conf_ = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
+    #   true_conf_ = tf.squeeze(true_conf_, axis=-1)
+    #   true_conf = tf.where(true_conf_ > true_conf, true_conf_, true_conf)
 
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),

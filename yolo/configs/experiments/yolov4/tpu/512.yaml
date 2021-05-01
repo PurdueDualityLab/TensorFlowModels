@@ -88,7 +88,7 @@ task:
       image_w: 512
       image_h: 512
       min_process_size: 512
-      jitter_im: 0.1
+      jitter_im: 0.3
       aug_scale_aspect: 0.3
       aug_scale_min: 0.1
       aug_scale_max: 2.0
@@ -121,7 +121,7 @@ task:
       image_h: 512
       fixed_size: True
       use_scale_xy: False
-      letter_box: False
+      letter_box: True
       anchor_thresh: 0.213
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
@@ -145,7 +145,7 @@ trainer:
       stepwise:
         boundaries: [240000, 260000]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.000975, 0.000655]
+        values: [0.00261, 0.000131, 0.000655]
     optimizer:
       type: sgd
       sgd:

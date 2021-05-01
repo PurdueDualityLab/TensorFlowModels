@@ -15,15 +15,16 @@ task:
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
     num_classes: 91
-    _boxes: ['[12.0, 16.0]',
-             '[19.0, 36.0]',
-             '[40.0, 28.0]',
-             '[36.0, 75.0]', 
-             '[76.0, 55.0]', 
-             '[72.0, 146.0]', 
-             '[142.0, 110.0]', 
-             '[192.0, 243.0]', 
-             '[459.0, 401.0]']
+    _boxes: null
+            # ['[12.0, 16.0]',
+            #  '[19.0, 36.0]',
+            #  '[40.0, 28.0]',
+            #  '[36.0, 75.0]', 
+            #  '[76.0, 55.0]', 
+            #  '[72.0, 146.0]', 
+            #  '[142.0, 110.0]', 
+            #  '[192.0, 243.0]', 
+            #  '[459.0, 401.0]']
     _input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
@@ -88,10 +89,10 @@ task:
       image_w: 640
       image_h: 640
       min_process_size: 640
-      jitter_im: 0.2
-      aug_scale_aspect: 0.0
-      aug_scale_min: 0.5
-      aug_scale_max: 1.5
+      jitter_im: 0.3
+      aug_scale_aspect: 0.2
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
@@ -131,21 +132,22 @@ task:
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 500000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
-  validation_interval: 20000 #00
+  validation_interval: 20000
   checkpoint_interval: 10000
   optimizer_config:
     ema:
       average_decay: 0.9998
     learning_rate:
-      type: stepwise
-      stepwise:
-        boundaries: [400000, 450000]
-        name: PiecewiseConstantDecay
-        values: [0.001, 0.0001, 0.00001]
+      type: cosine
+      cosine_epoch:
+        initial_learning_rate: 0.01
+        name: Cosine
+        alpha: 0.2
+        decay_steps: 370000
     optimizer:
       type: sgd
       sgd:
@@ -156,4 +158,4 @@ trainer:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 5000 #learning rate rises from 0 to 0.0013 over 1000 steps

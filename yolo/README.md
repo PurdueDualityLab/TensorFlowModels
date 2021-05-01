@@ -93,7 +93,7 @@ The Data Pipeline is found within the dataloaders folder. The way to use our dat
 | Yolov3 | 416 |35ms     | 40        | 59.7% |  
 | Yolov3-spp | 608 |40ms     | 30        | 61.7% |
 | Yolov3-tiny | 416 |20ms     | 60        | not tested yet |   
-| Yolov4 | 512 |--ms     | 60        | 62.25% |  
+| Yolov4 | 512 |--ms     | 60        | 62.65% |  
 | Yolov4-sam | 608 |--ms     | 30        | N/A |  
 | Yolov4-csp | 512 |--ms     | 60        | N/A | 
 | Yolov4-tiny | 416 |--ms     | 165        | N/A |  
@@ -107,11 +107,11 @@ NOTE: latency and FPS testing was done using an RTX 2070 super
 | Model name | Download | Top 1 Accuracy | Top 5 Accuracy |  
 |------------|----------|----------------|----------------|  
 | CSPDarknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 77% | 94% |  
-| CSPDarknet-tiny | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
-| CSPDarknet-p5 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
+| CSPDarknet-p5 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | 78.9% | 94.7% | 
 | CSPDarknet-p6 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 | CSPDarknet-p7 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 | Darknet53 | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A |  
+| CSPDarknet-tiny | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 | Darknet-tiny | [Checkpoint](https://drive.google.com/...), [SavedModel](https://tfhub.dev/...) | N/A | N/A | 
 
 ## Requirements
