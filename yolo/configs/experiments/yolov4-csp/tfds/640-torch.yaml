@@ -17,16 +17,16 @@ task:
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
     num_classes: 91
-    _boxes: ['[19.0, 29.0]', 
-             '[48.0, 71.0]', 
-             '[71.0, 175.0]', 
-             '[149.0, 84.0]',
-             '[205.0, 195.0]', 
-             '[121.0, 344.0]', 
-             '[463.0, 231.0]', 
-             '[264.0, 439.0]', 
-             '[535.0, 525.0]']
-    _input_size: [640, 640, 3]
+    _boxes: ['[15.0, 20.0]', 
+             '[23.0, 45.0]', 
+             '[50.0, 35.0]', 
+             '[45.0, 93.0]', 
+             '[95.0, 68.0]', 
+             '[90.0, 182.0]', 
+             '[177.0, 137.0]', 
+             '[240.0, 303.0]', 
+             '[573.0, 501.0]']
+    _input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -37,7 +37,7 @@ task:
       use_sync_bn: true
     decoder_activation: mish
     filter:
-      anchor_generation_scale: 640
+      anchor_generation_scale: 512
       ignore_thresh:
         '5': 0.7
         '4': 0.7
@@ -82,15 +82,17 @@ task:
       use_reduction_sum: true
   train_data:
     global_batch_size: 1
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: validation
     dtype: float16
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
+    input_path: ''
     is_training: true
-    shuffle_buffer_size: 10000
-    drop_remainder: true
     parser:
-      image_w: 640
-      image_h: 640
-      min_process_size: 640
+      image_w: 512
+      image_h: 512
+      min_process_size: 512
       jitter_im: 0.3
       aug_scale_aspect: 0.2
       aug_scale_min: 0.1
@@ -121,8 +123,8 @@ task:
     dtype: float16
     is_training: false
     parser:
-      image_w: 640
-      image_h: 640
+      image_w: 512
+      image_h: 512
       fixed_size: True
       use_scale_xy: True
       letter_box: True
@@ -142,8 +144,8 @@ trainer:
   validation_interval: 20000
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
+    # ema:
+    #   average_decay: 0.9998
     learning_rate:
       type: cosine
       cosine:

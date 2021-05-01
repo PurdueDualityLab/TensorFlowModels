@@ -15,26 +15,26 @@ task:
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
     num_classes: 91
-    _boxes: ['[18.0, 28.0]', 
-             '[46.0, 68.0]', 
-             '[68.0, 166.0]', 
-             '[142.0, 80.0]', 
-             '[194.0, 186.0]', 
-             '[115.0, 327.0]', 
-             '[440.0, 219.0]', 
-             '[251.0, 417.0]', 
-             '[508.0, 498.0]']
+    _boxes: ['[14.0, 19.0]', 
+             '[22.0, 42.0]', 
+             '[47.0, 33.0]', 
+             '[42.0, 89.0]', 
+             '[90.0, 65.0]', 
+             '[85.0, 173.0]', 
+             '[168.0, 130.0]', 
+             '[228.0, 288.0]', 
+             '[545.0, 476.0]']
     _input_size: [608, 608, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
+    use_sam: true
     norm_activation:
       activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    use_sam: true 
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       ignore_thresh:
         '5': 0.7
@@ -90,7 +90,7 @@ task:
       image_w: 608
       image_h: 608
       min_process_size: 608
-      jitter_im: 0.3
+      jitter_im: 0.1
       aug_scale_aspect: 0.3
       aug_scale_min: 0.1
       aug_scale_max: 2.0

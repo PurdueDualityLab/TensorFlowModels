@@ -7,6 +7,8 @@ from official.core import input_reader
 
 # https://github.com/AlexeyAB/darknet/blob/master/scripts/gen_anchors.py
 
+[[15.0, 23.0], [38.0, 57.0], [119.0, 67.0], [57.0, 141.0], [164.0, 156.0], [97.0, 277.0], [371.0, 184.0], [211.0, 352.0], [428.0, 419.0]]
+
 
 def IOU(X, centroids):
   w, h = tf.split(X, 2, axis=-1)

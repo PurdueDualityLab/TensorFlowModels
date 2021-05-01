@@ -495,7 +495,6 @@ class Yolo_Loss(object):
     
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
-
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
     if self._objectness_smooth:
@@ -552,8 +551,8 @@ class Yolo_Loss(object):
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_mask, iou_, tf.zeros_like(iou_))
-      true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
+      # true_conf = tf.where(iou_mask, iou_, true_conf)
+      true_conf = iou_
       # true_conf = tf.where(
       #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
       #                                     true_conf == 1), true_conf, iou_)
@@ -835,10 +834,7 @@ class Yolo_Loss(object):
     class_loss = tf.reduce_mean(class_loss)
 
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
-    if self._objectness_smooth: 
-      avg_iou = self.avgiou(true_conf)
-    else:
-      avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
+    avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
             precision50)
