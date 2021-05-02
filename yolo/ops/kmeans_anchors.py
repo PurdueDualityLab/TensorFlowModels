@@ -26,6 +26,31 @@ def IOU(X, centroids):
   return tf.squeeze(similarity, axis=-1)
 
 
+# def write_anchors_to_file(centroids,X,anchor_file):
+#     f = open(anchor_file,'w')
+    
+#     anchors = centroids.copy()
+#     print(anchors.shape)
+
+#     for i in range(anchors.shape[0]):
+#         anchors[i][0]*=width_in_cfg_file/32.
+#         anchors[i][1]*=height_in_cfg_file/32.
+         
+
+#     widths = anchors[:,0]
+#     sorted_indices = np.argsort(widths)
+
+#     print('Anchors = ', anchors[sorted_indices])
+        
+#     for i in sorted_indices[:-1]:
+#         f.write('%0.2f,%0.2f, '%(anchors[i,0],anchors[i,1]))
+
+#     #there should not be comma after last anchor, that's why
+#     f.write('%0.2f,%0.2f\n'%(anchors[sorted_indices[-1:],0],anchors[sorted_indices[-1:],1]))
+    
+#     f.write('%f\n'%(avg_IOU(X,centroids)))
+#     print()
+
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
     Args:
@@ -92,7 +117,8 @@ class AnchorKMeans:
 
   def kmeans(self, max_iter, box_num, clusters, k):
     dists = tf.zeros((box_num, k))
-    last = tf.zeros((box_num,), dtype=tf.int64)
+    last = tf.zeros((box_num,), dtype=tf.int64) - 1
+    old_d = dists
 
     tf.print(tf.shape(clusters))
     num_iters = 0
@@ -105,8 +131,11 @@ class AnchorKMeans:
       for i in range(k):
         hold = tf.math.reduce_mean(self._boxes[curr == i], axis=0)
         clusters = tf.tensor_scatter_nd_update(clusters, [[i]], [hold])
+        tf.print(dists * 512, summarize = -1)
+
       last = curr
       num_iters += 1
+      old_d = dists
       tf.print('k-Means box generation iteration: ', num_iters, end='\r')
     return clusters
 
@@ -118,7 +147,7 @@ class AnchorKMeans:
     clusters = self.kmeans(max_iter, box_num, clusters, self._k)
 
     clusters = clusters.numpy()
-    clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
+    clusters = np.array(sorted(clusters, key=lambda x: x[0]))
     return clusters, None
 
   def __call__(self, dataset, max_iter=300, image_width=416):
