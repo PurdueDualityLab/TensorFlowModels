@@ -24,7 +24,7 @@ task:
              '[142.0, 110.0]', 
              '[192.0, 243.0]', 
              '[459.0, 401.0]']
-    _input_size: [608, 608, 3]
+    _input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -86,9 +86,9 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 608
-      image_h: 608
-      min_process_size: 608
+      image_w: 512
+      image_h: 512
+      min_process_size: 512
       jitter_im: 0.3
       aug_scale_aspect: 0.3
       aug_scale_min: 0.1
@@ -118,8 +118,8 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 608
-      image_h: 608
+      image_w: 512
+      image_h: 512
       fixed_size: True
       use_scale_xy: False
       letter_box: True
@@ -146,7 +146,7 @@ trainer:
       stepwise:
         boundaries: [240000, 260000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000131, 0.000655]
+        values: [0.00131, 0.000655, 0.000325]
     optimizer:
       type: sgd
       sgd:

@@ -89,10 +89,10 @@ task:
       image_w: 640
       image_h: 640
       min_process_size: 640
-      jitter_im: 0.3
-      aug_scale_aspect: 0.2
-      aug_scale_min: 0.4
-      aug_scale_max: 2.0
+      jitter_im: 0.1
+      aug_scale_aspect: 0.0
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5

@@ -131,7 +131,7 @@ task:
   load_darknet_weights: false
   darknet_load_decoder: false
 trainer:
-  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -143,7 +143,7 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [240000, 260000]
+        boundaries: [200000, 225000]
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000655, 0.000325]
     optimizer:

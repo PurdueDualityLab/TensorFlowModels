@@ -10,6 +10,7 @@ task:
       type: 'darknet'
       darknet:
         model_id: 'csp-large'
+        width_scale: 1.25
     norm_activation:
       activation: 'mish'  
       use_sync_bn: true
