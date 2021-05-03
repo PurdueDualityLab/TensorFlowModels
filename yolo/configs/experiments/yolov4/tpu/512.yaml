@@ -119,9 +119,8 @@ task:
     parser:
       image_w: 512
       image_h: 512
-      fixed_size: True
       use_scale_xy: False
-      letter_box: True
+      letter_box: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
@@ -145,7 +144,8 @@ trainer:
       stepwise:
         boundaries: [240000, 260000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000655, 0.000325]
+        # values: [0.00131, 0.000655, 0.000325]
+        values: [0.00131, 0.0009825, 0.000655] #best
     optimizer:
       type: sgd
       sgd:
