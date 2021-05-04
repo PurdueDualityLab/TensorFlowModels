@@ -475,6 +475,7 @@ class Yolo_Loss(object):
     # ok this dumb, you just check if ANY of the classes have a conf gt than 
     # 0.25
     if self._any: 
+      # matched_classes = tf.equal(tf.ones_like(pred_classes_max), pred_classes_max)
       matched_classes = tf.cast(pred_classes_max, tf.bool)
     else:
       matched_classes = tf.equal(class_slice, pred_classes_max)
@@ -486,7 +487,7 @@ class Yolo_Loss(object):
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
     if self._objectness_smooth:
-      # low AP because classes see to be problematic
+      # low AP because classes seem to be problematic
       iou_max = tf.transpose(iou, perm=(0, 1, 2, 4, 3))
       iou_max = iou_max * tf.cast(full_iou_mask, iou_max.dtype)
       iou_max = tf.reduce_max(iou_max, axis=-1, keepdims=False)
@@ -773,10 +774,13 @@ class Yolo_Loss(object):
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
-    true_class = tf.stop_gradient(apply_mask(ind_mask, true_class))
+    true_classes = tf.stop_gradient(apply_mask(ind_mask, true_class))
 
     true_class = self.build_grid(
-        inds, true_class, pred_class, ind_mask, update=False)
+        inds, true_classes, pred_class, ind_mask, update=False)
+    cls_norm_mask = self.build_grid(
+        inds, true_classes, pred_class, ind_mask, update=True)
+
     counts = true_class
     counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
     reps = tf.gather_nd(counts, inds, batch_dims=1)
@@ -798,7 +802,8 @@ class Yolo_Loss(object):
       # cls_normalizer is only applied to the true label
       # for indexs wit no object the normalizer is not applied
       # also not applied if class multipliers (not used, not currently support)
-      class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
+      # cls_norm_mask = true_class
+      class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer) 
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
