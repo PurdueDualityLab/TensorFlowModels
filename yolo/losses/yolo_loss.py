@@ -481,7 +481,6 @@ class Yolo_Loss(object):
       matched_classes = tf.logical_and(matched_classes,
                                       tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
-    tf.print(matched_classes, summarize = -1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
@@ -573,12 +572,14 @@ class Yolo_Loss(object):
     return tf.stop_gradient(grid)
 
   def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
-    # 1. generate and store constants and format output
+    # 0. generate shape constants using tf.shat to support feature multi scale
+    # training
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
 
+    # 1. cast all input compontnts to float32 and stop gradient to save memory
     boxes = tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes = tf.stop_gradient(tf.cast(classes, tf.float32))
     y_true = tf.stop_gradient(tf.cast(y_true, tf.float32))
@@ -587,20 +588,28 @@ class Yolo_Loss(object):
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
 
+    # 2. split the y_true grid into the usable items, set the shapes correctly 
+    #    and save the true_confdence mask before it get altered
     (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
 
+    # 3. split up the predicitons to match the ground truths shapes
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
+    # 4. apply sigmoid to items and use the gradient trap to contol the back prop 
+    #    and selective gradient clipping 
     sigmoid_class = tf.sigmoid(pred_class)
     pred_class = class_gradient_trap(pred_class, np.inf)
     sigmoid_conf = tf.sigmoid(pred_conf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
+    
+    # 5. based on input val new_cords decode the box predicitions and because 
+    #    we are using the scaled loss, do not change the gradients at all  
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points, 
                                                     darknet=False)
@@ -636,7 +645,6 @@ class Yolo_Loss(object):
 
     # scale boxes
     scale = tf.convert_to_tensor([fheight, fwidth])
-    # pred_xy = pred_xy * scale - scale
     pred_wh = pred_wh * scale
     pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
 
