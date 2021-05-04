@@ -141,12 +141,11 @@ trainer:
     ema:
       average_decay: 0.9998
     learning_rate:
-      type: cosine
-      cosine:
-        initial_learning_rate: 0.0013
-        name: Cosine
-        alpha: 0.2
-        decay_steps: 299000
+      type: stepwise
+      stepwise:
+        boundaries: [240000, 260000]
+        name: PiecewiseConstantDecay
+        values: [0.001, 0.0001, 0.00001]
     optimizer:
       type: sgd
       sgd:
