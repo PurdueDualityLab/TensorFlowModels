@@ -367,6 +367,7 @@ class Yolo_Loss(object):
     self._beta_nms = beta_nms
     self._nms_kind = tf.cast(nms_kind, tf.string)
     self._new_cords = new_cords
+    self._any = True
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -464,21 +465,29 @@ class Yolo_Loss(object):
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
 
     # mask off zero boxes
-    # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
-    # iou *= mask
+    mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
+    iou *= mask
 
     # cconfidence is low
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
-    matched_classes = tf.equal(class_slice, pred_classes_max)
-    matched_classes = tf.logical_and(matched_classes,
-                                    tf.cast(class_slice, matched_classes.dtype))
+
+    # ok this dumb, you just check if ANY of the classes have a conf gt than 
+    # 0.25
+    if self._any: 
+      matched_classes = tf.cast(pred_classes_max, tf.bool)
+    else:
+      matched_classes = tf.equal(class_slice, pred_classes_max)
+      matched_classes = tf.logical_and(matched_classes,
+                                      tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
+    tf.print(matched_classes, summarize = -1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
     if self._objectness_smooth:
+      # low AP because classes see to be problematic
       iou_max = tf.transpose(iou, perm=(0, 1, 2, 4, 3))
       iou_max = iou_max * tf.cast(full_iou_mask, iou_max.dtype)
       iou_max = tf.reduce_max(iou_max, axis=-1, keepdims=False)
@@ -777,11 +786,11 @@ class Yolo_Loss(object):
     class_loss = sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
         self._label_smoothing)
-    # if self._cls_normalizer < 1.0:
-    #   # cls_normalizer is only applied to the true label
-    #   # for indexs wit no object the normalizer is not applied
-    #   # also not applied if class multipliers (not used, not currently support)
-    #   class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
+    if self._cls_normalizer < 1.0:
+      # cls_normalizer is only applied to the true label
+      # for indexs wit no object the normalizer is not applied
+      # also not applied if class multipliers (not used, not currently support)
+      class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
