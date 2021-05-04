@@ -778,8 +778,6 @@ class Yolo_Loss(object):
 
     true_class = self.build_grid(
         inds, true_classes, pred_class, ind_mask, update=False)
-    cls_norm_mask = self.build_grid(
-        inds, true_classes, pred_class, ind_mask, update=True)
 
     counts = true_class
     counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
@@ -803,6 +801,8 @@ class Yolo_Loss(object):
       # for indexs wit no object the normalizer is not applied
       # also not applied if class multipliers (not used, not currently support)
       # cls_norm_mask = true_class
+      cls_norm_mask = self.build_grid(
+        inds, true_classes, pred_class, ind_mask, update=True)
       class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer) 
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
