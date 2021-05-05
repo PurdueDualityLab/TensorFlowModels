@@ -718,10 +718,10 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first 
     #    but the sigmoid, if it is not enabled, they do not use the gradient of 
     #    the sigmoid
-    if self._new_cords:
-      # if smoothing is enabled they for some reason 
-      # take the sigmoid many times
-      y_pred = grad_sigmoid(y_pred)
+    # if self._new_cords:
+    #   # if smoothing is enabled they for some reason 
+    #   # take the sigmoid many times
+    #   y_pred = grad_sigmoid(y_pred)
 
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
