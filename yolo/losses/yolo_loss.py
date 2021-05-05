@@ -484,7 +484,6 @@ class Yolo_Loss(object):
     
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
-    tf.print(tf.reduce_sum(tf.cast(full_iou_mask, tf.int32)), tf.shape(full_iou_mask))
 
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
