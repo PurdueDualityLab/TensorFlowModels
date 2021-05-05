@@ -75,12 +75,12 @@ task:
         '3': 2.0
       max_boxes: 200
       nms_type: greedy
-      iou_thresh: 0.2
+      iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 500
       use_reduction_sum: false
   train_data:
-    global_batch_size: 64
+    global_batch_size: 2
     dtype: float16
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true

@@ -446,20 +446,21 @@ class Yolo_Loss(object):
     batch_size = tf.shape(boxes)[0]
     box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0],
                          [batch_size, TILE_SIZE, 4])
-    class_slice = tf.slice(classes, [0, idx * TILE_SIZE],
-                           [batch_size, TILE_SIZE])
 
     box_slice = tf.expand_dims(box_slice, axis=-2)
     box_slice = tf.expand_dims(box_slice, axis=1)
     box_slice = tf.expand_dims(box_slice, axis=1)
 
-    class_slice = tf.expand_dims(class_slice, axis=1)
-    class_slice = tf.expand_dims(class_slice, axis=1)
-    class_slice = tf.expand_dims(class_slice, axis=1)
-    class_slice = tf.one_hot(
-        tf.cast(class_slice, tf.int32),
-        depth=tf.shape(pred_classes_max)[-1],
-        dtype=pred_classes_max.dtype)
+    if not self._any:
+      class_slice = tf.slice(classes, [0, idx * TILE_SIZE],
+                            [batch_size, TILE_SIZE])
+      class_slice = tf.expand_dims(class_slice, axis=1)
+      class_slice = tf.expand_dims(class_slice, axis=1)
+      class_slice = tf.expand_dims(class_slice, axis=1)
+      class_slice = tf.one_hot(
+          tf.cast(class_slice, tf.int32),
+          depth=tf.shape(pred_classes_max)[-1],
+          dtype=pred_classes_max.dtype)
 
     pred_boxes = tf.expand_dims(pred_boxes_, axis=-3)
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
@@ -475,14 +476,16 @@ class Yolo_Loss(object):
     # ok this dumb, you just check if ANY of the classes have a conf gt than 
     # 0.25
     if self._any: 
-      # matched_classes = tf.equal(tf.ones_like(pred_classes_max), pred_classes_max)
       matched_classes = tf.cast(pred_classes_max, tf.bool)
     else:
       matched_classes = tf.equal(class_slice, pred_classes_max)
       matched_classes = tf.logical_and(matched_classes,
                                       tf.cast(class_slice, matched_classes.dtype))
+    
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
+    tf.print(tf.reduce_sum(tf.cast(full_iou_mask, tf.int32)), tf.shape(full_iou_mask))
+
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
@@ -748,12 +751,10 @@ class Yolo_Loss(object):
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
     sigmoid_class = tf.sigmoid(pred_class)
-    # pred_class = class_gradient_trap(sigmoid_class, np.inf)
     pred_class = class_gradient_trap(pred_class, np.inf)
 
     sigmoid_conf = tf.sigmoid(pred_conf)
     sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
-    # pred_conf = obj_gradient_trap(sigmoid_conf, np.inf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points, darknet=True)

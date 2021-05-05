@@ -100,7 +100,7 @@ task:
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
-      use_scale_xy: False
+      use_scale_xy: True
       letter_box: True
       anchor_thresh: 0.2
       mosaic: 
@@ -120,7 +120,7 @@ task:
       image_w: 512
       image_h: 512
       fixed_size: True
-      use_scale_xy: False
+      use_scale_xy: True
       letter_box: True
       anchor_thresh: 0.2
   weight_decay: 0.0005

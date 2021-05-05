@@ -141,22 +141,13 @@ class YoloLayer(ks.Model):
 
     # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
-
-    
-    # if not self._objectness_smooth[key]:
     
     # threshold the detection map
     obns_mask = tf.cast(obns_scores > self._thresh, obns_scores.dtype)
 
     # convert detection map to class detection probabailities
     class_scores = tf.math.sigmoid(class_scores) * obns_mask * obns_scores
-
-    # else:
-    #   # convert detection map to class detection probabailities
-    #   class_scores = tf.math.sigmoid(class_scores) * obns_scores
-    #   #threshold the detection map
-    #   obns_mask = tf.cast(class_scores > self._thresh, obns_scores.dtype)
-    #   class_scores *= obns_mask
+    class_scores *= tf.cast(class_scores > self._thresh, class_scores.dtype)
 
     # platten predictions to [batchsize, N, -1] for non max supression
     boxes = tf.reshape(boxes, [shape[0], -1, 4])
