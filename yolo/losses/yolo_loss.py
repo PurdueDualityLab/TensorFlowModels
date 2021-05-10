@@ -272,6 +272,9 @@ def get_predicted_box_newcords(width,
     # scale_xy = tf.cast(scale_xy, pred_xy.dtype)
     # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
     # box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    
+    pred_xy = grad_sigmoid(pred_xy)
+    pred_wh = grad_sigmoid(pred_wh)
     pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
@@ -615,24 +618,25 @@ class Yolo_Loss(object):
     #    we are using the scaled loss, do not change the gradients at all  
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points, 
-                                                    darknet=False)
+                                                    #darknet=False)
+                                                    darknet=True)
 
     # num_objs = tf.cast(
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
-    if self._objectness_smooth <= 0.0:
-      (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
-       obj_mask) = self._tiled_global_box_search(
-           pred_box,
-           sigmoid_class,
-           sigmoid_conf,
-           boxes,
-           classes,
-           true_conf,
-           fwidth,
-           fheight,
-           smoothed=False)
+    # if self._objectness_smooth <= 0.0:
+    #   (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
+    #    obj_mask) = self._tiled_global_box_search(
+    #        pred_box,
+    #        sigmoid_class,
+    #        sigmoid_conf,
+    #        boxes,
+    #        classes,
+    #        true_conf,
+    #        fwidth,
+    #        fheight,
+    #        smoothed=False)
 
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
