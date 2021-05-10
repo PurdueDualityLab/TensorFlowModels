@@ -647,18 +647,18 @@ class Yolo_Loss(object):
     # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
     # scale boxes
-    scale = tf.convert_to_tensor([fheight, fwidth])
-    pred_wh = pred_wh * scale
-    pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
+    # scale = tf.convert_to_tensor([fheight, fwidth])
+    # pred_wh = pred_wh * scale
+    # pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
 
-    true_xy, true_wh = tf.split(true_box, 2, axis=-1)
-    ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
-    ind_xy = tf.concat([ind_x, ind_y], axis=-1)
-    ind_xy = tf.cast(ind_xy, true_xy.dtype)
+    # true_xy, true_wh = tf.split(true_box, 2, axis=-1)
+    # ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
+    # ind_xy = tf.concat([ind_x, ind_y], axis=-1)
+    # ind_xy = tf.cast(ind_xy, true_xy.dtype)
 
-    true_xy = (true_xy * scale) - tf.cast(ind_xy, true_xy.dtype)
-    true_wh = true_wh * scale
-    true_box = tf.concat([true_xy, true_wh], axis=-1)
+    # true_xy = (true_xy * scale) - tf.cast(ind_xy, true_xy.dtype)
+    # true_wh = true_wh * scale
+    # true_box = tf.concat([true_xy, true_wh], axis=-1)
 
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
@@ -718,10 +718,10 @@ class Yolo_Loss(object):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first 
     #    but the sigmoid, if it is not enabled, they do not use the gradient of 
     #    the sigmoid
-    # if self._new_cords:
-    #   # if smoothing is enabled they for some reason 
-    #   # take the sigmoid many times
-    #   y_pred = grad_sigmoid(y_pred)
+    if self._new_cords:
+      # if smoothing is enabled they for some reason 
+      # take the sigmoid many times
+      y_pred = grad_sigmoid(y_pred)
 
     # 1. generate and store constants and format output
     shape = tf.shape(true_counts)
