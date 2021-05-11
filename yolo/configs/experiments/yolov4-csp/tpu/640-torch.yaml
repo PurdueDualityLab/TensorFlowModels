@@ -15,7 +15,7 @@ task:
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
     num_classes: 91
-    _boxes: ['[15.0, 20.0]', 
+    boxes: ['[15.0, 20.0]', 
              '[23.0, 45.0]', 
              '[50.0, 35.0]', 
              '[45.0, 93.0]', 
@@ -24,7 +24,7 @@ task:
              '[177.0, 137.0]', 
              '[240.0, 303.0]', 
              '[573.0, 501.0]']
-    _input_size: [640, 640, 3]
+    input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -89,7 +89,7 @@ task:
       image_w: 640
       image_h: 640
       min_process_size: 640
-      jitter_im: 0.1
+      aug_rand_crop: 0.1
       aug_scale_aspect: 0.0
       aug_scale_min: 0.5
       aug_scale_max: 1.5

@@ -92,7 +92,7 @@ class YoloSubDivTask(yolo.YoloTask):
         min_level=model.min_level,
         max_level=model.max_level,
         fixed_size=params.parser.fixed_size,
-        jitter_im=params.parser.jitter_im,
+        aug_rand_crop=params.parser.aug_rand_crop,
         jitter_boxes=params.parser.jitter_boxes,
         masks=masks,
         letter_box=params.parser.letter_box,

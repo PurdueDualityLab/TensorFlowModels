@@ -80,7 +80,7 @@ task:
       image_w: 512
       image_h: 512
       min_process_size: 512
-      jitter_im: 0.6
+      aug_rand_crop: 0.6
       jitter_boxes: 0.3
       aug_rand_zoom: 0.5
       aug_rand_angle: 0.0

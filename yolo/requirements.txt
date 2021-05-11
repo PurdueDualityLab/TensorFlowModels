@@ -70,3 +70,5 @@ pycocotools
 seqeval
 sentencepiece
 tflite_support
+
+regex

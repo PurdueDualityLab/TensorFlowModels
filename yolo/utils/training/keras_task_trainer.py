@@ -69,7 +69,7 @@ class Trainer(tf.keras.Model):
         image_h=params.parser.image_h,
         num_classes=self._task.task_config.model.num_classes,
         fixed_size=params.parser.fixed_size,
-        jitter_im=params.parser.jitter_im,
+        aug_rand_crop=params.parser.aug_rand_crop,
         jitter_boxes=params.parser.jitter_boxes,
         net_down_scale=params.parser.net_down_scale,
         min_process_size=params.parser.min_process_size,

@@ -185,7 +185,7 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
   model = YoloLayer(
       masks=masks,
       classes=model_config.num_classes,
-      anchors=model_config.boxes,
+      anchors=model_config._boxes,
       iou_thresh=model_config.filter.iou_thresh,
       nms_thresh=model_config.filter.nms_thresh,
       max_boxes=model_config.filter.max_boxes,

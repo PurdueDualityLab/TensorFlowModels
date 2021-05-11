@@ -27,6 +27,7 @@ from official.vision.beta.configs import common
 
 from yolo.configs import backbones
 import numpy as np
+import regex as re
 
 COCO_INPUT_PATH_BASE = 'coco'
 IMAGENET_TRAIN_EXAMPLES = 1281167
@@ -38,27 +39,12 @@ IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
 @dataclasses.dataclass
 class ModelConfig(hyperparams.Config):
 
-  @property
-  def input_size(self):
-    if self._input_size is None:
-      return [None, None, 3]
-    else:
-      return self._input_size
-
-  @input_size.setter
-  def input_size(self, input_size):
-    self._input_size = input_size
-
-  def as_dict(self):  # get_build_model_dict(self):
-    #model_cfg = getattr(self.model, self.model.type)
-    #model_kwargs = model_cfg.as_dict()
+  def as_dict(self):  
     model_kwargs = super().as_dict()
-    # print(model_kwargs)
-    if self._boxes is not None:
-      model_kwargs.update({'_boxes': [str(b) for b in self.boxes]})
+    if self.boxes is not None:
+      model_kwargs.update({'boxes': [str(b) for b in self.boxes]})
     else:
-      model_kwargs.update({'_boxes': None})
-
+      model_kwargs.update({'boxes': None})
     return model_kwargs
 
   @property
@@ -100,45 +86,36 @@ class ModelConfig(hyperparams.Config):
       return self.base.darknet_weights_cfg
 
   @property
-  def boxes(self):
-    if self._boxes is None:
+  def _boxes(self):
+    if self.boxes is None:
       return None
     boxes = []
-    for box in self._boxes:
-      # print(box)
+    key = re.compile('([\d\.]+)')
+    for box in self.boxes:
       if isinstance(box, list) or isinstance(box, tuple):
         boxes.append(box)
       elif isinstance(box, str):
-        if box[0] == '(' or box[0] == '[':
-          f = []
-          for b in box[1:-1].split(','):
-            f.append(float(b.strip()))
-          boxes.append(f)
-        else:
-          f = []
-          for b in box.split(','):
-            f.append(float(b.strip()))
-          boxes.append(f)
+        boxes.append([float(val) for val in key.findall(box)])
       elif isinstance(box, int):
         raise IOError('unsupported input type, only strings or tuples')
-    # print(boxes)
+    print(boxes)
     return boxes
+
+  @_boxes.setter
+  def _boxes(self, box_list):
+    setter = []
+    for value in box_list:
+      value = str(list(value))
+      setter.append(value[1:-1])
+    self.boxes = setter
 
   def set_boxes(self, box_list):
     setter = []
     for value in box_list:
-      # print(value)
       value = str(list(value))
       setter.append(value[1:-1])
-    self._boxes = setter
+    self.boxes = setter
 
-  @boxes.setter
-  def boxes(self, box_list):
-    setter = []
-    for value in box_list:
-      value = str(list(value))
-      setter.append(value[1:-1])
-    self._boxes = setter
 
 
 # dataset parsers
@@ -157,13 +134,11 @@ class Mosaic(hyperparams.Config):
 class Parser(hyperparams.Config):
   image_w: int = 512
   image_h: int = 512
-  fixed_size: bool = True
   max_num_instances: int = 200
   min_process_size: int = 512
   letter_box: bool = True
   random_flip: bool = True
-  pct_rand: float = 0.0
-  jitter_im: float = 0.1
+  aug_rand_crop: float = 0.1
   aug_scale_aspect: float = 0.0
   aug_rand_translate: float = 0.00
   aug_rand_saturation: float = 1.5
@@ -283,7 +258,8 @@ class YoloBase(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class Yolo(ModelConfig):
   num_classes: int = 80
-  _input_size: Optional[List[int]] = None
+  input_size: Optional[List[int]] = dataclasses.field(
+      default_factory=lambda:[608, 608, 3])
   min_level: int = 3
   max_level: int = 5
   boxes_per_scale: int = 3
@@ -303,7 +279,7 @@ class Yolo(ModelConfig):
   #     '(142, 110)', '(192, 243)', '(459, 401)'
   # ])
 
-  _boxes: Optional[List[str]] = None
+  boxes: Optional[List[str]] = None
 
 
 # model task

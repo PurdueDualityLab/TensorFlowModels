@@ -130,7 +130,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
 @tf.custom_gradient
 def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                   max_delta, scale_xy, normalizer):
-  # (box_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+                  
   (pred_xy, box_wh, pred_box) = scale_boxes(pred_xy, pred_wh, width, height,
                                             anchor_grid, grid_points, max_delta,
                                             scale_xy)
