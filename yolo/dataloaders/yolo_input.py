@@ -110,7 +110,6 @@ class Parser(parser.Parser):
       dtype: `str` indicating the output datatype of the datapipeline selecting 
         from {"float32", "float16", "bfloat16"}
     """
-    print(output_size)
 
     # base initialization
     image_w = output_size[1]
