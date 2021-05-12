@@ -105,49 +105,68 @@ def translate_image(image, t_y, t_x):
     image = tfa.image.translate(image, jitter)
   return image, jitter[0], jitter[1]
 
-
-def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
+def estimate_shape(image, output_size):
   height, width = get_image_shape(image)
-  clipper = tf.math.maximum(width, height)
-  if target_dim is None:
-    target_dim = clipper
+  oheight, owidth = output_size[0], output_size[1]
+
+  if height > width:
+    scale = oheight / height
+    nwidth = tf.cast(scale * tf.cast(width, scale.dtype), width.dtype)
+    if nwidth > owidth:
+      scale = owidth / width
+      oheight = tf.cast(scale * tf.cast(height, scale.dtype), height.dtype)
+    else:
+      owidth = nwidth
+  else:
+    scale = owidth / width
+    nheight = tf.cast(scale * tf.cast(height, scale.dtype), height.dtype)
+    if nheight > oheight:
+      scale = oheight / height
+      owidth = tf.cast(scale * tf.cast(width, scale.dtype), width.dtype)
+    else:
+      oheight = nheight
+  return oheight, owidth
+
+def letter_box(image, boxes=None, xs=0.0, ys=0.0, output_size = None):
+  # the actual height
+  if output_size is None:
+    height, width = get_image_shape(image)
+    clipper = tf.math.maximum(width, height)
+    output_size = [clipper, clipper]
+
+  height, width = estimate_shape(image, output_size)
+  # desired height 
+  hclipper, wclipper = output_size[0], output_size[1]
 
   xs = tf.convert_to_tensor(xs)
   ys = tf.convert_to_tensor(ys)
-  pad_width_p = clipper - width
-  pad_height_p = clipper - height
+  pad_width_p = wclipper - width
+  pad_height_p = hclipper - height
   pad_height = tf.cast(tf.cast(pad_height_p, ys.dtype) * ys, tf.int32)
   pad_width = tf.cast(tf.cast(pad_width_p, xs.dtype) * xs, tf.int32)
-  image = tf.image.pad_to_bounding_box(image, pad_height, pad_width, clipper,
-                                       clipper)
 
-  boxes = box_ops.yxyx_to_xcycwh(boxes)
-  x, y, w, h = tf.split(boxes, 4, axis=-1)
+  image = tf.image.resize(image, (height, width))
+  image = tf.image.pad_to_bounding_box(image, pad_height, pad_width, hclipper,
+                                        wclipper)
+  info = tf.convert_to_tensor([pad_height, pad_width, height, width])
 
-  y *= tf.cast(height / clipper, y.dtype)
-  x *= tf.cast(width / clipper, x.dtype)
+  if boxes is not None:
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    x, y, w, h = tf.split(boxes, 4, axis=-1)
 
-  y += tf.cast((pad_height / clipper), y.dtype)
-  x += tf.cast((pad_width / clipper), x.dtype)
+    y *= tf.cast(height / hclipper, y.dtype)
+    x *= tf.cast(width / wclipper, x.dtype)
 
-  h *= tf.cast(height / clipper, h.dtype)
-  w *= tf.cast(width / clipper, w.dtype)
+    y += tf.cast((pad_height / hclipper), y.dtype)
+    x += tf.cast((pad_width / wclipper), x.dtype)
 
-  boxes = tf.concat([x, y, w, h], axis=-1)
+    h *= tf.cast(height / hclipper, h.dtype)
+    w *= tf.cast(width / wclipper, w.dtype)
 
-  boxes = box_ops.xcycwh_to_yxyx(boxes)
-  boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
+    boxes = tf.concat([x, y, w, h], axis=-1)
 
-  image = tf.image.resize(image, (target_dim, target_dim))
-
-  scale = target_dim / clipper
-  pt_width = tf.cast(tf.cast(pad_width, scale.dtype) * scale, tf.int32)
-  pt_height = tf.cast(tf.cast(pad_height, scale.dtype) * scale, tf.int32)
-  pt_width_p = tf.cast(tf.cast(pad_width_p, scale.dtype) * scale, tf.int32)
-  pt_height_p = tf.cast(tf.cast(pad_height_p, scale.dtype) * scale, tf.int32)
-  return image, boxes, [
-      pt_height, pt_width, target_dim - pt_height_p, target_dim - pt_width_p
-  ]
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
+  return image, boxes, info
 
 
 def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):

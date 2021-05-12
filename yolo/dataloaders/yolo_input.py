@@ -386,7 +386,7 @@ class Parser(parser.Parser):
 
     # preserve the aspect ratio of the image 
     image, boxes, info = preprocessing_ops.letter_box(
-        image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
+        image, boxes, xs=0.5, ys=0.5, output_size=[self._image_h,self._image_w])
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
