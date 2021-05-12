@@ -194,8 +194,8 @@ class YoloDecoder(hyperparams.Config):
   input parameters and use version and name defaults"""
   version: Optional[str] = None
   type: Optional[str] = None
-  embed_fpn: bool = False
-  fpn_path_len: int = 4
+  use_fpn: bool = False
+  fpn_depth: int = 4
   path_process_len: int = 6
   max_level_process_len: Optional[int] = None
   embed_spp: bool = False

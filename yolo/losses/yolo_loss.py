@@ -577,7 +577,7 @@ class Yolo_Loss(object):
     grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(grid)
 
-  def call_pytorch(self, true_counts, inds, y_true, boxes, classes, y_pred):
+  def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
     # training
     shape = tf.shape(true_counts)
@@ -618,9 +618,8 @@ class Yolo_Loss(object):
     #    we are using the scaled loss, do not change the gradients at all  
     pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
                                                     anchor_grid, grid_points, 
-                                                    #darknet=False)
-                                                    darknet=True)
-
+                                                    darknet=False)
+                                                  
     # num_objs = tf.cast(
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
@@ -837,7 +836,7 @@ class Yolo_Loss(object):
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum:
-      return self.call_pytorch(true_counts, inds, y_true, boxes, classes,
+      return self.call_scaled(true_counts, inds, y_true, boxes, classes,
                                y_pred)
     else:
       return self.call_darknet(true_counts, inds, y_true, boxes, classes,
