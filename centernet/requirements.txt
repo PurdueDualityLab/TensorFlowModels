@@ -1,0 +1,3 @@
+# When using a wheel for the model garden, use the commented line instead of the requirements file
+# tf-models-official
+-r ../official/requirements.txt
