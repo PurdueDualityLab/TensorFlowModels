@@ -135,7 +135,6 @@ def letter_box(image, boxes=None, xs=0.0, ys=0.0, output_size = None):
     output_size = [clipper, clipper]
 
   height, width = estimate_shape(image, output_size)
-  # desired height 
   hclipper, wclipper = output_size[0], output_size[1]
 
   xs = tf.convert_to_tensor(xs)
