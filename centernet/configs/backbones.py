@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import List
-
 # Import libraries
 import dataclasses
+from typing import List
 
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
@@ -33,6 +32,9 @@ class Hourglass(hyperparams.Config):
       default_factory=lambda: [2, 2, 2, 2, 2, 4])
   num_hourglasses: int = 2
   initial_downsample: bool = True
+  norm_momentum: float = 0.1
+  norm_episilon: float = 1e-5
+
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

@@ -13,26 +13,24 @@
 # limitations under the License.
 
 """Tests for the progressive train_lib."""
+import dataclasses
 import os
 
+import tensorflow as tf
 from absl import flags
 from absl.testing import parameterized
-import dataclasses
-import orbit
-import tensorflow as tf
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-from official.common import flags as tfm_flags
+import orbit
 # pylint: disable=unused-import
+from official.common import flags as tfm_flags
 from official.common import registry_imports
 # pylint: enable=unused-import
 from official.core import config_definitions as cfg
 from official.core import task_factory
 from official.modeling import optimization
 from official.modeling.hyperparams import params_dict
-from official.modeling.progressive import policies
-from official.modeling.progressive import train_lib
+from official.modeling.progressive import policies, train_lib
 from official.modeling.progressive import trainer as prog_trainer_lib
 from official.utils.testing import mock_task
 

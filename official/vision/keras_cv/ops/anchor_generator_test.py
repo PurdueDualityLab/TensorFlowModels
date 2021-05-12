@@ -14,8 +14,9 @@
 # ==============================================================================
 """Tests for anchor_generator.py."""
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
+
 from official.vision.keras_cv.ops import anchor_generator
 
 

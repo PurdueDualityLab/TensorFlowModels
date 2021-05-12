@@ -21,12 +21,13 @@
 """
 
 from typing import Any, Callable, Dict, Optional
+
 # Import libraries
 import tensorflow as tf
+
 from official.modeling import tf_utils
 from official.vision.beta.modeling.backbones import factory
 from official.vision.beta.modeling.layers import nn_blocks
-
 
 # Specifications for different RevNet variants.
 # Each entry specifies block configurations of the particular RevNet variant.

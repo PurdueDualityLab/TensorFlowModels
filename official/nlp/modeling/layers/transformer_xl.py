@@ -15,9 +15,8 @@
 # ==============================================================================
 """Keras-based Transformer XL layer."""
 
-from absl import logging
-
 import tensorflow as tf
+from absl import logging
 
 from official.nlp.modeling.layers import relative_attention
 

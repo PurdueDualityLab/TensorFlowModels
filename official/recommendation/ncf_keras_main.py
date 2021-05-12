@@ -18,30 +18,23 @@ The NeuMF model assembles both MF and MLP models under the NCF framework. Check
 `neumf_model.py` for more details about the models.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import json
 import os
 
-# pylint: disable=g-bad-import-order
-
-from absl import app
-from absl import flags
-from absl import logging
-import tensorflow.compat.v2 as tf
-# pylint: enable=g-bad-import-order
+import tensorflow as tf
+from absl import app, flags, logging
 
 from official.common import distribute_utils
 from official.recommendation import constants as rconst
-from official.recommendation import movielens
-from official.recommendation import ncf_common
-from official.recommendation import ncf_input_pipeline
-from official.recommendation import neumf_model
+from official.recommendation import (
+    movielens, ncf_common, ncf_input_pipeline, neumf_model)
 from official.utils.flags import core as flags_core
-from official.utils.misc import keras_utils
-from official.utils.misc import model_helpers
+from official.utils.misc import keras_utils, model_helpers
+
+# pylint: disable=g-bad-import-order
+
+# pylint: enable=g-bad-import-order
+
 
 FLAGS = flags.FLAGS
 

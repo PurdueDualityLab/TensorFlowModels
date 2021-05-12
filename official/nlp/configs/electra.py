@@ -14,13 +14,11 @@
 # limitations under the License.
 # ==============================================================================
 """ELECTRA model configurations and instantiation methods."""
+import dataclasses
 from typing import List
 
-import dataclasses
-
 from official.modeling.hyperparams import base_config
-from official.nlp.configs import bert
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, encoders
 
 
 @dataclasses.dataclass

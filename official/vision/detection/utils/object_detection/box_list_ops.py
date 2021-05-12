@@ -22,15 +22,12 @@ Example box operations that are supported:
 Whenever box_list_ops functions output a BoxList, the fields of the incoming
 BoxList are retained unless documented otherwise.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from six.moves import range
 import tensorflow as tf
+from six.moves import range
 
-from official.vision.detection.utils.object_detection import box_list
-from official.vision.detection.utils.object_detection import ops
+from official.vision.detection.utils.object_detection import box_list, ops
 
 
 class SortOrder(object):

@@ -15,28 +15,22 @@
 # ==============================================================================
 """Unit tests for the classifier trainer models."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import json
-
 import os
 import sys
+from typing import (
+    Any, Callable, Iterable, Mapping, MutableMapping, Optional, Tuple)
 
-from typing import Any, Callable, Iterable, Mapping, MutableMapping, Optional, Tuple
-
-from absl import flags
-from absl.testing import flagsaver
-from absl.testing import parameterized
 import tensorflow as tf
+from absl import flags
+from absl.testing import flagsaver, parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.utils.flags import core as flags_core
 from official.vision.image_classification import classifier_trainer
-
 
 classifier_trainer.define_classifier_flags()
 

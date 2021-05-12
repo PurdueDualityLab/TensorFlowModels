@@ -14,11 +14,11 @@
 # ==============================================================================
 """A script to export the ALBERT core model as a TF-Hub SavedModel."""
 
-# Import libraries
-from absl import app
-from absl import flags
-import tensorflow as tf
 from typing import Text
+
+import tensorflow as tf
+# Import libraries
+from absl import app, flags
 
 from official.nlp.albert import configs
 from official.nlp.bert import bert_models

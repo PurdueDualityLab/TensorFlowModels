@@ -14,23 +14,17 @@
 # ==============================================================================
 """Model defination for the Mask R-CNN Model."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import tensorflow as tf
 
-from official.vision.detection.dataloader import anchor
-from official.vision.detection.dataloader import mode_keys
+from official.vision.detection.dataloader import anchor, mode_keys
 from official.vision.detection.evaluation import factory as eval_factory
-from official.vision.detection.modeling import base_model
-from official.vision.detection.modeling import losses
-from official.vision.detection.modeling.architecture import factory
-from official.vision.detection.modeling.architecture import keras_utils
-from official.vision.detection.ops import postprocess_ops
-from official.vision.detection.ops import roi_ops
-from official.vision.detection.ops import spatial_transform_ops
-from official.vision.detection.ops import target_ops
+from official.vision.detection.modeling import base_model, losses
+from official.vision.detection.modeling.architecture import (factory,
+                                                             keras_utils)
+from official.vision.detection.ops import (postprocess_ops, roi_ops,
+                                           spatial_transform_ops, target_ops)
 from official.vision.detection.utils import box_utils
 
 

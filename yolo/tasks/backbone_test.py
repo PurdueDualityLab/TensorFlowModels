@@ -1,10 +1,10 @@
-from yolo.configs import darknet_classification as dcfg
-from yolo.tasks import image_classification as imc
-from yolo.modeling.backbones import darknet
+import matplotlib.pyplot as plt
 import tensorflow as tf
 
+from yolo.configs import darknet_classification as dcfg
+from yolo.modeling.backbones import darknet
+from yolo.tasks import image_classification as imc
 from yolo.utils.run_utils import prep_gpu
-import matplotlib.pyplot as plt
 
 
 def test_classification_input():
@@ -41,5 +41,5 @@ def test_classification():
   return
 
 
-prep_gpu()
-test_classification()
+# prep_gpu()
+# test_classification()

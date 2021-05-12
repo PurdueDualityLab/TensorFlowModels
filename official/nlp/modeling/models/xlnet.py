@@ -19,8 +19,7 @@ from typing import Any, Mapping, Union
 
 import tensorflow as tf
 
-from official.nlp.modeling import layers
-from official.nlp.modeling import networks
+from official.nlp.modeling import layers, networks
 
 
 class XLNetMaskedLM(tf.keras.layers.Layer):
@@ -339,4 +338,3 @@ class XLNetSpanLabeler(tf.keras.Model):
   @classmethod
   def from_config(cls, config, custom_objects=None):
     return cls(**config)
-

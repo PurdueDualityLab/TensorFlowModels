@@ -1,9 +1,11 @@
 import socket
-from yolo.utils.demos import utils
-from queue import Queue
-import threading as t
-import numpy as np
 import struct
+import threading as t
+from queue import Queue
+
+import numpy as np
+
+from yolo.utils.demos import utils
 
 
 class UDPServer(object):

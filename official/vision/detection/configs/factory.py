@@ -15,10 +15,8 @@
 """Factory to provide model configs."""
 
 from official.modeling.hyperparams import params_dict
-from official.vision.detection.configs import maskrcnn_config
-from official.vision.detection.configs import olnmask_config
-from official.vision.detection.configs import retinanet_config
-from official.vision.detection.configs import shapemask_config
+from official.vision.detection.configs import (
+    maskrcnn_config, olnmask_config, retinanet_config, shapemask_config)
 
 
 def config_generator(model):

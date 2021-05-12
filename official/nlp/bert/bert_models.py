@@ -21,8 +21,7 @@ import tensorflow_hub as hub
 from official.modeling import tf_utils
 from official.nlp.albert import configs as albert_configs
 from official.nlp.bert import configs
-from official.nlp.modeling import models
-from official.nlp.modeling import networks
+from official.nlp.modeling import models, networks
 
 
 class BertPretrainLossAndMetricLayer(tf.keras.layers.Layer):

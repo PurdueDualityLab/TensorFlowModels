@@ -17,16 +17,14 @@
 
 import os
 
+import tensorflow as tf
 from absl import flags
 from absl.testing import parameterized
-import tensorflow as tf
-
 # pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
+from tensorflow.python.distribute import combinations, strategy_combinations
+
 # pylint: enable=g-direct-tensorflow-import
-from official.nlp.nhnet import trainer
-from official.nlp.nhnet import utils
+from official.nlp.nhnet import trainer, utils
 
 FLAGS = flags.FLAGS
 trainer.define_flags()

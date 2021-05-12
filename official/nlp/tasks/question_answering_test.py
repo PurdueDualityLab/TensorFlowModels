@@ -18,14 +18,12 @@ import itertools
 import json
 import os
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
-from official.nlp.configs import bert
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, encoders
 from official.nlp.data import question_answering_dataloader
-from official.nlp.tasks import masked_lm
-from official.nlp.tasks import question_answering
+from official.nlp.tasks import masked_lm, question_answering
 
 
 class QuestionAnsweringTaskTest(tf.test.TestCase, parameterized.TestCase):

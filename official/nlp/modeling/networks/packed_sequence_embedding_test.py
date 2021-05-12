@@ -17,9 +17,9 @@
 
 # Import libraries
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.nlp.modeling.networks import packed_sequence_embedding
 

@@ -17,7 +17,9 @@
 """Contains common building blocks for yolo neural networks."""
 
 from typing import Callable, List
+
 import tensorflow as tf
+
 from official.modeling import tf_utils
 
 

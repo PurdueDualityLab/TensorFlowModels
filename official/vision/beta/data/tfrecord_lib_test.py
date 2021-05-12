@@ -16,12 +16,11 @@
 
 import os
 
+import tensorflow as tf
 from absl import flags
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.vision.beta.data import tfrecord_lib
-
 
 FLAGS = flags.FLAGS
 

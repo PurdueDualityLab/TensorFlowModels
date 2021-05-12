@@ -3,10 +3,12 @@ A decoder to decode string tensors containing serialized tensorflow.Example
 protos for object detection.
 """
 import csv
+
 # Import libraries
 import tensorflow as tf
 
 from official.vision.beta.dataloaders import decoder
+
 
 def _generate_source_id(image_bytes):
   return tf.strings.as_string(

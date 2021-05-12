@@ -17,9 +17,8 @@
 
 Includes configurations and instantiation methods.
 """
-from typing import List, Optional, Text
-
 import dataclasses
+from typing import List, Optional, Text
 
 from official.modeling.hyperparams import base_config
 from official.nlp.configs import encoders

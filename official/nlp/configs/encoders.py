@@ -17,15 +17,14 @@
 
 Includes configurations and factory methods.
 """
+import dataclasses
 from typing import Optional
 
-from absl import logging
-import dataclasses
 import gin
 import tensorflow as tf
+from absl import logging
 
-from official.modeling import hyperparams
-from official.modeling import tf_utils
+from official.modeling import hyperparams, tf_utils
 from official.nlp.modeling import networks
 from official.nlp.projects.bigbird import encoder as bigbird_encoder
 
@@ -136,7 +135,7 @@ class BigBirdEncoderConfig(hyperparams.Config):
   block_size: int = 64
   type_vocab_size: int = 16
   initializer_range: float = 0.02
-  embedding_size: Optional[int] = None
+  embedding_width: Optional[int] = None
 
 
 @dataclasses.dataclass
@@ -290,11 +289,11 @@ def build_encoder(config: EncoderConfig,
         attention_dropout_rate=encoder_cfg.attention_dropout_rate,
         num_rand_blocks=encoder_cfg.num_rand_blocks,
         block_size=encoder_cfg.block_size,
-        max_sequence_length=encoder_cfg.max_position_embeddings,
+        max_position_embeddings=encoder_cfg.max_position_embeddings,
         type_vocab_size=encoder_cfg.type_vocab_size,
         initializer=tf.keras.initializers.TruncatedNormal(
             stddev=encoder_cfg.initializer_range),
-        embedding_width=encoder_cfg.embedding_size)
+        embedding_width=encoder_cfg.embedding_width)
 
   if encoder_type == "xlnet":
     return encoder_cls(

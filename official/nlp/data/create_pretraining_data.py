@@ -18,11 +18,9 @@ import collections
 import itertools
 import random
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
 
 from official.nlp.bert import tokenization
 

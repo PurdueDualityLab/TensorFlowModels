@@ -1,6 +1,6 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as ks
-import numpy as np
 from absl.testing import parameterized
 
 from yolo.modeling.layers import nn_blocks

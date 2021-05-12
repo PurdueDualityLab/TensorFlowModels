@@ -13,9 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 """Utility helpers for Bert2Bert."""
-from absl import logging
-import tensorflow as tf
 from typing import Optional, Text
+
+import tensorflow as tf
+from absl import logging
+
 from official.modeling.hyperparams import params_dict
 from official.nlp.bert import configs
 from official.nlp.nhnet import configs as nhnet_configs

@@ -15,6 +15,7 @@
 """BERT Question Answering model."""
 # pylint: disable=g-classes-have-attributes
 import collections
+
 import tensorflow as tf
 
 from official.nlp.modeling import networks

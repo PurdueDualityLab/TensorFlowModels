@@ -14,11 +14,11 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for factory functions."""
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
-
 from tensorflow.python.distribute import combinations
+
 from official.vision.beta.configs import backbones as backbones_cfg
 from official.vision.beta.configs import backbones_3d as backbones_3d_cfg
 from official.vision.beta.configs import common as common_cfg

@@ -49,8 +49,8 @@ Two things to note in the pipeline:
 
 import os
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.utils.misc import model_helpers
 

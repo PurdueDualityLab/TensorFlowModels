@@ -1,9 +1,8 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-from yolo.ops.box_ops import compute_iou
-from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
+from yolo.ops.box_ops import compute_iou, yxyx_to_xcycwh
 
 
 class AnchorKMeans:
@@ -36,7 +35,6 @@ class AnchorKMeans:
     self._clusters = None
     self._with_color = with_color
 
-  @tf.function
   def iou(self, boxes, clusters):
     n = tf.shape(boxes)[0]
     boxes = tf.repeat(boxes, self._k, axis=0)
@@ -71,7 +69,6 @@ class AnchorKMeans:
   def boxes(self):
     return self._boxes.numpy()
 
-  @tf.function
   def kmeans(self, max_iter, box_num, clusters, k):
     dists = tf.zeros((box_num, k))
     last = tf.zeros((box_num,), dtype=tf.int64)

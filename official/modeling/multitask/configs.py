@@ -13,9 +13,8 @@
 # limitations under the License.
 
 """Configuration definitions for multi-task training."""
-from typing import Optional, Tuple
-
 import dataclasses
+from typing import Optional, Tuple
 
 from official.core import config_definitions as cfg
 from official.modeling import hyperparams
@@ -37,16 +36,10 @@ class MultiTaskConfig(hyperparams.Config):
 
 
 @dataclasses.dataclass
-class MultiEvalExperimentConfig(hyperparams.Config):
+class MultiEvalExperimentConfig(cfg.ExperimentConfig):
   """An experiment config for single-task training and multi-task evaluation.
 
   Attributes:
-    task: the single-stream training task.
     eval_tasks: individual evaluation tasks.
-    trainer: the trainer configuration.
-    runtime: the runtime configuration.
   """
-  task: cfg.TaskConfig = cfg.TaskConfig()
   eval_tasks: MultiTaskConfig = MultiTaskConfig()
-  trainer: cfg.TrainerConfig = cfg.TrainerConfig()
-  runtime: cfg.RuntimeConfig = cfg.RuntimeConfig()

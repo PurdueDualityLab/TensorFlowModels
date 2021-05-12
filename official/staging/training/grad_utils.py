@@ -14,14 +14,8 @@
 # ==============================================================================
 """Some gradient util functions to help users writing custom training loop."""
 
-from __future__ import absolute_import
-from __future__ import division
-# from __future__ import google_type_annotations
-from __future__ import print_function
-
+import tensorflow as tf
 from absl import logging
-
-import tensorflow.compat.v2 as tf
 
 
 def _filter_grads(grads_and_vars):

@@ -17,7 +17,6 @@
 from official.modeling.hyperparams import params_dict
 from official.vision.detection.configs import base_config
 
-
 # pylint: disable=line-too-long
 OLNMASK_CFG = params_dict.ParamsDict(base_config.BASE_CFG)
 OLNMASK_CFG.override({

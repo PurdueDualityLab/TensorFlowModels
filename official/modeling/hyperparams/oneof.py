@@ -14,9 +14,9 @@
 
 """Config class that supports oneof functionality."""
 
+import dataclasses
 from typing import Optional
 
-import dataclasses
 from official.modeling.hyperparams import base_config
 
 

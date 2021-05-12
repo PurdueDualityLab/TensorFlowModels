@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
+from yolo.utils.run_utils import prep_gpu
 
 if __name__ == "__main__":
   # initialize YOLOv4 model

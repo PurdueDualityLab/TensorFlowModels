@@ -15,8 +15,9 @@
 """Tests for span_labeling network."""
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 from official.nlp.modeling.networks import span_labeling
 
 

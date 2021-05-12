@@ -1,11 +1,11 @@
-from absl.testing import parameterized
-import tensorflow as tf
+import dataclasses
+
 import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
 
 from centernet.configs import backbones as cfg
 from centernet.modeling.backbones import hourglass
-
-import dataclasses
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
 

@@ -1,8 +1,9 @@
-import cv2
 import threading as t
-from queue import Queue
-import traceback
 import time
+import traceback
+from queue import Queue
+
+import cv2
 
 from yolo.demos.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils
@@ -176,12 +177,15 @@ class VideoPlayer(object):
 class DisplayThread(object):
 
   def __init__(self,
-               frame_buffer,
+               frame_buffer=None,
                wait_time=0.0001,
                alpha=0.1,
                fix_wt=False,
                use_colab=False):
-    self._frame_buffer = frame_buffer
+    if frame_buffer is None:
+      self._frame_buffer = FrameQue(1000)
+    else:
+      self._frame_buffer = frame_buffer
     self._thread = None
     self._running = False
     self._wait_time = wait_time
@@ -193,12 +197,14 @@ class DisplayThread(object):
     return
 
   def start(self):
+    self._running = True
     self._thread = t.Thread(target=self.display, args=())
     self._thread.start()
     return
 
   def close(self):
     print()
+    self._running = False
     if self._thread is not None:
       self._thread.join()
     return
@@ -209,14 +215,17 @@ class DisplayThread(object):
       l = 0
       tick = 0
       display_fps = 0
-      self._running = True
+
       while (self._running):
+        # success, frame = self._frame_buffer.read()
         success, frame = self._frame_buffer.read()
-        if success and type(frame) != type(None):
+        if success and frame is not None:
           cv2.imshow("frame", frame)
 
           if cv2.waitKey(1) & 0xFF == ord("q"):
             break
+
+          del frame
           l += 1
           if time.time() - start - tick >= 1:
             tick += 1
@@ -235,11 +244,6 @@ class DisplayThread(object):
           if hasattr(self._frame_buffer, "wait_time"):
             self._frame_buffer.wait_time = self._wait_time
 
-          print(
-              "                                 \rshow fps: \033[1;34;40m%d, %0.3f, %0.10f\033[0m "
-              % (self._fps, self._prev_fps, self._wait_time),
-              end="\r")
-          #print("                                 \rshow fps: \033[1;34;40m%d, %0.3f, %0.10f\033[0m " % (self._fps, self._prev_fps, self._wait_time), end="\n")
         time.sleep(self._wait_time)
       self._running = False
       cv2.destroyAllWindows()
@@ -252,6 +256,16 @@ class DisplayThread(object):
   @property
   def running(self):
     return self._running
+
+  def put(self, frame):
+    return self._frame_buffer.put(frame)
+
+  def put_all(self, frames):
+    return self._frame_buffer.put_all(frames)
+
+  @property
+  def fps(self):
+    return self._fps
 
 
 if __name__ == "__main__":

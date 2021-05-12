@@ -30,18 +30,16 @@ Example usage:
 import collections
 import json
 import logging
+import multiprocessing as mp
 import os
 
+import numpy as np
+import tensorflow as tf
 from absl import app  # pylint:disable=unused-import
 from absl import flags
-import numpy as np
-
 from pycocotools import mask
-import tensorflow as tf
 
-import multiprocessing as mp
 from official.vision.beta.data import tfrecord_lib
-
 
 flags.DEFINE_boolean(
     'include_masks', False, 'Whether to include instance segmentations masks '
@@ -283,11 +281,11 @@ def generate_annotations(images, image_dir,
   """Generator for COCO annotations."""
 
   for image in images:
-    if img_to_obj_annotation:
-      object_annotation = img_to_obj_annotation.get(image['id'], None)
+    object_annotation = (img_to_obj_annotation.get(image['id'], None) if
+                         img_to_obj_annotation else None)
 
-    if img_to_caption_annotation:
-      caption_annotaion = img_to_caption_annotation.get(image['id'], None)
+    caption_annotaion = (img_to_caption_annotation.get(image['id'], None) if
+                         img_to_caption_annotation else None)
 
     yield (image, image_dir, object_annotation, id_to_name_map,
            caption_annotaion, include_masks)

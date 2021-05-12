@@ -16,8 +16,7 @@
 
 import tensorflow as tf
 
-from official.nlp.transformer import model_params
-from official.nlp.transformer import transformer
+from official.nlp.transformer import model_params, transformer
 
 
 class TransformerV2Test(tf.test.TestCase):

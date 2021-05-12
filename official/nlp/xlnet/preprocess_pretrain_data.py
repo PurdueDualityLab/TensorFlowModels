@@ -19,18 +19,14 @@ import json
 import os
 import random
 
-# Import libraries
-from absl import app
-from absl import flags
 import absl.logging as _logging  # pylint: disable=unused-import
-
 import numpy as np
-
-
-import tensorflow.google as tf
-from official.nlp.xlnet import preprocess_utils
 import sentencepiece as spm
+import tensorflow.google as tf
+# Import libraries
+from absl import app, flags
 
+from official.nlp.xlnet import preprocess_utils
 
 special_symbols = {
     "<unk>"  : 0,

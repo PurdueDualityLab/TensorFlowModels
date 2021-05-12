@@ -18,19 +18,18 @@ import collections
 import copy
 from typing import List, Optional
 
-from absl import logging
 import gin
 import tensorflow as tf
+from absl import logging
 
-from official.nlp.modeling import layers
-from official.nlp.modeling import networks
+from official.nlp.modeling import layers, networks
 
 
 @tf.keras.utils.register_keras_serializable(package='Text')
 class BertPretrainer(tf.keras.Model):
   """BERT pretraining model.
 
-  [Note] Please use the new BertPretrainerV2 for your projects.
+  [Note] Please use the new `BertPretrainerV2` for your projects.
 
   The BertPretrainer allows a user to pass in a transformer stack, and
   instantiates the masked language model and classification networks that are

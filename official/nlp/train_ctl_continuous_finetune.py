@@ -14,14 +14,13 @@
 # limitations under the License.
 # ==============================================================================
 """TFM continuous finetuning+eval training driver."""
-from absl import app
-from absl import flags
 import gin
+from absl import app, flags
 
-# pylint: disable=unused-import
-from official.common import registry_imports
 # pylint: enable=unused-import
+# pylint: disable=unused-import
 from official.common import flags as tfm_flags
+from official.common import registry_imports
 from official.core import train_utils
 from official.nlp import continuous_finetune_lib
 
@@ -41,6 +40,7 @@ def main(_):
   train_utils.serialize_config(params, model_dir)
   continuous_finetune_lib.run_continuous_finetune(FLAGS.mode, params, model_dir,
                                                   FLAGS.pretrain_steps)
+  train_utils.save_gin_config(FLAGS.mode, model_dir)
 
 
 if __name__ == '__main__':

@@ -17,8 +17,8 @@
 import os
 import random
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
 from official.nlp.bert import tokenization
 from official.nlp.data import tagging_data_lib

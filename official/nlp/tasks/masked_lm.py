@@ -16,17 +16,16 @@
 """Masked language task."""
 
 import dataclasses
+
 import tensorflow as tf
 
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory
 from official.modeling import tf_utils
-from official.nlp.configs import bert
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, encoders
 from official.nlp.data import data_loader_factory
-from official.nlp.modeling import layers
-from official.nlp.modeling import models
+from official.nlp.modeling import layers, models
 
 
 @dataclasses.dataclass

@@ -18,19 +18,17 @@ import os
 import random
 import tarfile
 
-# pylint: disable=g-bad-import-order
-
-from absl import app
-from absl import flags
-from absl import logging
 import six
-from six.moves import range
-from six.moves import urllib
-from six.moves import zip
 import tensorflow.compat.v1 as tf
+from absl import app, flags, logging
+from six.moves import range, urllib, zip
 
 from official.nlp.transformer.utils import tokenizer
 from official.utils.flags import core as flags_core
+
+# pylint: disable=g-bad-import-order
+
+
 # pylint: enable=g-bad-import-order
 
 # Data sources for training/evaluating the transformer translation model.

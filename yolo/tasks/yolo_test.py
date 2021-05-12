@@ -1,15 +1,16 @@
-from yolo.tasks import yolo
+import tensorflow as tf
+from absl.testing import parameterized
+
 import orbit
 from official.core import exp_factory
 from official.modeling import optimization
-
-import tensorflow as tf
-from absl.testing import parameterized
+from yolo.tasks import yolo
 from yolo.utils.run_utils import prep_gpu
-try:
-  prep_gpu()
-except BaseException:
-  print("GPUs ready")
+
+# try:
+#   prep_gpu()
+# except BaseException:
+#   print("GPUs ready")
 
 
 class YoloTaskTest(tf.test.TestCase, parameterized.TestCase):

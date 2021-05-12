@@ -1,13 +1,13 @@
-from absl.testing import parameterized
-import tensorflow as tf
-import numpy as np
 import dataclasses
 
+import numpy as np
+import tensorflow as tf
+from absl.testing import parameterized
+
+from centernet.configs import centernet
+from centernet.modeling.CenterNet import build_centernet
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
-
-from centernet.modeling.CenterNet import build_centernet
-from centernet.configs import centernet
 
 
 class CenterNetTest(parameterized.TestCase, tf.test.TestCase):
@@ -27,10 +27,6 @@ class CenterNetTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(outputs['raw_output']['ct_heatmaps'][0].shape, (5, 128, 128, 90))
     self.assertEqual(outputs['raw_output']['ct_offset'][0].shape, (5, 128, 128, 2))
     self.assertEqual(outputs['raw_output']['ct_size'][0].shape, (5, 128, 128, 2))
-
-    model.summary()
-    
-
 
 if __name__ == '__main__':
   tf.test.main()

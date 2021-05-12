@@ -14,17 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
-import tensorflow as tf
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses
 import os
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
+
+import tensorflow as tf
 
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
+from official.modeling import hyperparams, optimization
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
-
 from yolo.configs import backbones
 
 COCO_INPUT_PATH_BASE = 'coco'
@@ -143,36 +142,57 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 416
-  image_h: int = 416
-  fixed_size: bool = False
-  jitter_im: float = 0.3
+  image_w: int = 512
+  image_h: int = 512
+  fixed_size: bool = True
+  jitter_im: float = 0.2
   jitter_boxes: float = 0.005
   min_process_size: int = 320
   max_process_size: int = 608
   max_num_instances: int = 200
   random_flip: bool = True
   pct_rand: float = 0.5
-  letter_box: bool = True
+  letter_box: bool = False
   cutmix: bool = False
+  mosaic: bool = True
   aug_rand_saturation: bool = True
   aug_rand_brightness: bool = True
-  aug_rand_zoom: bool = True
+  aug_rand_zoom: bool = False
   aug_rand_hue: bool = True
-  seed: int = 10
+  keep_thresh: float = 0.1
+  mosaic_frequency: float = 0.75
   use_tie_breaker: bool = True
+
+
+# pylint: disable=missing-class-docstring
+@dataclasses.dataclass
+class TfExampleDecoder(hyperparams.Config):
+  regenerate_source_id: bool = False
+
+
+@dataclasses.dataclass
+class TfExampleDecoderLabelMap(hyperparams.Config):
+  regenerate_source_id: bool = False
+  label_map: str = ''
+
+
+@dataclasses.dataclass
+class DataDecoder(hyperparams.OneOfConfig):
+  type: Optional[str] = 'simple_decoder'
+  simple_decoder: TfExampleDecoder = TfExampleDecoder()
+  label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
 
 
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  input_path: str = ''
+  input_path: str = '' #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = 'coco'
   tfds_split: str = 'train'
-  global_batch_size: int = 4
+  global_batch_size: int = 32
   is_training: bool = True
   dtype: str = 'float16'
-  decoder = None
+  decoder: DataDecoder = DataDecoder()
   parser: Parser = Parser()
   shuffle_buffer_size: int = 10000
   tfds_download: bool = True
@@ -180,7 +200,8 @@ class DataConfig(cfg.DataConfig):
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
-  """if the name is specified, or version is specified we ignore input parameters and use version and name defaults"""
+  """if the name is specified, or version is specified we ignore 
+  input parameters and use version and name defaults"""
   version: Optional[str] = None
   type: Optional[str] = None
   embed_fpn: bool = False
@@ -198,11 +219,14 @@ class YoloLossLayer(hyperparams.Config):
   ignore_thresh: float = 0.5
   loss_type: str = 'ciou'
   max_boxes: int = 200
-  anchor_generation_scale: int = 416
+  anchor_generation_scale: int = 512
   use_nms: bool = False
   iou_normalizer: float = 0.75
   cls_normalizer: float = 1.0
   obj_normalizer: float = 1.0
+  max_delta: float = 10.0
+  scale_xy: Dict =  dataclasses.field(default_factory=lambda:{'5': 1.05, '4': 1.1, '3': 1.2})
+  # path scales:
 
 
 @dataclasses.dataclass
@@ -223,10 +247,12 @@ class Yolo(ModelConfig):
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
   dilate: bool = False
+  subdivisions: int = 1
+  use_sam: bool = False
   filter: YoloLossLayer = YoloLossLayer()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
-      use_sync_bn=False,
+      use_sync_bn=True,
       norm_momentum=0.99,
       norm_epsilon=0.001)
   decoder_activation: str = 'leaky'
@@ -249,6 +275,7 @@ class YoloTask(cfg.TaskConfig):
 
   load_darknet_weights: bool = True
   darknet_load_decoder: bool = True
+  init_checkpoint_modules: str = 'backbone'
 
 
 @dataclasses.dataclass
@@ -332,8 +359,8 @@ def yolo_custom() -> cfg.ExperimentConfig:
   return config
 
 
-@exp_factory.register_config_factory('yolo_subdiv_custom')
-def yolo_subdiv_custom() -> cfg.ExperimentConfig:
+@exp_factory.register_config_factory('yolo_tpu')
+def yolo_tpu() -> cfg.ExperimentConfig:
   """COCO object detection with YOLO."""
   train_batch_size = 1
   eval_batch_size = 1
@@ -341,24 +368,21 @@ def yolo_subdiv_custom() -> cfg.ExperimentConfig:
   num_batches = 1200000 * 64 / train_batch_size
 
   config = cfg.ExperimentConfig(
-      runtime=cfg.RuntimeConfig(
-          #            mixed_precision_dtype='float16',
-          #            loss_scale='dynamic',
-          num_gpus=2),
-      task=YoloSubDivTask(
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
+      task=YoloTask(
           model=Yolo(),
           train_data=DataConfig(  # input_path=os.path.join(
               # COCO_INPUT_PATH_BASE, 'train*'),
               is_training=True,
               global_batch_size=train_batch_size,
               parser=Parser(),
-              shuffle_buffer_size=2),
+              shuffle_buffer_size=10000),
           validation_data=DataConfig(
               # input_path=os.path.join(COCO_INPUT_PATH_BASE,
               #                        'val*'),
               is_training=False,
               global_batch_size=eval_batch_size,
-              shuffle_buffer_size=2)),
+              shuffle_buffer_size=10000)),
       trainer=cfg.TrainerConfig(
           steps_per_loop=2000,
           summary_interval=8000,

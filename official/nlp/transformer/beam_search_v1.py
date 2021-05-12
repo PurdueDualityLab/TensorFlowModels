@@ -15,6 +15,7 @@
 """Beam search to find the translated sequence with the highest probability."""
 
 import tensorflow.compat.v1 as tf
+
 from official.nlp.modeling.ops import beam_search
 
 _StateKeys = beam_search._StateKeys  # pylint: disable=protected-access

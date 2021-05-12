@@ -17,15 +17,13 @@
 import functools
 import os
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
 
-from official.nlp.configs import bert
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, encoders
 from official.nlp.data import sentence_prediction_dataloader
-from official.nlp.tasks import masked_lm
-from official.nlp.tasks import sentence_prediction
+from official.nlp.tasks import masked_lm, sentence_prediction
 
 
 def _create_fake_dataset(output_path, seq_length, num_classes, num_examples):

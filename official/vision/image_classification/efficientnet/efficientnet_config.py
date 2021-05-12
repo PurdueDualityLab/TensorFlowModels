@@ -14,13 +14,10 @@
 # limitations under the License.
 # ==============================================================================
 """Configuration definitions for EfficientNet losses, learning rates, and optimizers."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from typing import Any, Mapping
+from __future__ import absolute_import, division, print_function
 
 import dataclasses
+from typing import Any, Mapping
 
 from official.modeling.hyperparams import base_config
 from official.vision.image_classification.configs import base_configs

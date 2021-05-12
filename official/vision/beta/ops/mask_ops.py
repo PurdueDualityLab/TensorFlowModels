@@ -15,6 +15,7 @@
 """Utility functions for segmentations."""
 
 import math
+
 # Import libraries
 import cv2
 import numpy as np
@@ -187,4 +188,3 @@ def paste_instance_masks_v2(masks,
 
   segms = np.array(segms)
   return segms
-

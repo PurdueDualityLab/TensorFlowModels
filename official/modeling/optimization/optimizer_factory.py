@@ -15,14 +15,14 @@
 """Optimizer factory class."""
 from typing import Callable, Union
 
-
 import gin
 import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 
-from official.modeling.optimization import ema_optimizer
-from official.modeling.optimization import lr_schedule
-from official.modeling.optimization.configs import optimization_config as opt_cfg
+from official.modeling.optimization import (SGDAccumulated, ema_optimizer,
+                                            lr_schedule)
+from official.modeling.optimization.configs import \
+    optimization_config as opt_cfg
 from official.nlp import optimization as nlp_optimization
 
 OPTIMIZERS_CLS = {
@@ -30,7 +30,8 @@ OPTIMIZERS_CLS = {
     'adam': tf.keras.optimizers.Adam,
     'adamw': nlp_optimization.AdamWeightDecay,
     'lamb': tfa_optimizers.LAMB,
-    'rmsprop': tf.keras.optimizers.RMSprop
+    'rmsprop': tf.keras.optimizers.RMSprop,
+    'sgd_accum': SGDAccumulated.SGDAccumulated
 }
 
 LR_CLS = {

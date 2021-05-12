@@ -15,12 +15,12 @@
 """Tests for tensorflow_models.core.trainers.trainer."""
 # pylint: disable=g-direct-tensorflow-import
 import os
-from absl.testing import parameterized
+
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.core import base_trainer as trainer_lib
 from official.core import config_definitions as cfg
 from official.core import train_lib

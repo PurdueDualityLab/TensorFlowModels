@@ -14,10 +14,8 @@
 # ==============================================================================
 # coding=utf-8
 """Utilities used in SQUAD task."""
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import gc
@@ -28,13 +26,12 @@ import pickle
 import re
 import string
 
-from absl import logging
 import numpy as np
 import six
 import tensorflow as tf
+from absl import logging
 
-from official.nlp.xlnet import data_utils
-from official.nlp.xlnet import preprocess_utils
+from official.nlp.xlnet import data_utils, preprocess_utils
 
 SPIECE_UNDERLINE = u"▁"
 

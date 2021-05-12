@@ -17,8 +17,7 @@
 # Import libraries
 import tensorflow as tf
 
-from official.vision.beta.ops import box_ops
-from official.vision.beta.ops import nms
+from official.vision.beta.ops import box_ops, nms
 
 
 def _multilevel_propose_rois(raw_boxes,

@@ -14,14 +14,14 @@
 # limitations under the License.
 # ==============================================================================
 """Loads dataset for the question answering (e.g, SQuAD) task."""
+import dataclasses
 from typing import Mapping, Optional
 
-import dataclasses
 import tensorflow as tf
+
 from official.core import config_definitions as cfg
 from official.core import input_reader
-from official.nlp.data import data_loader
-from official.nlp.data import data_loader_factory
+from official.nlp.data import data_loader, data_loader_factory
 
 
 @dataclasses.dataclass

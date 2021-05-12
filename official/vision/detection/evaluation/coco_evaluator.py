@@ -26,19 +26,17 @@ The following snippet demonstrates the use of interfaces:
 See also: https://github.com/cocodataset/cocoapi/
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import atexit
 import copy
 import tempfile
 
-from absl import logging
 import numpy as np
-from pycocotools import cocoeval
 import six
 import tensorflow as tf
+from absl import logging
+from pycocotools import cocoeval
 
 from official.vision.detection.evaluation import coco_utils
 from official.vision.detection.utils import class_utils

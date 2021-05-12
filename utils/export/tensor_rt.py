@@ -1,9 +1,11 @@
 import tensorflow as tf
-# import tensorflow.experimental.tensorrt as trt
-
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
 from utils.run_utils import prep_gpu
+
+# import tensorflow.experimental.tensorrt as trt
+
+
 
 
 class TensorRT(object):

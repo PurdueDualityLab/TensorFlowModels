@@ -21,15 +21,12 @@ FLAG below).
 
 import os
 
-from absl import app
-from absl import flags
-
 import tensorflow as tf
+from absl import app, flags
+
 from official.modeling import tf_utils
-from official.nlp.bert import configs
-from official.nlp.bert import tf1_checkpoint_converter_lib
-from official.nlp.modeling import models
-from official.nlp.modeling import networks
+from official.nlp.bert import configs, tf1_checkpoint_converter_lib
+from official.nlp.modeling import models, networks
 
 FLAGS = flags.FLAGS
 

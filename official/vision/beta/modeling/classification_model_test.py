@@ -15,15 +15,13 @@
 # ==============================================================================
 """Tests for classification network."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-from official.vision.beta.modeling import backbones
-from official.vision.beta.modeling import classification_model
+from official.vision.beta.modeling import backbones, classification_model
 
 
 class ClassificationNetworkTest(parameterized.TestCase, tf.test.TestCase):

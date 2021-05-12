@@ -16,16 +16,12 @@
 
 import os
 
+import numpy as np
+import tensorflow as tf
 from absl import logging
 from absl.testing import parameterized
 
-import numpy as np
-
-from orbit import controller
-from orbit import runner
-from orbit import standard_runner
-
-import tensorflow as tf
+from orbit import controller, runner, standard_runner
 
 
 def create_model():

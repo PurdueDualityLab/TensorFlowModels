@@ -1,9 +1,10 @@
 import tensorflow as tf
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
+
 import official.core.base_task as bt
 from official.core import input_reader
 from yolo.dataloaders import yolo_input
 from yolo.dataloaders.decoders import tfds_coco_decoder
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 
 class Trainer(tf.keras.Model):

@@ -14,12 +14,14 @@
 # ==============================================================================
 """Tests for TN-BERT transformer."""
 
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
-from official.nlp.modeling.layers.tn_transformer_expand_condense import TNTransformerExpandCondense
+from official.nlp.modeling.layers.tn_transformer_expand_condense import \
+    TNTransformerExpandCondense
 
 
 # This decorator runs the test in V1, V2-Eager, and V2-Functional mode. It

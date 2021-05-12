@@ -15,9 +15,9 @@
 # ==============================================================================
 """Tests for semantic_segmentation."""
 
+import tensorflow as tf
 # pylint: disable=unused-import
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.core import exp_factory
 from official.modeling.hyperparams import config_definitions as cfg

@@ -18,15 +18,12 @@ Especially for loading Tensorflow 1.x
 checkpoint to Tensorflow 2.x (keras) model.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 
-from absl import logging
-
 import tensorflow as tf
+from absl import logging
 
 
 def _build_assignment_map(keras_model,

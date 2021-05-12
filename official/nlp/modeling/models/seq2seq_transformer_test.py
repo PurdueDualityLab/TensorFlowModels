@@ -14,13 +14,12 @@
 # ==============================================================================
 """Test Transformer model."""
 
-from absl import logging
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from absl import logging
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.nlp.modeling.models import seq2seq_transformer
 
 

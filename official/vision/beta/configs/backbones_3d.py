@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """3D Backbones configurations."""
-from typing import Optional, Tuple
-
 # Import libraries
 import dataclasses
+from typing import Optional, Tuple
 
 from official.modeling import hyperparams
 

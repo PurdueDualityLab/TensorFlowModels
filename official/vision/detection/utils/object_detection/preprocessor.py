@@ -39,9 +39,8 @@ we pass it to the functions. At the end of the preprocess we expand the image
 back to rank 4.
 """
 
-import tensorflow as tf
-
 import numpy as np
+import tensorflow as tf
 
 from official.vision.detection.utils.object_detection import box_list
 

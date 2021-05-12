@@ -14,7 +14,8 @@
 # ==============================================================================
 """ExpandCondense tensor network layer used in TN-BERT."""
 # pylint: disable=g-classes-have-attributes
-from typing import List, Optional, Text, Any, Dict
+from typing import Any, Dict, List, Optional, Text
+
 import tensorflow as tf
 
 Layer = tf.keras.layers.Layer

@@ -19,8 +19,8 @@ import tempfile
 
 import numpy as np
 import tensorflow as tf
-
 from sentencepiece import SentencePieceTrainer
+
 from official.nlp.modeling.layers import text_layers
 
 

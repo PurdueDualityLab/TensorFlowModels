@@ -47,7 +47,6 @@ import tensorflow as tf
 
 from official.core import registry
 
-
 _REGISTERED_BACKBONE_CLS = {}
 
 

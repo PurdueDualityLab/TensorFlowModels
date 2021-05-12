@@ -1,8 +1,8 @@
-import tensorflow_datasets as tfds 
-import tensorflow as tf
 import matplotlib.pyplot as plt
-import utils.demos.utils as utils
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
+import utils.demos.utils as utils
 from panoptic.dataloaders.decoders import tfds_panoptic_coco_decoder
 
 path = "/media/vbanna/DATA_SHARE/tfds"

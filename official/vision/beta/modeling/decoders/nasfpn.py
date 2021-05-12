@@ -19,12 +19,11 @@ NAS-FPN: Learning Scalable Feature Pyramid Architecture for Object Detection.
 https://arxiv.org/abs/1904.07392. CVPR 2019.
 """
 
+import tensorflow as tf
 # Import libraries
 from absl import logging
-import tensorflow as tf
 
 from official.vision.beta.ops import spatial_transform_ops
-
 
 # The fixed NAS-FPN architecture discovered by NAS.
 # Each element represents a specification of a building block:

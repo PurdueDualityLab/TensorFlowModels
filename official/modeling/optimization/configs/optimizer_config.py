@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """Dataclasses for optimizer configs."""
+import dataclasses
 from typing import List, Optional
 
-import dataclasses
 from official.modeling.hyperparams import base_config
 
 
@@ -53,6 +53,23 @@ class SGDConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum: float = 0.0
 
+@dataclasses.dataclass
+class SGDAccumConfig(BaseOptimizerConfig):
+  """Configuration for SGD optimizer.
+
+  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+
+  Attributes:
+    name: name of the optimizer.
+    decay: decay rate for SGD optimizer.
+    nesterov: nesterov for SGD optimizer.
+    momentum: momentum for SGD optimizer.
+  """
+  name: str = "SGD"
+  decay: float = 0.0
+  nesterov: bool = False
+  momentum: float = 0.0
+  accumulation_steps: int = 1
 
 @dataclasses.dataclass
 class RMSPropConfig(BaseOptimizerConfig):

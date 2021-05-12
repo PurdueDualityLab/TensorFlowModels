@@ -18,13 +18,12 @@ This file define the dataclass for optimization configs (OptimizationConfig).
 It also has two helper functions get_optimizer_config, and get_lr_config from
 an OptimizationConfig class.
 """
+import dataclasses
 from typing import Optional
 
-import dataclasses
-
-from official.modeling.hyperparams import base_config
-from official.modeling.hyperparams import oneof
-from official.modeling.optimization.configs import learning_rate_config as lr_cfg
+from official.modeling.hyperparams import base_config, oneof
+from official.modeling.optimization.configs import \
+    learning_rate_config as lr_cfg
 from official.modeling.optimization.configs import optimizer_config as opt_cfg
 
 
@@ -46,6 +45,7 @@ class OptimizerConfig(oneof.OneOfConfig):
   adamw: opt_cfg.AdamWeightDecayConfig = opt_cfg.AdamWeightDecayConfig()
   lamb: opt_cfg.LAMBConfig = opt_cfg.LAMBConfig()
   rmsprop: opt_cfg.RMSPropConfig = opt_cfg.RMSPropConfig()
+  sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
 
 
 @dataclasses.dataclass

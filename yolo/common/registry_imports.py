@@ -14,18 +14,14 @@
 # ==============================================================================
 """All necessary imports for registration."""
 
+import yolo
 # pylint: disable=unused-import
 from official.common import registry_imports
-
-import yolo
+from yolo.configs import darknet_classification, yolo
+from yolo.configs.darknet_classification import (ImageClassificationTask,
+                                                 image_classification)
+from yolo.configs.yolo import YoloTask, yolo_custom
 from yolo.modeling.backbones import darknet
-from yolo.configs import darknet_classification
-from yolo.configs import yolo
-from yolo.configs.yolo import yolo_custom
-from yolo.configs.darknet_classification import image_classification
-from yolo.configs.darknet_classification import ImageClassificationTask
-from yolo.configs.yolo import YoloTask
-
 from yolo.tasks.image_classification import ImageClassificationTask
 from yolo.tasks.yolo import YoloTask
 from yolo.tasks.yolo_subdiv import YoloSubDivTask

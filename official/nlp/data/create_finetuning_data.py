@@ -18,18 +18,16 @@ import functools
 import json
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
 import tensorflow as tf
+# Import libraries
+from absl import app, flags
+
 from official.nlp.bert import tokenization
-from official.nlp.data import classifier_data_lib
-from official.nlp.data import sentence_retrieval_lib
-# word-piece tokenizer based squad_lib
-from official.nlp.data import squad_lib as squad_lib_wp
 # sentence-piece tokenizer based squad_lib
-from official.nlp.data import squad_lib_sp
-from official.nlp.data import tagging_data_lib
+# word-piece tokenizer based squad_lib
+from official.nlp.data import classifier_data_lib, sentence_retrieval_lib
+from official.nlp.data import squad_lib as squad_lib_wp
+from official.nlp.data import squad_lib_sp, tagging_data_lib
 
 FLAGS = flags.FLAGS
 
@@ -49,7 +47,8 @@ flags.DEFINE_string(
 flags.DEFINE_enum(
     "classification_task_name", "MNLI", [
         "AX", "COLA", "IMDB", "MNLI", "MRPC", "PAWS-X", "QNLI", "QQP", "RTE",
-        "SST-2", "STS-B", "WNLI", "XNLI", "XTREME-XNLI", "XTREME-PAWS-X"
+        "SST-2", "STS-B", "WNLI", "XNLI", "XTREME-XNLI", "XTREME-PAWS-X",
+        "AX-g", "SUPERGLUE-RTE"
     ], "The name of the task to train BERT classifier. The "
     "difference between XTREME-XNLI and XNLI is: 1. the format "
     "of input tsv files; 2. the dev set for XTREME is english "
@@ -238,7 +237,11 @@ def generate_classifier_dataset():
             functools.partial(
                 classifier_data_lib.XtremePawsxProcessor,
                 translated_data_dir=FLAGS.translated_input_data_dir,
-                only_use_en_dev=FLAGS.only_use_en_dev)
+                only_use_en_dev=FLAGS.only_use_en_dev),
+        "ax-g":
+            classifier_data_lib.AXgProcessor,
+        "superglue-rte":
+            classifier_data_lib.SuperGLUERTEProcessor
     }
     task_name = FLAGS.classification_task_name.lower()
     if task_name not in processors:

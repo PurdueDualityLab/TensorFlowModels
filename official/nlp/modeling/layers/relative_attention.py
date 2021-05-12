@@ -16,6 +16,7 @@
 """Keras-based relative attention layers."""
 import math
 import string
+
 import tensorflow as tf
 
 _CHR_IDX = string.ascii_lowercase
@@ -75,7 +76,7 @@ class MultiHeadRelativeAttention(tf.keras.layers.MultiHeadAttention):
   """A multi-head attention layer with relative attention + position encoding.
 
   This layer shares the same input/output projections as the common
-  MultiHeadAttention layer.
+  `tf.keras.layers.MultiHeadAttention` layer.
 
   When it calculates attention logits, position encoding is projected to form
   relative keys. The logits are composed by shifted relative logits and content
@@ -333,8 +334,9 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
   The query stream only has access to contextual information and the position,
   but not the content.
 
-  This layer shares the same build signature as `MultiHeadRelativeAttention` but
-  has different input/output projections.
+  This layer shares the same build signature as
+  `tf.keras.layers.MultiHeadAttention` but has different input/output
+  projections.
 
   **Note: This layer is currently experimental.
 
@@ -496,4 +498,3 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
       query_attention_output = self._output_dense(query_attention_output)
 
     return content_attention_output, query_attention_output
-

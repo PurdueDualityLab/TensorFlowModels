@@ -1,18 +1,21 @@
-from yolo.tasks import image_classification as imc
-from yolo.utils.demos import utils, coco
-from yolo.tasks import yolo
-from yolo.configs import yolo as yolocfg
-from yolo.configs import darknet_classification as dcfg
+import dataclasses
+import time
+
+import matplotlib.pyplot as plt
+import tensorflow as tf
+
+from official.core import config_definitions as cfg
 from official.core import input_reader
-from yolo.dataloaders import yolo_input as YOLO_Detection_Input
+from official.modeling import hyperparams
+from yolo.configs import darknet_classification as dcfg
+from yolo.configs import yolo as yolocfg
 from yolo.dataloaders import classification_input
+from yolo.dataloaders import yolo_input as YOLO_Detection_Input
 from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.ops import box_ops
-import matplotlib.pyplot as plt
-import dataclasses
-from official.modeling import hyperparams
-from official.core import config_definitions as cfg
-import tensorflow as tf
+from yolo.tasks import image_classification as imc
+from yolo.tasks import yolo
+from yolo.utils.demos import coco, utils
 
 
 def test_yolo_input_task():
@@ -63,16 +66,24 @@ def test_classification_pipeline():
   return
 
 
+
+
 def test_pipeline():
   dataset, dsp = test_yolo_input_task()
-
+  print(dataset)
+  shind = 0
+  dip = 0
   drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
+  ltime = time.time()
   for l, (i, j) in enumerate(dataset):
+    ftime = time.time()
+    print(ftime - ltime)
 
+    print(tf.shape(i))
     # boxes = box_ops.xcycwh_to_yxyx(j['bbox'])
     # j["bbox"] = boxes
-    i = drawer(i,
-               j)  # tf.image.draw_bounding_boxes(i, boxes, [[1.0, 0.0, 1.0]])
+    i2 = drawer(i, j)  #
+    i = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
     gt = j['grid_form']
 
@@ -80,19 +91,45 @@ def test_pipeline():
     obj4 = gt['4'][..., 4]
     obj5 = gt['5'][..., 4]
 
+    cls3 = gt['3'][..., dip, 5]
+    cls4 = gt['4'][..., dip, 5]
+    cls5 = gt['5'][..., dip, 5]
+
     fig, axe = plt.subplots(1, 4)
 
-    axe[0].imshow(i[0])
-    axe[1].imshow(obj3[0].numpy())
-    axe[2].imshow(obj4[0].numpy())
-    axe[3].imshow(obj5[0].numpy())
+    axe[0].imshow(i2[shind])
+    axe[1].imshow(obj3[shind].numpy())
+    axe[2].imshow(obj4[shind].numpy())
+    axe[3].imshow(obj5[shind].numpy())
 
     fig.set_size_inches(18.5, 6.5, forward=True)
     plt.tight_layout()
     plt.show()
 
-    if l >= 30:
+    ltime = time.time()
+
+    if l >= 10:
       break
+
+
+def time_pipeline():
+  dataset, dsp = test_yolo_input_task()
+  print(dataset)
+  times = []
+  ltime = time.time()
+  for l, (i, j) in enumerate(dataset):
+    ftime = time.time()
+    # print(tf.reduce_min(i))
+    # print(l , ftime - ltime, end = ", ")
+    times.append(ftime - ltime)
+    ltime = time.time()
+    if l >= 100:
+      break
+
+  plt.plot(times)
+  plt.show()
+
+  print(f"total time {sum(times)}")
 
 
 if __name__ == '__main__':

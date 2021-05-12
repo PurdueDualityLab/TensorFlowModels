@@ -5,14 +5,12 @@ import string
 import warnings
 from typing import ClassVar, Union
 
-from official.vision.beta.configs import backbones, backbones_3d
-from official.vision.beta.modeling.backbones import factory as backbones_factory
-from official.vision.beta.modeling import factory_3d as models_3d_factory
-from official.core import task_factory
-from official.core import exp_factory
-
-from official.core import registry
+from official.core import exp_factory, registry, task_factory
 from official.modeling import hyperparams
+from official.vision.beta.configs import backbones, backbones_3d
+from official.vision.beta.modeling import factory_3d as models_3d_factory
+from official.vision.beta.modeling.backbones import \
+    factory as backbones_factory
 
 
 def _deduce_type(fn, config_param=1):

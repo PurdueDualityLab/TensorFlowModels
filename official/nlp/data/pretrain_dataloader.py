@@ -14,17 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 """Loads dataset for the BERT pretraining task."""
+import dataclasses
 from typing import Mapping, Optional
 
-from absl import logging
-
-import dataclasses
 import numpy as np
 import tensorflow as tf
+from absl import logging
+
 from official.core import config_definitions as cfg
 from official.core import input_reader
-from official.nlp.data import data_loader
-from official.nlp.data import data_loader_factory
+from official.nlp.data import data_loader, data_loader_factory
 
 
 @dataclasses.dataclass
@@ -61,8 +60,7 @@ class BertPretrainDataLoader(data_loader.DataLoader):
     self._use_next_sentence_label = params.use_next_sentence_label
     self._use_position_id = params.use_position_id
 
-  def _decode(self, record: tf.Tensor):
-    """Decodes a serialized tf.Example."""
+  def _name_to_features(self):
     name_to_features = {
         'input_mask':
             tf.io.FixedLenFeature([self._seq_length], tf.int64),
@@ -89,7 +87,11 @@ class BertPretrainDataLoader(data_loader.DataLoader):
     if self._use_position_id:
       name_to_features['position_ids'] = tf.io.FixedLenFeature(
           [self._seq_length], tf.int64)
+    return name_to_features
 
+  def _decode(self, record: tf.Tensor):
+    """Decodes a serialized tf.Example."""
+    name_to_features = self._name_to_features()
     example = tf.io.parse_single_example(record, name_to_features)
 
     # tf.Example only supports tf.int64, but the TPU only supports tf.int32.

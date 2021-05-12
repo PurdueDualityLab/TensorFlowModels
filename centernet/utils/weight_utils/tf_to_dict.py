@@ -1,4 +1,10 @@
+"""
+This file contains functions used to convert a TF checkpoint into a dictionary, 
+which streamlines the way of loading weights from one model to another.
+"""
+
 import tensorflow as tf
+
 
 def update_weights_dict(weights_dict, variable_key, value):
   """ Inserts weight value into a weight dictionary.
@@ -33,6 +39,7 @@ def get_model_weights_as_dict(ckpt_path):
     ckpt_path: String, indicating filepath of the TF checkpoint
   Returns:
     Dictionary where the checkpoint weights are stored
+    Number of weights read
   """
   print("\nConverting model checkpoint from {} to weights dictionary\n".format(ckpt_path))
   reader = tf.train.load_checkpoint(ckpt_path)
@@ -41,15 +48,18 @@ def get_model_weights_as_dict(ckpt_path):
 
   variable_keys = shape_from_key.keys()
   weights_dict = {}
+  n_read = 0
 
   for key in variable_keys:
     shape = shape_from_key[key]
     dtype = dtype_from_key[key]
     value = reader.get_tensor(key)
+    n_read += tf.size(value)
     update_weights_dict(weights_dict, key, value)
   
-  print("Successfully read checkpoint weights\n")
-  return weights_dict
+  print("Successfully read {} checkpoint weights\n".format(n_read))
+  return weights_dict, n_read
+
 
 def write_dict_as_tree(dictionary, filename, spaces=0):
   """ Writes nested dictionary keys to a file.

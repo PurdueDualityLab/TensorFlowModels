@@ -19,7 +19,6 @@
 import dataclasses
 
 from official.modeling import hyperparams
-
 from official.vision.beta.configs import backbones
 
 

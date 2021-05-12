@@ -1,7 +1,8 @@
+import cv2
 import numpy as np
 import tensorflow as tf
+
 from skimage import io
-import cv2
 # from yolo.utils.run_utils import prep_gpu
 # prep_gpu()
 # from yolo.modeling.layers.detection_generator import YoloLayer as filters

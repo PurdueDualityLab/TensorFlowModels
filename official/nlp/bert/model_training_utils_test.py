@@ -16,18 +16,14 @@
 
 import os
 
-from absl import logging
-from absl.testing import flagsaver
-from absl.testing import parameterized
-from absl.testing.absltest import mock
 import numpy as np
 import tensorflow as tf
+from absl import logging
+from absl.testing import flagsaver, parameterized
+from absl.testing.absltest import mock
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-from official.nlp.bert import common_flags
-from official.nlp.bert import model_training_utils
-
+from official.nlp.bert import common_flags, model_training_utils
 
 common_flags.define_common_bert_flags()
 

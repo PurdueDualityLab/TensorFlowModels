@@ -4,13 +4,12 @@ import collections
 import json
 import os
 
-from absl import logging
+import matplotlib.pyplot as plt
+import numpy as np
+import pycocotools.mask as mask_utils
 import tensorflow.compat.v2 as tf
 import tensorflow_datasets as tfds
-import pycocotools.mask as mask_utils
-import json 
-import matplotlib.pyplot as plt
-import numpy as np 
+from absl import logging
 
 
 def reformat_dictionary(things_file, stuff_file, panoptic_file):

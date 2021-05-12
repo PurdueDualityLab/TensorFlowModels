@@ -1,22 +1,40 @@
+"""
+This file contains the layers (Config objects) that are used for parsing the
+ODAPI checkpoint weights for CenterNet. 
+
+Currently, the parser is incomplete and has only been tested on  
+CenterNet Hourglass-104 512x512.
+"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-import numpy as np
+from typing import ClassVar, Dict, List, Tuple
 
-from typing import Tuple, List, Dict, ClassVar
+import numpy as np
+import tensorflow as tf
+
 
 class Config(ABC):
-    def get_weights(self):
-      return None
-    
-    def load_weights(self, layer):
-      weights = self.get_weights() 
-      layer.set_weights(weights)
-      n_weights = 0
+  def get_weights(self):
+    """
+    This function generates the weights needed to be loaded into the layer. 
+    """
+    return None
+  
+  def load_weights(self, layer: tf.keras.layers.Layer) -> int:
+    """
+    Given a layer, this function retrives the weights for that layer in an 
+    appropriate format, and loads them into the layer. Additionally, 
+    the number of weights loaded are returned. If the weights are in an
+    incorrect format, a ValueError will be raised by set_weights().
+    """
+    weights = self.get_weights() 
+    layer.set_weights(weights)
+    n_weights = 0
 
-      for w in weights:
-        n_weights += w.size
-      return n_weights
-
+    for w in weights:
+      n_weights += w.size
+    return n_weights
 
 @dataclass
 class convBnCFG(Config):
@@ -95,28 +113,28 @@ class residualBlockCFG(Config):
 
   def get_weights(self):
     weights = [
-          self.skip_weights,
-          self.skip_gamma,
-          self.skip_beta,
+      self.skip_weights,
+      self.skip_gamma,
+      self.skip_beta,
 
-          self.conv_block_weights,
-          self.conv_block_gamma,
-          self.conv_block_beta,
+      self.conv_block_weights,
+      self.conv_block_gamma,
+      self.conv_block_beta,
 
-          self.conv_weights,
-          self.norm_gamma,
-          self.norm_beta,
+      self.conv_weights,
+      self.norm_gamma,
+      self.norm_beta,
 
-          self.skip_moving_mean,
-          self.skip_moving_variance,
-          self.conv_block_moving_mean,
-          self.conv_block_moving_variance,
-          self.norm_moving_mean,
-          self.norm_moving_variance,
-        ]
+      self.skip_moving_mean,
+      self.skip_moving_variance,
+      self.conv_block_moving_mean,
+      self.conv_block_moving_variance,
+      self.norm_moving_mean,
+      self.norm_moving_variance,
+    ]
 
     weights = [x for x in weights if x is not None]
-    return weights  
+    return weights
 
 @dataclass
 class hourglassCFG(Config):
@@ -150,13 +168,16 @@ class hourglassCFG(Config):
     n_weights = 0
 
     if not self.is_last_stage:
-      enc_dec_layers = [layer.submodules[0], 
-                layer.submodules[1], 
-                layer.submodules[3]]
-      enc_dec_weight_dicts = [self.weights_dict['encoder_block1'], 
-                      self.weights_dict['encoder_block2'],
-                      self.weights_dict['decoder_block']]
-      
+      enc_dec_layers = [
+        layer.submodules[0], 
+        layer.submodules[1], 
+        layer.submodules[3]
+      ]
+      enc_dec_weight_dicts = [
+        self.weights_dict['encoder_block1'], 
+        self.weights_dict['encoder_block2'],
+        self.weights_dict['decoder_block']
+      ]
 
       for l, weights_dict in zip(enc_dec_layers, enc_dec_weight_dicts):
         n_weights += self.load_block_weights(l, weights_dict)

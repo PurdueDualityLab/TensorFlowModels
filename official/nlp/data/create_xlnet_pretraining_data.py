@@ -14,25 +14,24 @@
 # ==============================================================================
 """Create LM TF examples for XLNet."""
 
+import dataclasses
 import json
 import math
 import os
-
 import random
-from typing import Iterable, Mapping, List, Optional, Tuple
 import unicodedata
+from typing import Iterable, List, Mapping, Optional, Tuple
+
+import numpy as np
+import tensorflow as tf
+from absl import app, flags, logging
+
+from official.nlp.bert import tokenization
 
 # Import libraries
 
-from absl import app
-from absl import flags
-from absl import logging
 
-import dataclasses
-import numpy as np
-import tensorflow as tf
 
-from official.nlp.bert import tokenization
 
 special_symbols = {
     "<unk>": 0,

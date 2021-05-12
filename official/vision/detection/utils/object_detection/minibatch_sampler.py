@@ -29,8 +29,7 @@ Subclasses should implement the Subsample function and can make use of the
 This is originally implemented in TensorFlow Object Detection API.
 """
 
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 import tensorflow as tf
 

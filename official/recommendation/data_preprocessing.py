@@ -14,29 +14,28 @@
 # ==============================================================================
 """Preprocess dataset and construct any necessary artifacts."""
 
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import pickle
 import time
 import timeit
+import typing
+from typing import Dict, Text, Tuple
 
-# pylint: disable=wrong-import-order
-
-from absl import logging
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import typing
-from typing import Dict, Text, Tuple
-# pylint: enable=wrong-import-order
+from absl import logging
 
 from official.recommendation import constants as rconst
-from official.recommendation import data_pipeline
-from official.recommendation import movielens
+from official.recommendation import data_pipeline, movielens
+
+# pylint: disable=wrong-import-order
+
+# pylint: enable=wrong-import-order
+
 
 _EXPECTED_CACHE_KEYS = (rconst.TRAIN_USER_KEY, rconst.TRAIN_ITEM_KEY,
                         rconst.EVAL_USER_KEY, rconst.EVAL_ITEM_KEY,

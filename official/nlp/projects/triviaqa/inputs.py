@@ -20,7 +20,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 from official.modeling import tf_utils
-from official.nlp.projects.triviaqa import dataset  # pylint: disable=unused-import
+from official.nlp.projects.triviaqa import \
+    dataset  # pylint: disable=unused-import
 
 
 def _flatten_dims(tensor: tf.Tensor,

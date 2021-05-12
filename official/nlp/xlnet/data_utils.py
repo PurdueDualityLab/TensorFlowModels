@@ -18,10 +18,9 @@ import collections
 import json
 import os
 
-from absl import logging
-
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 special_symbols = {
     "<unk>": 0,

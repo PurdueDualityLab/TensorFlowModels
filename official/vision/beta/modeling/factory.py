@@ -18,30 +18,29 @@
 
 import tensorflow as tf
 
-from official.vision.beta.configs import image_classification as classification_cfg
+from official.vision.beta.configs import \
+    image_classification as classification_cfg
 from official.vision.beta.configs import maskrcnn as maskrcnn_cfg
 from official.vision.beta.configs import retinanet as retinanet_cfg
-from official.vision.beta.configs import semantic_segmentation as segmentation_cfg
-from official.vision.beta.modeling import backbones
-from official.vision.beta.modeling import classification_model
-from official.vision.beta.modeling import maskrcnn_model
-from official.vision.beta.modeling import retinanet_model
-from official.vision.beta.modeling import segmentation_model
+from official.vision.beta.configs import \
+    semantic_segmentation as segmentation_cfg
+from official.vision.beta.modeling import (backbones, classification_model,
+                                           maskrcnn_model, retinanet_model,
+                                           segmentation_model)
 from official.vision.beta.modeling.decoders import factory as decoder_factory
-from official.vision.beta.modeling.heads import dense_prediction_heads
-from official.vision.beta.modeling.heads import instance_heads
-from official.vision.beta.modeling.heads import segmentation_heads
-from official.vision.beta.modeling.layers import detection_generator
-from official.vision.beta.modeling.layers import mask_sampler
-from official.vision.beta.modeling.layers import roi_aligner
-from official.vision.beta.modeling.layers import roi_generator
-from official.vision.beta.modeling.layers import roi_sampler
+from official.vision.beta.modeling.heads import (dense_prediction_heads,
+                                                 instance_heads,
+                                                 segmentation_heads)
+from official.vision.beta.modeling.layers import (detection_generator,
+                                                  mask_sampler, roi_aligner,
+                                                  roi_generator, roi_sampler)
 
 
 def build_classification_model(
     input_specs: tf.keras.layers.InputSpec,
     model_config: classification_cfg.ImageClassificationModel,
-    l2_regularizer: tf.keras.regularizers.Regularizer = None):
+    l2_regularizer: tf.keras.regularizers.Regularizer = None,
+    skip_logits_layer: bool = False):
   """Builds the classification model."""
   backbone = backbones.factory.build_backbone(
       input_specs=input_specs,
@@ -58,7 +57,8 @@ def build_classification_model(
       add_head_batch_norm=model_config.add_head_batch_norm,
       use_sync_bn=norm_activation_config.use_sync_bn,
       norm_momentum=norm_activation_config.norm_momentum,
-      norm_epsilon=norm_activation_config.norm_epsilon)
+      norm_epsilon=norm_activation_config.norm_epsilon,
+      skip_logits_layer=skip_logits_layer)
   return model
 
 

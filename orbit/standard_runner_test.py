@@ -14,12 +14,10 @@
 
 """Tests for orbit.standard_runner."""
 
+import tensorflow as tf
 from absl.testing import parameterized
 
-from orbit import standard_runner
-from orbit import utils
-
-import tensorflow as tf
+from orbit import standard_runner, utils
 
 
 def dataset_fn(input_context=None):

@@ -14,16 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 """Sentence prediction (classification) task."""
-from typing import List, Union, Optional
-
-from absl import logging
 import dataclasses
+from typing import List, Optional, Union
+
 import numpy as np
-import orbit
+import tensorflow as tf
+from absl import logging
 from scipy import stats
 from sklearn import metrics as sklearn_metrics
-import tensorflow as tf
 
+import orbit
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory

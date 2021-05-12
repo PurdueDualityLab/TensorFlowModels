@@ -16,15 +16,12 @@
 
 import pprint
 import time
-
 from typing import Callable, Optional, Union
 
+import tensorflow as tf
 from absl import logging
 
-from orbit import runner
-from orbit import utils
-
-import tensorflow as tf
+from orbit import runner, utils
 
 
 def _log(message: str):
@@ -240,7 +237,6 @@ class Controller:
       ValueError: If `steps` is not a positive value or -1.
     """
     self._require("evaluator", for_method="evaluate")
-
     if steps > 0:
       steps_msg = f"running {steps} steps of evaluation..."
     elif steps == -1:
@@ -259,7 +255,7 @@ class Controller:
     elapsed = time.time() - start
 
     _log(f" eval | step: {current_step: 6d} | "
-         f"eval time: {elapsed: 6.1f} | "
+         f"eval time: {elapsed: 6.1f} sec | "
          f"output: {_format_output(eval_output)}")
 
     self.eval_summary_manager.write_summaries(eval_output)
@@ -449,6 +445,7 @@ class Controller:
     if self.checkpoint_manager and self.checkpoint_manager.checkpoint_interval:
       ckpt_path = self.checkpoint_manager.save(
           checkpoint_number=self.global_step.numpy(),
+          
           check_interval=check_interval)
       if ckpt_path is not None:
         _log(f"saved checkpoint to {ckpt_path}.")

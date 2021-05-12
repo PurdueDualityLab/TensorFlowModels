@@ -17,6 +17,7 @@
 import os
 
 from absl import logging
+
 from official.nlp.bert import tokenization
 from official.nlp.data import classifier_data_lib
 

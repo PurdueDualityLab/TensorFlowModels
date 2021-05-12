@@ -13,11 +13,10 @@
 # limitations under the License.
 """Entry point for refactoring via the lib2to3 fixer."""
 
+import logging
 from lib2to3 import refactor as lib2to3_refactor
 from lib2to3.pgen2 import parse as pgen2_parse
 from lib2to3.pgen2 import tokenize as pgen2_tokenize
-
-import logging
 
 # Our path in the source tree.
 MODULE_NAME_PREFIX = 'yapf_contrib.fixers.fix_'

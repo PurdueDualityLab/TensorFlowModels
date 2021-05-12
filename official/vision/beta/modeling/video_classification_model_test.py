@@ -15,13 +15,12 @@
 # ==============================================================================
 """Tests for video classification network."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
 
-from official.vision.beta.modeling import backbones
-from official.vision.beta.modeling import video_classification_model
+from official.vision.beta.modeling import backbones, video_classification_model
 
 
 class VideoClassificationNetworkTest(parameterized.TestCase, tf.test.TestCase):
@@ -53,7 +52,7 @@ class VideoClassificationNetworkTest(parameterized.TestCase, tf.test.TestCase):
     model = video_classification_model.VideoClassificationModel(
         backbone=backbone,
         num_classes=num_classes,
-        input_specs=input_specs,
+        input_specs={'image': input_specs},
         dropout_rate=0.2,
         aggregate_endpoints=aggregate_endpoints,
     )

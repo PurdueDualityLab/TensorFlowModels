@@ -17,13 +17,12 @@ r"""Vision models export utility function for serving/inference."""
 
 import os
 
-import tensorflow.compat.v2 as tf
+import tensorflow as tf
 
 from official.core import train_utils
 from official.vision.beta import configs
-from official.vision.beta.serving import detection
-from official.vision.beta.serving import image_classification
-from official.vision.beta.serving import semantic_segmentation
+from official.vision.beta.serving import (detection, image_classification,
+                                          semantic_segmentation)
 
 
 def export_inference_graph(input_type, batch_size, input_image_size, params,

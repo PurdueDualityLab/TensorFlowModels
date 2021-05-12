@@ -25,14 +25,10 @@ import os
 import tempfile
 from typing import List, Tuple
 
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
 import tensorflow_datasets as tfds
-
+from absl import app, flags, logging
 from sentencepiece import SentencePieceTrainer
-
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("output_model_path", None,

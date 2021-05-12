@@ -16,10 +16,9 @@
 
 import numpy as np
 import tensorflow as tf
+
 from official.nlp.modeling import layers
-from official.nlp.nhnet import configs
-from official.nlp.nhnet import decoder
-from official.nlp.nhnet import utils
+from official.nlp.nhnet import configs, decoder, utils
 
 
 class DecoderTest(tf.test.TestCase):

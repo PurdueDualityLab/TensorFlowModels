@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import tensorflow as tf
-
 from tensorflow.python.distribute import combinations
-from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.keras import \
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
+
 from official.nlp.modeling.networks import xlnet_base
 
 

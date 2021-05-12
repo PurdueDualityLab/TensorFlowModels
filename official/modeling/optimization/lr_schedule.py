@@ -14,7 +14,7 @@
 
 """Learning rate schedule classes."""
 
-from typing import Mapping, Any, Union, Optional
+from typing import Any, Mapping, Optional, Union
 
 import tensorflow as tf
 

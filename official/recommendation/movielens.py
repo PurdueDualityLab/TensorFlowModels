@@ -17,9 +17,7 @@
 Download the dataset, and perform basic preprocessing.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import sys
@@ -31,14 +29,14 @@ import zipfile
 import numpy as np
 import pandas as pd
 import six
-from six.moves import urllib  # pylint: disable=redefined-builtin
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
-# pylint: enable=g-bad-import-order
+from absl import app, flags, logging
+from six.moves import urllib  # pylint: disable=redefined-builtin
 
 from official.utils.flags import core as flags_core
+
+# pylint: enable=g-bad-import-order
+
 
 
 ML_1M = "ml-1m"

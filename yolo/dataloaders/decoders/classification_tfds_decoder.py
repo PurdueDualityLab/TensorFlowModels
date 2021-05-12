@@ -16,8 +16,7 @@
 # Import libraries
 import tensorflow as tf
 
-from official.vision.beta.dataloaders import decoder
-from official.vision.beta.dataloaders import parser
+from official.vision.beta.dataloaders import decoder, parser
 from official.vision.beta.ops import preprocess_ops
 
 
@@ -28,9 +27,12 @@ class Decoder(decoder.Decoder):
     return
 
   def decode(self, serialized_example):
-    # this is not the best solution, but we encode the image because the parser only works with string encoded jpegs.
-    # the simple solution is to decode the image to a tensor in the deccoder and to have the parser operate on uint8
-    # tensors rather than tensor strings, or to have the parser function differently based on the input type.
+    # this is not the best solution, but we encode the image because
+    # the parser only works with string encoded jpegs.
+    # the simple solution is to decode the image to a tensor in the deccoder
+    # and to have the parser operate on uint8
+    # tensors rather than tensor strings, or to have the parser function
+    # differently based on the input type.
 
     sample_dict = {
         'image/encoded':

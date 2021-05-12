@@ -13,16 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Optimizer factory for vision tasks."""
-from __future__ import absolute_import
-from __future__ import division
 # from __future__ import google_type_annotations
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from typing import Any, Dict, Text
 
-from absl import logging
 import tensorflow as tf
 import tensorflow_addons as tfa
+from absl import logging
 
 from official.modeling import optimization
 from official.vision.image_classification import learning_rate

@@ -14,20 +14,16 @@
 # ==============================================================================
 """NCF model input pipeline."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import functools
 
 # pylint: disable=g-bad-import-order
-
-import tensorflow.compat.v2 as tf
-# pylint: enable=g-bad-import-order
+import tensorflow as tf
 
 from official.recommendation import constants as rconst
-from official.recommendation import data_pipeline
-from official.recommendation import movielens
+from official.recommendation import data_pipeline, movielens
+
+# pylint: enable=g-bad-import-order
+
 
 
 def create_dataset_from_tf_record_files(input_file_pattern,

@@ -14,20 +14,16 @@
 # ==============================================================================
 """Test the Keras MNIST model on GPU."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.utils.testing import integration
 from official.vision.image_classification import mnist_main
-
 
 mnist_main.define_mnist_flags()
 

@@ -16,18 +16,15 @@
 
 import os
 
-from absl import logging
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
-
+from absl import logging
+from absl.testing import parameterized
 # pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
+from tensorflow.python.distribute import combinations, strategy_combinations
+
 # pylint: enable=g-direct-tensorflow-import
-from official.nlp.nhnet import configs
-from official.nlp.nhnet import models
-from official.nlp.nhnet import utils
+from official.nlp.nhnet import configs, models, utils
 
 
 def all_strategy_combinations():

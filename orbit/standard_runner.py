@@ -34,15 +34,13 @@ and `AbstractEvaluator` subclasses in these cases.
 """
 
 import abc
-
+import dataclasses
 from typing import Any, Optional
 
-import dataclasses
+import tensorflow as tf
 
 from orbit import runner
 from orbit.utils import loop_fns
-
-import tensorflow as tf
 
 
 @dataclasses.dataclass(frozen=True)
@@ -299,7 +297,7 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
                        "`options.use_tf_while_loop` is `True`")
 
     outputs = self.eval_begin()  # pylint: disable=assignment-from-no-return
-
+    
     has_state = outputs is not None
     if self._eval_loop_fn is None:
       self._eval_loop_fn = _create_eval_loop_fn(
@@ -311,7 +309,6 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
     else:
       outputs = self._eval_loop_fn(
           eval_iter, num_steps, state=outputs, reduce_fn=self.eval_reduce)
-
     if outputs is None:
       return self.eval_end()
     else:

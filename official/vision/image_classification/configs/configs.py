@@ -14,15 +14,14 @@
 # limitations under the License.
 # ==============================================================================
 """Configuration utils for image classification experiments."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import dataclasses
 
 from official.vision.image_classification import dataset_factory
 from official.vision.image_classification.configs import base_configs
-from official.vision.image_classification.efficientnet import efficientnet_config
+from official.vision.image_classification.efficientnet import \
+    efficientnet_config
 from official.vision.image_classification.resnet import resnet_config
 
 

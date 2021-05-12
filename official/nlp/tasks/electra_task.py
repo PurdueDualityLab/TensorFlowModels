@@ -16,18 +16,16 @@
 """ELECTRA pretraining task (Joint Masked LM and Replaced Token Detection)."""
 
 import dataclasses
+
 import tensorflow as tf
 
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory
 from official.modeling import tf_utils
-from official.nlp.configs import bert
-from official.nlp.configs import electra
-from official.nlp.configs import encoders
+from official.nlp.configs import bert, electra, encoders
 from official.nlp.data import pretrain_dataloader
-from official.nlp.modeling import layers
-from official.nlp.modeling import models
+from official.nlp.modeling import layers, models
 
 
 @dataclasses.dataclass

@@ -16,12 +16,11 @@
 # pylint: disable=g-direct-tensorflow-import
 import os
 
-from absl.testing import parameterized
-import orbit
 import tensorflow as tf
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
+import orbit
 from official.core import config_definitions as cfg
 from official.modeling import optimization
 from official.modeling.progressive import policies

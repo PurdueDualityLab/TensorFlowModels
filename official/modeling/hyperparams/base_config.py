@@ -15,13 +15,13 @@
 """Base configurations to standardize experiments."""
 
 import copy
+import dataclasses
 import functools
 from typing import Any, List, Mapping, Optional, Type
-from absl import logging
 
-import dataclasses
 import tensorflow as tf
 import yaml
+from absl import logging
 
 from official.modeling.hyperparams import params_dict
 
@@ -30,7 +30,7 @@ from official.modeling.hyperparams import params_dict
 class Config(params_dict.ParamsDict):
   """The base configuration class that supports YAML/JSON based overrides.
 
-  * It recursively enforces a whitelist of basic types and container types, so
+  * It recursively enforces a allowlist of basic types and container types, so
     it avoids surprises with copy and reuse caused by unanticipated types.
   * It converts dict to Config even within sequences,
     e.g. for config = Config({'key': [([{'a': 42}],)]),

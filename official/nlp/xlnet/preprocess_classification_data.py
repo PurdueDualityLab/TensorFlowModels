@@ -18,17 +18,13 @@ import collections
 import csv
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import numpy as np
-import tensorflow as tf
-
 import sentencepiece as spm
-from official.nlp.xlnet import classifier_utils
-from official.nlp.xlnet import preprocess_utils
+import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
 
+from official.nlp.xlnet import classifier_utils, preprocess_utils
 
 flags.DEFINE_bool(
     "overwrite_data",

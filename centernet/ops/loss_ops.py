@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def _to_float32(x):
   return tf.cast(x, tf.float32)
 
@@ -44,10 +45,48 @@ def get_num_instances_from_weights(groundtruth_weights_list):
     images in the batch. Note that this function is usually used to normalize
     the loss so the minimum return value is 1 to avoid weird behavior.
   """
-  num_instances = tf.reduce_sum(
-      [tf.math.count_nonzero(w) for w in groundtruth_weights_list])
+  # num_instances = tf.reduce_sum(
+  #     [tf.math.count_nonzero(w) for w in groundtruth_weights_list])
+
+  # This can execute in graph mode
+  groundtruth_weights_list = tf.convert_to_tensor(
+    groundtruth_weights_list, dtype=groundtruth_weights_list[0].dtype)
+  num_instances = tf.map_fn(
+    fn=lambda x: tf.math.count_nonzero(x, dtype=groundtruth_weights_list[0].dtype), 
+    elems=groundtruth_weights_list)
+  
+  num_instances = tf.reduce_sum(num_instances)
   num_instances = tf.maximum(num_instances, 1)
   return num_instances
+
+def multi_range(limit,
+                value_repetitions=1,
+                range_repetitions=1,
+                dtype=tf.int32):
+    """ Creates a sequence with optional value duplication and range repetition.
+
+    As an example (see the Args section for more details),
+    _multi_range(limit=2, value_repetitions=3, range_repetitions=4) returns:
+    [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1]
+    NOTE: Repurposed from Google OD API.
+
+    Args:
+      limit: A 0-D Tensor (scalar). Upper limit of sequence, exclusive.
+      value_repetitions: Integer. The number of times a value in the sequence is
+        repeated. With value_repetitions=3, the result is [0, 0, 0, 1, 1, 1, ..].
+      range_repetitions: Integer. The number of times the range is repeated. With
+        range_repetitions=3, the result is [0, 1, 2, .., 0, 1, 2, ..].
+      dtype: The type of the elements of the resulting tensor.
+    
+    Returns:
+      A 1-D tensor of type `dtype` and size
+        [`limit` * `value_repetitions` * `range_repetitions`] that contains the
+        specified range with given repetitions.
+    """
+    return tf.reshape(
+        tf.tile(
+          tf.expand_dims(tf.range(limit, dtype=dtype), axis=-1),
+          multiples=[range_repetitions, value_repetitions]), [-1])
 
 def get_batch_predictions_from_indices(batch_predictions, indices):
   """Gets the values of predictions in a batch at the given indices.
@@ -64,5 +103,16 @@ def get_batch_predictions_from_indices(batch_predictions, indices):
     values: A tensor of shape [num_instances, channels] holding the predicted
       values at the given indices.
   """
+  # indices right now is shape (8, 128, 2), we need to make it (8, 128, 3), where
+  # the last dimension corresponds to the batch it belongs t
+
   return tf.gather_nd(batch_predictions, indices)
 
+def add_batch_to_indices(indices):
+  shape = tf.shape(indices)
+  batch_size = shape[0]
+  num_instances = shape[1]
+  batch_range = multi_range(limit=batch_size, value_repetitions=num_instances)
+  batch_range = tf.reshape(batch_range, shape=(batch_size, num_instances, 1))
+  
+  return tf.concat([indices, batch_range], axis=-1)

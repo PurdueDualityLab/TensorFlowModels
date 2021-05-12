@@ -16,8 +16,8 @@
 
 import six
 import tensorflow as tf
-
 from tensorflow.python.util import deprecation
+
 from official.modeling import activations
 
 

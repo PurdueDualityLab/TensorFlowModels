@@ -1,23 +1,20 @@
-import yolo.demos.three_servers.video_server as video_t
-import struct
-import cv2
-import datetime
 import colorsys
-import numpy as np
-import time
-
+import datetime
+import struct
 import threading as t
+import time
+import traceback
 from queue import Queue
 
+import cv2
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
-from yolo.utils.run_utils import support_windows
-from yolo.utils.run_utils import prep_gpu
-from yolo.utils.demos import utils
-from yolo.utils.demos import coco
-import traceback
+import yolo.demos.three_servers.video_server as video_t
+from yolo.utils.demos import coco, utils
+from yolo.utils.run_utils import prep_gpu, support_windows
 
 
 class ModelServer(object):

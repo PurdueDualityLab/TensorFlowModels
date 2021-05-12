@@ -15,18 +15,18 @@
 # ==============================================================================
 """Tests for factory.py."""
 
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
 
-from official.vision.beta.configs import backbones
-from official.vision.beta.configs import backbones_3d
-from official.vision.beta.configs import image_classification as classification_cfg
+from official.vision.beta.configs import backbones, backbones_3d
+from official.vision.beta.configs import \
+    image_classification as classification_cfg
 from official.vision.beta.configs import maskrcnn as maskrcnn_cfg
 from official.vision.beta.configs import retinanet as retinanet_cfg
-from official.vision.beta.configs import video_classification as video_classification_cfg
-from official.vision.beta.modeling import factory
-from official.vision.beta.modeling import factory_3d
+from official.vision.beta.configs import \
+    video_classification as video_classification_cfg
+from official.vision.beta.modeling import factory, factory_3d
 
 
 class ClassificationModelBuilderTest(parameterized.TestCase, tf.test.TestCase):

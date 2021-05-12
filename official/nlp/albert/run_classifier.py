@@ -16,16 +16,15 @@
 
 import json
 import os
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
+
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.nlp.albert import configs as albert_configs
 from official.nlp.bert import bert_models
 from official.nlp.bert import run_classifier as run_classifier_bert
-
 
 FLAGS = flags.FLAGS
 

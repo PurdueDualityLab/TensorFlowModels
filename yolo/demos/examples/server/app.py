@@ -1,24 +1,26 @@
+import base64
+import sys
+import urllib.request
+from queue import Queue
+
+import cv2
+import numpy as np
+import tensorflow as tf
+
+from flask import Flask, jsonify, request
+from yolo.configs import yolo as exp_cfg
+from yolo.demos.three_servers import model_server as ms
+from yolo.tasks.yolo import YoloTask
+from yolo.utils.demos import coco, utils
 from yolo.utils.run_utils import prep_gpu
+
 try:
   prep_gpu()
 except BaseException:
   print("GPU's already prepped")
 
-from flask import Flask, request, jsonify
-import numpy as np
-import base64
-import cv2
-import sys
-import tensorflow as tf
 
-from yolo.demos.three_servers import model_server as ms
 
-from yolo.configs import yolo as exp_cfg
-from yolo.tasks.yolo import YoloTask
-from yolo.utils.demos import utils
-from yolo.utils.demos import coco
-from queue import Queue
-import urllib.request
 
 app = Flask(__name__)
 

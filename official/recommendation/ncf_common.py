@@ -14,23 +14,19 @@
 # ==============================================================================
 """Common functionalities used by both Keras and Estimator implementations."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import json
 import os
 
-from absl import flags
-from absl import logging
 import numpy as np
 import tensorflow as tf
+from absl import flags, logging
 
 from official.common import distribute_utils
 from official.recommendation import constants as rconst
-from official.recommendation import data_pipeline
-from official.recommendation import data_preprocessing
-from official.recommendation import movielens
+from official.recommendation import (data_pipeline, data_preprocessing,
+                                     movielens)
 from official.utils.flags import core as flags_core
 from official.utils.misc import keras_utils
 

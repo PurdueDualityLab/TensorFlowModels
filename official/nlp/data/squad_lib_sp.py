@@ -24,9 +24,9 @@ import json
 import math
 import os
 
-from absl import logging
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 from official.nlp.bert import tokenization
 

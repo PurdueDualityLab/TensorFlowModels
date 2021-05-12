@@ -15,9 +15,9 @@
 """Tests for the customized Relu activation."""
 
 import tensorflow as tf
-
 from tensorflow.python.keras import \
-  keras_parameterized  # pylint: disable=g-direct-tensorflow-import
+    keras_parameterized  # pylint: disable=g-direct-tensorflow-import
+
 from official.modeling import activations
 
 

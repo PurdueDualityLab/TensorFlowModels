@@ -14,9 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for image_classification."""
+import tensorflow as tf
 # pylint: disable=unused-import
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.core import config_definitions as cfg
 from official.core import exp_factory
@@ -26,9 +26,12 @@ from official.vision.beta.configs import image_classification as exp_cfg
 
 class ImageClassificationConfigTest(tf.test.TestCase, parameterized.TestCase):
 
-  @parameterized.parameters(('resnet_imagenet',),
-                            ('revnet_imagenet',),
-                            ('mobilenet_imagenet'),)
+  @parameterized.parameters(
+      ('resnet_imagenet',),
+      ('resnet_rs_imagenet',),
+      ('revnet_imagenet',),
+      ('mobilenet_imagenet'),
+  )
   def test_image_classification_configs(self, config_name):
     config = exp_factory.get_exp_config(config_name)
     self.assertIsInstance(config, cfg.ExperimentConfig)

@@ -15,13 +15,8 @@
 """Defines exported symbols for the `orbit` package."""
 
 from orbit import utils
-
 from orbit.controller import Controller
-
-from orbit.runner import AbstractEvaluator
-from orbit.runner import AbstractTrainer
-
-from orbit.standard_runner import StandardEvaluator
-from orbit.standard_runner import StandardEvaluatorOptions
-from orbit.standard_runner import StandardTrainer
-from orbit.standard_runner import StandardTrainerOptions
+from orbit.runner import AbstractEvaluator, AbstractTrainer
+from orbit.standard_runner import (
+    StandardEvaluator, StandardEvaluatorOptions, StandardTrainer,
+    StandardTrainerOptions)

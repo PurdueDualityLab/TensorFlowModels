@@ -22,12 +22,12 @@ prog_trainer_lib.ProgressiveTrainer instead of the base trainer.
 import os
 from typing import Any, Mapping, Tuple
 
+import tensorflow as tf
 # Import libraries
 from absl import logging
+
 import orbit
-import tensorflow as tf
-from official.core import base_task
-from official.core import config_definitions
+from official.core import base_task, config_definitions
 from official.core import train_lib as base_train_lib
 from official.modeling.progressive import trainer as prog_trainer_lib
 

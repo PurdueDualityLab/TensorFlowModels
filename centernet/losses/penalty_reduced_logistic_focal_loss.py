@@ -1,6 +1,7 @@
 # may be a dupe of retinanet_losses. need to look later
 import tensorflow as tf
 
+
 class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
   """Penalty-reduced pixelwise logistic regression with focal loss.
   The loss is defined in Equation (1) of the Objects as Points[1] paper.
@@ -50,7 +51,6 @@ class PenaltyReducedLogisticFocalLoss(tf.keras.losses.Loss):
     prediction_tensor = tf.clip_by_value(tf.sigmoid(y_pred),
                                          self._sigmoid_clip_value,
                                          1 - self._sigmoid_clip_value)
-
     positive_loss = (tf.math.pow((1 - prediction_tensor), self._alpha)*
                      tf.math.log(prediction_tensor))
     negative_loss = (tf.math.pow((1 - target_tensor), self._beta)*

@@ -17,18 +17,14 @@
 import functools
 import os
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 # pylint: disable=unused-import
 from official.common import distribute_utils
-from official.nlp.xlnet import common_flags
-from official.nlp.xlnet import data_utils
-from official.nlp.xlnet import optimization
-from official.nlp.xlnet import training_utils
-from official.nlp.xlnet import xlnet_config
+from official.nlp.xlnet import (common_flags, data_utils, optimization,
+                                training_utils, xlnet_config)
 from official.nlp.xlnet import xlnet_modeling as modeling
 
 flags.DEFINE_integer(

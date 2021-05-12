@@ -16,10 +16,10 @@
 
 import numpy as np
 import tensorflow as tf
+
 from official.modeling import tf_utils
 from official.vision.beta.modeling.backbones import factory
-from official.vision.beta.modeling.layers import nn_blocks
-from official.vision.beta.modeling.layers import nn_layers
+from official.vision.beta.modeling.layers import nn_blocks, nn_layers
 
 layers = tf.keras.layers
 

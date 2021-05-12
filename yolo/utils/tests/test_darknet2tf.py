@@ -1,5 +1,5 @@
-from absl.testing import parameterized
 import tensorflow as tf
+from absl.testing import parameterized
 
 from yolo import DarkNet53
 

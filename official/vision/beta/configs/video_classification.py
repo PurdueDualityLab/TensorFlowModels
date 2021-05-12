@@ -14,14 +14,13 @@
 # limitations under the License.
 # ==============================================================================
 """Video classification configuration definition."""
-from typing import Optional, Tuple
 import dataclasses
+from typing import Optional, Tuple
+
 from official.core import config_definitions as cfg
 from official.core import exp_factory
-from official.modeling import hyperparams
-from official.modeling import optimization
-from official.vision.beta.configs import backbones_3d
-from official.vision.beta.configs import common
+from official.modeling import hyperparams, optimization
+from official.vision.beta.configs import backbones_3d, common
 
 
 @dataclasses.dataclass
@@ -54,6 +53,10 @@ class DataConfig(cfg.DataConfig):
   output_audio: bool = False
   audio_feature: str = ''
   audio_feature_shape: Tuple[int, ...] = (-1,)
+  aug_min_aspect_ratio: float = 0.5
+  aug_max_aspect_ratio: float = 2.0
+  aug_min_area_ratio: float = 0.49
+  aug_max_area_ratio: float = 1.0
 
 
 def kinetics400(is_training):

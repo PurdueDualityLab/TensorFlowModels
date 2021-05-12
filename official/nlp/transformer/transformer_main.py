@@ -21,20 +21,14 @@ BLEU score.
 import os
 import tempfile
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.modeling import performance
-from official.nlp.transformer import compute_bleu
-from official.nlp.transformer import data_pipeline
-from official.nlp.transformer import metrics
-from official.nlp.transformer import misc
-from official.nlp.transformer import optimizer
-from official.nlp.transformer import transformer
-from official.nlp.transformer import translate
+from official.nlp.transformer import (compute_bleu, data_pipeline, metrics,
+                                      misc, optimizer, transformer, translate)
 from official.nlp.transformer.utils import tokenizer
 from official.utils.flags import core as flags_core
 from official.utils.misc import keras_utils

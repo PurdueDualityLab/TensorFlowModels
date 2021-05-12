@@ -18,15 +18,13 @@ import json
 import os
 import time
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.nlp.albert import configs as albert_configs
-from official.nlp.bert import run_squad_helper
-from official.nlp.bert import tokenization
+from official.nlp.bert import run_squad_helper, tokenization
 from official.nlp.data import squad_lib_sp
 
 flags.DEFINE_string(

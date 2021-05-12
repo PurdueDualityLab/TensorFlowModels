@@ -15,9 +15,9 @@
 # ==============================================================================
 """Tests for resnet."""
 
+import tensorflow as tf
 # Import libraries
 from absl.testing import parameterized
-import tensorflow as tf
 
 from official.vision.beta.modeling.layers import nn_blocks_3d
 

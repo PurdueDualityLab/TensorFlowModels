@@ -26,10 +26,8 @@ import tensorflow as tf
 from official.vision.detection.dataloader import anchor
 from official.vision.detection.dataloader import mode_keys as ModeKeys
 from official.vision.detection.dataloader import tf_example_decoder
-from official.vision.detection.utils import box_utils
-from official.vision.detection.utils import class_utils
-from official.vision.detection.utils import dataloader_utils
-from official.vision.detection.utils import input_utils
+from official.vision.detection.utils import (box_utils, class_utils,
+                                             dataloader_utils, input_utils)
 
 
 def pad_to_size(input_tensor, size):

@@ -16,13 +16,13 @@
 """Evaluation for Bert2Bert."""
 
 import os
-# Import libraries
-from absl import logging
+
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl import logging
 
-from official.nlp.nhnet import input_pipeline
-from official.nlp.nhnet import models
+from official.nlp.nhnet import input_pipeline, models
 from official.nlp.transformer import metrics as metrics_v2
 from official.nlp.transformer.utils import metrics
 

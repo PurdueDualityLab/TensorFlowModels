@@ -13,7 +13,4 @@
 # limitations under the License.
 # ==============================================================================
 """Modeling package definition."""
-from official.nlp.modeling import layers
-from official.nlp.modeling import losses
-from official.nlp.modeling import models
-from official.nlp.modeling import networks
+from official.nlp.modeling import layers, losses, models, networks

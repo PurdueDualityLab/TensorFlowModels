@@ -25,9 +25,7 @@ Users of a BoxCoder can call two methods:
 In both cases, the arguments are assumed to be in 1-1 correspondence already;
 it is not the job of a BoxCoder to perform matching.
 """
-from abc import ABCMeta
-from abc import abstractmethod
-from abc import abstractproperty
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 import tensorflow as tf
 

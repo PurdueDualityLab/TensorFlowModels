@@ -16,12 +16,11 @@
 import abc
 from typing import Optional
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from official.core import config_definitions
-from official.modeling import optimization
-from official.modeling import performance
+from official.modeling import optimization, performance
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig

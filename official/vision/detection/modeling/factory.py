@@ -15,10 +15,9 @@
 """Factory to build detection model."""
 
 
-from official.vision.detection.modeling import maskrcnn_model
-from official.vision.detection.modeling import olnmask_model
-from official.vision.detection.modeling import retinanet_model
-from official.vision.detection.modeling import shapemask_model
+from official.vision.detection.modeling import (maskrcnn_model, olnmask_model,
+                                                retinanet_model,
+                                                shapemask_model)
 
 
 def model_generator(params):

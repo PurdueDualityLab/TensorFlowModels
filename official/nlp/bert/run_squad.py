@@ -18,19 +18,16 @@ import json
 import os
 import time
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 import gin
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
 from official.nlp.bert import configs as bert_configs
-from official.nlp.bert import run_squad_helper
-from official.nlp.bert import tokenization
+from official.nlp.bert import run_squad_helper, tokenization
 from official.nlp.data import squad_lib as squad_lib_wp
 from official.utils.misc import keras_utils
-
 
 flags.DEFINE_string('vocab_file', None,
                     'The vocabulary file that the BERT model was trained on.')

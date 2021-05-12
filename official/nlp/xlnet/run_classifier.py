@@ -15,20 +15,16 @@
 """XLNet classification finetuning runner in tf2.0."""
 
 import functools
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
 
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 # pylint: disable=unused-import
 from official.common import distribute_utils
-from official.nlp.xlnet import common_flags
-from official.nlp.xlnet import data_utils
-from official.nlp.xlnet import optimization
-from official.nlp.xlnet import training_utils
-from official.nlp.xlnet import xlnet_config
+from official.nlp.xlnet import (common_flags, data_utils, optimization,
+                                training_utils, xlnet_config)
 from official.nlp.xlnet import xlnet_modeling as modeling
 
 flags.DEFINE_integer("n_class", default=2, help="Number of classes.")

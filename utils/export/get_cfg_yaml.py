@@ -1,5 +1,6 @@
-from yolo.configs import yolo as exp_cfg
 import yaml
+
+from yolo.configs import yolo as exp_cfg
 
 config = exp_cfg.yolo_v4_coco()
 

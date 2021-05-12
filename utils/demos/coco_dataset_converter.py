@@ -1,9 +1,10 @@
+import io
+import json
+import os
+
 import tensorflow as tf
 from PIL import Image
 from tqdm import tqdm
-import io
-import os
-import json
 
 
 def encode_image(image, fmt='JPEG'):

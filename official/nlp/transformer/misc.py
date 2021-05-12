@@ -16,8 +16,8 @@
 
 # pylint: disable=g-bad-import-order
 
-from absl import flags
 import tensorflow as tf
+from absl import flags
 
 from official.nlp.transformer import model_params
 from official.utils.flags import core as flags_core

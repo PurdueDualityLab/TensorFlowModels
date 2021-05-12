@@ -14,5 +14,10 @@
 # ==============================================================================
 """All necessary imports for registration."""
 
+import centernet
+from centernet.configs import centernet
+from centernet.configs.centernet import CenterNetTask
+from centernet.modeling.backbones import hourglass
+from centernet.tasks.centernet import CenterNetTask
 # pylint: disable=unused-import
 from official.common import registry_imports

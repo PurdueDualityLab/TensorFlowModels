@@ -1,9 +1,9 @@
 #### ARGUMENT PARSER ####
-from yolo.utils.demos import utils
-from yolo.utils.demos import coco
-from yolo.demos.three_servers import video_server as vs
-import tensorflow as tf
 import cv2
+import tensorflow as tf
+
+from yolo.demos.three_servers import video_server as vs
+from yolo.utils.demos import coco, utils
 
 
 def print_opt(latency, fps):

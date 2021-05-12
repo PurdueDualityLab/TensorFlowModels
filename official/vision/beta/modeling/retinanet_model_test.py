@@ -15,13 +15,12 @@
 # ==============================================================================
 """Tests for RetinaNet models."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 from official.vision.beta.modeling import retinanet_model
 from official.vision.beta.modeling.backbones import resnet
 from official.vision.beta.modeling.decoders import fpn
@@ -220,4 +219,3 @@ class RetinaNetTest(parameterized.TestCase, tf.test.TestCase):
 
 if __name__ == '__main__':
   tf.test.main()
-

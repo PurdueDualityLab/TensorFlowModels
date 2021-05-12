@@ -16,10 +16,8 @@
 
 import tensorflow as tf
 
-from official.nlp.transformer import attention_layer
-from official.nlp.transformer import embedding_layer
-from official.nlp.transformer import ffn_layer
-from official.nlp.transformer import metrics
+from official.nlp.transformer import (attention_layer, embedding_layer,
+                                      ffn_layer, metrics)
 
 
 class TransformerLayersTest(tf.test.TestCase):

@@ -14,9 +14,8 @@
 # limitations under the License.
 # ==============================================================================
 """Definitions for high level configuration groups.."""
-from typing import Any, List, Mapping, Optional
-
 import dataclasses
+from typing import Any, List, Mapping, Optional
 
 from official.core import config_definitions
 from official.modeling import hyperparams

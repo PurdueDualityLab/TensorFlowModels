@@ -23,16 +23,11 @@ Related papers/blogs:
 - http://torch.ch/blog/2016/02/04/resnets.html
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import tensorflow as tf
+from tensorflow.python.keras import backend, initializers, models, regularizers
 
-from tensorflow.python.keras import backend
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras import models
-from tensorflow.python.keras import regularizers
 from official.vision.image_classification.resnet import imagenet_preprocessing
 
 layers = tf.keras.layers

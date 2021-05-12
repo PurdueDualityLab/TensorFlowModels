@@ -1,9 +1,11 @@
-import tensorflow as tf 
-import os
-import cv2
 import json
-from PIL import Image, ImageDraw
+import os
+
+import cv2
 import numpy as np
+import pycocotools.mask as mask_utils
+import tensorflow as tf
+from PIL import Image, ImageDraw
 
 dataset_folder = "/media/vbanna/DATA_SHARE/CityScapes_raw"
 
@@ -54,7 +56,6 @@ def _get_file_generator(image_folder, split):
       samples.append(get_file_lists(folder, file))
   return samples
 
-import pycocotools.mask as mask_utils
 def draw_polygons():
   # mask_utils.
   return

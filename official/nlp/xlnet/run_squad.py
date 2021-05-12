@@ -19,21 +19,15 @@ import json
 import os
 import pickle
 
-# Import libraries
-from absl import app
-from absl import flags
-from absl import logging
-
-import tensorflow as tf
 # pylint: disable=unused-import
 import sentencepiece as spm
+import tensorflow as tf
+# Import libraries
+from absl import app, flags, logging
+
 from official.common import distribute_utils
-from official.nlp.xlnet import common_flags
-from official.nlp.xlnet import data_utils
-from official.nlp.xlnet import optimization
-from official.nlp.xlnet import squad_utils
-from official.nlp.xlnet import training_utils
-from official.nlp.xlnet import xlnet_config
+from official.nlp.xlnet import (common_flags, data_utils, optimization,
+                                squad_utils, training_utils, xlnet_config)
 from official.nlp.xlnet import xlnet_modeling as modeling
 
 flags.DEFINE_string(

@@ -14,15 +14,12 @@
 # limitations under the License.
 # ==============================================================================
 """Tagging (e.g., NER/POS) task."""
-from typing import List, Optional, Tuple
-
 import dataclasses
-import orbit
-
-from seqeval import metrics as seqeval_metrics
+from typing import List, Optional, Tuple
 
 import tensorflow as tf
 
+import orbit
 from official.core import base_task
 from official.core import config_definitions as cfg
 from official.core import task_factory
@@ -31,6 +28,7 @@ from official.nlp.configs import encoders
 from official.nlp.data import data_loader_factory
 from official.nlp.modeling import models
 from official.nlp.tasks import utils
+from seqeval import metrics as seqeval_metrics
 
 
 @dataclasses.dataclass

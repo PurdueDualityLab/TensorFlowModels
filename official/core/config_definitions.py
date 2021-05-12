@@ -14,9 +14,8 @@
 
 """Common configuration settings."""
 
-from typing import Optional, Sequence, Union
-
 import dataclasses
+from typing import Optional, Sequence, Union
 
 from official.modeling.hyperparams import base_config
 from official.modeling.optimization.configs import optimization_config
@@ -79,7 +78,7 @@ class DataConfig(base_config.Config):
   global_batch_size: int = 0
   is_training: bool = None
   drop_remainder: bool = True
-  shuffle_buffer_size: int = 100
+  shuffle_buffer_size: int = 10000
   cache: bool = False
   cycle_length: Optional[int] = None
   block_length: int = 1

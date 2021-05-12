@@ -16,5 +16,4 @@
 # pylint: disable=g-classes-have-attributes
 from official.nlp import keras_nlp
 
-
 MaskedLM = keras_nlp.layers.MaskedLM

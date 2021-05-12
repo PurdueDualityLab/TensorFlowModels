@@ -15,13 +15,12 @@
 # ==============================================================================
 """Tests for resnet."""
 
-# Import libraries
-from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+# Import libraries
+from absl.testing import parameterized
+from tensorflow.python.distribute import combinations, strategy_combinations
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
 # from yolo.modeling.backbones import darknet
 from yolo.modeling.decoders import yolo_decoder as decoders
 
@@ -121,6 +120,7 @@ class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
 def build_yolo_decoder(input_specs, type):
   if type == 'a':
     model = decoders.YoloDecoder(
+        input_specs=input_specs,
         embed_spp=False,
         embed_fpn=False,
         max_level_process_len=2,
@@ -128,6 +128,7 @@ def build_yolo_decoder(input_specs, type):
         activation='mish')
   elif type == 'b':
     model = decoders.YoloDecoder(
+        input_specs=input_specs,
         embed_spp=True,
         embed_fpn=False,
         max_level_process_len=None,
@@ -135,12 +136,13 @@ def build_yolo_decoder(input_specs, type):
         activation='mish')
   else:
     model = decoders.YoloDecoder(
+        input_specs=input_specs,
         embed_spp=False,
         embed_fpn=False,
         max_level_process_len=None,
         path_process_len=6,
         activation='mish')
-  model.build(input_specs)
+  # model.build(input_specs)
   return model
 
 

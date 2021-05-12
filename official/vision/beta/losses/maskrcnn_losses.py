@@ -299,4 +299,3 @@ class MaskrcnnLoss(object):
       # The loss is normalized by the number of 1's in weights and
       # + 0.01 is used to avoid division by zero.
       return mask_loss / (tf.reduce_sum(weights) + 0.01)
-

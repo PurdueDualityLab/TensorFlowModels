@@ -18,9 +18,9 @@
 import tensorflow as tf
 
 from official.core import registry
-from official.vision.beta.configs import video_classification as video_classification_cfg
-from official.vision.beta.modeling import video_classification_model
-from official.vision.beta.modeling import backbones
+from official.vision.beta.configs import \
+    video_classification as video_classification_cfg
+from official.vision.beta.modeling import backbones, video_classification_model
 
 _REGISTERED_MODEL_CLS = {}
 
@@ -83,6 +83,7 @@ def build_video_classification_model(
     num_classes: int,
     l2_regularizer: tf.keras.regularizers.Regularizer = None):
   """Builds the video classification model."""
+  input_specs_dict = {'image': input_specs}
   backbone = backbones.factory.build_backbone(
       input_specs=input_specs,
       model_config=model_config,
@@ -91,7 +92,7 @@ def build_video_classification_model(
   model = video_classification_model.VideoClassificationModel(
       backbone=backbone,
       num_classes=num_classes,
-      input_specs=input_specs,
+      input_specs=input_specs_dict,
       dropout_rate=model_config.dropout_rate,
       aggregate_endpoints=model_config.aggregate_endpoints,
       kernel_regularizer=l2_regularizer)

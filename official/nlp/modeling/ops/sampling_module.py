@@ -438,10 +438,3 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     new_finished_flags = tf.logical_or(
         new_finished_flags, state[decoding_module.StateKeys.FINISHED_FLAGS])
     return new_finished_flags
-
-
-
-
-
-
-

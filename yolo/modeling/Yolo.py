@@ -1,12 +1,12 @@
-from yolo.configs import yolo
-from official.core import registry
-from official.vision.beta.modeling.backbones import factory
-from yolo.modeling.backbones.darknet import build_darknet
-import tensorflow as tf
-import tensorflow.keras as ks
 from typing import *
 
-from yolo.modeling.backbones.darknet import Darknet
+import tensorflow as tf
+import tensorflow.keras as ks
+
+from official.core import registry
+from official.vision.beta.modeling.backbones import factory
+from yolo.configs import yolo
+from yolo.modeling.backbones.darknet import Darknet, build_darknet
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
@@ -26,13 +26,6 @@ class Yolo(ks.Model):
     self._decoder = decoder
     self._head = head
     self._filter = filter
-    return
-
-  def build(self, input_shape):
-    self._backbone.build(input_shape)
-    nshape = self._backbone.output_shape
-    self._decoder.build(nshape)
-    super().build(input_shape)
     return
 
   def call(self, inputs, training=False):
@@ -65,8 +58,14 @@ class Yolo(ks.Model):
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
+  if hasattr(model_config, "subdivisions"):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
   if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
+        input_specs,
         embed_spp=model_config.decoder.embed_spp,
         embed_fpn=model_config.decoder.embed_fpn,
         fpn_path_len=model_config.decoder.fpn_path_len,
@@ -74,54 +73,68 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         max_level_process_len=model_config.decoder.max_level_process_len,
         xy_exponential=model_config.decoder.xy_exponential,
         activation=activation,
+        subdivisions=subdivisions,
+        embed_sam=model_config.use_sam,
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
         kernel_regularizer=l2_regularization)
-    model.build(input_specs)
+    # model.build(input_specs)
     return model
 
   if model_config.decoder.type is None or model_config.decoder.type == "regular":  # defaut regular
     if model_config.decoder.version == "v4":
       model = YoloDecoder(
+          input_specs,
           embed_spp=False,
           embed_fpn=True,
           max_level_process_len=None,
           path_process_len=6,
           activation=activation,
+          subdivisions=subdivisions,
+          embed_sam=model_config.use_sam,
           use_sync_bn=model_config.norm_activation.use_sync_bn,
           norm_momentum=model_config.norm_activation.norm_momentum,
           norm_epsilon=model_config.norm_activation.norm_epsilon,
           kernel_regularizer=l2_regularization)
     if model_config.decoder.version == "v3":
       model = YoloDecoder(
+          input_specs,
           embed_spp=False,
           embed_fpn=False,
           max_level_process_len=None,
           path_process_len=6,
           activation=activation,
+          subdivisions=subdivisions,
+          embed_sam=model_config.use_sam,
           use_sync_bn=model_config.norm_activation.use_sync_bn,
           norm_momentum=model_config.norm_activation.norm_momentum,
           norm_epsilon=model_config.norm_activation.norm_epsilon,
           kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "tiny":
     model = YoloDecoder(
+        input_specs,
         embed_spp=False,
         embed_fpn=False,
         max_level_process_len=2,
         path_process_len=1,
         activation=activation,
+        subdivisions=subdivisions,
+        embed_sam=model_config.use_sam,
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
         kernel_regularizer=l2_regularization)
   elif model_config.decoder.type == "spp":
     model = YoloDecoder(
+        input_specs,
         embed_spp=True,
         embed_fpn=False,
         max_level_process_len=None,
         path_process_len=6,
         activation=activation,
+        subdivisions=subdivisions,
+        embed_sam=model_config.use_sam,
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
@@ -130,7 +143,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
     raise Exception(
         "unsupported model_key please select from {v3, v4, v3spp, v3tiny, v4tiny}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
     )
-  model.build(input_specs)
+  # model.build(input_specs)
   return model
 
 
@@ -147,6 +160,7 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       scale_xy=xy_scales,
       use_nms=model_config.filter.use_nms,
       loss_type=model_config.filter.loss_type,
+      max_delta=model_config.filter.max_delta,
       iou_normalizer=model_config.filter.iou_normalizer,
       cls_normalizer=model_config.filter.cls_normalizer,
       obj_normalizer=model_config.filter.obj_normalizer,
@@ -155,12 +169,19 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
 
 
 def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
+  if hasattr(model_config, "subdivisions"):
+    subdivisions = model_config.subdivisions
+  else:
+    subdivisions = 1
+
   head = YoloHead(
+      min_level=model_config.min_level,
+      max_level=model_config.max_level,
       classes=model_config.num_classes,
       boxes_per_level=model_config.boxes_per_scale,
-      xy_exponential=False,  # model_config.decoder.version == 'v4',
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
+      subdivisions=subdivisions,
       kernel_regularizer=l2_regularization)
   head.build(input_specs)
   return head
@@ -176,11 +197,12 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
                                     l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
-  head = build_yolo_head(backbone.output_specs, model_config, l2_regularization)
+  head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
   filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
 
   model = Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
   model.build(input_specs.shape)
+  model.summary()
 
   losses = filter.losses
   return model, losses

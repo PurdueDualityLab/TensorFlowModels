@@ -14,24 +14,21 @@
 # ==============================================================================
 """Util functions related to pycocotools and COCO eval."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import json
 
-from absl import logging
 import numpy as np
+import six
+import tensorflow as tf
+from absl import logging
 from PIL import Image
 from pycocotools import coco
 from pycocotools import mask as mask_api
-import six
-import tensorflow as tf
 
 from official.vision.detection.dataloader import tf_example_decoder
-from official.vision.detection.utils import box_utils
-from official.vision.detection.utils import mask_utils
+from official.vision.detection.utils import box_utils, mask_utils
 
 
 class COCOWrapper(coco.COCO):

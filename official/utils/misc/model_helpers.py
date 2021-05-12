@@ -14,16 +14,14 @@
 # ==============================================================================
 """Miscellaneous functions that can be called by models."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numbers
 
-from absl import logging
 import tensorflow as tf
-
+from absl import logging
 from tensorflow.python.util import nest
+
 # pylint:disable=logging-format-interpolation
 
 

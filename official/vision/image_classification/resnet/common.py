@@ -13,16 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Common util functions and classes used by both keras cifar and imagenet."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
-from absl import flags
 import tensorflow as tf
+from absl import flags
+from tensorflow.python.keras.optimizer_v2 import \
+    gradient_descent as gradient_descent_v2
 
-from tensorflow.python.keras.optimizer_v2 import gradient_descent as gradient_descent_v2
 import tensorflow_model_optimization as tfmot
 from official.utils.flags import core as flags_core
 from official.utils.misc import keras_utils

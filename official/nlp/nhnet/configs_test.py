@@ -15,6 +15,7 @@
 """Tests for configs."""
 
 import tensorflow as tf
+
 from official.nlp.nhnet import configs
 
 BERT2BERT_CONFIG = {

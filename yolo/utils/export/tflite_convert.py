@@ -1,10 +1,13 @@
 import os
+
+import cv2
 import tensorflow as tf
-from yolo.utils.run_utils import prep_gpu
+
+from skimage import io
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
-from skimage import io
-import cv2
+from yolo.utils.run_utils import prep_gpu
+
 prep_gpu()
 
 

@@ -17,10 +17,10 @@
 import functools
 import os
 
-import orbit
 import tensorflow as tf
-
 from sentencepiece import SentencePieceTrainer
+
+import orbit
 from official.nlp.data import wmt_dataloader
 from official.nlp.tasks import translation
 

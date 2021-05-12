@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Backbones configurations."""
-from typing import Optional, List
-
 # Import libraries
 import dataclasses
+from typing import List, Optional
 
 from official.modeling import hyperparams
 
@@ -30,6 +29,8 @@ class ResNet(hyperparams.Config):
   stem_type: str = 'v0'
   se_ratio: float = 0.0
   stochastic_depth_drop_rate: float = 0.0
+  resnetd_shortcut: bool = False
+  replace_stem_max_pool: bool = False
 
 
 @dataclasses.dataclass
