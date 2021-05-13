@@ -144,8 +144,8 @@ class Parser(hyperparams.Config):
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.666
-  aug_scale_max: float = 1.5
+  aug_scale_min: float = 0.1
+  aug_scale_max: float = 2.0
   aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
@@ -178,7 +178,7 @@ class DataConfig(cfg.DataConfig):
   input_path: str = ''  #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = None  #'coco'
   tfds_split: str = None  #'train'
-  global_batch_size: int = 64
+  global_batch_size: int = 1
   is_training: bool = True
   dtype: str = 'float16'
   decoder: DataDecoder = DataDecoder()

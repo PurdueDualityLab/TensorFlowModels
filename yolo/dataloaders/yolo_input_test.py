@@ -167,6 +167,7 @@ def time_pipeline():
     # print(l , ftime - ltime, end = ", ")
     times.append(ftime - ltime)
     ltime = time.time()
+    print(times[-1])
     if l >= 100:
       break
 

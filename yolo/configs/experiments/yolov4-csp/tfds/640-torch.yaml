@@ -81,7 +81,7 @@ task:
       pre_nms_points: 5000
       use_reduction_sum: true
   train_data:
-    global_batch_size: 1
+    global_batch_size: 2
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco

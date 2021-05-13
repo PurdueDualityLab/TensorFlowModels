@@ -123,7 +123,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   box_xy = grid_points + pred_xy / scaler
   box_wh = tf.math.exp(pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  box_wh *= scaler
+  # return (box_xy, box_wh, pred_box)
   return (pred_xy, box_wh, pred_box)
 
 
@@ -210,7 +210,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
   box_xy = grid_points + pred_xy / scaler
   box_wh = tf.square(2 * pred_wh) * anchor_grid
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  box_wh *= scaler
+  # return (box_xy, box_wh, pred_box)
   return (pred_xy, box_wh, pred_box)
 
 
@@ -624,16 +624,36 @@ class Yolo_Loss(object):
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
+    # if self._objectness_smooth <= 0.0:
+    #   (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
+    #    obj_mask) = self._tiled_global_box_search(
+    #        pred_box,
+    #        sigmoid_class,
+    #        sigmoid_conf,
+    #        boxes,
+    #        classes,
+    #        true_conf,
+    #        fwidth,
+    #        fheight,
+    #        smoothed=False)
+
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
 
+    # counts = true_counts
+    # counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
+    # reps = tf.gather_nd(counts, inds, batch_dims=1)
+    # reps = tf.squeeze(reps, axis=-1)
+    # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
+
     # scale boxes
+    # scale = tf.convert_to_tensor([fheight, fwidth])
+    # pred_wh = pred_wh * scale
     # pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
 
-    # scale = tf.convert_to_tensor([fwidth, fheight])
     # true_xy, true_wh = tf.split(true_box, 2, axis=-1)
     # ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
     # ind_xy = tf.concat([ind_x, ind_y], axis=-1)
