@@ -55,10 +55,14 @@ class GridGenerator(object):
     else:
       self.dtype = dtype
     grid_points = _build_grid_points(width, height, self._anchors, self.dtype)
+
+    scaler = tf.cast([width, height], self.dtype)
+    scaler = tf.cast(scaler * self._scale_anchors, self.dtype)
+    anchors = tf.cast(self._anchors, self.dtype)
+
     anchor_grid = _build_anchor_grid(
         width, height,
-        tf.cast(self._anchors, self.dtype) /
-        tf.cast(self._scale_anchors * width, self.dtype),
+        anchors/scaler,
         self.dtype)  #self._num, self.dtype)
     grid_points = self._extend_batch(grid_points, batch_size)
     anchor_grid = self._extend_batch(anchor_grid, batch_size)

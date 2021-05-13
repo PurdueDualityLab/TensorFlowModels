@@ -132,10 +132,7 @@ class Mosaic(hyperparams.Config):
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
-  image_w: int = 512
-  image_h: int = 512
   max_num_instances: int = 200
-  min_process_size: int = 512
   letter_box: bool = True
   random_flip: bool = True
   aug_rand_crop: float = 0.1
@@ -259,7 +256,7 @@ class YoloBase(hyperparams.OneOfConfig):
 class Yolo(ModelConfig):
   num_classes: int = 80
   input_size: Optional[List[int]] = dataclasses.field(
-      default_factory=lambda:[608, 608, 3])
+      default_factory=lambda:[640, 640, 3])
   min_level: int = 3
   max_level: int = 5
   boxes_per_scale: int = 3

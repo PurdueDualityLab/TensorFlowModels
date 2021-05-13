@@ -203,9 +203,11 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 
     # scale thhe boxes
     anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
-    anchors_x = anchors[..., 0] / height
-    anchors_y = anchors[..., 1] / width
-    anchors = tf.stack([anchors_x, anchors_y], axis=-1)
+    scaler = tf.convert_to_tensor([width, height], dtype=y_true.dtype)
+    # anchors_x = anchors[..., 0] / width
+    # anchors_y = anchors[..., 1] / height
+    # anchors = tf.stack([anchors_x, anchors_y], axis=-1)
+    anchors = anchors/scaler
     k = tf.shape(anchors)[0]
     # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
     anchors = tf.transpose(anchors, perm=[1, 0])
