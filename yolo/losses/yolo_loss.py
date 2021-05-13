@@ -395,18 +395,6 @@ class Yolo_Loss(object):
     if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred))):
       tf.print("\nerror: stop training ", key)
 
-  def _scale_ground_truth_box(self, box, width, height, anchor_grid,
-                              grid_points, dtype):
-    xy = tf.nn.relu(box[..., 0:2] - grid_points)
-    xy = K.concatenate([
-        K.expand_dims(xy[..., 0] * width, axis=-1),
-        K.expand_dims(xy[..., 1] * height, axis=-1)
-    ],
-                       axis=-1)
-    wh = tf.math.log(box[..., 2:4] / anchor_grid)
-    wh = math_ops.rm_nan_inf(wh)
-    return tf.stop_gradient(xy), tf.stop_gradient(wh)
-
   def APAR(self, pred_conf, true_conf, pct=0.5):
     dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
     true_pos = tf.reduce_sum(
@@ -577,6 +565,20 @@ class Yolo_Loss(object):
     grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(grid)
 
+  def _scale_ground_truth_box(self, true_box, inds, ind_mask, fheight, fwidth):
+    ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
+    ind_zero = tf.zeros_like(ind_x)
+    ind_shift = tf.concat([ind_x, ind_y, ind_zero, ind_zero], axis=-1)
+    ind_shift = tf.cast(ind_shift, true_box.dtype)
+
+    scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+    true_box = (true_box * scale) - ind_shift
+    # true_xy, true_wh = tf.split(true_box, 2, axis=-1)
+    # true_xy = true_xy - tf.cast(ind_xy, true_xy.dtype)
+    # true_box = tf.concat([true_xy, true_wh], axis=-1)
+    true_box = apply_mask(ind_mask, true_box)
+    return tf.stop_gradient(true_box)
+
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
     # training
@@ -624,18 +626,6 @@ class Yolo_Loss(object):
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
-    # if self._objectness_smooth <= 0.0:
-    #   (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
-    #    obj_mask) = self._tiled_global_box_search(
-    #        pred_box,
-    #        sigmoid_class,
-    #        sigmoid_conf,
-    #        boxes,
-    #        classes,
-    #        true_conf,
-    #        fwidth,
-    #        fheight,
-    #        smoothed=False)
 
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
@@ -650,25 +640,20 @@ class Yolo_Loss(object):
     # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
     # scale boxes
-    # scale = tf.convert_to_tensor([fheight, fwidth])
-    # pred_wh = pred_wh * scale
-    # pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
+    scale = tf.convert_to_tensor([fheight, fwidth])
+    pred_wh = pred_wh * scale
+    pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
 
-    # true_xy, true_wh = tf.split(true_box, 2, axis=-1)
-    # ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
-    # ind_xy = tf.concat([ind_x, ind_y], axis=-1)
-    # ind_xy = tf.cast(ind_xy, true_xy.dtype)
 
-    # true_xy = (true_xy * scale) - tf.cast(ind_xy, true_xy.dtype)
-    # true_wh = true_wh * scale
-    # true_box = tf.concat([true_xy, true_wh], axis=-1)
+    true_box = self._scale_ground_truth_box(true_box, inds, ind_mask, fheight, fwidth)
+    # tf.print(inds)
 
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = tf.stop_gradient(math_ops.mul_no_nan(ind_mask, true_box))
     iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     # box_loss = math_ops.divide_no_nan(box_loss, reps)
-    box_loss = math_ops.mul_no_nan(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
@@ -679,14 +664,17 @@ class Yolo_Loss(object):
       true_conf = tf.squeeze(true_conf, axis=-1)
       obj_mask = tf.ones_like(true_conf)
 
-    pred_class = math_ops.mul_no_nan(
+    pred_class = apply_mask(
         ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
-    class_loss = ks.losses.binary_crossentropy(
-        K.expand_dims(true_class, axis=-1),
-        K.expand_dims(pred_class, axis=-1),
-        label_smoothing=self._label_smoothing,
-        from_logits=True)
-    class_loss = math_ops.mul_no_nan(ind_mask, class_loss)
+    # class_loss = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_class, axis=-1),
+    #     K.expand_dims(pred_class, axis=-1),
+    #     label_smoothing=self._label_smoothing,
+    #     from_logits=True)
+    class_loss = sigmoid_BCE(
+        K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
+        self._label_smoothing)
+    class_loss = apply_mask(ind_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)
     # class_loss = math_ops.divide_no_nan(class_loss, reps)
@@ -695,9 +683,10 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = math_ops.mul_no_nan(obj_mask, bce)
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
+    conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
         tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
@@ -706,8 +695,8 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     loss = box_loss + class_loss + conf_loss
-    loss = tf.reduce_sum(loss)
 
+    loss = tf.reduce_sum(loss)
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
