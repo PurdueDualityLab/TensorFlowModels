@@ -289,7 +289,6 @@ class Yolo_Loss(object):
                mask,
                anchors,
                scale_anchors=1,
-               num_extras=0,
                ignore_thresh=0.7,
                truth_thresh=1.0,
                loss_type="ciou",
@@ -313,37 +312,43 @@ class Yolo_Loss(object):
     parameters for the loss functions used at each detection head output
     Args:
       classes: `int` for the number of classes 
-      mask: `List[int]` for the output level that this specific model output level
-      anchors: 
-      scale_anchors: 
-      num_extras: 
-      ignore_thresh: 
-      truth_thresh: 
-      loss_type: 
-      iou_normalizer: 
-      cls_normalizer: 
-      obj_normalizer: 
-      objectness_smooth: 
-      use_reduction_sum: 
-      label_smoothing: 
-      iou_thresh: 
-      new_cords: 
-      scale_x_y: 
-      max_delta: 
-      nms_kind: 
-      beta_nms: 
-      path_key: 
-      use_tie_breaker:
+      mask: `List[int]` for the output level that this specific model output 
+        level
+      anchors: `List[List[int]]` for the anchor boxes that are used in the model at all levels
+      scale_anchors: `int` for how much to scale this level to get the orginal input shape
+      ignore_thresh: `float` for the IOU value over which the loss is not propagated, and a detection is assumed to have been made 
+      truth_thresh: `float` for the IOU value over which the loss is propagated despite a detection being made 
+      loss_type: `str` for the typeof iou loss to use with in {ciou, diou, giou, iou}
+      iou_normalizer: `float` for how much to scale the loss on the IOU or the boxes
+      cls_normalizer: `float` for how much to scale the loss on the classes
+      obj_normalizer: `float` for how much to scale the loss on the detectoion map
+      objectness_smooth: `float` for how much to smooth the loss on the detection map 
+      use_reduction_sum: `bool` for whether to use the scaled loss or the traditional loss
+      label_smoothing: `float` for how much to smooth the loss on the classes
+      new_cords: `bool` for which scaling type to use 
+      scale_xy: dictionary `float` values inidcating how far each pixel can see 
+        outside of its containment of 1.0. a value of 1.2 indicates there is a 
+        20% extended radius around each pixel that this specific pixel can 
+        predict values for a center at. the center can range from 0 - value/2 
+        to 1 + value/2, this value is set in the yolo filter, and resused here. 
+        there should be one value for scale_xy for each level from min_level to 
+        max_level
+      max_delta: gradient clipping to apply to the box loss 
+      
+      iou_thresh: rmv
+      nms_kind: rmv
+      beta_nms: rmv
+      path_key: rmv
+      use_tie_breaker: rmv
+      
       name=None,
     call Return:
       float: for the average loss
     """
     self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
     self._num = tf.cast(len(mask), dtype=tf.int32)
-    self._num_extras = tf.cast(num_extras, dtype=tf.int32)
     self._truth_thresh = truth_thresh
     self._ignore_thresh = ignore_thresh
-    self._iou_thresh = iou_thresh
     self._masks = mask
     self._anchors = anchors
 
@@ -367,9 +372,6 @@ class Yolo_Loss(object):
     self._objectness_smooth = float(objectness_smooth)
     self._use_reduction_sum = use_reduction_sum
 
-    # used in detection filtering
-    self._beta_nms = beta_nms
-    self._nms_kind = tf.cast(nms_kind, tf.string)
     self._new_cords = new_cords
     self._any = True
 
@@ -388,8 +390,6 @@ class Yolo_Loss(object):
     self._anchor_generator = GridGenerator(
         masks=mask, anchors=anchors, scale_anchors=scale_anchors)
 
-    # metric struff
-    self._path_key = path_key
     return
 
   def print_error(self, pred, key):
