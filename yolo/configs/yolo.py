@@ -145,7 +145,7 @@ class Parser(hyperparams.Config):
   aug_scale_max: float = 2.0
   aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
-  use_scale_xy: bool = False
+  use_scale_xy: bool = True
   anchor_thresh: float = 0.213
   mosaic: Mosaic = Mosaic()
 

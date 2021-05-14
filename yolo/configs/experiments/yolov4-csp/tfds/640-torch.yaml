@@ -112,7 +112,7 @@ task:
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 1
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'
     tfds_download: true
     tfds_name: coco

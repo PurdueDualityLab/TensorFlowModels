@@ -511,6 +511,7 @@ def get_non_empty_box_indices(boxes):
   width = boxes[:, 3] - boxes[:, 1]
   indices = tf.where(tf.logical_and(tf.greater(height, 0),
                                     tf.greater(width, 0)))
+  # tf.print(indices[:, 0], summarize = -1)
   return indices[:, 0]
 
 

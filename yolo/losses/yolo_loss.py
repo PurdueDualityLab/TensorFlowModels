@@ -305,7 +305,6 @@ class Yolo_Loss(object):
                max_delta=10,
                nms_kind="greedynms",
                beta_nms=0.6,
-               reduction=tf.keras.losses.Reduction.NONE,
                path_key=None,
                use_tie_breaker=True,
                name=None,
@@ -313,27 +312,29 @@ class Yolo_Loss(object):
     """
     parameters for the loss functions used at each detection head output
     Args:
-      mask: list of indexes for which anchors in the anchors list should be 
-        used in prediction
-      anchors: list of tuples (w, h) representing the anchor boxes to be 
-        used in prediction
-      num_extras: number of indexes predicted in addition to 4 for the box 
-        and N + 1 for classes
-      ignore_thresh: float for the threshold for if iou > threshold the 
-        network has made a prediction, and should not be penealized for 
-        p(object) prediction if an object exists at this location
-      truth_thresh: float thresholding the groud truth to get the true mask
-      loss_type: string for the key of the loss to use,
-        options -> mse, giou, ciou
-      iou_normalizer: float used for appropriatly scaling the iou or the 
-        loss used for the box prediction error
-      cls_normalizer: float used for appropriatly scaling the classification 
-        error
-      scale_x_y: float used to scale the predictied x and y outputs
-      nms_kind: string used for filtering the output and ensuring each 
-        object has only one prediction
-      beta_nms: float for the thresholding value to apply in non max 
-        supression(nms) -> not yet implemented
+      classes: `int` for the number of classes 
+      mask: `List[int]` for the output level that this specific model output level
+      anchors: 
+      scale_anchors: 
+      num_extras: 
+      ignore_thresh: 
+      truth_thresh: 
+      loss_type: 
+      iou_normalizer: 
+      cls_normalizer: 
+      obj_normalizer: 
+      objectness_smooth: 
+      use_reduction_sum: 
+      label_smoothing: 
+      iou_thresh: 
+      new_cords: 
+      scale_x_y: 
+      max_delta: 
+      nms_kind: 
+      beta_nms: 
+      path_key: 
+      use_tie_breaker:
+      name=None,
     call Return:
       float: for the average loss
     """
@@ -548,7 +549,7 @@ class Yolo_Loss(object):
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
     bhep = tf.math.cumsum(bhep, axis=0) - 1
     indexes = tf.concat([bhep, indexes], axis=-1)
-    indexes = math_ops.mul_no_nan(tf.cast(ind_mask, indexes.dtype), indexes)
+    indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
 
     indexes = tf.reshape(indexes, [-1, 4])
     truths = tf.reshape(truths, [-1, num_flatten])
@@ -561,7 +562,6 @@ class Yolo_Loss(object):
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
 
-    # grid = tf.scatter_nd(indexes, truths, tf.shape(preds))
     grid = tf.clip_by_value(grid, 0.0, 1.0)
     return tf.stop_gradient(grid)
 
@@ -573,11 +573,9 @@ class Yolo_Loss(object):
 
     scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
     true_box = (true_box * scale) - ind_shift
-    # true_xy, true_wh = tf.split(true_box, 2, axis=-1)
-    # true_xy = true_xy - tf.cast(ind_xy, true_xy.dtype)
-    # true_box = tf.concat([true_xy, true_wh], axis=-1)
     true_box = apply_mask(ind_mask, true_box)
     return tf.stop_gradient(true_box)
+
 
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
@@ -626,6 +624,18 @@ class Yolo_Loss(object):
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
+    # if self._objectness_smooth <= 0.0:
+    #   (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
+    #    obj_mask) = self._tiled_global_box_search(
+    #        pred_box,
+    #        sigmoid_class,
+    #        sigmoid_conf,
+    #        boxes,
+    #        classes,
+    #        true_conf,
+    #        fwidth,
+    #        fheight,
+    #        smoothed=False)
 
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
@@ -643,20 +653,16 @@ class Yolo_Loss(object):
     scale = tf.convert_to_tensor([fheight, fwidth])
     pred_wh = pred_wh * scale
     pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
-
-
     true_box = self._scale_ground_truth_box(true_box, inds, ind_mask, fheight, fwidth)
-    # tf.print(inds)
 
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = tf.stop_gradient(math_ops.mul_no_nan(ind_mask, true_box))
     iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
-    # box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
-    box_loss = math_ops.divide_no_nan(box_loss, num_objs)
-
+    # box_loss = math_ops.divide_no_nan(box_loss, num_objs)
+    
     if self._objectness_smooth > 0.0:
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
       iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
@@ -666,26 +672,21 @@ class Yolo_Loss(object):
 
     pred_class = apply_mask(
         ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
-    # class_loss = ks.losses.binary_crossentropy(
-    #     K.expand_dims(true_class, axis=-1),
-    #     K.expand_dims(pred_class, axis=-1),
-    #     label_smoothing=self._label_smoothing,
-    #     from_logits=True)
-    class_loss = sigmoid_BCE(
-        K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
-        self._label_smoothing)
+    class_loss = ks.losses.binary_crossentropy(
+        K.expand_dims(true_class, axis=-1),
+        K.expand_dims(pred_class, axis=-1),
+        label_smoothing=self._label_smoothing,
+        from_logits=True)
     class_loss = apply_mask(ind_mask, class_loss)
     class_loss = tf.cast(
         tf.reduce_mean(class_loss, axis=(2)), dtype=y_pred.dtype)
-    # class_loss = math_ops.divide_no_nan(class_loss, reps)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
-    # bce = ks.losses.binary_crossentropy(
-    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
+    bce = ks.losses.binary_crossentropy(
+        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
         tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
@@ -695,8 +696,8 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     loss = box_loss + class_loss + conf_loss
-
     loss = tf.reduce_sum(loss)
+
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)

@@ -166,17 +166,28 @@ def test_yolo_pipeline(is_training=True):
 
 def time_pipeline():
   dataset, dsp = test_yolo_input_task()
-  print(dataset)
+  dataset = dataset.take(100000)
+  print(dataset, dataset.cardinality())
   times = []
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
     ftime = time.time()
     # print(tf.reduce_min(i))
     # print(l , ftime - ltime, end = ", ")
+
+    gt = j['true_conf']
+    inds = j['inds']
+    
+    with tf.device('CPU:0'):
+      test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
+      test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
+      test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
+      tf.print(test)
+
     times.append(ftime - ltime)
     ltime = time.time()
-    print(times[-1])
-    if l >= 100:
+    print(times[-1], l)
+    if l >= 80000:
       break
 
   plt.plot(times)
@@ -253,9 +264,9 @@ def test_ret_pipeline():
 
 if __name__ == '__main__':
   # test_ret_pipeline()
-  test_yolo_pipeline(is_training=True)
+  # test_yolo_pipeline(is_training=True)
   # test_yolo_pipeline(is_training=False)
-  # time_pipeline()
+  time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
