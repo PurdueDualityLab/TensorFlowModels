@@ -31,15 +31,72 @@ class Mosaic(object):
     self._crop_area_mosaic = crop_area_mosaic
     return
 
+  # def _estimate_shape(self, image):
+  #   return preprocessing_ops.estimate_shape(image, self._output_size)
+
+  # def _letter_box(self, image, boxes=None, xs=0.0, ys=0.0):
+  #   return preprocessing_ops.letter_box(image, 
+  #                                       boxes=boxes, 
+  #                                       xs=xs, 
+  #                                       ys=ys, 
+  #                                       output_size = self._output_size)
+
   def _estimate_shape(self, image):
-    return preprocessing_ops.estimate_shape(image, self._output_size)
+    height, width = preprocessing_ops.get_image_shape(image)
+    oheight, owidth = self._output_size[0], self._output_size[1]
+
+    if height > width:
+      scale = oheight / height
+      nwidth = tf.cast(scale * tf.cast(width, scale.dtype), width.dtype)
+      if nwidth > owidth:
+        scale = owidth / width
+        oheight = tf.cast(scale * tf.cast(height, scale.dtype), height.dtype)
+      else:
+        owidth = nwidth
+    else:
+      scale = owidth / width
+      nheight = tf.cast(scale * tf.cast(height, scale.dtype), height.dtype)
+      if nheight > oheight:
+        scale = oheight / height
+        owidth = tf.cast(scale * tf.cast(width, scale.dtype), width.dtype)
+      else:
+        oheight = nheight
+    return oheight, owidth
 
   def _letter_box(self, image, boxes=None, xs=0.0, ys=0.0):
-    return preprocessing_ops.letter_box(image, 
-                                        boxes=boxes, 
-                                        xs=xs, 
-                                        ys=ys, 
-                                        output_size = self._output_size)
+    height, width = self._estimate_shape(image)
+    hclipper, wclipper = self._output_size[0], self._output_size[1]
+
+    xs = tf.convert_to_tensor(xs)
+    ys = tf.convert_to_tensor(ys)
+    pad_width_p = wclipper - width
+    pad_height_p = hclipper - height
+    pad_height = tf.cast(tf.cast(pad_height_p, ys.dtype) * ys, tf.int32)
+    pad_width = tf.cast(tf.cast(pad_width_p, xs.dtype) * xs, tf.int32)
+
+    image = tf.image.resize(image, (height, width))
+    image = tf.image.pad_to_bounding_box(image, pad_height, pad_width, hclipper,
+                                         wclipper)
+    info = tf.convert_to_tensor([pad_height, pad_width, height, width])
+
+    if boxes is not None:
+      boxes = bbox_ops.yxyx_to_xcycwh(boxes)
+      x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+      y *= tf.cast(height / hclipper, y.dtype)
+      x *= tf.cast(width / wclipper, x.dtype)
+
+      y += tf.cast((pad_height / hclipper), y.dtype)
+      x += tf.cast((pad_width / wclipper), x.dtype)
+
+      h *= tf.cast(height / hclipper, h.dtype)
+      w *= tf.cast(width / wclipper, w.dtype)
+
+      boxes = tf.concat([x, y, w, h], axis=-1)
+
+      boxes = bbox_ops.xcycwh_to_yxyx(boxes)
+      #boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
+    return image, boxes, info
 
   def _pad_images(self, sample):
     image = sample['image']
