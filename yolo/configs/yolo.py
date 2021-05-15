@@ -27,7 +27,7 @@ from official.vision.beta.configs import common
 
 from yolo.configs import backbones
 import numpy as np
-import regex as re
+# import regex as re
 
 COCO_INPUT_PATH_BASE = 'coco'
 IMAGENET_TRAIN_EXAMPLES = 1281167
@@ -85,20 +85,43 @@ class ModelConfig(hyperparams.Config):
     else:
       return self.base.darknet_weights_cfg
 
+  # @property
+  # def _boxes(self):
+  #   if self.boxes is None:
+  #     return None
+  #   boxes = []
+  #   key = re.compile('([\d\.]+)')
+  #   for box in self.boxes:
+  #     if isinstance(box, list) or isinstance(box, tuple):
+  #       boxes.append(box)
+  #     elif isinstance(box, str):
+  #       boxes.append([float(val) for val in key.findall(box)])
+  #     elif isinstance(box, int):
+  #       raise IOError('unsupported input type, only strings or tuples')
+  #   print(boxes)
+  #   return boxes
+
   @property
   def _boxes(self):
     if self.boxes is None:
       return None
     boxes = []
-    key = re.compile('([\d\.]+)')
     for box in self.boxes:
       if isinstance(box, list) or isinstance(box, tuple):
         boxes.append(box)
       elif isinstance(box, str):
-        boxes.append([float(val) for val in key.findall(box)])
+        if box[0] == '(' or box[0] == '[':
+          f = []
+          for b in box[1:-1].split(','):
+            f.append(float(b.strip()))
+          boxes.append(f)
+        else:
+          f = []
+          for b in box.split(','):
+            f.append(float(b.strip()))
+          boxes.append(f)
       elif isinstance(box, int):
         raise IOError('unsupported input type, only strings or tuples')
-    print(boxes)
     return boxes
 
   @_boxes.setter
