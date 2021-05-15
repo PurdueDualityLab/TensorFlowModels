@@ -94,7 +94,9 @@ class YoloTask(base_task.Task):
     print(xy_scales, l2_weight_decay)
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
-    print(anchors)
+    print(
+      "heheheeheheheheheheheh: ",
+      anchors)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                             model_base_cfg.input_size)
@@ -148,18 +150,15 @@ class YoloTask(base_task.Task):
     )
 
     parser = yolo_input.Parser(
-        image_w=params.parser.image_w,
-        image_h=params.parser.image_h,
+        output_size=model.input_size, 
         min_level=model.min_level,
         max_level=model.max_level,
-        num_classes=model.num_classes,
         masks=masks,
         anchors=anchors,
-        fixed_size=params.parser.fixed_size,
         letter_box=params.parser.letter_box,
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
-        jitter_im=params.parser.jitter_im,
+        aug_rand_crop=params.parser.aug_rand_crop,
         aug_scale_aspect=params.parser.aug_scale_aspect,
         aug_rand_transalate=params.parser.aug_rand_translate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
@@ -168,9 +167,7 @@ class YoloTask(base_task.Task):
         aug_scale_max=params.parser.aug_scale_max,
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
-        min_process_size=params.parser.min_process_size,
         max_num_instances=params.parser.max_num_instances,
-        pct_rand=params.parser.pct_rand,
         scale_xy=xy_scales,
         use_scale_xy=params.parser.use_scale_xy,
         anchor_t=params.parser.anchor_thresh,
@@ -181,8 +178,7 @@ class YoloTask(base_task.Task):
         dataset_fn=tf.data.TFRecordDataset,
         decoder_fn=decoder.decode,
         sample_fn=sample_fn.mosaic_fn(is_training=params.is_training),
-        parser_fn=parser.parse_fn(params.is_training),
-        postprocess_fn=parser.postprocess_fn(params.is_training))
+        parser_fn=parser.parse_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
 
     print(dataset)
@@ -377,7 +373,7 @@ class YoloTask(base_task.Task):
 
   def _get_boxes(self, gen_boxes=True):
 
-    if gen_boxes and self.task_config.model.boxes is None and not self._anchors_built:
+    if gen_boxes and self.task_config.model._boxes is None and not self._anchors_built:
       # must save the boxes!
       params = self.task_config.train_data
       decoder = self.get_decoder(params)
@@ -396,8 +392,7 @@ class YoloTask(base_task.Task):
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
-
-    return self.task_config.model.boxes
+    return self.task_config.model._boxes
 
   def _get_masks(self,
                  xy_exponential=True,

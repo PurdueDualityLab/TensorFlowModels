@@ -27,16 +27,24 @@ def test_yolo_input_task():
             base='v4',
             min_level=3,
             norm_activation=yolocfg.common.NormActivation(activation='mish'),
-            #norm_activation = yolocfg.common.NormActivation(activation="leaky"),
-            #_boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-            #_boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-            # _boxes =  ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)'], #, '(135, 169)'])
-            _boxes=[
-                '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-                '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-            ],
-            # _boxes = ['[15.0, 23.0]', '[38.0, 57.0]', '[119.0, 67.0]', '[57.0, 141.0]', '[164.0, 156.0]', '[97.0, 277.0]', '[371.0, 184.0]', '[211.0, 352.0]', '[428.0, 419.0]'],
-            # _boxes = None,
+            # norm_activation = yolocfg.common.NormActivation(activation="leaky"),
+            # boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
+            # boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
+            # boxes =  ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)'], #, '(135, 169)'])
+            # boxes=[
+            #     '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
+            #     '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
+            # ],
+            boxes = ['[15.0, 20.0]', 
+             '[23.0, 45.0]', 
+             '[50.0, 35.0]', 
+             '[45.0, 93.0]', 
+             '[95.0, 68.0]', 
+             '[90.0, 182.0]', 
+             '[177.0, 137.0]', 
+             '[240.0, 303.0]', 
+             '[573.0, 501.0]'],
+            # boxes = None,
             filter=yolocfg.YoloLossLayer(nms_type="greedy")))
     task = yolo.YoloTask(config)
 
@@ -158,16 +166,28 @@ def test_yolo_pipeline(is_training=True):
 
 def time_pipeline():
   dataset, dsp = test_yolo_input_task()
-  print(dataset)
+  dataset = dataset.take(100000)
+  print(dataset, dataset.cardinality())
   times = []
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
     ftime = time.time()
     # print(tf.reduce_min(i))
     # print(l , ftime - ltime, end = ", ")
+
+    gt = j['true_conf']
+    inds = j['inds']
+    
+    with tf.device('CPU:0'):
+      test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
+      test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
+      test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
+      tf.print(test)
+
     times.append(ftime - ltime)
     ltime = time.time()
-    if l >= 100:
+    print(times[-1], l)
+    if l >= 80000:
       break
 
   plt.plot(times)
