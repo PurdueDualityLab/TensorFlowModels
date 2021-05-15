@@ -566,24 +566,13 @@ class Yolo_Loss(object):
     return tf.stop_gradient(grid)
 
   def _scale_ground_truth_box(self, true_box, inds, ind_mask, fheight, fwidth):
-    # ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
-    # ind_zero = tf.zeros_like(ind_x)
-    # ind_shift = tf.concat([ind_x, ind_y, ind_zero, ind_zero], axis=-1)
-    # ind_shift = tf.cast(ind_shift, true_box.dtype)
+    ind_y, ind_x, _ = tf.split(inds, 3, axis=-1)
+    ind_zero = tf.zeros_like(ind_x)
+    ind_shift = tf.concat([ind_x, ind_y, ind_zero, ind_zero], axis=-1)
+    ind_shift = tf.cast(ind_shift, true_box.dtype)
 
-    # scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
-    # true_box = (true_box * scale) - ind_shift
-    # true_box = apply_mask(ind_mask, true_box)
-
-    scale = tf.convert_to_tensor([fwidth, fheight])
-    true_xy, true_wh = tf.split(true_box, 2, axis=-1)
-    ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
-    ind_xy = tf.concat([ind_x, ind_y], axis=-1)
-    ind_xy = tf.cast(ind_xy, true_xy.dtype)
-
-    true_xy = (true_xy * scale) - tf.cast(ind_xy, true_xy.dtype)
-    true_wh = true_wh * scale
-    true_box = tf.concat([true_xy, true_wh], axis=-1)
+    scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+    true_box = (true_box * scale) - ind_shift
     true_box = apply_mask(ind_mask, true_box)
     return tf.stop_gradient(true_box)
 
