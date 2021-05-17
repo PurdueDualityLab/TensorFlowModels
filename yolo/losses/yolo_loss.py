@@ -596,11 +596,11 @@ class Yolo_Loss(object):
 
     # 2. split the y_true grid into the usable items, set the shapes correctly 
     #    and save the true_confdence mask before it get altered
-    (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
+    (true_box, ind_mask, true_class, _, _) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
-    true_conf = tf.squeeze(true_conf, axis=-1)
-    true_class = tf.squeeze(true_class, axis=-1)
-    grid_mask = true_conf
+    true_conf = tf.stop_gradient(tf.squeeze(true_conf, axis=-1))
+    true_class = tf.stop_gradient(tf.squeeze(true_class, axis=-1))
+    grid_mask = tf.stop_gradient(true_conf)
 
     # 3. split up the predicitons to match the ground truths shapes
     y_pred = tf.cast(
@@ -610,9 +610,9 @@ class Yolo_Loss(object):
     # 4. apply sigmoid to items and use the gradient trap to contol the back prop 
     #    and selective gradient clipping 
     sigmoid_class = tf.sigmoid(pred_class)
-    pred_class = class_gradient_trap(pred_class, np.inf)
+    # pred_class = class_gradient_trap(pred_class, np.inf)
     sigmoid_conf = tf.sigmoid(pred_conf)
-    pred_conf = obj_gradient_trap(pred_conf, np.inf)
+    # pred_conf = obj_gradient_trap(pred_conf, np.inf)
     
     # 5. based on input val new_cords decode the box predicitions and because 
     #    we are using the scaled loss, do not change the gradients at all  
@@ -624,30 +624,11 @@ class Yolo_Loss(object):
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
     num_objs = tf.cast(tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
-    # if self._objectness_smooth <= 0.0:
-    #   (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
-    #    obj_mask) = self._tiled_global_box_search(
-    #        pred_box,
-    #        sigmoid_class,
-    #        sigmoid_conf,
-    #        boxes,
-    #        classes,
-    #        true_conf,
-    #        fwidth,
-    #        fheight,
-    #        smoothed=False)
-
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
-
-    # counts = true_counts
-    # counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
-    # reps = tf.gather_nd(counts, inds, batch_dims=1)
-    # reps = tf.squeeze(reps, axis=-1)
-    # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
     # scale boxes
     scale = tf.convert_to_tensor([fheight, fwidth])
@@ -663,12 +644,11 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     
-    if self._objectness_smooth > 0.0:
-      iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou
-      iou_ = math_ops.mul_no_nan(ind_mask, tf.expand_dims(iou_, axis=-1))
-      true_conf = self.build_grid(inds, iou_, pred_conf, ind_mask, update=False)
-      true_conf = tf.squeeze(true_conf, axis=-1)
-      obj_mask = tf.ones_like(true_conf)
+
+    smoothed_iou = ((1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) + self._objectness_smooth * iou
+    smooothed_iou = math_ops.mul_no_nan(ind_mask, tf.expand_dims(smoothed_iou, axis=-1))
+    true_conf = self.build_grid(inds, smooothed_iou, pred_conf, ind_mask, update=False)
+    true_conf = tf.squeeze(true_conf, axis=-1)
 
     pred_class = apply_mask(
         ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
@@ -684,12 +664,10 @@ class Yolo_Loss(object):
         tf.reduce_sum(class_loss, axis=(1)), dtype=y_pred.dtype)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
-    # pred_conf = math_ops.rm_nan_inf(pred_conf, val = -1000.0)
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
-        tf.reduce_mean(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+        tf.reduce_mean(bce, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
@@ -698,9 +676,9 @@ class Yolo_Loss(object):
     loss = box_loss + class_loss + conf_loss
     loss = tf.reduce_sum(loss)
 
-    box_loss = tf.reduce_mean(box_loss)
-    conf_loss = tf.reduce_mean(conf_loss)
-    class_loss = tf.reduce_mean(class_loss)
+    box_loss = tf.reduce_sum(box_loss)
+    conf_loss = tf.reduce_sum(conf_loss)
+    class_loss = tf.reduce_sum(class_loss)
 
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
