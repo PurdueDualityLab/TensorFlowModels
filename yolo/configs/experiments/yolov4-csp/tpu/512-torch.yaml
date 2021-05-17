@@ -86,7 +86,7 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      aug_rand_crop: 0.1
+      aug_rand_crop: 0.05
       aug_scale_aspect: 0.0
       aug_scale_min: 0.5
       aug_scale_max: 1.5
