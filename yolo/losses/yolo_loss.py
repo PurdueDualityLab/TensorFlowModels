@@ -644,9 +644,10 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     
-    smoothed_iou = ((1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) + self._objectness_smooth * iou
-    smooothed_iou = math_ops.mul_no_nan(ind_mask, tf.expand_dims(smoothed_iou, axis=-1))
-    true_conf = self.build_grid(inds, smooothed_iou, pred_conf, ind_mask, update=False)
+
+    smoothed_iou = ((1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) + self._objectness_smooth * tf.expand_dims(iou, axis=-1)
+    smoothed_iou = math_ops.mul_no_nan(ind_mask, smoothed_iou)
+    true_conf = self.build_grid(inds, smoothed_iou, pred_conf, ind_mask, update=False)
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     pred_class = apply_mask(
