@@ -165,6 +165,7 @@ class YoloTask(base_task.Task):
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_scale_min=params.parser.aug_scale_min,
         aug_scale_max=params.parser.aug_scale_max,
+        random_pad=params.parser.random_pad, 
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,

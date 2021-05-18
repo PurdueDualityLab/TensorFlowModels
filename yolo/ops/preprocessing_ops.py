@@ -887,6 +887,7 @@ def resize_and_crop_image(image,
                           padded_size,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
+                          random_pad = False, 
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -965,12 +966,13 @@ def resize_and_crop_image(image,
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
-    if random_jittering:
+    if random_pad:
       dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
       dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
     else:
-      dy = 0
-      dx = 0
+      dy = (padded_size[0] - scaled_size[0])//2
+      dx = (padded_size[1] - scaled_size[1])//2
+
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
 
@@ -983,169 +985,3 @@ def resize_and_crop_image(image,
     ])
     return output_image, image_info
 
-
-# def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, use_tie_breaker):
-#   """
-#     convert ground truth for use in loss functions
-#     Args:
-#       y_true: tf.Tensor[] ground truth
-#         [batch, box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-#       mask: list of the anchor boxes choresponding to the output,
-#         ex. [1, 2, 3] tells this layer to predict only the first 3 anchors
-#         in the total.
-#       size: the dimensions of this output, for regular, it progresses from
-#         13, to 26, to 52
-#       num_classes: `integer` for the number of classes
-#       dtype: expected output datatype
-#       use_tie_breaker: boolean value for wether or not to use the tie
-#         breaker
-
-#     Return:
-#       tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
-#   """
-#   # unpack required components from the input ground truth
-#   boxes = tf.cast(y_true['bbox'], dtype)
-#   classes = tf.expand_dims(tf.cast(y_true['classes'], dtype=dtype), axis=-1)
-#   anchors = tf.cast(y_true['best_anchors'], dtype)
-#   ious = tf.cast(y_true['best_iou_match'], dtype)
-
-#   is_batch = True
-#   boxes_shape = boxes.get_shape()
-#   if boxes_shape.ndims == 2:
-#     is_batch = False
-#     boxes = tf.expand_dims(boxes, 0)
-#     classes = tf.expand_dims(classes, 0)
-#     anchors = tf.expand_dims(anchors, 0)
-#     ious = tf.expand_dims(ious, 0)
-#   elif boxes_shape.ndims is None:
-#     is_batch = False
-#     boxes = tf.expand_dims(image, 0)
-#     classes = tf.expand_dims(classes, 0)
-#     anchors = tf.expand_dims(anchors, 0)
-#     ious = tf.expand_dims(ious, 0)
-#     boxes.set_shape([None] * 3)
-#     classes.set_shape([None] * 2)
-#     anchors.set_shape([None] * 3)
-#     ious.set_shape([None] * 3)
-#   elif boxes_shape.ndims != 3:
-#     raise ValueError('\'box\' (shape %s) must have either 3 or 4 dimensions.')
-
-#   # get the batch size
-#   batches = tf.shape(boxes)[0]
-#   # get the number of boxes in the ground truth boxs
-#   num_boxes = tf.shape(boxes)[-2]
-#   # get the number of anchor boxes used for this anchor scale
-#   len_masks = tf.shape(mask)[0]
-#   # number of anchors
-#   num_anchors = tf.shape(anchors)[-1]
-#   num_instances = num_boxes
-
-#   # rescale the x and y centers to the size of the grid [size, size]
-#   mask = tf.cast(mask, dtype=dtype)
-#   const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
-#   x = tf.cast(boxes[..., 0] * tf.cast(size, dtype=dtype), dtype=tf.int32)
-#   y = tf.cast(boxes[..., 1] * tf.cast(size, dtype=dtype), dtype=tf.int32)
-#   box_mask = _gen_utility(boxes)
-#   num_reps, viable_primary, viable_alternate = _get_num_reps(anchors, mask, box_mask)
-#   viable_primary = tf.cast(viable_primary, tf.int32)
-#   viable_alternate = tf.cast(viable_alternate, tf.int32)
-
-#   i = 0
-#   num_boxes_written = tf.zeros([batches], dtype = tf.int32)
-#   list_indx = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-#   list_ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-#   list_ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
-#   update_index = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-#   update = tf.TensorArray(dtype, size=0, dynamic_size=True)
-
-#   num_primary = tf.shape(viable_primary)[0]
-#   for val in range(num_primary):
-#     idx = viable_primary[val]
-#     batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
-
-#     count = num_boxes_written[batch]
-#     if count >= num_instances:
-#       continue
-#     batch_ind = batch * num_instances
-
-#     reps = num_reps[batch, obj_id]
-#     box = boxes[batch, obj_id]
-#     classif = classes[batch, obj_id]
-#     iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
-#     # reps_ = tf.convert_to_tensor([reps])
-#     sample = tf.concat([box, const, classif, iou], axis = -1)
-#     y_, x_ = y[batch, obj_id], x[batch, obj_id]
-#     list_indx = list_indx.write(i, [batch_ind + count])
-#     list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
-#     list_ind_sample = list_ind_sample.write(i, sample)
-
-#     update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
-#     update = update.write(i, const)
-#     count += 1
-#     i += 1
-#     num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
-
-#   if use_tie_breaker:
-#     num_alternate = tf.shape(viable_alternate)[0]
-#     for val in range(num_alternate):
-#       idx = viable_alternate[val]
-#       batch, obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2], idx[3]
-#       count = num_boxes_written[batch]
-#       if count >= num_instances:
-#         continue
-#       batch_ind = batch * num_instances
-
-#       reps = num_reps[batch, obj_id]
-#       box = boxes[batch, obj_id]
-#       classif = classes[batch, obj_id]
-#       iou = tf.convert_to_tensor([ious[batch, obj_id, anchor]])
-#       # reps_ = tf.convert_to_tensor([reps])
-#       sample = tf.concat([box, const, classif, iou], axis = -1)
-#       y_, x_ = y[batch, obj_id], x[batch, obj_id]
-#       list_indx = list_indx.write(i, [batch_ind + count])
-#       list_ind_val = list_ind_val.write(i, [y_, x_, anchor_idx])
-#       list_ind_sample = list_ind_sample.write(i, sample)
-
-#       update_index = update_index.write(i, [batch, y_, x_, anchor_idx])
-#       update = update.write(i, const)
-#       count += 1
-#       i += 1
-#       num_boxes_written = tf.tensor_scatter_nd_update(num_boxes_written, [[batch]], [count])
-
-#   num_coords = 4 + 1 + 1 + 1
-#   indexes = tf.zeros([batches * num_instances, 3], tf.int32)
-#   gridvals = tf.zeros([batches * num_instances, num_coords], boxes.dtype)
-#   full = tf.zeros([batches, size, size, len_masks, 1], dtype=dtype)
-
-#   if tf.math.greater(list_indx.size(), 0):
-#     list_indx = list_indx.stack()
-#     list_ind_val = list_ind_val.stack()
-#     list_ind_sample = list_ind_sample.stack()
-#     indexes = tf.tensor_scatter_nd_update(indexes, list_indx, list_ind_val)
-#     gridvals = tf.tensor_scatter_nd_update(gridvals, list_indx, list_ind_sample)
-
-#   if tf.math.greater(update_index.size(), 0):
-#     update_index = update_index.stack()
-#     update = update.stack()
-#     full = tf.tensor_scatter_nd_add(full, update_index, update)
-
-#   if is_batch:
-#     indexes = tf.reshape(indexes, [batches, -1, 3])
-#     gridvals = tf.reshape(gridvals, [batches, -1,  num_coords])
-
-#   if not is_batch:
-#     full = tf.squeeze(full, axis=0)
-
-#   # if is_batch:
-#   #   reps = tf.gather_nd(full, indexes, batch_dims = 1)
-#   # else:
-#   #   reps = tf.gather_nd(full, indexes, batch_dims = 0)
-
-#   # reps = reps * tf.expand_dims(gridvals[..., 4], axis = -1)
-#   # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
-#   # gridvals = tf.concat([gridvals, reps], axis = -1)
-
-#   # full = tf.clip_by_value(full, 0.0, 1.0)
-
-#   # tf.print(tf.reduce_max(full))
-#   return indexes, gridvals, full

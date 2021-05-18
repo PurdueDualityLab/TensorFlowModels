@@ -14,6 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
+from yolo.ops.preprocessing_ops import random_pad
 import tensorflow as tf
 from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses
@@ -27,7 +28,7 @@ from official.vision.beta.configs import common
 
 from yolo.configs import backbones
 import numpy as np
-# import regex as re
+import regex as re
 
 COCO_INPUT_PATH_BASE = 'coco'
 IMAGENET_TRAIN_EXAMPLES = 1281167
@@ -85,44 +86,44 @@ class ModelConfig(hyperparams.Config):
     else:
       return self.base.darknet_weights_cfg
 
-  # @property
-  # def _boxes(self):
-  #   if self.boxes is None:
-  #     return None
-  #   boxes = []
-  #   key = re.compile('([\d\.]+)')
-  #   for box in self.boxes:
-  #     if isinstance(box, list) or isinstance(box, tuple):
-  #       boxes.append(box)
-  #     elif isinstance(box, str):
-  #       boxes.append([float(val) for val in key.findall(box)])
-  #     elif isinstance(box, int):
-  #       raise IOError('unsupported input type, only strings or tuples')
-  #   print(boxes)
-  #   return boxes
-
   @property
   def _boxes(self):
     if self.boxes is None:
       return None
     boxes = []
+    key = re.compile('([\d\.]+)')
     for box in self.boxes:
       if isinstance(box, list) or isinstance(box, tuple):
         boxes.append(box)
       elif isinstance(box, str):
-        if box[0] == '(' or box[0] == '[':
-          f = []
-          for b in box[1:-1].split(','):
-            f.append(float(b.strip()))
-          boxes.append(f)
-        else:
-          f = []
-          for b in box.split(','):
-            f.append(float(b.strip()))
-          boxes.append(f)
+        boxes.append([float(val) for val in key.findall(box)])
       elif isinstance(box, int):
         raise IOError('unsupported input type, only strings or tuples')
+    print(boxes)
     return boxes
+
+  # @property
+  # def _boxes(self):
+  #   if self.boxes is None:
+  #     return None
+  #   boxes = []
+  #   for box in self.boxes:
+  #     if isinstance(box, list) or isinstance(box, tuple):
+  #       boxes.append(box)
+  #     elif isinstance(box, str):
+  #       if box[0] == '(' or box[0] == '[':
+  #         f = []
+  #         for b in box[1:-1].split(','):
+  #           f.append(float(b.strip()))
+  #         boxes.append(f)
+  #       else:
+  #         f = []
+  #         for b in box.split(','):
+  #           f.append(float(b.strip()))
+  #         boxes.append(f)
+  #     elif isinstance(box, int):
+  #       raise IOError('unsupported input type, only strings or tuples')
+  #   return boxes
 
   @_boxes.setter
   def _boxes(self, box_list):
@@ -160,16 +161,17 @@ class Parser(hyperparams.Config):
   random_flip: bool = True
   aug_rand_crop: float = 0.1
   aug_scale_aspect: float = 0.0
-  aug_rand_translate: float = 0.00
+  aug_rand_translate: float = 0.5
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.1
-  aug_scale_max: float = 2.0
+  aug_scale_min: float = 0.5
+  aug_scale_max: float = 1.5
+  random_pad: bool = False
   aug_rand_angle: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
-  anchor_thresh: float = 0.213
+  anchor_thresh: float = 0.2
   mosaic: Mosaic = Mosaic()
 
 

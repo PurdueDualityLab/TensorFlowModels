@@ -48,6 +48,7 @@ class Parser(parser.Parser):
                aug_rand_angle=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
+               random_pad = True, 
                anchor_t=4.0,
                scale_xy=None,
                use_scale_xy=True,
@@ -82,6 +83,8 @@ class Parser(parser.Parser):
         scale jitter. 
       aug_scale_max: `float` indicating the maximum scaling value for image 
         scale jitter.
+      random_pad: `bool` indiccating wether to use padding to apply random 
+        translation true for darknet yolo false for scaled yolo
       anchor_t: `float` indicating the threshold over which an anchor will be 
         considered for prediction, at zero, all the anchors will be used and at
         1.0 only the best will be used. for anchor thresholds larger than 1.0 
@@ -139,6 +142,7 @@ class Parser(parser.Parser):
     self._letter_box = letter_box
     self._aug_scale_min = aug_scale_min
     self._aug_scale_max = aug_scale_max
+    self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_translate = aug_rand_transalate
     
@@ -298,6 +302,33 @@ class Parser(parser.Parser):
       # randomly flip the image horizontally 
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
+    # apply the final scale jittering of the image, if the image is mosaiced 
+    # ensure the minimum is larger than 0.4, or 0.1 for each image in the 
+    # mosaic
+    if not data['is_mosaic']:
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min=self._aug_scale_min,
+          aug_scale_max=self._aug_scale_max, 
+          random_pad=self._random_pad)
+    else:
+      image, info = preprocessing_ops.resize_and_crop_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          aug_scale_min=self._aug_scale_min
+          if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max=self._aug_scale_max, 
+          random_pad=self._random_pad)
+
+    # again crop the boxes and classes and only use those that are still 
+    # in the image. 
+    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :])
+
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._aug_rand_translate > 0.0:
       # apply random translation to the image 
@@ -321,32 +352,6 @@ class Parser(parser.Parser):
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
-
-    # apply the final scale jittering of the image, if the image is mosaiced 
-    # ensure the minimum is larger than 0.4, or 0.1 for each image in the 
-    # mosaic
-    if not data['is_mosaic']:
-      image, info = preprocessing_ops.resize_and_crop_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=self._aug_scale_min,
-          aug_scale_max=self._aug_scale_max)
-    else:
-      image, info = preprocessing_ops.resize_and_crop_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=self._aug_scale_min
-          if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=self._aug_scale_max)
-
-    # again crop the boxes and classes and only use those that are still 
-    # in the image. 
-    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
-
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
