@@ -14,28 +14,21 @@ TILE_SIZE = 50
 
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta=np.inf):
-
   def trap(dy):
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
-    # tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
-
   return y, trap
 
 
 @tf.custom_gradient
 def box_gradient_trap(y, max_delta=np.inf):
-
   def trap(dy):
-    # tf.print(dy[0,0,0,0,0,...])
     dy = math_ops.rm_nan_inf(dy)
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
-    # tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
-
   return y, trap
 
 

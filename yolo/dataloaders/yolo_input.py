@@ -353,6 +353,7 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
 
+    image = tf.image.resize(image, (self._image_h, self._image_w),preserve_aspect_ratio=False, antialias=False, name=None)
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
     if self._aug_rand_hue > 0.0:
