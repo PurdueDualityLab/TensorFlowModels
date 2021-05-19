@@ -288,15 +288,17 @@ class Yolo_Loss(object):
                objectness_smooth=True,
                use_reduction_sum=False,
                label_smoothing=0.0,
-               iou_thresh=0.213,
                new_cords=False,
                scale_x_y=1.0,
                max_delta=10,
+
+               use_tie_breaker=True,
                nms_kind="greedynms",
                beta_nms=0.6,
                path_key=None,
-               use_tie_breaker=True,
+               iou_thresh=0.213,
                name=None,
+
                **kwargs):
     """
     parameters for the loss functions used at each detection head output
@@ -343,20 +345,20 @@ class Yolo_Loss(object):
       recall50: `float` metric for how accurate the model is
       precision50: `float` metric for how precise the model is
     """
-    self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
-    self._num = tf.cast(len(mask), dtype=tf.int32)
-    self._truth_thresh = truth_thresh
-    self._ignore_thresh = ignore_thresh
-    self._masks = mask
-    self._anchors = anchors
 
-    self._use_tie_breaker = tf.cast(use_tie_breaker, tf.bool)
     if loss_type == "giou":
       self._loss_type = 1
     elif loss_type == "ciou":
       self._loss_type = 2
     else:
       self._loss_type = 0
+
+    self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
+    self._num = tf.cast(len(mask), dtype=tf.int32)
+    self._truth_thresh = truth_thresh
+    self._ignore_thresh = ignore_thresh
+    self._masks = mask
+    self._anchors = anchors
 
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
@@ -365,13 +367,14 @@ class Yolo_Loss(object):
     self._max_delta = max_delta
 
     self._label_smoothing = tf.cast(label_smoothing, tf.float32)
-    # self._objectness_smooth = objectness_smooth
-
     self._objectness_smooth = float(objectness_smooth)
     self._use_reduction_sum = use_reduction_sum
 
     self._new_cords = new_cords
     self._any = True
+
+    self._anchor_generator = GridGenerator(
+        masks=mask, anchors=anchors, scale_anchors=scale_anchors)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -384,32 +387,32 @@ class Yolo_Loss(object):
     else:
       self._decode_boxes = partial(get_predicted_box_newcords, **box_kwargs)
 
-    # grid comp
-    self._anchor_generator = GridGenerator(
-        masks=mask, anchors=anchors, scale_anchors=scale_anchors)
-
-    return
-
   def print_error(self, pred, key):
+    # a catch all to indicate an error may have occured in training 
     if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred))):
       tf.print("\nerror: stop training ", key)
 
   def APAR(self, pred_conf, true_conf, pct=0.5):
+    # capture all predictions of high confidence
     dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
+
+    # compute the total number of true positive predictions
     true_pos = tf.reduce_sum(
         math_ops.mul_no_nan(true_conf, dets), axis=(1, 2, 3))
+    # compute the total number of poitives 
     gt_pos = tf.reduce_sum(true_conf, axis=(1, 2, 3))
+    # compute the total number of predictions, positve and negative
     all_pos = tf.reduce_sum(dets, axis=(1, 2, 3))
 
-    # high recall low precision menas the model i kind of throwing stuff 
-    # at a wall to see that sticks. but it is covering all it bases, 
-    # we need both precision and recall to be high 
-    # smoothing is causing negative out comes form some reason 
+    # compute total recall = true_predicitons/ground_truth
     recall = tf.reduce_mean(math_ops.divide_no_nan(true_pos, gt_pos))
+    # compute total precision = true_predicitons/total_predictions
     precision = tf.reduce_mean(math_ops.divide_no_nan(true_pos, all_pos))
     return tf.stop_gradient(recall), tf.stop_gradient(precision)
 
   def avgiou(self, iou):
+    # compute the average realtive to non zero locations, so the 
+    # average is not biased in sparse tensors 
     avg_iou = math_ops.divide_no_nan(
         tf.reduce_sum(iou),
         tf.cast(
@@ -418,53 +421,72 @@ class Yolo_Loss(object):
     return tf.stop_gradient(avg_iou)
 
   def box_loss(self, true_box, pred_box, darknet=False):
+    # based on the type of loss, compute the iou loss for a box
+    # compute_<name> indicated the type of iou to use
     if self._loss_type == 1:
       iou, liou = box_ops.compute_giou(true_box, pred_box, darknet=darknet)
-      loss_box = (1 - liou)
     elif self._loss_type == 2:
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
-      loss_box = (1 - liou)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
       liou = iou
-      loss_box = 1 - iou
+    # compute the inverse of iou or the value you plan to 
+    # minimize as 1 - iou_type
+    loss_box = 1 - liou
     return iou, liou, loss_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf,
                        pred_classes_max, boxes, classes, iou_max_, ignore_mask_,
                        conf_loss_, loss_, count, idx):
+    
+    # capture the batch size to be used, and gather a slice of 
+    # boxes from the ground truth. currently TILE_SIZE = 50, to 
+    # save memory
     batch_size = tf.shape(boxes)[0]
     box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0],
                          [batch_size, TILE_SIZE, 4])
 
+    # match the dimentions of the slice to the model predictions
+    # shape: [batch_size, 1, 1, num, TILE_SIZE, 4]
     box_slice = tf.expand_dims(box_slice, axis=-2)
     box_slice = tf.expand_dims(box_slice, axis=1)
     box_slice = tf.expand_dims(box_slice, axis=1)
 
+    # if we are not comparing specific classes we do not 
+    # need this code
     if not self._any:
+      # repeat the steps applied to the boxes for the classes 
+      # shape: [batch_size, 1, 1, num,  TILE_SIZE, 1]
       class_slice = tf.slice(classes, [0, idx * TILE_SIZE],
                             [batch_size, TILE_SIZE])
       class_slice = tf.expand_dims(class_slice, axis=1)
       class_slice = tf.expand_dims(class_slice, axis=1)
       class_slice = tf.expand_dims(class_slice, axis=1)
+      # shape: [batch_size, 1, 1, num,  TILE_SIZE, num_classes]
       class_slice = tf.one_hot(
           tf.cast(class_slice, tf.int32),
           depth=tf.shape(pred_classes_max)[-1],
           dtype=pred_classes_max.dtype)
 
+    # compute the iou between all predictions and ground truths for the 
+    # purpose of comparison
     pred_boxes = tf.expand_dims(pred_boxes_, axis=-3)
-    iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
+    iou, liou, _ = self.box_loss(box_slice, pred_boxes)
 
-    # mask off zero boxes
+    # mask off zero boxes from the grount truth
     mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
     iou *= mask
 
-    # cconfidence is low
+    # capture all instances where the boxes iou with ground truth is larger 
+    # than the ignore threshold, all these instances will be ignored 
+    # unless the grount truth indicates that a box exists here
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
 
-    # ok this dumb, you just check if ANY of the classes have a conf gt than 
-    # 0.25
+    # compute the matched classes, if any is set to true, we don't care 
+    # which class was predicted, but only that a class was predicted. 
+    # other wise we also compare that both the classes and the boxes 
+    # have matched 
     if self._any: 
       matched_classes = tf.cast(pred_classes_max, tf.bool)
     else:
@@ -472,14 +494,18 @@ class Yolo_Loss(object):
       matched_classes = tf.logical_and(matched_classes,
                                       tf.cast(class_slice, matched_classes.dtype))
     
+    # build the full ignore mask, by taking the logical and of the 
+    # class and iou masks
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
 
+    # update the tensor with ignore locations
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
 
+    # if object ness smoothing is set to true we also update a 
+    # tensor with the maximum matchin iou ateach index
     if self._objectness_smooth:
-      # low AP because classes seem to be problematic
       iou_max = tf.transpose(iou, perm=(0, 1, 2, 4, 3))
       iou_max = iou_max * tf.cast(full_iou_mask, iou_max.dtype)
       iou_max = tf.reduce_max(iou_max, axis=-1, keepdims=False)
@@ -490,26 +516,38 @@ class Yolo_Loss(object):
 
   def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes,
                                classes, true_conf, fwidth, fheight, smoothed):
+    
+    # compute the number of boxes and the total number of tiles for the search
     num_boxes = tf.shape(boxes)[-2]
     num_tiles = num_boxes // TILE_SIZE
-    base = tf.cast(tf.zeros_like(tf.reduce_sum(pred_boxes, axis=-1)), tf.bool)
+
+    # convert the grount truth boxes to the model output format
     boxes = box_ops.yxyx_to_xcycwh(boxes)
 
+    # store once the predicted classes with a high confidence, greater 
+    # than 25%
     pred_classes_mask = tf.cast(pred_classes > 0.25, tf.float32)
     pred_classes_mask = tf.expand_dims(pred_classes_mask, axis=-2)
 
+    # base tensors that we will update in the while loops 
+    base = tf.cast(tf.zeros_like(tf.reduce_sum(pred_boxes, axis=-1)), tf.bool)
     loss_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis=-1))
     obns_base = tf.zeros_like(tf.reduce_sum(pred_boxes, axis=-1, keepdims=True))
 
     def _loop_cond(pred_boxes_, pred_classes_, pred_conf, pred_classes_max,
                    boxes, classes, iou_max_, ignore_mask_, conf_loss_, loss_,
                    count, idx):
+      # check that the slice has boxes that all zeros
       batch_size = tf.shape(boxes)[0]
       box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0],
                            [batch_size, TILE_SIZE, 4])
+      
+      # confirm that the index is less than the total tiles that the 
+      # slice has values 
       return tf.logical_and(idx < num_tiles,
                             tf.math.greater(tf.reduce_sum(box_slice), 0))
 
+    # compute the while loop
     (_, _, _, _, _, _, iou_max, iou_mask, obns_loss, truth_loss, count,
      idx) = tf.while_loop(
          _loop_cond,
@@ -520,21 +558,29 @@ class Yolo_Loss(object):
          ],
          parallel_iterations=20)
 
-    # tf.print(tf.reduce_mean(tf.reduce_sum(truth_loss, axis = (1, 2, 3))))
+    # build the final ignore mask
     ignore_mask = tf.logical_not(iou_mask)
     ignore_mask = tf.stop_gradient(tf.cast(ignore_mask, true_conf.dtype))
     iou_max = tf.stop_gradient(iou_max)
 
-    # tf.print(tf.reduce_sum(true_conf), tf.reduce_sum(tf.maximum(tf.cast(iou_mask, tf.float32),true_conf)))
+    # depending on smoothed vs not smoothed the build the mask and ground truth
+    # map to use 
     if not smoothed:
+      # higher map lower iou with ground truth 
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
+      # lower map, very high iou with ground truth
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
-      # true_conf = tf.where(iou_mask, iou_, true_conf)
-      true_conf = iou_ #tf.where(iou_mask, iou_, true_conf)
 
+      # update the true conffidence mask with the best matching iou
+      true_conf = tf.where(iou_mask, iou_, true_conf)
+      # true_conf = iou_ 
+
+    # stop gradient on all components to save resources, we don't
+    # need to track the gradient though the while loop as they are
+    # not used
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
     obns_loss = tf.stop_gradient(obns_loss)
@@ -543,35 +589,67 @@ class Yolo_Loss(object):
     return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
 
   def build_grid(self, indexes, truths, preds, ind_mask, update=False):
+    # this function is used to broadcast all the indexes to the correct
+    # into the correct ground truth mask, used for iou detection map 
+    # in the scaled loss and the classification mask in the darknet loss
     num_flatten = tf.shape(preds)[-1]
+
+    # find all the batch indexes using the cumulated sum of a ones tensor
+    # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
     bhep = tf.math.cumsum(bhep, axis=0) - 1
+
+    # concatnate the batch sizes to the indexes 
     indexes = tf.concat([bhep, indexes], axis=-1)
     indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
 
+    # reshape the indexes into the correct shape for the loss, 
+    # just flatten all indexes but the last
     indexes = tf.reshape(indexes, [-1, 4])
+
+    # also flatten the ground truth value on all axis but the last
     truths = tf.reshape(truths, [-1, num_flatten])
 
+    # build a zero grid in the samve shape as the predicitons
     grid = tf.zeros_like(preds)
+    # remove invalid values from the truths that may have 
+    # come up from computation, invalid = nan and inf
     truths = math_ops.rm_nan_inf(truths)
 
+    # scatter update the zero grid 
     if update:
       grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
-
-    grid = tf.clip_by_value(grid, 0.0, 1.0)
+      # clip the values between zero and one 
+      grid = tf.clip_by_value(grid, 0.0, 1.0)
+    
+    # stop gradient and return to avoid TPU errors and save compute 
+    # resources
     return tf.stop_gradient(grid)
 
   def _scale_ground_truth_box(self, true_box, inds, ind_mask, fheight, fwidth):
+    # used to scale up the groun truth boxes to the shape of the current output 
+    # in the scaled yolo loss 
     ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
     ind_zero = tf.zeros_like(ind_x)
+
+    # build out the indexes and the how much all the values must be shifted 
     ind_shift = tf.concat([ind_x, ind_y, ind_zero, ind_zero], axis=-1)
     ind_shift = tf.cast(ind_shift, true_box.dtype)
 
+    # build a scaling tensor
     scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+
+    # shift and scale the boxes 
     true_box = (true_box * scale) - ind_shift
+
+    # mask off any of the shorting and scaling that may hav occured to 
+    # any all zero boxes
     true_box = apply_mask(ind_mask, true_box)
+
+    # stop gradient and return to avoid TPU errors and save compute 
+    # resources
     return tf.stop_gradient(true_box)
 
 
