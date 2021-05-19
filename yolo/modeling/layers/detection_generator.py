@@ -27,7 +27,7 @@ class YoloLayer(ks.Model):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
-               use_reduction_sum=False,
+               use_scaled_loss=False,
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
@@ -53,7 +53,7 @@ class YoloLayer(ks.Model):
     self._classes = classes
     self._loss_type = loss_type
     self._use_tie_breaker = use_tie_breaker
-    self._use_reduction_sum = use_reduction_sum
+    self._use_scaled_loss = use_scaled_loss
     self._pre_nms_points = pre_nms_points
     self._label_smoothing = label_smoothing
     self._keys = list(masks.keys())
@@ -250,14 +250,12 @@ class YoloLayer(ks.Model):
           obj_normalizer=self._obj_normalizer[key],
           new_cords=self._new_cords[key],
           objectness_smooth=self._objectness_smooth[key],
-          use_reduction_sum=self._use_reduction_sum,
+          use_scaled_loss=self._use_scaled_loss,
           label_smoothing=self._label_smoothing,
-          path_key=key,
           mask=self._masks[key],
           max_delta=self._max_delta[key],
           scale_anchors=self._path_scale[key],
-          scale_x_y=self._scale_xy[key],
-          use_tie_breaker=self._use_tie_breaker)
+          scale_x_y=self._scale_xy[key])
     return loss_dict
 
   def get_config(self):

@@ -242,7 +242,7 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_reduction_sum:
+    if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
       num_replicas = scale_replicas
@@ -299,7 +299,7 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_reduction_sum:
+    if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
       num_replicas = scale_replicas

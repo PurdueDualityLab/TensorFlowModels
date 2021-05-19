@@ -73,7 +73,7 @@ task:
       use_nms: false
       iou_thresh: 0.25
       nms_thresh: 0.9
-      use_reduction_sum: false
+      use_scaled_loss: false
   validation_data:
     global_batch_size: 8
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'

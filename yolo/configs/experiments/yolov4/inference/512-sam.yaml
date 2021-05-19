@@ -79,7 +79,7 @@ task:
       iou_thresh: 0.2
       nms_thresh: 0.6
       pre_nms_points: 500
-      use_reduction_sum: false
+      use_scaled_loss: false
   train_data:
     global_batch_size: 64
     dtype: float16

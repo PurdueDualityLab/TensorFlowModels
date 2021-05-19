@@ -78,7 +78,7 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
-      use_reduction_sum: true
+      use_scaled_loss: true
   train_data:
     global_batch_size: 4
     tfds_data_dir: '/media/vbanna/DATA_SHARE/tfds'

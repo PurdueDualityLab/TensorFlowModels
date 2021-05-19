@@ -297,7 +297,7 @@ class Yolo_Loss(object):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                objectness_smooth=True,
-               use_reduction_sum=False,
+               use_scaled_loss=False,
                label_smoothing=0.0,
                iou_thresh=0.213,
                new_cords=False,
@@ -366,7 +366,7 @@ class Yolo_Loss(object):
     # self._objectness_smooth = objectness_smooth
 
     self._objectness_smooth = float(objectness_smooth)
-    self._use_reduction_sum = use_reduction_sum
+    self._use_scaled_loss = use_scaled_loss
 
     # used in detection filtering
     self._beta_nms = beta_nms
@@ -375,7 +375,7 @@ class Yolo_Loss(object):
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
-        darknet=not self._use_reduction_sum,
+        darknet=not self._use_scaled_loss,
         normalizer=self._iou_normalizer,
         max_delta=self._max_delta)
 
@@ -839,7 +839,7 @@ class Yolo_Loss(object):
             precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
-    if self._use_reduction_sum:
+    if self._use_scaled_loss:
       return self.call_scaled(true_counts, inds, y_true, boxes, classes,
                                y_pred)
     else:

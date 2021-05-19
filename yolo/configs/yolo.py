@@ -265,7 +265,7 @@ class YoloLossLayer(hyperparams.Config):
   pre_nms_points: int = 500
   label_smoothing: float = 0.0
   anchor_generation_scale: int = 512
-  use_reduction_sum: bool = True
+  use_scaled_loss: bool = True
 
 
 @dataclasses.dataclass
