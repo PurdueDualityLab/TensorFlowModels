@@ -40,7 +40,7 @@ IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
 @dataclasses.dataclass
 class ModelConfig(hyperparams.Config):
 
-  def as_dict(self):  
+  def as_dict(self):
     model_kwargs = super().as_dict()
     if self.boxes is not None:
       model_kwargs.update({'boxes': [str(b) for b in self.boxes]})
@@ -139,7 +139,6 @@ class ModelConfig(hyperparams.Config):
       value = str(list(value))
       setter.append(value[1:-1])
     self.boxes = setter
-
 
 
 # dataset parsers
@@ -281,7 +280,7 @@ class YoloBase(hyperparams.OneOfConfig):
 class Yolo(ModelConfig):
   num_classes: int = 80
   input_size: Optional[List[int]] = dataclasses.field(
-      default_factory=lambda:[640, 640, 3])
+      default_factory=lambda: [640, 640, 3])
   min_level: int = 3
   max_level: int = 5
   boxes_per_scale: int = 3

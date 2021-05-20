@@ -887,7 +887,7 @@ def resize_and_crop_image(image,
                           padded_size,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
-                          random_pad = False, 
+                          random_pad=False,
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -970,8 +970,8 @@ def resize_and_crop_image(image,
       dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
       dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
     else:
-      dy = (padded_size[0] - scaled_size[0])//2
-      dx = (padded_size[1] - scaled_size[1])//2
+      dy = (padded_size[0] - scaled_size[0]) // 2
+      dx = (padded_size[1] - scaled_size[1]) // 2
 
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
@@ -984,4 +984,3 @@ def resize_and_crop_image(image,
         tf.cast(offset, tf.float32)
     ])
     return output_image, image_info
-

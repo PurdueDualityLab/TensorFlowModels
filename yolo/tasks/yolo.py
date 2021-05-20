@@ -94,9 +94,7 @@ class YoloTask(base_task.Task):
     print(xy_scales, l2_weight_decay)
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
-    print(
-      "heheheeheheheheheheheh: ",
-      anchors)
+    print("heheheeheheheheheheheh: ", anchors)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                             model_base_cfg.input_size)
@@ -150,7 +148,7 @@ class YoloTask(base_task.Task):
     )
 
     parser = yolo_input.Parser(
-        output_size=model.input_size, 
+        output_size=model.input_size,
         min_level=model.min_level,
         max_level=model.max_level,
         masks=masks,
@@ -165,7 +163,7 @@ class YoloTask(base_task.Task):
         aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_scale_min=params.parser.aug_scale_min,
         aug_scale_max=params.parser.aug_scale_max,
-        random_pad=params.parser.random_pad, 
+        random_pad=params.parser.random_pad,
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,

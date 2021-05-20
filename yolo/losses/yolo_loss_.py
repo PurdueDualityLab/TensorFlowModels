@@ -63,6 +63,7 @@ def ce(values, labels):
 @tf.custom_gradient
 def grad_sigmoid(values):
   t = tf.math.sigmoid(values)
+
   def delta(dy):
     #t = tf.math.sigmoid(values)
     return dy * t * (1 - t)
@@ -480,7 +481,6 @@ class Yolo_Loss(object):
     pred_boxes = tf.expand_dims(pred_boxes_, axis=-3)
     iou, liou, loss_box = self.box_loss(box_slice, pred_boxes)
 
-
     # mask off zero boxes
     # mask = tf.cast(tf.reduce_sum(tf.abs(box_slice), axis = -1) > 0.0, iou.dtype)
     # iou *= mask
@@ -489,10 +489,10 @@ class Yolo_Loss(object):
     iou_mask = iou > self._ignore_thresh
     iou_mask = tf.transpose(iou_mask, perm=(0, 1, 2, 4, 3))
     matched_classes = tf.equal(class_slice, pred_classes_max)
-    matched_classes = tf.logical_and(matched_classes,
-                                    tf.cast(class_slice, matched_classes.dtype))
+    matched_classes = tf.logical_and(
+        matched_classes, tf.cast(class_slice, matched_classes.dtype))
     matched_classes = tf.reduce_any(matched_classes, axis=-1)
-    
+
     full_iou_mask = tf.logical_and(iou_mask, matched_classes)
     iou_mask = tf.reduce_any(full_iou_mask, axis=-1, keepdims=False)
     ignore_mask_ = tf.logical_or(ignore_mask_, iou_mask)
@@ -553,9 +553,8 @@ class Yolo_Loss(object):
       # true_conf = tf.where(iou_mask, iou_, true_conf)
       true_conf = iou_
       # true_conf = tf.where(
-      #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1), 
+      #         tf.logical_and(iou_ == tf.squeeze(pred_conf, axis = -1),
       #                                     true_conf == 1), true_conf, iou_)
-      
 
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
@@ -615,9 +614,8 @@ class Yolo_Loss(object):
     pred_class = class_gradient_trap(pred_class, np.inf)
     sigmoid_conf = tf.sigmoid(pred_conf)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
-    pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
-                                                    anchor_grid, grid_points, 
-                                                    darknet=False)
+    pred_xy, pred_wh, pred_box = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
     # num_objs = tf.cast(
     #     tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
@@ -757,9 +755,8 @@ class Yolo_Loss(object):
     sigmoid_conf = tf.sigmoid(pred_conf)
     sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
-    pred_xy, pred_wh, pred_box = self._decode_boxes(fwidth, fheight, pred_box,
-                                                    anchor_grid, grid_points, 
-                                                    darknet=True)
+    pred_xy, pred_wh, pred_box = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
 
     (mask_loss, thresh_conf_loss, thresh_loss, thresh_counts, true_conf,
      obj_mask) = self._tiled_global_box_search(
@@ -809,7 +806,9 @@ class Yolo_Loss(object):
       # cls_normalizer is only applied to the true label
       # for indexs wit no object the normalizer is not applied
       # also not applied if class multipliers (not used, not currently support)
-      class_loss = (1 - true_class) * class_loss + true_class * class_loss * self._cls_normalizer
+      class_loss = (
+          1 - true_class
+      ) * class_loss + true_class * class_loss * self._cls_normalizer
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
@@ -840,8 +839,7 @@ class Yolo_Loss(object):
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_scaled_loss:
-      return self.call_scaled(true_counts, inds, y_true, boxes, classes,
-                               y_pred)
+      return self.call_scaled(true_counts, inds, y_true, boxes, classes, y_pred)
     else:
       return self.call_darknet(true_counts, inds, y_true, boxes, classes,
                                y_pred)

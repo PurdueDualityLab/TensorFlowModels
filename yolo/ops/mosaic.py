@@ -21,14 +21,32 @@ class Mosaic(object):
                random_crop=1.0,
                keep_thresh=0.00,
                random_crop_mosaic=False):
+    """
+    parameters for the loss functions used at each detection head output
+    Args:
+      output_size: `List[int]` for the expected output shape of the image.
+      mosaic_frequency: `float` the percentage of the images [0.0, 1.0] that we want to apply mosaic on.
+      crop_area: `List[float]` the area range of images to keep when cropping each image [0.5, 1.0] 
+        both values should be bound to between 0.0 and 1.0.
+      crop_area_mosaic: `List[float]` the area range of images to keep when cropping each image [0.5, 1.0] 
+        both values should be bound to between 0.0 and 1.0.
+      random_crop: `float` the percentage of the images [0.0, 1.0] that we want to apply random crop on 
+        only the mosaiced images. 
+      random_crop_mosaic: `bool` for whether we want to crop the mosaiced images to get a 
+        random patch or not, if enabled, then the output can be treated simply like a normal 
+        image sample, if not, the data pipeline must handle mosaiced images specially.
+
+    Return:
+
+    """
     self._output_size = output_size
     self._mosaic_frequency = mosaic_frequency
     self._random_crop = random_crop
-    self._seed = None
     self._crop_area = crop_area
-    self._keep_thresh = keep_thresh
+    self._keep_thresh = 0.00
     self._random_crop_mosaic = random_crop_mosaic
     self._crop_area_mosaic = crop_area_mosaic
+    self._seed = None
     return
 
   def _estimate_shape(self, image):
@@ -85,12 +103,11 @@ class Mosaic(object):
       boxes = tf.concat([x, y, w, h], axis=-1)
 
       boxes = bbox_ops.xcycwh_to_yxyx(boxes)
-      #boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
     return image, boxes, info
 
   def _pad_images(self, sample):
     image = sample['image']
-    image, boxes, info = self._letter_box(image, xs=0.0, ys=0.0)
+    image, _, info = self._letter_box(image, xs=0.0, ys=0.0)
     sample['image'] = image
     sample['info'] = info
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[0]
