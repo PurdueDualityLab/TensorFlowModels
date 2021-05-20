@@ -273,8 +273,8 @@ def get_predicted_box_newcords(width,
     # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
     # box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
     
-    pred_xy = grad_sigmoid(pred_xy)
-    pred_wh = grad_sigmoid(pred_wh)
+    # pred_xy = grad_sigmoid(pred_xy)
+    # pred_wh = grad_sigmoid(pred_wh)
     pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
