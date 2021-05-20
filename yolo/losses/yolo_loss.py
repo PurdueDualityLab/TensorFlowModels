@@ -283,6 +283,8 @@ def get_predicted_box_newcords(width,
                                                         scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of the boxes
+    pred_xy = grad_sigmoid(pred_xy)
+    pred_wh = grad_sigmoid(pred_wh)
     pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
@@ -632,7 +634,7 @@ class Yolo_Loss(object):
   def _scale_ground_truth_box(self, true_box, inds, ind_mask, fheight, fwidth):
     # used to scale up the groun truth boxes to the shape of the current output
     # in the scaled yolo loss
-    ind_y, ind_x, ind_a = tf.split(inds, 3, axis=-1)
+    ind_y, ind_x, _ = tf.split(inds, 3, axis=-1)
     ind_zero = tf.zeros_like(ind_x)
 
     # build out the indexes and the how much all the values must be shifted
