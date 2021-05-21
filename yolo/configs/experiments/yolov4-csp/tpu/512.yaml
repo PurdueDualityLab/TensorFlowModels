@@ -93,11 +93,12 @@ task:
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_translate: 0.5
+      aug_rand_translate: 0.0
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
       use_scale_xy: False
+      random_pad: True
       letter_box: False
       anchor_thresh: 0.2
       mosaic: 
