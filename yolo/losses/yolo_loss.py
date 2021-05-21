@@ -283,8 +283,8 @@ def get_predicted_box_newcords(width,
                                                         scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of the boxes
-    # pred_xy = grad_sigmoid(pred_xy)
-    # pred_wh = grad_sigmoid(pred_wh)
+    pred_xy = grad_sigmoid(pred_xy)
+    pred_wh = grad_sigmoid(pred_wh)
     pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
