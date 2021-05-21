@@ -97,8 +97,8 @@ task:
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
-      use_scale_xy: False
       random_pad: True
+      use_scale_xy: False
       letter_box: False
       anchor_thresh: 0.2
       mosaic: 
