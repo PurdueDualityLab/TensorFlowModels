@@ -255,7 +255,6 @@ class YoloTask(base_task.Task):
           label,
           num_replicas=num_replicas,
           scale_replicas=1)
-      # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
