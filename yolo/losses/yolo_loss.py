@@ -650,10 +650,9 @@ class Yolo_Loss(object):
     # reps = tf.where(reps == 0.0, tf.ones_like(reps), reps)
 
     # scale boxes
-    scale = tf.convert_to_tensor([fheight, fwidth])
-    pred_wh = pred_wh * scale
-    pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
-    true_box = self._scale_ground_truth_box(true_box, inds, ind_mask, fheight, fwidth)
+    scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+    pred_box = pred_box * scale
+    true_box = true_box * scale
 
     pred_box = math_ops.mul_no_nan(ind_mask,
                                    tf.gather_nd(pred_box, inds, batch_dims=1))
