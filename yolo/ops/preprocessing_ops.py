@@ -7,12 +7,41 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32):
+  """
+  Equivalent to tf.random.uniform, except that minval and maxval are flipped if
+  minval is greater than maxval.
+
+  Args:
+    minval: An `int` for a lower or upper endpoint of the interval from which to
+      choose the random number.
+    maxval: An `int` for the other endpoint.
+    dtype: The output type of the tensor.
+
+  Returns:
+    A random tensor of type dtype that falls between minval and maxval excluding
+    the bigger one.
+  """
   if minval > maxval:
     minval, maxval = maxval, minval
   return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
 
 def rand_scale(val, dtype=tf.float32):
+  """
+  Generates a random number for the scale. Half the time, the value is between
+  [1.0, val) with uniformly distributed probability. The other half, the value
+  is the reciprocal of this value.
+
+  The function is identical to the one in the original implementation:
+  https://github.com/AlexeyAB/darknet/blob/a3714d0a/src/utils.c#L708-L713
+
+  Args:
+    val: A float representing the maximum scaling allowed.
+    dtype: The output type of the tensor.
+
+  Returns:
+    The random scale.
+  """
   scale = rand_uniform_strong(1.0, val, dtype=dtype)
   do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
   if (do_ret == 1):
@@ -21,6 +50,10 @@ def rand_scale(val, dtype=tf.float32):
 
 
 def shift_zeros(data, mask, axis=-2, fill=0):
+  """
+  FIXME
+  UNUSED
+  """
   zeros = tf.zeros_like(data) + fill
   data_flat = tf.boolean_mask(data, mask)
 
@@ -43,6 +76,17 @@ def shift_zeros(data, mask, axis=-2, fill=0):
 
 
 def shift_zeros2(mask, squeeze=True, fill=0):
+  """
+  FIXME Why is this named shift_zeros2
+  UNUSED
+
+  Find the top
+
+  Args:
+    mask:
+    squeeze: A `bool` to indicate whether to squeeze `mask` before doing operations
+    fill: FIXME unused
+  """
   mask = tf.cast(mask, tf.float32)
   if squeeze:
     mask = tf.squeeze(mask, axis=-1)
@@ -53,6 +97,21 @@ def shift_zeros2(mask, squeeze=True, fill=0):
 
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+  """
+  Pad a dimension of the tensor to have a maximum number of instances filling
+  additional entries with the `pad_value`.
+
+  Args:
+    value: An input tensor.
+    instances: An int representing the maximum number of instances.
+    pad_value: An int representing the value used for padding until the maximum
+      number of instances is obtained.
+    pad_axis: An int representing the axis index to pad.
+
+  Returns:
+    The output tensor whose dimensions match the input tensor except with the
+    size along the `pad_axis` replaced by `instances`.
+  """
   shape = tf.shape(value)
   if pad_axis < 0:
     pad_axis = tf.rank(value) + pad_axis
@@ -101,7 +160,20 @@ def clip_boxes(boxes, image_shape):
 
 
 def get_non_empty_box_indices(boxes, output_size=None):
-  """Get indices for non-empty boxes."""
+  """
+  Get indices for non-empty boxes. These are the boxes who are inside of the
+  image, meaning the x and y coordinates as well as the width and height of the
+  boxes are all greater than 0. In addition, if the `output_size` is given, the
+  x and y coordinates must also be less than the width and the height.
+
+  Args:
+    boxes: A tensor which represent the bounding boxes and has a last dimension
+      with size 4 representing (x, y, w, h).
+    output_size: An optional tuple containing (height, width) of the image.
+
+  Returns:
+    The indices of the boxes that are in the bounds of the image.
+  """
   # Selects indices if box height or width is 0.
   if output_size is not None:
     width = tf.cast(output_size[1], boxes.dtype)
@@ -124,11 +196,56 @@ def get_non_empty_box_indices(boxes, output_size=None):
 
 
 def box_area(box):
+  """
+  Calculate the area of a box in pixels.
+
+  Inputs:
+    box: A tensor which represent the bounding box and has a last dimension
+      with size 4 representing (ymin, xmin, ymax, xmin).
+
+  Returns:
+    A tensor with one less dimension than `box` which represents the area of
+    each box.
+  """
   return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
 
 
 def clip_boxes(boxes, image_shape, keep_thresh=0.0, clip_wh=False):
+  """
+  Clip boxes to the image if they exceed the bounds of the image.
 
+  If the fraction of either a box's width or height is greater than
+  `keep_thresh` outside of the image and the box's center is outside of the
+  image, the box is clipped in the dimension exceeding `keep_thresh`. The box
+  is clipped by putting the center at the extreme boundary of the image. For
+  example, if the width of the box needs to be clipped, the x-coordinate of the
+  center changes to 0 or the width of the image, depending on if it is off the
+  screen on the left or the right, and the width of the new bounding box is
+  adjusted to keep the corners of the box that were not outside of the image in
+  the same location as before the clip.
+
+  Args:
+    boxes: A tensor whose last dimension is 4 representing the coordinates
+      of boxes in (ymin, xmin, ymax, xmax) order.
+    image_shape: A list of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+    keep_thresh: A `float` representing the fraction of the box's width or
+      height that must be outside of the image in order to clip that dimension.
+      For example, if `keep_thresh` is set to 0, the entire box must be outside
+      of the bounds of the image.
+    clip_wh: A `bool` which determines whether the width and height of the boxes
+      will always be clipped to between 0 and the width and height of the image.
+      If `clip_wh` is false, the width and height of the boxes will only be
+      clipped  if the clipped area is more than 10% of the original are of the
+      box.
+
+  Returns:
+    A tensor whose shape is the same as `boxes` representing the clipped boxes.
+
+  Raises:
+    ValueError: If the last dimension of boxes is not 4.
+  """
   if isinstance(image_shape, list) or isinstance(image_shape, tuple):
     height, width = image_shape
     max_length = [height, width, height, width]
@@ -219,16 +336,58 @@ def resize_and_crop_boxes(boxes,
                           keep_thresh=0.0,
                           clip_wh=False,
                           aggressive=False):
+  """
+  Resize and crop boxes to match the transformations to the image performed by
+  `resize_and_crop_image`.
 
+  Args:
+    boxes: a tensor whose last dimension is 4 representing the coordinates
+      of boxes in ymin, xmin, ymax, xmax order.
+    image_scale: a list of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+    output_size: a list of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+    offset: a list of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+    keep_thresh: A `float` representing the fraction of the box's width or
+      height that must be outside of the image in order to clip that dimension.
+      For example, if `keep_thresh` is set to 0, the entire box must be outside
+      of the bounds of the image.
+    clip_wh: A `bool` which determines whether the width and height of the boxes
+      will always be clipped to between 0 and the width and height of the image.
+      If `clip_wh` is false, the width and height of the boxes will only be
+      clipped  if the clipped area is more than 10% of the original are of the
+      box.
+    aggressive: FIXME unused
+
+  Returns:
+    A tensor whose shape is the same as `boxes` representing the clipped boxes.
+
+  Raises:
+    ValueError: If the last dimension of `boxes` is not 4 or the last dimension
+      of `image_scale`, `output_size`, or `offset` are not 2.
+  """
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
-
   boxes = clip_boxes(
       boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
   return boxes
 
 
 def get_image_shape(image):
+  """
+  Get the shape of the image regardless of if the image is in the
+  (batch_size, x, y, c) format or the (x, y, c) format.
+
+  Args:
+    image: A int tensor who has either 3 or 4 dimensions.
+
+  Returns:
+    A tuple representing the (height, width) of the image.
+  """
   shape = tf.shape(image)
   if tf.shape(shape)[0] == 4:
     width = shape[2]
@@ -240,6 +399,21 @@ def get_image_shape(image):
 
 
 def random_translate(image, t):
+  """
+  Translate the boxes by a random fraction of the image width and height between
+  [-t, t).
+
+  Args:
+    image: An int tensor of either 3 or 4 dimensions representing the image or a
+      batch of images.
+    t: A float representing the fraction of the width and height by which to
+      jitter the image.
+
+  Returns:
+    A tuple with three elements: a tensor representing the translated image with
+    the same dimensions as `box`, and the number of pixels that the image was
+    translated in both the x and y directions.
+  """
   with tf.name_scope('random_translate'):
     if t != 0:
       t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
@@ -256,6 +430,20 @@ def random_translate(image, t):
 
 
 def translate_boxes(box, classes, translate_x, translate_y):
+  """
+  Translate the boxes by a fixed number of pixels.
+
+  Args:
+    box: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+    classes: A tensor representing the classes of each bounding box. The shape
+      of `classes` lacks the final dimension of the shape `box` which is of size
+      4.
+
+  Returns:
+    A tuple with two elements: a tensor representing the translated boxes with
+    the same dimensions as `box` and the `classes` tensor.
+  """
   with tf.name_scope('translate_boxes'):
     box = box_ops.yxyx_to_xcycwh(box)
     x, y, w, h = tf.split(box, 4, axis=-1)
@@ -267,7 +455,24 @@ def translate_boxes(box, classes, translate_x, translate_y):
 
 
 def translate_image(image, t_y, t_x):
-  with tf.name_scope('translate_boxes'):
+  """
+  Translate the boxes by a fix fraction of the image width and height
+  represented by (t_y, t_x).
+
+  Args:
+    image: An int tensor of either 3 or 4 dimensions representing the image or a
+      batch of images.
+    t_y: A float representing the fraction of the height by which to translate
+      the image vertically.
+    t_x: A float representing the fraction of the width by which to translate
+      the image horizontally.
+
+  Returns:
+    A tuple with three elements: a tensor representing the translated image with
+    the same dimensions as `box`, and the number of pixels that the image was
+    translated in both the y and x directions.
+  """
+  with tf.name_scope('translate_image'):
     height, width = get_image_shape(image)
     image_jitter = tf.convert_to_tensor([t_y, t_x])
     image_dims = tf.cast(tf.convert_to_tensor([height, width]), tf.float32)
@@ -278,6 +483,30 @@ def translate_image(image, t_y, t_x):
 
 
 def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
+  """
+  Performs the letterbox operation that pads the image in order to change the
+  aspect ratio of the image without distorting or cropping the image. This
+  function also adjusts the bounding boxes accordingly.
+
+  https://en.wikipedia.org/wiki/Letterboxing_(filming)
+
+  Args:
+    image: A Tensor of shape [height, width, 3] representing the input image.
+    boxes: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+    xs: A `float` representing the amount to scale the width of the image though
+      the use of letterboxing.
+    ys: A `float` representing the amount to scale the height of the image
+      though the use of letterboxing.
+    target_dim: An `int` representing the largest dimension of the image for
+      the scaled image information.
+
+  Returns:
+    A tuple with 3 elements representing the letterboxed image, the adjusted
+    bounding boxes for the new letterboxed image, followed by a list
+    representing the scaled padded height, width, as well as the padding in
+    both directions.
+  """
   height, width = get_image_shape(image)
   clipper = tf.math.maximum(width, height)
   if target_dim is None:
@@ -330,12 +559,14 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
         found via Kmeans
       width: int for the image width
       height: int for the image height
+      iou_thresh: float for the threshold for selecting the boxes that are
+        considered overlapping
 
-    Return:
+    Returns:
       tf.Tensor: y_true with the anchor associated with each ground truth
       box known
     """
-  with tf.name_scope('get_best_anchor'):
+  with tf.name_scope('get_best_anchor2'):
     is_batch = True
     ytrue_shape = y_true.get_shape()
     if ytrue_shape.ndims == 2:
@@ -434,8 +665,10 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
         found via Kmeans
       width: int for the image width
       height: int for the image height
+      iou_thresh: float for the threshold for selecting the boxes that are
+        considered overlapping
 
-    Return:
+    Returns:
       tf.Tensor: y_true with the anchor associated with each ground truth
       box known
     """
@@ -453,6 +686,22 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 
 
 def _get_num_reps(anchors, mask, box_mask):
+  """
+  Calculate the number of anchor boxes that an object is repeated in.
+
+  Args:
+    anchors: A list or Tensor representing the anchor boxes
+    mask: A `list` of `int`s representing the mask for the anchor boxes that
+      will be considered when creating the gridded ground truth.
+    box_mask: A mask for all of the boxes that are in the bounds of the image
+      and have positive height and width.
+
+  Returns:
+    A tuple with three elements: the number of repetitions, the box indices
+    where the primary anchors are usable according to the mask, and the box
+    indices where the alternate anchors are usable according to the mask.
+
+  """
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
@@ -479,6 +728,18 @@ def _get_num_reps(anchors, mask, box_mask):
 
 
 def _gen_utility(boxes):
+  """
+  Generate a mask to filter the boxes whose x and y coordinates are in
+  [0.0, 1.0) and have width and height are greater than 0.
+
+  Args:
+    boxes: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+
+  Returns:
+    A mask for all of the boxes that are in the bounds of the image and have
+    positive height and width.
+  """
   eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
   gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis=-1)
   ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis=-1)
@@ -489,6 +750,17 @@ def _gen_utility(boxes):
 
 
 def _gen_offsets(scale_xy, dtype):
+  """
+  Create offset Tensor for a `scale_xy` for use in `build_grided_gt_ind`.
+
+  Args:
+    scale_xy: A `float` to represent the amount the boxes are scaled in the
+      loss function.
+    dtype: The type of the Tensor to create.
+
+  Returns:
+    Returns the Tensor for the offsets.
+  """
   return tf.cast(0.5 * (scale_xy - 1), dtype)
 
 
@@ -506,11 +778,15 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
         13, to 26, to 52
       num_classes: `integer` for the number of classes
       dtype: expected output datatype
-      use_tie_breaker: boolean value for wether or not to use the tie
-        breaker
+      scale_xy: A `float` to represent the amount the boxes are scaled in the
+        loss function.
+      scale_num_inst: A `float` to represent the scale at which to multiply the
+        number of predicted boxes by to get the number of instances to write
+        to the grid.
+      use_tie_breaker: A `bool` value for wether or not to use the tie breaker.
 
-    Return:
-      tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
+    Returns:
+      tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes].
   """
   # unpack required components from the input ground truth
   boxes = tf.cast(y_true['bbox'], dtype)
@@ -590,6 +866,26 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
 
 def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
                  width, num_written):
+  """
+  Write out the y and x grid cell location and the anchor into the `ind_val`
+  TensorArray and write the `sample` to the `ind_sample` TensorArray.
+
+  Args:
+    box: An `int` Tensor with two elements for the relative position of the
+      box in the image.
+    anchor_id: An `int` representing the anchor box.
+    offset: A `float` representing the offset from the grid cell.
+    sample: A `float` Tensor representing the data to write out.
+    ind_val: A TensorArray representing the indices for the detected boxes.
+    ind_sample: A TensorArray representing the indices for the detected boxes.
+    height: An `int` representing the height of the image.
+    width: An `int` representing the width of the image.
+    num_written: A `int` representing the number of samples that have been
+      written.
+
+  Returns:
+    Modified `ind_val`, `ind_sample`, and `num_written`.
+  """
   a_ = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
 
   y = box[1] * height
@@ -648,7 +944,29 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):
+  """
+  Iterate through all viable anchor boxes and write the sample information to
+  the `ind_val` and `ind_sample` TensorArrays.
 
+  Args:
+    num_reps: An `int` Tensor representing the number of repetitions.
+    boxes: A 2D `int` Tensor with two elements for the relative position of the
+      box in the image for each object.
+    classes: An `int` Tensor representing the class for each object.
+    ious: A 2D `int` Tensor representing the IOU of object with each anchor box.
+    ind_val: A TensorArray representing the indices for the detected boxes.
+    ind_sample: A TensorArray representing the indices for the detected boxes.
+    height: An `int` representing the height of the image.
+    width: An `int` representing the width of the image.
+    num_written: A `int` representing the number of samples that have been
+      written.
+    num_instances: A `int` representing the number of instances that can be
+      written at the maximum.
+    offset: A `float` representing the offset from the grid cell.
+
+  Returns:
+    Modified `ind_val`, `ind_sample`, and `num_written`.
+  """
   # if offset > 0.0:
   #   const = tf.cast(tf.convert_to_tensor([1. - offset/2]), dtype=boxes.dtype)
   # else:
@@ -731,7 +1049,9 @@ def random_crop_mosaic(image,
                        area_range=(0.08, 1.0),
                        max_attempts=10,
                        seed=1):
-  """Randomly crop an arbitrary shaped slice from the input image.
+  """Randomly crop an arbitrary shaped slice from the input image. Can be the
+  original image if max_attempts is exhausted.
+
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
     aspect_ratio_range: a list of floats. The cropped area of the image must
@@ -742,12 +1062,14 @@ def random_crop_mosaic(image,
       image of the specified constraints. After max_attempts failures, return
       the entire image.
     seed: the seed of the random generator.
+
   Returns:
-    cropped_image: a Tensor representing the random cropped image. Can be the
-      original image if max_attempts is exhausted.
+    A 2-element tuple containing a Tensor representing the random cropped image
+    and a Tensor representing the transformation information of the padding
+    (input shape, output shape, scaling, and padding)
   """
 
-  with tf.name_scope('random_crop_image'):
+  with tf.name_scope('random_crop_mosaic'):
     ishape = tf.shape(image)
     crop_offset, crop_size, _ = tf.image.sample_distorted_bounding_box(
         ishape,
@@ -782,7 +1104,23 @@ def random_crop_mosaic(image,
 
 
 def random_pad(image, area):
-  with tf.name_scope('pad_to_bbox'):
+  """
+  Pad the image to with a random amount of offset on both the x-axis and the
+  y-axis and a padding that multiplies the shape of each dimension by
+  `sqrt(area)`. The amount is within a box that is the same shape as `image` but
+  has the `sqrt(area)` factor on each dimension.
+
+  Args:
+    image: a Tensor of shape [height, width, 3] representing the input image.
+    area: a `float` representing the amount to scale the area of the original
+      image by.
+
+  Returns:
+    A 2 element tuple containing the padded image and a Tensor representing the
+    transformation information of the padding (input shape, output shape,
+    scaling, and padding)
+  """
+  with tf.name_scope('random_pad'):
     height, width = get_image_shape(image)
 
     rand_area = tf.cast(area, tf.float32)  #tf.random.uniform([], 1.0, area)
@@ -820,6 +1158,17 @@ def random_pad(image, area):
 
 
 def random_rotate_image(image, max_angle):
+  """
+  Rotate an image by a random angle that ranges from [-max_angle, max_angle).
+
+  Args:
+    x_: A float tensor for the x-coordinates of the points.
+    y_: A float tensor for the y-coordinates of the points.
+    angle: A float representing the counter-clockwise rotation in radians.
+
+  Returns:
+    The rotated points.
+  """
   angle = tf.random.uniform([],
                             minval=-max_angle,
                             maxval=max_angle,
@@ -831,6 +1180,18 @@ def random_rotate_image(image, max_angle):
 
 
 def get_corners(boxes):
+  """
+  Get the coordinates of the 4 courners of a set of bounding boxes.
+
+  Args:
+    boxes: A tensor whose last axis has a length of 4 and is in the format
+      (ymin, xmin, ymax, xmax)
+
+  Returns:
+    A tensor whose dimensions are the same as `boxes` but has an additional axis
+    of size 2 representing the 4 courners of the bounding boxes in the order
+    (tl, bl, tr, br).
+  """
   ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
 
   tl = tf.concat([xmi, ymi], axis=-1)
@@ -843,6 +1204,17 @@ def get_corners(boxes):
 
 
 def rotate_points(x_, y_, angle):
+  """
+  Rotate points by an angle about the center of the image.
+
+  Args:
+    x_: A float tensor for the x-coordinates of the points.
+    y_: A float tensor for the y-coordinates of the points.
+    angle: A float representing the counter-clockwise rotation in radians.
+
+  Returns:
+    The rotated points.
+  """
   sx = 0.5 - x_
   sy = 0.5 - y_
 
@@ -861,6 +1233,17 @@ def rotate_points(x_, y_, angle):
 
 
 def rotate_boxes(boxes, height, width, angle):
+  """
+  Rotate bounding boxes by an angle about the center of the image.
+
+  Args:
+    boxes: A float tensor whose last axis represents (ymin, xmin, ymax, xmax).
+    height, width: FIXME: unused
+    angle: A float representing the counter-clockwise rotation in radians.
+
+  Returns:
+    The rotated boxes.
+  """
   corners = get_corners(boxes)
   # boxes = box_ops.yxyx_to_xcycwh(boxes)
   ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis=-1)
@@ -887,7 +1270,7 @@ def resize_and_crop_image(image,
                           padded_size,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
-                          random_pad = False, 
+                          random_pad = False,
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -984,4 +1367,3 @@ def resize_and_crop_image(image,
         tf.cast(offset, tf.float32)
     ])
     return output_image, image_info
-
