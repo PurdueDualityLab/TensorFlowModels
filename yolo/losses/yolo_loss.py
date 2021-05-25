@@ -651,6 +651,7 @@ class Yolo_Loss(object):
 
     # scale boxes
     scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+    scale = tf.ones_like(scale)
     pred_box = pred_box * scale
     true_box = true_box * scale
 
