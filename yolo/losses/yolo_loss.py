@@ -14,18 +14,12 @@ TILE_SIZE = 50
 
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta=np.inf):
+  # this is an identity operation that will
+  # allow us to add some steps to the back propagation
   def trap(dy):
+    # remove the value nan from back propagation
     dy = math_ops.rm_nan_inf(dy)
-    delta = tf.cast(max_delta, dy.dtype)
-    dy = tf.clip_by_value(dy, -delta, delta)
-    return dy, 0.0
-  return y, trap
-
-
-@tf.custom_gradient
-def box_gradient_trap(y, max_delta=np.inf):
-  def trap(dy):
-    dy = math_ops.rm_nan_inf(dy)
+    # clip the gradient for the back prop
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
     return dy, 0.0
@@ -34,29 +28,26 @@ def box_gradient_trap(y, max_delta=np.inf):
 
 @tf.custom_gradient
 def class_gradient_trap(y, max_delta=np.inf):
-
+  # this is an identity operation that will
+  # allow us to add some steps to the back propagation
   def trap(dy):
+    # remove the value nan from back propagation
     dy = math_ops.rm_nan_inf(dy)
+    # clip the gradient for the back prop
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
-    # tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
 
   return y, trap
 
-
-def ce(values, labels):
-  labels = labels + K.epsilon()
-  loss = tf.reduce_mean(
-      -math_ops.mul_no_nan(values, tf.math.log(labels)), axis=-1)
-  loss = math_ops.rm_nan(loss, val=0.0)
-  return loss
-
-
 @tf.custom_gradient
 def grad_sigmoid(values):
-  #vals = tf.math.sigmoid(values)
+  # this is an identity operation that will
+  # allow us to add some steps to the back propagation
   def delta(dy):
+    # darknet only propagtes sigmoids for the boxes
+    # under some conditions, so we need this to selectively
+    # add the sigmoid to the chain rule
     t = tf.math.sigmoid(values)
     return dy * t * (1 - t)
   return values, delta
@@ -64,16 +55,19 @@ def grad_sigmoid(values):
 
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
+  # this applies the sigmoid cross entropy loss
   y = y * (1 - label_smoothing) + 0.5 * label_smoothing
   x = tf.math.sigmoid(x_prime)
   x = math_ops.rm_nan_inf(x, val=0.0)
-  #bce = ks.losses.binary_crossentropy(y, x, from_logits=False)
   bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
 
   def delta(dy):
-    # safer and faster gradient compute for bce
+    # this is a safer version of the sigmoid with binary cross entropy
+    # bellow is the mathematic formula reduction that is used to
+    # get the simplified derivative. The derivative reduces to
+    # y_pred - y_true
 
-    # # bce = -ylog(x) - (1 - y)log(1 - x)
+    # bce = -ylog(x) - (1 - y)log(1 - x)
     # # bce derive
     # dloss = -math_ops.divide_no_nan(y, x) + math_ops.divide_no_nan((1-y),(1-x))
     # # 1 / (1 + exp(-x))
@@ -85,7 +79,7 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
     # # 1 / (1 + exp(-x))
     # dx = dloss * tf.expand_dims(dy, axis = -1)
 
-    # bce + sigmoid derivative
+    # bce * sigmoid derivative
     dloss = (-y + x) 
     dx = dloss * tf.expand_dims(dy, axis=-1)
 
@@ -96,27 +90,42 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
 @tf.custom_gradient
 def apply_mask(mask, x):
+  # this function is used to apply no nan mask to an input tensor
+  # as such this will apply a mask and remove NAN for both the
+  # forward AND backward propagation
   masked = math_ops.mul_no_nan(mask, x)
 
   def delta(dy):
+    # mask the incoming derivative as well.
     return tf.zeros_like(mask), math_ops.mul_no_nan(mask, dy)
 
   return masked, delta
 
 
-# conver to a static class
-# no ops in this fn should have grads propagated
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
+  # cast the grid scaling value to a tensorflow data type, in yolo each pixel
+  # is used to predict the center of a box, the center must be with in the bounds
+  # of representation of each pixel, typically 1/width pixels. Scale_xy, extends
+  # the view of each pixel such that the offset is no longer bound by 0 and 1.
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
+  
+  # scale the centers and find the offset of each box relative to
+  # their center pixel
   pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
-  # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
 
+  # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([width, height])
+
+  # scale the offsets and add them to the grid points or a tensor that is
+  # the realtive location of each pixel
   box_xy = grid_points + pred_xy / scaler
+
+  # scale the width and height of the predictions and corlate them to anchor boxes
   box_wh = tf.math.exp(pred_wh) * anchor_grid
+
+  # build the final predicted box
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  # return (box_xy, box_wh, pred_box)
   return (pred_xy, box_wh, pred_box)
 
 
@@ -133,16 +142,23 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     # leads to the scaling of the gradient of a box relative to the size of the box and the gradient
     # for small boxes this will mean down scaling the gradient leading to poor convergence on small
     # objects and also very likely over fitting
+
+    # add all the gradients that may have been applied to the
+    # boxes and those that have been applied to the width and height
     dy_xy_, dy_wh_ = tf.split(dy, 2, axis=-1)
     dy_wh += dy_wh_
     dy_xy += dy_xy_
+
+    # propagate the exponential applied to the width and height in
+    # order to ensure the gradient propagated is of the correct
+    # magnitude 
     dy_wh *= tf.math.exp(pred_wh)
 
-    # scaling
+    # apply the configs weight to the propagated gradient
     dy_xy *= tf.cast(normalizer, dy_xy.dtype)
     dy_wh *= tf.cast(normalizer, dy_wh.dtype)
 
-    # gradient clipping
+    # apply the gradient clipping to xy and wh
     dy_wh = math_ops.rm_nan_inf(dy_wh)
     delta = tf.cast(max_delta, dy_wh.dtype)
     dy_wh = tf.clip_by_value(dy_wh, -delta, delta)
@@ -153,7 +169,6 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
         grid_points), 0.0, 0.0, 0.0
 
-  # return (box_xy, box_wh, pred_box), delta
   return (pred_xy, box_wh, pred_box), delta
 
 
@@ -167,19 +182,16 @@ def get_predicted_box(width,
                       max_delta=5.0, 
                       normalizer=1.0):
 
-  # TODO: scale_xy should not be propagated in darkent either
   pred_xy = unscaled_box[..., 0:2]  
-  # pred_xy = tf.sigmoid(unscaled_box[..., 0:2])  
   pred_wh = unscaled_box[..., 2:4]
 
-  # the gradient for non of this should be propagated
   if darknet:
-    # box_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # if we are using the darknet loss we shoud nto propagate the decoding of the box
     pred_xy, box_wh, pred_box = darknet_boxes(pred_xy, pred_wh, width, height,
                                               anchor_grid, grid_points,
                                               max_delta, scale_xy, normalizer)
   else:
-    # box_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # if we are using the scaled loss we should propagate the decoding of the boxes
     pred_xy, box_wh, pred_box = scale_boxes(pred_xy, pred_wh, width, height,
                                             anchor_grid, grid_points, max_delta,
                                             scale_xy)
@@ -187,42 +199,56 @@ def get_predicted_box(width,
   return pred_xy, box_wh, pred_box
 
 
-# conver to a static class
-# no ops in this fn should have grads propagated
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
+  # cast the grid scaling value to a tensorflow data type, in yolo each pixel
+  # is used to predict the center of a box, the center must be with in the bounds
+  # of representation of each pixel, typically 1/width pixels. Scale_xy, extends
+  # the view of each pixel such that the offset is no longer bound by 0 and 1.
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
+  # apply the sigmoid
   pred_xy = tf.math.sigmoid(pred_xy)  
   pred_wh = tf.math.sigmoid(pred_wh)
+
+  # scale the xy offset predictions according to the config
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+
+  # find the true offset from the grid points and the scaler
+  # where the grid points are the relative offset of each pixel with
+  # in the image
   scaler = tf.convert_to_tensor([width, height])
   box_xy = grid_points + pred_xy / scaler
+
+  # decode the widht and height of the boxes and correlate them
+  # to the anchor boxes
   box_wh = tf.square(2 * pred_wh) * anchor_grid
+
+  # build the final boxes
   pred_box = K.concatenate([box_xy, box_wh], axis=-1)
-  # return (box_xy, box_wh, pred_box)
   return (pred_xy, box_wh, pred_box)
 
 
 @tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                             grid_points, max_delta, scale_xy, normalizer):
-  # (box_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
   (pred_xy, box_wh, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
                                                       scale_xy)
 
   def delta(dy_xy, dy_wh, dy):
+    # add all the gradients that may have been applied to the
+    # boxes and those that have been applied to the width and height
     dy_xy_, dy_wh_ = tf.split(dy, 2, axis=-1)
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
-    # scaling
+    # apply the configs weight to the propagated gradient
     dy_xy *= tf.cast(normalizer, dy_xy.dtype)
     dy_wh *= tf.cast(normalizer, dy_wh.dtype)
 
-    # gradient clipping
+    # apply the gradient clipping to xy and wh
     dy_wh = math_ops.rm_nan_inf(dy_wh)
     delta = tf.cast(max_delta, dy_wh.dtype)
     dy_wh = tf.clip_by_value(dy_wh, -delta, delta)
@@ -233,7 +259,6 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
         grid_points), 0.0, 0.0, 0.0
 
-  # return (box_xy, box_wh, pred_box), delta
   return (pred_xy, box_wh, pred_box), delta
 
 
@@ -246,25 +271,19 @@ def get_predicted_box_newcords(width,
                                darknet=False,
                                max_delta=5.0, 
                                normalizer=1.0):
-  # pred_xy = tf.math.sigmoid(unscaled_box[..., 0:2])  
-  # pred_wh = tf.math.sigmoid(unscaled_box[..., 2:4])
   pred_xy = unscaled_box[..., 0:2]  
   pred_wh = unscaled_box[..., 2:4]
 
   if darknet:
-    # box_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
+    # if we are using the darknet loss we shoud nto propagate the decoding of the box
     pred_xy, box_wh, pred_box = darknet_new_coord_boxes(pred_xy, pred_wh, width,
                                                         height, anchor_grid,
                                                         grid_points, max_delta,
                                                         scale_xy, normalizer)
   else:
-    # pred_xy_ = pred_xy
-    # scale_xy = tf.cast(scale_xy, pred_xy.dtype)
-    # pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
-    # box_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy_, pred_wh, width, height, anchor_grid, grid_points, max_delta, scale_xy)
-    
-    pred_xy = grad_sigmoid(pred_xy)
-    pred_wh = grad_sigmoid(pred_wh)
+    # if we are using the scaled loss we should propagate the decoding of the boxes
+    # pred_xy = grad_sigmoid(pred_xy)
+    # pred_wh = grad_sigmoid(pred_wh)
     pred_xy, box_wh, pred_box = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
