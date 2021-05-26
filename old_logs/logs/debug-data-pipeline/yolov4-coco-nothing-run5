@@ -1,0 +1,1313 @@
+cat: .experiment_zone: No such file or directory
+ERROR: (gcloud.compute.tpus.start) INVALID_ARGUMENT: StartNode is not supported when state is READY
+europe-west4-a
+I0323 15:35:07.020416 140060615362368 train_utils.py:286] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'tpu',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'bfloat16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 2,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': False,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden',
+          'init_checkpoint_modules': 'backbone',
+          'load_darknet_weights': False,
+          'model': {'_boxes': ['[12.0, 16.0]',
+                               '[19.0, 36.0]',
+                               '[40.0, 28.0]',
+                               '[36.0, 75.0]',
+                               '[76.0, 55.0]',
+                               '[72.0, 146.0]',
+                               '[142.0, 110.0]',
+                               '[192.0, 243.0]',
+                               '[459.0, 401.0]'],
+                    '_input_size': [512, 512, 3],
+                    'base': {'type': None},
+                    'boxes_per_scale': 3,
+                    'decoder_activation': 'leaky',
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': 1.0,
+                               'ignore_thresh': 0.7,
+                               'iou_normalizer': 0.07,
+                               'iou_thresh': 0.25,
+                               'loss_type': 'ciou',
+                               'max_boxes': 200,
+                               'max_delta': 10.0,
+                               'new_cords': False,
+                               'nms_thresh': 0.6,
+                               'obj_normalizer': 1.0,
+                               'scale_xy': {'3': 1.2,
+                                            '4': 1.1,
+                                            '5': 1.05,
+                                            '6': 1.0,
+                                            '7': 1.0},
+                               'truth_thresh': 1.0,
+                               'use_nms': False,
+                               'use_reduction_sum': True},
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.001,
+                                        'norm_momentum': 0.99,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'subdivisions': 1,
+                    'use_sam': False},
+          'per_category_metrics': False,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'bfloat16',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 64,
+                         'input_path': None,
+                         'is_training': True,
+                         'parser': {'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_transalate': 0.0,
+                                    'aug_rand_zoom': 0.0,
+                                    'fixed_size': True,
+                                    'image_h': 512,
+                                    'image_w': 512,
+                                    'jitter_boxes': 0.0,
+                                    'jitter_im': 0.0,
+                                    'keep_thresh': 0.0,
+                                    'letter_box': True,
+                                    'max_num_instances': 200,
+                                    'max_process_size': 608,
+                                    'min_process_size': 320,
+                                    'mosaic_frequency': 0.0,
+                                    'pct_rand': 0.0,
+                                    'random_flip': True,
+                                    'use_tie_breaker': True},
+                         'sharding': True,
+                         'shuffle_buffer_size': 1000,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'train'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'bfloat16',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 64,
+                              'input_path': None,
+                              'is_training': False,
+                              'parser': {'aug_rand_brightness': 0.75,
+                                         'aug_rand_hue': 0.1,
+                                         'aug_rand_saturation': 0.75,
+                                         'aug_rand_transalate': 0.0,
+                                         'aug_rand_zoom': 0.45,
+                                         'fixed_size': True,
+                                         'image_h': 512,
+                                         'image_w': 512,
+                                         'jitter_boxes': 0.0,
+                                         'jitter_im': 0.0,
+                                         'keep_thresh': 0.0,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'max_process_size': 608,
+                                         'min_process_size': 320,
+                                         'mosaic_frequency': 1.0,
+                                         'pct_rand': 0.0,
+                                         'random_flip': True,
+                                         'use_tie_breaker': True},
+                              'sharding': True,
+                              'shuffle_buffer_size': 1000,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 1000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'stepwise': {'boundaries': [40000,
+                                                                                45000],
+                                                                 'name': 'PiecewiseConstantDecay',
+                                                                 'values': [0.00261,
+                                                                            0.000261,
+                                                                            2.61e-05]},
+                                                    'type': 'stepwise'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.949,
+                                                        'name': 'SGD',
+                                                        'nesterov': False},
+                                                'type': 'sgd'},
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 1000},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 1000,
+             'summary_interval': 1000,
+             'train_steps': 50050,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 1000,
+             'validation_steps': 78}}
+I0323 15:35:07.021364 140060615362368 train_utils.py:295] Saving experiment configuration to gs://tensorflow2/debug-data-pipeline/yolov4-coco-nothing-run5/params.yaml
+I0323 15:35:08.611789 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:09.239212 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:09.239465 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:35:09.295582 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:09.452940 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:09.453306 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+2021-03-23 15:35:09.514177: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+I0323 15:35:09.514913 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:10.132659 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:10.132892 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:35:10.198848 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:10.340179 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:10.340713 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+2021-03-23 15:35:10.383727: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-03-23 15:35:10.394464: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.62.133.178:8470}
+2021-03-23 15:35:10.394526: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:31825}
+2021-03-23 15:35:10.408090: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.62.133.178:8470}
+2021-03-23 15:35:10.408168: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:31825}
+2021-03-23 15:35:10.408565: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:411] Started server with target: grpc://localhost:31825
+I0323 15:35:10.409068 140060615362368 remote.py:218] Entering into master device scope: /job:worker/replica:0/task:0/device:CPU:0
+INFO:tensorflow:Initializing the TPU system: node-1
+I0323 15:35:10.409322 140060615362368 tpu_strategy_util.py:74] Initializing the TPU system: node-1
+INFO:tensorflow:Clearing out eager caches
+I0323 15:35:15.737277 140060615362368 tpu_strategy_util.py:109] Clearing out eager caches
+INFO:tensorflow:Finished initializing TPU system.
+I0323 15:35:15.775076 140060615362368 tpu_strategy_util.py:133] Finished initializing TPU system.
+I0323 15:35:15.776599 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:15.924935 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:15.925152 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:35:15.965624 140060615362368 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:35:16.109239 140060615362368 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1?alt=json
+I0323 15:35:16.109461 140060615362368 transport.py:157] Attempting refresh to obtain initial access_token
+INFO:tensorflow:Found TPU system:
+I0323 15:35:16.149132 140060615362368 tpu_system_metadata.py:159] Found TPU system:
+INFO:tensorflow:*** Num TPU Cores: 8
+I0323 15:35:16.149618 140060615362368 tpu_system_metadata.py:160] *** Num TPU Cores: 8
+INFO:tensorflow:*** Num TPU Workers: 1
+I0323 15:35:16.150071 140060615362368 tpu_system_metadata.py:161] *** Num TPU Workers: 1
+INFO:tensorflow:*** Num TPU Cores Per Worker: 8
+I0323 15:35:16.150325 140060615362368 tpu_system_metadata.py:163] *** Num TPU Cores Per Worker: 8
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0323 15:35:16.150573 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0323 15:35:16.150929 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+I0323 15:35:16.151196 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+I0323 15:35:16.151441 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+I0323 15:35:16.151690 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+I0323 15:35:16.151927 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+I0323 15:35:16.152211 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+I0323 15:35:16.152425 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+I0323 15:35:16.152656 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+I0323 15:35:16.152871 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+I0323 15:35:16.153101 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0323 15:35:16.153325 140060615362368 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0323 15:35:16.176182 140060615362368 train_utils.py:214] Running default trainer.
+2021-03-23 15:35:16.188984: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+cat: .experiment_zone: No such file or directory
+Request issued for: [node-3]
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513841416-5be35f54acac5-5a9fc422-b501ca66] to complete...
+............................aborted by ctrl-c.
+ERROR: (gcloud.compute.tpus.start) Aborting wait for operation https://tpu.googleapis.com/v1alpha1/projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513841416-5be35f54acac5-5a9fc422-b501ca66.
+
+europe-west4-a
+I0323 15:37:30.226656 140561155757888 train_utils.py:286] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'tpu',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'bfloat16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 2,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': False,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden',
+          'init_checkpoint_modules': 'backbone',
+          'load_darknet_weights': False,
+          'model': {'_boxes': ['[12.0, 16.0]',
+                               '[19.0, 36.0]',
+                               '[40.0, 28.0]',
+                               '[36.0, 75.0]',
+                               '[76.0, 55.0]',
+                               '[72.0, 146.0]',
+                               '[142.0, 110.0]',
+                               '[192.0, 243.0]',
+                               '[459.0, 401.0]'],
+                    '_input_size': [512, 512, 3],
+                    'base': {'type': None},
+                    'boxes_per_scale': 3,
+                    'decoder_activation': 'leaky',
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': 1.0,
+                               'ignore_thresh': 0.7,
+                               'iou_normalizer': 0.07,
+                               'iou_thresh': 0.25,
+                               'loss_type': 'ciou',
+                               'max_boxes': 200,
+                               'max_delta': 10.0,
+                               'new_cords': False,
+                               'nms_thresh': 0.6,
+                               'obj_normalizer': 1.0,
+                               'scale_xy': {'3': 1.2,
+                                            '4': 1.1,
+                                            '5': 1.05,
+                                            '6': 1.0,
+                                            '7': 1.0},
+                               'truth_thresh': 1.0,
+                               'use_nms': False,
+                               'use_reduction_sum': True},
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.001,
+                                        'norm_momentum': 0.99,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'subdivisions': 1,
+                    'use_sam': False},
+          'per_category_metrics': False,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'bfloat16',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 64,
+                         'input_path': None,
+                         'is_training': True,
+                         'parser': {'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_transalate': 0.0,
+                                    'aug_rand_zoom': 0.0,
+                                    'fixed_size': True,
+                                    'image_h': 512,
+                                    'image_w': 512,
+                                    'jitter_boxes': 0.0,
+                                    'jitter_im': 0.0,
+                                    'keep_thresh': 0.0,
+                                    'letter_box': True,
+                                    'max_num_instances': 200,
+                                    'max_process_size': 608,
+                                    'min_process_size': 320,
+                                    'mosaic_frequency': 0.0,
+                                    'pct_rand': 0.0,
+                                    'random_flip': True,
+                                    'use_tie_breaker': True},
+                         'sharding': True,
+                         'shuffle_buffer_size': 1000,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'train'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'bfloat16',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 64,
+                              'input_path': None,
+                              'is_training': False,
+                              'parser': {'aug_rand_brightness': 0.75,
+                                         'aug_rand_hue': 0.1,
+                                         'aug_rand_saturation': 0.75,
+                                         'aug_rand_transalate': 0.0,
+                                         'aug_rand_zoom': 0.45,
+                                         'fixed_size': True,
+                                         'image_h': 512,
+                                         'image_w': 512,
+                                         'jitter_boxes': 0.0,
+                                         'jitter_im': 0.0,
+                                         'keep_thresh': 0.0,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'max_process_size': 608,
+                                         'min_process_size': 320,
+                                         'mosaic_frequency': 1.0,
+                                         'pct_rand': 0.0,
+                                         'random_flip': True,
+                                         'use_tie_breaker': True},
+                              'sharding': True,
+                              'shuffle_buffer_size': 1000,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 1000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'stepwise': {'boundaries': [40000,
+                                                                                45000],
+                                                                 'name': 'PiecewiseConstantDecay',
+                                                                 'values': [0.00261,
+                                                                            0.000261,
+                                                                            2.61e-05]},
+                                                    'type': 'stepwise'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.949,
+                                                        'name': 'SGD',
+                                                        'nesterov': False},
+                                                'type': 'sgd'},
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 1000},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 1000,
+             'summary_interval': 1000,
+             'train_steps': 50050,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 1000,
+             'validation_steps': 78}}
+I0323 15:37:30.227375 140561155757888 train_utils.py:295] Saving experiment configuration to gs://tensorflow2/debug-data-pipeline/yolov4-coco-nothing-run5/params.yaml
+I0323 15:37:31.021890 140561155757888 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:37:31.164958 140561155757888 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3?alt=json
+I0323 15:37:31.165157 140561155757888 transport.py:157] Attempting refresh to obtain initial access_token
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 157, in <module>
+    app.run(main)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 300, in run
+    _run_main(main, args)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 251, in _run_main
+    sys.exit(main(argv))
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 140, in main
+    tpu_address=params.runtime.tpu)
+  File "/home/cam2tensorflow/TensorFlowModels/official/common/distribute_utils.py", line 139, in get_distribution_strategy
+    cluster_resolver = tpu_initialize(tpu_address)
+  File "/home/cam2tensorflow/TensorFlowModels/official/common/distribute_utils.py", line 88, in tpu_initialize
+    tf.config.experimental_connect_to_cluster(cluster_resolver)
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/eager/remote.py", line 145, in connect_to_cluster
+    if cluster_spec_or_resolver.master() in _LOCAL_MASTERS:
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/distribute/cluster_resolver/tpu/tpu_cluster_resolver.py", line 257, in master
+    cluster_spec = self.cluster_spec()
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/distribute/cluster_resolver/tpu/tpu_cluster_resolver.py", line 331, in cluster_spec
+    network_endpoints = self._cloud_tpu_client.network_endpoints()
+  File "/usr/local/lib/python3.7/dist-packages/cloud_tpu_client/client.py", line 324, in network_endpoints
+    (self._tpu, response.get('state')))
+RuntimeError: TPU "node-3" is not yet ready; state: "STARTING"
+yolo_custom
+{'task': {'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden', 'model': {'num_classes': 80, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'iou_thresh': 0.25, 'nms_thresh': 0.6, 'ignore_thresh': 0.7, 'truth_thresh': 1.0, 'loss_type': 'ciou', 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_nms': False, 'iou_normalizer': 0.07, 'cls_normalizer': 1.0, 'obj_normalizer': 1.0, 'max_delta': 10.0, 'new_cords': False, 'use_reduction_sum': True, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'train', 'global_batch_size': 64, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_zoom': 0.0, 'aug_rand_hue': 0.0, 'keep_thresh': 0.0, 'mosaic_frequency': 0.0, 'use_tie_breaker': True}}, 'validation_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 64, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.45, 'aug_rand_hue': 0.1, 'keep_thresh': 0.0, 'mosaic_frequency': 1.0, 'use_tie_breaker': True}}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': False, 'darknet_load_decoder': False, 'init_checkpoint_modules': 'backbone'}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': False, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [40000, 45000], 'values': [0.00261, 0.000261, 2.61e-05]}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 1000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 1000, 'summary_interval': 1000, 'checkpoint_interval': 1000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 50050, 'validation_steps': 78, 'validation_interval': 1000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'tpu', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 2, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'bfloat16', 'loss_scale': None, 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+Request issued for: [node-3]
+/home/cam2tensorflow/.experiment_start.sh: line 19:  1825 Killed                  TPU_NAME=$1 python3 -m $2.train_vm --mode=train_and_eval --experiment=$3 --config_file=$2/configs/experiments/$4.yaml --model_dir=gs://tensorflow2/$4-$5
+Request issued for: [node-1]
+cat: .experiment_zone: No such file or directory
+ERROR: (gcloud.compute.tpus.start) INVALID_ARGUMENT: StartNode is not supported when state is STOPPING
+europe-west4-a
+I0323 15:38:18.679116 139808908314432 train_utils.py:286] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'tpu',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'bfloat16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 2,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': False,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden',
+          'init_checkpoint_modules': 'backbone',
+          'load_darknet_weights': False,
+          'model': {'_boxes': ['[12.0, 16.0]',
+                               '[19.0, 36.0]',
+                               '[40.0, 28.0]',
+                               '[36.0, 75.0]',
+                               '[76.0, 55.0]',
+                               '[72.0, 146.0]',
+                               '[142.0, 110.0]',
+                               '[192.0, 243.0]',
+                               '[459.0, 401.0]'],
+                    '_input_size': [512, 512, 3],
+                    'base': {'type': None},
+                    'boxes_per_scale': 3,
+                    'decoder_activation': 'leaky',
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': 1.0,
+                               'ignore_thresh': 0.7,
+                               'iou_normalizer': 0.07,
+                               'iou_thresh': 0.25,
+                               'loss_type': 'ciou',
+                               'max_boxes': 200,
+                               'max_delta': 10.0,
+                               'new_cords': False,
+                               'nms_thresh': 0.6,
+                               'obj_normalizer': 1.0,
+                               'scale_xy': {'3': 1.2,
+                                            '4': 1.1,
+                                            '5': 1.05,
+                                            '6': 1.0,
+                                            '7': 1.0},
+                               'truth_thresh': 1.0,
+                               'use_nms': False,
+                               'use_reduction_sum': True},
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.001,
+                                        'norm_momentum': 0.99,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'subdivisions': 1,
+                    'use_sam': False},
+          'per_category_metrics': False,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'bfloat16',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 64,
+                         'input_path': None,
+                         'is_training': True,
+                         'parser': {'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_transalate': 0.0,
+                                    'aug_rand_zoom': 0.0,
+                                    'fixed_size': True,
+                                    'image_h': 512,
+                                    'image_w': 512,
+                                    'jitter_boxes': 0.0,
+                                    'jitter_im': 0.0,
+                                    'keep_thresh': 0.0,
+                                    'letter_box': True,
+                                    'max_num_instances': 200,
+                                    'max_process_size': 608,
+                                    'min_process_size': 320,
+                                    'mosaic_frequency': 0.0,
+                                    'pct_rand': 0.0,
+                                    'random_flip': True,
+                                    'use_tie_breaker': True},
+                         'sharding': True,
+                         'shuffle_buffer_size': 1000,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'train'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'bfloat16',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 64,
+                              'input_path': None,
+                              'is_training': False,
+                              'parser': {'aug_rand_brightness': 0.75,
+                                         'aug_rand_hue': 0.1,
+                                         'aug_rand_saturation': 0.75,
+                                         'aug_rand_transalate': 0.0,
+                                         'aug_rand_zoom': 0.45,
+                                         'fixed_size': True,
+                                         'image_h': 512,
+                                         'image_w': 512,
+                                         'jitter_boxes': 0.0,
+                                         'jitter_im': 0.0,
+                                         'keep_thresh': 0.0,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'max_process_size': 608,
+                                         'min_process_size': 320,
+                                         'mosaic_frequency': 1.0,
+                                         'pct_rand': 0.0,
+                                         'random_flip': True,
+                                         'use_tie_breaker': True},
+                              'sharding': True,
+                              'shuffle_buffer_size': 1000,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 1000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'stepwise': {'boundaries': [40000,
+                                                                                45000],
+                                                                 'name': 'PiecewiseConstantDecay',
+                                                                 'values': [0.00261,
+                                                                            0.000261,
+                                                                            2.61e-05]},
+                                                    'type': 'stepwise'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.949,
+                                                        'name': 'SGD',
+                                                        'nesterov': False},
+                                                'type': 'sgd'},
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 1000},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 1000,
+             'summary_interval': 1000,
+             'train_steps': 50050,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 1000,
+             'validation_steps': 78}}
+I0323 15:38:18.679822 139808908314432 train_utils.py:295] Saving experiment configuration to gs://tensorflow2/debug-data-pipeline/yolov4-coco-nothing-run5/params.yaml
+I0323 15:38:19.509540 139808908314432 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:38:19.652433 139808908314432 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3?alt=json
+I0323 15:38:19.652633 139808908314432 transport.py:157] Attempting refresh to obtain initial access_token
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 157, in <module>
+    app.run(main)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 300, in run
+    _run_main(main, args)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 251, in _run_main
+    sys.exit(main(argv))
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 140, in main
+    tpu_address=params.runtime.tpu)
+  File "/home/cam2tensorflow/TensorFlowModels/official/common/distribute_utils.py", line 139, in get_distribution_strategy
+    cluster_resolver = tpu_initialize(tpu_address)
+  File "/home/cam2tensorflow/TensorFlowModels/official/common/distribute_utils.py", line 88, in tpu_initialize
+    tf.config.experimental_connect_to_cluster(cluster_resolver)
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/eager/remote.py", line 145, in connect_to_cluster
+    if cluster_spec_or_resolver.master() in _LOCAL_MASTERS:
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/distribute/cluster_resolver/tpu/tpu_cluster_resolver.py", line 257, in master
+    cluster_spec = self.cluster_spec()
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/distribute/cluster_resolver/tpu/tpu_cluster_resolver.py", line 331, in cluster_spec
+    network_endpoints = self._cloud_tpu_client.network_endpoints()
+  File "/usr/local/lib/python3.7/dist-packages/cloud_tpu_client/client.py", line 324, in network_endpoints
+    (self._tpu, response.get('state')))
+RuntimeError: TPU "node-3" is not yet ready; state: "STOPPING"
+yolo_custom
+{'task': {'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden', 'model': {'num_classes': 80, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'iou_thresh': 0.25, 'nms_thresh': 0.6, 'ignore_thresh': 0.7, 'truth_thresh': 1.0, 'loss_type': 'ciou', 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_nms': False, 'iou_normalizer': 0.07, 'cls_normalizer': 1.0, 'obj_normalizer': 1.0, 'max_delta': 10.0, 'new_cords': False, 'use_reduction_sum': True, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'train', 'global_batch_size': 64, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_zoom': 0.0, 'aug_rand_hue': 0.0, 'keep_thresh': 0.0, 'mosaic_frequency': 0.0, 'use_tie_breaker': True}}, 'validation_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 64, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.45, 'aug_rand_hue': 0.1, 'keep_thresh': 0.0, 'mosaic_frequency': 1.0, 'use_tie_breaker': True}}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': False, 'darknet_load_decoder': False, 'init_checkpoint_modules': 'backbone'}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': False, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [40000, 45000], 'values': [0.00261, 0.000261, 2.61e-05]}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 1000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 1000, 'summary_interval': 1000, 'checkpoint_interval': 1000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 50050, 'validation_steps': 78, 'validation_interval': 1000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'tpu', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 2, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'bfloat16', 'loss_scale': None, 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+Request issued for: [node-3]
+cat: .experiment_zone: No such file or directory
+Request issued for: [node-5]
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-23T15:37:51.147183885Z'
+  endTime: '2021-03-23T15:38:52.124690165Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513871136-5be35f710456a-906d4f28-9c16d930
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.62.133.176/29
+  createTime: '2021-03-13T00:06:59.130259463Z'
+  health: HEALTHY
+  ipAddress: 10.62.133.178
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-1
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.62.133.178
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: STOPPED
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513871136-5be35f710456a-906d4f28-9c16d930] to complete...
+....................................................................................................................................................................................................................................................................................................................................................................................................done.
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-23T15:38:43.179614002Z'
+  endTime: '2021-03-23T15:39:18.278812394Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513923165-5be35fa2a2d8c-f6708b5b-7465881a
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.56.217.88/29
+  createTime: '2021-03-18T03:04:40.452633368Z'
+  health: HEALTHY
+  ipAddress: 10.56.217.90
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.56.217.90
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: READY
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513923165-5be35fa2a2d8c-f6708b5b-7465881a] to complete...
+...........................................................................................................................................................................................done.
+europe-west4-a
+I0323 15:39:23.115014 140015070463808 train_utils.py:286] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'tpu',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'bfloat16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 2,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': False,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden',
+          'init_checkpoint_modules': 'backbone',
+          'load_darknet_weights': False,
+          'model': {'_boxes': ['[12.0, 16.0]',
+                               '[19.0, 36.0]',
+                               '[40.0, 28.0]',
+                               '[36.0, 75.0]',
+                               '[76.0, 55.0]',
+                               '[72.0, 146.0]',
+                               '[142.0, 110.0]',
+                               '[192.0, 243.0]',
+                               '[459.0, 401.0]'],
+                    '_input_size': [512, 512, 3],
+                    'base': {'type': None},
+                    'boxes_per_scale': 3,
+                    'decoder_activation': 'leaky',
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': 1.0,
+                               'ignore_thresh': 0.7,
+                               'iou_normalizer': 0.07,
+                               'iou_thresh': 0.25,
+                               'loss_type': 'ciou',
+                               'max_boxes': 200,
+                               'max_delta': 10.0,
+                               'new_cords': False,
+                               'nms_thresh': 0.6,
+                               'obj_normalizer': 1.0,
+                               'scale_xy': {'3': 1.2,
+                                            '4': 1.1,
+                                            '5': 1.05,
+                                            '6': 1.0,
+                                            '7': 1.0},
+                               'truth_thresh': 1.0,
+                               'use_nms': False,
+                               'use_reduction_sum': True},
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.001,
+                                        'norm_momentum': 0.99,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'subdivisions': 1,
+                    'use_sam': False},
+          'per_category_metrics': False,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'bfloat16',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 64,
+                         'input_path': None,
+                         'is_training': True,
+                         'parser': {'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_transalate': 0.0,
+                                    'aug_rand_zoom': 0.0,
+                                    'fixed_size': True,
+                                    'image_h': 512,
+                                    'image_w': 512,
+                                    'jitter_boxes': 0.0,
+                                    'jitter_im': 0.0,
+                                    'keep_thresh': 0.0,
+                                    'letter_box': True,
+                                    'max_num_instances': 200,
+                                    'max_process_size': 608,
+                                    'min_process_size': 320,
+                                    'mosaic_frequency': 0.0,
+                                    'pct_rand': 0.0,
+                                    'random_flip': True,
+                                    'use_tie_breaker': True},
+                         'sharding': True,
+                         'shuffle_buffer_size': 1000,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'train'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'bfloat16',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 64,
+                              'input_path': None,
+                              'is_training': False,
+                              'parser': {'aug_rand_brightness': 0.75,
+                                         'aug_rand_hue': 0.1,
+                                         'aug_rand_saturation': 0.75,
+                                         'aug_rand_transalate': 0.0,
+                                         'aug_rand_zoom': 0.45,
+                                         'fixed_size': True,
+                                         'image_h': 512,
+                                         'image_w': 512,
+                                         'jitter_boxes': 0.0,
+                                         'jitter_im': 0.0,
+                                         'keep_thresh': 0.0,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'max_process_size': 608,
+                                         'min_process_size': 320,
+                                         'mosaic_frequency': 1.0,
+                                         'pct_rand': 0.0,
+                                         'random_flip': True,
+                                         'use_tie_breaker': True},
+                              'sharding': True,
+                              'shuffle_buffer_size': 1000,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 1000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'stepwise': {'boundaries': [40000,
+                                                                                45000],
+                                                                 'name': 'PiecewiseConstantDecay',
+                                                                 'values': [0.00261,
+                                                                            0.000261,
+                                                                            2.61e-05]},
+                                                    'type': 'stepwise'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.949,
+                                                        'name': 'SGD',
+                                                        'nesterov': False},
+                                                'type': 'sgd'},
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 1000},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 1000,
+             'summary_interval': 1000,
+             'train_steps': 50050,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 1000,
+             'validation_steps': 78}}
+I0323 15:39:23.115745 140015070463808 train_utils.py:295] Saving experiment configuration to gs://tensorflow2/debug-data-pipeline/yolov4-coco-nothing-run5/params.yaml
+I0323 15:39:23.925326 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:39:24.538851 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:39:24.539098 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:39:24.596394 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:39:25.209621 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:39:25.209921 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+2021-03-23 15:39:25.275409: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+I0323 15:39:25.276114 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:39:25.421500 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:39:25.421723 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:39:25.464819 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:39:26.079016 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:39:26.079279 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+2021-03-23 15:39:26.137752: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-03-23 15:39:26.147920: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.56.217.90:8470}
+2021-03-23 15:39:26.147987: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:32106}
+2021-03-23 15:40:02.790383: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.56.217.90:8470}
+2021-03-23 15:40:02.790462: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:32106}
+2021-03-23 15:40:02.790945: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:411] Started server with target: grpc://localhost:32106
+I0323 15:40:02.791639 140015070463808 remote.py:218] Entering into master device scope: /job:worker/replica:0/task:0/device:CPU:0
+INFO:tensorflow:Initializing the TPU system: node-5
+I0323 15:40:02.792360 140015070463808 tpu_strategy_util.py:74] Initializing the TPU system: node-5
+INFO:tensorflow:Clearing out eager caches
+I0323 15:40:10.980690 140015070463808 tpu_strategy_util.py:109] Clearing out eager caches
+INFO:tensorflow:Finished initializing TPU system.
+I0323 15:40:10.982568 140015070463808 tpu_strategy_util.py:133] Finished initializing TPU system.
+I0323 15:40:10.983722 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:40:11.123931 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:40:11.124161 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+I0323 15:40:11.175851 140015070463808 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0323 15:40:11.790428 140015070463808 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5?alt=json
+I0323 15:40:11.790897 140015070463808 transport.py:157] Attempting refresh to obtain initial access_token
+INFO:tensorflow:Found TPU system:
+I0323 15:40:11.840078 140015070463808 tpu_system_metadata.py:159] Found TPU system:
+INFO:tensorflow:*** Num TPU Cores: 8
+I0323 15:40:11.840292 140015070463808 tpu_system_metadata.py:160] *** Num TPU Cores: 8
+INFO:tensorflow:*** Num TPU Workers: 1
+I0323 15:40:11.840521 140015070463808 tpu_system_metadata.py:161] *** Num TPU Workers: 1
+INFO:tensorflow:*** Num TPU Cores Per Worker: 8
+I0323 15:40:11.840580 140015070463808 tpu_system_metadata.py:163] *** Num TPU Cores Per Worker: 8
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0323 15:40:11.840631 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0323 15:40:11.840796 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+I0323 15:40:11.840880 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+I0323 15:40:11.840942 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+I0323 15:40:11.840986 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+I0323 15:40:11.841047 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+I0323 15:40:11.841089 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+I0323 15:40:11.841133 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+I0323 15:40:11.841185 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+I0323 15:40:11.841230 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+I0323 15:40:11.841275 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0323 15:40:11.841333 140015070463808 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0323 15:40:11.863778 140015070463808 train_utils.py:214] Running default trainer.
+2021-03-23 15:40:11.875310: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+yolo_custom
+{'task': {'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden', 'model': {'num_classes': 80, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'iou_thresh': 0.25, 'nms_thresh': 0.6, 'ignore_thresh': 0.7, 'truth_thresh': 1.0, 'loss_type': 'ciou', 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_nms': False, 'iou_normalizer': 0.07, 'cls_normalizer': 1.0, 'obj_normalizer': 1.0, 'max_delta': 10.0, 'new_cords': False, 'use_reduction_sum': True, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'train', 'global_batch_size': 64, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_zoom': 0.0, 'aug_rand_hue': 0.0, 'keep_thresh': 0.0, 'mosaic_frequency': 0.0, 'use_tie_breaker': True}}, 'validation_data': {'input_path': None, 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 64, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 1000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': 'gs://tensorflow2/tensorflow_datasets', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'bfloat16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 320, 'max_process_size': 608, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.0, 'jitter_boxes': 0.0, 'aug_rand_transalate': 0.0, 'aug_rand_saturation': 0.75, 'aug_rand_brightness': 0.75, 'aug_rand_zoom': 0.45, 'aug_rand_hue': 0.1, 'keep_thresh': 0.0, 'mosaic_frequency': 1.0, 'use_tie_breaker': True}}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': False, 'darknet_load_decoder': False, 'init_checkpoint_modules': 'backbone'}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': False, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [40000, 45000], 'values': [0.00261, 0.000261, 2.61e-05]}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 1000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 1000, 'summary_interval': 1000, 'checkpoint_interval': 1000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 50050, 'validation_steps': 78, 'validation_interval': 1000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'tpu', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 2, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'bfloat16', 'loss_scale': None, 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+{'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}
+{'num_classes': 80, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'iou_thresh': 0.25, 'nms_thresh': 0.6, 'ignore_thresh': 0.7, 'truth_thresh': 1.0, 'loss_type': 'ciou', 'max_boxes': 200, 'anchor_generation_scale': 512, 'use_nms': False, 'iou_normalizer': 0.07, 'cls_normalizer': 1.0, 'obj_normalizer': 1.0, 'max_delta': 10.0, 'new_cords': False, 'use_reduction_sum': True, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}
+InputSpec(shape=(None, 512, 512, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7f576438ce48>
+Model: "cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 512, 512, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 512, 512, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_csp_down (CSPRoute)   ((None, 256, 256, 64 27392       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_1_0 (DarkResidual)      (None, 256, 256, 64) 20864       DarkRes_1_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_1_csp_connect (CSPConne (None, 256, 256, 64) 12800       DarkRes_1_0[0][0]                
+                                                                 DarkRes_1_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 128, 128, 64 91136       DarkRes_1_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 128, 128, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 128, 128, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 128, 128, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 64, 64, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________I0323 15:40:32.460386 140015070463808 dataset_builder.py:811] No config specified, defaulting to first: coco/2014
+I0323 15:40:33.313313 140015070463808 dataset_info.py:361] Load dataset info from gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0
+I0323 15:40:34.762675 140015070463808 dataset_builder.py:299] Reusing dataset coco (gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0)
+I0323 15:40:34.762926 140015070463808 dataset_builder.py:511] Constructing tf.data.Dataset for split train, from gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0
+I0323 15:40:40.491502 140015070463808 dataset_builder.py:811] No config specified, defaulting to first: coco/2014
+I0323 15:40:41.264486 140015070463808 dataset_info.py:361] Load dataset info from gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0
+I0323 15:40:42.196704 140015070463808 dataset_builder.py:299] Reusing dataset coco (gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0)
+I0323 15:40:42.196984 140015070463808 dataset_builder.py:511] Constructing tf.data.Dataset for split validation, from gs://tensorflow2/tensorflow_datasets/coco/2014/1.1.0
+
+DarkRes_3_0 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 64, 64, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 32, 32, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 32, 32, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 16, 16, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_5_0 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 16, 16, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,652,512
+Trainable params: 26,617,184
+Non-trainable params: 35,328
+__________________________________________________________________________________________________
+conv1 512.0
+conv2 1024.0
+conv1 512.0
+spp
+conv1 512.0
+conv2 1024.0
+conv1 512.0
+7
+conv1 512.0
+conv2 256.0
+conv1 512.0
+conv2 256.0
+4
+
+
+
+
+
+
+
+
+ ListWrapper([256, 512, 1024])
+conv1 128
+conv2 256
+conv1 128
+conv2 256
+conv1 128
+conv2 256
+6
+conv1 256
+conv2 512
+conv1 256
+conv2 512
+conv1 256
+conv2 512
+6
+conv1 512
+conv2 1024
+conv1 512
+conv2 1024
+conv1 512
+conv2 1024
+6
+detget {'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+cspdarknet53 (Darknet)       OrderedDict([('3', (None, 26652512  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 64, 64, 256) 37319168  
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  457725    
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+=================================================================
+Total params: 64,429,405
+Trainable params: 64,363,101
+Non-trainable params: 66,304
+_________________________________________________________________
+{'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}
+<BatchDataset shapes: ((8, 512, 512, 3), {bbox: (8, 200, 4), classes: (8, 200), info: (8, 4), best_anchors: (8, 200, 9), best_iou_match: (8, 200, 9), upds: {3: (8, 200, 8), 4: (8, 200, 8), 5: (8, 200, 8)}, inds: {3: (8, 200, 3), 4: (8, 200, 3), 5: (8, 200, 3)}, true_conf: {3: (8, 64, 64, 3, 1), 4: (8, 32, 32, 3, 1), 5: (8, 16, 16, 3, 1)}}), types: (tf.float32, {bbox: tf.bfloat16, classes: tf.bfloat16, info: tf.int32, best_anchors: tf.float32, best_iou_match: tf.float32, upds: {3: tf.bfloat16, 4: tf.bfloat16, 5: tf.bfloat16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.bfloat16, 4: tf.bfloat16, 5: tf.bfloat16}})>
+{'3': 1.2, '4': 1.1, '5': 1.05, '6': 1.0, '7': 1.0}
+<BatchDataset shapes: ((8, 512, 512, 3), {source_id: (8,), bbox: (8, 200, 4), classes: (8, 200), area: (8, 200), is_crowd: (8, 200), best_anchors: (8, 200, 9), best_iou_match: (8, 200, 9), width: (8,), height: (8,), info: (8, 4), num_detections: (8,), upds: {3: (8, 200, 8), 4: (8, 200, 8), 5: (8, 200, 8)}, inds: {3: (8, 200, 3), 4: (8, 200, 3), 5: (8, 200, 3)}, true_conf: {3: (8, 64, 64, 3, 1), 4: (8, 32, 32, 3, 1), 5: (8, 16, 16, 3, 1)}}), types: (tf.bfloat16, {source_id: tf.int64, bbox: tf.bfloat16, classes: tf.bfloat16, area: tf.bfloat16, is_crowd: tf.int32, best_anchors: tf.bfloat16, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.int32, num_detections: tf.int32, upds: {3: tf.bfloat16, 4: tf.bfloat16, 5: tf.bfloat16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.bfloat16, 4: tf.bfloat16, 5: tf.bfloat16}})>I0323 15:40:45.298934 140015070463808 controller.py:362] restoring or initializing model...
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-23T15:38:20.937684892Z'
+  endTime: '2021-03-23T15:40:37.951977227Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513900919-5be35f8d6bbd9-981285e8-22a323a9
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.91.127.64/29
+  createTime: '2021-03-13T03:33:12.910754151Z'
+  health: HEALTHY
+  ipAddress: 10.91.127.66
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.91.127.66
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: STOPPED
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513900919-5be35f8d6bbd9-981285e8-22a323a9] to complete...
+..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................done.
+I0323 15:40:53.433663 140015070463808 yolo.py:498] Finished loading pretrained checkpoint from gs://tensorflow2/darknet/cspdarknet53-golden/ckpt-15000
+I0323 15:40:53.435568 140015070463808 controller.py:368] initialized model.
+I0323 15:40:53.435785 140015070463808 train_lib.py:96] Starts to execute mode: train_and_eval
+I0323 15:40:53.440463 140015070463808 controller.py:211] train | step:      0 | training until step 1000...
+I0323 15:40:56.339092 140015070463808 tpu.py:1238] Automatic outside compilation is enabled. Ops without XLA kernels will be automatically placed on CPU.
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-23T15:37:32.407393118Z'
+  endTime: '2021-03-23T15:40:27.103734964Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513852393-5be35f5f249fe-0e466f04-44fe518e
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.91.127.64/29
+  createTime: '2021-03-13T03:33:12.910754151Z'
+  health: HEALTHY
+  ipAddress: 10.91.127.66
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.91.127.66
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: STOPPED
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616513852393-5be35f5f249fe-0e466f04-44fe518e] to complete...
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................done.
+I0323 15:41:34.460903 140015070463808 tpu.py:1238] Automatic outside compilation is enabled. Ops without XLA kernels will be automatically placed on CPU.
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 157, in <module>
+    app.run(main)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 300, in run
+    _run_main(main, args)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 251, in _run_main
+    sys.exit(main(argv))
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 149, in main
+    model_dir=model_dir)
+  File "/home/cam2tensorflow/TensorFlowModels/official/core/train_lib.py", line 104, in run_experiment
+    eval_interval=params.trainer.validation_interval)
+  File "/home/cam2tensorflow/TensorFlowModels/orbit/controller.py", line 303, in train_and_evaluate
+    self.train(steps=num_steps, checkpoint_at_completion=False)
+  File "/home/cam2tensorflow/TensorFlowModels/orbit/controller.py", line 215, in train
+    self._train_n_steps(num_steps)
+  File "/home/cam2tensorflow/TensorFlowModels/orbit/controller.py", line 410, in _train_n_steps
+    train_output = self.trainer.train(num_steps_tensor)
+  File "/home/cam2tensorflow/TensorFlowModels/orbit/standard_runner.py", line 142, in train
+    return self.train_loop_end()
+  File "/home/cam2tensorflow/TensorFlowModels/official/core/base_trainer.py", line 277, in train_loop_end
+    self.global_step.numpy())
+  File "/home/cam2tensorflow/TensorFlowModels/official/core/base_trainer.py", line 79, in maybe_recover
+    self.recover_counter)
+RuntimeError: The loss value is NaN after training loop and it happens 1 times.
+
+restoring or initializing model...
+initialized model.
+train | step:      0 | training until step 1000...
+Request issued for: [node-5]
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-23T15:50:02.482343172Z'
+  endTime: '2021-03-23T15:50:56.768031400Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616514602470-5be3622a78df0-7654e309-a60b71b0
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.56.217.88/29
+  createTime: '2021-03-18T03:04:40.452633368Z'
+  health: HEALTHY
+  ipAddress: 10.56.217.90
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-5
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.56.217.90
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: STOPPED
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1616514602470-5be3622a78df0-7654e309-a60b71b0] to complete...
+........................................................................................................................................................................................................................................................................................................................................................................................done.

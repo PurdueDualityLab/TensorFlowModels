@@ -1,0 +1,73 @@
+cat: .experiment_zone: No such file or directory
+Request issued for: [node-3]
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-03-29T19:25:02.581774861Z'
+  endTime: '2021-03-29T19:25:37.645395154Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1617045902567-5beb1d69ba93f-4ea37019-7a9b718b
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  cidrBlock: 10.91.127.64/29
+  createTime: '2021-03-13T03:33:12.910754151Z'
+  health: HEALTHY
+  ipAddress: 10.91.127.66
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-3
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.91.127.66
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: READY
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1617045902567-5beb1d69ba93f-4ea37019-7a9b718b] to complete...
+...............................................................................................................................................................................................done.
+europe-west4-a
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 157, in <module>
+    app.run(main)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 300, in run
+    _run_main(main, args)
+  File "/usr/local/lib/python3.7/dist-packages/absl/app.py", line 251, in _run_main
+    sys.exit(main(argv))
+  File "/home/cam2tensorflow/TensorFlowModels/yolo/train_vm.py", line 115, in main
+    params = train_utils.parse_configuration(FLAGS)
+  File "/home/cam2tensorflow/TensorFlowModels/official/core/train_utils.py", line 249, in parse_configuration
+    params, config_file, is_strict=True)
+  File "/home/cam2tensorflow/TensorFlowModels/official/modeling/hyperparams/params_dict.py", line 441, in override_params_dict
+    params.override(yaml.load(f, Loader=yaml.FullLoader), is_strict)
+  File "/usr/local/lib/python3.7/dist-packages/yaml/__init__.py", line 112, in load
+    loader = Loader(stream)
+  File "/usr/local/lib/python3.7/dist-packages/yaml/loader.py", line 24, in __init__
+    Reader.__init__(self, stream)
+  File "/usr/local/lib/python3.7/dist-packages/yaml/reader.py", line 85, in __init__
+    self.determine_encoding()
+  File "/usr/local/lib/python3.7/dist-packages/yaml/reader.py", line 124, in determine_encoding
+    self.update_raw()
+  File "/usr/local/lib/python3.7/dist-packages/yaml/reader.py", line 178, in update_raw
+    data = self.stream.read(size)
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/lib/io/file_io.py", line 117, in read
+    self._preread_check()
+  File "/usr/local/lib/python3.7/dist-packages/tensorflow/python/lib/io/file_io.py", line 80, in _preread_check
+    compat.path_to_str(self.__name), 1024 * 512)
+tensorflow.python.framework.errors_impl.NotFoundError: yolo/configs/experiments/debug-data-pipeline/yolov4-coco-all-50k-sdg.yaml; No such file or directory
+yolo_custom
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   229    0     2  100   227     11   1327 --:--:-- --:--:-- --:--:--  1347
+okRequest issued for: [node-3]
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1617045945977-5beb1d9320a8a-425bfc4e-1e021b19] to complete...
+.................................................................................................................................................................................................................................................................................................................................................................................................................................................................aborted by ctrl-c.
+ERROR: (gcloud.compute.tpus.stop) Aborting wait for operation https://tpu.googleapis.com/v1alpha1/projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1617045945977-5beb1d9320a8a-425bfc4e-1e021b19.
+

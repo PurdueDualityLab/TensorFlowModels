@@ -1,0 +1,3493 @@
+cat: .experiment_zone: No such file or directory
+Request issued for: [node-4]
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-04-20T15:20:11.829572829Z'
+  endTime: '2021-04-20T15:20:48.073079014Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1618932011819-5c068fb7ae375-7899f619-2d7a1389
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  apiVersion: V1
+  cidrBlock: 10.117.66.216/29
+  createTime: '2021-03-13T04:41:22.291533178Z'
+  health: HEALTHY
+  ipAddress: 10.117.66.218
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.117.66.218
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: READY
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1618932011819-5c068fb7ae375-7899f619-2d7a1389] to complete...
+.................................................................................................................................................................................................done.
+europe-west4-a
+I0420 15:18:49.524967 140072511887168 train_utils.py:286] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'tpu',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'bfloat16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 2,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': False,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden',
+          'init_checkpoint_modules': 'backbone',
+          'load_darknet_weights': False,
+          'model': {'_boxes': ['[12.0, 16.0]',
+                               '[19.0, 36.0]',
+                               '[40.0, 28.0]',
+                               '[36.0, 75.0]',
+                               '[76.0, 55.0]',
+                               '[72.0, 146.0]',
+                               '[142.0, 110.0]',
+                               '[192.0, 243.0]',
+                               '[459.0, 401.0]'],
+                    '_input_size': [512, 512, 3],
+                    'base': {'type': None},
+                    'boxes_per_scale': 3,
+                    'decoder_activation': 'leaky',
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0},
+                               'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7},
+                               'iou_normalizer': {'3': 0.07,
+                                                  '4': 0.07,
+                                                  '5': 0.07},
+                               'iou_thresh': 0.001,
+                               'label_smoothing': 0.0,
+                               'loss_type': {'3': 'ciou',
+                                             '4': 'ciou',
+                                             '5': 'ciou'},
+                               'max_boxes': 200,
+                               'max_delta': {'3': 5.0, '4': 5.0, '5': 5.0},
+                               'max_level': 5,
+                               'min_level': 3,
+                               'new_cords': {'3': False,
+                                             '4': False,
+                                             '5': False},
+                               'nms_thresh': 0.6,
+                               'nms_type': 'greedy',
+                               'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0},
+                               'objectness_smooth': {'3': 0.0,
+                                                     '4': 0.0,
+                                                     '5': 0.0},
+                               'path_scales': {'3': 8, '4': 16, '5': 32},
+                               'pre_nms_points': 5000,
+                               'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05},
+                               'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0},
+                               'use_reduction_sum': False},
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.001,
+                                        'norm_momentum': 0.99,
+                                        'use_sync_bn': True},
+                    'num_classes': 91,
+                    'subdivisions': 1,
+                    'use_sam': False},
+          'per_category_metrics': False,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'float16',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 64,
+                         'input_path': 'gs://tensorflow2/coco_records/train/2017*',
+                         'is_training': True,
+                         'parser': {'anchor_thresh': 0.213,
+                                    'aug_rand_angle': 0.0,
+                                    'aug_rand_brightness': 0.5,
+                                    'aug_rand_hue': 0.1,
+                                    'aug_rand_saturation': 0.7,
+                                    'aug_rand_translate': 0.0,
+                                    'aug_scale_aspect': 0.0,
+                                    'aug_scale_max': 2.4,
+                                    'aug_scale_min': 0.1,
+                                    'fixed_size': True,
+                                    'image_h': 512,
+                                    'image_w': 512,
+                                    'jitter_im': 0.6,
+                                    'letter_box': True,
+                                    'max_num_instances': 200,
+                                    'min_process_size': 512,
+                                    'mosaic': {'crop_area': [0.25, 1.0],
+                                               'crop_area_mosaic': [0.25, 0.95],
+                                               'mosaic_frequency': 0.85,
+                                               'output_size': [640, 640],
+                                               'random_crop': True,
+                                               'random_crop_mosaic': False},
+                                    'pct_rand': 0.0,
+                                    'random_flip': True,
+                                    'use_scale_xy': False,
+                                    'use_tie_breaker': True},
+                         'sharding': True,
+                         'shuffle_buffer_size': 10000,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': '',
+                         'tfds_download': True,
+                         'tfds_name': None,
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': None},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'float16',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 8,
+                              'input_path': 'gs://tensorflow2/coco_records/val/2017*',
+                              'is_training': False,
+                              'parser': {'anchor_thresh': 0.213,
+                                         'aug_rand_angle': 0.0,
+                                         'aug_rand_brightness': 0.5,
+                                         'aug_rand_hue': 0.15,
+                                         'aug_rand_saturation': 0.7,
+                                         'aug_rand_translate': 0.0,
+                                         'aug_scale_aspect': 0.0,
+                                         'aug_scale_max': 2.4,
+                                         'aug_scale_min': 0.1,
+                                         'fixed_size': True,
+                                         'image_h': 512,
+                                         'image_w': 512,
+                                         'jitter_im': 0.6,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'min_process_size': 512,
+                                         'mosaic': {'crop_area': [0.75, 1.0],
+                                                    'crop_area_mosaic': [0.25,
+                                                                         0.95],
+                                                    'mosaic_frequency': 0.85,
+                                                    'output_size': [640, 640],
+                                                    'random_crop': 1.0,
+                                                    'random_crop_mosaic': False},
+                                         'pct_rand': 0.0,
+                                         'random_flip': True,
+                                         'use_scale_xy': False,
+                                         'use_tie_breaker': True},
+                              'sharding': True,
+                              'shuffle_buffer_size': 10000,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': '',
+                              'tfds_download': True,
+                              'tfds_name': None,
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': None},
+          'weight_decay': 0.001},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 20000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'stepwise': {'boundaries': [240000,
+                                                                                260000],
+                                                                 'name': 'PiecewiseConstantDecay',
+                                                                 'values': [0.00131,
+                                                                            0.000131,
+                                                                            1.31e-05]},
+                                                    'type': 'stepwise'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.949,
+                                                        'name': 'SGD',
+                                                        'nesterov': True},
+                                                'type': 'sgd'},
+                                  'warmup': {'polynomial': {'name': 'polynomial',
+                                                            'power': 4,
+                                                            'warmup_steps': 2000},
+                                             'type': 'polynomial'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 10000,
+             'summary_interval': 10000,
+             'train_steps': 300000,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 20000,
+             'validation_steps': 625}}
+I0420 15:18:49.526146 140072511887168 train_utils.py:295] Saving experiment configuration to gs://tensorflow2/config_tests/250k-512-aggressive-base/params.yaml
+I0420 15:18:51.043512 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:18:51.661676 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:18:51.661934 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+I0420 15:18:51.708896 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:18:51.850972 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:18:51.851286 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+2021-04-20 15:18:51.921288: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+I0420 15:18:51.921968 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:18:52.064536 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:18:52.064768 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+I0420 15:18:52.101296 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:18:52.718156 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:18:52.718413 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+2021-04-20 15:18:52.775998: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-04-20 15:18:52.792479: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.117.66.218:8470}
+2021-04-20 15:18:52.792561: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:43727}
+2021-04-20 15:19:28.716801: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job worker -> {0 -> 10.117.66.218:8470}
+2021-04-20 15:19:28.716911: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:301] Initialize GrpcChannelCache for job localhost -> {0 -> localhost:43727}
+2021-04-20 15:19:28.717499: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:411] Started server with target: grpc://localhost:43727
+I0420 15:19:28.718393 140072511887168 remote.py:218] Entering into master device scope: /job:worker/replica:0/task:0/device:CPU:0
+INFO:tensorflow:Initializing the TPU system: node-4
+I0420 15:19:28.719399 140072511887168 tpu_strategy_util.py:74] Initializing the TPU system: node-4
+INFO:tensorflow:Clearing out eager caches
+I0420 15:19:36.787082 140072511887168 tpu_strategy_util.py:109] Clearing out eager caches
+INFO:tensorflow:Finished initializing TPU system.
+I0420 15:19:36.789190 140072511887168 tpu_strategy_util.py:133] Finished initializing TPU system.
+I0420 15:19:36.790868 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:19:36.939563 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:19:36.939811 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+I0420 15:19:36.995306 140072511887168 discovery.py:280] URL being requested: GET https://www.googleapis.com/discovery/v1/apis/tpu/v1/rest
+I0420 15:19:37.617638 140072511887168 discovery.py:911] URL being requested: GET https://tpu.googleapis.com/v1/projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4?alt=json
+I0420 15:19:37.617979 140072511887168 transport.py:157] Attempting refresh to obtain initial access_token
+INFO:tensorflow:Found TPU system:
+I0420 15:19:37.681201 140072511887168 tpu_system_metadata.py:159] Found TPU system:
+INFO:tensorflow:*** Num TPU Cores: 8
+I0420 15:19:37.681592 140072511887168 tpu_system_metadata.py:160] *** Num TPU Cores: 8
+INFO:tensorflow:*** Num TPU Workers: 1
+I0420 15:19:37.681921 140072511887168 tpu_system_metadata.py:161] *** Num TPU Workers: 1
+INFO:tensorflow:*** Num TPU Cores Per Worker: 8
+I0420 15:19:37.682019 140072511887168 tpu_system_metadata.py:163] *** Num TPU Cores Per Worker: 8
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0420 15:19:37.682106 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+I0420 15:19:37.682399 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+I0420 15:19:37.682518 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+I0420 15:19:37.682592 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+I0420 15:19:37.682681 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+I0420 15:19:37.682777 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+I0420 15:19:37.682892 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+I0420 15:19:37.683034 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+I0420 15:19:37.683133 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+I0420 15:19:37.683234 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+I0420 15:19:37.683334 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0420 15:19:37.683427 140072511887168 tpu_system_metadata.py:165] *** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+I0420 15:19:37.684985 140072511887168 train_utils.py:214] Running default trainer.
+2021-04-20 15:19:37.705452: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+yolo_custom
+{'task': {'init_checkpoint': 'gs://tensorflow2/darknet/cspdarknet53-golden', 'model': {'num_classes': 91, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': 5.0, '4': 5.0, '5': 5.0}, 'new_cords': {'3': False, '4': False, '5': False}, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 200, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_reduction_sum': False}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}, 'train_data': {'input_path': 'gs://tensorflow2/coco_records/train/2017*', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 64, 'is_training': True, 'drop_remainder': True, 'shuffle_buffer_size': 10000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 512, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.6, 'aug_scale_aspect': 0.0, 'aug_rand_translate': 0.0, 'aug_rand_saturation': 0.7, 'aug_rand_brightness': 0.5, 'aug_rand_hue': 0.1, 'aug_scale_min': 0.1, 'aug_scale_max': 2.4, 'aug_rand_angle': 0.0, 'use_tie_breaker': True, 'use_scale_xy': False, 'anchor_thresh': 0.213, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.85, 'crop_area': [0.25, 1.0], 'crop_area_mosaic': [0.25, 0.95], 'random_crop': True, 'random_crop_mosaic': False}}}, 'validation_data': {'input_path': 'gs://tensorflow2/coco_records/val/2017*', 'tfds_name': None, 'tfds_split': None, 'global_batch_size': 8, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 10000, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '', 'tfds_download': True, 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'dtype': 'float16', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'image_w': 512, 'image_h': 512, 'fixed_size': True, 'max_num_instances': 200, 'min_process_size': 512, 'letter_box': True, 'random_flip': True, 'pct_rand': 0.0, 'jitter_im': 0.6, 'aug_scale_aspect': 0.0, 'aug_rand_translate': 0.0, 'aug_rand_saturation': 0.7, 'aug_rand_brightness': 0.5, 'aug_rand_hue': 0.15, 'aug_scale_min': 0.1, 'aug_scale_max': 2.4, 'aug_rand_angle': 0.0, 'use_tie_breaker': True, 'use_scale_xy': False, 'anchor_thresh': 0.213, 'mosaic': {'output_size': [640, 640], 'mosaic_frequency': 0.85, 'crop_area': [0.75, 1.0], 'crop_area_mosaic': [0.25, 0.95], 'random_crop': 1.0, 'random_crop_mosaic': False}}}, 'weight_decay': 0.001, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': False, 'darknet_load_decoder': False, 'init_checkpoint_modules': 'backbone'}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': True, 'momentum': 0.949}}, 'ema': None, 'learning_rate': {'type': 'stepwise', 'stepwise': {'name': 'PiecewiseConstantDecay', 'boundaries': [240000, 260000], 'values': [0.00131, 0.000131, 1.31e-05]}}, 'warmup': {'type': 'polynomial', 'polynomial': {'name': 'polynomial', 'power': 4, 'warmup_steps': 2000}}}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 10000, 'summary_interval': 10000, 'checkpoint_interval': 20000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 300000, 'validation_steps': 625, 'validation_interval': 20000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'tpu', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 2, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'bfloat16', 'loss_scale': None, 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss']})
+{'3': 1.2, '4': 1.1, '5': 1.05} 0.0005
+{'num_classes': 91, '_input_size': [512, 512, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'use_sam': False, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou'}, 'iou_normalizer': {'3': 0.07, '4': 0.07, '5': 0.07}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'obj_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0}, 'max_delta': {'3': 5.0, '4': 5.0, '5': 5.0}, 'new_cords': {'3': False, '4': False, '5': False}, 'scale_xy': {'3': 1.2, '4': 1.1, '5': 1.05}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 200, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_reduction_sum': False}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'decoder_activation': 'leaky', '_boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']}
+InputSpec(shape=(None, 512, 512, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7f64c47be668>
+Model: "cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 512, 512, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 512, 512, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_csp_down (CSPRoute)   ((None, 256, 256, 64 27392       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_1_0 (DarkResidual)      (None, 256, 256, 64) 20864       DarkRes_1_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_1_csp_connect (CSPConne (None, 256, 256, 64) 12800       DarkRes_1_0[0][0]                
+                                                                 DarkRes_1_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 128, 128, 64 91136       DarkRes_1_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 128, 128, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 128, 128, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 128, 128, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 64, 64, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_3_0 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 64, 64, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 64, 64, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 32, 32, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 32, 32, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 32, 32, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 16, 16, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_5_0 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 16, 16, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 16, 16, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,652,512
+Trainable params: 26,617,184
+Non-trainable params: 35,328
+__________________________________________________________________________________________________
+Model: "YoloDecoder"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 64, 64, 256) 0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 32, 32, 512) 0                                            
+__________________________________________________________________________________________________
+input_4 (InputLayer)            [(None, 16, 16, 1024 0                                            
+__________________________________________________________________________________________________
+yolo_fpn (YoloFPN)              {'5': (None, 16, 16, 15165440    input_2[0][0]                    
+                                                                 input_3[0][0]                    
+                                                                 input_4[0][0]                    
+__________________________________________________________________________________________________I0420 15:20:19.024484 140072511887168 controller.py:362] restoring or initializing model...
+I0420 15:20:28.007422 140072511887168 yolo.py:529] Finished loading pretrained checkpoint from gs://tensorflow2/darknet/cspdarknet53-golden/ckpt-15000
+I0420 15:20:28.008937 140072511887168 controller.py:368] initialized model.
+I0420 15:20:28.009141 140072511887168 train_lib.py:96] Starts to execute mode: train_and_eval
+I0420 15:20:28.013718 140072511887168 controller.py:211] train | step:      0 | training until step 20000...
+I0420 15:20:35.434225 140072511887168 tpu.py:1238] Automatic outside compilation is enabled. Ops without XLA kernels will be automatically placed on CPU.
+I0420 15:21:32.914696 140072511887168 tpu.py:1238] Automatic outside compilation is enabled. Ops without XLA kernels will be automatically placed on CPU.
+I0420 16:32:47.195696 140072511887168 controller.py:425] train | step:  10000 | steps/sec:    2.3 | output: 
+    {'3': {'avg_iou': 0.55205244,
+           'avg_obj': 0.09637706,
+           'box_loss': 3.4667175,
+           'class_loss': 12.878982,
+           'conf_loss': 47.35332,
+           'precision50': 0.0815888,
+           'recall50': 0.028283099},
+     '4': {'avg_iou': 0.62917054,
+           'avg_obj': 0.17890596,
+           'box_loss': 3.4384923,
+           'class_loss': 14.555588,
+           'conf_loss': 25.262455,
+           'precision50': 0.20896123,
+           'recall50': 0.108351305},
+     '5': {'avg_iou': 0.67716473,
+           'avg_obj': 0.26827767,
+           'box_loss': 1.9787285,
+           'class_loss': 9.62826,
+           'conf_loss': 8.590272,
+           'precision50': 0.32825467,
+           'recall50': 0.23381715},
+     'global': {'total_loss': 127.15296},
+     'learning_rate': 0.00131,
+     'training_loss': 127.15296}
+I0420 16:33:34.714375 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-10000.
+I0420 17:36:26.790124 140072511887168 controller.py:425] train | step:  20000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6261823,
+           'avg_obj': 0.14822857,
+           'box_loss': 2.9064963,
+           'class_loss': 3.7803028,
+           'conf_loss': 6.350293,
+           'precision50': 0.15470381,
+           'recall50': 0.059542187},
+     '4': {'avg_iou': 0.72227836,
+           'avg_obj': 0.26813364,
+           'box_loss': 2.5843549,
+           'class_loss': 4.0505214,
+           'conf_loss': 6.7102795,
+           'precision50': 0.30959252,
+           'recall50': 0.19842908},
+     '5': {'avg_iou': 0.7667075,
+           'avg_obj': 0.38704732,
+           'box_loss': 1.4359198,
+           'class_loss': 2.663242,
+           'conf_loss': 3.7434742,
+           'precision50': 0.44141403,
+           'recall50': 0.37953016},
+     'global': {'total_loss': 34.22491},
+     'learning_rate': 0.00131,
+     'training_loss': 34.22491}
+I0420 17:36:38.461346 140072511887168 controller.py:252]  eval | step:  20000 | running 625 steps of evaluation...
+I0420 17:36:44.057954 140072511887168 tpu.py:1238] Automatic outside compilation is enabled. Ops without XLA kernels will be automatically placed on CPU.
+I0420 17:41:37.694000 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0420 17:45:57.799067 140072511887168 controller.py:261]  eval | step:  20000 | eval time:  559.3 sec | output: 
+    {'3': {'avg_iou': 0.4627503,
+           'avg_obj': 0.12669364,
+           'box_loss': 3.0972402,
+           'class_loss': 3.140364,
+           'conf_loss': 7.2108717,
+           'precision50': 0.20155104,
+           'recall50': 0.09888368},
+     '4': {'avg_iou': 0.6471368,
+           'avg_obj': 0.32020432,
+           'box_loss': 2.7234821,
+           'class_loss': 2.7988298,
+           'conf_loss': 6.338287,
+           'precision50': 0.35851362,
+           'recall50': 0.30485034},
+     '5': {'avg_iou': 0.712053,
+           'avg_obj': 0.47822574,
+           'box_loss': 1.4324754,
+           'class_loss': 1.5592546,
+           'conf_loss': 3.1595395,
+           'precision50': 0.45795712,
+           'recall50': 0.4868396},
+     'AP': 0.19939277,
+     'AP50': 0.39425874,
+     'AP75': 0.18070938,
+     'APl': 0.2905055,
+     'APm': 0.19598563,
+     'APs': 0.062820844,
+     'ARl': 0.52363646,
+     'ARm': 0.4119456,
+     'ARmax1': 0.20512372,
+     'ARmax10': 0.35486695,
+     'ARmax100': 0.39562175,
+     'ARs': 0.19556367,
+     'global': {'total_loss': 31.460337},
+     'validation_loss': 31.460337}
+
+yolo_pan (YoloPAN)              {'3': (None, 64, 64, 22153728    yolo_fpn[0][0]                   
+                                                                 yolo_fpn[0][1]                   
+                                                                 yolo_fpn[0][2]                   
+==================================================================================================
+Total params: 37,319,168
+Trainable params: 37,288,192
+Non-trainable params: 30,976
+__________________________________________________________________________________________________
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+cspdarknet53 (Darknet)       OrderedDict([('3', (None, 26652512  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 64, 64, 256) 37319168  
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  516960    
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+=================================================================
+Total params: 64,488,640
+Trainable params: 64,422,336
+Non-trainable params: 66,304
+_________________________________________________________________
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss']})
+{'3': 1.2, '4': 1.1, '5': 1.05}
+<PrefetchDataset shapes: ((8, 512, 512, 3), {source_id: (8,), bbox: (8, 200, 4), classes: (8, 200), area: (8, 200), is_crowd: (8, 200), best_anchors: (8, 200, 9), best_iou_match: (8, 200, 9), width: (8,), height: (8,), info: (8, 4, 2), num_detections: (8,), upds: {3: (8, 200, 8), 4: (8, 200, 8), 5: (8, 200, 8)}, inds: {3: (8, 200, 3), 4: (8, 200, 3), 5: (8, 200, 3)}, true_conf: {3: (8, 64, 64, 3, 1), 4: (8, 32, 32, 3, 1), 5: (8, 16, 16, 3, 1)}}), types: (tf.float16, {source_id: tf.int64, bbox: tf.float16, classes: tf.float16, area: tf.float16, is_crowd: tf.int32, best_anchors: tf.float16, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.float32, num_detections: tf.int32, upds: {3: tf.float16, 4: tf.float16, 5: tf.float16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float16, 4: tf.float16, 5: tf.float16}})>
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss']})
+{'3': 1.2, '4': 1.1, '5': 1.05}
+<PrefetchDataset shapes: ((1, 512, 512, 3), {source_id: (1,), bbox: (1, 200, 4), classes: (1, 200), area: (1, 200), is_crowd: (1, 200), best_anchors: (1, 200, 9), best_iou_match: (1, 200, 9), width: (1,), height: (1,), info: (1, 4), num_detections: (1,), upds: {3: (1, 200, 8), 4: (1, 200, 8), 5: (1, 200, 8)}, inds: {3: (1, 200, 3), 4: (1, 200, 3), 5: (1, 200, 3)}, true_conf: {3: (1, 64, 64, 3, 1), 4: (1, 32, 32, 3, 1), 5: (1, 16, 16, 3, 1)}}), types: (tf.float16, {source_id: tf.int64, bbox: tf.float16, classes: tf.float16, area: tf.float16, is_crowd: tf.int32, best_anchors: tf.float16, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.int32, num_detections: tf.int32, upds: {3: tf.float16, 4: tf.float16, 5: tf.float16}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float16, 4: tf.float16, 5: tf.float16}})>
+restoring or initializing model...
+initialized model.
+train | step:      0 | training until step 20000...
+train | step:  10000 | steps/sec:    2.3 | output: 
+    {'3': {'avg_iou': 0.55205244,
+           'avg_obj': 0.09637706,
+           'box_loss': 3.4667175,
+           'class_loss': 12.878982,
+           'conf_loss': 47.35332,
+           'precision50': 0.0815888,
+           'recall50': 0.028283099},
+     '4': {'avg_iou': 0.62917054,
+           'avg_obj': 0.17890596,
+           'box_loss': 3.4384923,
+           'class_loss': 14.555588,
+           'conf_loss': 25.262455,
+           'precision50': 0.20896123,
+           'recall50': 0.108351305},
+     '5': {'avg_iou': 0.67716473,
+           'avg_obj': 0.26827767,
+           'box_loss': 1.9787285,
+           'class_loss': 9.62826,
+           'conf_loss': 8.590272,
+           'precision50': 0.32825467,
+           'recall50': 0.23381715},
+     'global': {'total_loss': 127.15296},
+     'learning_rate': 0.00131,
+     'training_loss': 127.15296}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-10000.
+train | step:  20000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6261823,
+           'avg_obj': 0.14822857,
+           'box_loss': 2.9064963,
+           'class_loss': 3.7803028,
+           'conf_loss': 6.350293,
+           'precision50': 0.15470381,
+           'recall50': 0.059542187},
+     '4': {'avg_iou': 0.72227836,
+           'avg_obj': 0.26813364,
+           'box_loss': 2.5843549,
+           'class_loss': 4.0505214,
+           'conf_loss': 6.7102795,
+           'precision50': 0.30959252,
+           'recall50': 0.19842908},
+     '5': {'avg_iou': 0.7667075,
+           'avg_obj': 0.38704732,
+           'box_loss': 1.4359198,
+           'class_loss': 2.663242,
+           'conf_loss': 3.7434742,
+           'precision50': 0.44141403,
+           'recall50': 0.37953016},
+     'global': {'total_loss': 34.22491},
+     'learning_rate': 0.00131,
+     'training_loss': 34.22491}
+ eval | step:  20000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=180.85s).
+Accumulating evaluation results...
+DONE (t=19.83s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.199
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.394
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.181
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.063
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.196
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.291
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.205
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.355
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.396
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.196
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.412
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.524
+ eval | step:  20000 | eval time:  559.3 sec | output: 
+    {'3': {'avg_iou': 0.4627503,
+           'avg_obj': 0.12669364,
+           'box_loss': 3.0972402,
+           'class_loss': 3.140364,
+           'conf_loss': 7.2108717,
+           'precision50': 0.20155104,
+           'recall50': 0.09888368},
+     '4': {'avg_iou': 0.6471368,
+           'avg_obj': 0.32020432,
+           'box_loss': 2.7234821,
+           'class_loss': 2.7988298,
+           'conf_loss': 6.338287,
+           'precision50': 0.35851362,
+           'recall50': 0.30485034},
+     '5': {'avg_iou': 0.712053,
+           'avg_obj': 0.47822574,
+           'box_loss': 1.4324754,
+           'class_loss': 1.5592546,
+           'conf_loss': 3.1595395,
+           'precision50': 0.45795712,
+           'recall50': 0.4868396},
+     'AP': 0.19939277,
+     'AP50': 0.39425874,
+     'AP75': 0.18070938,
+     'APl': 0.2905055,
+     'APm': 0.19598563,
+     'APs': 0.062820844,
+     'ARl': 0.52363646,
+     'ARm': 0.4119456,
+     'ARmax1': 0.20512372,
+     'ARmax10': 0.35486695,
+     'ARmax100': 0.39562175,
+     'ARs': 0.19556367,
+     'global': {'total_loss': 31.460337},
+     'validation_loss': 31.460337}I0420 17:46:20.478133 140072511887168 controller.py:211] train | step:  20000 | training until step 40000...
+I0420 18:43:52.819680 140072511887168 controller.py:425] train | step:  30000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6424872,
+           'avg_obj': 0.1710192,
+           'box_loss': 2.7927773,
+           'class_loss': 3.4154773,
+           'conf_loss': 6.1996365,
+           'precision50': 0.17503826,
+           'recall50': 0.07584031},
+     '4': {'avg_iou': 0.74243426,
+           'avg_obj': 0.30310726,
+           'box_loss': 2.398132,
+           'class_loss': 3.5614095,
+           'conf_loss': 6.3857865,
+           'precision50': 0.3260689,
+           'recall50': 0.233578},
+     '5': {'avg_iou': 0.7853149,
+           'avg_obj': 0.42639023,
+           'box_loss': 1.3218613,
+           'class_loss': 2.3400948,
+           'conf_loss': 3.5034773,
+           'precision50': 0.45245352,
+           'recall50': 0.4234123},
+     'global': {'total_loss': 31.918756},
+     'learning_rate': 0.00131,
+     'training_loss': 31.918756}
+I0420 18:44:33.305857 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-30000.
+I0420 19:45:06.499122 140072511887168 controller.py:425] train | step:  40000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.6522137,
+           'avg_obj': 0.18589954,
+           'box_loss': 2.7121603,
+           'class_loss': 3.1809876,
+           'conf_loss': 6.071507,
+           'precision50': 0.18809208,
+           'recall50': 0.08746851},
+     '4': {'avg_iou': 0.754031,
+           'avg_obj': 0.32547152,
+           'box_loss': 2.2955728,
+           'class_loss': 3.277307,
+           'conf_loss': 6.1915936,
+           'precision50': 0.33449784,
+           'recall50': 0.25733465},
+     '5': {'avg_iou': 0.7963404,
+           'avg_obj': 0.45203716,
+           'box_loss': 1.2549896,
+           'class_loss': 2.1448426,
+           'conf_loss': 3.3488512,
+           'precision50': 0.45789805,
+           'recall50': 0.4517872},
+     'global': {'total_loss': 30.47786},
+     'learning_rate': 0.00131,
+     'training_loss': 30.47786}
+I0420 19:45:19.978127 140072511887168 controller.py:252]  eval | step:  40000 | running 625 steps of evaluation...
+I0420 19:49:44.136396 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0420 19:53:50.066083 140072511887168 controller.py:261]  eval | step:  40000 | eval time:  510.1 sec | output: 
+    {'3': {'avg_iou': 0.47793663,
+           'avg_obj': 0.17137915,
+           'box_loss': 2.9147954,
+           'class_loss': 2.5391006,
+           'conf_loss': 6.88667,
+           'precision50': 0.23757246,
+           'recall50': 0.14941886},
+     '4': {'avg_iou': 0.6806438,
+           'avg_obj': 0.36001757,
+           'box_loss': 2.38354,
+           'class_loss': 2.1962054,
+           'conf_loss': 5.8627214,
+           'precision50': 0.37292302,
+           'recall50': 0.3498034},
+     '5': {'avg_iou': 0.73838305,
+           'avg_obj': 0.50980103,
+           'box_loss': 1.2812498,
+           'class_loss': 1.2727551,
+           'conf_loss': 2.8436146,
+           'precision50': 0.47568431,
+           'recall50': 0.52238977},
+     'AP': 0.26124322,
+     'AP50': 0.4746582,
+     'AP75': 0.26229966,
+     'APl': 0.37013343,
+     'APm': 0.26761368,
+     'APs': 0.09855729,
+     'ARl': 0.5716843,
+     'ARm': 0.4848727,
+     'ARmax1': 0.24184129,
+     'ARmax10': 0.40790278,
+     'ARmax100': 0.45226195,
+     'ARs': 0.24290073,
+     'global': {'total_loss': 28.180656},
+     'validation_loss': 28.180656}
+I0420 19:54:06.260972 140072511887168 controller.py:211] train | step:  40000 | training until step 60000...
+I0420 20:56:02.588742 140072511887168 controller.py:425] train | step:  50000 | steps/sec:    2.3 | output: 
+    {'3': {'avg_iou': 0.6591166,
+           'avg_obj': 0.19698425,
+           'box_loss': 2.6659105,
+           'class_loss': 3.033909,
+           'conf_loss': 5.998042,
+           'precision50': 0.19498667,
+           'recall50': 0.09547399},
+     '4': {'avg_iou': 0.7617197,
+           'avg_obj': 0.34141695,
+           'box_loss': 2.2188618,
+           'class_loss': 3.0781808,
+           'conf_loss': 6.029132,
+           'precision50': 0.3381918,
+           'recall50': 0.2723754},
+     '5': {'avg_iou': 0.80396265,
+           'avg_obj': 0.46953857,
+           'box_loss': 1.2072093,
+           'class_loss': 2.0123863,
+           'conf_loss': 3.2416642,
+           'precision50': 0.45950478,
+           'recall50': 0.46982738},
+     'global': {'total_loss': 29.48527},
+     'learning_rate': 0.00131,
+     'training_loss': 29.48527}
+I0420 20:56:43.913461 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-50000.
+I0420 21:59:11.966581 140072511887168 controller.py:425] train | step:  60000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6640324,
+           'avg_obj': 0.20547982,
+           'box_loss': 2.622476,
+           'class_loss': 2.9172547,
+           'conf_loss': 5.921377,
+           'precision50': 0.20060195,
+           'recall50': 0.102113366},
+     '4': {'avg_iou': 0.7675767,
+           'avg_obj': 0.35445943,
+           'box_loss': 2.1636686,
+           'class_loss': 2.9293005,
+           'conf_loss': 5.9106627,
+           'precision50': 0.343166,
+           'recall50': 0.28516462},
+     '5': {'avg_iou': 0.8097105,
+           'avg_obj': 0.482575,
+           'box_loss': 1.1715969,
+           'class_loss': 1.9142994,
+           'conf_loss': 3.159484,
+           'precision50': 0.46218497,
+           'recall50': 0.48429605},
+     'global': {'total_loss': 28.710112},
+     'learning_rate': 0.00131,
+     'training_loss': 28.710112}
+I0420 21:59:24.917913 140072511887168 controller.py:252]  eval | step:  60000 | running 625 steps of evaluation...
+I0420 22:03:42.200655 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0420 22:07:56.477512 140072511887168 controller.py:261]  eval | step:  60000 | eval time:  511.6 sec | output: 
+    {'3': {'avg_iou': 0.48155516,
+           'avg_obj': 0.15757945,
+           'box_loss': 2.8730786,
+           'class_loss': 2.3991096,
+           'conf_loss': 6.7819147,
+           'precision50': 0.23531182,
+           'recall50': 0.13006261},
+     '4': {'avg_iou': 0.688525,
+           'avg_obj': 0.36737135,
+           'box_loss': 2.2898371,
+           'class_loss': 2.0147274,
+           'conf_loss': 5.681032,
+           'precision50': 0.38853246,
+           'recall50': 0.3614484},
+     '5': {'avg_iou': 0.7528507,
+           'avg_obj': 0.5394074,
+           'box_loss': 1.2015444,
+           'class_loss': 1.1114807,
+           'conf_loss': 2.6769874,
+           'precision50': 0.4685815,
+           'recall50': 0.55098057},
+     'AP': 0.28696147,
+     'AP50': 0.5009803,
+     'AP75': 0.2979758,
+     'APl': 0.41227385,
+     'APm': 0.2938592,
+     'APs': 0.102567494,
+     'ARl': 0.6018772,
+     'ARm': 0.50076574,
+     'ARmax1': 0.25668842,
+     'ARmax10': 0.4273465,
+     'ARmax100': 0.47174695,
+     'ARs': 0.26614177,
+     'global': {'total_loss': 27.029703},
+     'validation_loss': 27.029703}
+
+train | step:  20000 | training until step 40000...
+train | step:  30000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6424872,
+           'avg_obj': 0.1710192,
+           'box_loss': 2.7927773,
+           'class_loss': 3.4154773,
+           'conf_loss': 6.1996365,
+           'precision50': 0.17503826,
+           'recall50': 0.07584031},
+     '4': {'avg_iou': 0.74243426,
+           'avg_obj': 0.30310726,
+           'box_loss': 2.398132,
+           'class_loss': 3.5614095,
+           'conf_loss': 6.3857865,
+           'precision50': 0.3260689,
+           'recall50': 0.233578},
+     '5': {'avg_iou': 0.7853149,
+           'avg_obj': 0.42639023,
+           'box_loss': 1.3218613,
+           'class_loss': 2.3400948,
+           'conf_loss': 3.5034773,
+           'precision50': 0.45245352,
+           'recall50': 0.4234123},
+     'global': {'total_loss': 31.918756},
+     'learning_rate': 0.00131,
+     'training_loss': 31.918756}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-30000.
+train | step:  40000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.6522137,
+           'avg_obj': 0.18589954,
+           'box_loss': 2.7121603,
+           'class_loss': 3.1809876,
+           'conf_loss': 6.071507,
+           'precision50': 0.18809208,
+           'recall50': 0.08746851},
+     '4': {'avg_iou': 0.754031,
+           'avg_obj': 0.32547152,
+           'box_loss': 2.2955728,
+           'class_loss': 3.277307,
+           'conf_loss': 6.1915936,
+           'precision50': 0.33449784,
+           'recall50': 0.25733465},
+     '5': {'avg_iou': 0.7963404,
+           'avg_obj': 0.45203716,
+           'box_loss': 1.2549896,
+           'class_loss': 2.1448426,
+           'conf_loss': 3.3488512,
+           'precision50': 0.45789805,
+           'recall50': 0.4517872},
+     'global': {'total_loss': 30.47786},
+     'learning_rate': 0.00131,
+     'training_loss': 30.47786}
+ eval | step:  40000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=173.28s).
+Accumulating evaluation results...
+DONE (t=17.79s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.261
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.475
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.262
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.099
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.268
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.370
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.242
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.408
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.452
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.243
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.485
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.572
+ eval | step:  40000 | eval time:  510.1 sec | output: 
+    {'3': {'avg_iou': 0.47793663,
+           'avg_obj': 0.17137915,
+           'box_loss': 2.9147954,
+           'class_loss': 2.5391006,
+           'conf_loss': 6.88667,
+           'precision50': 0.23757246,
+           'recall50': 0.14941886},
+     '4': {'avg_iou': 0.6806438,
+           'avg_obj': 0.36001757,
+           'box_loss': 2.38354,
+           'class_loss': 2.1962054,
+           'conf_loss': 5.8627214,
+           'precision50': 0.37292302,
+           'recall50': 0.3498034},
+     '5': {'avg_iou': 0.73838305,
+           'avg_obj': 0.50980103,
+           'box_loss': 1.2812498,
+           'class_loss': 1.2727551,
+           'conf_loss': 2.8436146,
+           'precision50': 0.47568431,
+           'recall50': 0.52238977},
+     'AP': 0.26124322,
+     'AP50': 0.4746582,
+     'AP75': 0.26229966,
+     'APl': 0.37013343,
+     'APm': 0.26761368,
+     'APs': 0.09855729,
+     'ARl': 0.5716843,
+     'ARm': 0.4848727,
+     'ARmax1': 0.24184129,
+     'ARmax10': 0.40790278,
+     'ARmax100': 0.45226195,
+     'ARs': 0.24290073,
+     'global': {'total_loss': 28.180656},
+     'validation_loss': 28.180656}
+train | step:  40000 | training until step 60000...
+train | step:  50000 | steps/sec:    2.3 | output: 
+    {'3': {'avg_iou': 0.6591166,
+           'avg_obj': 0.19698425,
+           'box_loss': 2.6659105,
+           'class_loss': 3.033909,
+           'conf_loss': 5.998042,
+           'precision50': 0.19498667,
+           'recall50': 0.09547399},
+     '4': {'avg_iou': 0.7617197,
+           'avg_obj': 0.34141695,
+           'box_loss': 2.2188618,
+           'class_loss': 3.0781808,
+           'conf_loss': 6.029132,
+           'precision50': 0.3381918,
+           'recall50': 0.2723754},
+     '5': {'avg_iou': 0.80396265,
+           'avg_obj': 0.46953857,
+           'box_loss': 1.2072093,
+           'class_loss': 2.0123863,
+           'conf_loss': 3.2416642,
+           'precision50': 0.45950478,
+           'recall50': 0.46982738},
+     'global': {'total_loss': 29.48527},
+     'learning_rate': 0.00131,
+     'training_loss': 29.48527}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-50000.
+train | step:  60000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6640324,
+           'avg_obj': 0.20547982,
+           'box_loss': 2.622476,
+           'class_loss': 2.9172547,
+           'conf_loss': 5.921377,
+           'precision50': 0.20060195,
+           'recall50': 0.102113366},
+     '4': {'avg_iou': 0.7675767,
+           'avg_obj': 0.35445943,
+           'box_loss': 2.1636686,
+           'class_loss': 2.9293005,
+           'conf_loss': 5.9106627,
+           'precision50': 0.343166,
+           'recall50': 0.28516462},
+     '5': {'avg_iou': 0.8097105,
+           'avg_obj': 0.482575,
+           'box_loss': 1.1715969,
+           'class_loss': 1.9142994,
+           'conf_loss': 3.159484,
+           'precision50': 0.46218497,
+           'recall50': 0.48429605},
+     'global': {'total_loss': 28.710112},
+     'learning_rate': 0.00131,
+     'training_loss': 28.710112}
+ eval | step:  60000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=175.34s).
+Accumulating evaluation results...
+DONE (t=16.79s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.287
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.501
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.298
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.103
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.294
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.412
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.257
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.427
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.472
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.266
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.501
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.602
+ eval | step:  60000 | eval time:  511.6 sec | output: 
+    {'3': {'avg_iou': 0.48155516,
+           'avg_obj': 0.15757945,
+           'box_loss': 2.8730786,
+           'class_loss': 2.3991096,
+           'conf_loss': 6.7819147,
+           'precision50': 0.23531182,
+           'recall50': 0.13006261},
+     '4': {'avg_iou': 0.688525,
+           'avg_obj': 0.36737135,
+           'box_loss': 2.2898371,
+           'class_loss': 2.0147274,
+           'conf_loss': 5.681032,
+           'precision50': 0.38853246,
+           'recall50': 0.3614484},
+     '5': {'avg_iou': 0.7528507,
+           'avg_obj': 0.5394074,
+           'box_loss': 1.2015444,
+           'class_loss': 1.1114807,
+           'conf_loss': 2.6769874,
+           'precision50': 0.4685815,
+           'recall50': 0.55098057},
+     'AP': 0.28696147,
+     'AP50': 0.5009803,
+     'AP75': 0.2979758,
+     'APl': 0.41227385,
+     'APm': 0.2938592,
+     'APs': 0.102567494,
+     'ARl': 0.6018772,
+     'ARm': 0.50076574,
+     'ARmax1': 0.25668842,
+     'ARmax10': 0.4273465,
+     'ARmax100': 0.47174695,
+     'ARs': 0.26614177,
+     'global': {'total_loss': 27.029703},
+     'validation_loss': 27.029703}I0420 22:08:15.042925 140072511887168 controller.py:211] train | step:  60000 | training until step 80000...
+I0420 23:08:30.287261 140072511887168 controller.py:425] train | step:  70000 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.6682003,
+           'avg_obj': 0.21294968,
+           'box_loss': 2.5890427,
+           'class_loss': 2.820676,
+           'conf_loss': 5.864088,
+           'precision50': 0.20448874,
+           'recall50': 0.10735415},
+     '4': {'avg_iou': 0.7723753,
+           'avg_obj': 0.36393738,
+           'box_loss': 2.118706,
+           'class_loss': 2.819009,
+           'conf_loss': 5.819679,
+           'precision50': 0.34561488,
+           'recall50': 0.29428828},
+     '5': {'avg_iou': 0.8143017,
+           'avg_obj': 0.49319604,
+           'box_loss': 1.1432292,
+           'class_loss': 1.8332326,
+           'conf_loss': 3.0945394,
+           'precision50': 0.46351713,
+           'recall50': 0.49465674},
+     'global': {'total_loss': 28.102219},
+     'learning_rate': 0.00131,
+     'training_loss': 28.102219}
+I0420 23:09:11.138515 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-70000.
+I0421 00:08:59.689678 140072511887168 controller.py:425] train | step:  80000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.67129046,
+           'avg_obj': 0.2181354,
+           'box_loss': 2.5650473,
+           'class_loss': 2.7414238,
+           'conf_loss': 5.821654,
+           'precision50': 0.20811103,
+           'recall50': 0.11156786},
+     '4': {'avg_iou': 0.7761344,
+           'avg_obj': 0.37191004,
+           'box_loss': 2.086879,
+           'class_loss': 2.7267046,
+           'conf_loss': 5.7536783,
+           'precision50': 0.34772745,
+           'recall50': 0.3022471},
+     '5': {'avg_iou': 0.8180486,
+           'avg_obj': 0.5026458,
+           'box_loss': 1.1211513,
+           'class_loss': 1.77335,
+           'conf_loss': 3.041214,
+           'precision50': 0.4640769,
+           'recall50': 0.50436795},
+     'global': {'total_loss': 27.631094},
+     'learning_rate': 0.00131,
+     'training_loss': 27.631094}
+I0421 00:09:12.791913 140072511887168 controller.py:252]  eval | step:  80000 | running 625 steps of evaluation...
+I0421 00:13:36.852360 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 00:17:50.058805 140072511887168 controller.py:261]  eval | step:  80000 | eval time:  517.3 sec | output: 
+    {'3': {'avg_iou': 0.49079064,
+           'avg_obj': 0.18630046,
+           'box_loss': 2.7436779,
+           'class_loss': 2.1837304,
+           'conf_loss': 6.613248,
+           'precision50': 0.24980752,
+           'recall50': 0.1641958},
+     '4': {'avg_iou': 0.69928616,
+           'avg_obj': 0.40718094,
+           'box_loss': 2.1775846,
+           'class_loss': 1.880399,
+           'conf_loss': 5.4885178,
+           'precision50': 0.38904858,
+           'recall50': 0.40413693},
+     '5': {'avg_iou': 0.7628166,
+           'avg_obj': 0.5541411,
+           'box_loss': 1.1464508,
+           'class_loss': 1.0444067,
+           'conf_loss': 2.5850706,
+           'precision50': 0.47260982,
+           'recall50': 0.5674062},
+     'AP': 0.3095242,
+     'AP50': 0.52344066,
+     'AP75': 0.32668394,
+     'APl': 0.44384828,
+     'APm': 0.32114193,
+     'APs': 0.12095435,
+     'ARl': 0.61547565,
+     'ARm': 0.5287765,
+     'ARmax1': 0.26975793,
+     'ARmax10': 0.4474293,
+     'ARmax100': 0.4908122,
+     'ARs': 0.2808489,
+     'global': {'total_loss': 25.863085},
+     'validation_loss': 25.863085}
+I0421 00:18:06.766224 140072511887168 controller.py:211] train | step:  80000 | training until step 100000...
+I0421 01:18:40.324191 140072511887168 controller.py:425] train | step:  90000 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.67424744,
+           'avg_obj': 0.22404219,
+           'box_loss': 2.5393126,
+           'class_loss': 2.682541,
+           'conf_loss': 5.770483,
+           'precision50': 0.21116763,
+           'recall50': 0.11555056},
+     '4': {'avg_iou': 0.7792245,
+           'avg_obj': 0.3796625,
+           'box_loss': 2.0541549,
+           'class_loss': 2.6385283,
+           'conf_loss': 5.672678,
+           'precision50': 0.34896922,
+           'recall50': 0.3095015},
+     '5': {'avg_iou': 0.8210783,
+           'avg_obj': 0.5102115,
+           'box_loss': 1.1013405,
+           'class_loss': 1.7165065,
+           'conf_loss': 2.9925158,
+           'precision50': 0.46447426,
+           'recall50': 0.51262206},
+     'global': {'total_loss': 27.16806},
+     'learning_rate': 0.00131,
+     'training_loss': 27.16806}
+I0421 01:19:23.017087 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-90000.
+I0421 02:21:33.854771 140072511887168 controller.py:425] train | step:  100000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.6769484,
+           'avg_obj': 0.2286318,
+           'box_loss': 2.5243948,
+           'class_loss': 2.630775,
+           'conf_loss': 5.747438,
+           'precision50': 0.21329279,
+           'recall50': 0.11907133},
+     '4': {'avg_iou': 0.7818865,
+           'avg_obj': 0.38588837,
+           'box_loss': 2.0363011,
+           'class_loss': 2.5878513,
+           'conf_loss': 5.636021,
+           'precision50': 0.350649,
+           'recall50': 0.31528005},
+     '5': {'avg_iou': 0.82353115,
+           'avg_obj': 0.51712966,
+           'box_loss': 1.088391,
+           'class_loss': 1.674925,
+           'conf_loss': 2.9560611,
+           'precision50': 0.46428925,
+           'recall50': 0.51930183},
+     'global': {'total_loss': 26.882196},
+     'learning_rate': 0.00131,
+     'training_loss': 26.882196}
+I0421 02:21:47.051147 140072511887168 controller.py:252]  eval | step:  100000 | running 625 steps of evaluation...
+I0421 02:26:02.065990 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 02:30:25.154803 140072511887168 controller.py:261]  eval | step:  100000 | eval time:  518.1 sec | output: 
+    {'3': {'avg_iou': 0.49174726,
+           'avg_obj': 0.19429573,
+           'box_loss': 2.7291753,
+           'class_loss': 2.1819932,
+           'conf_loss': 6.5773764,
+           'precision50': 0.253448,
+           'recall50': 0.17225893},
+     '4': {'avg_iou': 0.70248586,
+           'avg_obj': 0.41606778,
+           'box_loss': 2.1377463,
+           'class_loss': 1.8104936,
+           'conf_loss': 5.364029,
+           'precision50': 0.39430216,
+           'recall50': 0.41527197},
+     '5': {'avg_iou': 0.7678667,
+           'avg_obj': 0.5686634,
+           'box_loss': 1.116046,
+           'class_loss': 0.992092,
+           'conf_loss': 2.5199544,
+           'precision50': 0.47402167,
+           'recall50': 0.58529633},
+     'AP': 0.3208937,
+     'AP50': 0.5370866,
+     'AP75': 0.34590876,
+     'APl': 0.45995873,
+     'APm': 0.33365303,
+     'APs': 0.1225028,
+     'ARl': 0.6277453,
+     'ARm': 0.5350148,
+     'ARmax1': 0.2733244,
+     'ARmax10': 0.45297524,
+     'ARmax100': 0.4964188,
+     'ARs': 0.27719605,
+     'global': {'total_loss': 25.428913},
+     'validation_loss': 25.428913}
+
+train | step:  60000 | training until step 80000...
+train | step:  70000 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.6682003,
+           'avg_obj': 0.21294968,
+           'box_loss': 2.5890427,
+           'class_loss': 2.820676,
+           'conf_loss': 5.864088,
+           'precision50': 0.20448874,
+           'recall50': 0.10735415},
+     '4': {'avg_iou': 0.7723753,
+           'avg_obj': 0.36393738,
+           'box_loss': 2.118706,
+           'class_loss': 2.819009,
+           'conf_loss': 5.819679,
+           'precision50': 0.34561488,
+           'recall50': 0.29428828},
+     '5': {'avg_iou': 0.8143017,
+           'avg_obj': 0.49319604,
+           'box_loss': 1.1432292,
+           'class_loss': 1.8332326,
+           'conf_loss': 3.0945394,
+           'precision50': 0.46351713,
+           'recall50': 0.49465674},
+     'global': {'total_loss': 28.102219},
+     'learning_rate': 0.00131,
+     'training_loss': 28.102219}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-70000.
+train | step:  80000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.67129046,
+           'avg_obj': 0.2181354,
+           'box_loss': 2.5650473,
+           'class_loss': 2.7414238,
+           'conf_loss': 5.821654,
+           'precision50': 0.20811103,
+           'recall50': 0.11156786},
+     '4': {'avg_iou': 0.7761344,
+           'avg_obj': 0.37191004,
+           'box_loss': 2.086879,
+           'class_loss': 2.7267046,
+           'conf_loss': 5.7536783,
+           'precision50': 0.34772745,
+           'recall50': 0.3022471},
+     '5': {'avg_iou': 0.8180486,
+           'avg_obj': 0.5026458,
+           'box_loss': 1.1211513,
+           'class_loss': 1.77335,
+           'conf_loss': 3.041214,
+           'precision50': 0.4640769,
+           'recall50': 0.50436795},
+     'global': {'total_loss': 27.631094},
+     'learning_rate': 0.00131,
+     'training_loss': 27.631094}
+ eval | step:  80000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=176.93s).
+Accumulating evaluation results...
+DONE (t=16.77s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.310
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.523
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.327
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.121
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.321
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.444
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.270
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.447
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.491
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.281
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.529
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.615
+ eval | step:  80000 | eval time:  517.3 sec | output: 
+    {'3': {'avg_iou': 0.49079064,
+           'avg_obj': 0.18630046,
+           'box_loss': 2.7436779,
+           'class_loss': 2.1837304,
+           'conf_loss': 6.613248,
+           'precision50': 0.24980752,
+           'recall50': 0.1641958},
+     '4': {'avg_iou': 0.69928616,
+           'avg_obj': 0.40718094,
+           'box_loss': 2.1775846,
+           'class_loss': 1.880399,
+           'conf_loss': 5.4885178,
+           'precision50': 0.38904858,
+           'recall50': 0.40413693},
+     '5': {'avg_iou': 0.7628166,
+           'avg_obj': 0.5541411,
+           'box_loss': 1.1464508,
+           'class_loss': 1.0444067,
+           'conf_loss': 2.5850706,
+           'precision50': 0.47260982,
+           'recall50': 0.5674062},
+     'AP': 0.3095242,
+     'AP50': 0.52344066,
+     'AP75': 0.32668394,
+     'APl': 0.44384828,
+     'APm': 0.32114193,
+     'APs': 0.12095435,
+     'ARl': 0.61547565,
+     'ARm': 0.5287765,
+     'ARmax1': 0.26975793,
+     'ARmax10': 0.4474293,
+     'ARmax100': 0.4908122,
+     'ARs': 0.2808489,
+     'global': {'total_loss': 25.863085},
+     'validation_loss': 25.863085}
+train | step:  80000 | training until step 100000...
+train | step:  90000 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.67424744,
+           'avg_obj': 0.22404219,
+           'box_loss': 2.5393126,
+           'class_loss': 2.682541,
+           'conf_loss': 5.770483,
+           'precision50': 0.21116763,
+           'recall50': 0.11555056},
+     '4': {'avg_iou': 0.7792245,
+           'avg_obj': 0.3796625,
+           'box_loss': 2.0541549,
+           'class_loss': 2.6385283,
+           'conf_loss': 5.672678,
+           'precision50': 0.34896922,
+           'recall50': 0.3095015},
+     '5': {'avg_iou': 0.8210783,
+           'avg_obj': 0.5102115,
+           'box_loss': 1.1013405,
+           'class_loss': 1.7165065,
+           'conf_loss': 2.9925158,
+           'precision50': 0.46447426,
+           'recall50': 0.51262206},
+     'global': {'total_loss': 27.16806},
+     'learning_rate': 0.00131,
+     'training_loss': 27.16806}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-90000.
+train | step:  100000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.6769484,
+           'avg_obj': 0.2286318,
+           'box_loss': 2.5243948,
+           'class_loss': 2.630775,
+           'conf_loss': 5.747438,
+           'precision50': 0.21329279,
+           'recall50': 0.11907133},
+     '4': {'avg_iou': 0.7818865,
+           'avg_obj': 0.38588837,
+           'box_loss': 2.0363011,
+           'class_loss': 2.5878513,
+           'conf_loss': 5.636021,
+           'precision50': 0.350649,
+           'recall50': 0.31528005},
+     '5': {'avg_iou': 0.82353115,
+           'avg_obj': 0.51712966,
+           'box_loss': 1.088391,
+           'class_loss': 1.674925,
+           'conf_loss': 2.9560611,
+           'precision50': 0.46428925,
+           'recall50': 0.51930183},
+     'global': {'total_loss': 26.882196},
+     'learning_rate': 0.00131,
+     'training_loss': 26.882196}
+ eval | step:  100000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=182.56s).
+Accumulating evaluation results...
+DONE (t=15.89s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.321
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.537
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.346
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.123
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.334
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.460
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.273
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.453
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.496
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.277
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.535
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.628
+ eval | step:  100000 | eval time:  518.1 sec | output: 
+    {'3': {'avg_iou': 0.49174726,
+           'avg_obj': 0.19429573,
+           'box_loss': 2.7291753,
+           'class_loss': 2.1819932,
+           'conf_loss': 6.5773764,
+           'precision50': 0.253448,
+           'recall50': 0.17225893},
+     '4': {'avg_iou': 0.70248586,
+           'avg_obj': 0.41606778,
+           'box_loss': 2.1377463,
+           'class_loss': 1.8104936,
+           'conf_loss': 5.364029,
+           'precision50': 0.39430216,
+           'recall50': 0.41527197},
+     '5': {'avg_iou': 0.7678667,
+           'avg_obj': 0.5686634,
+           'box_loss': 1.116046,
+           'class_loss': 0.992092,
+           'conf_loss': 2.5199544,
+           'precision50': 0.47402167,
+           'recall50': 0.58529633},
+     'AP': 0.3208937,
+     'AP50': 0.5370866,
+     'AP75': 0.34590876,
+     'APl': 0.45995873,
+     'APm': 0.33365303,
+     'APs': 0.1225028,
+     'ARl': 0.6277453,
+     'ARm': 0.5350148,
+     'ARmax1': 0.2733244,
+     'ARmax10': 0.45297524,
+     'ARmax100': 0.4964188,
+     'ARs': 0.27719605,
+     'global': {'total_loss': 25.428913},
+     'validation_loss': 25.428913}I0421 02:30:41.115829 140072511887168 controller.py:211] train | step:  100000 | training until step 120000...
+I0421 03:28:04.953212 140072511887168 controller.py:425] train | step:  110000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6790881,
+           'avg_obj': 0.23259312,
+           'box_loss': 2.5118158,
+           'class_loss': 2.5833545,
+           'conf_loss': 5.7276883,
+           'precision50': 0.21577698,
+           'recall50': 0.12207171},
+     '4': {'avg_iou': 0.7844888,
+           'avg_obj': 0.39200175,
+           'box_loss': 2.015013,
+           'class_loss': 2.5281053,
+           'conf_loss': 5.587438,
+           'precision50': 0.35295448,
+           'recall50': 0.32182646},
+     '5': {'avg_iou': 0.8260372,
+           'avg_obj': 0.52380174,
+           'box_loss': 1.0742232,
+           'class_loss': 1.6337584,
+           'conf_loss': 2.9191198,
+           'precision50': 0.46478462,
+           'recall50': 0.52663887},
+     'global': {'total_loss': 26.580547},
+     'learning_rate': 0.00131,
+     'training_loss': 26.580547}
+I0421 03:28:45.308135 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-110000.
+I0421 04:34:52.385517 140072511887168 controller.py:425] train | step:  120000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6803788,
+           'avg_obj': 0.23630056,
+           'box_loss': 2.503817,
+           'class_loss': 2.5439112,
+           'conf_loss': 5.705632,
+           'precision50': 0.21729161,
+           'recall50': 0.12526092},
+     '4': {'avg_iou': 0.78674775,
+           'avg_obj': 0.3974209,
+           'box_loss': 1.990741,
+           'class_loss': 2.464822,
+           'conf_loss': 5.5264325,
+           'precision50': 0.35434827,
+           'recall50': 0.32640746},
+     '5': {'avg_iou': 0.8282764,
+           'avg_obj': 0.5290783,
+           'box_loss': 1.0588361,
+           'class_loss': 1.5922126,
+           'conf_loss': 2.882678,
+           'precision50': 0.4651749,
+           'recall50': 0.5314262},
+     'global': {'total_loss': 26.269077},
+     'learning_rate': 0.00131,
+     'training_loss': 26.269077}
+I0421 04:35:04.216806 140072511887168 controller.py:252]  eval | step:  120000 | running 625 steps of evaluation...
+I0421 04:39:20.223600 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 04:43:50.618682 140072511887168 controller.py:261]  eval | step:  120000 | eval time:  526.4 sec | output: 
+    {'3': {'avg_iou': 0.49441835,
+           'avg_obj': 0.19935809,
+           'box_loss': 2.7080064,
+           'class_loss': 2.0800462,
+           'conf_loss': 6.493975,
+           'precision50': 0.2573666,
+           'recall50': 0.17856595},
+     '4': {'avg_iou': 0.70219994,
+           'avg_obj': 0.4389939,
+           'box_loss': 2.1336336,
+           'class_loss': 1.724367,
+           'conf_loss': 5.3196807,
+           'precision50': 0.3929922,
+           'recall50': 0.4428106},
+     '5': {'avg_iou': 0.77182317,
+           'avg_obj': 0.60920066,
+           'box_loss': 1.093194,
+           'class_loss': 0.94753546,
+           'conf_loss': 2.514694,
+           'precision50': 0.4521641,
+           'recall50': 0.62526363},
+     'AP': 0.32777917,
+     'AP50': 0.5464145,
+     'AP75': 0.35360804,
+     'APl': 0.46698967,
+     'APm': 0.33459684,
+     'APs': 0.13091561,
+     'ARl': 0.6429703,
+     'ARm': 0.5420268,
+     'ARmax1': 0.2804504,
+     'ARmax10': 0.46344838,
+     'ARmax100': 0.5068738,
+     'ARs': 0.2901193,
+     'global': {'total_loss': 25.01513},
+     'validation_loss': 25.01513}
+I0421 04:44:06.611480 140072511887168 controller.py:211] train | step:  120000 | training until step 140000...
+I0421 05:40:45.136038 140072511887168 controller.py:425] train | step:  130000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.68191326,
+           'avg_obj': 0.23967443,
+           'box_loss': 2.4892724,
+           'class_loss': 2.5046647,
+           'conf_loss': 5.6709805,
+           'precision50': 0.21909297,
+           'recall50': 0.12755224},
+     '4': {'avg_iou': 0.7885425,
+           'avg_obj': 0.40151972,
+           'box_loss': 1.9734293,
+           'class_loss': 2.4213316,
+           'conf_loss': 5.4857144,
+           'precision50': 0.35431907,
+           'recall50': 0.3303313},
+     '5': {'avg_iou': 0.82996035,
+           'avg_obj': 0.53408056,
+           'box_loss': 1.0482898,
+           'class_loss': 1.5619514,
+           'conf_loss': 2.8517675,
+           'precision50': 0.46463922,
+           'recall50': 0.53617877},
+     'global': {'total_loss': 26.007397},
+     'learning_rate': 0.00131,
+     'training_loss': 26.007397}
+I0421 05:41:28.770446 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-130000.
+I0421 06:38:48.659529 140072511887168 controller.py:425] train | step:  140000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.68366605,
+           'avg_obj': 0.24240196,
+           'box_loss': 2.4663155,
+           'class_loss': 2.4583642,
+           'conf_loss': 5.62971,
+           'precision50': 0.22054817,
+           'recall50': 0.12980391},
+     '4': {'avg_iou': 0.79036033,
+           'avg_obj': 0.4055683,
+           'box_loss': 1.9544951,
+           'class_loss': 2.3738487,
+           'conf_loss': 5.441908,
+           'precision50': 0.35467854,
+           'recall50': 0.33463413},
+     '5': {'avg_iou': 0.83165985,
+           'avg_obj': 0.5381077,
+           'box_loss': 1.0381975,
+           'class_loss': 1.53442,
+           'conf_loss': 2.8272092,
+           'precision50': 0.4644556,
+           'recall50': 0.5407687},
+     'global': {'total_loss': 25.724483},
+     'learning_rate': 0.00131,
+     'training_loss': 25.724483}
+I0421 06:39:01.811359 140072511887168 controller.py:252]  eval | step:  140000 | running 625 steps of evaluation...
+I0421 06:43:20.079927 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 06:47:26.750904 140072511887168 controller.py:261]  eval | step:  140000 | eval time:  504.9 sec | output: 
+    {'3': {'avg_iou': 0.49630004,
+           'avg_obj': 0.21068247,
+           'box_loss': 2.670388,
+           'class_loss': 2.0013988,
+           'conf_loss': 6.452169,
+           'precision50': 0.25870135,
+           'recall50': 0.19236216},
+     '4': {'avg_iou': 0.70887655,
+           'avg_obj': 0.45061988,
+           'box_loss': 2.0709033,
+           'class_loss': 1.7126936,
+           'conf_loss': 5.283448,
+           'precision50': 0.383481,
+           'recall50': 0.45236015},
+     '5': {'avg_iou': 0.7721539,
+           'avg_obj': 0.61160886,
+           'box_loss': 1.0830946,
+           'class_loss': 0.94018817,
+           'conf_loss': 2.4769197,
+           'precision50': 0.45538697,
+           'recall50': 0.62834895},
+     'AP': 0.33580232,
+     'AP50': 0.557178,
+     'AP75': 0.35816738,
+     'APl': 0.4712778,
+     'APm': 0.34998447,
+     'APs': 0.13870622,
+     'ARl': 0.6334618,
+     'ARm': 0.5507791,
+     'ARmax1': 0.2843586,
+     'ARmax10': 0.46879333,
+     'ARmax100': 0.5117774,
+     'ARs': 0.30948776,
+     'global': {'total_loss': 24.691229},
+     'validation_loss': 24.691229}
+
+train | step:  100000 | training until step 120000...
+train | step:  110000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6790881,
+           'avg_obj': 0.23259312,
+           'box_loss': 2.5118158,
+           'class_loss': 2.5833545,
+           'conf_loss': 5.7276883,
+           'precision50': 0.21577698,
+           'recall50': 0.12207171},
+     '4': {'avg_iou': 0.7844888,
+           'avg_obj': 0.39200175,
+           'box_loss': 2.015013,
+           'class_loss': 2.5281053,
+           'conf_loss': 5.587438,
+           'precision50': 0.35295448,
+           'recall50': 0.32182646},
+     '5': {'avg_iou': 0.8260372,
+           'avg_obj': 0.52380174,
+           'box_loss': 1.0742232,
+           'class_loss': 1.6337584,
+           'conf_loss': 2.9191198,
+           'precision50': 0.46478462,
+           'recall50': 0.52663887},
+     'global': {'total_loss': 26.580547},
+     'learning_rate': 0.00131,
+     'training_loss': 26.580547}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-110000.
+train | step:  120000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.6803788,
+           'avg_obj': 0.23630056,
+           'box_loss': 2.503817,
+           'class_loss': 2.5439112,
+           'conf_loss': 5.705632,
+           'precision50': 0.21729161,
+           'recall50': 0.12526092},
+     '4': {'avg_iou': 0.78674775,
+           'avg_obj': 0.3974209,
+           'box_loss': 1.990741,
+           'class_loss': 2.464822,
+           'conf_loss': 5.5264325,
+           'precision50': 0.35434827,
+           'recall50': 0.32640746},
+     '5': {'avg_iou': 0.8282764,
+           'avg_obj': 0.5290783,
+           'box_loss': 1.0588361,
+           'class_loss': 1.5922126,
+           'conf_loss': 2.882678,
+           'precision50': 0.4651749,
+           'recall50': 0.5314262},
+     'global': {'total_loss': 26.269077},
+     'learning_rate': 0.00131,
+     'training_loss': 26.269077}
+ eval | step:  120000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=194.28s).
+Accumulating evaluation results...
+DONE (t=14.86s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.328
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.546
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.354
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.131
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.335
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.467
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.280
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.463
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.507
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.290
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.542
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.643
+ eval | step:  120000 | eval time:  526.4 sec | output: 
+    {'3': {'avg_iou': 0.49441835,
+           'avg_obj': 0.19935809,
+           'box_loss': 2.7080064,
+           'class_loss': 2.0800462,
+           'conf_loss': 6.493975,
+           'precision50': 0.2573666,
+           'recall50': 0.17856595},
+     '4': {'avg_iou': 0.70219994,
+           'avg_obj': 0.4389939,
+           'box_loss': 2.1336336,
+           'class_loss': 1.724367,
+           'conf_loss': 5.3196807,
+           'precision50': 0.3929922,
+           'recall50': 0.4428106},
+     '5': {'avg_iou': 0.77182317,
+           'avg_obj': 0.60920066,
+           'box_loss': 1.093194,
+           'class_loss': 0.94753546,
+           'conf_loss': 2.514694,
+           'precision50': 0.4521641,
+           'recall50': 0.62526363},
+     'AP': 0.32777917,
+     'AP50': 0.5464145,
+     'AP75': 0.35360804,
+     'APl': 0.46698967,
+     'APm': 0.33459684,
+     'APs': 0.13091561,
+     'ARl': 0.6429703,
+     'ARm': 0.5420268,
+     'ARmax1': 0.2804504,
+     'ARmax10': 0.46344838,
+     'ARmax100': 0.5068738,
+     'ARs': 0.2901193,
+     'global': {'total_loss': 25.01513},
+     'validation_loss': 25.01513}
+train | step:  120000 | training until step 140000...
+train | step:  130000 | steps/sec:    2.5 | output: 
+    {'3': {'avg_iou': 0.68191326,
+           'avg_obj': 0.23967443,
+           'box_loss': 2.4892724,
+           'class_loss': 2.5046647,
+           'conf_loss': 5.6709805,
+           'precision50': 0.21909297,
+           'recall50': 0.12755224},
+     '4': {'avg_iou': 0.7885425,
+           'avg_obj': 0.40151972,
+           'box_loss': 1.9734293,
+           'class_loss': 2.4213316,
+           'conf_loss': 5.4857144,
+           'precision50': 0.35431907,
+           'recall50': 0.3303313},
+     '5': {'avg_iou': 0.82996035,
+           'avg_obj': 0.53408056,
+           'box_loss': 1.0482898,
+           'class_loss': 1.5619514,
+           'conf_loss': 2.8517675,
+           'precision50': 0.46463922,
+           'recall50': 0.53617877},
+     'global': {'total_loss': 26.007397},
+     'learning_rate': 0.00131,
+     'training_loss': 26.007397}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-130000.
+train | step:  140000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.68366605,
+           'avg_obj': 0.24240196,
+           'box_loss': 2.4663155,
+           'class_loss': 2.4583642,
+           'conf_loss': 5.62971,
+           'precision50': 0.22054817,
+           'recall50': 0.12980391},
+     '4': {'avg_iou': 0.79036033,
+           'avg_obj': 0.4055683,
+           'box_loss': 1.9544951,
+           'class_loss': 2.3738487,
+           'conf_loss': 5.441908,
+           'precision50': 0.35467854,
+           'recall50': 0.33463413},
+     '5': {'avg_iou': 0.83165985,
+           'avg_obj': 0.5381077,
+           'box_loss': 1.0381975,
+           'class_loss': 1.53442,
+           'conf_loss': 2.8272092,
+           'precision50': 0.4644556,
+           'recall50': 0.5407687},
+     'global': {'total_loss': 25.724483},
+     'learning_rate': 0.00131,
+     'training_loss': 25.724483}
+ eval | step:  140000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=179.63s).
+Accumulating evaluation results...
+DONE (t=14.79s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.336
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.557
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.358
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.139
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.350
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.471
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.284
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.469
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.512
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.551
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.633
+ eval | step:  140000 | eval time:  504.9 sec | output: 
+    {'3': {'avg_iou': 0.49630004,
+           'avg_obj': 0.21068247,
+           'box_loss': 2.670388,
+           'class_loss': 2.0013988,
+           'conf_loss': 6.452169,
+           'precision50': 0.25870135,
+           'recall50': 0.19236216},
+     '4': {'avg_iou': 0.70887655,
+           'avg_obj': 0.45061988,
+           'box_loss': 2.0709033,
+           'class_loss': 1.7126936,
+           'conf_loss': 5.283448,
+           'precision50': 0.383481,
+           'recall50': 0.45236015},
+     '5': {'avg_iou': 0.7721539,
+           'avg_obj': 0.61160886,
+           'box_loss': 1.0830946,
+           'class_loss': 0.94018817,
+           'conf_loss': 2.4769197,
+           'precision50': 0.45538697,
+           'recall50': 0.62834895},
+     'AP': 0.33580232,
+     'AP50': 0.557178,
+     'AP75': 0.35816738,
+     'APl': 0.4712778,
+     'APm': 0.34998447,
+     'APs': 0.13870622,
+     'ARl': 0.6334618,
+     'ARm': 0.5507791,
+     'ARmax1': 0.2843586,
+     'ARmax10': 0.46879333,
+     'ARmax100': 0.5117774,
+     'ARs': 0.30948776,
+     'global': {'total_loss': 24.691229},
+     'validation_loss': 24.691229}I0421 06:47:45.374054 140072511887168 controller.py:211] train | step:  140000 | training until step 160000...
+I0421 07:42:15.781616 140072511887168 controller.py:425] train | step:  150000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6852391,
+           'avg_obj': 0.24604094,
+           'box_loss': 2.4622557,
+           'class_loss': 2.431086,
+           'conf_loss': 5.619444,
+           'precision50': 0.2224601,
+           'recall50': 0.13215633},
+     '4': {'avg_iou': 0.79201734,
+           'avg_obj': 0.41033608,
+           'box_loss': 1.9400057,
+           'class_loss': 2.3365116,
+           'conf_loss': 5.4041686,
+           'precision50': 0.35636786,
+           'recall50': 0.33953705},
+     '5': {'avg_iou': 0.83334726,
+           'avg_obj': 0.54304713,
+           'box_loss': 1.0277977,
+           'class_loss': 1.5049834,
+           'conf_loss': 2.7982645,
+           'precision50': 0.46477392,
+           'recall50': 0.5448877},
+     'global': {'total_loss': 25.524492},
+     'learning_rate': 0.00131,
+     'training_loss': 25.524492}
+I0421 07:42:56.182533 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-150000.
+I0421 08:41:31.838819 140072511887168 controller.py:425] train | step:  160000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6866486,
+           'avg_obj': 0.248859,
+           'box_loss': 2.443693,
+           'class_loss': 2.3943474,
+           'conf_loss': 5.580982,
+           'precision50': 0.22376958,
+           'recall50': 0.13433273},
+     '4': {'avg_iou': 0.7933175,
+           'avg_obj': 0.41435596,
+           'box_loss': 1.9253578,
+           'class_loss': 2.295962,
+           'conf_loss': 5.360225,
+           'precision50': 0.35746065,
+           'recall50': 0.34372306},
+     '5': {'avg_iou': 0.83459777,
+           'avg_obj': 0.5473281,
+           'box_loss': 1.0188777,
+           'class_loss': 1.4760458,
+           'conf_loss': 2.769483,
+           'precision50': 0.4643107,
+           'recall50': 0.5490401},
+     'global': {'total_loss': 25.265017},
+     'learning_rate': 0.00131,
+     'training_loss': 25.265017}
+I0421 08:41:44.799233 140072511887168 controller.py:252]  eval | step:  160000 | running 625 steps of evaluation...
+I0421 08:46:02.534202 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 08:50:19.241206 140072511887168 controller.py:261]  eval | step:  160000 | eval time:  514.4 sec | output: 
+    {'3': {'avg_iou': 0.4967347,
+           'avg_obj': 0.21394226,
+           'box_loss': 2.6645544,
+           'class_loss': 1.99532,
+           'conf_loss': 6.4684854,
+           'precision50': 0.26507372,
+           'recall50': 0.19538441},
+     '4': {'avg_iou': 0.7118694,
+           'avg_obj': 0.47356427,
+           'box_loss': 2.0350997,
+           'class_loss': 1.6570697,
+           'conf_loss': 5.280651,
+           'precision50': 0.379834,
+           'recall50': 0.47804394},
+     '5': {'avg_iou': 0.778162,
+           'avg_obj': 0.6273192,
+           'box_loss': 1.0550578,
+           'class_loss': 0.90042245,
+           'conf_loss': 2.4468856,
+           'precision50': 0.44456518,
+           'recall50': 0.6434472},
+     'AP': 0.34152994,
+     'AP50': 0.56051874,
+     'AP75': 0.36730745,
+     'APl': 0.48934194,
+     'APm': 0.35355753,
+     'APs': 0.13379845,
+     'ARl': 0.6521306,
+     'ARm': 0.56155103,
+     'ARmax1': 0.28748953,
+     'ARmax10': 0.47644404,
+     'ARmax100': 0.52156353,
+     'ARs': 0.29968742,
+     'global': {'total_loss': 24.503546},
+     'validation_loss': 24.503546}
+I0421 08:50:38.059155 140072511887168 controller.py:211] train | step:  160000 | training until step 180000...
+I0421 09:42:47.104614 140072511887168 controller.py:425] train | step:  170000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.68774277,
+           'avg_obj': 0.2517992,
+           'box_loss': 2.440252,
+           'class_loss': 2.37094,
+           'conf_loss': 5.5732036,
+           'precision50': 0.2249697,
+           'recall50': 0.13671961},
+     '4': {'avg_iou': 0.7947684,
+           'avg_obj': 0.4185562,
+           'box_loss': 1.9133277,
+           'class_loss': 2.2608876,
+           'conf_loss': 5.324262,
+           'precision50': 0.3571384,
+           'recall50': 0.34698245},
+     '5': {'avg_iou': 0.8361666,
+           'avg_obj': 0.55142957,
+           'box_loss': 1.0087627,
+           'class_loss': 1.4504392,
+           'conf_loss': 2.742704,
+           'precision50': 0.46440098,
+           'recall50': 0.5532053},
+     'global': {'total_loss': 25.084799},
+     'learning_rate': 0.00131,
+     'training_loss': 25.084799}
+I0421 09:43:31.078298 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-170000.
+I0421 10:40:44.653464 140072511887168 controller.py:425] train | step:  180000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.68891966,
+           'avg_obj': 0.25394905,
+           'box_loss': 2.4361558,
+           'class_loss': 2.3520231,
+           'conf_loss': 5.565973,
+           'precision50': 0.2259834,
+           'recall50': 0.13820545},
+     '4': {'avg_iou': 0.79611415,
+           'avg_obj': 0.4218438,
+           'box_loss': 1.9024818,
+           'class_loss': 2.2332103,
+           'conf_loss': 5.2992353,
+           'precision50': 0.35865915,
+           'recall50': 0.350334},
+     '5': {'avg_iou': 0.8374017,
+           'avg_obj': 0.5548816,
+           'box_loss': 1.0002612,
+           'class_loss': 1.4344496,
+           'conf_loss': 2.7199526,
+           'precision50': 0.46420205,
+           'recall50': 0.5562883},
+     'global': {'total_loss': 24.943684},
+     'learning_rate': 0.00131,
+     'training_loss': 24.943684}
+I0421 10:40:57.733291 140072511887168 controller.py:252]  eval | step:  180000 | running 625 steps of evaluation...
+I0421 10:45:23.320529 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 10:49:32.748234 140072511887168 controller.py:261]  eval | step:  180000 | eval time:  515.0 sec | output: 
+    {'3': {'avg_iou': 0.5002518,
+           'avg_obj': 0.20737822,
+           'box_loss': 2.6227455,
+           'class_loss': 1.9790274,
+           'conf_loss': 6.4192595,
+           'precision50': 0.26210245,
+           'recall50': 0.19052723},
+     '4': {'avg_iou': 0.7125977,
+           'avg_obj': 0.47090116,
+           'box_loss': 2.026184,
+           'class_loss': 1.6144719,
+           'conf_loss': 5.189504,
+           'precision50': 0.3775659,
+           'recall50': 0.4752601},
+     '5': {'avg_iou': 0.7797957,
+           'avg_obj': 0.6336861,
+           'box_loss': 1.0422642,
+           'class_loss': 0.8814323,
+           'conf_loss': 2.401009,
+           'precision50': 0.44659448,
+           'recall50': 0.6470788},
+     'AP': 0.34852716,
+     'AP50': 0.5718052,
+     'AP75': 0.37626344,
+     'APl': 0.4926768,
+     'APm': 0.36041456,
+     'APs': 0.14587915,
+     'ARl': 0.653683,
+     'ARm': 0.5614207,
+     'ARmax1': 0.29002553,
+     'ARmax10': 0.47927192,
+     'ARmax100': 0.5237875,
+     'ARs': 0.30877516,
+     'global': {'total_loss': 24.17591},
+     'validation_loss': 24.17591}
+
+train | step:  140000 | training until step 160000...
+train | step:  150000 | steps/sec:    2.6 | output: 
+    {'3': {'avg_iou': 0.6852391,
+           'avg_obj': 0.24604094,
+           'box_loss': 2.4622557,
+           'class_loss': 2.431086,
+           'conf_loss': 5.619444,
+           'precision50': 0.2224601,
+           'recall50': 0.13215633},
+     '4': {'avg_iou': 0.79201734,
+           'avg_obj': 0.41033608,
+           'box_loss': 1.9400057,
+           'class_loss': 2.3365116,
+           'conf_loss': 5.4041686,
+           'precision50': 0.35636786,
+           'recall50': 0.33953705},
+     '5': {'avg_iou': 0.83334726,
+           'avg_obj': 0.54304713,
+           'box_loss': 1.0277977,
+           'class_loss': 1.5049834,
+           'conf_loss': 2.7982645,
+           'precision50': 0.46477392,
+           'recall50': 0.5448877},
+     'global': {'total_loss': 25.524492},
+     'learning_rate': 0.00131,
+     'training_loss': 25.524492}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-150000.
+train | step:  160000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6866486,
+           'avg_obj': 0.248859,
+           'box_loss': 2.443693,
+           'class_loss': 2.3943474,
+           'conf_loss': 5.580982,
+           'precision50': 0.22376958,
+           'recall50': 0.13433273},
+     '4': {'avg_iou': 0.7933175,
+           'avg_obj': 0.41435596,
+           'box_loss': 1.9253578,
+           'class_loss': 2.295962,
+           'conf_loss': 5.360225,
+           'precision50': 0.35746065,
+           'recall50': 0.34372306},
+     '5': {'avg_iou': 0.83459777,
+           'avg_obj': 0.5473281,
+           'box_loss': 1.0188777,
+           'class_loss': 1.4760458,
+           'conf_loss': 2.769483,
+           'precision50': 0.4643107,
+           'recall50': 0.5490401},
+     'global': {'total_loss': 25.265017},
+     'learning_rate': 0.00131,
+     'training_loss': 25.265017}
+ eval | step:  160000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=174.76s).
+Accumulating evaluation results...
+DONE (t=15.53s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.342
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.561
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.367
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.134
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.354
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.489
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.287
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.476
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.522
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.300
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.562
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.652
+ eval | step:  160000 | eval time:  514.4 sec | output: 
+    {'3': {'avg_iou': 0.4967347,
+           'avg_obj': 0.21394226,
+           'box_loss': 2.6645544,
+           'class_loss': 1.99532,
+           'conf_loss': 6.4684854,
+           'precision50': 0.26507372,
+           'recall50': 0.19538441},
+     '4': {'avg_iou': 0.7118694,
+           'avg_obj': 0.47356427,
+           'box_loss': 2.0350997,
+           'class_loss': 1.6570697,
+           'conf_loss': 5.280651,
+           'precision50': 0.379834,
+           'recall50': 0.47804394},
+     '5': {'avg_iou': 0.778162,
+           'avg_obj': 0.6273192,
+           'box_loss': 1.0550578,
+           'class_loss': 0.90042245,
+           'conf_loss': 2.4468856,
+           'precision50': 0.44456518,
+           'recall50': 0.6434472},
+     'AP': 0.34152994,
+     'AP50': 0.56051874,
+     'AP75': 0.36730745,
+     'APl': 0.48934194,
+     'APm': 0.35355753,
+     'APs': 0.13379845,
+     'ARl': 0.6521306,
+     'ARm': 0.56155103,
+     'ARmax1': 0.28748953,
+     'ARmax10': 0.47644404,
+     'ARmax100': 0.52156353,
+     'ARs': 0.29968742,
+     'global': {'total_loss': 24.503546},
+     'validation_loss': 24.503546}
+train | step:  160000 | training until step 180000...
+train | step:  170000 | steps/sec:    2.7 | output: 
+    {'3': {'avg_iou': 0.68774277,
+           'avg_obj': 0.2517992,
+           'box_loss': 2.440252,
+           'class_loss': 2.37094,
+           'conf_loss': 5.5732036,
+           'precision50': 0.2249697,
+           'recall50': 0.13671961},
+     '4': {'avg_iou': 0.7947684,
+           'avg_obj': 0.4185562,
+           'box_loss': 1.9133277,
+           'class_loss': 2.2608876,
+           'conf_loss': 5.324262,
+           'precision50': 0.3571384,
+           'recall50': 0.34698245},
+     '5': {'avg_iou': 0.8361666,
+           'avg_obj': 0.55142957,
+           'box_loss': 1.0087627,
+           'class_loss': 1.4504392,
+           'conf_loss': 2.742704,
+           'precision50': 0.46440098,
+           'recall50': 0.5532053},
+     'global': {'total_loss': 25.084799},
+     'learning_rate': 0.00131,
+     'training_loss': 25.084799}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-170000.
+train | step:  180000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.68891966,
+           'avg_obj': 0.25394905,
+           'box_loss': 2.4361558,
+           'class_loss': 2.3520231,
+           'conf_loss': 5.565973,
+           'precision50': 0.2259834,
+           'recall50': 0.13820545},
+     '4': {'avg_iou': 0.79611415,
+           'avg_obj': 0.4218438,
+           'box_loss': 1.9024818,
+           'class_loss': 2.2332103,
+           'conf_loss': 5.2992353,
+           'precision50': 0.35865915,
+           'recall50': 0.350334},
+     '5': {'avg_iou': 0.8374017,
+           'avg_obj': 0.5548816,
+           'box_loss': 1.0002612,
+           'class_loss': 1.4344496,
+           'conf_loss': 2.7199526,
+           'precision50': 0.46420205,
+           'recall50': 0.5562883},
+     'global': {'total_loss': 24.943684},
+     'learning_rate': 0.00131,
+     'training_loss': 24.943684}
+ eval | step:  180000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=176.47s).
+Accumulating evaluation results...
+DONE (t=15.64s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.349
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.572
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.376
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.146
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.360
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.493
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.290
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.479
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.524
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.561
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.654
+ eval | step:  180000 | eval time:  515.0 sec | output: 
+    {'3': {'avg_iou': 0.5002518,
+           'avg_obj': 0.20737822,
+           'box_loss': 2.6227455,
+           'class_loss': 1.9790274,
+           'conf_loss': 6.4192595,
+           'precision50': 0.26210245,
+           'recall50': 0.19052723},
+     '4': {'avg_iou': 0.7125977,
+           'avg_obj': 0.47090116,
+           'box_loss': 2.026184,
+           'class_loss': 1.6144719,
+           'conf_loss': 5.189504,
+           'precision50': 0.3775659,
+           'recall50': 0.4752601},
+     '5': {'avg_iou': 0.7797957,
+           'avg_obj': 0.6336861,
+           'box_loss': 1.0422642,
+           'class_loss': 0.8814323,
+           'conf_loss': 2.401009,
+           'precision50': 0.44659448,
+           'recall50': 0.6470788},
+     'AP': 0.34852716,
+     'AP50': 0.5718052,
+     'AP75': 0.37626344,
+     'APl': 0.4926768,
+     'APm': 0.36041456,
+     'APs': 0.14587915,
+     'ARl': 0.653683,
+     'ARm': 0.5614207,
+     'ARmax1': 0.29002553,
+     'ARmax10': 0.47927192,
+     'ARmax100': 0.5237875,
+     'ARs': 0.30877516,
+     'global': {'total_loss': 24.17591},
+     'validation_loss': 24.17591}I0421 10:49:49.241669 140072511887168 controller.py:211] train | step:  180000 | training until step 200000...
+I0421 11:40:29.424554 140072511887168 controller.py:425] train | step:  190000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6900796,
+           'avg_obj': 0.25611252,
+           'box_loss': 2.42451,
+           'class_loss': 2.322435,
+           'conf_loss': 5.5450377,
+           'precision50': 0.22693728,
+           'recall50': 0.13991588},
+     '4': {'avg_iou': 0.7971766,
+           'avg_obj': 0.42457578,
+           'box_loss': 1.894169,
+           'class_loss': 2.2065966,
+           'conf_loss': 5.2758965,
+           'precision50': 0.35963017,
+           'recall50': 0.35312936},
+     '5': {'avg_iou': 0.8382732,
+           'avg_obj': 0.55828375,
+           'box_loss': 0.99536437,
+           'class_loss': 1.4097261,
+           'conf_loss': 2.7006934,
+           'precision50': 0.46554986,
+           'recall50': 0.56000495},
+     'global': {'total_loss': 24.774492},
+     'learning_rate': 0.00131,
+     'training_loss': 24.774492}
+I0421 11:41:12.444354 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-190000.
+I0421 12:38:36.327121 140072511887168 controller.py:425] train | step:  200000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.6906968,
+           'avg_obj': 0.25895008,
+           'box_loss': 2.4221084,
+           'class_loss': 2.3014555,
+           'conf_loss': 5.530199,
+           'precision50': 0.22790627,
+           'recall50': 0.1415658},
+     '4': {'avg_iou': 0.7982488,
+           'avg_obj': 0.42768726,
+           'box_loss': 1.8814505,
+           'class_loss': 2.1757932,
+           'conf_loss': 5.2426667,
+           'precision50': 0.35897896,
+           'recall50': 0.35531947},
+     '5': {'avg_iou': 0.8396373,
+           'avg_obj': 0.56124467,
+           'box_loss': 0.9877885,
+           'class_loss': 1.397836,
+           'conf_loss': 2.6846325,
+           'precision50': 0.46492788,
+           'recall50': 0.5623779},
+     'global': {'total_loss': 24.623928},
+     'learning_rate': 0.00131,
+     'training_loss': 24.623928}
+I0421 12:38:49.630945 140072511887168 controller.py:252]  eval | step:  200000 | running 625 steps of evaluation...
+I0421 12:43:17.471330 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 12:47:25.688579 140072511887168 controller.py:261]  eval | step:  200000 | eval time:  516.1 sec | output: 
+    {'3': {'avg_iou': 0.49947578,
+           'avg_obj': 0.19645107,
+           'box_loss': 2.6163247,
+           'class_loss': 1.8940498,
+           'conf_loss': 6.3941393,
+           'precision50': 0.26776782,
+           'recall50': 0.17910688},
+     '4': {'avg_iou': 0.71686393,
+           'avg_obj': 0.45041123,
+           'box_loss': 1.9892377,
+           'class_loss': 1.5596118,
+           'conf_loss': 5.09802,
+           'precision50': 0.39748183,
+           'recall50': 0.45136747},
+     '5': {'avg_iou': 0.7817122,
+           'avg_obj': 0.61413693,
+           'box_loss': 1.0312041,
+           'class_loss': 0.85614187,
+           'conf_loss': 2.3752592,
+           'precision50': 0.45243222,
+           'recall50': 0.62594897},
+     'AP': 0.35103202,
+     'AP50': 0.5744815,
+     'AP75': 0.37454188,
+     'APl': 0.4992778,
+     'APm': 0.36922628,
+     'APs': 0.13637932,
+     'ARl': 0.6655814,
+     'ARm': 0.56726426,
+     'ARmax1': 0.29368952,
+     'ARmax10': 0.4822347,
+     'ARmax100': 0.52741385,
+     'ARs': 0.30887684,
+     'global': {'total_loss': 23.814},
+     'validation_loss': 23.814}
+I0421 12:47:44.614249 140072511887168 controller.py:211] train | step:  200000 | training until step 220000...
+I0421 13:37:17.570075 140072511887168 controller.py:425] train | step:  210000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6918689,
+           'avg_obj': 0.2606582,
+           'box_loss': 2.4114141,
+           'class_loss': 2.2737687,
+           'conf_loss': 5.5107136,
+           'precision50': 0.22839385,
+           'recall50': 0.1430218},
+     '4': {'avg_iou': 0.79924875,
+           'avg_obj': 0.4300792,
+           'box_loss': 1.874792,
+           'class_loss': 2.147738,
+           'conf_loss': 5.2261715,
+           'precision50': 0.35987955,
+           'recall50': 0.35840163},
+     '5': {'avg_iou': 0.84055495,
+           'avg_obj': 0.5641512,
+           'box_loss': 0.9838445,
+           'class_loss': 1.3764462,
+           'conf_loss': 2.670783,
+           'precision50': 0.46477222,
+           'recall50': 0.56624407},
+     'global': {'total_loss': 24.475657},
+     'learning_rate': 0.00131,
+     'training_loss': 24.475657}
+I0421 13:37:58.292983 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-210000.
+I0421 14:37:32.859754 140072511887168 controller.py:425] train | step:  220000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6927294,
+           'avg_obj': 0.26237893,
+           'box_loss': 2.4037466,
+           'class_loss': 2.254167,
+           'conf_loss': 5.493349,
+           'precision50': 0.22955474,
+           'recall50': 0.14454062},
+     '4': {'avg_iou': 0.8001929,
+           'avg_obj': 0.43258974,
+           'box_loss': 1.8613781,
+           'class_loss': 2.1227958,
+           'conf_loss': 5.190401,
+           'precision50': 0.35938883,
+           'recall50': 0.36016303},
+     '5': {'avg_iou': 0.8414819,
+           'avg_obj': 0.56683445,
+           'box_loss': 0.97634983,
+           'class_loss': 1.3623328,
+           'conf_loss': 2.650867,
+           'precision50': 0.46342388,
+           'recall50': 0.5675794},
+     'global': {'total_loss': 24.31541},
+     'learning_rate': 0.00131,
+     'training_loss': 24.31541}
+I0421 14:37:45.617371 140072511887168 controller.py:252]  eval | step:  220000 | running 625 steps of evaluation...
+I0421 14:42:12.766148 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 14:46:21.215134 140072511887168 controller.py:261]  eval | step:  220000 | eval time:  515.6 sec | output: 
+    {'3': {'avg_iou': 0.501842,
+           'avg_obj': 0.23233645,
+           'box_loss': 2.6008058,
+           'class_loss': 1.8695952,
+           'conf_loss': 6.427616,
+           'precision50': 0.2621689,
+           'recall50': 0.21755967},
+     '4': {'avg_iou': 0.71685076,
+           'avg_obj': 0.47545835,
+           'box_loss': 1.9843591,
+           'class_loss': 1.5611094,
+           'conf_loss': 5.1522183,
+           'precision50': 0.37869686,
+           'recall50': 0.4824603},
+     '5': {'avg_iou': 0.781871,
+           'avg_obj': 0.6226243,
+           'box_loss': 1.0335946,
+           'class_loss': 0.8548578,
+           'conf_loss': 2.3940861,
+           'precision50': 0.4482536,
+           'recall50': 0.6350954},
+     'AP': 0.35518065,
+     'AP50': 0.5735909,
+     'AP75': 0.38063005,
+     'APl': 0.5052254,
+     'APm': 0.3692253,
+     'APs': 0.14969318,
+     'ARl': 0.6637146,
+     'ARm': 0.56683326,
+     'ARmax1': 0.2941233,
+     'ARmax10': 0.48530743,
+     'ARmax100': 0.5295318,
+     'ARs': 0.30998456,
+     'global': {'total_loss': 23.878239},
+     'validation_loss': 23.878239}
+
+train | step:  180000 | training until step 200000...
+train | step:  190000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6900796,
+           'avg_obj': 0.25611252,
+           'box_loss': 2.42451,
+           'class_loss': 2.322435,
+           'conf_loss': 5.5450377,
+           'precision50': 0.22693728,
+           'recall50': 0.13991588},
+     '4': {'avg_iou': 0.7971766,
+           'avg_obj': 0.42457578,
+           'box_loss': 1.894169,
+           'class_loss': 2.2065966,
+           'conf_loss': 5.2758965,
+           'precision50': 0.35963017,
+           'recall50': 0.35312936},
+     '5': {'avg_iou': 0.8382732,
+           'avg_obj': 0.55828375,
+           'box_loss': 0.99536437,
+           'class_loss': 1.4097261,
+           'conf_loss': 2.7006934,
+           'precision50': 0.46554986,
+           'recall50': 0.56000495},
+     'global': {'total_loss': 24.774492},
+     'learning_rate': 0.00131,
+     'training_loss': 24.774492}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-190000.
+train | step:  200000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.6906968,
+           'avg_obj': 0.25895008,
+           'box_loss': 2.4221084,
+           'class_loss': 2.3014555,
+           'conf_loss': 5.530199,
+           'precision50': 0.22790627,
+           'recall50': 0.1415658},
+     '4': {'avg_iou': 0.7982488,
+           'avg_obj': 0.42768726,
+           'box_loss': 1.8814505,
+           'class_loss': 2.1757932,
+           'conf_loss': 5.2426667,
+           'precision50': 0.35897896,
+           'recall50': 0.35531947},
+     '5': {'avg_iou': 0.8396373,
+           'avg_obj': 0.56124467,
+           'box_loss': 0.9877885,
+           'class_loss': 1.397836,
+           'conf_loss': 2.6846325,
+           'precision50': 0.46492788,
+           'recall50': 0.5623779},
+     'global': {'total_loss': 24.623928},
+     'learning_rate': 0.00131,
+     'training_loss': 24.623928}
+ eval | step:  200000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=178.43s).
+Accumulating evaluation results...
+DONE (t=13.46s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.351
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.574
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.375
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.136
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.369
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.499
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.294
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.482
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.527
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.567
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.666
+ eval | step:  200000 | eval time:  516.1 sec | output: 
+    {'3': {'avg_iou': 0.49947578,
+           'avg_obj': 0.19645107,
+           'box_loss': 2.6163247,
+           'class_loss': 1.8940498,
+           'conf_loss': 6.3941393,
+           'precision50': 0.26776782,
+           'recall50': 0.17910688},
+     '4': {'avg_iou': 0.71686393,
+           'avg_obj': 0.45041123,
+           'box_loss': 1.9892377,
+           'class_loss': 1.5596118,
+           'conf_loss': 5.09802,
+           'precision50': 0.39748183,
+           'recall50': 0.45136747},
+     '5': {'avg_iou': 0.7817122,
+           'avg_obj': 0.61413693,
+           'box_loss': 1.0312041,
+           'class_loss': 0.85614187,
+           'conf_loss': 2.3752592,
+           'precision50': 0.45243222,
+           'recall50': 0.62594897},
+     'AP': 0.35103202,
+     'AP50': 0.5744815,
+     'AP75': 0.37454188,
+     'APl': 0.4992778,
+     'APm': 0.36922628,
+     'APs': 0.13637932,
+     'ARl': 0.6655814,
+     'ARm': 0.56726426,
+     'ARmax1': 0.29368952,
+     'ARmax10': 0.4822347,
+     'ARmax100': 0.52741385,
+     'ARs': 0.30887684,
+     'global': {'total_loss': 23.814},
+     'validation_loss': 23.814}
+train | step:  200000 | training until step 220000...
+train | step:  210000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6918689,
+           'avg_obj': 0.2606582,
+           'box_loss': 2.4114141,
+           'class_loss': 2.2737687,
+           'conf_loss': 5.5107136,
+           'precision50': 0.22839385,
+           'recall50': 0.1430218},
+     '4': {'avg_iou': 0.79924875,
+           'avg_obj': 0.4300792,
+           'box_loss': 1.874792,
+           'class_loss': 2.147738,
+           'conf_loss': 5.2261715,
+           'precision50': 0.35987955,
+           'recall50': 0.35840163},
+     '5': {'avg_iou': 0.84055495,
+           'avg_obj': 0.5641512,
+           'box_loss': 0.9838445,
+           'class_loss': 1.3764462,
+           'conf_loss': 2.670783,
+           'precision50': 0.46477222,
+           'recall50': 0.56624407},
+     'global': {'total_loss': 24.475657},
+     'learning_rate': 0.00131,
+     'training_loss': 24.475657}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-210000.
+train | step:  220000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6927294,
+           'avg_obj': 0.26237893,
+           'box_loss': 2.4037466,
+           'class_loss': 2.254167,
+           'conf_loss': 5.493349,
+           'precision50': 0.22955474,
+           'recall50': 0.14454062},
+     '4': {'avg_iou': 0.8001929,
+           'avg_obj': 0.43258974,
+           'box_loss': 1.8613781,
+           'class_loss': 2.1227958,
+           'conf_loss': 5.190401,
+           'precision50': 0.35938883,
+           'recall50': 0.36016303},
+     '5': {'avg_iou': 0.8414819,
+           'avg_obj': 0.56683445,
+           'box_loss': 0.97634983,
+           'class_loss': 1.3623328,
+           'conf_loss': 2.650867,
+           'precision50': 0.46342388,
+           'recall50': 0.5675794},
+     'global': {'total_loss': 24.31541},
+     'learning_rate': 0.00131,
+     'training_loss': 24.31541}
+ eval | step:  220000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=179.55s).
+Accumulating evaluation results...
+DONE (t=14.50s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.355
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.574
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.381
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.150
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.369
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.505
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.294
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.485
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.530
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.310
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.567
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.664
+ eval | step:  220000 | eval time:  515.6 sec | output: 
+    {'3': {'avg_iou': 0.501842,
+           'avg_obj': 0.23233645,
+           'box_loss': 2.6008058,
+           'class_loss': 1.8695952,
+           'conf_loss': 6.427616,
+           'precision50': 0.2621689,
+           'recall50': 0.21755967},
+     '4': {'avg_iou': 0.71685076,
+           'avg_obj': 0.47545835,
+           'box_loss': 1.9843591,
+           'class_loss': 1.5611094,
+           'conf_loss': 5.1522183,
+           'precision50': 0.37869686,
+           'recall50': 0.4824603},
+     '5': {'avg_iou': 0.781871,
+           'avg_obj': 0.6226243,
+           'box_loss': 1.0335946,
+           'class_loss': 0.8548578,
+           'conf_loss': 2.3940861,
+           'precision50': 0.4482536,
+           'recall50': 0.6350954},
+     'AP': 0.35518065,
+     'AP50': 0.5735909,
+     'AP75': 0.38063005,
+     'APl': 0.5052254,
+     'APm': 0.3692253,
+     'APs': 0.14969318,
+     'ARl': 0.6637146,
+     'ARm': 0.56683326,
+     'ARmax1': 0.2941233,
+     'ARmax10': 0.48530743,
+     'ARmax100': 0.5295318,
+     'ARs': 0.30998456,
+     'global': {'total_loss': 23.878239},
+     'validation_loss': 23.878239}I0421 14:46:40.774487 140072511887168 controller.py:211] train | step:  220000 | training until step 240000...
+I0421 15:36:18.554711 140072511887168 controller.py:425] train | step:  230000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.69400746,
+           'avg_obj': 0.26460987,
+           'box_loss': 2.3993347,
+           'class_loss': 2.2417045,
+           'conf_loss': 5.4894295,
+           'precision50': 0.23089905,
+           'recall50': 0.14602679},
+     '4': {'avg_iou': 0.80123913,
+           'avg_obj': 0.4353416,
+           'box_loss': 1.8560373,
+           'class_loss': 2.1078248,
+           'conf_loss': 5.1781597,
+           'precision50': 0.3608622,
+           'recall50': 0.36284944},
+     '5': {'avg_iou': 0.84218234,
+           'avg_obj': 0.56949216,
+           'box_loss': 0.9734035,
+           'class_loss': 1.3487101,
+           'conf_loss': 2.6386654,
+           'precision50': 0.46355122,
+           'recall50': 0.5705226},
+     'global': {'total_loss': 24.23333},
+     'learning_rate': 0.00131,
+     'training_loss': 24.23333}
+I0421 15:36:58.669556 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-230000.
+I0421 16:35:47.024960 140072511887168 controller.py:425] train | step:  240000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6940188,
+           'avg_obj': 0.26687637,
+           'box_loss': 2.3962097,
+           'class_loss': 2.226382,
+           'conf_loss': 5.466375,
+           'precision50': 0.23112667,
+           'recall50': 0.14771019},
+     '4': {'avg_iou': 0.8022524,
+           'avg_obj': 0.43912363,
+           'box_loss': 1.8465806,
+           'class_loss': 2.0881429,
+           'conf_loss': 5.143276,
+           'precision50': 0.36148712,
+           'recall50': 0.36669958},
+     '5': {'avg_iou': 0.84335595,
+           'avg_obj': 0.57345486,
+           'box_loss': 0.9658612,
+           'class_loss': 1.3343765,
+           'conf_loss': 2.6141028,
+           'precision50': 0.46306124,
+           'recall50': 0.5741923},
+     'global': {'total_loss': 24.081291},
+     'learning_rate': 0.00131,
+     'training_loss': 24.081291}
+I0421 16:35:58.798554 140072511887168 controller.py:252]  eval | step:  240000 | running 625 steps of evaluation...
+I0421 16:40:21.162933 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 16:44:26.705956 140072511887168 controller.py:261]  eval | step:  240000 | eval time:  507.9 sec | output: 
+    {'3': {'avg_iou': 0.5018832,
+           'avg_obj': 0.21823074,
+           'box_loss': 2.599812,
+           'class_loss': 1.8457422,
+           'conf_loss': 6.3357377,
+           'precision50': 0.26545992,
+           'recall50': 0.20150763},
+     '4': {'avg_iou': 0.7167553,
+           'avg_obj': 0.47551227,
+           'box_loss': 1.9832613,
+           'class_loss': 1.5395033,
+           'conf_loss': 5.0724053,
+           'precision50': 0.3868342,
+           'recall50': 0.47803912},
+     '5': {'avg_iou': 0.7839349,
+           'avg_obj': 0.63464826,
+           'box_loss': 1.018173,
+           'class_loss': 0.837912,
+           'conf_loss': 2.359502,
+           'precision50': 0.44827485,
+           'recall50': 0.64843285},
+     'AP': 0.3614939,
+     'AP50': 0.58154494,
+     'AP75': 0.3917604,
+     'APl': 0.50922364,
+     'APm': 0.37948778,
+     'APs': 0.15431482,
+     'ARl': 0.6742153,
+     'ARm': 0.575239,
+     'ARmax1': 0.29868194,
+     'ARmax10': 0.48945284,
+     'ARmax100': 0.53476065,
+     'ARs': 0.31782904,
+     'global': {'total_loss': 23.592037},
+     'validation_loss': 23.592037}
+I0421 16:44:44.069563 140072511887168 controller.py:211] train | step:  240000 | training until step 260000...
+I0421 17:34:34.863724 140072511887168 controller.py:425] train | step:  250000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.70406723,
+           'avg_obj': 0.28345814,
+           'box_loss': 2.3167055,
+           'class_loss': 2.0645168,
+           'conf_loss': 5.33165,
+           'precision50': 0.23710491,
+           'recall50': 0.16014628},
+     '4': {'avg_iou': 0.81187725,
+           'avg_obj': 0.46010846,
+           'box_loss': 1.7576412,
+           'class_loss': 1.9031234,
+           'conf_loss': 4.943645,
+           'precision50': 0.3639891,
+           'recall50': 0.38665327},
+     '5': {'avg_iou': 0.8525966,
+           'avg_obj': 0.59545887,
+           'box_loss': 0.90811104,
+           'class_loss': 1.1984677,
+           'conf_loss': 2.472981,
+           'precision50': 0.46374452,
+           'recall50': 0.5957112},
+     'global': {'total_loss': 22.896875},
+     'learning_rate': 0.000131,
+     'training_loss': 22.896875}
+I0421 17:35:17.184490 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-250000.
+I0421 18:49:07.892169 140072511887168 controller.py:425] train | step:  260000 | steps/sec:    2.2 | output: 
+    {'3': {'avg_iou': 0.70544475,
+           'avg_obj': 0.28740466,
+           'box_loss': 2.3057349,
+           'class_loss': 2.0323107,
+           'conf_loss': 5.3013916,
+           'precision50': 0.23940098,
+           'recall50': 0.16323148},
+     '4': {'avg_iou': 0.8134294,
+           'avg_obj': 0.46544883,
+           'box_loss': 1.7405847,
+           'class_loss': 1.8547572,
+           'conf_loss': 4.888449,
+           'precision50': 0.36343127,
+           'recall50': 0.392039},
+     '5': {'avg_iou': 0.8544256,
+           'avg_obj': 0.60160875,
+           'box_loss': 0.8966163,
+           'class_loss': 1.1599053,
+           'conf_loss': 2.4328864,
+           'precision50': 0.46271685,
+           'recall50': 0.6008181},
+     'global': {'total_loss': 22.612577},
+     'learning_rate': 0.000131,
+     'training_loss': 22.612577}
+I0421 18:49:20.626127 140072511887168 controller.py:252]  eval | step:  260000 | running 625 steps of evaluation...
+I0421 18:53:40.337421 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 18:57:43.296984 140072511887168 controller.py:261]  eval | step:  260000 | eval time:  502.7 sec | output: 
+    {'3': {'avg_iou': 0.5094499,
+           'avg_obj': 0.23862009,
+           'box_loss': 2.5002577,
+           'class_loss': 1.7088027,
+           'conf_loss': 6.22756,
+           'precision50': 0.269537,
+           'recall50': 0.22664626},
+     '4': {'avg_iou': 0.72723687,
+           'avg_obj': 0.49975443,
+           'box_loss': 1.87748,
+           'class_loss': 1.4125935,
+           'conf_loss': 4.968693,
+           'precision50': 0.37891373,
+           'recall50': 0.50629133},
+     '5': {'avg_iou': 0.793814,
+           'avg_obj': 0.6568874,
+           'box_loss': 0.9627625,
+           'class_loss': 0.75551957,
+           'conf_loss': 2.2766466,
+           'precision50': 0.4386885,
+           'recall50': 0.6690905},
+     'AP': 0.38395256,
+     'AP50': 0.59797114,
+     'AP75': 0.41736594,
+     'APl': 0.5393347,
+     'APm': 0.40089807,
+     'APs': 0.16039857,
+     'ARl': 0.6907952,
+     'ARm': 0.5950941,
+     'ARmax1': 0.31128958,
+     'ARmax10': 0.5091192,
+     'ARmax100': 0.5537038,
+     'ARs': 0.3310129,
+     'global': {'total_loss': 22.690317},
+     'validation_loss': 22.690317}
+
+train | step:  220000 | training until step 240000...
+train | step:  230000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.69400746,
+           'avg_obj': 0.26460987,
+           'box_loss': 2.3993347,
+           'class_loss': 2.2417045,
+           'conf_loss': 5.4894295,
+           'precision50': 0.23089905,
+           'recall50': 0.14602679},
+     '4': {'avg_iou': 0.80123913,
+           'avg_obj': 0.4353416,
+           'box_loss': 1.8560373,
+           'class_loss': 2.1078248,
+           'conf_loss': 5.1781597,
+           'precision50': 0.3608622,
+           'recall50': 0.36284944},
+     '5': {'avg_iou': 0.84218234,
+           'avg_obj': 0.56949216,
+           'box_loss': 0.9734035,
+           'class_loss': 1.3487101,
+           'conf_loss': 2.6386654,
+           'precision50': 0.46355122,
+           'recall50': 0.5705226},
+     'global': {'total_loss': 24.23333},
+     'learning_rate': 0.00131,
+     'training_loss': 24.23333}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-230000.
+train | step:  240000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.6940188,
+           'avg_obj': 0.26687637,
+           'box_loss': 2.3962097,
+           'class_loss': 2.226382,
+           'conf_loss': 5.466375,
+           'precision50': 0.23112667,
+           'recall50': 0.14771019},
+     '4': {'avg_iou': 0.8022524,
+           'avg_obj': 0.43912363,
+           'box_loss': 1.8465806,
+           'class_loss': 2.0881429,
+           'conf_loss': 5.143276,
+           'precision50': 0.36148712,
+           'recall50': 0.36669958},
+     '5': {'avg_iou': 0.84335595,
+           'avg_obj': 0.57345486,
+           'box_loss': 0.9658612,
+           'class_loss': 1.3343765,
+           'conf_loss': 2.6141028,
+           'precision50': 0.46306124,
+           'recall50': 0.5741923},
+     'global': {'total_loss': 24.081291},
+     'learning_rate': 0.00131,
+     'training_loss': 24.081291}
+ eval | step:  240000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=178.42s).
+Accumulating evaluation results...
+DONE (t=14.23s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.361
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.582
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.392
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.154
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.379
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.509
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.299
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.489
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.535
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.318
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.575
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.674
+ eval | step:  240000 | eval time:  507.9 sec | output: 
+    {'3': {'avg_iou': 0.5018832,
+           'avg_obj': 0.21823074,
+           'box_loss': 2.599812,
+           'class_loss': 1.8457422,
+           'conf_loss': 6.3357377,
+           'precision50': 0.26545992,
+           'recall50': 0.20150763},
+     '4': {'avg_iou': 0.7167553,
+           'avg_obj': 0.47551227,
+           'box_loss': 1.9832613,
+           'class_loss': 1.5395033,
+           'conf_loss': 5.0724053,
+           'precision50': 0.3868342,
+           'recall50': 0.47803912},
+     '5': {'avg_iou': 0.7839349,
+           'avg_obj': 0.63464826,
+           'box_loss': 1.018173,
+           'class_loss': 0.837912,
+           'conf_loss': 2.359502,
+           'precision50': 0.44827485,
+           'recall50': 0.64843285},
+     'AP': 0.3614939,
+     'AP50': 0.58154494,
+     'AP75': 0.3917604,
+     'APl': 0.50922364,
+     'APm': 0.37948778,
+     'APs': 0.15431482,
+     'ARl': 0.6742153,
+     'ARm': 0.575239,
+     'ARmax1': 0.29868194,
+     'ARmax10': 0.48945284,
+     'ARmax100': 0.53476065,
+     'ARs': 0.31782904,
+     'global': {'total_loss': 23.592037},
+     'validation_loss': 23.592037}
+train | step:  240000 | training until step 260000...
+train | step:  250000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.70406723,
+           'avg_obj': 0.28345814,
+           'box_loss': 2.3167055,
+           'class_loss': 2.0645168,
+           'conf_loss': 5.33165,
+           'precision50': 0.23710491,
+           'recall50': 0.16014628},
+     '4': {'avg_iou': 0.81187725,
+           'avg_obj': 0.46010846,
+           'box_loss': 1.7576412,
+           'class_loss': 1.9031234,
+           'conf_loss': 4.943645,
+           'precision50': 0.3639891,
+           'recall50': 0.38665327},
+     '5': {'avg_iou': 0.8525966,
+           'avg_obj': 0.59545887,
+           'box_loss': 0.90811104,
+           'class_loss': 1.1984677,
+           'conf_loss': 2.472981,
+           'precision50': 0.46374452,
+           'recall50': 0.5957112},
+     'global': {'total_loss': 22.896875},
+     'learning_rate': 0.000131,
+     'training_loss': 22.896875}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-250000.
+train | step:  260000 | steps/sec:    2.2 | output: 
+    {'3': {'avg_iou': 0.70544475,
+           'avg_obj': 0.28740466,
+           'box_loss': 2.3057349,
+           'class_loss': 2.0323107,
+           'conf_loss': 5.3013916,
+           'precision50': 0.23940098,
+           'recall50': 0.16323148},
+     '4': {'avg_iou': 0.8134294,
+           'avg_obj': 0.46544883,
+           'box_loss': 1.7405847,
+           'class_loss': 1.8547572,
+           'conf_loss': 4.888449,
+           'precision50': 0.36343127,
+           'recall50': 0.392039},
+     '5': {'avg_iou': 0.8544256,
+           'avg_obj': 0.60160875,
+           'box_loss': 0.8966163,
+           'class_loss': 1.1599053,
+           'conf_loss': 2.4328864,
+           'precision50': 0.46271685,
+           'recall50': 0.6008181},
+     'global': {'total_loss': 22.612577},
+     'learning_rate': 0.000131,
+     'training_loss': 22.612577}
+ eval | step:  260000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=174.01s).
+Accumulating evaluation results...
+DONE (t=12.47s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.384
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.598
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.417
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.160
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.401
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.539
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.311
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.509
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.554
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.331
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.595
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.691
+ eval | step:  260000 | eval time:  502.7 sec | output: 
+    {'3': {'avg_iou': 0.5094499,
+           'avg_obj': 0.23862009,
+           'box_loss': 2.5002577,
+           'class_loss': 1.7088027,
+           'conf_loss': 6.22756,
+           'precision50': 0.269537,
+           'recall50': 0.22664626},
+     '4': {'avg_iou': 0.72723687,
+           'avg_obj': 0.49975443,
+           'box_loss': 1.87748,
+           'class_loss': 1.4125935,
+           'conf_loss': 4.968693,
+           'precision50': 0.37891373,
+           'recall50': 0.50629133},
+     '5': {'avg_iou': 0.793814,
+           'avg_obj': 0.6568874,
+           'box_loss': 0.9627625,
+           'class_loss': 0.75551957,
+           'conf_loss': 2.2766466,
+           'precision50': 0.4386885,
+           'recall50': 0.6690905},
+     'AP': 0.38395256,
+     'AP50': 0.59797114,
+     'AP75': 0.41736594,
+     'APl': 0.5393347,
+     'APm': 0.40089807,
+     'APs': 0.16039857,
+     'ARl': 0.6907952,
+     'ARm': 0.5950941,
+     'ARmax1': 0.31128958,
+     'ARmax10': 0.5091192,
+     'ARmax100': 0.5537038,
+     'ARs': 0.3310129,
+     'global': {'total_loss': 22.690317},
+     'validation_loss': 22.690317}I0421 18:57:59.594927 140072511887168 controller.py:211] train | step:  260000 | training until step 280000...
+I0421 19:48:55.634593 140072511887168 controller.py:425] train | step:  270000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.7067505,
+           'avg_obj': 0.28970477,
+           'box_loss': 2.3054187,
+           'class_loss': 2.0126266,
+           'conf_loss': 5.3064656,
+           'precision50': 0.24021372,
+           'recall50': 0.16508706},
+     '4': {'avg_iou': 0.81486887,
+           'avg_obj': 0.4686834,
+           'box_loss': 1.7301891,
+           'class_loss': 1.8347468,
+           'conf_loss': 4.867858,
+           'precision50': 0.3643661,
+           'recall50': 0.39500466},
+     '5': {'avg_iou': 0.85569453,
+           'avg_obj': 0.6048338,
+           'box_loss': 0.88994247,
+           'class_loss': 1.1477402,
+           'conf_loss': 2.4163668,
+           'precision50': 0.4635665,
+           'recall50': 0.60431683},
+     'global': {'total_loss': 22.511398},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.511398}
+I0421 19:49:38.757161 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-270000.
+I0421 20:47:21.222910 140072511887168 controller.py:425] train | step:  280000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.70734227,
+           'avg_obj': 0.2904545,
+           'box_loss': 2.2969458,
+           'class_loss': 2.0106628,
+           'conf_loss': 5.2904844,
+           'precision50': 0.24038857,
+           'recall50': 0.16548291},
+     '4': {'avg_iou': 0.81496686,
+           'avg_obj': 0.46909356,
+           'box_loss': 1.7286227,
+           'class_loss': 1.828162,
+           'conf_loss': 4.8607154,
+           'precision50': 0.36387354,
+           'recall50': 0.394891},
+     '5': {'avg_iou': 0.85588056,
+           'avg_obj': 0.6051747,
+           'box_loss': 0.8876976,
+           'class_loss': 1.1390486,
+           'conf_loss': 2.4109545,
+           'precision50': 0.46212944,
+           'recall50': 0.6041654},
+     'global': {'total_loss': 22.453293},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.453293}
+I0421 20:47:33.546988 140072511887168 controller.py:252]  eval | step:  280000 | running 625 steps of evaluation...
+I0421 20:51:57.245713 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 20:56:14.091643 140072511887168 controller.py:261]  eval | step:  280000 | eval time:  520.5 sec | output: 
+    {'3': {'avg_iou': 0.5099248,
+           'avg_obj': 0.23671128,
+           'box_loss': 2.4914238,
+           'class_loss': 1.6906484,
+           'conf_loss': 6.2082386,
+           'precision50': 0.27140722,
+           'recall50': 0.2245379},
+     '4': {'avg_iou': 0.7278692,
+           'avg_obj': 0.49650878,
+           'box_loss': 1.870421,
+           'class_loss': 1.3951695,
+           'conf_loss': 4.9484267,
+           'precision50': 0.38349962,
+           'recall50': 0.5026668},
+     '5': {'avg_iou': 0.7946722,
+           'avg_obj': 0.6568271,
+           'box_loss': 0.9579168,
+           'class_loss': 0.74489874,
+           'conf_loss': 2.2672405,
+           'precision50': 0.437033,
+           'recall50': 0.66822004},
+     'AP': 0.3860872,
+     'AP50': 0.60133886,
+     'AP75': 0.41794035,
+     'APl': 0.5426454,
+     'APm': 0.4042918,
+     'APs': 0.16350856,
+     'ARl': 0.6939195,
+     'ARm': 0.59465593,
+     'ARmax1': 0.31249464,
+     'ARmax10': 0.51005775,
+     'ARmax100': 0.55445623,
+     'ARs': 0.33140674,
+     'global': {'total_loss': 22.574396},
+     'validation_loss': 22.574396}
+I0421 20:56:31.501475 140072511887168 controller.py:211] train | step:  280000 | training until step 300000...
+I0421 21:46:13.992691 140072511887168 controller.py:425] train | step:  290000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.7069,
+           'avg_obj': 0.29073334,
+           'box_loss': 2.2893555,
+           'class_loss': 1.9999247,
+           'conf_loss': 5.267781,
+           'precision50': 0.23938167,
+           'recall50': 0.16519229},
+     '4': {'avg_iou': 0.8153202,
+           'avg_obj': 0.4703396,
+           'box_loss': 1.725074,
+           'class_loss': 1.8283516,
+           'conf_loss': 4.8493404,
+           'precision50': 0.36389023,
+           'recall50': 0.39622265},
+     '5': {'avg_iou': 0.85604745,
+           'avg_obj': 0.606542,
+           'box_loss': 0.8878064,
+           'class_loss': 1.141998,
+           'conf_loss': 2.4070156,
+           'precision50': 0.4632433,
+           'recall50': 0.6066285},
+     'global': {'total_loss': 22.396624},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.396624}
+I0421 21:46:55.178167 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-290000.
+I0421 22:44:41.740185 140072511887168 controller.py:425] train | step:  300000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.7070295,
+           'avg_obj': 0.29070002,
+           'box_loss': 2.3002095,
+           'class_loss': 2.003712,
+           'conf_loss': 5.2935295,
+           'precision50': 0.24003303,
+           'recall50': 0.16542482},
+     '4': {'avg_iou': 0.8151603,
+           'avg_obj': 0.47040698,
+           'box_loss': 1.7288023,
+           'class_loss': 1.8238924,
+           'conf_loss': 4.855422,
+           'precision50': 0.36417145,
+           'recall50': 0.39557087},
+     '5': {'avg_iou': 0.85617703,
+           'avg_obj': 0.6068859,
+           'box_loss': 0.88823587,
+           'class_loss': 1.1430825,
+           'conf_loss': 2.407507,
+           'precision50': 0.46299914,
+           'recall50': 0.6062575},
+     'global': {'total_loss': 22.444363},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.444363}
+I0421 22:44:53.409195 140072511887168 controller.py:252]  eval | step:  300000 | running 625 steps of evaluation...
+I0421 22:49:15.954454 140072511887168 coco_evaluator.py:128] There is no annotation_file in COCOEvaluator.
+I0421 22:53:26.646458 140072511887168 controller.py:261]  eval | step:  300000 | eval time:  513.2 sec | output: 
+    {'3': {'avg_iou': 0.510071,
+           'avg_obj': 0.23755208,
+           'box_loss': 2.4897392,
+           'class_loss': 1.6850662,
+           'conf_loss': 6.210009,
+           'precision50': 0.2717815,
+           'recall50': 0.22565232},
+     '4': {'avg_iou': 0.7278085,
+           'avg_obj': 0.49730682,
+           'box_loss': 1.8717574,
+           'class_loss': 1.3941073,
+           'conf_loss': 4.944241,
+           'precision50': 0.38354498,
+           'recall50': 0.5028897},
+     '5': {'avg_iou': 0.7948121,
+           'avg_obj': 0.6553405,
+           'box_loss': 0.9573257,
+           'class_loss': 0.7433713,
+           'conf_loss': 2.2643642,
+           'precision50': 0.43897045,
+           'recall50': 0.66730934},
+     'AP': 0.3865231,
+     'AP50': 0.60171384,
+     'AP75': 0.416864,
+     'APl': 0.5439424,
+     'APm': 0.40455973,
+     'APs': 0.16397364,
+     'ARl': 0.6939809,
+     'ARm': 0.59408945,
+     'ARmax1': 0.3120936,
+     'ARmax10': 0.51026976,
+     'ARmax100': 0.5546793,
+     'ARs': 0.33366448,
+     'global': {'total_loss': 22.55998},
+     'validation_loss': 22.55998}
+
+train | step:  260000 | training until step 280000...
+train | step:  270000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.7067505,
+           'avg_obj': 0.28970477,
+           'box_loss': 2.3054187,
+           'class_loss': 2.0126266,
+           'conf_loss': 5.3064656,
+           'precision50': 0.24021372,
+           'recall50': 0.16508706},
+     '4': {'avg_iou': 0.81486887,
+           'avg_obj': 0.4686834,
+           'box_loss': 1.7301891,
+           'class_loss': 1.8347468,
+           'conf_loss': 4.867858,
+           'precision50': 0.3643661,
+           'recall50': 0.39500466},
+     '5': {'avg_iou': 0.85569453,
+           'avg_obj': 0.6048338,
+           'box_loss': 0.88994247,
+           'class_loss': 1.1477402,
+           'conf_loss': 2.4163668,
+           'precision50': 0.4635665,
+           'recall50': 0.60431683},
+     'global': {'total_loss': 22.511398},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.511398}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-270000.
+train | step:  280000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.70734227,
+           'avg_obj': 0.2904545,
+           'box_loss': 2.2969458,
+           'class_loss': 2.0106628,
+           'conf_loss': 5.2904844,
+           'precision50': 0.24038857,
+           'recall50': 0.16548291},
+     '4': {'avg_iou': 0.81496686,
+           'avg_obj': 0.46909356,
+           'box_loss': 1.7286227,
+           'class_loss': 1.828162,
+           'conf_loss': 4.8607154,
+           'precision50': 0.36387354,
+           'recall50': 0.394891},
+     '5': {'avg_iou': 0.85588056,
+           'avg_obj': 0.6051747,
+           'box_loss': 0.8876976,
+           'class_loss': 1.1390486,
+           'conf_loss': 2.4109545,
+           'precision50': 0.46212944,
+           'recall50': 0.6041654},
+     'global': {'total_loss': 22.453293},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.453293}
+ eval | step:  280000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=188.44s).
+Accumulating evaluation results...
+DONE (t=14.01s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.386
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.601
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.418
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.164
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.404
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.543
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.312
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.510
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.554
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.331
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.595
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.694
+ eval | step:  280000 | eval time:  520.5 sec | output: 
+    {'3': {'avg_iou': 0.5099248,
+           'avg_obj': 0.23671128,
+           'box_loss': 2.4914238,
+           'class_loss': 1.6906484,
+           'conf_loss': 6.2082386,
+           'precision50': 0.27140722,
+           'recall50': 0.2245379},
+     '4': {'avg_iou': 0.7278692,
+           'avg_obj': 0.49650878,
+           'box_loss': 1.870421,
+           'class_loss': 1.3951695,
+           'conf_loss': 4.9484267,
+           'precision50': 0.38349962,
+           'recall50': 0.5026668},
+     '5': {'avg_iou': 0.7946722,
+           'avg_obj': 0.6568271,
+           'box_loss': 0.9579168,
+           'class_loss': 0.74489874,
+           'conf_loss': 2.2672405,
+           'precision50': 0.437033,
+           'recall50': 0.66822004},
+     'AP': 0.3860872,
+     'AP50': 0.60133886,
+     'AP75': 0.41794035,
+     'APl': 0.5426454,
+     'APm': 0.4042918,
+     'APs': 0.16350856,
+     'ARl': 0.6939195,
+     'ARm': 0.59465593,
+     'ARmax1': 0.31249464,
+     'ARmax10': 0.51005775,
+     'ARmax100': 0.55445623,
+     'ARs': 0.33140674,
+     'global': {'total_loss': 22.574396},
+     'validation_loss': 22.574396}
+train | step:  280000 | training until step 300000...
+train | step:  290000 | steps/sec:    2.8 | output: 
+    {'3': {'avg_iou': 0.7069,
+           'avg_obj': 0.29073334,
+           'box_loss': 2.2893555,
+           'class_loss': 1.9999247,
+           'conf_loss': 5.267781,
+           'precision50': 0.23938167,
+           'recall50': 0.16519229},
+     '4': {'avg_iou': 0.8153202,
+           'avg_obj': 0.4703396,
+           'box_loss': 1.725074,
+           'class_loss': 1.8283516,
+           'conf_loss': 4.8493404,
+           'precision50': 0.36389023,
+           'recall50': 0.39622265},
+     '5': {'avg_iou': 0.85604745,
+           'avg_obj': 0.606542,
+           'box_loss': 0.8878064,
+           'class_loss': 1.141998,
+           'conf_loss': 2.4070156,
+           'precision50': 0.4632433,
+           'recall50': 0.6066285},
+     'global': {'total_loss': 22.396624},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.396624}
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-290000.
+train | step:  300000 | steps/sec:    2.9 | output: 
+    {'3': {'avg_iou': 0.7070295,
+           'avg_obj': 0.29070002,
+           'box_loss': 2.3002095,
+           'class_loss': 2.003712,
+           'conf_loss': 5.2935295,
+           'precision50': 0.24003303,
+           'recall50': 0.16542482},
+     '4': {'avg_iou': 0.8151603,
+           'avg_obj': 0.47040698,
+           'box_loss': 1.7288023,
+           'class_loss': 1.8238924,
+           'conf_loss': 4.855422,
+           'precision50': 0.36417145,
+           'recall50': 0.39557087},
+     '5': {'avg_iou': 0.85617703,
+           'avg_obj': 0.6068859,
+           'box_loss': 0.88823587,
+           'class_loss': 1.1430825,
+           'conf_loss': 2.407507,
+           'precision50': 0.46299914,
+           'recall50': 0.6062575},
+     'global': {'total_loss': 22.444363},
+     'learning_rate': 1.31e-05,
+     'training_loss': 22.444363}
+ eval | step:  300000 | running 625 steps of evaluation...
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=181.11s).
+Accumulating evaluation results...
+DONE (t=13.95s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.387
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.602
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.417
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.164
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.405
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.544
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.312
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.510
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.555
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.334
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.594
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.694
+ eval | step:  300000 | eval time:  513.2 sec | output: 
+    {'3': {'avg_iou': 0.510071,
+           'avg_obj': 0.23755208,
+           'box_loss': 2.4897392,
+           'class_loss': 1.6850662,
+           'conf_loss': 6.210009,
+           'precision50': 0.2717815,
+           'recall50': 0.22565232},
+     '4': {'avg_iou': 0.7278085,
+           'avg_obj': 0.49730682,
+           'box_loss': 1.8717574,
+           'class_loss': 1.3941073,
+           'conf_loss': 4.944241,
+           'precision50': 0.38354498,
+           'recall50': 0.5028897},
+     '5': {'avg_iou': 0.7948121,
+           'avg_obj': 0.6553405,
+           'box_loss': 0.9573257,
+           'class_loss': 0.7433713,
+           'conf_loss': 2.2643642,
+           'precision50': 0.43897045,
+           'recall50': 0.66730934},
+     'AP': 0.3865231,
+     'AP50': 0.60171384,
+     'AP75': 0.416864,
+     'APl': 0.5439424,
+     'APm': 0.40455973,
+     'APs': 0.16397364,
+     'ARl': 0.6939809,
+     'ARm': 0.59408945,
+     'ARmax1': 0.3120936,
+     'ARmax10': 0.51026976,
+     'ARmax100': 0.5546793,
+     'ARs': 0.33366448,
+     'global': {'total_loss': 22.55998},
+     'validation_loss': 22.55998}I0421 22:54:13.699041 140072511887168 controller.py:455] saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-300000.
+I0421 22:54:13.715364 140072511887168 train_lib.py:123] Number of trainable params in model: 64.488640 Millions.
+
+saved checkpoint to gs://tensorflow2/config_tests/250k-512-aggressive-base/ckpt-300000.
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   223    0     2  100   221     12   1407 --:--:-- --:--:-- --:--:--  1411100   223    0     2  100   221     12   1398 --:--:-- --:--:-- --:--:--  1411
+okRequest issued for: [node-4]
+done: true
+metadata:
+  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
+  apiVersion: v1
+  cancelRequested: false
+  createTime: '2021-04-21T22:56:47.976794107Z'
+  endTime: '2021-04-21T22:57:41.560928380Z'
+  target: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4
+  verb: update
+name: projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1619045807960-5c0837a4231a1-6475c75f-21049212
+response:
+  '@type': type.googleapis.com/google.cloud.tpu.v1.Node
+  acceleratorType: v3-8
+  apiVersion: V1
+  cidrBlock: 10.117.66.216/29
+  createTime: '2021-03-13T04:41:22.291533178Z'
+  health: HEALTHY
+  ipAddress: 10.117.66.218
+  name: projects/red-atlas-305317/locations/europe-west4-a/nodes/node-4
+  network: global/networks/default
+  networkEndpoints:
+  - ipAddress: 10.117.66.218
+    port: 8470
+  port: '8470'
+  schedulingConfig: {}
+  serviceAccount: service-276208758346@cloud-tpu.iam.gserviceaccount.com
+  state: STOPPED
+  tensorflowVersion: 2.4.1
+Waiting for operation [projects/red-atlas-305317/locations/europe-west4-a/operations/operation-1619045807960-5c0837a4231a1-6475c75f-21049212] to complete...
+............................................................................................................................................................................................................................................................................................................................................................................................done.
