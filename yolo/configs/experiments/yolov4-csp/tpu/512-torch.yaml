@@ -97,6 +97,7 @@ task:
       aug_rand_translate: 0.5
       max_num_instances: 200
       random_flip: True
+      random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
       letter_box: True
