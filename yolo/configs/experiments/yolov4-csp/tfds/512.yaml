@@ -17,7 +17,7 @@ task:
       darknet_weights_cfg: 'cache://yolov4-csp.cfg'
     subdivisions: 1
     num_classes: 80
-    _boxes: ['[12.0, 16.0]',
+    boxes: ['[12.0, 16.0]',
              '[19.0, 36.0]',
              '[40.0, 28.0]',
              '[36.0, 75.0]', 
@@ -26,7 +26,7 @@ task:
              '[142.0, 110.0]', 
              '[192.0, 243.0]', 
              '[459.0, 401.0]']
-    _input_size: [512, 512, 3]
+    input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -89,18 +89,15 @@ task:
     input_path: ''
     is_training: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
-      jitter_im: 0.1
-      aug_scale_aspect: 0.0
+      aug_rand_crop: 0.00
+      aug_scale_aspect: 0.00
       aug_scale_min: 0.5
       aug_scale_max: 1.5
       aug_rand_angle: 0.0
       aug_rand_hue: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_translate: 0.00
+      aug_rand_translate: 0.5
       max_num_instances: 200
       random_flip: True
       use_tie_breaker: True
@@ -123,9 +120,6 @@ task:
     input_path: ''
     is_training: false
     parser:
-      image_w: 512
-      image_h: 512
-      fixed_size: True
       use_scale_xy: True
       letter_box: True
       anchor_thresh: 0.2
@@ -135,7 +129,7 @@ task:
   annotation_file: null
   gradient_clip_norm: 0.0
   load_darknet_weights: true
-  darknet_load_decoder: true
+  darknet_load_decoder: false
 trainer:
   train_steps: 500000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
