@@ -144,7 +144,7 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [240000, 260000]
+        boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000655, 0.000325]
     optimizer:
