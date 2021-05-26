@@ -11,6 +11,59 @@ from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
 
+# static base Yolo Models that do not require configuration
+# similar to a backbone model id. 
+
+# this is done greatly simplify the model config
+# the structure is as follows. model version, {v3, v4, v#, ... etc}
+# the model config type {regular, tiny, small, large, ... etc}
+YOLO_MODELS = {
+  "v4" : dict(
+    regular = dict(
+      embed_spp=False,
+      use_fpn=True,
+      max_level_process_len=None,
+      path_process_len=6),
+    tiny = dict(
+      embed_spp=False,
+      use_fpn=False,
+      max_level_process_len=2,
+      path_process_len=1), 
+    csp = dict(
+      embed_spp=False,
+      use_fpn=True,
+      max_level_process_len=None,
+      csp_stack=5,
+      fpn_depth=5,
+      path_process_len=6), 
+    csp_large=dict(
+      embed_spp=False,
+      use_fpn=True,
+      max_level_process_len=None,
+      csp_stack=7,
+      fpn_depth=7,
+      path_process_len=8,
+      fpn_filter_scale=2), 
+  ),
+  "v3" : dict(
+    regular = dict(
+      embed_spp=False,
+      use_fpn=False,
+      max_level_process_len=None,
+      path_process_len=6), 
+    tiny = dict(
+      embed_spp=False,
+      use_fpn=False,
+      max_level_process_len=2,
+      path_process_len=1), 
+    spp = dict(
+      embed_spp=True,
+      use_fpn=False,
+      max_level_process_len=2,
+      path_process_len=1),
+  ),
+}
+
 
 class Yolo(ks.Model):
   """The YOLO model class."""
@@ -82,10 +135,7 @@ class Yolo(ks.Model):
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
-  if hasattr(model_config, "subdivisions"):
-    subdivisions = model_config.subdivisions
-  else:
-    subdivisions = 1
+  subdivisions = 1
 
   if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
@@ -103,104 +153,36 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         norm_momentum=model_config.norm_activation.norm_momentum,
         norm_epsilon=model_config.norm_activation.norm_epsilon,
         kernel_regularizer=l2_regularization)
-    # model.build(input_specs)
     return model
 
-  if model_config.decoder.type is None or model_config.decoder.type == "regular":  # defaut regular
-    if model_config.decoder.version == "v4":
-      model = YoloDecoder(
-          input_specs,
-          embed_spp=False,
-          use_fpn=True,
-          max_level_process_len=None,
-          path_process_len=6,
-          activation=activation,
-          subdivisions=subdivisions,
-          use_spatial_attention=model_config.use_sam,
-          use_sync_bn=model_config.norm_activation.use_sync_bn,
-          norm_momentum=model_config.norm_activation.norm_momentum,
-          norm_epsilon=model_config.norm_activation.norm_epsilon,
-          kernel_regularizer=l2_regularization)
-    if model_config.decoder.version == "v3":
-      model = YoloDecoder(
-          input_specs,
-          embed_spp=False,
-          use_fpn=False,
-          max_level_process_len=None,
-          path_process_len=6,
-          activation=activation,
-          subdivisions=subdivisions,
-          use_spatial_attention=model_config.use_sam,
-          use_sync_bn=model_config.norm_activation.use_sync_bn,
-          norm_momentum=model_config.norm_activation.norm_momentum,
-          norm_epsilon=model_config.norm_activation.norm_epsilon,
-          kernel_regularizer=l2_regularization)
-  elif model_config.decoder.type == "tiny":
-    model = YoloDecoder(
-        input_specs,
-        embed_spp=False,
-        use_fpn=False,
-        max_level_process_len=2,
-        path_process_len=1,
-        activation=activation,
-        subdivisions=subdivisions,
-        use_spatial_attention=model_config.use_sam,
-        use_sync_bn=model_config.norm_activation.use_sync_bn,
-        norm_momentum=model_config.norm_activation.norm_momentum,
-        norm_epsilon=model_config.norm_activation.norm_epsilon,
-        kernel_regularizer=l2_regularization)
-  elif model_config.decoder.type == "csp":
-    model = YoloDecoder(
-        input_specs,
-        embed_spp=False,
-        use_fpn=True,
-        max_level_process_len=None,
-        csp_stack=5,
-        fpn_depth=5,
-        path_process_len=6,
-        activation=activation,
-        subdivisions=subdivisions,
-        use_spatial_attention=model_config.use_sam,
-        use_sync_bn=model_config.norm_activation.use_sync_bn,
-        norm_momentum=model_config.norm_activation.norm_momentum,
-        norm_epsilon=model_config.norm_activation.norm_epsilon,
-        kernel_regularizer=l2_regularization)
-  elif model_config.decoder.type == "csp-large":
-    model = YoloDecoder(
-        input_specs,
-        embed_spp=False,
-        use_fpn=True,
-        max_level_process_len=None,
-        csp_stack=7,
-        fpn_depth=7,
-        path_process_len=8,
-        fpn_filter_scale=2,
-        activation=activation,
-        subdivisions=subdivisions,
-        use_spatial_attention=model_config.use_sam,
-        use_sync_bn=model_config.norm_activation.use_sync_bn,
-        norm_momentum=model_config.norm_activation.norm_momentum,
-        norm_epsilon=model_config.norm_activation.norm_epsilon,
-        kernel_regularizer=l2_regularization)
-  elif model_config.decoder.type == "spp":
-    model = YoloDecoder(
-        input_specs,
-        embed_spp=True,
-        use_fpn=False,
-        max_level_process_len=None,
-        path_process_len=6,
-        activation=activation,
-        subdivisions=subdivisions,
-        use_spatial_attention=model_config.use_sam,
-        use_sync_bn=model_config.norm_activation.use_sync_bn,
-        norm_momentum=model_config.norm_activation.norm_momentum,
-        norm_epsilon=model_config.norm_activation.norm_epsilon,
-        kernel_regularizer=l2_regularization)
-  else:
+  if model_config.decoder.type == None: 
+    model_config.decoder.type = "regular"
+
+  if model_config.decoder.version not in YOLO_MODELS.keys():
     raise Exception(
-        "unsupported model_key please select from {v3, v4, v3spp, v3tiny, v4tiny}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
+      f"unsupported model version please select from {v3, v4}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
     )
-  # model.build(input_specs)
+  
+  if model_config.decoder.type not in YOLO_MODELS[model_config.decoder.version].keys():
+    raise Exception(
+      f"unsupported model type please select from {YOLO_MODELS[model_config.decoder.version].keys()}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
+    )
+
+  base_model = YOLO_MODELS[model_config.decoder.version][model_config.decoder.type]
+  base_dict = dict(activation=activation,
+                   subdivisions=subdivisions,
+                   use_spatial_attention=model_config.use_sam,
+                   use_sync_bn=model_config.norm_activation.use_sync_bn,
+                   norm_momentum=model_config.norm_activation.norm_momentum,
+                   norm_epsilon=model_config.norm_activation.norm_epsilon,
+                   kernel_regularizer=l2_regularization)
+
+  base_model.update(base_dict)
+
+  model = YoloDecoder(
+          input_specs,
+          **base_model)
+
   return model
 
 
