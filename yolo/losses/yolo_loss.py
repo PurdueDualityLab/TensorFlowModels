@@ -725,10 +725,14 @@ class Yolo_Loss(object):
     true_class = math_ops.mul_no_nan(ind_mask, true_class)
 
     # 8. scale the boxes properly in order to also scale the gradeints in backprop 
-    scale = tf.convert_to_tensor([fheight, fwidth])
-    pred_wh = pred_wh * scale
-    pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
-    true_box = self._scale_ground_truth_box(true_box, inds, ind_mask, fheight, fwidth)
+    # scale = tf.convert_to_tensor([fheight, fwidth])
+    # pred_wh = pred_wh * scale
+    # pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
+    # true_box = self._scale_ground_truth_box(true_box, inds, ind_mask, fheight, fwidth)
+
+    scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
+    pred_box *= scale
+    true_box *= scale
 
     # 9. gather all the indexes that a loss should be computed at also stop the 
     #    gradient on grount truths to save memory
