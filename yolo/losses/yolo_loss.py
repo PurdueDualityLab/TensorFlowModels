@@ -11,16 +11,15 @@ from functools import partial
 
 TILE_SIZE = 50
 
+
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta=np.inf):
-  # this is an identity operation that will
-  # allow us to add some steps to the back propagation
+
   def trap(dy):
-    # remove the value nan from back propagation
     dy = math_ops.rm_nan_inf(dy)
-    # clip the gradient for the back prop
     delta = tf.cast(max_delta, dy.dtype)
     dy = tf.clip_by_value(dy, -delta, delta)
+    # tf.print(tf.reduce_sum(tf.square(dy)))
     return dy, 0.0
 
   return y, trap
@@ -652,7 +651,7 @@ class Yolo_Loss(object):
 
     # scale boxes
     scale = tf.convert_to_tensor([fwidth, fheight, fwidth, fheight])
-    # scale = tf.ones_like(scale)
+    #scale = tf.ones_like(scale)
     pred_box = pred_box * scale
     true_box = true_box * scale
 
