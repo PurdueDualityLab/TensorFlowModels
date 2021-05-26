@@ -13,6 +13,7 @@ from yolo.modeling.layers.detection_generator import YoloLayer
 
 
 class Yolo(ks.Model):
+  """The YOLO model class."""
 
   def __init__(self,
                backbone=None,
@@ -20,7 +21,23 @@ class Yolo(ks.Model):
                head=None,
                filter=None,
                **kwargs):
-    super().__init__(**kwargs)
+    """Detection initialization function.
+    Args:
+      backbone: `tf.keras.Model` a backbone network.
+      decoder: `tf.keras.Model` a decoder network.
+      head: `RetinaNetHead`, the RetinaNet head.
+      filter: the detection generator.
+      **kwargs: keyword arguments to be passed.
+    """
+    super(Yolo, self).__init__(**kwargs)
+
+    self._config_dict = {
+        'backbone': backbone,
+        'decoder': decoder,
+        'head': head,
+        'filter': filter
+    }
+
     # model components
     self._backbone = backbone
     self._decoder = decoder
@@ -35,6 +52,7 @@ class Yolo(ks.Model):
     if training:
       return {"raw_output": raw_predictions}
     else:
+      # Post-processing.
       predictions = self._filter(raw_predictions)
       predictions.update({"raw_output": raw_predictions})
       return predictions
@@ -55,6 +73,12 @@ class Yolo(ks.Model):
   def filter(self):
     return self._filter
 
+  def get_config(self):
+    return self._config_dict
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
