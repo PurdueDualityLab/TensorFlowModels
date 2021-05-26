@@ -11,7 +11,6 @@ from functools import partial
 
 TILE_SIZE = 50
 
-
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta=np.inf):
   # this is an identity operation that will
