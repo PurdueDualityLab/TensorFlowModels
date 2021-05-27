@@ -52,11 +52,11 @@ task:
         '4': 1.0
         '3': 1.0
       obj_normalizer: 
-        '5': 0.4
+        '5': 1.0
         '4': 1.0
-        '3': 4.0
+        '3': 1.0
       max_delta:
-        '5': 2.0
+        '5': 5.0
         '4': 5.0
         '3': 5.0
       new_cords:
@@ -64,9 +64,9 @@ task:
         '4': true
         '3': true
       objectness_smooth: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        '5': 0.0
+        '4': 0.0
+        '3': 0.0
       scale_xy:
         '5': 2.0
         '4': 2.0
@@ -99,7 +99,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 2.0
       use_tie_breaker: True
-      use_scale_xy: False
+      use_scale_xy: True
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.6667
@@ -129,7 +129,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 2.0
       use_tie_breaker: True
-      use_scale_xy: False
+      use_scale_xy: True
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.6667
