@@ -302,7 +302,6 @@ class Parser(parser.Parser):
       # randomly flip the image horizontally 
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-
     if self._aug_rand_translate > 0.0:
       # apply random translation to the image 
       image, tx, ty = preprocessing_ops.random_translate(
@@ -353,7 +352,7 @@ class Parser(parser.Parser):
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    
+
     image = tf.image.resize(image, (self._image_h, self._image_w),preserve_aspect_ratio=False, antialias=False, name=None)
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
