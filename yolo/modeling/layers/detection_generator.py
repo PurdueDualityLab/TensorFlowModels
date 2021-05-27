@@ -252,12 +252,10 @@ class YoloLayer(ks.Model):
           objectness_smooth=self._objectness_smooth[key],
           use_reduction_sum=self._use_reduction_sum,
           label_smoothing=self._label_smoothing,
-          path_key=key,
           mask=self._masks[key],
           max_delta=self._max_delta[key],
           scale_anchors=self._path_scale[key],
-          scale_x_y=self._scale_xy[key],
-          use_tie_breaker=self._use_tie_breaker)
+          scale_x_y=self._scale_xy[key])
     return loss_dict
 
   def get_config(self):
