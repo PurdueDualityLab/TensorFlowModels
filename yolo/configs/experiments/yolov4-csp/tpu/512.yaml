@@ -85,29 +85,26 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
-      jitter_im: 0.1
-      aug_scale_aspect: 0.0
-      aug_scale_min: 0.666
-      aug_scale_max: 1.5
+      max_num_instances: 200
+      letter_box: False
+      random_flip: True
+      random_pad: True
+      aug_rand_crop: 0.0
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
-      aug_rand_hue: 0.1
+      aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_translate: 0.5
-      max_num_instances: 200
-      random_flip: True
-      random_pad: False
+      aug_rand_hue: 0.1
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
       use_tie_breaker: True
-      use_scale_xy: True
-      letter_box: True
-      anchor_thresh: 0.2
+      use_scale_xy: False
+      anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.85
+        mosaic_frequency: 0.6667
         random_crop: 0.5
-        crop_area: [0.5, 1.0]
+        crop_area: [0.25, 1.0]
         random_crop_mosaic: False
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
@@ -118,12 +115,28 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      fixed_size: True
-      use_scale_xy: True
-      letter_box: True
-      anchor_thresh: 0.2
+      max_num_instances: 200
+      letter_box: False
+      random_flip: True
+      random_pad: True
+      aug_rand_crop: 0.0
+      aug_scale_aspect: 0.3
+      aug_rand_angle: 0.0
+      aug_rand_translate: 0.0
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_hue: 0.1
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
+      use_tie_breaker: True
+      use_scale_xy: False
+      anchor_thresh: 0.213
+      mosaic: 
+        mosaic_frequency: 0.6667
+        random_crop: 0.5
+        crop_area: [0.25, 1.0]
+        random_crop_mosaic: False
+        crop_area_mosaic: [0.25, 0.95]
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
