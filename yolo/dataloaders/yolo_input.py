@@ -258,7 +258,7 @@ class Parser(parser.Parser):
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    elif data['is_mosaic']:
+    elif data['is_mosaic'] and self._aug_rand_crop > 0:
       # same as above but the crops applied to the mosaiced images are treated 
       # differently
       jmi = 1 - self._aug_rand_crop
