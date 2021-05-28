@@ -101,7 +101,7 @@ task:
       aug_scale_max: 1.5
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.213
+      anchor_thresh: 0.2
       mosaic: 
         mosaic_frequency: 0.6667
         random_crop: 0.5
@@ -131,7 +131,7 @@ task:
       aug_scale_max: 1.5
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.213
+      anchor_thresh: 0.2
       mosaic: 
         mosaic_frequency: 0.6667
         random_crop: 0.5
