@@ -173,9 +173,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     #     dtype=params.dtype)
 
     parser = classification_vision.Parser(
-      output_size = input_size[:2],
-      aug_policy = 'randaug',
-      dtype=params.dtype)
+        output_size=input_size[:2], aug_policy='randaug', dtype=params.dtype)
 
     reader = input_reader.InputReader(
         params,

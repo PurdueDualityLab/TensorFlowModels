@@ -7,7 +7,8 @@ from official.core import input_reader
 
 # https://github.com/AlexeyAB/darknet/blob/master/scripts/gen_anchors.py
 
-[[15.0, 23.0], [38.0, 57.0], [119.0, 67.0], [57.0, 141.0], [164.0, 156.0], [97.0, 277.0], [371.0, 184.0], [211.0, 352.0], [428.0, 419.0]]
+[[15.0, 23.0], [38.0, 57.0], [119.0, 67.0], [57.0, 141.0], [164.0, 156.0],
+ [97.0, 277.0], [371.0, 184.0], [211.0, 352.0], [428.0, 419.0]]
 
 
 def IOU(X, centroids):
@@ -28,28 +29,28 @@ def IOU(X, centroids):
 
 # def write_anchors_to_file(centroids,X,anchor_file):
 #     f = open(anchor_file,'w')
-    
+
 #     anchors = centroids.copy()
 #     print(anchors.shape)
 
 #     for i in range(anchors.shape[0]):
 #         anchors[i][0]*=width_in_cfg_file/32.
 #         anchors[i][1]*=height_in_cfg_file/32.
-         
 
 #     widths = anchors[:,0]
 #     sorted_indices = np.argsort(widths)
 
 #     print('Anchors = ', anchors[sorted_indices])
-        
+
 #     for i in sorted_indices[:-1]:
 #         f.write('%0.2f,%0.2f, '%(anchors[i,0],anchors[i,1]))
 
 #     #there should not be comma after last anchor, that's why
 #     f.write('%0.2f,%0.2f\n'%(anchors[sorted_indices[-1:],0],anchors[sorted_indices[-1:],1]))
-    
+
 #     f.write('%f\n'%(avg_IOU(X,centroids)))
 #     print()
+
 
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
@@ -131,7 +132,7 @@ class AnchorKMeans:
       for i in range(k):
         hold = tf.math.reduce_mean(self._boxes[curr == i], axis=0)
         clusters = tf.tensor_scatter_nd_update(clusters, [[i]], [hold])
-        tf.print(dists * 512, summarize = -1)
+        tf.print(dists * 512, summarize=-1)
 
       last = curr
       num_iters += 1

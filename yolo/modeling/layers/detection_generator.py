@@ -141,7 +141,7 @@ class YoloLayer(ks.Model):
 
     # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
-    
+
     # threshold the detection map
     obns_mask = tf.cast(obns_scores > self._thresh, obns_scores.dtype)
 

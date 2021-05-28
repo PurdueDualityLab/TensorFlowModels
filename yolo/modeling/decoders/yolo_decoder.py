@@ -18,6 +18,7 @@
 import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
 
+
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class _IdentityRoute(tf.keras.layers.Layer):
 
@@ -27,7 +28,7 @@ class _IdentityRoute(tf.keras.layers.Layer):
 
     super().__init__(**kwargs)
 
-  def call(self, inputs): # pylint: disable=arguments-differ
+  def call(self, inputs):  # pylint: disable=arguments-differ
     return None, inputs
 
 
@@ -328,7 +329,7 @@ class YoloPAN(tf.keras.layers.Layer):
     Returns:
       The unscaled depths of the FPN branches.
     """
-    
+
     depths = []
     if len(inputs.keys()) > 3 or self._fpn_filter_scale > 1:
       for i in range(self._min_level, self._max_level + 1):

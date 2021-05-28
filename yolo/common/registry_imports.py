@@ -28,4 +28,3 @@ from yolo.configs.yolo import YoloTask
 
 from yolo.tasks.image_classification import ImageClassificationTask
 from yolo.tasks.yolo import YoloTask
-from yolo.tasks.yolo_subdiv import YoloSubDivTask

@@ -31,11 +31,12 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
 
 # image_w=608, image_h=608
 
+
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
   def __init__(self,
-               output_size,           
+               output_size,
                min_level=3,
                max_level=5,
                aug_rand_crop=0.0,
@@ -48,7 +49,7 @@ class Parser(parser.Parser):
                aug_rand_angle=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
-               random_pad = True, 
+               random_pad=True,
                anchor_t=4.0,
                scale_xy=None,
                use_scale_xy=True,
@@ -122,10 +123,10 @@ class Parser(parser.Parser):
     # assert that the width and height is viable
     assert image_w % self._net_down_scale == 0
     assert image_h % self._net_down_scale == 0
-    
+
     # set the width and height properly
-    self._image_w = image_w 
-    self._image_h = image_h 
+    self._image_w = image_w
+    self._image_h = image_h
 
     # set the anchor boxes and masks for each scale
     self._anchors = anchors
@@ -145,13 +146,13 @@ class Parser(parser.Parser):
     self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_translate = aug_rand_transalate
-    
+
     # color space distortion of the image
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_hue = aug_rand_hue
-    
-    # set the per level values needed for operation 
+
+    # set the per level values needed for operation
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._use_scale_xy = use_scale_xy
@@ -184,8 +185,8 @@ class Parser(parser.Parser):
     upds = {}
     true_conf = {}
 
-    # based on if training or not determine how to scale up the number of 
-    # boxes that may result for final loss computation 
+    # based on if training or not determine how to scale up the number of
+    # boxes that may result for final loss computation
     if is_training:
       scale_up = self._scale_up
     else:
@@ -198,8 +199,8 @@ class Parser(parser.Parser):
       else:
         scale_xy = 1
 
-      # build the actual grid as well and the list of boxes and classes AND 
-      # their index in the prediction grid 
+      # build the actual grid as well and the list of boxes and classes AND
+      # their index in the prediction grid
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
           raw_true, self._masks[key], width // 2**int(key), 0,
           raw_true['bbox'].dtype, scale_xy, scale_up[key], use_tie_breaker)
@@ -229,8 +230,8 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
-    
-    # resize the image irrespective of the aspect ratio 
+
+    # resize the image irrespective of the aspect ratio
     clipper = tf.reduce_max((height, width))
     image = tf.image.resize(
         image, (clipper, clipper), preserve_aspect_ratio=False)
@@ -239,7 +240,7 @@ class Parser(parser.Parser):
     w_scale = width / clipper
     h_scale = height / clipper
 
-    # apply the random aspect ratio crop to the image 
+    # apply the random aspect ratio crop to the image
     if self._aug_rand_crop > 0 and not data['is_mosaic']:
       # compute the net jitter
       jmi = 1 - self._aug_rand_crop
@@ -249,7 +250,7 @@ class Parser(parser.Parser):
       image, info = preprocessing_ops.random_crop_image(
           image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
 
-      # use the info to crop the boxes and classes as well 
+      # use the info to crop the boxes and classes as well
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
                                                    info[1, :], info[3, :])
@@ -259,7 +260,7 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
     elif data['is_mosaic'] and self._aug_rand_crop > 0:
-      # same as above but the crops applied to the mosaiced images are treated 
+      # same as above but the crops applied to the mosaiced images are treated
       # differently
       jmi = 1 - self._aug_rand_crop
       jma = 1 + self._aug_rand_crop
@@ -276,9 +277,9 @@ class Parser(parser.Parser):
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._letter_box:
-      # use the saved distortion values to return the cropeed image to proper 
-      # aspect ratio, it is doen this way in order to allow the random crop to 
-      # be indpendent of the images natural input resolution 
+      # use the saved distortion values to return the cropeed image to proper
+      # aspect ratio, it is doen this way in order to allow the random crop to
+      # be indpendent of the images natural input resolution
       height_, width_ = preprocessing_ops.get_image_shape(image)
       height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
       width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
@@ -299,29 +300,28 @@ class Parser(parser.Parser):
       image = tf.image.resize(image, (height_, width_))
 
     if self._random_flip:
-      # randomly flip the image horizontally 
+      # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-
-    # apply the final scale jittering of the image, if the image is mosaiced 
-    # ensure the minimum is larger than 0.4, or 0.1 for each image in the 
+    # apply the final scale jittering of the image, if the image is mosaiced
+    # ensure the minimum is larger than 0.4, or 0.1 for each image in the
     # mosaic
     if not data['is_mosaic']:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
           aug_scale_min=self._aug_scale_min,
-          aug_scale_max=self._aug_scale_max, 
+          aug_scale_max=self._aug_scale_max,
           random_pad=self._random_pad)
     else:
       image, info = preprocessing_ops.resize_and_crop_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
           aug_scale_min=self._aug_scale_min
           if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=self._aug_scale_max, 
+          aug_scale_max=self._aug_scale_max,
           random_pad=self._random_pad)
 
-    # again crop the boxes and classes and only use those that are still 
-    # in the image. 
+    # again crop the boxes and classes and only use those that are still
+    # in the image.
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
@@ -332,20 +332,24 @@ class Parser(parser.Parser):
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._aug_rand_translate > 0.0:
-      # apply random translation to the image 
+      # apply random translation to the image
       image, tx, ty = preprocessing_ops.random_translate(
           image, self._aug_rand_translate)
       boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
 
     if self._aug_rand_angle > 0:
-      # apply rotation to the images 
+      # apply rotation to the images
       image, angle = preprocessing_ops.random_rotate_image(
           image, self._aug_rand_angle)
       boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
 
-    image = tf.image.resize(image, (self._image_h, self._image_w),preserve_aspect_ratio=False, antialias=False, name=None)
+    image = tf.image.resize(
+        image, (self._image_h, self._image_w),
+        preserve_aspect_ratio=False,
+        antialias=False,
+        name=None)
 
-    # propagate all the changes to the images to the boxes and classes  
+    # propagate all the changes to the images to the boxes and classes
     # mainly image clipping and removing boxes no longer in the image
     h_, w_ = preprocessing_ops.get_image_shape(image)
     im_shape = tf.cast([h_, w_], tf.float32)
@@ -380,7 +384,7 @@ class Parser(parser.Parser):
 
   def _parse_eval_data(self, data):
 
-    # get the image shape constants 
+    # get the image shape constants
     shape = tf.shape(data['image'])
     image = data['image'] / 255
     boxes = data['groundtruth_boxes']
@@ -388,12 +392,12 @@ class Parser(parser.Parser):
     height, width = preprocessing_ops.get_image_shape(image)
 
     if not self._letter_box:
-      # dont preserve aspect ratio in eval if it is not set in train 
+      # dont preserve aspect ratio in eval if it is not set in train
       clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
       image = tf.image.resize(
           image, (clipper, clipper), preserve_aspect_ratio=False)
 
-    # preserve the aspect ratio of the image 
+    # preserve the aspect ratio of the image
     image, boxes, info = preprocessing_ops.letter_box(
         image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
 
@@ -419,7 +423,7 @@ class Parser(parser.Parser):
     imshape[-1] = 3
     image.set_shape(imshape)
 
-    # get the best anchors 
+    # get the best anchors
     boxes = box_utils.yxyx_to_xcycwh(boxes)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes,
@@ -467,7 +471,7 @@ class Parser(parser.Parser):
     ishape[0] = self._max_num_instances
     is_crowd.set_shape(ishape)
 
-    # build the dictionary set 
+    # build the dictionary set
     labels = {
         'source_id': utils.process_source_id(data['source_id']),
         'bbox': tf.cast(boxes, self._dtype),
@@ -488,7 +492,7 @@ class Parser(parser.Parser):
         self._image_w,
         use_tie_breaker=self._use_tie_breaker,
         is_training=is_training)
-    
+
     # update the labels dictionary
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     labels['upds'] = upds
