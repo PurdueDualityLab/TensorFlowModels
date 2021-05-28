@@ -89,16 +89,16 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      random_pad: True
+      random_pad: False
       aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
+      aug_rand_translate: 0.5
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 0.213
@@ -119,16 +119,16 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      random_pad: True
+      random_pad: False
       aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
+      aug_rand_translate: 0.5
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 0.213

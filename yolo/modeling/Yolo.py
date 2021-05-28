@@ -227,7 +227,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization)
-  head.build(input_specs)
+
   return head
 
 

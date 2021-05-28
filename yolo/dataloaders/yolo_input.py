@@ -302,28 +302,6 @@ class Parser(parser.Parser):
       # randomly flip the image horizontally 
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    if self._aug_rand_translate > 0.0:
-      # apply random translation to the image 
-      image, tx, ty = preprocessing_ops.random_translate(
-          image, self._aug_rand_translate)
-      boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
-
-    if self._aug_rand_angle > 0:
-      # apply rotation to the images 
-      image, angle = preprocessing_ops.random_rotate_image(
-          image, self._aug_rand_angle)
-      boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
-
-    # propagate all the changes to the images to the boxes and classes  
-    # mainly image clipping and removing boxes no longer in the image
-    h_, w_ = preprocessing_ops.get_image_shape(image)
-    im_shape = tf.cast([h_, w_], tf.float32)
-    boxes = box_ops.denormalize_boxes(boxes, im_shape)
-    boxes = box_ops.clip_boxes(boxes, im_shape)
-    inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    boxes = box_ops.normalize_boxes(boxes, im_shape)
 
     # apply the final scale jittering of the image, if the image is mosaiced 
     # ensure the minimum is larger than 0.4, or 0.1 for each image in the 
@@ -353,7 +331,32 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
+    if self._aug_rand_translate > 0.0:
+      # apply random translation to the image 
+      image, tx, ty = preprocessing_ops.random_translate(
+          image, self._aug_rand_translate)
+      boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
+
+    if self._aug_rand_angle > 0:
+      # apply rotation to the images 
+      image, angle = preprocessing_ops.random_rotate_image(
+          image, self._aug_rand_angle)
+      boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
+
     image = tf.image.resize(image, (self._image_h, self._image_w),preserve_aspect_ratio=False, antialias=False, name=None)
+
+    # propagate all the changes to the images to the boxes and classes  
+    # mainly image clipping and removing boxes no longer in the image
+    h_, w_ = preprocessing_ops.get_image_shape(image)
+    im_shape = tf.cast([h_, w_], tf.float32)
+    boxes = box_ops.denormalize_boxes(boxes, im_shape)
+    boxes = box_ops.clip_boxes(boxes, im_shape)
+
+    inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    boxes = box_ops.normalize_boxes(boxes, im_shape)
+
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
     if self._aug_rand_hue > 0.0:
