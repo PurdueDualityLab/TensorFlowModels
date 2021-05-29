@@ -21,7 +21,7 @@ def obj_gradient_trap(y, max_delta=np.inf):
     dy = math_ops.rm_nan_inf(dy)
     # clip the gradient for the back prop
     delta = tf.cast(max_delta, dy.dtype)
-    dy = tf.clip_by_value(dy, -delta, delta)
+    dy = tf.clip_by_value(dy, -1 * delta, delta)
     return dy, 0.0
 
   return y, trap
@@ -36,7 +36,7 @@ def class_gradient_trap(y, max_delta=np.inf):
     dy = math_ops.rm_nan_inf(dy)
     # clip the gradient for the back prop
     delta = tf.cast(max_delta, dy.dtype)
-    dy = tf.clip_by_value(dy, -delta, delta)
+    dy = tf.clip_by_value(dy, -1 * delta, delta)
     return dy, 0.0
 
   return y, trap

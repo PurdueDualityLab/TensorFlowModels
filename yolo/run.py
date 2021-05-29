@@ -1,3 +1,6 @@
+# Lint as: python3
+# pylint: skip-file
+
 from yolo.utils.run_utils import prep_gpu
 # try:
 #

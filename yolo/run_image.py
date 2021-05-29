@@ -1,3 +1,5 @@
+# Lint as: python3
+# pylint: skip-file
 from absl import app
 from absl import flags
 import gin
