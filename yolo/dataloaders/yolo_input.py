@@ -29,9 +29,6 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   return value
 
 
-# image_w=608, image_h=608
-
-
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
@@ -259,7 +256,7 @@ class Parser(parser.Parser):
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    elif data['is_mosaic'] and self._aug_rand_crop > 0:
+    elif data['is_mosaic']: #and self._aug_rand_crop > 0:
       # same as above but the crops applied to the mosaiced images are treated
       # differently
       jmi = 1 - self._aug_rand_crop
