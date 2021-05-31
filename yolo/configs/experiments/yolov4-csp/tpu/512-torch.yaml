@@ -93,7 +93,7 @@ task:
       aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
-      aug_rand_translate: 0.5
+      aug_rand_translate: 0.25
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
@@ -120,10 +120,10 @@ task:
       letter_box: False
       random_flip: True
       random_pad: False
-      aug_rand_crop: 0.0
+      aug_rand_crop: 0.2
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
-      aug_rand_translate: 0.5
+      aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
