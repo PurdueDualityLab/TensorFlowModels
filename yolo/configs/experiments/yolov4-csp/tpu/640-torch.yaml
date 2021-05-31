@@ -119,7 +119,7 @@ task:
       max_num_instances: 200
       letter_box: False
       random_flip: True
-      random_pad: True
+      random_pad: False
       aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
