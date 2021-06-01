@@ -89,11 +89,11 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      random_pad: True
+      random_pad: False
       aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
+      aug_rand_translate: 0.25
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
@@ -101,7 +101,7 @@ task:
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.213
+      anchor_thresh: 0.2
       mosaic: 
         mosaic_frequency: 0.6667
         random_crop: 0.5
@@ -117,11 +117,11 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: True
+      letter_box: False
       random_flip: True
-      random_pad: True
-      aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      random_pad: False
+      aug_rand_crop: 0.2
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
@@ -131,7 +131,7 @@ task:
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.213
+      anchor_thresh: 0.2
       mosaic: 
         mosaic_frequency: 0.6667
         random_crop: 0.5

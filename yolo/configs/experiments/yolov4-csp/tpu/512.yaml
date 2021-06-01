@@ -10,7 +10,7 @@ task:
           model_id: 'cspdarknet53'
       decoder:
         version: v4
-        type: csp
+        type: regular
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
@@ -33,7 +33,7 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: mish
+    decoder_activation: leaky
     filter:
       ignore_thresh:
         '5': 0.7
@@ -44,9 +44,9 @@ task:
         '4': ciou
         '3': ciou
       iou_normalizer: 
-        '5': 0.05
-        '4': 0.05
-        '3': 0.05
+        '5': 0.07
+        '4': 0.07
+        '3': 0.07
       cls_normalizer: 
         '5': 1.0
         '4': 1.0
@@ -60,9 +60,9 @@ task:
         '4': 5.0
         '3': 5.0
       new_cords:
-        '5': true
-        '4': true
-        '3': true
+        '5': false
+        '4': false
+        '3': false
       objectness_smooth: 
         '5': 0.0
         '4': 0.0
@@ -89,7 +89,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
+      aug_rand_crop: 0.1
       aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -99,7 +99,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 2.0
       use_tie_breaker: True
-      use_scale_xy: True
+      use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.6667
@@ -119,7 +119,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
+      aug_rand_crop: 0.1
       aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -129,7 +129,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 2.0
       use_tie_breaker: True
-      use_scale_xy: True
+      use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.6667
@@ -157,9 +157,10 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [240000, 260000]
+        boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        values: [0.001, 0.0001, 0.00001]
+        # values: [0.00131, 0.000655, 0.000325]
+        values: [0.00131, 0.0009825, 0.000655] #best
     optimizer:
       type: sgd
       sgd:
