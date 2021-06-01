@@ -85,7 +85,8 @@ class YoloTask(base_task.Task):
 
   def build_model(self):
     """get an instance of Yolo v3 or v4"""
-    from yolo.modeling.Yolo import build_yolo
+    # from yolo.modeling.yolo_model import build_yolo
+    from yolo.modeling.factory import build_yolo
     params = self.task_config.train_data
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
@@ -94,7 +95,6 @@ class YoloTask(base_task.Task):
     print(xy_scales, l2_weight_decay)
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
-    print("heheheeheheheheheheheh: ", anchors)
 
     input_specs = tf.keras.layers.InputSpec(shape=[None] +
                                             model_base_cfg.input_size)
