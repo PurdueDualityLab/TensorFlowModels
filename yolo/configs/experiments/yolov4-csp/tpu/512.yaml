@@ -33,7 +33,7 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       ignore_thresh:
         '5': 0.7
