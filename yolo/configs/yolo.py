@@ -156,18 +156,18 @@ class Mosaic(hyperparams.Config):
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: bool = True
+  letter_box: bool = False
   random_flip: bool = True
   random_pad: bool = False
-  aug_rand_crop: float = 0.0
-  aug_scale_aspect: float = 0.0
+  aug_rand_crop: float = 0.4
+  aug_scale_aspect: float = 0.1
   aug_rand_angle: float = 0.0
-  aug_rand_translate: float = 0.5
+  aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
   aug_scale_min: float = 0.5
-  aug_scale_max: float = 2.0
+  aug_scale_max: float = 0.5
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
   anchor_thresh: float = 0.2
