@@ -7,50 +7,46 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32):
+  """
+  Equivalent to tf.random.uniform, except that minval and maxval are flipped if
+  minval is greater than maxval.
+
+  Args:
+    minval: An `int` for a lower or upper endpoint of the interval from which to
+      choose the random number.
+    maxval: An `int` for the other endpoint.
+    dtype: The output type of the tensor.
+  
+  Returns:
+    A random tensor of type dtype that falls between minval and maxval excluding
+    the bigger one.
+  """
   if minval > maxval:
     minval, maxval = maxval, minval
   return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
 
 def rand_scale(val, dtype=tf.float32):
+  """
+  Generates a random number for the scale. Half the time, the value is between
+  [1.0, val) with uniformly distributed probability. The other half, the value
+  is the reciprocal of this value.
+  
+  The function is identical to the one in the original implementation:
+  https://github.com/AlexeyAB/darknet/blob/a3714d0a/src/utils.c#L708-L713
+  
+  Args:
+    val: A float representing the maximum scaling allowed.
+    dtype: The output type of the tensor.
+
+  Returns:
+    The random scale.
+  """
   scale = rand_uniform_strong(1.0, val, dtype=dtype)
   do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
   if (do_ret == 1):
     return scale
   return 1.0 / scale
-
-
-def shift_zeros(data, mask, axis=-2, fill=0):
-  zeros = tf.zeros_like(data) + fill
-  data_flat = tf.boolean_mask(data, mask)
-
-  # tf.print(tf.shape(data_flat), tf.shape(data))
-  nonzero_lens = tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=-2)
-  nonzero_mask = tf.sequence_mask(nonzero_lens, maxlen=tf.shape(mask)[-2])
-  perm1 = tf.range(0, tf.shape(tf.shape(data))[0] - 2)
-  perm2 = tf.roll(
-      tf.range(tf.shape(tf.shape(data))[0] - 2,
-               tf.shape(tf.shape(data))[0]),
-      1,
-      axis=-1)
-
-  perm = tf.concat([perm1, perm2], axis=-1)
-  nonzero_mask = tf.transpose(nonzero_mask, perm=perm)
-  inds = tf.cast(tf.where(nonzero_mask), dtype=tf.int32)
-  nonzero_data = tf.tensor_scatter_nd_update(
-      zeros, tf.cast(tf.where(nonzero_mask), dtype=tf.int32), data_flat)
-  return nonzero_data
-
-
-def shift_zeros2(mask, squeeze=True, fill=0):
-  mask = tf.cast(mask, tf.float32)
-  if squeeze:
-    mask = tf.squeeze(mask, axis=-1)
-
-  k = tf.shape(mask)[-1]
-  mask, ind = tf.math.top_k(mask, k=k, sorted=True)
-  return mask, ind
-
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)

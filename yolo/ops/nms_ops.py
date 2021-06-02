@@ -372,40 +372,40 @@ class TiledNMS():
   def _single_iter(self, boxes, scores, indices, nmsed_boxes, nmsed_classes,
                    nmsed_scores, max_num_detections, num_classes_for_box,
                    pre_nms_score_threshold, nms_iou_threshold, i):
+    with tf.name_scope('single_iter'):
+      boxes_shape = boxes.get_shape().as_list() #tf.shape(boxes)
+      scores_shape = scores.get_shape().as_list() #tf.shape(scores)
+      batch_size, _, num_classes_for_box, _ = boxes_shape[0], boxes_shape[
+          1], boxes_shape[2], boxes_shape[3]  #boxes.get_shape().as_list()
 
-    boxes_shape = boxes.get_shape().as_list() #tf.shape(boxes)
-    scores_shape = scores.get_shape().as_list() #tf.shape(scores)
-    batch_size, _, num_classes_for_box, _ = boxes_shape[0], boxes_shape[
-        1], boxes_shape[2], boxes_shape[3]  #boxes.get_shape().as_list()
+      _, num, _ = scores_shape[0], scores_shape[1], scores_shape[2]
 
-    _, num, _ = scores_shape[0], scores_shape[1], scores_shape[2]
+      boxes_i = boxes[:, :, tf.math.minimum(num_classes_for_box - 1, i), :]
+      scores_i = scores[:, :, i]
 
-    boxes_i = boxes[:, :, tf.math.minimum(num_classes_for_box - 1, i), :]
-    scores_i = scores[:, :, i]
+      # Obtains pre_nms_top_k before running NMS.
+      boxes_i = tf.gather(boxes_i, indices[:, :, i], batch_dims=1, axis=1)
 
-    # Obtains pre_nms_top_k before running NMS.
-    boxes_i = tf.gather(boxes_i, indices[:, :, i], batch_dims=1, axis=1)
+      # Filter out scores.
+      boxes_i, scores_i = box_utils.filter_boxes_by_scores(
+          boxes_i,
+          scores_i,
+          min_score_threshold=tf.cast(pre_nms_score_threshold, boxes_i.dtype))
 
-    # Filter out scores.
-    boxes_i, scores_i = box_utils.filter_boxes_by_scores(
-        boxes_i,
-        scores_i,
-        min_score_threshold=tf.cast(pre_nms_score_threshold, boxes_i.dtype))
+      (nmsed_scores_i, nmsed_boxes_i) = self._sorted_non_max_suppression_padded(
+          tf.cast(scores_i, tf.float32),
+          tf.cast(boxes_i, tf.float32),
+          max_num_detections,
+          iou_threshold=tf.cast(nms_iou_threshold, tf.float32))
+      nmsed_classes_i = tf.ones_like(nmsed_scores_i, dtype = i.dtype) * i
+      #tf.fill([batch_size, max_num_detections], i)
 
-    (nmsed_scores_i, nmsed_boxes_i) = self._sorted_non_max_suppression_padded(
-        tf.cast(scores_i, tf.float32),
-        tf.cast(boxes_i, tf.float32),
-        max_num_detections,
-        iou_threshold=tf.cast(nms_iou_threshold, tf.float32))
-    nmsed_classes_i = tf.ones_like(nmsed_scores_i, dtype = i.dtype) * i
-    #tf.fill([batch_size, max_num_detections], i)
-
-    nmsed_boxes = nmsed_boxes.write(i,
-                                    tf.transpose(nmsed_boxes_i, perm=(1, 0, 2)))
-    nmsed_scores = nmsed_scores.write(i,
-                                      tf.transpose(nmsed_scores_i, perm=(1, 0)))
-    nmsed_classes = nmsed_classes.write(
-        i, tf.transpose(nmsed_classes_i, perm=(1, 0)))
+      nmsed_boxes = nmsed_boxes.write(i,
+                                      tf.transpose(nmsed_boxes_i, perm=(1, 0, 2)))
+      nmsed_scores = nmsed_scores.write(i,
+                                        tf.transpose(nmsed_scores_i, perm=(1, 0)))
+      nmsed_classes = nmsed_classes.write(
+          i, tf.transpose(nmsed_classes_i, perm=(1, 0)))
 
     return (boxes, scores, indices, nmsed_boxes, nmsed_classes, nmsed_scores,
             max_num_detections, num_classes_for_box, pre_nms_score_threshold,
@@ -420,7 +420,7 @@ class TiledNMS():
                    max_num_detections=100):
 
     with tf.name_scope('nms'):
-      boxes_shape = boxes.get_shape().as_list()#tf.shape(boxes)
+      boxes_shape = boxes.get_shape().as_list() #tf.shape(boxes)
       batch_size, _, num_classes_for_box, _ = (boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3])  #boxes.get_shape().as_list()
 
       scores_shape = scores.get_shape().as_list() #tf.shape(scores)
