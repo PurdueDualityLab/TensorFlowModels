@@ -380,7 +380,7 @@ class TiledNMS():
 
       _, num, _ = scores_shape[0], scores_shape[1], scores_shape[2]
 
-      boxes_i = boxes[:, :, min(num_classes_for_box - 1, i), :]
+      boxes_i = boxes[:, :, 0, :]
       scores_i = scores[:, :, i]
 
       # Obtains pre_nms_top_k before running NMS.
