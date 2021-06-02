@@ -380,7 +380,7 @@ class TiledNMS():
 
       _, num, _ = scores_shape[0], scores_shape[1], scores_shape[2]
 
-      boxes_i = boxes[:, :, tf.math.minimum(num_classes_for_box - 1, i), :]
+      boxes_i = boxes[:, :, min(num_classes_for_box - 1, i), :]
       scores_i = scores[:, :, i]
 
       # Obtains pre_nms_top_k before running NMS.
@@ -397,8 +397,7 @@ class TiledNMS():
           tf.cast(boxes_i, tf.float32),
           max_num_detections,
           iou_threshold=tf.cast(nms_iou_threshold, tf.float32))
-      nmsed_classes_i = tf.ones_like(nmsed_scores_i, dtype = i.dtype) * i
-      #tf.fill([batch_size, max_num_detections], i)
+      nmsed_classes_i = tf.fill([batch_size, max_num_detections], i)
 
       nmsed_boxes = nmsed_boxes.write(i,
                                       tf.transpose(nmsed_boxes_i, perm=(1, 0, 2)))
