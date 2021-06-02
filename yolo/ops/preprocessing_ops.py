@@ -523,7 +523,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   # get the number of boxes in the ground truth boxs
   num_boxes = tf.shape(boxes)[-2]
   # get the number of anchor boxes used for this anchor scale
-  len_masks = tf.shape(mask)[0]
+  len_masks = len(mask) #mask is a python object tf.shape(mask)[0] 
   # number of anchors
   num_anchors = tf.shape(anchors)[-1]
   num_instances = num_boxes * scale_num_inst

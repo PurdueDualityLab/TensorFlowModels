@@ -5,7 +5,6 @@ from official.vision.beta.ops import box_ops as box_utils
 
 NMS_TILE_SIZE = 512
 
-
 def sort_drop(objectness, box, classificationsi, k):
   objectness, ind = tf.math.top_k(objectness, k=k)
 
@@ -353,7 +352,7 @@ class TiledNMS():
 
   def _select_top_k_scores(self, scores_in, pre_nms_num_detections):
     # batch_size, num_anchors, num_class = scores_in.get_shape().as_list()
-    scores_shape = tf.shape(scores_in)
+    scores_shape = scores_in.get_shape().as_list() #tf.shape(scores_in)
     batch_size, num_anchors, num_class = scores_shape[0], scores_shape[
         1], scores_shape[2]
     scores_trans = tf.transpose(scores_in, perm=[0, 2, 1])
@@ -363,9 +362,9 @@ class TiledNMS():
         scores_trans, k=pre_nms_num_detections, sorted=True)
 
     top_k_scores = tf.reshape(top_k_scores,
-                              [batch_size, num_class, pre_nms_num_detections])
+                              [-1, num_class, pre_nms_num_detections])
     top_k_indices = tf.reshape(top_k_indices,
-                               [batch_size, num_class, pre_nms_num_detections])
+                               [-1, num_class, pre_nms_num_detections])
 
     return tf.transpose(top_k_scores,
                         [0, 2, 1]), tf.transpose(top_k_indices, [0, 2, 1])
@@ -374,8 +373,8 @@ class TiledNMS():
                    nmsed_scores, max_num_detections, num_classes_for_box,
                    pre_nms_score_threshold, nms_iou_threshold, i):
 
-    boxes_shape = tf.shape(boxes)
-    scores_shape = tf.shape(scores)
+    boxes_shape = boxes.get_shape().as_list() #tf.shape(boxes)
+    scores_shape = scores.get_shape().as_list() #tf.shape(scores)
     batch_size, _, num_classes_for_box, _ = boxes_shape[0], boxes_shape[
         1], boxes_shape[2], boxes_shape[3]  #boxes.get_shape().as_list()
 
@@ -398,7 +397,8 @@ class TiledNMS():
         tf.cast(boxes_i, tf.float32),
         max_num_detections,
         iou_threshold=tf.cast(nms_iou_threshold, tf.float32))
-    nmsed_classes_i = tf.fill([batch_size, max_num_detections], i)
+    nmsed_classes_i = tf.ones_like(nmsed_scores_i, dtype = i.dtype) * i
+    #tf.fill([batch_size, max_num_detections], i)
 
     nmsed_boxes = nmsed_boxes.write(i,
                                     tf.transpose(nmsed_boxes_i, perm=(1, 0, 2)))
@@ -420,12 +420,13 @@ class TiledNMS():
                    max_num_detections=100):
 
     with tf.name_scope('nms'):
-      boxes_shape = tf.shape(boxes)
-      batch_size, _, num_classes_for_box, _ = boxes_shape[0], boxes_shape[
-          1], boxes_shape[2], boxes_shape[3]  #boxes.get_shape().as_list()
+      boxes_shape = boxes.get_shape().as_list()#tf.shape(boxes)
+      batch_size, _, num_classes_for_box, _ = (boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3])  #boxes.get_shape().as_list()
 
-      scores_shape = tf.shape(scores)
+      scores_shape = scores.get_shape().as_list() #tf.shape(scores)
       _, total_anchors, num_classes = scores_shape[0], scores_shape[1], scores_shape[2]  #.get_shape().as_list()
+
+      print(scores_shape, boxes_shape)
 
       nmsed_boxes = tf.TensorArray(tf.float32, size=num_classes)
       nmsed_classes = tf.TensorArray(tf.int32, size=num_classes)

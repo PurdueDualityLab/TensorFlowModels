@@ -5,6 +5,7 @@ from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
 from skimage import io
 import cv2
+
 prep_gpu()
 
 

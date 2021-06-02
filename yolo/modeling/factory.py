@@ -1,4 +1,3 @@
-
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
@@ -9,7 +8,10 @@ from yolo.configs import yolo
 
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
-  activation = model_config.decoder_activation if model_config.decoder_activation != "same" else model_config.norm_activation.activation
+  activation = (
+      model_config.decoder_activation
+      if model_config.decoder_activation != "same" else
+      model_config.norm_activation.activation)
   subdivisions = 1
 
   if model_config.decoder.version is None:  # custom yolo
@@ -35,14 +37,14 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   if model_config.decoder.version not in yolo_model.YOLO_MODELS.keys():
     raise Exception(
-        f"unsupported model version please select from {v3, v4}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
-    )
+        f"unsupported model version please select from {v3, v4}, \n\n \
+        or specify a custom decoder config using YoloDecoder in you yaml")
 
   if model_config.decoder.type not in yolo_model.YOLO_MODELS[
       model_config.decoder.version].keys():
-    raise Exception(
-        f"unsupported model type please select from {yolo_model.YOLO_MODELS[model_config.decoder.version].keys()}, \n\n or specify a custom decoder config using YoloDecoder in you yaml"
-    )
+    raise Exception(f"unsupported model type please select from \
+        {yolo_model.YOLO_MODELS[model_config.decoder.version].keys()},\
+        \n\n or specify a custom decoder config using YoloDecoder in you yaml")
 
   base_model = yolo_model.YOLO_MODELS[model_config.decoder.version][
       model_config.decoder.type]
@@ -117,7 +119,8 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
   filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
 
-  model = yolo_model.Yolo(backbone=backbone, decoder=decoder, head=head, filter=filter)
+  model = yolo_model.Yolo(
+      backbone=backbone, decoder=decoder, head=head, filter=filter)
   model.build(input_specs.shape)
   model.decoder.summary()
   model.summary()

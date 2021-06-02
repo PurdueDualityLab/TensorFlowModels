@@ -51,6 +51,8 @@ def test_yolo_input_task():
     config.validation_data.tfds_name = 'coco'
     config.train_data.tfds_split = 'train'
     config.validation_data.tfds_split = 'validation'
+    config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
+    config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
     train_data = task.build_inputs(config.train_data)
     test_data = task.build_inputs(config.validation_data)
   return train_data, test_data

@@ -9,7 +9,6 @@ from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.losses import yolo_loss
 from yolo.ops import nms_ops
 
-
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
 
@@ -99,7 +98,10 @@ class YoloLayer(ks.Model):
     return x
 
   def parse_prediction_path(self, key, inputs):
-    shape = tf.shape(inputs)
+    shape_ = tf.shape(inputs)
+    shape = inputs.get_shape().as_list()
+    batchsize, height, width = shape_[0], shape[1], shape[2]
+
     generator = self._generator[key]
     len_mask = self._len_mask[key]
     scale_xy = self._scale_xy[key]
@@ -109,9 +111,9 @@ class YoloLayer(ks.Model):
     #                             height,
     #                             number_anchors,
     #                             remaining_points)
-    batchsize, height, width = shape[0], shape[1], shape[2]
+   
     data = tf.reshape(inputs,
-                      [batchsize, height, width, len_mask, self._classes + 5])
+                      [-1, height, width, len_mask, self._classes + 5])
 
     # use the grid generator to get the formatted anchor boxes and grid points
     # in shape [1, height, width, 2]
@@ -121,8 +123,9 @@ class YoloLayer(ks.Model):
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
 
+
     # determine the number of classes
-    classes = tf.shape(class_scores)[-1]
+    classes = class_scores.get_shape().as_list()[-1] #tf.shape(class_scores)[-1]
 
     # configurable to use the new coordinates in scaled Yolo v4 or not
     if not self._new_cords[key]:
@@ -149,10 +152,13 @@ class YoloLayer(ks.Model):
     class_scores = tf.math.sigmoid(class_scores) * obns_mask * obns_scores
     class_scores *= tf.cast(class_scores > self._thresh, class_scores.dtype)
 
+    fill = height * width * len_mask
     # platten predictions to [batchsize, N, -1] for non max supression
-    boxes = tf.reshape(boxes, [shape[0], -1, 4])
-    class_scores = tf.reshape(class_scores, [shape[0], -1, classes])
-    obns_scores = tf.reshape(obns_scores, [shape[0], -1])
+    boxes = tf.reshape(boxes, [-1, fill, 4])
+    class_scores = tf.reshape(class_scores, [-1, fill, classes])
+    obns_scores = tf.reshape(obns_scores, [-1, fill])
+
+    print(obns_scores.get_shape().as_list())
     return obns_scores, boxes, class_scores
 
   def call(self, inputs):
@@ -176,6 +182,7 @@ class YoloLayer(ks.Model):
     boxes = tf.concat(boxes, axis=1)
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
+
 
     # apply nms
     if self._nms_type == 6:

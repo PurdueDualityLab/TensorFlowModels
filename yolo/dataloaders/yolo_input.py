@@ -248,7 +248,7 @@ class Parser(parser.Parser):
 
       # crop the image
       image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
+          image, aspect_ratio_range=[jmi, jma], area_range=[0.0001, 1.0])
 
       # use the info to crop the boxes and classes as well
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])

@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
-  mosaic_frequency: float = 0.85
+  mosaic_frequency: float = 0.0
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.6, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 0.95])

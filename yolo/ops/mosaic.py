@@ -17,15 +17,18 @@ class Mosaic(object):
                output_size,
                mosaic_frequency=1.0,
                crop_area=[0.5, 1.0],
+               crop_daspect=0.6, 
                crop_area_mosaic=[0.5, 1.0],
+               preserve_aspect_ratio=True, 
                random_crop=1.0,
                keep_thresh=0.00,
                random_crop_mosaic=False):
     self._output_size = output_size
-    self._mosaic_frequency = mosaic_frequency
     self._random_crop = random_crop
-    self._seed = None
+    self._mosaic_frequency = mosaic_frequency
     self._crop_area = crop_area
+    self._seed = None
+    self._crop_daspect = crop_daspect
     self._keep_thresh = keep_thresh
     self._random_crop_mosaic = random_crop_mosaic
     self._crop_area_mosaic = crop_area_mosaic
@@ -169,6 +172,7 @@ class Mosaic(object):
 
   def _mapped(self, sample):
     if self._mosaic_frequency > 0.0:
+      # mosaic is enabled 0.666667 = 0.5 of images are mosaiced
       domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
       if domo >= (1 - self._mosaic_frequency):
         image = sample['image']
@@ -177,6 +181,7 @@ class Mosaic(object):
         is_crowd = sample['groundtruth_is_crowd']
         area = sample['groundtruth_area']
         info = sample['info']
+
 
         images = tf.split(image, 4, axis=0)
         box_list = tf.split(boxes, 4, axis=0)
@@ -207,11 +212,6 @@ class Mosaic(object):
 
         height, width = self._output_size[0], self._output_size[1]
 
-        # if self._random_crop >= 1.0:
-        #   docrop = 1.0
-        # elif self._random_crop <= 0.0:
-        #   docrop = 0.0
-        # else:S
         docrop = tf.random.uniform([],
                                    0.0,
                                    1.0,
