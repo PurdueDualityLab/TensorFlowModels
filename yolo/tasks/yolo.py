@@ -430,7 +430,7 @@ class YoloTask(base_task.Task):
       metric_names[key].append("avg_iou")
       metric_names[key].append("avg_obj")
 
-    metric_names['global'].append(f'total_loss')
+    metric_names['global'].append('total_loss')
 
     print(metric_names)
 

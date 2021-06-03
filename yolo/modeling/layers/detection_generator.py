@@ -211,7 +211,6 @@ class YoloLayer(ks.Model):
     class_scores = tf.reshape(class_scores, [-1, fill, classes])
     obns_scores = tf.reshape(obns_scores, [-1, fill])
 
-    print(obns_scores.get_shape().as_list())
     return obns_scores, boxes, class_scores
 
   def call(self, inputs):
