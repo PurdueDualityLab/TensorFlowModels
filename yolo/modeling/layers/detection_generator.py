@@ -36,6 +36,59 @@ class YoloLayer(ks.Model):
                nms_type='greedy',
                objectness_smooth=False,
                **kwargs):
+    """
+    parameters for the loss functions used at each detection head output
+    
+    Args:
+      classes: `int` for the number of classes 
+      mask: `List[int]` for the output level that this specific model output 
+        level
+      anchors: `List[List[int]]` for the anchor boxes that are used in the model 
+        at all levels
+      scale_anchors: `int` for how much to scale this level to get the orginal 
+        input shape
+      ignore_thresh: `float` for the IOU value over which the loss is not 
+        propagated, and a detection is assumed to have been made 
+      truth_thresh: `float` for the IOU value over which the loss is propagated 
+        despite a detection being made 
+      loss_type: `str` for the typeof iou loss to use with in {ciou, diou, 
+        giou, iou}
+      iou_normalizer: `float` for how much to scale the loss on the IOU or the 
+        boxes
+      cls_normalizer: `float` for how much to scale the loss on the classes
+      obj_normalizer: `float` for how much to scale loss on the detection map
+      objectness_smooth: `float` for how much to smooth the loss on the 
+        detection map 
+      use_reduction_sum: `bool` for whether to use the scaled loss 
+        or the traditional loss
+      label_smoothing: `float` for how much to smooth the loss on the classes
+      new_cords: `bool` for which scaling type to use 
+      scale_xy: dictionary `float` values inidcating how far each pixel can see 
+        outside of its containment of 1.0. a value of 1.2 indicates there is a 
+        20% extended radius around each pixel that this specific pixel can 
+        predict values for a center at. the center can range from 0 - value/2 
+        to 1 + value/2, this value is set in the yolo filter, and resused here. 
+        there should be one value for scale_xy for each level from min_level to 
+        max_level
+      max_delta: gradient clipping to apply to the box loss 
+      nms_type: "greedy",
+      nms_thresh: 0.6,
+      iou_thresh: 0.213,
+      name=None,
+
+
+    Return:
+      loss: `float` for the actual loss
+      box_loss: `float` loss on the boxes used for metrics
+      conf_loss: `float` loss on the confidence used for metrics
+      class_loss: `float` loss on the classes used for metrics
+      avg_iou: `float` metric for the average iou between predictions 
+        and ground truth
+      avg_obj: `float` metric for the average confidence of the model 
+        for predictions
+      recall50: `float` metric for how accurate the model is
+      precision50: `float` metric for how precise the model is
+    """
     super().__init__(**kwargs)
     self._masks = masks
     self._anchors = anchors

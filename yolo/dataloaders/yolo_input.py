@@ -248,7 +248,7 @@ class Parser(parser.Parser):
 
       # crop the image
       image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[0.0001, 1.0])
+          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
 
       # use the info to crop the boxes and classes as well
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
@@ -341,7 +341,7 @@ class Parser(parser.Parser):
       # apply rotation to the images
       image, angle = preprocessing_ops.random_rotate_image(
           image, self._aug_rand_angle)
-      boxes = preprocessing_ops.rotate_boxes(boxes, 0.0, 0.0, angle)
+      boxes = preprocessing_ops.rotate_boxes(boxes, angle)
 
     image = tf.image.resize(
         image, (self._image_h, self._image_w),
@@ -356,7 +356,8 @@ class Parser(parser.Parser):
     boxes = box_ops.denormalize_boxes(boxes, im_shape)
     boxes = box_ops.clip_boxes(boxes, im_shape)
 
-    inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
+    #inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
+    inds = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)

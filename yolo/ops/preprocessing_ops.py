@@ -49,6 +49,21 @@ def rand_scale(val, dtype=tf.float32):
   return 1.0 / scale
 
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+  """
+  Pad a dimension of the tensor to have a maximum number of instances filling
+  additional entries with the `pad_value`.
+   
+  Args:
+    value: An input tensor.
+    instances: An int representing the maximum number of instances.
+    pad_value: An int representing the value used for padding until the maximum
+      number of instances is obtained.
+    pad_axis: An int representing the axis index to pad.
+
+  Returns:
+    The output tensor whose dimensions match the input tensor except with the
+    size along the `pad_axis` replaced by `instances`.
+  """
   shape = tf.shape(value)
   if pad_axis < 0:
     pad_axis = tf.rank(value) + pad_axis
@@ -96,135 +111,145 @@ def clip_boxes(boxes, image_shape):
     return clipped_boxes
 
 
-def get_non_empty_box_indices(boxes, output_size=None):
-  """Get indices for non-empty boxes."""
-  # Selects indices if box height or width is 0.
-  if output_size is not None:
-    width = tf.cast(output_size[1], boxes.dtype)
-    height = tf.cast(output_size[0], boxes.dtype)
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(boxes, 4, axis=-1)
+# def get_non_empty_box_indices(boxes, output_size=None):
+#   """Get indices for non-empty boxes."""
+#   # Selects indices if box height or width is 0.
+#   if output_size is not None:
+#     width = tf.cast(output_size[1], boxes.dtype)
+#     height = tf.cast(output_size[0], boxes.dtype)
+#     boxes = box_ops.yxyx_to_xcycwh(boxes)
+#     x, y, w, h = tf.split(boxes, 4, axis=-1)
 
-    indices = tf.where(
-        tf.logical_and(
-            tf.logical_and(
-                tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
-                tf.logical_and(tf.less(x, width), tf.less(y, height))),
-            tf.logical_and(tf.greater(h, 0), tf.greater(w, 0))))
-  else:
-    height = boxes[:, 2] - boxes[:, 0]
-    width = boxes[:, 3] - boxes[:, 1]
-    indices = tf.where(
-        tf.logical_and(tf.greater(height, 0), tf.greater(width, 0)))
-  return indices[:, 0]
-
-
-def box_area(box):
-  return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
+#     indices = tf.where(
+#         tf.logical_and(
+#             tf.logical_and(
+#                 tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
+#                 tf.logical_and(tf.less(x, width), tf.less(y, height))),
+#             tf.logical_and(tf.greater(h, 0), tf.greater(w, 0))))
+#   else:
+#     height = boxes[:, 2] - boxes[:, 0]
+#     width = boxes[:, 3] - boxes[:, 1]
+#     indices = tf.where(
+#         tf.logical_and(tf.greater(height, 0), tf.greater(width, 0)))
+#   return indices[:, 0]
 
 
-def clip_boxes(boxes, image_shape, keep_thresh=0.0, clip_wh=False):
-
-  if isinstance(image_shape, list) or isinstance(image_shape, tuple):
-    height, width = image_shape
-    max_length = [height, width, height, width]
-  else:
-    image_shape = tf.cast(image_shape, dtype=boxes.dtype)
-    height, width = tf.unstack(image_shape, axis=-1)
-    max_length = tf.stack([height, width, height, width], axis=-1)
-
-  # if clip_wh:
-  #   boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
-  # else:
-  width = tf.cast(width, boxes.dtype)
-  height = tf.cast(height, boxes.dtype)
-  keep_thresh = tf.cast(keep_thresh, boxes.dtype)
-
-  # locations where atleast 25% of the image is in frame but the certer is not
-  y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
-  boxes = box_ops.yxyx_to_xcycwh(boxes)
-  x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-  y_mask1 = tf.math.logical_and(
-      (y_min - height > tf.cast(h * keep_thresh, y_min.dtype)), (y > height))
-  x_mask1 = tf.math.logical_and(
-      (x_min - width > tf.cast(w * keep_thresh, x_min.dtype)), (x > width))
-  y_new = tf.where(y_mask1, height, y)
-  x_new = tf.where(x_mask1, width, x)
-  h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
-  w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
-
-  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-  x, y, w, h = tf.split(boxes, 4, axis=-1)
-  boxes = box_ops.xcycwh_to_yxyx(boxes)
-  y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
-
-  y_mask1 = tf.math.logical_and(
-      (y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)), (y < 0))
-  x_mask1 = tf.math.logical_and(
-      (x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)), (x < 0))
-
-  y_new = tf.where(y_mask1, 0.0, y)
-  x_new = tf.where(x_mask1, 0.0, x)
-  h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
-  w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
-
-  boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
-  boxes = box_ops.xcycwh_to_yxyx(boxes)
-
-  # y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
-  # x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
-  # y_max = tf.where(y_mask1, height, y_max)
-  # x_max = tf.where(x_mask1, width, x_max)
-
-  # boxes = tf.cast(
-  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-  # boxes = box_ops.yxyx_to_xcycwh(boxes)
-  # x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-  # y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
-  # x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
-
-  # y_min = tf.where(y_mask1, 0.0, y_min)
-  # x_min = tf.where(x_mask1, 0.0, x_min)
-
-  # boxes = tf.cast(
-  #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
-
-  if clip_wh:
-    boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
-  else:
-    x, y, w, h = tf.split(box_ops.yxyx_to_xcycwh(boxes), 4, axis=-1)
-    cond = tf.logical_and(
-        tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
-        tf.logical_and(tf.less(x, width), tf.less(y, height)))
-    clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
-    clipped_b_area = tf.expand_dims(box_area(clipped_boxes), axis=-1)
-    b_area = tf.expand_dims(box_area(boxes), axis=-1)
-
-    boxes = tf.where(
-        tf.logical_and(tf.logical_not(cond), clipped_b_area > 0.1 * b_area),
-        clipped_boxes, boxes)
-  return boxes
+# def box_area(box):
+#   return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
 
 
-def resize_and_crop_boxes(boxes,
-                          image_scale,
-                          output_size,
-                          offset,
-                          keep_thresh=0.0,
-                          clip_wh=False,
-                          aggressive=False):
+# def clip_boxes(boxes, image_shape, keep_thresh=0.0, clip_wh=False):
 
-  boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
-  boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+#   if isinstance(image_shape, list) or isinstance(image_shape, tuple):
+#     height, width = image_shape
+#     max_length = [height, width, height, width]
+#   else:
+#     image_shape = tf.cast(image_shape, dtype=boxes.dtype)
+#     height, width = tf.unstack(image_shape, axis=-1)
+#     max_length = tf.stack([height, width, height, width], axis=-1)
 
-  boxes = clip_boxes(
-      boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
-  return boxes
+#   # if clip_wh:
+#   #   boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+#   # else:
+#   width = tf.cast(width, boxes.dtype)
+#   height = tf.cast(height, boxes.dtype)
+#   keep_thresh = tf.cast(keep_thresh, boxes.dtype)
+
+#   # locations where atleast 25% of the image is in frame but the certer is not
+#   y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
+#   boxes = box_ops.yxyx_to_xcycwh(boxes)
+#   x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+#   y_mask1 = tf.math.logical_and(
+#       (y_min - height > tf.cast(h * keep_thresh, y_min.dtype)), (y > height))
+#   x_mask1 = tf.math.logical_and(
+#       (x_min - width > tf.cast(w * keep_thresh, x_min.dtype)), (x > width))
+#   y_new = tf.where(y_mask1, height, y)
+#   x_new = tf.where(x_mask1, width, x)
+#   h_new = tf.where(y_mask1, (y_new - y_min) * 2, h)
+#   w_new = tf.where(x_mask1, (x_new - x_min) * 2, w)
+
+#   boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+#   x, y, w, h = tf.split(boxes, 4, axis=-1)
+#   boxes = box_ops.xcycwh_to_yxyx(boxes)
+#   y_min, x_min, y_max, x_max = tf.split(boxes, 4, axis=-1)
+
+#   y_mask1 = tf.math.logical_and(
+#       (y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)), (y < 0))
+#   x_mask1 = tf.math.logical_and(
+#       (x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)), (x < 0))
+
+#   y_new = tf.where(y_mask1, 0.0, y)
+#   x_new = tf.where(x_mask1, 0.0, x)
+#   h_new = tf.where(y_mask1, (y_max - y_new) * 2, h)
+#   w_new = tf.where(x_mask1, (x_max - x_new) * 2, w)
+
+#   boxes = tf.cast(tf.concat([x_new, y_new, w_new, h_new], axis=-1), boxes.dtype)
+#   boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+#   # y_mask1 = tf.math.logical_and((y_min - height > tf.cast(h * keep_thresh, y_min.dtype)),(y > height))
+#   # x_mask1 = tf.math.logical_and((x_min - width  > tf.cast(w * keep_thresh, x_min.dtype)),(x > width ))
+#   # y_max = tf.where(y_mask1, height, y_max)
+#   # x_max = tf.where(x_mask1, width, x_max)
+
+#   # boxes = tf.cast(
+#   #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+#   # boxes = box_ops.yxyx_to_xcycwh(boxes)
+#   # x, y, w, h = tf.split(boxes, 4, axis=-1)
+
+#   # y_mask1 = tf.math.logical_and((y_max - 0 > tf.cast(h * keep_thresh, y_max.dtype)),(y < 0))
+#   # x_mask1 = tf.math.logical_and((x_max - 0 > tf.cast(w * keep_thresh, x_max.dtype)),(x < 0))
+
+#   # y_min = tf.where(y_mask1, 0.0, y_min)
+#   # x_min = tf.where(x_mask1, 0.0, x_min)
+
+#   # boxes = tf.cast(
+#   #     tf.concat([y_min, x_min, y_max, x_max], axis=-1), boxes.dtype)
+
+#   if clip_wh:
+#     boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+#   else:
+#     x, y, w, h = tf.split(box_ops.yxyx_to_xcycwh(boxes), 4, axis=-1)
+#     cond = tf.logical_and(
+#         tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
+#         tf.logical_and(tf.less(x, width), tf.less(y, height)))
+#     clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+#     clipped_b_area = tf.expand_dims(box_area(clipped_boxes), axis=-1)
+#     b_area = tf.expand_dims(box_area(boxes), axis=-1)
+
+#     boxes = tf.where(
+#         tf.logical_and(tf.logical_not(cond), clipped_b_area > 0.1 * b_area),
+#         clipped_boxes, boxes)
+#   return boxes
+
+
+# def resize_and_crop_boxes(boxes,
+#                           image_scale,
+#                           output_size,
+#                           offset,
+#                           keep_thresh=0.0,
+#                           clip_wh=False,
+#                           aggressive=False):
+
+#   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
+#   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+
+#   boxes = clip_boxes(
+#       boxes, output_size, keep_thresh=keep_thresh, clip_wh=clip_wh)
+#   return boxes
 
 
 def get_image_shape(image):
+  """
+  Get the shape of the image regardless of if the image is in the
+  (batch_size, x, y, c) format or the (x, y, c) format.
+  
+  Args:
+    image: A int tensor who has either 3 or 4 dimensions.
+  
+  Returns:
+    A tuple representing the (height, width) of the image.
+  """
   shape = tf.shape(image)
   if tf.shape(shape)[0] == 4:
     width = shape[2]
@@ -236,6 +261,21 @@ def get_image_shape(image):
 
 
 def random_translate(image, t):
+  """
+  Translate the boxes by a random fraction of the image width and height between
+  [-t, t).
+
+  Args:
+    image: An int tensor of either 3 or 4 dimensions representing the image or a
+      batch of images.
+    t: A float representing the fraction of the width and height by which to
+      jitter the image.
+  
+  Returns:
+    A tuple with three elements: a tensor representing the translated image with
+    the same dimensions as `box`, and the number of pixels that the image was
+    translated in both the x and y directions.
+  """
   with tf.name_scope('random_translate'):
     if t != 0:
       t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
@@ -252,6 +292,20 @@ def random_translate(image, t):
 
 
 def translate_boxes(box, classes, translate_x, translate_y):
+  """
+  Translate the boxes by a fixed number of pixels.
+  
+  Args:
+    box: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+    classes: A tensor representing the classes of each bounding box. The shape
+      of `classes` lacks the final dimension of the shape `box` which is of size
+      4.
+  
+  Returns:
+    A tuple with two elements: a tensor representing the translated boxes with
+    the same dimensions as `box` and the `classes` tensor.
+  """
   with tf.name_scope('translate_boxes'):
     box = box_ops.yxyx_to_xcycwh(box)
     x, y, w, h = tf.split(box, 4, axis=-1)
@@ -263,6 +317,23 @@ def translate_boxes(box, classes, translate_x, translate_y):
 
 
 def translate_image(image, t_y, t_x):
+  """
+  Translate the boxes by a fix fraction of the image width and height
+  represented by (t_y, t_x).
+
+  Args:
+    image: An int tensor of either 3 or 4 dimensions representing the image or a
+      batch of images.
+    t_y: A float representing the fraction of the height by which to translate
+      the image vertically.
+    t_x: A float representing the fraction of the width by which to translate
+      the image horizontally.
+
+  Returns:
+    A tuple with three elements: a tensor representing the translated image with
+    the same dimensions as `box`, and the number of pixels that the image was
+    translated in both the y and x directions.
+  """
   with tf.name_scope('translate_boxes'):
     height, width = get_image_shape(image)
     image_jitter = tf.convert_to_tensor([t_y, t_x])
@@ -274,6 +345,30 @@ def translate_image(image, t_y, t_x):
 
 
 def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
+  """
+  Performs the letterbox operation that pads the image in order to change the
+  aspect ratio of the image without distorting or cropping the image. This
+  function also adjusts the bounding boxes accordingly.
+  https://en.wikipedia.org/wiki/Letterboxing_(filming)
+
+  Args:
+    image: A Tensor of shape [height, width, 3] representing the input image.
+    boxes: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+    xs: A `float` representing the amount to scale the width of the image though
+      the use of letterboxing.
+    ys: A `float` representing the amount to scale the height of the image
+      though the use of letterboxing.
+    target_dim: An `int` representing the largest dimension of the image for
+      the scaled image information.
+
+  Returns:
+    A tuple with 3 elements representing the letterboxed image, the adjusted
+    bounding boxes for the new letterboxed image, followed by a list
+    representing the scaled padded height, width, as well as the padding in
+    both directions.
+  """
+
   height, width = get_image_shape(image)
   clipper = tf.math.maximum(width, height)
   if target_dim is None:
@@ -319,18 +414,19 @@ def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
 
 def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
   """
-    get the correct anchor that is assoiciated with each box using IOU
-    Args:
-      y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
-      anchors: list or tensor for the anchor boxes to be used in prediction
-        found via Kmeans
-      width: int for the image width
-      height: int for the image height
+  get the correct anchor that is assoiciated with each box using IOU
+  
+  Args:
+    y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
+    anchors: list or tensor for the anchor boxes to be used in prediction
+      found via Kmeans
+    width: int for the image width
+    height: int for the image height
 
-    Return:
-      tf.Tensor: y_true with the anchor associated with each ground truth
-      box known
-    """
+  Return:
+    tf.Tensor: y_true with the anchor associated with each ground truth
+    box known
+  """
   with tf.name_scope('get_best_anchor'):
     is_batch = True
     ytrue_shape = y_true.get_shape()
@@ -424,17 +520,20 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
   """
     get the correct anchor that is assoiciated with each box using IOU
-    Args:
-      y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
-      anchors: list or tensor for the anchor boxes to be used in prediction
-        found via Kmeans
-      width: int for the image width
-      height: int for the image height
+    
+  Args:
+    y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
+    anchors: list or tensor for the anchor boxes to be used in prediction
+      found via Kmeans
+    width: int for the image width
+    height: int for the image height
+    iou_thresh: float for the threshold for selecting the boxes that are
+      considered overlapping
 
-    Return:
-      tf.Tensor: y_true with the anchor associated with each ground truth
-      box known
-    """
+  Return:
+    tf.Tensor: y_true with the anchor associated with each ground truth
+    box known
+  """
   with tf.name_scope('get_best_anchor'):
     width = tf.cast(width, dtype=y_true.dtype)
     height = tf.cast(height, dtype=y_true.dtype)
@@ -449,6 +548,21 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
 
 
 def _get_num_reps(anchors, mask, box_mask):
+  """
+  Calculate the number of anchor boxes that an object is repeated in.
+  
+  Args:
+    anchors: A list or Tensor representing the anchor boxes
+    mask: A `list` of `int`s representing the mask for the anchor boxes that
+      will be considered when creating the gridded ground truth.
+    box_mask: A mask for all of the boxes that are in the bounds of the image
+      and have positive height and width.
+  
+  Returns:
+    A tuple with three elements: the number of repetitions, the box indices
+    where the primary anchors are usable according to the mask, and the box
+    indices where the alternate anchors are usable according to the mask.
+  """
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, 0)
@@ -475,6 +589,18 @@ def _get_num_reps(anchors, mask, box_mask):
 
 
 def _gen_utility(boxes):
+  """
+  Generate a mask to filter the boxes whose x and y coordinates are in
+  [0.0, 1.0) and have width and height are greater than 0.
+  
+  Args:
+    boxes: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+  
+  Returns:
+    A mask for all of the boxes that are in the bounds of the image and have
+    positive height and width.
+  """
   eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
   gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis=-1)
   ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis=-1)
@@ -485,28 +611,44 @@ def _gen_utility(boxes):
 
 
 def _gen_offsets(scale_xy, dtype):
+  """
+  Create offset Tensor for a `scale_xy` for use in `build_grided_gt_ind`.
+  
+  Args:
+    scale_xy: A `float` to represent the amount the boxes are scaled in the
+      loss function.
+    dtype: The type of the Tensor to create.
+  
+  Returns:
+    Returns the Tensor for the offsets.
+  """
   return tf.cast(0.5 * (scale_xy - 1), dtype)
 
 
 def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
                         scale_num_inst, use_tie_breaker):
   """
-    convert ground truth for use in loss functions
-    Args:
-      y_true: tf.Tensor[] ground truth
-        [batch, box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
-      mask: list of the anchor boxes choresponding to the output,
-        ex. [1, 2, 3] tells this layer to predict only the first 3 anchors
-        in the total.
-      size: the dimensions of this output, for regular, it progresses from
-        13, to 26, to 52
-      num_classes: `integer` for the number of classes
-      dtype: expected output datatype
-      use_tie_breaker: boolean value for wether or not to use the tie
-        breaker
+  convert ground truth for use in loss functions
+  
+  Args:
+    y_true: tf.Tensor[] ground truth
+      [batch, box coords[0:4], classes_onehot[0:-1], best_fit_anchor_box]
+    mask: list of the anchor boxes choresponding to the output,
+      ex. [1, 2, 3] tells this layer to predict only the first 3 anchors
+      in the total.
+    size: the dimensions of this output, for regular, it progresses from
+      13, to 26, to 52
+    num_classes: `integer` for the number of classes
+    dtype: expected output datatype
+    scale_xy: A `float` to represent the amount the boxes are scaled in the
+      loss function.
+    scale_num_inst: A `float` to represent the scale at which to multiply the
+      number of predicted boxes by to get the number of instances to write
+      to the grid.
+    use_tie_breaker: A `bool` value for wether or not to use the tie breaker.
 
-    Return:
-      tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
+  Return:
+    tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
   """
   # unpack required components from the input ground truth
   boxes = tf.cast(y_true['bbox'], dtype)
@@ -586,6 +728,27 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
 
 def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
                  width, num_written):
+  """
+  Write out the y and x grid cell location and the anchor into the `ind_val`
+  TensorArray and write the `sample` to the `ind_sample` TensorArray.
+  
+  Args:
+    box: An `int` Tensor with two elements for the relative position of the
+      box in the image.
+    anchor_id: An `int` representing the anchor box.
+    offset: A `float` representing the offset from the grid cell.
+    sample: A `float` Tensor representing the data to write out.
+    ind_val: A TensorArray representing the indices for the detected boxes.
+    ind_sample: A TensorArray representing the indices for the detected boxes.
+    height: An `int` representing the height of the image.
+    width: An `int` representing the width of the image.
+    num_written: A `int` representing the number of samples that have been
+      written.
+  
+  Returns:
+    Modified `ind_val`, `ind_sample`, and `num_written`.
+  """
+
   a_ = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
 
   y = box[1] * height
@@ -644,7 +807,29 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):
-
+  """
+  Iterate through all viable anchor boxes and write the sample information to
+  the `ind_val` and `ind_sample` TensorArrays.
+  
+  Args:
+    num_reps: An `int` Tensor representing the number of repetitions.
+    boxes: A 2D `int` Tensor with two elements for the relative position of the
+      box in the image for each object.
+    classes: An `int` Tensor representing the class for each object.
+    ious: A 2D `int` Tensor representing the IOU of object with each anchor box.
+    ind_val: A TensorArray representing the indices for the detected boxes.
+    ind_sample: A TensorArray representing the indices for the detected boxes.
+    height: An `int` representing the height of the image.
+    width: An `int` representing the width of the image.
+    num_written: A `int` representing the number of samples that have been
+      written.
+    num_instances: A `int` representing the number of instances that can be
+      written at the maximum.
+    offset: A `float` representing the offset from the grid cell.
+  
+  Returns:
+    Modified `ind_val`, `ind_sample`, and `num_written`.
+  """
   # if offset > 0.0:
   #   const = tf.cast(tf.convert_to_tensor([1. - offset/2]), dtype=boxes.dtype)
   # else:
@@ -683,6 +868,7 @@ def random_crop_image(image,
                       max_attempts=10,
                       seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
+  
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
     aspect_ratio_range: a list of floats. The cropped area of the image must
@@ -693,6 +879,7 @@ def random_crop_image(image,
       image of the specified constraints. After max_attempts failures, return
       the entire image.
     seed: the seed of the random generator.
+  
   Returns:
     cropped_image: a Tensor representing the random cropped image. Can be the
       original image if max_attempts is exhausted.
@@ -727,7 +914,9 @@ def random_crop_mosaic(image,
                        area_range=(0.08, 1.0),
                        max_attempts=10,
                        seed=1):
-  """Randomly crop an arbitrary shaped slice from the input image.
+  """Randomly crop an arbitrary shaped slice from the input image. Can be the
+  original image if max_attempts is exhausted.
+  
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
     aspect_ratio_range: a list of floats. The cropped area of the image must
@@ -738,9 +927,11 @@ def random_crop_mosaic(image,
       image of the specified constraints. After max_attempts failures, return
       the entire image.
     seed: the seed of the random generator.
+  
   Returns:
-    cropped_image: a Tensor representing the random cropped image. Can be the
-      original image if max_attempts is exhausted.
+    A 2-element tuple containing a Tensor representing the random cropped image
+    and a Tensor representing the transformation information of the padding
+    (input shape, output shape, scaling, and padding)
   """
 
   with tf.name_scope('random_crop_image'):
@@ -778,6 +969,22 @@ def random_crop_mosaic(image,
 
 
 def random_pad(image, area):
+  """
+  Pad the image to with a random amount of offset on both the x-axis and the
+  y-axis and a padding that multiplies the shape of each dimension by
+  `sqrt(area)`. The amount is within a box that is the same shape as `image` but
+  has the `sqrt(area)` factor on each dimension.
+
+  Args:
+    image: a Tensor of shape [height, width, 3] representing the input image.
+    area: a `float` representing the amount to scale the area of the original
+      image by.
+
+  Returns:
+    A 2 element tuple containing the padded image and a Tensor representing the
+    transformation information of the padding (input shape, output shape,
+    scaling, and padding)
+  """
   with tf.name_scope('pad_to_bbox'):
     height, width = get_image_shape(image)
 
@@ -816,6 +1023,17 @@ def random_pad(image, area):
 
 
 def random_rotate_image(image, max_angle):
+  """
+  Rotate an image by a random angle that ranges from [-max_angle, max_angle).
+  
+  Args:
+    x_: A float tensor for the x-coordinates of the points.
+    y_: A float tensor for the y-coordinates of the points.
+    angle: A float representing the counter-clockwise rotation in radians.
+  
+  Returns:
+    The rotated points.
+  """
   angle = tf.random.uniform([],
                             minval=-max_angle,
                             maxval=max_angle,
@@ -827,6 +1045,19 @@ def random_rotate_image(image, max_angle):
 
 
 def get_corners(boxes):
+  """
+  Get the coordinates of the 4 courners of a set of bounding boxes.
+  
+  Args:
+    boxes: A tensor whose last axis has a length of 4 and is in the format
+      (ymin, xmin, ymax, xmax)
+  
+  Returns:
+    A tensor whose dimensions are the same as `boxes` but has an additional axis
+    of size 2 representing the 4 courners of the bounding boxes in the order
+    (tl, bl, tr, br).
+  """
+
   ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
 
   tl = tf.concat([xmi, ymi], axis=-1)
@@ -839,6 +1070,17 @@ def get_corners(boxes):
 
 
 def rotate_points(x_, y_, angle):
+  """
+  Rotate points by an angle about the center of the image.
+  
+  Args:
+    x_: A float tensor for the x-coordinates of the points.
+    y_: A float tensor for the y-coordinates of the points.
+    angle: A float representing the counter-clockwise rotation in radians.
+  
+  Returns:
+    The rotated points.
+  """
   sx = 0.5 - x_
   sy = 0.5 - y_
 
@@ -856,7 +1098,19 @@ def rotate_points(x_, y_, angle):
   return x, y
 
 
-def rotate_boxes(boxes, height, width, angle):
+def rotate_boxes(boxes, angle):
+  """
+  Rotate bounding boxes by an angle about the center of the image.
+  
+  Args:
+    boxes: A float tensor whose last axis represents (ymin, xmin, ymax, xmax).
+    height, width: FIXME: unused
+    angle: A float representing the counter-clockwise rotation in radians.
+  
+  Returns:
+    The rotated boxes.
+  """
+
   corners = get_corners(boxes)
   # boxes = box_ops.yxyx_to_xcycwh(boxes)
   ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis=-1)
