@@ -74,7 +74,7 @@ task:
       max_boxes: 200
       nms_type: diou
       iou_thresh: 0.001
-      nms_thresh: 0.6
+      nms_thresh: 0.5
       pre_nms_points: 5000
       use_reduction_sum: false
   train_data:
@@ -89,8 +89,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.4
-      aug_scale_aspect: 0.0
+      aug_rand_crop: 0.1
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
