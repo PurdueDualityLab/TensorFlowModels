@@ -115,8 +115,8 @@ class Mosaic(object):
       is_crowd = tf.squeeze(is_crowd, axis=0)
       area = tf.squeeze(area, axis=0)
 
-    # indices = box_ops.get_non_empty_box_indices(boxes)
-    indices = preprocessing_ops.get_non_empty_box_indices(boxes)
+    indices = box_ops.get_non_empty_box_indices(boxes)
+    # indices = preprocessing_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
     is_crowd = tf.gather(classes, indices)
