@@ -37,12 +37,12 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   if model_config.decoder.version not in yolo_model.YOLO_MODELS.keys():
     raise Exception(
-        f"unsupported model version please select from {v3, v4}, \n\n \
+        "unsupported model version please select from {v3, v4}, \n\n \
         or specify a custom decoder config using YoloDecoder in you yaml")
 
   if model_config.decoder.type not in yolo_model.YOLO_MODELS[
       model_config.decoder.version].keys():
-    raise Exception(f"unsupported model type please select from \
+    raise Exception("unsupported model type please select from \
         {yolo_model.YOLO_MODELS[model_config.decoder.version].keys()},\
         \n\n or specify a custom decoder config using YoloDecoder in you yaml")
 

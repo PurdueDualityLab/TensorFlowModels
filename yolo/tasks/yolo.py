@@ -422,13 +422,13 @@ class YoloTask(base_task.Task):
 
     metric_names = defaultdict(list)
     for key in self._masks.keys():
-      metric_names[key].append(f'box_loss')
-      metric_names[key].append(f'class_loss')
-      metric_names[key].append(f'conf_loss')
-      metric_names[key].append(f"recall50")
-      metric_names[key].append(f"precision50")
-      metric_names[key].append(f"avg_iou")
-      metric_names[key].append(f"avg_obj")
+      metric_names[key].append('box_loss')
+      metric_names[key].append('class_loss')
+      metric_names[key].append('conf_loss')
+      metric_names[key].append("recall50")
+      metric_names[key].append("precision50")
+      metric_names[key].append("avg_iou")
+      metric_names[key].append("avg_obj")
 
     metric_names['global'].append(f'total_loss')
 
