@@ -17,9 +17,9 @@ class Mosaic(object):
                output_size,
                mosaic_frequency=1.0,
                crop_area=[0.5, 1.0],
-               crop_daspect=0.6, 
+               crop_daspect=0.6,
                crop_area_mosaic=[0.5, 1.0],
-               preserve_aspect_ratio=True, 
+               preserve_aspect_ratio=True,
                random_crop=1.0,
                keep_thresh=0.00,
                random_crop_mosaic=False):
@@ -181,7 +181,6 @@ class Mosaic(object):
         is_crowd = sample['groundtruth_is_crowd']
         area = sample['groundtruth_area']
         info = sample['info']
-
 
         images = tf.split(image, 4, axis=0)
         box_list = tf.split(boxes, 4, axis=0)

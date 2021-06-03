@@ -48,6 +48,7 @@ def rand_scale(val, dtype=tf.float32):
     return scale
   return 1.0 / scale
 
+
 def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   """
   Pad a dimension of the tensor to have a maximum number of instances filling
@@ -661,7 +662,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   # get the number of boxes in the ground truth boxs
   num_boxes = tf.shape(boxes)[-2]
   # get the number of anchor boxes used for this anchor scale
-  len_masks = len(mask) #mask is a python object tf.shape(mask)[0] 
+  len_masks = len(mask)  #mask is a python object tf.shape(mask)[0]
   # number of anchors
   num_anchors = tf.shape(anchors)[-1]
   num_instances = num_boxes * scale_num_inst
@@ -1138,8 +1139,8 @@ def resize_and_crop_image(image,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
                           random_pad=False,
-                          shiftx = 0.5, 
-                          shifty = 0.5, 
+                          shiftx=0.5,
+                          shifty=0.5,
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -1222,8 +1223,12 @@ def resize_and_crop_image(image,
       dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
       dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
     else:
-      dy = tf.cast(tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shiftx, tf.int32)
-      dx = tf.cast(tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shifty, tf.int32)
+      dy = tf.cast(
+          tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shiftx,
+          tf.int32)
+      dx = tf.cast(
+          tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shifty,
+          tf.int32)
 
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])

@@ -9,6 +9,7 @@ from yolo.losses.yolo_loss import Yolo_Loss
 from yolo.losses import yolo_loss
 from yolo.ops import nms_ops
 
+
 @ks.utils.register_keras_serializable(package='yolo')
 class YoloLayer(ks.Model):
 
@@ -38,7 +39,7 @@ class YoloLayer(ks.Model):
                **kwargs):
     """
     parameters for the loss functions used at each detection head output
-    
+
     Args:
       classes: `int` for the number of classes 
       mask: `List[int]` for the output level that this specific model output 
@@ -164,9 +165,8 @@ class YoloLayer(ks.Model):
     #                             height,
     #                             number_anchors,
     #                             remaining_points)
-   
-    data = tf.reshape(inputs,
-                      [-1, height, width, len_mask, self._classes + 5])
+
+    data = tf.reshape(inputs, [-1, height, width, len_mask, self._classes + 5])
 
     # use the grid generator to get the formatted anchor boxes and grid points
     # in shape [1, height, width, 2]
@@ -176,9 +176,9 @@ class YoloLayer(ks.Model):
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
 
-
     # determine the number of classes
-    classes = class_scores.get_shape().as_list()[-1] #tf.shape(class_scores)[-1]
+    classes = class_scores.get_shape().as_list()[
+        -1]  #tf.shape(class_scores)[-1]
 
     # configurable to use the new coordinates in scaled Yolo v4 or not
     if not self._new_cords[key]:
@@ -235,7 +235,6 @@ class YoloLayer(ks.Model):
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
 
-
     # apply nms
     if self._nms_type == 6:
       # TPU supported + DIOU NMS much slower
@@ -246,8 +245,7 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           self._thresh,
           self._nms_thresh,
-          prenms_top_k=self._pre_nms_points,
-          use_classes=True)
+          prenms_top_k=500)
     elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)

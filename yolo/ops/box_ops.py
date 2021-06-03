@@ -1,7 +1,5 @@
 import tensorflow as tf
-import tensorflow.keras.backend as K
 from yolo.ops import math_ops
-from typing import Tuple, Union
 import math
 
 
@@ -295,10 +293,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 
 
 # equal to bbox_overlap but far more versitile
-def aggregated_comparitive_iou(boxes1,
-                               boxes2=None,
-                               iou_type=0,
-                               beta=0.6):
+def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
   """Calculates the intersection over union between every box in boxes1 and 
   every box in boxes2.
 
