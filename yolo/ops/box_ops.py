@@ -1,21 +1,21 @@
-""" bounding box utils file """
-
-# import libraries
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from yolo.ops import math_ops
 from typing import Tuple, Union
 import math
-from yolo.ops import math_ops
 
 
 def yxyx_to_xcycwh(box: tf.Tensor):
-  """Converts boxes from ymin, xmin, ymax, xmax to x_center, y_center, width, height.
-    Args:
-      box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes
-        in ymin, xmin, ymax, xmax.
-    Returns:
-      box: a `Tensor` whose shape is the same as `box` in new format.
-    """
+  """Converts boxes from ymin, xmin, ymax, xmax to x_center, y_center, width, 
+  height.
+
+  Args:
+    box: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes in ymin, xmin, ymax, xmax.
+  
+  Returns:
+    box: a `Tensor` whose shape is the same as `box` in new format.
+  """
   with tf.name_scope('yxyx_to_xcycwh'):
     ymin, xmin, ymax, xmax = tf.split(box, 4, axis=-1)
     x_center = (xmax + xmin) / 2
@@ -28,13 +28,9 @@ def yxyx_to_xcycwh(box: tf.Tensor):
 
 @tf.custom_gradient
 def _xcycwh_to_yxyx(box: tf.Tensor, scale):
-  """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, xmax.
-    Args:
-      box: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-        x_center, y_center, width, height.
-    Returns:
-      box: a `Tensor` whose shape is the same as `box` in new format.
-    """
+  """Private function called by xcycwh_to_yxyx to allow custom gradients
+  with defaults.
+  """
   with tf.name_scope('xcycwh_to_yxyx'):
     xy, wh = tf.split(box, 2, axis=-1)
     xy_min = xy - wh / 2
@@ -58,6 +54,16 @@ def _xcycwh_to_yxyx(box: tf.Tensor, scale):
 
 
 def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
+  """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, 
+  xmax.
+  
+  Args:
+    box: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes in x_center, y_center, width, height.
+  
+  Returns:
+    box: a `Tensor` whose shape is the same as `box` in new format.
+  """
   if darknet:
     scale = 1.0
   else:
@@ -68,6 +74,21 @@ def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
 
 # IOU
 def intersect_and_union(box1, box2, yxyx=False):
+  """Calculates the intersection and union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+
+  Returns:
+    intersection: a `Tensor` who represents the intersection.
+    union: a `Tensor` who represents the union.
+  """
+
   if not yxyx:
     box1 = xcycwh_to_yxyx(box1)
     box2 = xcycwh_to_yxyx(box2)
@@ -86,6 +107,22 @@ def intersect_and_union(box1, box2, yxyx=False):
 
 
 def smallest_encompassing_box(box1, box2, yxyx=False):
+  """Calculates the smallest box that encompasses both that encomapasses both
+  box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+
+  Returns:
+    box_c: a `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes, the return format is y_min, x_min, y_max, x_max if yxyx is set to
+      to True. In other words it will match the input format.
+  """
   if not yxyx:
     box1 = xcycwh_to_yxyx(box1)
     box2 = xcycwh_to_yxyx(box2)
@@ -107,15 +144,19 @@ def smallest_encompassing_box(box1, box2, yxyx=False):
 
 
 def compute_iou(box1, box2, yxyx=False):
-  """Calculates the intersection of union between box1 and box2.
-    Args:
-        box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-        box2: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-    Returns:
-        iou: a `Tensor` who represents the intersection over union.
-    """
+  """Calculates the intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+
+  Returns:
+    iou: a `Tensor` who represents the intersection over union.
+  """
   # get box corners
   with tf.name_scope('iou'):
     intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
@@ -125,15 +166,21 @@ def compute_iou(box1, box2, yxyx=False):
 
 
 def compute_giou(box1, box2, yxyx=False, darknet=False):
-  """Calculates the generalized intersection of union between box1 and box2.
-    Args:
-        box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-        box2: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-    Returns:
-        iou: a `Tensor` who represents the generalized intersection over union.
-    """
+  """Calculates the General intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+    darknet: a `bool` indicating whether the calling function is the yolo 
+      darknet loss.
+
+  Returns:
+    giou: a `Tensor` who represents the General intersection over union.
+  """
   with tf.name_scope('giou'):
     # get IOU
     if not yxyx:
@@ -160,15 +207,23 @@ def compute_giou(box1, box2, yxyx=False, darknet=False):
 
 
 def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
-  """Calculates the distance intersection of union between box1 and box2.
-    Args:
-        box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-        box2: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-    Returns:
-        iou: a `Tensor` who represents the distance intersection over union.
-    """
+  """Calculates the distance intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    beta: a `float` indicating the amount to scale the distance iou 
+      regularization term. 
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+    darknet: a `bool` indicating whether the calling function is the yolo 
+      darknet loss.
+
+  Returns:
+    diou: a `Tensor` who represents the distance intersection over union.
+  """
   with tf.name_scope('diou'):
     # compute center distance
     if not yxyx:
@@ -200,15 +255,21 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
 
 
 def compute_ciou(box1, box2, yxyx=False, darknet=False):
-  """Calculates the complete intersection of union between box1 and box2.
-    Args:
-        box1: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-        box2: a `Tensor` whose last dimension is 4 representing the coordinates of boxes in
-            x_center, y_center, width, height.
-    Returns:
-        iou: a `Tensor` who represents the complete intersection over union.
-    """
+  """Calculates the complete intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+    darknet: a `bool` indicating whether the calling function is the yolo 
+      darknet loss.
+
+  Returns:
+    ciou: a `Tensor` who represents the complete intersection over union.
+  """
   with tf.name_scope('ciou'):
     # compute DIOU and IOU
     iou, diou = compute_diou(box1, box2, yxyx=yxyx, darknet=darknet)
@@ -237,22 +298,30 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 def aggregated_comparitive_iou(boxes1,
                                boxes2=None,
                                iou_type=0,
-                               beta=0.6,
-                               xyxy=True):
+                               beta=0.6):
+  """Calculates the intersection over union between every box in boxes1 and 
+  every box in boxes2.
 
-  # if boxes2 is not None:
-  #   k1 = tf.shape(boxes1)[-2]
-  #   k2 = tf.shape(boxes2)[-2]
-  # else:
-  #   k1 = tf.shape(boxes1)[-2]
-  #   k2 = tf.shape(boxes1)[-2]
+  Args:
+    boxes1: a `Tensor` of shape [batch size, N, 4] representing the coordinates 
+      of boxes.
+    boxes2: a `Tensor` of shape [batch size, N, 4] representing the coordinates 
+      of boxes.
+    iou_type: `integer` representing the iou version to use, 0 is distance iou, 
+      1 is the general iou, 2 is the complete iou, any other number uses the 
+      standard iou.
+    beta: `float` for the scaling quantity to apply to distance iou 
+      regularization.
+    
 
+  Returns:
+    iou: a `Tensor` who represents the intersection over union in of the 
+      expected/input type.
+  """
   boxes1 = tf.expand_dims(boxes1, axis=-2)
-  #boxes1 = tf.tile(boxes1, [1, 1, k2, 1])
 
   if boxes2 is not None:
     boxes2 = tf.expand_dims(boxes2, axis=-3)
-    #boxes2 = tf.tile(boxes2, [1, k1, 1, 1])
   else:
     boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
 
