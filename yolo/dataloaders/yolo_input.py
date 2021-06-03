@@ -356,8 +356,8 @@ class Parser(parser.Parser):
     boxes = box_ops.denormalize_boxes(boxes, im_shape)
     boxes = box_ops.clip_boxes(boxes, im_shape)
 
-    #inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
-    inds = box_ops.get_non_empty_box_indices(boxes)
+    inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
+    # inds = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, inds)
     classes = tf.gather(classes, inds)
     boxes = box_ops.normalize_boxes(boxes, im_shape)
