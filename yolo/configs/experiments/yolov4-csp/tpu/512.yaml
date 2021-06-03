@@ -89,8 +89,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_rand_crop: 0.6
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
@@ -102,11 +102,11 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.6667
-        random_crop: 0.5
+        mosaic_frequency: 0.85
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: False
-        crop_area_mosaic: [0.25, 0.95]
+        random_crop_mosaic: true
+        aspect_ratio_mode: 'distort'
+        crop_area_mosaic: [0.25, 0.85]
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -119,8 +119,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_rand_crop: 0.6
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
@@ -132,11 +132,11 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.6667
-        random_crop: 0.5
+        mosaic_frequency: 0.85
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: False
-        crop_area_mosaic: [0.25, 0.95]
+        random_crop_mosaic: true
+        aspect_ratio_mode: 'distort'
+        crop_area_mosaic: [0.25, 0.85]
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

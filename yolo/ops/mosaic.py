@@ -16,22 +16,32 @@ class Mosaic(object):
   def __init__(self,
                output_size,
                mosaic_frequency=1.0,
+               random_crop = 0.0,
+               random_aspect_distort = 0.0,
+               aspect_ratio_mode='distort',
+               aug_scale_min = 0.1, 
+               aug_scale_max = 2.0,
+
                crop_area=[0.5, 1.0],
-               crop_daspect=0.6,
                crop_area_mosaic=[0.5, 1.0],
-               preserve_aspect_ratio=True,
-               random_crop=1.0,
-               keep_thresh=0.00,
-               random_crop_mosaic=False):
+               random_crop_mosaic=False, 
+               seed = None,):
+
     self._output_size = output_size
-    self._random_crop = random_crop
+
     self._mosaic_frequency = mosaic_frequency
+    self._aspect_ratio_mode = aspect_ratio_mode
+    self._random_crop = random_crop
+    self._random_aspect_distort = random_aspect_distort
+    self._aug_scale_max = aug_scale_max
+    self._aug_scale_min = aug_scale_min
+
     self._crop_area = crop_area
-    self._seed = None
-    self._crop_daspect = crop_daspect
-    self._keep_thresh = keep_thresh
+    
     self._random_crop_mosaic = random_crop_mosaic
     self._crop_area_mosaic = crop_area_mosaic
+
+    self._seed = seed
     return
 
   def _estimate_shape(self, image):
@@ -170,6 +180,116 @@ class Mosaic(object):
     # image = tf.image.resize(image, (height, width))
     return image, boxes, classes, is_crowd, area, info
 
+  def _process_image(self, image, boxes, classes, is_crowd, area, xs=0.0, ys =0.0):
+    # initialize the shape constants
+    height, width = preprocessing_ops.get_image_shape(image)
+
+    # resize the image irrespective of the aspect ratio
+    clipper = tf.reduce_max((height, width))
+    image = tf.image.resize(
+        image, (clipper, clipper), preserve_aspect_ratio=False)
+    
+    # store the total distortion
+    w_scale = width / clipper
+    h_scale = height / clipper
+    _width = width
+    _height = height
+
+    if self._random_crop > 0.0:
+      jmi = 1 - self._random_crop
+      jma = 1 + self._random_crop
+
+      # crop the image
+      image, info = preprocessing_ops.random_crop_image(
+          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0], 
+          seed = self._seed)
+
+      # use the info to crop the boxes and classes as well
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                    info[1, :], info[3, :])
+      # use the info to crop the boxes and classes as well
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      is_crowd = tf.gather(is_crowd, inds)
+      area = tf.gather(area, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    
+    # use the saved distortion values to return the cropeed image to proper
+    # aspect ratio, it is doen this way in order to allow the random crop to
+    # be indpendent of the images natural input resolution
+    height_, width_ = preprocessing_ops.get_image_shape(image)
+    height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+    width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+    image = tf.image.resize(
+        image, (height_, width_), preserve_aspect_ratio=False)
+
+    if self._random_aspect_distort > 0.0:
+      # apply aspect ratio distortion (stretching and compressing)
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+
+      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._random_aspect_distort, self._random_aspect_distort)
+      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+          -self._random_aspect_distort, self._random_aspect_distort)
+      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+
+      image = tf.image.resize(image, (height_, width_))
+
+    if self._aspect_ratio_mode == 'crop':
+      height, width = self._output_size[0], self._output_size[1]
+      image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
+                                                                     boxes, 
+                                                                     classes, 
+                                                                     is_crowd, 
+                                                                     area, 
+                                                                     self._crop_area,
+                                                                     width, 
+                                                                     height)
+    elif self._aspect_ratio_mode == 'letter':
+      height, width = self._estimate_shape(image)
+      image = tf.image.resize(
+        image, (height, width), preserve_aspect_ratio=False)
+    else:
+      w_scale = self._output_size[0]/_width
+      h_scale = self._output_size[1]/_height
+
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+      image = tf.image.resize(
+        image, (height_, width_), preserve_aspect_ratio=False)
+
+
+    image, info = preprocessing_ops.resize_and_crop_image(
+        image, [self._output_size[0], self._output_size[1]], 
+        [self._output_size[0], self._output_size[1]],
+        aug_scale_min=self._aug_scale_min,
+        aug_scale_max=self._aug_scale_max,
+        random_pad=False, 
+        shiftx = xs, 
+        shifty = ys,
+        seed = self._seed)
+
+    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                 info[3, :])
+
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    is_crowd = tf.gather(is_crowd, inds)
+    area = tf.gather(area, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+
+    return image, boxes, classes, is_crowd, area, info
+
+        
+
+
+
   def _mapped(self, sample):
     if self._mosaic_frequency > 0.0:
       # mosaic is enabled 0.666667 = 0.5 of images are mosaiced
@@ -209,60 +329,26 @@ class Mosaic(object):
          areas[3]) = self._unpad_gt_comps(box_list[3], class_list[3],
                                           is_crowds[3], areas[3])
 
-        height, width = self._output_size[0], self._output_size[1]
 
-        docrop = tf.random.uniform([],
-                                   0.0,
-                                   1.0,
-                                   dtype=tf.float32,
-                                   seed=self._seed)
-        if docrop > (1 - self._random_crop):
-          images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
-              0] = self._crop_image(images[0], box_list[0], class_list[0],
-                                    is_crowds[0], areas[0], self._crop_area,
-                                    width, height)
+        images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
+            0] = self._process_image(images[0], box_list[0], class_list[0],
+                                  is_crowds[0], areas[0], 1.0, 1.0)
 
-        docrop = tf.random.uniform([],
-                                   0.0,
-                                   1.0,
-                                   dtype=tf.float32,
-                                   seed=self._seed)
-        if docrop > (1 - self._random_crop):
-          images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[
-              1] = self._crop_image(images[1], box_list[1], class_list[1],
-                                    is_crowds[1], areas[1], self._crop_area,
-                                    width, height)
+        images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[
+            1] = self._process_image(images[1], box_list[1], class_list[1],
+                                  is_crowds[1], areas[1], 0.0, 1.0)
 
-        docrop = tf.random.uniform([],
-                                   0.0,
-                                   1.0,
-                                   dtype=tf.float32,
-                                   seed=self._seed)
-        if docrop > (1 - self._random_crop):
-          images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[
-              2] = self._crop_image(images[2], box_list[2], class_list[2],
-                                    is_crowds[2], areas[2], self._crop_area,
-                                    width, height)
 
-        docrop = tf.random.uniform([],
-                                   0.0,
-                                   1.0,
-                                   dtype=tf.float32,
-                                   seed=self._seed)
-        if docrop > (1 - self._random_crop):
-          images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[
-              3] = self._crop_image(images[3], box_list[3], class_list[3],
-                                    is_crowds[3], areas[3], self._crop_area,
-                                    width, height)
+        images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[
+            2] = self._process_image(images[2], box_list[2], class_list[2],
+                                  is_crowds[2], areas[2], 1.0, 0.0)
 
-        images[0], box_list[0], infos[0] = self._letter_box(
-            images[0], box_list[0], xs=1.0, ys=1.0)
-        images[1], box_list[1], infos[1] = self._letter_box(
-            images[1], box_list[1], xs=0.0, ys=1.0)
-        images[2], box_list[2], infos[2] = self._letter_box(
-            images[2], box_list[2], xs=1.0, ys=0.0)
-        images[3], box_list[3], infos[3] = self._letter_box(
-            images[3], box_list[3], xs=0.0, ys=0.0)
+
+        images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[
+            3] = self._process_image(images[3], box_list[3], class_list[3],
+                                  is_crowds[3], areas[3], 0.0, 0.0)
+
+
         box_list[0] = box_list[0] * 0.5
         box_list[1], class_list[1] = preprocessing_ops.translate_boxes(
             box_list[1] * 0.5, class_list[1], .5, 0)
@@ -280,6 +366,7 @@ class Mosaic(object):
         is_crowd = tf.concat(is_crowds, axis=0)
         area = tf.concat(areas, axis=0)
 
+        height, width = self._output_size[0], self._output_size[1]
         if self._random_crop_mosaic:
           image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area, self._crop_area_mosaic,

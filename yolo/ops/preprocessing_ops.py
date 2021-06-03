@@ -1224,10 +1224,10 @@ def resize_and_crop_image(image,
       dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
     else:
       dy = tf.cast(
-          tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shiftx,
+          tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shifty,
           tf.int32)
       dx = tf.cast(
-          tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shifty,
+          tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
           tf.int32)
 
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
