@@ -24,7 +24,7 @@ task:
             '[142.0, 110.0]', 
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
-    input_size: [512, 512, 3]
+    input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -35,7 +35,7 @@ task:
       use_sync_bn: true
     decoder_activation: mish
     filter:
-      anchor_generation_scale: 512
+      anchor_generation_scale: 640
       ignore_thresh:
         '5': 0.7
         '4': 0.7
