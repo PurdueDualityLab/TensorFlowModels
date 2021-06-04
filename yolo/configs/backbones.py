@@ -7,7 +7,7 @@ from official.vision.beta.configs import backbones
 
 
 @dataclasses.dataclass
-class DarkNet(hyperparams.Config):
+class Darknet(hyperparams.Config):
   """DarkNet config."""
   model_id: str = 'darknet53'
   width_scale: int = 1.0
@@ -17,4 +17,4 @@ class DarkNet(hyperparams.Config):
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):
-  darknet: DarkNet = DarkNet()
+  darknet: Darknet = Darknet()

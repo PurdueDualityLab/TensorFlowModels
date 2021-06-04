@@ -45,7 +45,7 @@ class ImageClassificationModel(hyperparams.Config):
   input_size: List[int] = dataclasses.field(
       default_factory=lambda: [256, 256, 3])
   backbone: backbones.Backbone = backbones.Backbone(
-      type='darknet', resnet=backbones.DarkNet(model_id='cspdarknet'))
+      type='darknet', resnet=backbones.Darknet(model_id='cspdarknet'))
   dropout_rate: float = 0.0
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky', use_sync_bn=False)

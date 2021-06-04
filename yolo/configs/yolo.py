@@ -149,24 +149,24 @@ class Mosaic(hyperparams.Config):
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 0.85])
-  aspect_ratio_mode: str = 'distort'
+  aspect_ratio_mode: str = 'letter'
   random_crop_mosaic: bool = True
 
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: bool = False
+  letter_box: bool = True
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.0
-  aug_scale_aspect: float = 0.3
+  aug_rand_crop: float = 0.3
+  aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.5
+  aug_scale_min: float = 0.2
   aug_scale_max: float = 1.5
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
@@ -271,7 +271,7 @@ class YoloLossLayer(hyperparams.Config):
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
   backbone: backbones.Backbone = backbones.Backbone(
-      type='darknet', darknet=backbones.DarkNet(model_id='cspdarknet53'))
+      type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
   decoder: YoloDecoder = YoloDecoder(version='v3', type='regular')
   darknet_weights_file: str = 'yolov3.weights'
   darknet_weights_cfg: str = 'yolov3.cfg'
