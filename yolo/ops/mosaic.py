@@ -216,14 +216,15 @@ class Mosaic(object):
       area = tf.gather(area, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
     
-    # use the saved distortion values to return the cropeed image to proper
-    # aspect ratio, it is doen this way in order to allow the random crop to
-    # be indpendent of the images natural input resolution
-    height_, width_ = preprocessing_ops.get_image_shape(image)
-    height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-    width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-    image = tf.image.resize(
-        image, (height_, width_), preserve_aspect_ratio=False)
+    # # use the saved distortion values to return the cropeed image to proper
+    # # aspect ratio, it is doen this way in order to allow the random crop to
+    # # be indpendent of the images natural input resolution
+    if self._aspect_ratio_mode == 'crop' or self._aspect_ratio_mode == 'letter':
+      height_, width_ = preprocessing_ops.get_image_shape(image)
+      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+      image = tf.image.resize(
+          image, (height_, width_), preserve_aspect_ratio=False)
 
     if self._random_aspect_distort > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
@@ -237,6 +238,7 @@ class Mosaic(object):
       height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
       image = tf.image.resize(image, (height_, width_))
+
 
     if self._aspect_ratio_mode == 'crop':
       height, width = self._output_size[0], self._output_size[1]
@@ -252,16 +254,15 @@ class Mosaic(object):
       height, width = self._estimate_shape(image)
       image = tf.image.resize(
         image, (height, width), preserve_aspect_ratio=False)
-    else:
-      w_scale = self._output_size[0]/_width
-      h_scale = self._output_size[1]/_height
+    # else:
+    #   w_scale = self._output_size[0]/_width
+    #   h_scale = self._output_size[1]/_height
 
-      height_, width_ = preprocessing_ops.get_image_shape(image)
-      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-      image = tf.image.resize(
-        image, (height_, width_), preserve_aspect_ratio=False)
-
+    #   height_, width_ = preprocessing_ops.get_image_shape(image)
+    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+    #   image = tf.image.resize(
+    #     image, (height_, width_), preserve_aspect_ratio=False)
 
     image, info = preprocessing_ops.resize_and_crop_image(
         image, [self._output_size[0], self._output_size[1]], 

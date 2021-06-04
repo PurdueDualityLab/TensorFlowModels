@@ -45,6 +45,8 @@ def test_yolo_input_task():
     task = yolo.YoloTask(config)
 
     # loading both causes issues, but oen at a time is not issue, why?
+    config.train_data.global_batch_size = 64
+    config.validation_data.global_batch_size = 64
     config.train_data.dtype = 'float32'
     config.validation_data.dtype = 'float32'
     config.train_data.tfds_name = 'coco'
@@ -164,8 +166,8 @@ def test_yolo_pipeline(is_training=True):
 
 def time_pipeline():
   dataset, dsp = test_yolo_input_task()
-  dataset = dataset.take(100000)
-  print(dataset, dataset.cardinality())
+  # dataset = dataset.take(100000)
+  # print(dataset, dataset.cardinality())
   times = []
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
@@ -173,19 +175,19 @@ def time_pipeline():
     # print(tf.reduce_min(i))
     # print(l , ftime - ltime, end = ", ")
 
-    gt = j['true_conf']
-    inds = j['inds']
+    # gt = j['true_conf']
+    # inds = j['inds']
 
-    with tf.device('CPU:0'):
-      test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
-      test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
-      test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
-      tf.print(test)
+    # with tf.device('CPU:0'):
+    #   test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
+    #   test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
+    #   test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
+      # tf.print(test)
 
     times.append(ftime - ltime)
     ltime = time.time()
     print(times[-1], l)
-    if l >= 80000:
+    if l >= 100:
       break
 
   plt.plot(times)
