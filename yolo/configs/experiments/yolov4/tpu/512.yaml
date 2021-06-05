@@ -90,7 +90,7 @@ task:
       random_flip: True
       random_pad: True
       aug_rand_crop: 0.4
-      aug_scale_aspect: 0.1
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
@@ -120,7 +120,7 @@ task:
       random_flip: True
       random_pad: True
       aug_rand_crop: 0.4
-      aug_scale_aspect: 0.1
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
