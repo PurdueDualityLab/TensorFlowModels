@@ -185,24 +185,19 @@ class Mosaic(object):
     height, width = preprocessing_ops.get_image_shape(image)
 
     # resize the image irrespective of the aspect ratio
-    clipper = tf.reduce_max((height, width))
-    image = tf.image.resize(
-        image, (clipper, clipper), preserve_aspect_ratio=False)
+    if self._aspect_ratio_mode == 'distort':
+      w_, h_ = self._estimate_shape(image)
+      image = tf.image.resize(
+          image, (h_, w_), preserve_aspect_ratio=False)
     
-    # store the total distortion
-    w_scale = width / clipper
-    h_scale = height / clipper
-    _width = width
-    _height = height
-
     if self._random_crop > 0.0:
-      jmi = 1 - self._random_crop
-      jma = 1 + self._random_crop
+      # jmi = 1 - self._random_crop
+      # jma = 1 + self._random_crop
 
       # crop the image
-      image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0], 
-          seed = self._seed)
+      # crop the image
+      image, info = preprocessing_ops.random_aspect_crop(image, 
+                                                    daspect = self._random_crop)
 
       # use the info to crop the boxes and classes as well
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
@@ -216,15 +211,6 @@ class Mosaic(object):
       area = tf.gather(area, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
     
-    # # use the saved distortion values to return the cropeed image to proper
-    # # aspect ratio, it is doen this way in order to allow the random crop to
-    # # be indpendent of the images natural input resolution
-    if self._aspect_ratio_mode == 'crop' or self._aspect_ratio_mode == 'letter':
-      height_, width_ = preprocessing_ops.get_image_shape(image)
-      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-      image = tf.image.resize(
-          image, (height_, width_), preserve_aspect_ratio=False)
 
     if self._random_aspect_distort > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
@@ -239,7 +225,6 @@ class Mosaic(object):
 
       image = tf.image.resize(image, (height_, width_))
 
-
     if self._aspect_ratio_mode == 'crop':
       height, width = self._output_size[0], self._output_size[1]
       image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
@@ -250,19 +235,6 @@ class Mosaic(object):
                                                                      self._crop_area,
                                                                      width, 
                                                                      height)
-    elif self._aspect_ratio_mode == 'letter':
-      height, width = self._estimate_shape(image)
-      image = tf.image.resize(
-        image, (height, width), preserve_aspect_ratio=False)
-    # else:
-    #   w_scale = self._output_size[0]/_width
-    #   h_scale = self._output_size[1]/_height
-
-    #   height_, width_ = preprocessing_ops.get_image_shape(image)
-    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-    #   image = tf.image.resize(
-    #     image, (height_, width_), preserve_aspect_ratio=False)
 
     image, info = preprocessing_ops.resize_and_crop_image(
         image, [self._output_size[0], self._output_size[1]], 

@@ -244,12 +244,15 @@ class Parser(parser.Parser):
       # apply the random aspect ratio crop to the image
       if self._aug_rand_crop > 0 and not data['is_mosaic']:
         # compute the net jitter
-        jmi = 1 - self._aug_rand_crop
-        jma = 1 + self._aug_rand_crop
+        # jmi = 1 - self._aug_rand_crop
+        # jma = 1 + self._aug_rand_crop
 
         # crop the image
-        image, info = preprocessing_ops.random_crop_image(
-            image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
+        image, info = preprocessing_ops.random_aspect_crop(image, 
+                                                           daspect = self._aug_rand_crop)
+        
+        #preprocessing_ops.random_crop_image(
+            #image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
 
         # use the info to crop the boxes and classes as well
         boxes = box_ops.denormalize_boxes(boxes, info[0, :])
