@@ -233,44 +233,29 @@ class Parser(parser.Parser):
 
     # if not data['is_mosaic']:  
     # resize the image irrespective of the aspect ratio
-    clipper = tf.reduce_max((height, width))
-    image = tf.image.resize(
-        image, (clipper, clipper), preserve_aspect_ratio=False)
+    if self._letter_box:
+      clipper = tf.reduce_max((height, width))
+      image = tf.image.resize(
+          image, (clipper, clipper), preserve_aspect_ratio=False)
 
     # store the total distortion
-    w_scale = width / clipper
-    h_scale = height / clipper
+    # w_scale = width / clipper
+    # h_scale = height / clipper
 
     # apply the random aspect ratio crop to the image
-    if self._aug_rand_crop > 0 and not data['is_mosaic']:
+    # if self._aug_rand_crop > 0 and not data['is_mosaic']:
 
-      # # crop the image
-      # image, info = preprocessing_ops.random_aspect_crop(image, 
-      #                                                     daspect = self._aug_rand_crop)
+    #   # # crop the image
+    #   # image, info = preprocessing_ops.random_aspect_crop(image, 
+    #   #                                                     daspect = self._aug_rand_crop)
                                                           
-      # # compute the net jitter
-      jmi = 1 - self._aug_rand_crop
-      jma = 1 + self._aug_rand_crop
-      image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
-
-      # use the info to crop the boxes and classes as well
-      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                  info[1, :], info[3, :])
-
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    # elif data['is_mosaic'] and self._aug_rand_crop > 0:
-    #   # same as above but the crops applied to the mosaiced images are treated
-    #   # differently
+    #   # # compute the net jitter
     #   jmi = 1 - self._aug_rand_crop
     #   jma = 1 + self._aug_rand_crop
-    #   image, info = preprocessing_ops.random_crop_mosaic(
-    #       image, aspect_ratio_range=[jmi, jma], area_range=[0.25, 1.0])
+    #   image, info = preprocessing_ops.random_crop_image(
+    #       image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
 
+    #   # use the info to crop the boxes and classes as well
     #   boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     #   boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
     #                                               info[1, :], info[3, :])
@@ -279,16 +264,32 @@ class Parser(parser.Parser):
     #   boxes = tf.gather(boxes, inds)
     #   classes = tf.gather(classes, inds)
     #   boxes = box_ops.normalize_boxes(boxes, info[1, :])
+    # # elif data['is_mosaic'] and self._aug_rand_crop > 0:
+    # #   # same as above but the crops applied to the mosaiced images are treated
+    # #   # differently
+    # #   jmi = 1 - self._aug_rand_crop
+    # #   jma = 1 + self._aug_rand_crop
+    # #   image, info = preprocessing_ops.random_crop_mosaic(
+    # #       image, aspect_ratio_range=[jmi, jma], area_range=[0.25, 1.0])
 
-    if self._letter_box:
-      # use the saved distortion values to return the cropeed image to proper
-      # aspect ratio, it is doen this way in order to allow the random crop to
-      # be indpendent of the images natural input resolution
-      height_, width_ = preprocessing_ops.get_image_shape(image)
-      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-      image = tf.image.resize(
-          image, (height_, width_), preserve_aspect_ratio=False)
+    # #   boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+    # #   boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
+    # #                                               info[1, :], info[3, :])
+
+    # #   inds = box_ops.get_non_empty_box_indices(boxes)
+    # #   boxes = tf.gather(boxes, inds)
+    # #   classes = tf.gather(classes, inds)
+    # #   boxes = box_ops.normalize_boxes(boxes, info[1, :])
+
+    # if self._letter_box:
+    #   # use the saved distortion values to return the cropeed image to proper
+    #   # aspect ratio, it is doen this way in order to allow the random crop to
+    #   # be indpendent of the images natural input resolution
+    #   height_, width_ = preprocessing_ops.get_image_shape(image)
+    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+    #   image = tf.image.resize(
+    #       image, (height_, width_), preserve_aspect_ratio=False)
 
     if self._aug_scale_aspect > 0.0 and not data['is_mosaic']:
       # apply aspect ratio distortion (stretching and compressing)
@@ -311,34 +312,31 @@ class Parser(parser.Parser):
     # ensure the minimum is larger than 0.4, or 0.1 for each image in the
     # mosaic
     if not data['is_mosaic']:
-      image, info = preprocessing_ops.resize_and_crop_image(
+      image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
+          jitter=self._aug_rand_crop,
           random_pad=self._random_pad)
     else:
-      image, info = preprocessing_ops.resize_and_crop_image(
+      image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=self._aug_scale_min
-          if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=self._aug_scale_max / 2,
+          aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max=1.0, #self._aug_scale_max / 2,
+          jitter=0.0, #self._aug_rand_crop,
           random_pad=self._random_pad)
-      # image = tf.image.resize(image, (self._image_h, self._image_w))
-      # image, info = preprocessing_ops.resize_and_crop_image(
-      #     image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-      #     aug_scale_min=1,
-      #     aug_scale_max=1,
-      #     random_pad=self._random_pad)
+      
     # again crop the boxes and classes and only use those that are still
     # in the image.
-    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    for info in infos:
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                  info[3, :])
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._aug_rand_translate > 0.0:
       # apply random translation to the image

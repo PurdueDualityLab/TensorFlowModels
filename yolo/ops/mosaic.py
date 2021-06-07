@@ -190,28 +190,16 @@ class Mosaic(object):
       w_, h_ = self._estimate_shape(image)
       image = tf.image.resize(
           image, (h_, w_), preserve_aspect_ratio=False)
-    
-    if self._random_crop > 0.0:
-      jmi = 1 - self._random_crop
-      jma = 1 + self._random_crop
-      image, info = preprocessing_ops.random_crop_image(
-          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
-
-      # image, info = preprocessing_ops.random_aspect_crop(image, 
-      #                                               daspect = self._random_crop)
-
-      # use the info to crop the boxes and classes as well
-      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                    info[1, :], info[3, :])
-      # use the info to crop the boxes and classes as well
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      is_crowd = tf.gather(is_crowd, inds)
-      area = tf.gather(area, inds)
-      boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    
+    elif self._aspect_ratio_mode == 'crop':
+      height, width = self._output_size[0], self._output_size[1]
+      image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
+                                                                     boxes, 
+                                                                     classes, 
+                                                                     is_crowd, 
+                                                                     area, 
+                                                                     self._crop_area,
+                                                                     width, 
+                                                                     height)
 
     if self._random_aspect_distort > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
@@ -226,48 +214,36 @@ class Mosaic(object):
 
       image = tf.image.resize(image, (height_, width_))
 
-    if self._aspect_ratio_mode == 'crop':
-      height, width = self._output_size[0], self._output_size[1]
-      image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
-                                                                     boxes, 
-                                                                     classes, 
-                                                                     is_crowd, 
-                                                                     area, 
-                                                                     self._crop_area,
-                                                                     width, 
-                                                                     height)
-
     if self._random_flip:
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    image, info = preprocessing_ops.resize_and_crop_image(
+    image, infos = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]], 
         [self._output_size[0], self._output_size[1]],
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
+        jitter = self._random_crop,
         random_pad=False, 
         shiftx = xs, 
         shifty = ys,
         seed = self._seed)
 
-    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    for info in infos:
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                  info[3, :])
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    is_crowd = tf.gather(is_crowd, inds)
-    area = tf.gather(area, inds)
-    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      is_crowd = tf.gather(is_crowd, inds)
+      area = tf.gather(area, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     return image, boxes, classes, is_crowd, area, info
 
         
-
-
-
   def _mapped(self, sample):
     if self._mosaic_frequency > 0.0:
       # mosaic is enabled 0.666667 = 0.5 of images are mosaiced

@@ -1164,7 +1164,6 @@ def rotate_boxes(boxes, angle):
   
   Args:
     boxes: A float tensor whose last axis represents (ymin, xmin, ymax, xmax).
-    height, width: FIXME: unused
     angle: A float representing the counter-clockwise rotation in radians.
   
   Returns:
@@ -1191,6 +1190,30 @@ def rotate_boxes(boxes, angle):
   boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
   return boxes
 
+def random_crop(image, target_height, target_width):
+  ishape = tf.shape(image)
+  
+  th = target_height if target_height < ishape[0] else ishape[0]
+  tw = target_width if target_width < ishape[1] else ishape[1]
+  crop_size = tf.convert_to_tensor([th, tw, -1])
+  
+  crop_offset = ishape - crop_size
+  oh = tf.random.uniform([], 0, crop_offset[0] + 1, tf.int32)
+  ow = tf.random.uniform([], 0, crop_offset[1] + 1, tf.int32)
+  crop_offset = tf.convert_to_tensor([oh, ow, 0])
+
+  cropped_image = tf.slice(image, crop_offset, crop_size)
+
+  scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
+  offset = tf.cast(crop_offset[:2], tf.float32)
+
+  info = tf.stack([
+      tf.cast(ishape[:2], tf.float32),
+      tf.cast(crop_size[:2], tf.float32), scale, offset
+  ],
+                  axis=0)
+
+  return cropped_image, info
 
 def resize_and_crop_image(image,
                           desired_size,
@@ -1246,6 +1269,7 @@ def resize_and_crop_image(image,
                                        seed=seed)
       scaled_size = tf.round(random_scale * desired_size)
     else:
+      random_scale = 1.0
       scaled_size = desired_size
 
     scale = tf.minimum(scaled_size[0] / image_size[0],
@@ -1272,10 +1296,13 @@ def resize_and_crop_image(image,
     scaled_image = tf.image.resize(
         image, tf.cast(scaled_size, tf.int32), method=method)
 
+    
+
     if random_jittering:
       scaled_image = scaled_image[offset[0]:offset[0] + desired_size[0],
                                   offset[1]:offset[1] + desired_size[1], :]
 
+    
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
     if random_pad:
@@ -1300,3 +1327,118 @@ def resize_and_crop_image(image,
         tf.cast(offset, tf.float32)
     ])
     return output_image, image_info
+
+def resize_and_jitter_image(image,
+                            desired_size,
+                            padded_size,
+                            jitter = 0.3, 
+                            aug_scale_min=1.0,
+                            aug_scale_max=1.0,
+                            random_pad=False,
+                            shiftx=0.5,
+                            shifty=0.5,
+                            seed=1,
+                            method=tf.image.ResizeMethod.BILINEAR):
+  """Resizes the input image to output size (RetinaNet style).
+  Resize and pad images given the desired output size of the image and
+  stride size.
+  Here are the preprocessing steps.
+  1. For a given image, keep its aspect ratio and rescale the image to make it
+     the largest rectangle to be bounded by the rectangle specified by the
+     `desired_size`.
+  2. Pad the rescaled image to the padded_size.
+  Args:
+    image: a `Tensor` of shape [height, width, 3] representing an image.
+    desired_size: a `Tensor` or `int` list/tuple of two elements representing
+      [height, width] of the desired actual output image size.
+    padded_size: a `Tensor` or `int` list/tuple of two elements representing
+      [height, width] of the padded output image size. Padding will be applied
+      after scaling the image to the desired_size.
+    aug_scale_min: a `float` with range between [0, 1.0] representing minimum
+      random scale applied to desired_size for training scale jittering.
+    aug_scale_max: a `float` with range between [1.0, inf] representing maximum
+      random scale applied to desired_size for training scale jittering.
+    seed: seed for random scale jittering.
+    method: function to resize input image to scaled image.
+  Returns:
+    output_image: `Tensor` of shape [height, width, 3] where [height, width]
+      equals to `output_size`.
+    image_info: a 2D `Tensor` that encodes the information of the image and the
+      applied preprocessing. It is in the format of
+      [[original_height, original_width], [desired_height, desired_width],
+       [y_scale, x_scale], [y_offset, x_offset]], where [desired_height,
+      desired_width] is the actual scaled image size, and [y_scale, x_scale] is
+      the scaling factor, which is the ratio of
+      scaled dimension / original dimension.
+  """
+  with tf.name_scope('resize_and_crop_image'):
+    image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
+
+    random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)
+
+    if random_jittering:
+      random_scale = tf.random.uniform([],
+                                       aug_scale_min,
+                                       aug_scale_max,
+                                       seed=seed)
+      scaled_size = tf.round(random_scale * desired_size)
+    else:
+      random_scale = 1.0
+      scaled_size = desired_size
+
+    scale = tf.minimum(scaled_size[0] / image_size[0],
+                       scaled_size[1] / image_size[1])
+    scaled_size = tf.round(image_size * scale)
+
+    # Computes 2D image_scale.
+    image_scale = scaled_size / image_size
+
+    scaled_image = tf.image.resize(
+          image, tf.cast(scaled_size, tf.int32), method=method)
+
+    if random_jittering:
+      jsize = rand_uniform_strong(1 - jitter, 1)
+      scaled_image, info1 = random_crop(scaled_image, 
+                                       tf.cast(desired_size[0] * jsize, tf.int32), 
+                                       tf.cast(desired_size[1] * jsize, tf.int32))
+      offset = info1[3]
+      scaled_image, info2 = random_aspect_crop(scaled_image, daspect = jitter)
+      offset += info2[3]
+      offset = tf.cast(offset, tf.int32)
+    else:
+      offset = tf.zeros((2,), tf.int32)
+
+
+    image_info_a = tf.stack([
+        image_size,
+        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), 
+        image_scale,
+        tf.cast(offset, tf.float32)
+    ])
+
+
+    scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
+
+    if random_pad:
+      dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
+      dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
+    else:
+      dy = tf.cast(
+          tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shifty,
+          tf.int32)
+      dx = tf.cast(
+          tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
+          tf.int32)
+
+    output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
+                                                padded_size[0], padded_size[1])
+
+    offset = -tf.convert_to_tensor([dy, dx])
+
+    image_info_b = tf.stack([
+        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), 
+        tf.cast(desired_size, dtype=tf.float32), 
+        tf.ones_like(image_scale),
+        tf.cast(offset, tf.float32)
+    ])
+    return output_image, [image_info_a, image_info_b]
