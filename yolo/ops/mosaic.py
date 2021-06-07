@@ -192,8 +192,13 @@ class Mosaic(object):
           image, (h_, w_), preserve_aspect_ratio=False)
     
     if self._random_crop > 0.0:
-      image, info = preprocessing_ops.random_aspect_crop(image, 
-                                                    daspect = self._random_crop)
+      jmi = 1 - self._random_crop
+      jma = 1 + self._random_crop
+      image, info = preprocessing_ops.random_crop_image(
+          image, aspect_ratio_range=[jmi, jma], area_range=[jmi, 1.0])
+
+      # image, info = preprocessing_ops.random_aspect_crop(image, 
+      #                                               daspect = self._random_crop)
 
       # use the info to crop the boxes and classes as well
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
