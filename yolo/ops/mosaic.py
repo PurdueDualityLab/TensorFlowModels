@@ -21,7 +21,7 @@ class Mosaic(object):
                aspect_ratio_mode='distort',
                aug_scale_min = 0.1, 
                aug_scale_max = 2.0,
-
+               random_flip = True, 
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                random_crop_mosaic=False, 
@@ -35,6 +35,7 @@ class Mosaic(object):
     self._random_aspect_distort = random_aspect_distort
     self._aug_scale_max = aug_scale_max
     self._aug_scale_min = aug_scale_min
+    self._random_flip = random_flip
 
     self._crop_area = crop_area
     
@@ -191,11 +192,6 @@ class Mosaic(object):
           image, (h_, w_), preserve_aspect_ratio=False)
     
     if self._random_crop > 0.0:
-      # jmi = 1 - self._random_crop
-      # jma = 1 + self._random_crop
-
-      # crop the image
-      # crop the image
       image, info = preprocessing_ops.random_aspect_crop(image, 
                                                     daspect = self._random_crop)
 
@@ -235,6 +231,10 @@ class Mosaic(object):
                                                                      self._crop_area,
                                                                      width, 
                                                                      height)
+
+    if self._random_flip:
+      # randomly flip the image horizontally
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     image, info = preprocessing_ops.resize_and_crop_image(
         image, [self._output_size[0], self._output_size[1]], 

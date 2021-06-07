@@ -148,7 +148,7 @@ class YoloTask(base_task.Task):
 
         random_crop=params.parser.aug_rand_crop, 
         random_aspect_distort = params.parser.aug_scale_aspect,
-        aug_scale_min = max(params.parser.aug_scale_min, 0.3),
+        aug_scale_min = max(params.parser.aug_scale_min, 0.4),
         aug_scale_max = params.parser.aug_scale_max
     )
 
