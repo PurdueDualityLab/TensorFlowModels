@@ -331,7 +331,7 @@ class Parser(parser.Parser):
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.25)
+                                                  info[3, :], keep_thresh = 0.0)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)

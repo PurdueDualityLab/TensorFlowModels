@@ -156,7 +156,7 @@ class Mosaic(hyperparams.Config):
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: bool = False
+  letter_box: bool = True
   random_flip: bool = True
   random_pad: bool = False
   aug_rand_crop: float = 0.3
