@@ -166,7 +166,7 @@ class Parser(hyperparams.Config):
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.4
+  aug_scale_min: float = 0.1
   aug_scale_max: float = 2.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
