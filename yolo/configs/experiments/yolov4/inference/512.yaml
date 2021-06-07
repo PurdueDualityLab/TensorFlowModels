@@ -75,9 +75,9 @@ task:
         '3': 1.2
       max_boxes: 200
       nms_type: greedy
-      iou_thresh: 0.0
+      iou_thresh: 0.001
       nms_thresh: 0.6
-      pre_nms_points: 500
+      pre_nms_points: 5000
       use_reduction_sum: false
   train_data:
     global_batch_size: 4
@@ -87,30 +87,28 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      min_process_size: 512
-      jitter_im: 0.6
+      max_num_instances: 200
+      letter_box: False
+      random_flip: True
+      random_pad: True
+      aug_rand_crop: 0.3
       aug_scale_aspect: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
       aug_rand_angle: 0.0
-      aug_rand_hue: 0.1
+      aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_translate: 0.00
-      max_num_instances: 200
-      random_flip: True
+      aug_rand_hue: 0.1
+      aug_scale_min: 0.4
+      aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
-      letter_box: False
       anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.85
-        random_crop: 0.5
+        mosaic_frequency: 0.75
         crop_area: [0.25, 1.0]
-        random_crop_mosaic: False
-        crop_area_mosaic: [0.25, 0.95]
+        random_crop_mosaic: true
+        aspect_ratio_mode: 'distort'
+        crop_area_mosaic: [0.25, 0.65]
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -119,12 +117,28 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      image_w: 512
-      image_h: 512
-      fixed_size: True
-      use_scale_xy: False
+      max_num_instances: 200
       letter_box: False
+      random_flip: True
+      random_pad: True
+      aug_rand_crop: 0.3
+      aug_scale_aspect: 0.1
+      aug_rand_angle: 0.0
+      aug_rand_translate: 0.0
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_hue: 0.1
+      aug_scale_min: 0.4
+      aug_scale_max: 2.0
+      use_tie_breaker: True
+      use_scale_xy: False
       anchor_thresh: 0.213
+      mosaic: 
+        mosaic_frequency: 0.75
+        crop_area: [0.25, 1.0]
+        random_crop_mosaic: true
+        aspect_ratio_mode: 'distort'
+        crop_area_mosaic: [0.25, 0.65]
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
@@ -135,8 +149,8 @@ task:
 trainer:
   train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 10000
-  summary_interval: 10000
+  steps_per_loop: 100
+  summary_interval: 100
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
@@ -145,9 +159,11 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [240000, 260000]
+        boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.000975, 0.000655]
+        # values: [0.00131, 0.000655, 0.000325]
+        # values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00131, 0.00013, 0.000013] 
     optimizer:
       type: sgd
       sgd:
@@ -158,4 +174,4 @@ trainer:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 4000 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
