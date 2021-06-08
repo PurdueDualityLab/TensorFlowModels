@@ -1406,23 +1406,44 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     Args:
       filters: the number of filters to be used in all subsequent layers
         filters should be the depth of the tensor input into this layer,
-        as no downsampling can be done within this layer object
-      repetitions: number of times to repeat the processign nodes
-        for tiny: 1 repition, no spp allowed
-        for spp: insert_spp = True, and allow for 3+ repetitions
-        for regular: insert_spp = False, and allow for 3+ repetitions
-      insert_spp: bool if true add the spatial pyramid pooling layer
-      kernel_initializer: method to use to initializa kernel weights
+        as no downsampling can be done within this layer object.
+      repetitions: number of times to repeat the processign nodes.
+        for tiny: 1 repition, no spp allowed.
+        for spp: insert_spp = True, and allow for 6 repetitions.
+        for regular: insert_spp = False, and allow for 6 repetitions.
+      insert_spp: `bool` if true add the spatial pyramid pooling layer.
+      insert_sam: `bool` if true add spatial attention module to path.
+      insert_cbam: `bool` if true add convolutional block attention 
+        module to path.
+      csp_stack: `int` for the number of sequential layers from 0 
+        to <value> you would like to convert into a Cross Stage 
+        Partial(csp) type.
+      csp_scale: `int` for how much to down scale the number of filters 
+        only for the csp layers in the csp section of the processing 
+        path. A value 2 indicates that each layer that is int eh CSP 
+        stack will have filters = filters/2. 
+      kernel_initializer: method to use to initialize kernel weights.
       bias_initializer: method to use to initialize the bias of the conv
-        layers
-      subdivisions: `int` how many subdivision to usein training execution, not
-        used in eval or inference
-      norm_momentum: batch norm parameter see Tensorflow documentation
-      norm_epsilon: batch norm parameter see Tensorflow documentation
-      activation: activation function to use in processing
+        layers.
+      use_sync_bn: `bool` if true use the sync batch normalization.
+      norm_momentum: batch norm parameter see Tensorflow documentation.
+      norm_epsilon: batch norm parameter see Tensorflow documentation.
+      block_invert: `bool` use for switching between the even and odd 
+        repretions of layers. usually the repetition is based on a 
+        3x3 conv with filters, followed by a 1x1 with filters/2 with 
+        an even number of repetitions to ensure each 3x3 gets a 1x1 
+        sqeeze. block invert swaps the 3x3/1 1x1/2 to a 1x1/2 3x3/1
+        ordering typically used when the model requires an odd number 
+        of repetiitions. All other peramters maintain their affects
+      activation: activation function to use in processing.
       leaky_alpha: if leaky acitivation function, the alpha to use in
-        processing the relu input
-
+        processing the relu input.
+      spp_keys: `List[int]` of the sampling levels to be applied by 
+        the Spatial Pyramid Pooling Layer. By default it is 
+        [5, 9, 13] inidicating a 5x5 pooling followed by 9x9 
+        followed by 13x13 then followed by the standard concatnation 
+        and convolution. 
+        
     Returns:
       callable tensorflow layer
 
