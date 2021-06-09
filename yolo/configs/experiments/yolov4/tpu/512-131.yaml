@@ -89,7 +89,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
+      aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -119,7 +119,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
+      aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
