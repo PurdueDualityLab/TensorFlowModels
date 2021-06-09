@@ -159,7 +159,7 @@ class Parser(hyperparams.Config):
   letter_box: bool = False
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.3
+  aug_rand_crop: float = 0.0
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
