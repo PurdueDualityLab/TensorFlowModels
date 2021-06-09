@@ -321,8 +321,8 @@ class Parser(parser.Parser):
     else:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=1.0, #self._aug_scale_max / 2,
+          aug_scale_min=self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max=self._aug_scale_max, #self._aug_scale_max / 2,
           jitter=0.0, #self._aug_rand_crop,
           random_pad=self._random_pad)
       

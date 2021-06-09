@@ -26,7 +26,7 @@ class Mosaic(object):
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                random_crop_mosaic=False, 
-               seed = None,):
+               seed = None):
 
     self._output_size = output_size
 
