@@ -34,8 +34,8 @@ class Mosaic(object):
     self._aspect_ratio_mode = aspect_ratio_mode
     self._random_crop = random_crop
     self._random_aspect_distort = random_aspect_distort
-    self._aug_scale_max = aug_scale_max
-    self._aug_scale_min = aug_scale_min
+    self._aug_scale_max = 0.5 #aug_scale_max
+    self._aug_scale_min = 1.5 #aug_scale_min
     self._random_flip = random_flip
 
     self._crop_area = crop_area
@@ -232,8 +232,11 @@ class Mosaic(object):
 
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.0)
+      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, 
+                                                      info[2, :], 
+                                                      info[1, :],
+                                                      info[3, :], 
+                                                      keep_thresh = 0.25)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)

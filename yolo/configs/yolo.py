@@ -148,7 +148,7 @@ class Mosaic(hyperparams.Config):
   mosaic_frequency: float = 0.75
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.35, 0.65])
+      default_factory=lambda: [0.35, 1.0])
   aspect_ratio_mode: str = 'distort'
   random_crop_mosaic: bool = True
 
