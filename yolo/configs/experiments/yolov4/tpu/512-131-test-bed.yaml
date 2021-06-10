@@ -96,7 +96,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
+      aug_scale_min: 0.3
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
@@ -106,7 +106,7 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 1.0]
+        crop_area_mosaic: [0.35, 0.75]
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -126,7 +126,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
+      aug_scale_min: 0.3
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
@@ -136,7 +136,7 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 1.0]
+        crop_area_mosaic: [0.35, 0.75]
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

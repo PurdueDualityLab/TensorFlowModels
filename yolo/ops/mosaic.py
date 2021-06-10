@@ -34,8 +34,8 @@ class Mosaic(object):
     self._aspect_ratio_mode = aspect_ratio_mode
     self._random_crop = random_crop
     self._random_aspect_distort = random_aspect_distort
-    self._aug_scale_max = 0.5 #aug_scale_max
-    self._aug_scale_min = 1.5 #aug_scale_min
+    self._aug_scale_max = 0.1 #aug_scale_max
+    self._aug_scale_min = 2.0 #aug_scale_min
     self._random_flip = random_flip
 
     self._crop_area = crop_area

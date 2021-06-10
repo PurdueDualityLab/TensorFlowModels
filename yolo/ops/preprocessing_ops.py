@@ -906,7 +906,6 @@ def random_aspect_crop(image,
     return cropped_image, info
 
 def random_jitter_crop(image,
-                       original_dims = None, 
                        jitter = 0.2, 
                        seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
@@ -933,9 +932,8 @@ def random_jitter_crop(image,
     if jitter > 1 or jitter < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
     
-    if original_dims is None: 
-      original_dims = ishape[:2]
-
+    
+    original_dims = ishape[:2]
     jitter = tf.cast(jitter, tf.float32)
     ow = tf.cast(original_dims[1], tf.float32) 
     oh = tf.cast(original_dims[0], tf.float32)
@@ -1424,7 +1422,8 @@ def resize_and_jitter_image(image,
                                        tf.cast(desired_size[1] * jsize, tf.int32))
       offset = info1[3]
 
-      scaled_image, info2 = random_jitter_crop(scaled_image, jitter = jitter)
+      scaled_image, info2 = random_jitter_crop(scaled_image, 
+                                               jitter = jitter)
       offset += info2[3]
       offset = tf.cast(offset, tf.int32)
     else:
