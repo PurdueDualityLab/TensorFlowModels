@@ -188,7 +188,7 @@ class Mosaic(object):
 
     # resize the image irrespective of the aspect ratio
     if self._aspect_ratio_mode == 'distort':
-      w_, h_ = self._estimate_shape(image)
+      w_, h_ = self._output_size[0], self._output_size[1] #self._estimate_shape(image)
       image = tf.image.resize(
           image, (h_, w_), preserve_aspect_ratio=False)
     elif self._aspect_ratio_mode == 'crop':
