@@ -1404,13 +1404,14 @@ def resize_and_jitter_image(image,
           image, tf.cast(scaled_size, tf.int32), method=method)
 
     if random_jittering or jitter > 0:
+      scaled_image, info2 = random_jitter_crop(scaled_image, jitter = jitter)
+      offset = info2[3]
+
       jsize = rand_uniform_strong(1 - jitter, 1)
       scaled_image, info1 = random_crop(scaled_image, 
                                        tf.cast(desired_size[0] * jsize, tf.int32), 
                                        tf.cast(desired_size[1] * jsize, tf.int32))
-      offset = info1[3]
-      scaled_image, info2 = random_jitter_crop(scaled_image, jitter = jitter)
-      offset += info2[3]
+      offset += info1[3]
       offset = tf.cast(offset, tf.int32)
     else:
       offset = tf.zeros((2,), tf.int32)
