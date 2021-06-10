@@ -319,13 +319,20 @@ class Parser(parser.Parser):
           jitter=self._aug_rand_crop,
           random_pad=self._random_pad)
     else:
+      # works well
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
           aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
           aug_scale_max=1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
-          jitter=0.0, #self._aug_rand_crop,
+          jitter=0.0,
           random_pad=self._random_pad)
-      
+      # image, infos = preprocessing_ops.resize_and_jitter_image(
+      #     image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+      #     aug_scale_min=self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+      #     aug_scale_max=self._aug_scale_max, #self._aug_scale_max / 2,
+      #     jitter=self._aug_rand_crop,
+      #     random_pad=self._random_pad)
+
     # again crop the boxes and classes and only use those that are still
     # in the image.
     for info in infos:

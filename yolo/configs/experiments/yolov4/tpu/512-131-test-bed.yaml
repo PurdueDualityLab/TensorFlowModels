@@ -89,7 +89,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
+      aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -106,7 +106,7 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 0.95]
+        crop_area_mosaic: [0.35, 1.0]
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -119,7 +119,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
+      aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -136,7 +136,7 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 0.95]
+        crop_area_mosaic: [0.35, 1.0]
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

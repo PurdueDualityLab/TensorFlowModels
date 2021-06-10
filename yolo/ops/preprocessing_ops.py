@@ -905,6 +905,77 @@ def random_aspect_crop(image,
                     axis=0)
     return cropped_image, info
 
+def random_jitter_crop(image,
+                       original_dims = None, 
+                       jitter = 0.2, 
+                       seed=1):
+  """Randomly crop an arbitrary shaped slice from the input image.
+  
+  Args:
+    image: a Tensor of shape [height, width, 3] representing the input image.
+    aspect_ratio_range: a list of floats. The cropped area of the image must
+      have an aspect ratio = width / height within this range.
+    area_range: a list of floats. The cropped reas of the image must contain
+      a fraction of the input image within this range.
+    max_attempts: the number of attempts at generating a cropped region of the
+      image of the specified constraints. After max_attempts failures, return
+      the entire image.
+    seed: the seed of the random generator.
+  
+  Returns:
+    cropped_image: a Tensor representing the random cropped image. Can be the
+      original image if max_attempts is exhausted.
+  """
+
+  with tf.name_scope('random_crop_image'):
+    ishape = tf.shape(image)
+    
+    if jitter > 1 or jitter < 0:
+      raise Exception("maximum change in aspect ratio must be between 0 and 1")
+    
+    if original_dims is None: 
+      original_dims = ishape[:2]
+
+    jitter = tf.cast(jitter, tf.float32)
+    ow = tf.cast(original_dims[1], tf.float32) 
+    oh = tf.cast(original_dims[0], tf.float32)
+
+    dw = ow * jitter
+    dh = oh * jitter
+
+    pleft = rand_uniform_strong(-dw, dw, dw.dtype)
+    pright = rand_uniform_strong(-dw, dw, dw.dtype)
+    ptop = rand_uniform_strong(-dh, dh, dh.dtype)
+    pbottom = rand_uniform_strong(-dh, dh, dh.dtype)
+
+    crop_top = tf.convert_to_tensor([pleft, ptop])
+    crop_bottom = tf.convert_to_tensor([ow - pright, oh - pbottom])
+
+    src_top = tf.zeros_like(crop_top)
+    src_bottom = tf.cast(tf.convert_to_tensor([ow, oh]), src_top.dtype)
+
+    intersect_top = tf.maximum(crop_top, src_top)
+    intersect_bottom = tf.minimum(crop_bottom, src_bottom)
+    
+    intersect_wh = src_bottom - intersect_top - (src_bottom - intersect_bottom)
+
+    crop_offset = tf.cast(tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
+    crop_size = tf.cast(tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
+
+    #tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh)
+
+    cropped_image = tf.slice(image, crop_offset, crop_size)
+
+    scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
+    offset = tf.cast(crop_offset[:2], tf.float32)
+
+    info = tf.stack([
+        tf.cast(ishape[:2], tf.float32),
+        tf.cast(crop_size[:2], tf.float32), scale, offset
+    ],
+                    axis=0)
+    return cropped_image, info
+
 def random_crop_mosaic(image,
                        aspect_ratio_range=(3. / 4., 4. / 3.),
                        area_range=(0.08, 1.0),
@@ -1310,7 +1381,7 @@ def resize_and_jitter_image(image,
   with tf.name_scope('resize_and_crop_image'):
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
 
-    random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)
+    random_jittering = (aug_scale_min != 1.0 and aug_scale_max != 1.0)
 
     if random_jittering:
       random_scale = tf.random.uniform([],
@@ -1332,13 +1403,13 @@ def resize_and_jitter_image(image,
     scaled_image = tf.image.resize(
           image, tf.cast(scaled_size, tf.int32), method=method)
 
-    if random_jittering:
+    if random_jittering or jitter > 0:
       jsize = rand_uniform_strong(1 - jitter, 1)
       scaled_image, info1 = random_crop(scaled_image, 
                                        tf.cast(desired_size[0] * jsize, tf.int32), 
                                        tf.cast(desired_size[1] * jsize, tf.int32))
       offset = info1[3]
-      scaled_image, info2 = random_aspect_crop(scaled_image, daspect = jitter)
+      scaled_image, info2 = random_jitter_crop(scaled_image, jitter = jitter)
       offset += info2[3]
       offset = tf.cast(offset, tf.int32)
     else:
