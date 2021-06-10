@@ -233,7 +233,7 @@ class Parser(parser.Parser):
 
     # if not data['is_mosaic']:  
     # resize the image irrespective of the aspect ratio
-    if self._letter_box:
+    if not self._letter_box:
       clipper = tf.reduce_max((height, width))
       image = tf.image.resize(
           image, (clipper, clipper), preserve_aspect_ratio=False)
@@ -291,18 +291,18 @@ class Parser(parser.Parser):
     #   image = tf.image.resize(
     #       image, (height_, width_), preserve_aspect_ratio=False)
 
-    if self._aug_scale_aspect > 0.0 and not data['is_mosaic']:
-      # apply aspect ratio distortion (stretching and compressing)
-      height_, width_ = preprocessing_ops.get_image_shape(image)
+    # if self._aug_scale_aspect > 0.0 and not data['is_mosaic']:
+    #   # apply aspect ratio distortion (stretching and compressing)
+    #   height_, width_ = preprocessing_ops.get_image_shape(image)
 
-      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._aug_scale_aspect, self._aug_scale_aspect)
-      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._aug_scale_aspect, self._aug_scale_aspect)
-      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+    #   shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #       -self._aug_scale_aspect, self._aug_scale_aspect)
+    #   shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #       -self._aug_scale_aspect, self._aug_scale_aspect)
+    #   width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+    #   height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
-      image = tf.image.resize(image, (height_, width_))
+    #   image = tf.image.resize(image, (height_, width_))
 
     if self._random_flip:
       # randomly flip the image horizontally
@@ -314,6 +314,7 @@ class Parser(parser.Parser):
     if not data['is_mosaic']:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          scale_aspect=self._aug_scale_aspect,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
           jitter=self._aug_rand_crop,
@@ -322,6 +323,7 @@ class Parser(parser.Parser):
       # works well
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          scale_aspect=0.0, 
           aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
           aug_scale_max=1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
           jitter=0.0,

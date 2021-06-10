@@ -960,7 +960,7 @@ def random_jitter_crop(image,
     crop_offset = tf.cast(tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
     crop_size = tf.cast(tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
 
-    #tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh)
+    tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh, src_bottom)
 
     cropped_image = tf.slice(image, crop_offset, crop_size)
 
@@ -1337,6 +1337,7 @@ def resize_and_jitter_image(image,
                             desired_size,
                             padded_size,
                             jitter = 0.3, 
+                            scale_aspect = 0.0, 
                             aug_scale_min=1.0,
                             aug_scale_max=1.0,
                             random_pad=False,
@@ -1377,6 +1378,16 @@ def resize_and_jitter_image(image,
       scaled dimension / original dimension.
   """
   with tf.name_scope('resize_and_crop_image'):
+    if scale_aspect > 0.0:
+      # apply aspect ratio distortion (stretching and compressing)
+      height_, width_ = get_image_shape(image)
+      shiftx = 1.0 + rand_uniform_strong(-scale_aspect, scale_aspect)
+      shifty = 1.0 + rand_uniform_strong(-scale_aspect, scale_aspect)
+      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+      image = tf.image.resize(image, (height_, width_))
+
+
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
 
     random_jittering = (aug_scale_min != 1.0 and aug_scale_max != 1.0)
