@@ -96,7 +96,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
+      aug_scale_min: 0.3
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
@@ -126,7 +126,7 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
+      aug_scale_min: 0.3
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False

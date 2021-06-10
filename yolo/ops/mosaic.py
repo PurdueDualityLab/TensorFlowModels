@@ -236,7 +236,7 @@ class Mosaic(object):
                                                       info[2, :], 
                                                       info[1, :],
                                                       info[3, :], 
-                                                      keep_thresh = 0.25)
+                                                      keep_thresh = 0.0)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)

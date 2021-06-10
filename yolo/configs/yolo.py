@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
-from yolo.ops.preprocessing_ops import random_pad
+# from yolo.ops.preprocessing_ops import random_pad
 import tensorflow as tf
 from typing import ClassVar, Dict, List, Optional, Tuple, Union
 import dataclasses

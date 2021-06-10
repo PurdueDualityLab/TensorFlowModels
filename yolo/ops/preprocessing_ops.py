@@ -960,7 +960,7 @@ def random_jitter_crop(image,
     crop_offset = tf.cast(tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
     crop_size = tf.cast(tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
 
-    tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh, src_bottom)
+    # tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh, src_bottom)
 
     cropped_image = tf.slice(image, crop_offset, crop_size)
 
@@ -1033,58 +1033,58 @@ def random_crop_mosaic(image,
     return cropped_image, info
 
 
-def random_pad(image, area):
-  """
-  Pad the image to with a random amount of offset on both the x-axis and the
-  y-axis and a padding that multiplies the shape of each dimension by
-  `sqrt(area)`. The amount is within a box that is the same shape as `image` but
-  has the `sqrt(area)` factor on each dimension.
+# def random_pad(image, area):
+#   """
+#   Pad the image to with a random amount of offset on both the x-axis and the
+#   y-axis and a padding that multiplies the shape of each dimension by
+#   `sqrt(area)`. The amount is within a box that is the same shape as `image` but
+#   has the `sqrt(area)` factor on each dimension.
 
-  Args:
-    image: a Tensor of shape [height, width, 3] representing the input image.
-    area: a `float` representing the amount to scale the area of the original
-      image by.
+#   Args:
+#     image: a Tensor of shape [height, width, 3] representing the input image.
+#     area: a `float` representing the amount to scale the area of the original
+#       image by.
 
-  Returns:
-    A 2 element tuple containing the padded image and a Tensor representing the
-    transformation information of the padding (input shape, output shape,
-    scaling, and padding)
-  """
-  with tf.name_scope('pad_to_bbox'):
-    height, width = get_image_shape(image)
+#   Returns:
+#     A 2 element tuple containing the padded image and a Tensor representing the
+#     transformation information of the padding (input shape, output shape,
+#     scaling, and padding)
+#   """
+#   with tf.name_scope('pad_to_bbox'):
+#     height, width = get_image_shape(image)
 
-    rand_area = tf.cast(area, tf.float32)  #tf.random.uniform([], 1.0, area)
-    target_height = tf.cast(
-        tf.sqrt(rand_area) * tf.cast(height, rand_area.dtype), tf.int32)
-    target_width = tf.cast(
-        tf.sqrt(rand_area) * tf.cast(width, rand_area.dtype), tf.int32)
+#     rand_area = tf.cast(area, tf.float32)  #tf.random.uniform([], 1.0, area)
+#     target_height = tf.cast(
+#         tf.sqrt(rand_area) * tf.cast(height, rand_area.dtype), tf.int32)
+#     target_width = tf.cast(
+#         tf.sqrt(rand_area) * tf.cast(width, rand_area.dtype), tf.int32)
 
-    offset_height = tf.random.uniform([],
-                                      0,
-                                      target_height - height + 1,
-                                      dtype=tf.int32)
-    offset_width = tf.random.uniform([],
-                                     0,
-                                     target_width - width + 1,
-                                     dtype=tf.int32)
+#     offset_height = tf.random.uniform([],
+#                                       0,
+#                                       target_height - height + 1,
+#                                       dtype=tf.int32)
+#     offset_width = tf.random.uniform([],
+#                                      0,
+#                                      target_width - width + 1,
+#                                      dtype=tf.int32)
 
-    image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
-                                         target_height, target_width)
+#     image = tf.image.pad_to_bounding_box(image, offset_height, offset_width,
+#                                          target_height, target_width)
 
-  ishape = tf.convert_to_tensor([height, width])
-  oshape = tf.convert_to_tensor([target_height, target_width])
-  offset = tf.convert_to_tensor([offset_height, offset_width])
+#   ishape = tf.convert_to_tensor([height, width])
+#   oshape = tf.convert_to_tensor([target_height, target_width])
+#   offset = tf.convert_to_tensor([offset_height, offset_width])
 
-  scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
-  offset = tf.cast(-offset, tf.float32)  # * scale
+#   scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
+#   offset = tf.cast(-offset, tf.float32)  # * scale
 
-  info = tf.stack([
-      tf.cast(ishape[:2], tf.float32),
-      tf.cast(oshape[:2], tf.float32), scale, offset
-  ],
-                  axis=0)
+#   info = tf.stack([
+#       tf.cast(ishape[:2], tf.float32),
+#       tf.cast(oshape[:2], tf.float32), scale, offset
+#   ],
+#                   axis=0)
 
-  return image, info
+#   return image, info
 
 
 def random_rotate_image(image, max_angle):
