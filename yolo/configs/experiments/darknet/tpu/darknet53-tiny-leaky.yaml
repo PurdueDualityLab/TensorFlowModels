@@ -22,7 +22,7 @@ task:
     tfds_split: train
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     is_training: true
-    global_batch_size: 512 # 128
+    global_batch_size: 1024 # 128
     drop_remainder: true
     dtype: 'bfloat16'
     parser:
@@ -32,15 +32,15 @@ task:
     tfds_split: validation
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     is_training: false
-    global_batch_size: 512 # 128
+    global_batch_size: 1024 # 128
     dtype: 'bfloat16'
     drop_remainder: true
     parser:
       aug_rand: true
 trainer:
-  train_steps: 300000 # epochs: 120
-  validation_steps: 97 # size of validation data
-  validation_interval: 2500
+  train_steps: 150000 # epochs: 120
+  validation_steps: 48 # size of validation data
+  validation_interval: 5000
   steps_per_loop: 2500
   summary_interval: 2500
   checkpoint_interval: 2500
@@ -52,12 +52,12 @@ trainer:
     learning_rate:
       type: 'polynomial'
       polynomial:
-        initial_learning_rate: 0.2 # og 0.4, but with mish scaling down can prevent nan
+        initial_learning_rate: 0.4 # og 0.4, but with mish scaling down can prevent nan
         end_learning_rate: 0.0000
         power: 4.0
-        decay_steps: 299750
+        decay_steps: 149750
     warmup:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 125 #learning rate rises from 0 to 0.0013 over 1000 steps
