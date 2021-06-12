@@ -202,18 +202,18 @@ class Mosaic(object):
                                                                      width, 
                                                                      height)
 
-    if self._random_aspect_distort > 0.0:
-      # apply aspect ratio distortion (stretching and compressing)
-      height_, width_ = preprocessing_ops.get_image_shape(image)
+    # if self._random_aspect_distort > 0.0:
+    #   # apply aspect ratio distortion (stretching and compressing)
+    #   height_, width_ = preprocessing_ops.get_image_shape(image)
 
-      shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._random_aspect_distort, self._random_aspect_distort)
-      shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-          -self._random_aspect_distort, self._random_aspect_distort)
-      width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-      height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
+    #   shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #       -self._random_aspect_distort, self._random_aspect_distort)
+    #   shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
+    #       -self._random_aspect_distort, self._random_aspect_distort)
+    #   width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
+    #   height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
 
-      image = tf.image.resize(image, (height_, width_))
+    #   image = tf.image.resize(image, (height_, width_))
 
     if self._random_flip:
       # randomly flip the image horizontally
@@ -222,6 +222,7 @@ class Mosaic(object):
     image, infos = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]], 
         [self._output_size[0], self._output_size[1]],
+        letter_box = False, 
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
         jitter = self._random_crop,

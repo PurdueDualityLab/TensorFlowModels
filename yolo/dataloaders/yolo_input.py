@@ -231,16 +231,35 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
 
+
+    if self._random_flip:
+      # randomly flip the image horizontally
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
+
     # if not data['is_mosaic']:  
     # resize the image irrespective of the aspect ratio
-    if not self._letter_box:
-      clipper = tf.reduce_max((height, width))
-      image = tf.image.resize(
-          image, (clipper, clipper), preserve_aspect_ratio=False)
+    # if not self._letter_box:
+    #   clipper = tf.reduce_max((height, width))
+    #   image = tf.image.resize(
+    #       image, (clipper, clipper), preserve_aspect_ratio=False)
+    # if not self._letter_box:
+    #   # clipper = tf.reduce_max((height, width))
+    #   image = image = tf.image.resize(
+    #     image, (self._image_h, self._image_w),preserve_aspect_ratio=False)
+    # else:
+    #   height, width = preprocessing_ops.get_image_shape(image)
+    #   clipper = tf.reduce_max((height, width))
+    #   w_scale = width / clipper
+    #   h_scale = height / clipper
 
-    # store the total distortion
-    # w_scale = width / clipper
-    # h_scale = height / clipper
+    #   height_, width_ = self._image_h, self._image_w
+    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+
+    #   image = image = tf.image.resize(
+    #     image, (height_, width_),preserve_aspect_ratio=False)
+
+      # tf.print(width/height, width_/height_, width, height, width_, height_)
 
     # apply the random aspect ratio crop to the image
     # if self._aug_rand_crop > 0 and not data['is_mosaic']:
@@ -304,9 +323,7 @@ class Parser(parser.Parser):
 
     #   image = tf.image.resize(image, (height_, width_))
 
-    if self._random_flip:
-      # randomly flip the image horizontally
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
+
 
     # apply the final scale jittering of the image, if the image is mosaiced
     # ensure the minimum is larger than 0.4, or 0.1 for each image in the
@@ -314,6 +331,7 @@ class Parser(parser.Parser):
     if not data['is_mosaic']:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          letter_box = self._letter_box, 
           scale_aspect=self._aug_scale_aspect,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
@@ -323,7 +341,8 @@ class Parser(parser.Parser):
       # works well
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          scale_aspect=0.0, 
+          letter_box = self._letter_box, 
+          scale_aspect=self._aug_scale_aspect,
           aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
           aug_scale_max=1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
           jitter=0.0,
@@ -340,7 +359,7 @@ class Parser(parser.Parser):
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.0)
+                                                  info[3, :], keep_thresh = 0.1)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)

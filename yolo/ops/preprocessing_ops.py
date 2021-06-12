@@ -1337,6 +1337,7 @@ def resize_and_jitter_image(image,
                             desired_size,
                             padded_size,
                             jitter = 0.3, 
+                            letter_box = None, 
                             scale_aspect = 0.0, 
                             aug_scale_min=1.0,
                             aug_scale_max=1.0,
@@ -1378,6 +1379,22 @@ def resize_and_jitter_image(image,
       scaled dimension / original dimension.
   """
   with tf.name_scope('resize_and_crop_image'):
+    if letter_box == False:
+      image = image = tf.image.resize(
+        image, (desired_size[0], desired_size[1]),preserve_aspect_ratio=False)
+    elif letter_box == True:
+      height, width = get_image_shape(image)
+      clipper = tf.reduce_max((height, width))
+      w_scale = width / clipper
+      h_scale = height / clipper
+
+      height_, width_ = desired_size[0], desired_size[1]
+      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+
+      image = image = tf.image.resize(
+        image, (height_, width_), preserve_aspect_ratio=False)
+
     if scale_aspect > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
       height_, width_ = get_image_shape(image)
@@ -1390,7 +1407,7 @@ def resize_and_jitter_image(image,
 
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
 
-    random_jittering = (aug_scale_min != 1.0 and aug_scale_max != 1.0)
+    random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)
 
     if random_jittering:
       random_scale = tf.random.uniform([],

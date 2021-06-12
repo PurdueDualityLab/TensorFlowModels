@@ -145,7 +145,7 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
-  mosaic_frequency: float = 0.75
+  mosaic_frequency: float = 1.0
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.35, 0.75])
@@ -167,7 +167,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
   aug_scale_min: float = 0.3
-  aug_scale_max: float = 2.0
+  aug_scale_max: float = 1.7
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
   anchor_thresh: float = 0.2
@@ -281,7 +281,7 @@ class YoloBase(hyperparams.OneOfConfig):
 class Yolo(ModelConfig):
   num_classes: int = 80
   input_size: Optional[List[int]] = dataclasses.field(
-      default_factory=lambda: [640, 640, 3])
+      default_factory=lambda: [512, 512, 3])
   min_level: int = 3
   max_level: int = 5
   boxes_per_scale: int = 3
