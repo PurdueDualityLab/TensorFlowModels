@@ -34,8 +34,8 @@ class Mosaic(object):
     self._aspect_ratio_mode = aspect_ratio_mode
     self._random_crop = random_crop
     self._random_aspect_distort = random_aspect_distort
-    self._aug_scale_max = 0.1 #aug_scale_max
-    self._aug_scale_min = 2.0 #aug_scale_min
+    self._aug_scale_max = aug_scale_max
+    self._aug_scale_min = aug_scale_min
     self._random_flip = random_flip
 
     self._crop_area = crop_area
@@ -188,9 +188,7 @@ class Mosaic(object):
 
     # resize the image irrespective of the aspect ratio
     if self._aspect_ratio_mode == 'distort':
-      w_, h_ = self._output_size[0], self._output_size[1] #self._estimate_shape(image)
-      image = tf.image.resize(
-          image, (h_, w_), preserve_aspect_ratio=False)
+      letter_box = False
     elif self._aspect_ratio_mode == 'crop':
       height, width = self._output_size[0], self._output_size[1]
       image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
@@ -201,6 +199,9 @@ class Mosaic(object):
                                                                      self._crop_area,
                                                                      width, 
                                                                      height)
+      letter_box = True
+    else:
+      letter_box = True
 
     # if self._random_aspect_distort > 0.0:
     #   # apply aspect ratio distortion (stretching and compressing)
@@ -222,7 +223,7 @@ class Mosaic(object):
     image, infos = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]], 
         [self._output_size[0], self._output_size[1]],
-        letter_box = False, 
+        letter_box = letter_box, 
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
         jitter = self._random_crop,

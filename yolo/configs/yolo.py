@@ -102,29 +102,6 @@ class ModelConfig(hyperparams.Config):
     print(boxes)
     return boxes
 
-  # @property
-  # def _boxes(self):
-  #   if self.boxes is None:
-  #     return None
-  #   boxes = []
-  #   for box in self.boxes:
-  #     if isinstance(box, list) or isinstance(box, tuple):
-  #       boxes.append(box)
-  #     elif isinstance(box, str):
-  #       if box[0] == '(' or box[0] == '[':
-  #         f = []
-  #         for b in box[1:-1].split(','):
-  #           f.append(float(b.strip()))
-  #         boxes.append(f)
-  #       else:
-  #         f = []
-  #         for b in box.split(','):
-  #           f.append(float(b.strip()))
-  #         boxes.append(f)
-  #     elif isinstance(box, int):
-  #       raise IOError('unsupported input type, only strings or tuples')
-  #   return boxes
-
   @_boxes.setter
   def _boxes(self, box_list):
     setter = []
