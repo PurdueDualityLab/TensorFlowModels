@@ -427,15 +427,26 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
 
-    if not self._letter_box:
-      # dont preserve aspect ratio in eval if it is not set in train
-      clipper = tf.reduce_max(preprocessing_ops.get_image_shape(image))
-      image = tf.image.resize(
-          image, (clipper, clipper), preserve_aspect_ratio=False)
+    image, infos = preprocessing_ops.resize_and_jitter_image(
+          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+          letter_box = self._letter_box, 
+          scale_aspect = 0.0,
+          aug_scale_min = 1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max = 1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
+          jitter = 0.0,
+          random_pad = False, 
+          shiftx = 0.0, 
+          shifty = 0.0)
 
-    # preserve the aspect ratio of the image
-    image, boxes, info = preprocessing_ops.letter_box(
-        image, boxes, xs=0.5, ys=0.5, target_dim=self._image_w)
+    for info in infos:
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                  info[3, :], keep_thresh = 0.1)
+
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
