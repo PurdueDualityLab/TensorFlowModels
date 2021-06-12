@@ -10,7 +10,7 @@ task:
           model_id: 'cspdarknet53'
       decoder:
         version: v4
-        type: regular
+        type: csp
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
@@ -33,7 +33,7 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: leaky
+    decoder_activation: mish
     filter:
       ignore_thresh:
         '5': 0.7
@@ -89,8 +89,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
-      aug_scale_aspect: 0.0
+      aug_rand_crop: 0.0
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
@@ -119,8 +119,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.3
-      aug_scale_aspect: 0.0
+      aug_rand_crop: 0.0
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
