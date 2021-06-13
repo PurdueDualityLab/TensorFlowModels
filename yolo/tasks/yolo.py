@@ -25,7 +25,6 @@ from collections import defaultdict
 class ListMetrics(object):
 
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
-    # super(ListMetrics, self).__init__(name=name, **kwargs)
     self.name = name
     self._metric_names = metric_names
     self._metrics = self.build_metric()
@@ -62,7 +61,7 @@ class ListMetrics(object):
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
   """A single-replica view of training procedure.
-  RetinaNet task provides artifacts for training/evalution procedures, including
+  YOLO task provides artifacts for training/evalution procedures, including
   loading/iterating over Datasets, initializing the model, calculating the loss,
   post-processing, and customized metrics with reduction.
   """
@@ -72,7 +71,6 @@ class YoloTask(base_task.Task):
     self._loss_dict = None
     self._num_boxes = None
     self._anchors_built = False
-    # self._get_gt_boxes_used = None #YoloGTFilter()
 
     self._masks = None
     self._path_scales = None
@@ -80,7 +78,6 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
-
     return
 
   def build_model(self):
@@ -92,7 +89,6 @@ class YoloTask(base_task.Task):
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
     masks, path_scales, xy_scales = self._get_masks()
-    print(xy_scales, l2_weight_decay)
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
@@ -288,13 +284,6 @@ class YoloTask(base_task.Task):
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
 
-      # for m in metrics:
-      #   m.update_state(loss_metrics[m.name])
-      #   logs.update({m.name: m.result()})
-
-    # tf.print(logs, end='\n')
-    # ret = '\033[F' * (len(logs.keys()) * 7 - 14 + 2 + 1)
-    # tf.print(ret, end='\n')
     return logs
 
   def validation_step(self, inputs, model, metrics=None):
@@ -338,22 +327,11 @@ class YoloTask(base_task.Task):
 
     logs.update({self.coco_metric.name: (label, coco_model_outputs)})
 
-    # if metrics:
-    #   for m in metrics:
-    #     m.update_state(loss_metrics[m.name])
-    #     logs.update({m.name: m.result()})
 
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
-
-      # for i, key in enumerate(self._metric_names.keys()):
-      #   if metrics[i] is not None:
-      #     logs[key] = dict()
-      #     for m in metrics[i]:
-      #       m.update_state(loss_metrics[key][m.name])
-      #       logs[key].update({m.name: m.result()})
 
     return logs
 
@@ -391,7 +369,7 @@ class YoloTask(base_task.Task):
           parser_fn=None)
       anchors = reader.read(
           k=self._num_boxes,
-          image_width=params.parser.image_w,
+          image_width=self._task_config.model.input_size[0],
           input_context=None)
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
@@ -507,31 +485,15 @@ class YoloTask(base_task.Task):
       # Restoring checkpoint.
       if self.task_config.init_checkpoint_modules == 'all':
         ckpt = tf.train.Checkpoint(model=model)
-        # status = ckpt.restore(ckpt_dir_or_file)
-        # status.assert_consumed()
-        # optimizer = self.create_optimizer(params.trainer.optimizer_config,
-        #                               params.runtime)
-        # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-        # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial().assert_existing_objects_matched()
       elif self.task_config.init_checkpoint_modules == 'backbone':
         ckpt = tf.train.Checkpoint(backbone=model.backbone)
         status = ckpt.restore(ckpt_dir_or_file)
-        # if self.task_config.model.subdivisions == 1:
-        #   try:
         status.expect_partial().assert_existing_objects_matched()
-        #except:
-        #print("this checkpoint could not assert all components consumed")
       elif self.task_config.init_checkpoint_modules == 'decoder':
         ckpt = tf.train.Checkpoint(
             backbone=model.backbone, decoder=model.decoder)
-        # status = ckpt.restore(ckpt_dir_or_file)
-        # status.assert_consumed()
-        # optimizer = self.create_optimizer(params.trainer.optimizer_config,
-        #                               params.runtime)
-        # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
-        # ckpt = tf.train.Checkpoint(backbone = model.backbone, decoder = model.decoder, head = model.head) #, optimizer=optimizer)
         status = ckpt.restore(ckpt_dir_or_file)
         status.expect_partial()  #.assert_existing_objects_matched()
       else:

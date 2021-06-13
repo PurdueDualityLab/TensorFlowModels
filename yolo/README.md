@@ -59,23 +59,6 @@ Our goal with this model conversion is to provide highly versatile implementatio
 
 For all Standard implementations, we provided scripts to load the weights into the Tensorflow implementation directly from the original Darknet Implementation, provided that you have a yolo**.cfg file, and the corresponding yolo**.weights file.
 
-## Data Pipeline/Dataset Benchmarking
-The Data Pipeline is found within the dataloaders folder. The way to use our data pipeline is by typing "from yolo.dataloaders import preprocessing_functions.py as pf" at the top of your python file. Then loading in the tfds dataset by means of tfds.ImageFolder or tfds.load. Then use the following function as seen below:
-
-    dataset = pf.preprocessing(dataset, data_augmentation_split, preprocessing_type, size, batch_size, num_of_classes, shuffle_flag)
-
-    ARGS:
-        dataset (tfds.data.Dataset): The Dataset you would like to preprocess.
-        data_augmentation_split (int): The percentage of the dataset that is data
-            augmented.
-        preprocessing_type (str): The type of preprocessing should be conducted
-            and is dependent on the type of training.
-        size (int): The size of the dataset being passed into preprocessing.
-        batch_size (int): The size of the each batch.
-        num_of_classes (int): The number of classes found within the dataset.
-        shuffle_flag (bool): This is a Flag that determines whether to or not to shuffle
-            within the function.
-
 ## Results
 
 [![TensorFlow Hub](https://img.shields.io/badge/TF%20Hub-Models-FF6F00?logo=tensorflow)](https://tfhub.dev/...)
