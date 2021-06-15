@@ -134,7 +134,6 @@ task:
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.35, 0.85]
   weight_decay: 0.0005
-  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: null
   annotation_file: null
   gradient_clip_norm: 0.0
