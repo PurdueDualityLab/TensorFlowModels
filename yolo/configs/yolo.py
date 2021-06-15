@@ -126,25 +126,25 @@ class Mosaic(hyperparams.Config):
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.35, 0.75])
-  aspect_ratio_mode: str = 'distort'
+  aspect_ratio_mode: str = 'letter'
   random_crop_mosaic: bool = True
 
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: bool = False
+  letter_box: bool = True
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.3
+  aug_rand_crop: float = 0.1
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 1.5
   aug_rand_brightness: float = 1.5
   aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.3
-  aug_scale_max: float = 1.7
+  aug_scale_min: float = 0.1
+  aug_scale_max: float = 1.9
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
   anchor_thresh: float = 0.2
@@ -256,7 +256,7 @@ class YoloBase(hyperparams.OneOfConfig):
 
 @dataclasses.dataclass
 class Yolo(ModelConfig):
-  num_classes: int = 80
+  num_classes: int = 91
   input_size: Optional[List[int]] = dataclasses.field(
       default_factory=lambda: [512, 512, 3])
   min_level: int = 3
