@@ -104,7 +104,7 @@ task:
   init_checkpoint_modules: 'all'
   annotation_file: null
 trainer:
-  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 100000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -116,10 +116,10 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [400000, 450000]
+        boundaries: [50000]
         name: PiecewiseConstantDecay
-        #values: [0.00131, 0.00013, 0.000013] 
-        values: [0.00261, 0.000261, 0.0000261] 
+        values: [0.00013, 0.000013] 
+        #values: [0.00261, 0.000261, 0.0000261] 
     optimizer:
       type: sgd
       sgd:
