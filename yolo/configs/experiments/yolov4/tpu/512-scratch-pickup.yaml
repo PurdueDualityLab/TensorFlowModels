@@ -59,7 +59,7 @@ task:
   train_data:
     global_batch_size: 64
     dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
+    input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -89,7 +89,7 @@ task:
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
