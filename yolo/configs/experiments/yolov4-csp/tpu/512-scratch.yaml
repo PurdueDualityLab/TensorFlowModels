@@ -85,15 +85,15 @@ task:
       letter_box: True
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.1
+      aug_rand_crop: 0.2
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
+      aug_rand_saturation: 0.4
+      aug_rand_brightness: 0.6
+      aug_rand_hue: 0.2
       aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_max: 3.0
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 0.20
@@ -102,7 +102,7 @@ task:
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.35, 0.85]
+        crop_area_mosaic: [0.35, 1.0]
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -113,26 +113,9 @@ task:
     parser:
       max_num_instances: 200
       letter_box: True
-      random_flip: True
-      random_pad: True
-      aug_rand_crop: 0.1
-      aug_scale_aspect: 0.0
-      aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.20
-      mosaic: 
-        mosaic_frequency: 0.85
-        crop_area: [0.25, 1.0]
-        random_crop_mosaic: true
-        aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.35, 0.85]
+      anchor_thresh: 0.2
   weight_decay: 0.0005
   init_checkpoint_modules: null
   annotation_file: null

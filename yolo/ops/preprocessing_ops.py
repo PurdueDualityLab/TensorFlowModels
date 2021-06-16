@@ -1481,6 +1481,7 @@ def resize_and_jitter_image(image,
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
 
+
     offset = -tf.convert_to_tensor([dy, dx])
 
     image_info_b = tf.stack([

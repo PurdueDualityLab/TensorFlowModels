@@ -140,11 +140,11 @@ class Parser(hyperparams.Config):
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
-  aug_rand_saturation: float = 1.5
-  aug_rand_brightness: float = 1.5
-  aug_rand_hue: float = 0.1
+  aug_rand_saturation: float = 1.0
+  aug_rand_brightness: float = 1.0
+  aug_rand_hue: float = 0.0
   aug_scale_min: float = 0.1
-  aug_scale_max: float = 1.9
+  aug_scale_max: float = 3.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = True
   anchor_thresh: float = 0.2
