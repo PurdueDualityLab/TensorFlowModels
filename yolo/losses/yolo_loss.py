@@ -302,14 +302,6 @@ def get_predicted_box_newcords(width,
   return pred_xy, box_wh, pred_box
 
 
-#  use_tie_breaker=True,
-#  nms_kind="greedynms",
-#  beta_nms=0.6,
-#  path_key=None,
-#  iou_thresh=0.213,
-#  name=None,
-
-
 class Yolo_Loss(object):
 
   def __init__(self,
@@ -581,7 +573,7 @@ class Yolo_Loss(object):
 
     # compute the while loop
     (_, _, _, _, _, _, iou_max, iou_mask, obns_loss, truth_loss, count,
-     idx) = tf.while_loop(
+     _) = tf.while_loop(
          _loop_cond,
          self._build_mask_body, [
              pred_boxes, pred_classes, pred_conf, pred_classes_mask, boxes,
@@ -607,8 +599,8 @@ class Yolo_Loss(object):
       iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
 
       # update the true conffidence mask with the best matching iou
-      true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
+      # true_conf = tf.where(iou_mask, iou_, true_conf)
+      true_conf = iou_
 
     # stop gradient on all components to save resources, we don't
     # need to track the gradient though the while loop as they are
@@ -768,13 +760,13 @@ class Yolo_Loss(object):
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = math_ops.mul_no_nan(ind_mask, smoothed_iou)
-    # smoothed_iou = tf.clip_by_value(smoothed_iou, 0.0, 1.0)
-    # tf.print(smoothed_iou)
+    smoothed_iou = tf.clip_by_value(smoothed_iou, 0.0, 1.0)
 
     # 12. build a the ground truth detection map
     true_conf = self.build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=False)
+        inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)
+
 
     # 13. apply the mask for the classes to again use only the indexes where a
     #     box exists
