@@ -52,9 +52,9 @@ task:
         '4': 0.3
         '3': 0.3
       obj_normalizer: 
-        '5': 0.4
-        '4': 1.0
-        '3': 4.0
+        '5': 0.28
+        '4': 0.7
+        '3': 2.8
       new_cords:
         '5': true
         '4': true
@@ -84,7 +84,7 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      random_pad: False
+      random_pad: True
       aug_rand_crop: 0.1
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
@@ -114,7 +114,7 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      random_pad: False
+      random_pad: True
       aug_rand_crop: 0.1
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0

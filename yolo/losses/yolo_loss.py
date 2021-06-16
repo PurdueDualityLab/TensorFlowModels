@@ -654,7 +654,7 @@ class Yolo_Loss(object):
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
       # clip the values between zero and one
-      grid = tf.clip_by_value(grid, 0.0, 1.0)
+      # grid = tf.clip_by_value(grid, 0.0, 1.0)
 
     # stop gradient and return to avoid TPU errors and save compute
     # resources
@@ -721,7 +721,7 @@ class Yolo_Loss(object):
 
     # 5. based on input val new_cords decode the box predicitions and because
     #    we are using the scaled loss, do not change the gradients at all
-    pred_xy, pred_wh, pred_box = self._decode_boxes(
+    _, _, pred_box = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
     # 6. find out the number of points placed in the grid mask
@@ -756,7 +756,7 @@ class Yolo_Loss(object):
 
     # 10. compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    iou, _, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
@@ -768,6 +768,8 @@ class Yolo_Loss(object):
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = math_ops.mul_no_nan(ind_mask, smoothed_iou)
+    # smoothed_iou = tf.clip_by_value(smoothed_iou, 0.0, 1.0)
+    # tf.print(smoothed_iou)
 
     # 12. build a the ground truth detection map
     true_conf = self.build_grid(
