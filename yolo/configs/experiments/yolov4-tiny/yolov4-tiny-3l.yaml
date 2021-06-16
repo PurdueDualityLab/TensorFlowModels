@@ -139,7 +139,7 @@ trainer:
       stepwise:
         boundaries: [900000, 1012500]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.000975, 0.000655]
+        values: [0.0013, 0.00013, 0.000013]
     optimizer:
       type: sgd
       sgd:
