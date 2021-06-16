@@ -13,6 +13,7 @@ task:
       decoder:
         version: v4
         type: csp
+        activation: mish
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 1
@@ -35,46 +36,31 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: mish
     filter:
       ignore_thresh:
-        '5': 0.7
-        '4': 0.7
-        '3': 0.7
+        'all': 0.7
       loss_type:  
-        '5': ciou
-        '4': ciou
-        '3': ciou
+        'all': ciou
       iou_normalizer: 
-        '5': 0.05
-        '4': 0.05
-        '3': 0.05
+        'all': 0.05
       cls_normalizer: 
-        '5': 0.3
-        '4': 0.3
-        '3': 0.3
+        'all': 0.3
       obj_normalizer: 
         '5': 0.28
         '4': 0.7
         '3': 2.8
       new_cords:
-        '5': true
-        '4': true
-        '3': true
+        'all': true
       objectness_smooth: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        'all': 1.0
       scale_xy:
-        '5': 2.0
-        '4': 2.0
-        '3': 2.0
+        'all': 2.0
       max_boxes: 200
       nms_type: diou
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
-      use_reduction_sum: true
+      use_scaled_loss: true
   train_data:
     global_batch_size: 4
     dtype: bfloat16

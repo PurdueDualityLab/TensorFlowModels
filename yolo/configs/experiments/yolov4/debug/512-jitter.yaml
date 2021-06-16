@@ -11,9 +11,7 @@ task:
       decoder:
         version: v4
         type: regular
-      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
-      darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 1
+        activation: leaky
     num_classes: 91
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
@@ -33,40 +31,21 @@ task:
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: leaky
     filter:
       ignore_thresh:
-        '5': 0.7
-        '4': 0.7
-        '3': 0.7
+        'all': 0.7
       loss_type:  
-        '5': ciou
-        '4': ciou
-        '3': ciou
+        'all': ciou
       iou_normalizer: 
-        '5': 0.07
-        '4': 0.07
-        '3': 0.07
+        'all': 0.07
       cls_normalizer: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        'all': 1.0
       obj_normalizer: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
-      max_delta:
-        '5': 5.0
-        '4': 5.0
-        '3': 5.0
+        'all': 1.0
       new_cords:
-        '5': false
-        '4': false
-        '3': false
+        'all': false
       objectness_smooth: 
-        '5': 0.0
-        '4': 0.0
-        '3': 0.0
+        'all': 0.0
       scale_xy:
         '5': 1.05
         '4': 1.1
@@ -76,7 +55,7 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
-      use_reduction_sum: false
+      use_scaled_loss: false
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -93,11 +72,11 @@ task:
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 1.7
+      aug_rand_saturation: 2.0
+      aug_rand_brightness: 2.0
+      aug_rand_hue: 0.15
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
@@ -125,11 +104,11 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
-  validation_interval: 20000 #00
+  validation_interval: 20000 
   checkpoint_interval: 10000
   optimizer_config:
     ema:
@@ -137,11 +116,10 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [200000, 225000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000655, 0.000325]
-        values: [0.00131, 0.0009825, 0.000655] #best
-        # values: [0.00131, 0.00013, 0.000013] 
+        values: [0.00131, 0.00013, 0.000013] 
+        #values: [0.00261, 0.000261, 0.0000261] 
     optimizer:
       type: sgd
       sgd:

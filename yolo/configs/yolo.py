@@ -121,33 +121,33 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  output_size: List[int] = dataclasses.field(default_factory=lambda: [640, 640])
   mosaic_frequency: float = 0.75
-  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
+  crop_area: List[int] = dataclasses.field(
+      default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.35, 0.75])
-  aspect_ratio_mode: str = 'letter'
+  aspect_ratio_mode: str = 'distort'
   random_crop_mosaic: bool = True
 
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: bool = True
+  letter_box: Optional[bool] = False
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.1
+  aug_rand_crop: float = 0.3
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
-  aug_rand_saturation: float = 1.0
-  aug_rand_brightness: float = 1.0
-  aug_rand_hue: float = 0.0
+  aug_rand_saturation: float = 2.0
+  aug_rand_brightness: float = 2.0
+  aug_rand_hue: float = 0.15
   aug_scale_min: float = 0.1
-  aug_scale_max: float = 3.0
+  aug_scale_max: float = 2.0
   use_tie_breaker: bool = True
-  use_scale_xy: bool = True
-  anchor_thresh: float = 0.2
+  use_scale_xy: bool = False
+  anchor_thresh: float = 0.213
   mosaic: Mosaic = Mosaic()
 
 
@@ -193,16 +193,20 @@ class YoloDecoder(hyperparams.Config):
   input parameters and use version and name defaults"""
   version: Optional[str] = None
   type: Optional[str] = None
-  use_fpn: bool = False
-  fpn_depth: int = 4
-  path_process_len: int = 6
+  use_fpn: Optional[bool] = None
+  use_spatial_attention: bool = False
+  csp_stack: Optional[bool] = None
+  fpn_depth: Optional[int] = None
+  fpn_filter_scale: Optional[int] = None
+  path_process_len: Optional[int] = None
   max_level_process_len: Optional[int] = None
-  embed_spp: bool = False
-  xy_exponential: bool = False
-
+  embed_spp: Optional[bool] = None
+  activation: Optional[str] = 'same'
 
 def _build_dict(min_level, max_level, value):
-  return lambda: {str(key): value for key in range(min_level, max_level + 1)}
+  vals = {str(key): value for key in range(min_level, max_level + 1)}
+  vals["all"] = None
+  return lambda: vals
 
 
 def _build_path_scales(min_level, max_level):
@@ -242,16 +246,16 @@ class YoloLossLayer(hyperparams.Config):
   pre_nms_points: int = 500
   label_smoothing: float = 0.0
   anchor_generation_scale: int = 512
-  use_reduction_sum: bool = True
+  use_scaled_loss: bool = True
 
 
 @dataclasses.dataclass
 class YoloBase(hyperparams.OneOfConfig):
   backbone: backbones.Backbone = backbones.Backbone(
       type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
-  decoder: YoloDecoder = YoloDecoder(version='v3', type='regular')
-  darknet_weights_file: str = 'yolov3.weights'
-  darknet_weights_cfg: str = 'yolov3.cfg'
+  decoder: YoloDecoder = YoloDecoder(version='v4', type='regular')
+  darknet_weights_file: str = 'yolov4.weights'
+  darknet_weights_cfg: str = 'yolov4.cfg'
 
 
 @dataclasses.dataclass
@@ -264,7 +268,6 @@ class Yolo(ModelConfig):
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
   subdivisions: int = 1
-  use_sam: bool = False
   filter: YoloLossLayer = YoloLossLayer(
       min_level=min_level, max_level=max_level)
   norm_activation: common.NormActivation = common.NormActivation(
@@ -272,8 +275,6 @@ class Yolo(ModelConfig):
       use_sync_bn=True,
       norm_momentum=0.99,
       norm_epsilon=0.001)
-  decoder_activation: str = 'leaky'
-
   boxes: Optional[List[str]] = None
 
 

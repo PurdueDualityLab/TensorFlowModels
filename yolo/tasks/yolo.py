@@ -135,7 +135,7 @@ class YoloTask(base_task.Task):
     print(xy_scales)
 
     sample_fn = mosaic.Mosaic(
-        output_size=params.parser.mosaic.output_size,
+        output_size=model.input_size,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         crop_area=params.parser.mosaic.crop_area,
         crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
@@ -241,7 +241,7 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_reduction_sum:
+    if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
       num_replicas = scale_replicas
@@ -291,7 +291,7 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_reduction_sum:
+    if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
       num_replicas = scale_replicas

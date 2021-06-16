@@ -9,8 +9,8 @@ from yolo.configs import yolo
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   activation = (
-      model_config.decoder_activation
-      if model_config.decoder_activation != "same" else
+      model_config.decoder.activation
+      if model_config.decoder.activation != "same" else
       model_config.norm_activation.activation)
   subdivisions = 1
 
@@ -48,24 +48,42 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   base_model = yolo_model.YOLO_MODELS[model_config.decoder.version][
       model_config.decoder.type]
+  
+  cfg_dict = model_config.decoder.as_dict()
+  for key in base_model:
+    if cfg_dict[key] is not None:
+      base_model[key] = cfg_dict[key]
+
   base_dict = dict(
       activation=activation,
       subdivisions=subdivisions,
-      use_spatial_attention=model_config.use_sam,
+      use_spatial_attention=model_config.decoder.use_spatial_attention,
       use_sync_bn=model_config.norm_activation.use_sync_bn,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization)
 
   base_model.update(base_dict)
+  print(base_model)
 
   model = YoloDecoder(input_specs, **base_model)
 
   return model
 
 
+  
 def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
                       xy_scales, path_scales):
+
+  def _build(values):
+    print(values)
+    if "all" in values and values["all"] is not None:
+      for key in values:
+        if key != 'all':
+          values[key] = values["all"]
+    print(values)
+    return values
+
   model = YoloLayer(
       masks=masks,
       classes=model_config.num_classes,
@@ -78,16 +96,16 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       scale_xy=xy_scales,
       label_smoothing=model_config.filter.label_smoothing,
       pre_nms_points=model_config.filter.pre_nms_points,
-      use_reduction_sum=model_config.filter.use_reduction_sum,
-      truth_thresh=model_config.filter.truth_thresh.as_dict(),
-      loss_type=model_config.filter.loss_type.as_dict(),
-      max_delta=model_config.filter.max_delta.as_dict(),
-      new_cords=model_config.filter.new_cords.as_dict(),
-      iou_normalizer=model_config.filter.iou_normalizer.as_dict(),
-      cls_normalizer=model_config.filter.cls_normalizer.as_dict(),
-      obj_normalizer=model_config.filter.obj_normalizer.as_dict(),
-      ignore_thresh=model_config.filter.ignore_thresh.as_dict(),
-      objectness_smooth=model_config.filter.objectness_smooth.as_dict())
+      use_scaled_loss=model_config.filter.use_scaled_loss,
+      truth_thresh=_build(model_config.filter.truth_thresh.as_dict()),
+      loss_type=_build(model_config.filter.loss_type.as_dict()),
+      max_delta=_build(model_config.filter.max_delta.as_dict()),
+      new_cords=_build(model_config.filter.new_cords.as_dict()),
+      iou_normalizer=_build(model_config.filter.iou_normalizer.as_dict()),
+      cls_normalizer=_build(model_config.filter.cls_normalizer.as_dict()),
+      obj_normalizer=_build(model_config.filter.obj_normalizer.as_dict()),
+      ignore_thresh=_build(model_config.filter.ignore_thresh.as_dict()),
+      objectness_smooth=_build(model_config.filter.objectness_smooth.as_dict()))
   return model
 
 

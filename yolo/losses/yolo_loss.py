@@ -316,7 +316,7 @@ class Yolo_Loss(object):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                objectness_smooth=True,
-               use_reduction_sum=False,
+               use_scaled_loss=False,
                label_smoothing=0.0,
                new_cords=False,
                scale_x_y=1.0,
@@ -344,7 +344,7 @@ class Yolo_Loss(object):
       obj_normalizer: `float` for how much to scale loss on the detection map
       objectness_smooth: `float` for how much to smooth the loss on the 
         detection map 
-      use_reduction_sum: `bool` for whether to use the scaled loss 
+      use_scaled_loss: `bool` for whether to use the scaled loss 
         or the traditional loss
       label_smoothing: `float` for how much to smooth the loss on the classes
       new_cords: `bool` for which scaling type to use 
@@ -392,7 +392,7 @@ class Yolo_Loss(object):
 
     self._label_smoothing = tf.cast(label_smoothing, tf.float32)
     self._objectness_smooth = float(objectness_smooth)
-    self._use_reduction_sum = use_reduction_sum
+    self._use_reduction_sum = use_scaled_loss
 
     self._new_cords = new_cords
     self._any = True
@@ -402,7 +402,7 @@ class Yolo_Loss(object):
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
-        darknet=not self._use_reduction_sum,
+        # darknet=not self._use_reduction_sum,
         normalizer=self._iou_normalizer,
         max_delta=self._max_delta)
 
