@@ -291,10 +291,7 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_scaled_loss:
-      num_replicas = 1
-    else:
-      num_replicas = scale_replicas
+    num_replicas = scale_replicas
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)

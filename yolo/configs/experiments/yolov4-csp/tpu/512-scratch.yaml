@@ -93,7 +93,7 @@ task:
       aug_rand_brightness: 0.6
       aug_rand_hue: 0.2
       aug_scale_min: 0.1
-      aug_scale_max: 3.0
+      aug_scale_max: 2.5
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 0.20
