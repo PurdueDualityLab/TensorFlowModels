@@ -476,6 +476,7 @@ class YoloTask(base_task.Task):
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:
+        tf.print("loaded nothing")
         return
 
       ckpt_dir_or_file = self.task_config.init_checkpoint
