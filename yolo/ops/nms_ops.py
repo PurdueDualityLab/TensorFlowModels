@@ -7,7 +7,7 @@ NMS_TILE_SIZE = 512
 class TiledNMS():
   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 
-  def __init__(self, iou_type='diou', beta=0.6):
+  def __init__(self, iou_type='diou', beta=1.0):
     '''Initialization for all non max supression operations mainly used to 
     select hyperperamters for the iou type and scaling.
 

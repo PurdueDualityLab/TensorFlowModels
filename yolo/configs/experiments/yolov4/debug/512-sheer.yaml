@@ -12,7 +12,6 @@ task:
         version: v4
         type: regular
         activation: leaky
-    subdivisions: 1
     num_classes: 91
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
@@ -43,8 +42,6 @@ task:
         'all': 1.0
       obj_normalizer: 
         'all': 1.0
-      max_delta:
-        'all': 5.0
       new_cords:
         'all': false
       objectness_smooth: 
@@ -62,7 +59,7 @@ task:
   train_data:
     global_batch_size: 64
     dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
+    input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -78,8 +75,8 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 1.7
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
@@ -92,7 +89,7 @@ task:
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
+    input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -121,9 +118,7 @@ trainer:
       stepwise:
         boundaries: [200000, 225000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000655, 0.000325]
         values: [0.00131, 0.0009825, 0.000655] #best
-        # values: [0.00131, 0.00013, 0.000013] 
     optimizer:
       type: sgd
       sgd:

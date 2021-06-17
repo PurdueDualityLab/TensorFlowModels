@@ -960,7 +960,6 @@ def random_jitter_crop(image,
     crop_offset = tf.cast(tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
     crop_size = tf.cast(tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
 
-    # tf.print(crop_offset, crop_size, pleft, pright, ptop, pbottom, intersect_wh, src_bottom)
 
     cropped_image = tf.slice(image, crop_offset, crop_size)
 

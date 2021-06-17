@@ -11,7 +11,7 @@ from yolo.utils.demos import utils, coco
 import matplotlib.pyplot as plt
 
 
-# TODO: revert back to old mosaic
+# TODO: revert back to old mosaic?
 class Mosaic(object):
 
   def __init__(self,
