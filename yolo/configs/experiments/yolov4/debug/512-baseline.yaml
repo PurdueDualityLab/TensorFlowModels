@@ -72,8 +72,8 @@ task:
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
+      aug_rand_saturation: 0.7
+      aug_rand_brightness: 0.4
       aug_rand_hue: 0.1
       aug_scale_min: 0.1
       aug_scale_max: 2.0
@@ -84,8 +84,8 @@ task:
         mosaic_frequency: 0.75
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 0.75]
-        aug_scale_min: 0.35
+        crop_area_mosaic: [0.25, 2.5]
+        aug_scale_min: 0.3
         aug_scale_max: 1.7
   validation_data:
     global_batch_size: 8
