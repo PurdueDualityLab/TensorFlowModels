@@ -128,8 +128,8 @@ class Mosaic(hyperparams.Config):
       default_factory=lambda: [0.35, 2.5])
   aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str]= 'scale'
-  aug_scale_min: Optional[float] = None
-  aug_scale_max: Optional[float] = None
+  aug_scale_min: Optional[float] = 0.35
+  aug_scale_max: Optional[float] = 1.70
   aug_rand_crop: Optional[float] = None
 
 
@@ -147,7 +147,7 @@ class Parser(hyperparams.Config):
   aug_rand_brightness: float = 0.4
   aug_rand_hue: float = 0.1
   aug_scale_min: float = 0.1
-  aug_scale_max: float = 1.7
+  aug_scale_max: float = 2.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213
