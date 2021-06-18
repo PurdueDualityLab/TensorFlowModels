@@ -128,7 +128,7 @@ class Mosaic(hyperparams.Config):
       default_factory=lambda: [0.35, 2.5])
   aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str]= 'scale'
-  aug_scale_min: Optional[float] = 0.35
+  aug_scale_min: Optional[float] = None
   aug_scale_max: Optional[float] = None
   aug_rand_crop: Optional[float] = None
 
