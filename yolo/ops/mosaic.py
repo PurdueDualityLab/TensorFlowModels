@@ -25,7 +25,7 @@ class Mosaic(object):
                random_flip = True, 
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
-               random_crop_mosaic=False, 
+               mosaic_crop_mode=None, 
                seed = None):
 
     self._output_size = output_size
@@ -40,7 +40,7 @@ class Mosaic(object):
 
     self._crop_area = crop_area
     
-    self._random_crop_mosaic = random_crop_mosaic
+    self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
 
     self._seed = seed
@@ -161,30 +161,47 @@ class Mosaic(object):
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area,
                          width, height):
-    image, info = preprocessing_ops.random_crop_mosaic(
-        image,
-        aspect_ratio_range=(self._output_size[1] / self._output_size[0],
-                            self._output_size[1] / self._output_size[0]),
-        area_range=crop_area,
-        seed=self._seed)
+    if self._mosaic_crop_mode == "scale":
+      image, infos = preprocessing_ops.resize_and_jitter_image(
+        image, [self._output_size[0] * 2, self._output_size[1] * 2], 
+        [self._output_size[0] * 2, self._output_size[1] * 2],
+        letter_box = False, 
+        aug_scale_min=crop_area[0],
+        aug_scale_max=crop_area[1],
+        jitter = self._random_crop,
+        random_pad=True, 
+        seed = self._seed)
+    else:
+      image, info = preprocessing_ops.random_crop_mosaic(
+          image,
+          aspect_ratio_range=(self._output_size[1] / self._output_size[0],
+                              self._output_size[1] / self._output_size[0]),
+          area_range=crop_area,
+          seed=self._seed)
+      infos = [info]
 
-    boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                 info[3, :])
+    for info in infos:
+      boxes = box_ops.denormalize_boxes(boxes, info[0, :])
+      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+                                                  info[3, :])
 
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    is_crowd = tf.gather(is_crowd, inds)
-    area = tf.gather(area, inds)
+      inds = box_ops.get_non_empty_box_indices(boxes)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
+      is_crowd = tf.gather(is_crowd, inds)
+      area = tf.gather(area, inds)
 
-    boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      boxes = box_ops.normalize_boxes(boxes, info[1, :])
     # image = tf.image.resize(image, (height, width))
     return image, boxes, classes, is_crowd, area, info
 
   def _process_image(self, image, boxes, classes, is_crowd, area, xs=0.0, ys =0.0):
     # initialize the shape constants
     height, width = preprocessing_ops.get_image_shape(image)
+    # height = 4 * height//5
+    # width = 4 * width//5
+    # image = tf.image.resize(image, (height, width))
+
 
     # resize the image irrespective of the aspect ratio
     if self._aspect_ratio_mode == 'distort':
@@ -202,19 +219,6 @@ class Mosaic(object):
       letter_box = True
     else:
       letter_box = True
-
-    # if self._random_aspect_distort > 0.0:
-    #   # apply aspect ratio distortion (stretching and compressing)
-    #   height_, width_ = preprocessing_ops.get_image_shape(image)
-
-    #   shiftx = 1.0 + preprocessing_ops.rand_uniform_strong(
-    #       -self._random_aspect_distort, self._random_aspect_distort)
-    #   shifty = 1.0 + preprocessing_ops.rand_uniform_strong(
-    #       -self._random_aspect_distort, self._random_aspect_distort)
-    #   width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
-    #   height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
-
-    #   image = tf.image.resize(image, (height_, width_))
 
     if self._random_flip:
       # randomly flip the image horizontally
@@ -327,11 +331,12 @@ class Mosaic(object):
         area = tf.concat(areas, axis=0)
 
         height, width = self._output_size[0], self._output_size[1]
-        if self._random_crop_mosaic:
+        if self._mosaic_crop_mode is not None:
           image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area, self._crop_area_mosaic,
               width, height)
         image = tf.image.resize(image, (height, width))
+
 
         sample['image'] = tf.expand_dims(image, axis=0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)

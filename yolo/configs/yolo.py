@@ -121,13 +121,16 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  mosaic_frequency: float = 0.75
+  mosaic_frequency: float = 1.00
   crop_area: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.35, 0.75])
+      default_factory=lambda: [0.35, 2.5])
   aspect_ratio_mode: str = 'distort'
-  random_crop_mosaic: bool = True
+  mosaic_crop_mode: Optional[str]= 'scale'
+  aug_scale_min: Optional[float] = 0.35
+  aug_scale_max: Optional[float] = None
+  aug_rand_crop: Optional[float] = None
 
 
 @dataclasses.dataclass
@@ -140,11 +143,11 @@ class Parser(hyperparams.Config):
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
-  aug_rand_saturation: float = 2.0
-  aug_rand_brightness: float = 2.0
-  aug_rand_hue: float = 0.15
+  aug_rand_saturation: float = 0.7
+  aug_rand_brightness: float = 0.4
+  aug_rand_hue: float = 0.1
   aug_scale_min: float = 0.1
-  aug_scale_max: float = 2.0
+  aug_scale_max: float = 1.7
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213

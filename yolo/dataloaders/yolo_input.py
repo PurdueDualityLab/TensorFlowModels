@@ -359,7 +359,7 @@ class Parser(parser.Parser):
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.1)
+                                                  info[3, :], keep_thresh = 0.0)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -404,10 +404,14 @@ class Parser(parser.Parser):
                                                     self._aug_rand_hue)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
+      delta = preprocessing_ops.rand_uniform_strong(1 - self._aug_rand_saturation,
+                                                    1 + self._aug_rand_saturation)
+      # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
+      delta = preprocessing_ops.rand_uniform_strong(1 - self._aug_rand_brightness,
+                                                    1 + self._aug_rand_brightness)
+      #delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
       image *= delta
     # clip the values of the image between 0.0 and 1.0
     image = tf.clip_by_value(image, 0.0, 1.0)

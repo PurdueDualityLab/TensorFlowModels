@@ -132,20 +132,30 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    print(xy_scales)
+    
+    min_scale = params.parser.mosaic.aug_scale_min
+    if min_scale is None: 
+      min_scale = params.parser.aug_scale_min
+
+    max_scale = params.parser.mosaic.aug_scale_max
+    if max_scale is None: 
+      max_scale = params.parser.aug_scale_max
+
+    rcrop = params.parser.mosaic.aug_rand_crop
+    if rcrop is None: 
+      rcrop = params.parser.aug_rand_crop
 
     sample_fn = mosaic.Mosaic(
         output_size=model.input_size,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         crop_area=params.parser.mosaic.crop_area,
         crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
-        random_crop_mosaic=params.parser.mosaic.random_crop_mosaic,
+        mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
-
-        random_crop=params.parser.aug_rand_crop, 
+        random_crop=rcrop, 
         random_aspect_distort = params.parser.aug_scale_aspect,
-        aug_scale_min = max(params.parser.aug_scale_min, 0.0),
-        aug_scale_max = params.parser.aug_scale_max
+        aug_scale_min = min_scale,
+        aug_scale_max = max_scale
     )
 
     parser = yolo_input.Parser(
