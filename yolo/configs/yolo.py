@@ -125,11 +125,11 @@ class Mosaic(hyperparams.Config):
   crop_area: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.25, 2.5])
+      default_factory=lambda: [0.35, 2.3])
   aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str]= 'scale'
   aug_scale_min: Optional[float] = 0.30
-  aug_scale_max: Optional[float] = 1.70
+  aug_scale_max: Optional[float] = 2.00
   aug_rand_crop: Optional[float] = None
 
 
@@ -139,8 +139,8 @@ class Parser(hyperparams.Config):
   letter_box: Optional[bool] = False
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.0
-  aug_scale_aspect: float = 0.3
+  aug_rand_crop: float = 0.3
+  aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.7
@@ -176,7 +176,7 @@ class DataDecoder(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
-  global_batch_size: int = 64
+  global_batch_size: int = 1
   input_path: str = ''  #'gs://tensorflow2/coco_records/train/2017*'
   tfds_name: str = None  #'coco'
   tfds_split: str = None  #'train'
