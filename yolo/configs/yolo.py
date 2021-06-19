@@ -121,11 +121,11 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  mosaic_frequency: float = 1
+  mosaic_frequency: float = 0.85
   crop_area: List[int] = dataclasses.field(
       default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.35, 2.3])
+      default_factory=lambda: [0.3, 2.3])
   aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str]= 'scale'
   aug_scale_min: Optional[float] = 0.30

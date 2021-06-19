@@ -45,18 +45,18 @@ def test_yolo_input_task():
     task = yolo.YoloTask(config)
 
     # loading both causes issues, but oen at a time is not issue, why?
-    config.train_data.global_batch_size = 64
-    config.validation_data.global_batch_size = 64
+    # config.train_data.global_batch_size = 64
+    # config.validation_data.global_batch_size = 64
     config.train_data.dtype = 'float32'
     config.validation_data.dtype = 'float32'
-    config.train_data.tfds_name = 'coco'
-    config.validation_data.tfds_name = 'coco'
-    config.train_data.tfds_split = 'train'
-    config.validation_data.tfds_split = 'validation'
+    # config.train_data.tfds_name = 'coco'
+    # config.validation_data.tfds_name = 'coco'
+    # config.train_data.tfds_split = 'train'
+    # config.validation_data.tfds_split = 'validation'
     # config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
     # config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
-    # config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-    # config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     train_data = task.build_inputs(config.train_data)
     test_data = task.build_inputs(config.validation_data)
   return train_data, test_data
@@ -109,7 +109,7 @@ def test_yolo_pipeline(is_training=True):
   print(dataset, dsp)
   # shind = 3
   dip = 0
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"), thickness=2, classes=91)
+  drawer = utils.DrawBoxes(labels=coco.get_coco_names(path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"), thickness=2, classes=91)
   # dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
