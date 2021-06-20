@@ -26,6 +26,7 @@ class Mosaic(object):
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None, 
+               aug_probability = 1.0, 
                seed = None):
 
     self._output_size = output_size
@@ -37,6 +38,7 @@ class Mosaic(object):
     self._aug_scale_max = aug_scale_max
     self._aug_scale_min = aug_scale_min
     self._random_flip = random_flip
+    self._aug_probability = aug_probability
 
     self._crop_area = crop_area
     
@@ -224,6 +226,7 @@ class Mosaic(object):
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
+
     image, infos = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]], 
         [self._output_size[0], self._output_size[1]],
@@ -251,7 +254,7 @@ class Mosaic(object):
       area = tf.gather(area, inds)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
-    return image, boxes, classes, is_crowd, area, info
+    return image, boxes, classes, is_crowd, area
 
         
   def _mapped(self, sample):
@@ -294,22 +297,18 @@ class Mosaic(object):
                                           is_crowds[3], areas[3])
 
 
-        images[0], box_list[0], class_list[0], is_crowds[0], areas[0], infos[
-            0] = self._process_image(images[0], box_list[0], class_list[0],
+        images[0], box_list[0], class_list[0], is_crowds[0], areas[0] = self._process_image(images[0], box_list[0], class_list[0],
                                   is_crowds[0], areas[0], 1.0, 1.0)
 
-        images[1], box_list[1], class_list[1], is_crowds[1], areas[1], infos[
-            1] = self._process_image(images[1], box_list[1], class_list[1],
+        images[1], box_list[1], class_list[1], is_crowds[1], areas[1] = self._process_image(images[1], box_list[1], class_list[1],
                                   is_crowds[1], areas[1], 0.0, 1.0)
 
 
-        images[2], box_list[2], class_list[2], is_crowds[2], areas[2], infos[
-            2] = self._process_image(images[2], box_list[2], class_list[2],
+        images[2], box_list[2], class_list[2], is_crowds[2], areas[2] = self._process_image(images[2], box_list[2], class_list[2],
                                   is_crowds[2], areas[2], 1.0, 0.0)
 
 
-        images[3], box_list[3], class_list[3], is_crowds[3], areas[3], infos[
-            3] = self._process_image(images[3], box_list[3], class_list[3],
+        images[3], box_list[3], class_list[3], is_crowds[3], areas[3] = self._process_image(images[3], box_list[3], class_list[3],
                                   is_crowds[3], areas[3], 0.0, 0.0)
 
 

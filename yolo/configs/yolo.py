@@ -128,15 +128,17 @@ class Mosaic(hyperparams.Config):
       default_factory=lambda: [0.3, 2.3])
   aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str]= 'scale'
+  aug_probability: float = 1.0
   aug_scale_min: Optional[float] = 0.30
   aug_scale_max: Optional[float] = 2.00
   aug_rand_crop: Optional[float] = None
+  
 
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
   max_num_instances: int = 200
-  letter_box: Optional[bool] = False
+  letter_box: Optional[bool] = None
   random_flip: bool = True
   random_pad: bool = True
   aug_rand_crop: float = 0.3
