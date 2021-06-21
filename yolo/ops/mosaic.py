@@ -199,7 +199,6 @@ class Mosaic(object):
       classes = tf.gather(classes, inds)
       is_crowd = tf.gather(is_crowd, inds)
       area = tf.gather(area, inds)
-
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     return image, boxes, classes, is_crowd, area, info
