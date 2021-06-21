@@ -807,74 +807,6 @@ def random_crop_image(image,
     return cropped_image, info
 
 
-def random_aspect_crop(image, daspect=3 / 4, seed=1):
-  """Randomly crop an arbitrary shaped slice from the input image.
-  
-  Args:
-    image: a Tensor of shape [height, width, 3] representing the input image.
-    aspect_ratio_range: a list of floats. The cropped area of the image must
-      have an aspect ratio = width / height within this range.
-    area_range: a list of floats. The cropped reas of the image must contain
-      a fraction of the input image within this range.
-    max_attempts: the number of attempts at generating a cropped region of the
-      image of the specified constraints. After max_attempts failures, return
-      the entire image.
-    seed: the seed of the random generator.
-  
-  Returns:
-    cropped_image: a Tensor representing the random cropped image. Can be the
-      original image if max_attempts is exhausted.
-  """
-
-  with tf.name_scope('random_crop_image'):
-    ishape = tf.shape(image)
-
-    if daspect > 1 or daspect < 0:
-      raise Exception("maximum change in aspect ratio must be between 0 and 1")
-
-    scale = tf.random.uniform([],
-                              minval=1 - daspect,
-                              maxval=1 + daspect,
-                              dtype=tf.float32)
-
-    if scale > 1:
-      scale = tf.convert_to_tensor(
-          [1, 1 - (scale - 1),
-           tf.cast(-1 / ishape[-1], tf.float32)])
-      crop_size = tf.cast(tf.cast(ishape, scale.dtype) * scale, ishape.dtype)
-
-      shift = ishape - crop_size
-      shift = tf.random.uniform([],
-                                minval=0,
-                                maxval=shift[1] + 1,
-                                dtype=tf.int32)
-      crop_offset = tf.convert_to_tensor([0, shift, 0])
-
-    else:
-      scale = tf.convert_to_tensor(
-          [scale, 1, tf.cast(-1 / ishape[-1], tf.float32)])
-      crop_size = tf.cast(tf.cast(ishape, scale.dtype) * scale, ishape.dtype)
-
-      shift = ishape - crop_size
-      shift = tf.random.uniform([],
-                                minval=0,
-                                maxval=shift[0] + 1,
-                                dtype=tf.int32)
-      crop_offset = tf.convert_to_tensor([shift, 0, 0])
-
-    cropped_image = tf.slice(image, crop_offset, crop_size)
-
-    scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
-    offset = tf.cast(crop_offset[:2], tf.float32)
-
-    info = tf.stack([
-        tf.cast(ishape[:2], tf.float32),
-        tf.cast(crop_size[:2], tf.float32), scale, offset
-    ],
-                    axis=0)
-    return cropped_image, info
-
-
 def random_jitter_crop(image, jitter=0.2, seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
   
@@ -1164,7 +1096,7 @@ def rotate_boxes(boxes, angle):
   return boxes
 
 
-def random_crop(image, target_height, target_width):
+def random_window_crop(image, target_height, target_width):
   ishape = tf.shape(image)
 
   th = target_height if target_height < ishape[0] else ishape[0]
@@ -1172,9 +1104,11 @@ def random_crop(image, target_height, target_width):
   crop_size = tf.convert_to_tensor([th, tw, -1])
 
   crop_offset = ishape - crop_size
-  oh = tf.random.uniform([], 0, crop_offset[0] + 1, tf.int32)
-  ow = tf.random.uniform([], 0, crop_offset[1] + 1, tf.int32)
-  crop_offset = tf.convert_to_tensor([oh, ow, 0])
+  crop_offset = tf.convert_to_tensor([crop_offset[0]//2, crop_offset[1]//2, 0])
+
+  oh = tf.random.uniform([], -crop_offset[0], crop_offset[0] + 1, tf.int32)
+  ow = tf.random.uniform([], -crop_offset[1], crop_offset[1] + 1, tf.int32)
+  crop_offset += tf.convert_to_tensor([oh, ow, 0])
 
   cropped_image = tf.slice(image, crop_offset, crop_size)
 
@@ -1407,7 +1341,7 @@ def resize_and_crop_image(image,
 #       offset = info2[3]
 
 #       jsize = rand_uniform_strong(1 - jitter, 1)
-#       scaled_image, info1 = random_crop(
+#       scaled_image, info1 = random_window_crop(
 #           scaled_image, tf.cast(desired_size[0] * jsize, tf.int32),
 #           tf.cast(desired_size[1] * jsize, tf.int32))
 #       offset += info1[3]
@@ -1575,17 +1509,24 @@ def resize_and_jitter_image(image,
     # Computes 2D image_scale.
     image_scale = scaled_size / image_size
 
+    if random_jittering:
+      max_offset_ = scaled_size - desired_size
+
+      max_offset = tf.where(
+          tf.less(max_offset_, 0), tf.zeros_like(max_offset_), max_offset_)
+      offset = max_offset * tf.random.uniform([
+          2,
+      ], 0, 1, seed=seed)
+      offset = tf.cast(offset, tf.int32)
+    else:
+      offset = tf.zeros((2,), tf.int32)
+
     scaled_image = tf.image.resize(
         image, tf.cast(scaled_size, tf.int32), method=method)
 
     if random_jittering:
-      scaled_image, info1 = random_crop(
-          scaled_image, tf.cast(desired_size[0], tf.int32),
-          tf.cast(desired_size[1], tf.int32))
-      offset = info1[3]
-      offset = tf.cast(offset, tf.int32)
-    else:
-      offset = tf.zeros((2,), tf.int32)
+      scaled_image = scaled_image[offset[0]:offset[0] + desired_size[0],
+                                  offset[1]:offset[1] + desired_size[1], :]
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
