@@ -150,8 +150,8 @@ class Mosaic(object):
                          width, height):
     if self._mosaic_crop_mode == "scale":
       image, infos = preprocessing_ops.resize_and_jitter_image(
-          image, [self._output_size[0] * 2, self._output_size[1] * 2],
-          [self._output_size[0] * 2, self._output_size[1] * 2],
+          image, [self._output_size[0], self._output_size[1]],
+          [self._output_size[0], self._output_size[1]],
           letter_box=False,
           aug_scale_min=crop_area[0],
           aug_scale_max=crop_area[1],
@@ -167,9 +167,9 @@ class Mosaic(object):
           seed=self._seed)
       infos = [info]
       image, infos_ = preprocessing_ops.resize_and_jitter_image(
-          image, [self._output_size[0] * 2, self._output_size[1] * 2],
-          [self._output_size[0] * 2, self._output_size[1] * 2],
-          letter_box=None,
+          image, [self._output_size[0], self._output_size[1]],
+          [self._output_size[0], self._output_size[1]],
+          letter_box=True,
           aug_scale_min=crop_area[0],
           aug_scale_max=crop_area[1],
           jitter=0.0,
@@ -334,10 +334,13 @@ class Mosaic(object):
         area = tf.concat(areas, axis=0)
 
         height, width = self._output_size[0], self._output_size[1]
+        image = tf.image.resize(image, (height, width))
+
         if self._mosaic_crop_mode is not None:
           image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area, self._crop_area_mosaic,
               width, height)
+
         image = tf.image.resize(image, (height, width))
 
         sample['image'] = tf.expand_dims(image, axis=0)

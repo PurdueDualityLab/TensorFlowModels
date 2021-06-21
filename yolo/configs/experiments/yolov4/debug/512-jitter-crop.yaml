@@ -68,7 +68,7 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
+      aug_rand_crop: 0.3
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -82,11 +82,11 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.75
-        mosaic_crop_mode: 'crop_scale'
+        mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
         crop_area_mosaic: [0.4, 2.0]
-        aug_scale_min: 0.6
-        aug_scale_max: 1.5
+        aug_scale_min: 0.75
+        aug_scale_max: 1.00
   validation_data:
     global_batch_size: 8
     dtype: bfloat16

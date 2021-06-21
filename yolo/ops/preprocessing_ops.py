@@ -1362,7 +1362,7 @@ def resize_and_jitter_image(image,
     #   image = image = tf.image.resize(
     #     image, (height_, width_), preserve_aspect_ratio=False)
 
-    if letter_box == False:
+    if not letter_box:
       height, width = get_image_shape(image)
       clipper = tf.reduce_max((height, width))
       image = image = tf.image.resize(
