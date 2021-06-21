@@ -81,12 +81,13 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
+        max_resolution: 640
         mosaic_frequency: 0.75
         mosaic_crop_mode: 'crop_scale'
         aspect_ratio_mode: 'distort'
         crop_area: [0.35, 1.0]
-        crop_area_mosaic: [0.4, 2.0]
-        aug_scale_min: 0.5
+        crop_area_mosaic: [0.4, 1.5]
+        aug_scale_min: 0.4
         aug_scale_max: 1.5
   validation_data:
     global_batch_size: 8
