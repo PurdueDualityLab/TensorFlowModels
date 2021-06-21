@@ -122,15 +122,15 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   max_resolution: int = 640
-  mosaic_frequency: float = 0.75
+  mosaic_frequency: float = 1.0
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.4, 2.0])
-  aspect_ratio_mode: str = 'distort'
+  aspect_ratio_mode: str = 'crop'
   mosaic_crop_mode: Optional[str] = 'crop_scale'
-  aug_scale_min: Optional[float] = 0.5
-  aug_scale_max: Optional[float] = 1.5
-  aug_rand_crop: Optional[float] = None
+  aug_scale_min: Optional[float] = 1.0
+  aug_scale_max: Optional[float] = 1.0
+  aug_rand_crop: Optional[float] = 0.5
 
 
 @dataclasses.dataclass

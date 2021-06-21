@@ -144,6 +144,8 @@ class Mosaic(object):
     area = tf.gather(area, inds)
 
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
+
+    image = tf.image.resize(image, (self._output_size[1], self._output_size[0]))
     return image, boxes, classes, is_crowd, area
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area,

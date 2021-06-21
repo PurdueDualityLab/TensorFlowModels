@@ -1349,24 +1349,23 @@ def resize_and_jitter_image(image,
     #   image = image = tf.image.resize(
     #     image, (desired_size[0], desired_size[1]),preserve_aspect_ratio=False)
 
-    # elif letter_box == True:
-    #   height, width = get_image_shape(image)
-    #   clipper = tf.reduce_max((height, width))
-    #   w_scale = width / clipper
-    #   h_scale = height / clipper
-
-    #   height_, width_ = desired_size[0], desired_size[1]
-    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-
-    #   image = image = tf.image.resize(
-    #     image, (height_, width_), preserve_aspect_ratio=False)
-
-    if not letter_box:
+    if letter_box == False:
       height, width = get_image_shape(image)
       clipper = tf.reduce_max((height, width))
       image = image = tf.image.resize(
           image, (clipper, clipper), preserve_aspect_ratio=False)
+    elif letter_box == True:
+      height, width = get_image_shape(image)
+      clipper = tf.reduce_max((height, width))
+      w_scale = width / clipper
+      h_scale = height / clipper
+
+      height_, width_ = desired_size[0], desired_size[1]
+      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+
+      image = image = tf.image.resize(
+        image, (height_, width_), preserve_aspect_ratio=False)
 
     if scale_aspect > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
