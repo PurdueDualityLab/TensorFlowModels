@@ -45,8 +45,8 @@ def test_yolo_input_task():
     task = yolo.YoloTask(config)
 
     # loading both causes issues, but oen at a time is not issue, why?
-    config.train_data.global_batch_size = 64
-    config.validation_data.global_batch_size = 64
+    # config.train_data.global_batch_size = 64
+    # config.validation_data.global_batch_size = 64
     config.train_data.dtype = 'float32'
     config.validation_data.dtype = 'float32'
     # config.train_data.tfds_name = 'coco'
@@ -271,9 +271,9 @@ def test_ret_pipeline():
 
 if __name__ == '__main__':
   # test_ret_pipeline()
-  # test_yolo_pipeline(is_training=True)
+  test_yolo_pipeline(is_training=True)
   # test_yolo_pipeline(is_training=False)
-  time_pipeline()
+  # time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
