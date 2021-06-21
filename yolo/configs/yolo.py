@@ -123,14 +123,14 @@ class ModelConfig(hyperparams.Config):
 class Mosaic(hyperparams.Config):
   max_resolution: int = 640
   mosaic_frequency: float = 1.85
-  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.6, 1.0])
+  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.35, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [0.4, 2.0])
-  aspect_ratio_mode: str = 'crop'
+  aspect_ratio_mode: str = 'distort'
   mosaic_crop_mode: Optional[str] = 'crop_scale'
-  aug_scale_min: Optional[float] = 1.0
-  aug_scale_max: Optional[float] = 1.0
-  aug_rand_crop: Optional[float] = 0.5
+  aug_scale_min: Optional[float] = 0.5
+  aug_scale_max: Optional[float] = 1.5
+  aug_rand_crop: Optional[float] = None
 
 
 @dataclasses.dataclass
@@ -139,8 +139,8 @@ class Parser(hyperparams.Config):
   letter_box: Optional[bool] = False
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.0
-  aug_scale_aspect: float = 0.1
+  aug_rand_crop: float = 0.3
+  aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.7

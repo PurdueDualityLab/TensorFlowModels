@@ -167,7 +167,7 @@ class Mosaic(object):
           image,
           aspect_ratio_range=(self._output_size[1] / self._output_size[0],
                               self._output_size[1] / self._output_size[0]),
-          area_range=[0.25, 1.0],
+          area_range=[0.25, 1.0] if self._aspect_ratio_mode == 'crop' else self._crop_area,
           seed=self._seed)
       infos = [info]
       image, infos_ = preprocessing_ops.resize_and_jitter_image(
