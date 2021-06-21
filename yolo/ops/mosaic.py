@@ -216,8 +216,6 @@ class Mosaic(object):
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
-      # height, width = self._output_size[0], self._output_size[1]
-
       docrop = tf.random.uniform([],
                                  0.0,
                                  1.0,
@@ -227,7 +225,7 @@ class Mosaic(object):
         image, boxes, classes, is_crowd, area = self._crop_image(
             image, boxes, classes, is_crowd, area, self._crop_area)
       random_crop = 0.0
-      letter_box = None
+      letter_box = True
     else:
       letter_box = True
 
