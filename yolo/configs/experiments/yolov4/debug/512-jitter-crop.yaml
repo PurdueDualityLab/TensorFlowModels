@@ -82,11 +82,11 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         mosaic_frequency: 0.75
-        mosaic_crop_mode: 'crop'
-        aspect_ratio_mode: 'distort'
+        mosaic_crop_mode: 'crop_scale'
+        aspect_ratio_mode: 'crop'
         crop_area_mosaic: [0.4, 2.0]
-        aug_scale_min: 0.75
-        aug_scale_max: 1.00
+        aug_scale_min: 1.0
+        aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
