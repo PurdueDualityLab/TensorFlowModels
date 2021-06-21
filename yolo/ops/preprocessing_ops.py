@@ -97,8 +97,8 @@ def clip_boxes(boxes, image_shape, wh_thr=2, ar_thr=20, area_thr=0.1):
   og_height = boxes[:, 2] - boxes[:, 0]
   og_width = boxes[:, 3] - boxes[:, 1]
   
-  clipped_height = boxes[:, 2] - boxes[:, 0]
-  clipped_width = boxes[:, 3] - boxes[:, 1]
+  clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
+  clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
 
   ar = tf.maximum(clipped_width/(clipped_height + 1e-16), 
                   clipped_height/(clipped_width + 1e-16))
@@ -106,8 +106,12 @@ def clip_boxes(boxes, image_shape, wh_thr=2, ar_thr=20, area_thr=0.1):
                    og_height/(og_width + 1e-16))
 
 
-  conda = tf.math.floor(clipped_width) > wh_thr
-  condb = tf.math.floor(clipped_height) > wh_thr
+  # conda = clipped_width > wh_thr
+  # condb = clipped_height > wh_thr
+
+  conda = tf.logical_and(clipped_width > wh_thr, og_width > wh_thr)
+  condb = tf.logical_and(clipped_height > wh_thr, og_height > wh_thr)
+  
   condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
   condd = ar < ar_thr
   conde = ar2 < ar_thr 
@@ -117,6 +121,7 @@ def clip_boxes(boxes, image_shape, wh_thr=2, ar_thr=20, area_thr=0.1):
     tf.logical_and(condc, tf.logical_and(condd, conde))
   ), axis = -1)
 
+  tf.print(cond, summarize = -1)
 
   boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
   return boxes
@@ -308,7 +313,7 @@ def letter_box(image, boxes, xs=0.5, ys=0.5, target_dim=None):
   ]
 
 
-def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.20):
+def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
   """
   get the correct anchor that is assoiciated with each box using IOU
   
@@ -1430,7 +1435,8 @@ def resize_and_jitter_image(image,
 
     image_info_a = tf.stack([
         image_size,
-        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), image_scale,
+        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), 
+        image_scale,
         tf.cast(offset, tf.float32)
     ])
 
