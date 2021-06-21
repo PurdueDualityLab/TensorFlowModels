@@ -483,7 +483,7 @@ class Darknet(ks.Model):
     self._default_dict['name'] = f"{name}_csp_down"
     if self._dilate:
       self._default_dict['dilation_rate'] = config.dilation_rate
-      degrid = int(tf.math.log(float(config.dilation_rate))/tf.math.log(2.))
+      degrid = int(tf.math.log(float(config.dilation_rate)) / tf.math.log(2.))
     else:
       self._default_dict['dilation_rate'] = 1
       degrid = 0
@@ -506,8 +506,8 @@ class Darknet(ks.Model):
               x)
 
     for i in range(dilated_reps, config.repetitions):
-      self._default_dict[
-          'dilation_rate'] = max(1, self._default_dict['dilation_rate'] // 2)
+      self._default_dict['dilation_rate'] = max(
+          1, self._default_dict['dilation_rate'] // 2)
       self._default_dict[
           'name'] = f"{name}_{i}_degrided_{self._default_dict['dilation_rate']}"
       x = nn_blocks.DarkResidual(

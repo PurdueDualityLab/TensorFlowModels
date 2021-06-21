@@ -231,12 +231,11 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
 
-
     if self._random_flip:
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    # if not data['is_mosaic']:  
+    # if not data['is_mosaic']:
     # resize the image irrespective of the aspect ratio
     # if not self._letter_box:
     #   clipper = tf.reduce_max((height, width))
@@ -259,15 +258,15 @@ class Parser(parser.Parser):
     #   image = image = tf.image.resize(
     #     image, (height_, width_),preserve_aspect_ratio=False)
 
-      # tf.print(width/height, width_/height_, width, height, width_, height_)
+    # tf.print(width/height, width_/height_, width, height, width_, height_)
 
     # apply the random aspect ratio crop to the image
     # if self._aug_rand_crop > 0 and not data['is_mosaic']:
 
     #   # # crop the image
-    #   # image, info = preprocessing_ops.random_aspect_crop(image, 
+    #   # image, info = preprocessing_ops.random_aspect_crop(image,
     #   #                                                     daspect = self._aug_rand_crop)
-                                                          
+
     #   # # compute the net jitter
     #   jmi = 1 - self._aug_rand_crop
     #   jma = 1 + self._aug_rand_crop
@@ -323,15 +322,13 @@ class Parser(parser.Parser):
 
     #   image = tf.image.resize(image, (height_, width_))
 
-
-
     # apply the final scale jittering of the image, if the image is mosaiced
     # ensure the minimum is larger than 0.4, or 0.1 for each image in the
     # mosaic
     if not data['is_mosaic']:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          letter_box = self._letter_box, 
+          letter_box=self._letter_box,
           scale_aspect=self._aug_scale_aspect,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
@@ -340,11 +337,13 @@ class Parser(parser.Parser):
     else:
       # works well
       image, infos = preprocessing_ops.resize_and_jitter_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          letter_box = self._letter_box, 
+          image,
+          [self._image_h, self._image_w],
+          [self._image_h, self._image_w],
+          letter_box=self._letter_box,
           scale_aspect=self._aug_scale_aspect,
-          aug_scale_min=1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max=1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
+          aug_scale_min=1.0,  #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+          aug_scale_max=1.0,  #self._aug_scale_max, #self._aug_scale_max / 2,
           jitter=0.0,
           random_pad=self._random_pad)
       # image, infos = preprocessing_ops.resize_and_jitter_image(
@@ -358,8 +357,8 @@ class Parser(parser.Parser):
     # in the image.
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.0)
+      boxes = preprocessing_ops.resize_and_crop_boxes(
+          boxes, info[2, :], info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -404,13 +403,13 @@ class Parser(parser.Parser):
                                                     self._aug_rand_hue)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(1 - self._aug_rand_saturation,
-                                                    1 + self._aug_rand_saturation)
+      delta = preprocessing_ops.rand_uniform_strong(
+          1 - self._aug_rand_saturation, 1 + self._aug_rand_saturation)
       # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(1 - self._aug_rand_brightness,
-                                                    1 + self._aug_rand_brightness)
+      delta = preprocessing_ops.rand_uniform_strong(
+          1 - self._aug_rand_brightness, 1 + self._aug_rand_brightness)
       #delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
       image *= delta
     # clip the values of the image between 0.0 and 1.0
@@ -432,20 +431,22 @@ class Parser(parser.Parser):
     height, width = preprocessing_ops.get_image_shape(image)
 
     image, infos = preprocessing_ops.resize_and_jitter_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
-          letter_box = self._letter_box, 
-          scale_aspect = 0.0,
-          aug_scale_min = 1.0, #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
-          aug_scale_max = 1.0, #self._aug_scale_max, #self._aug_scale_max / 2,
-          jitter = 0.0,
-          random_pad = False, 
-          shiftx = 0.0, 
-          shifty = 0.0)
+        image,
+        [self._image_h, self._image_w],
+        [self._image_h, self._image_w],
+        letter_box=self._letter_box,
+        scale_aspect=0.0,
+        aug_scale_min=1.0,  #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
+        aug_scale_max=1.0,  #self._aug_scale_max, #self._aug_scale_max / 2,
+        jitter=0.0,
+        random_pad=False,
+        shiftx=0.0,
+        shifty=0.0)
 
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :], keep_thresh = 0.0)
+      boxes = preprocessing_ops.resize_and_crop_boxes(
+          boxes, info[2, :], info[1, :], info[3, :], keep_thresh=0.0)
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)

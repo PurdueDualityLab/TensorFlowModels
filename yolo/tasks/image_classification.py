@@ -153,7 +153,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       decoder = cli.Decoder()
     else:
       decoder = classification_input.Decoder()
-      
+
     parser = classification_vision.Parser(
         output_size=input_size[:2], aug_policy='randaug', dtype=params.dtype)
 

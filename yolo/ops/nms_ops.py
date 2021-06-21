@@ -4,6 +4,7 @@ from official.vision.beta.ops import box_ops as box_utils
 
 NMS_TILE_SIZE = 512
 
+
 class TiledNMS():
   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 

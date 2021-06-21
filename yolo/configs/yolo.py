@@ -121,18 +121,16 @@ class ModelConfig(hyperparams.Config):
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  mosaic_frequency: float = 0.85
-  crop_area: List[int] = dataclasses.field(
-      default_factory=lambda: [0.25, 1.0])
+  max_resolution: int = 640
+  mosaic_frequency: float = 1.0
+  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.25, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.3, 2.3])
+      default_factory=lambda: [0.4, 2.0])
   aspect_ratio_mode: str = 'distort'
-  mosaic_crop_mode: Optional[str]= 'scale'
-  aug_probability: float = 1.0
-  aug_scale_min: Optional[float] = 0.30
-  aug_scale_max: Optional[float] = 2.00
+  mosaic_crop_mode: Optional[str] = 'crop_scale'
+  aug_scale_min: Optional[float] = None
+  aug_scale_max: Optional[float] = None
   aug_rand_crop: Optional[float] = None
-  
 
 
 @dataclasses.dataclass
@@ -207,6 +205,7 @@ class YoloDecoder(hyperparams.Config):
   max_level_process_len: Optional[int] = None
   embed_spp: Optional[bool] = None
   activation: Optional[str] = 'same'
+
 
 def _build_dict(min_level, max_level, value):
   vals = {str(key): value for key in range(min_level, max_level + 1)}

@@ -109,7 +109,12 @@ def test_yolo_pipeline(is_training=True):
   print(dataset, dsp)
   # shind = 3
   dip = 0
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"), thickness=2, classes=91)
+  drawer = utils.DrawBoxes(
+      labels=coco.get_coco_names(
+          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"
+      ),
+      thickness=2,
+      classes=91)
   # dfilter = detection_generator.YoloFilter()
   ltime = time.time()
 
@@ -184,7 +189,7 @@ def time_pipeline():
     #   test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
     #   test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
     #   test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
-      # tf.print(test)
+    # tf.print(test)
 
     times.append(ftime - ltime)
     ltime = time.time()

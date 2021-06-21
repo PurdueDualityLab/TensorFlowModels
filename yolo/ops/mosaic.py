@@ -16,20 +16,22 @@ class Mosaic(object):
 
   def __init__(self,
                output_size,
+               max_resolution=640,
                mosaic_frequency=1.0,
-               random_crop = 0.0,
-               random_aspect_distort = 0.0,
+               random_crop=0.0,
+               random_aspect_distort=0.0,
                aspect_ratio_mode='distort',
-               aug_scale_min = 0.1, 
-               aug_scale_max = 2.0,
-               random_flip = True, 
+               aug_scale_min=0.1,
+               aug_scale_max=2.0,
+               random_flip=True,
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
-               mosaic_crop_mode=None, 
-               aug_probability = 1.0, 
-               seed = None):
+               mosaic_crop_mode=None,
+               aug_probability=1.0,
+               seed=None):
 
     self._output_size = output_size
+    self._max_resolution = max_resolution
 
     self._mosaic_frequency = mosaic_frequency
     self._aspect_ratio_mode = aspect_ratio_mode
@@ -41,7 +43,7 @@ class Mosaic(object):
     self._aug_probability = aug_probability
 
     self._crop_area = crop_area
-    
+
     self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
 
@@ -50,7 +52,8 @@ class Mosaic(object):
 
   def _estimate_shape(self, image):
     height, width = preprocessing_ops.get_image_shape(image)
-    oheight, owidth = self._output_size[0], self._output_size[1]
+    # oheight, owidth = self._output_size[0], self._output_size[1]
+    oheight, owidth = self._max_resolution, self._max_resolution
 
     if height > width:
       scale = oheight / height
@@ -68,11 +71,15 @@ class Mosaic(object):
         owidth = tf.cast(scale * tf.cast(width, scale.dtype), width.dtype)
       else:
         oheight = nheight
+
+    if height < oheight and width < owidth:
+      oheight = height
+      owidth = width
     return oheight, owidth
 
   def _letter_box(self, image, boxes=None, xs=0.0, ys=0.0):
     height, width = self._estimate_shape(image)
-    hclipper, wclipper = self._output_size[0], self._output_size[1]
+    hclipper, wclipper = self._max_resolution, self._max_resolution
 
     xs = tf.convert_to_tensor(xs)
     ys = tf.convert_to_tensor(ys)
@@ -85,29 +92,11 @@ class Mosaic(object):
     image = tf.image.pad_to_bounding_box(image, pad_height, pad_width, hclipper,
                                          wclipper)
     info = tf.convert_to_tensor([pad_height, pad_width, height, width])
-
-    if boxes is not None:
-      boxes = bbox_ops.yxyx_to_xcycwh(boxes)
-      x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-      y *= tf.cast(height / hclipper, y.dtype)
-      x *= tf.cast(width / wclipper, x.dtype)
-
-      y += tf.cast((pad_height / hclipper), y.dtype)
-      x += tf.cast((pad_width / wclipper), x.dtype)
-
-      h *= tf.cast(height / hclipper, h.dtype)
-      w *= tf.cast(width / wclipper, w.dtype)
-
-      boxes = tf.concat([x, y, w, h], axis=-1)
-
-      boxes = bbox_ops.xcycwh_to_yxyx(boxes)
-      #boxes = tf.where(h == 0, tf.zeros_like(boxes), boxes)
     return image, boxes, info
 
   def _pad_images(self, sample):
     image = sample['image']
-    image, boxes, info = self._letter_box(image, xs=0.0, ys=0.0)
+    image, _, info = self._letter_box(image, xs=0.0, ys=0.0)
     sample['image'] = image
     sample['info'] = info
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[0]
@@ -118,7 +107,6 @@ class Mosaic(object):
     if squeeze:
       image = tf.squeeze(image, axis=0)
       info = tf.squeeze(info, axis=0)
-    # image = tf.image.crop_to_bounding_box(image, info[0], info[1], info[2], info[3])
     image = tf.slice(image, [info[0], info[1], 0], [info[2], info[3], -1])
     return image
 
@@ -130,15 +118,13 @@ class Mosaic(object):
       area = tf.squeeze(area, axis=0)
 
     indices = box_ops.get_non_empty_box_indices(boxes)
-    # indices = preprocessing_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
     is_crowd = tf.gather(classes, indices)
     area = tf.gather(area, indices)
     return boxes, classes, is_crowd, area
 
-  def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area, width,
-                  height):
+  def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
 
     image, info = preprocessing_ops.random_crop_image(
         image,
@@ -148,7 +134,7 @@ class Mosaic(object):
         seed=self._seed)
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+    boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
 
     inds = box_ops.get_non_empty_box_indices(boxes)
@@ -158,21 +144,38 @@ class Mosaic(object):
     area = tf.gather(area, inds)
 
     boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    image = tf.image.resize(image, (height, width))
-    return image, boxes, classes, is_crowd, area, tf.cast(info, tf.int32)
+    return image, boxes, classes, is_crowd, area
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area, crop_area,
                          width, height):
     if self._mosaic_crop_mode == "scale":
       image, infos = preprocessing_ops.resize_and_jitter_image(
-        image, [self._output_size[0] * 2, self._output_size[1] * 2], 
-        [self._output_size[0] * 2, self._output_size[1] * 2],
-        letter_box = False, 
-        aug_scale_min=crop_area[0],
-        aug_scale_max=crop_area[1],
-        jitter = self._random_crop,
-        random_pad=True, 
-        seed = self._seed)
+          image, [self._output_size[0] * 2, self._output_size[1] * 2],
+          [self._output_size[0] * 2, self._output_size[1] * 2],
+          letter_box=False,
+          aug_scale_min=crop_area[0],
+          aug_scale_max=crop_area[1],
+          jitter=self._random_crop,
+          random_pad=True,
+          seed=self._seed)
+    elif self._mosaic_crop_mode == 'crop_scale':
+      image, info = preprocessing_ops.random_crop_mosaic(
+          image,
+          aspect_ratio_range=(self._output_size[1] / self._output_size[0],
+                              self._output_size[1] / self._output_size[0]),
+          area_range=self._crop_area,
+          seed=self._seed)
+      infos = [info]
+      image, infos_ = preprocessing_ops.resize_and_jitter_image(
+          image, [self._output_size[0] * 2, self._output_size[1] * 2],
+          [self._output_size[0] * 2, self._output_size[1] * 2],
+          letter_box=None,
+          aug_scale_min=crop_area[0],
+          aug_scale_max=crop_area[1],
+          jitter=0.0,
+          random_pad=True,
+          seed=self._seed)
+      infos.extend(infos_)
     else:
       image, info = preprocessing_ops.random_crop_mosaic(
           image,
@@ -184,8 +187,8 @@ class Mosaic(object):
 
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
-                                                  info[3, :])
+      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -194,31 +197,37 @@ class Mosaic(object):
       area = tf.gather(area, inds)
 
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
-    # image = tf.image.resize(image, (height, width))
+
     return image, boxes, classes, is_crowd, area, info
 
-  def _process_image(self, image, boxes, classes, is_crowd, area, xs=0.0, ys =0.0):
+  def _process_image(self,
+                     image,
+                     boxes,
+                     classes,
+                     is_crowd,
+                     area,
+                     xs=0.0,
+                     ys=0.0):
     # initialize the shape constants
     height, width = preprocessing_ops.get_image_shape(image)
-    # height = 4 * height//5
-    # width = 4 * width//5
-    # image = tf.image.resize(image, (height, width))
-
 
     # resize the image irrespective of the aspect ratio
+    random_crop = self._random_crop
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
-      height, width = self._output_size[0], self._output_size[1]
-      image, boxes, classes, is_crowd, area, info = self._crop_image(image, 
-                                                                     boxes, 
-                                                                     classes, 
-                                                                     is_crowd, 
-                                                                     area, 
-                                                                     self._crop_area,
-                                                                     width, 
-                                                                     height)
-      letter_box = True
+      # height, width = self._output_size[0], self._output_size[1]
+
+      docrop = tf.random.uniform([],
+                                 0.0,
+                                 1.0,
+                                 dtype=tf.float32,
+                                 seed=self._seed)
+      if docrop > 1 - self._random_crop:
+        image, boxes, classes, is_crowd, area = self._crop_image(
+            image, boxes, classes, is_crowd, area, self._crop_area)
+      random_crop = 0.0
+      letter_box = None
     else:
       letter_box = True
 
@@ -226,26 +235,22 @@ class Mosaic(object):
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-
     image, infos = preprocessing_ops.resize_and_jitter_image(
-        image, [self._output_size[0], self._output_size[1]], 
+        image, [self._output_size[0], self._output_size[1]],
         [self._output_size[0], self._output_size[1]],
-        letter_box = letter_box, 
+        letter_box=letter_box,
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
-        jitter = self._random_crop,
-        random_pad=False, 
-        shiftx = xs, 
-        shifty = ys,
-        seed = self._seed)
+        jitter=random_crop,
+        random_pad=False,
+        shiftx=xs,
+        shifty=ys,
+        seed=self._seed)
 
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, 
-                                                      info[2, :], 
-                                                      info[1, :],
-                                                      info[3, :], 
-                                                      keep_thresh = 0.0)
+      boxes = preprocessing_ops.resize_and_crop_boxes(
+          boxes, info[2, :], info[1, :], info[3, :])
 
       inds = box_ops.get_non_empty_box_indices(boxes)
       boxes = tf.gather(boxes, inds)
@@ -256,7 +261,6 @@ class Mosaic(object):
 
     return image, boxes, classes, is_crowd, area
 
-        
   def _mapped(self, sample):
     if self._mosaic_frequency > 0.0:
       # mosaic is enabled 0.666667 = 0.5 of images are mosaiced
@@ -296,21 +300,21 @@ class Mosaic(object):
          areas[3]) = self._unpad_gt_comps(box_list[3], class_list[3],
                                           is_crowds[3], areas[3])
 
+        (images[0], box_list[0], class_list[0], is_crowds[0],
+         areas[0]) = self._process_image(images[0], box_list[0], class_list[0],
+                                         is_crowds[0], areas[0], 1.0, 1.0)
 
-        images[0], box_list[0], class_list[0], is_crowds[0], areas[0] = self._process_image(images[0], box_list[0], class_list[0],
-                                  is_crowds[0], areas[0], 1.0, 1.0)
+        (images[1], box_list[1], class_list[1], is_crowds[1],
+         areas[1]) = self._process_image(images[1], box_list[1], class_list[1],
+                                         is_crowds[1], areas[1], 0.0, 1.0)
 
-        images[1], box_list[1], class_list[1], is_crowds[1], areas[1] = self._process_image(images[1], box_list[1], class_list[1],
-                                  is_crowds[1], areas[1], 0.0, 1.0)
+        (images[2], box_list[2], class_list[2], is_crowds[2],
+         areas[2]) = self._process_image(images[2], box_list[2], class_list[2],
+                                         is_crowds[2], areas[2], 1.0, 0.0)
 
-
-        images[2], box_list[2], class_list[2], is_crowds[2], areas[2] = self._process_image(images[2], box_list[2], class_list[2],
-                                  is_crowds[2], areas[2], 1.0, 0.0)
-
-
-        images[3], box_list[3], class_list[3], is_crowds[3], areas[3] = self._process_image(images[3], box_list[3], class_list[3],
-                                  is_crowds[3], areas[3], 0.0, 0.0)
-
+        (images[3], box_list[3], class_list[3], is_crowds[3],
+         areas[3]) = self._process_image(images[3], box_list[3], class_list[3],
+                                         is_crowds[3], areas[3], 0.0, 0.0)
 
         box_list[0] = box_list[0] * 0.5
         box_list[1], class_list[1] = preprocessing_ops.translate_boxes(
@@ -335,7 +339,6 @@ class Mosaic(object):
               image, boxes, classes, is_crowd, area, self._crop_area_mosaic,
               width, height)
         image = tf.image.resize(image, (height, width))
-
 
         sample['image'] = tf.expand_dims(image, axis=0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)

@@ -48,7 +48,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   base_model = yolo_model.YOLO_MODELS[model_config.decoder.version][
       model_config.decoder.type]
-  
+
   cfg_dict = model_config.decoder.as_dict()
   for key in base_model:
     if cfg_dict[key] is not None:
@@ -71,7 +71,6 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   return model
 
 
-  
 def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
                       xy_scales, path_scales):
 

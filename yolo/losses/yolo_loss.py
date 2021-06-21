@@ -767,7 +767,6 @@ class Yolo_Loss(object):
         inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)
 
-
     # 13. apply the mask for the classes to again use only the indexes where a
     #     box exists
     pred_class = apply_mask(ind_mask,

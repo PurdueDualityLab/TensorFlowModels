@@ -78,68 +78,11 @@ def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   return value
 
 
-def clip_boxes(boxes, image_shape):
-  """Clips boxes to image boundaries.
-
-  Args:
-    boxes: a tensor whose last dimension is 4 representing the coordinates
-      of boxes in ymin, xmin, ymax, xmax order.
-    image_shape: a list of two integers, a two-element vector or a tensor such
-      that all but the last dimensions are `broadcastable` to `boxes`. The last
-      dimension is 2, which represents [height, width].
-
-  Returns:
-    clipped_boxes: a tensor whose shape is the same as `boxes` representing the
-      clipped boxes.
-
-  Raises:
-    ValueError: If the last dimension of boxes is not 4.
-  """
-  if boxes.shape[-1] != 4:
-    raise ValueError('boxes.shape[-1] is {:d}, but must be 4.'.format(
-        boxes.shape[-1]))
-
-  with tf.name_scope('clip_boxes'):
-    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
-      height, width = image_shape
-      max_length = [height, width, height, width]
-    else:
-      image_shape = tf.cast(image_shape, dtype=boxes.dtype)
-      height, width = tf.unstack(image_shape, axis=-1)
-      max_length = tf.stack([height, width, height, width], axis=-1)
-
-    clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
-    return clipped_boxes
-
-
-def get_non_empty_box_indices(boxes, output_size=None):
-  """Get indices for non-empty boxes."""
-  # Selects indices if box height or width is 0.
-  if output_size is not None:
-    width = tf.cast(output_size[1], boxes.dtype)
-    height = tf.cast(output_size[0], boxes.dtype)
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
-    x, y, w, h = tf.split(boxes, 4, axis=-1)
-
-    indices = tf.where(
-        tf.logical_and(
-            tf.logical_and(
-                tf.logical_and(tf.greater(x, 0), tf.greater(y, 0)),
-                tf.logical_and(tf.less(x, width), tf.less(y, height))),
-            tf.logical_and(tf.greater(h, 0), tf.greater(w, 0))))
-  else:
-    height = boxes[:, 2] - boxes[:, 0]
-    width = boxes[:, 3] - boxes[:, 1]
-    indices = tf.where(
-        tf.logical_and(tf.greater(height, 0), tf.greater(width, 0)))
-  return indices[:, 0]
-
-
 def box_area(box):
   return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
 
 
-def clip_boxes(boxes, image_shape, keep_thresh=0.0):
+def clip_boxes(boxes, image_shape, wh_thr=2, ar_thr=20, area_thr=0.1):
 
   if isinstance(image_shape, list) or isinstance(image_shape, tuple):
     height, width = image_shape
@@ -149,16 +92,33 @@ def clip_boxes(boxes, image_shape, keep_thresh=0.0):
     height, width = tf.unstack(image_shape, axis=-1)
     max_length = tf.stack([height, width, height, width], axis=-1)
 
-  if keep_thresh > 0.0:
-    clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+  clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
 
-    clipped_b_area = tf.expand_dims(box_area(clipped_boxes), axis=-1)
-    b_area = tf.expand_dims(box_area(boxes), axis=-1)
-    
-    boxes = tf.where(clipped_b_area > keep_thresh * b_area, clipped_boxes, tf.zeros_like(clipped_boxes))
-  else:
-    boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
+  og_height = boxes[:, 2] - boxes[:, 0]
+  og_width = boxes[:, 3] - boxes[:, 1]
+  
+  clipped_height = boxes[:, 2] - boxes[:, 0]
+  clipped_width = boxes[:, 3] - boxes[:, 1]
 
+  ar = tf.maximum(clipped_width/(clipped_height + 1e-16), 
+                  clipped_height/(clipped_width + 1e-16))
+  ar2 = tf.maximum(og_width/(og_height + 1e-16), 
+                   og_height/(og_width + 1e-16))
+
+
+  conda = tf.math.floor(clipped_width) > wh_thr
+  condb = tf.math.floor(clipped_height) > wh_thr
+  condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
+  condd = ar < ar_thr
+  conde = ar2 < ar_thr 
+
+  cond = tf.expand_dims(tf.logical_and(
+    tf.logical_and(conda, condb), 
+    tf.logical_and(condc, tf.logical_and(condd, conde))
+  ), axis = -1)
+
+
+  boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
   return boxes
 
 
@@ -171,8 +131,7 @@ def resize_and_crop_boxes(boxes,
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
 
-  boxes = clip_boxes(
-      boxes, output_size, keep_thresh=keep_thresh)
+  boxes = clip_boxes(boxes, output_size)
   return boxes
 
 
@@ -845,9 +804,8 @@ def random_crop_image(image,
                     axis=0)
     return cropped_image, info
 
-def random_aspect_crop(image,
-                       daspect=3/4,
-                       seed=1):
+
+def random_aspect_crop(image, daspect=3 / 4, seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
   
   Args:
@@ -868,29 +826,38 @@ def random_aspect_crop(image,
 
   with tf.name_scope('random_crop_image'):
     ishape = tf.shape(image)
-    
+
     if daspect > 1 or daspect < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
-    
+
     scale = tf.random.uniform([],
-                              minval = 1 - daspect, 
-                              maxval = 1 + daspect, 
-                              dtype = tf.float32)
+                              minval=1 - daspect,
+                              maxval=1 + daspect,
+                              dtype=tf.float32)
 
     if scale > 1:
-      scale = tf.convert_to_tensor([1, 1 - (scale - 1), tf.cast(-1/ishape[-1], tf.float32)])
+      scale = tf.convert_to_tensor(
+          [1, 1 - (scale - 1),
+           tf.cast(-1 / ishape[-1], tf.float32)])
       crop_size = tf.cast(tf.cast(ishape, scale.dtype) * scale, ishape.dtype)
 
       shift = ishape - crop_size
-      shift = tf.random.uniform([], minval = 0, maxval = shift[1] + 1, dtype = tf.int32)
+      shift = tf.random.uniform([],
+                                minval=0,
+                                maxval=shift[1] + 1,
+                                dtype=tf.int32)
       crop_offset = tf.convert_to_tensor([0, shift, 0])
 
     else:
-      scale = tf.convert_to_tensor([scale, 1, tf.cast(-1/ishape[-1], tf.float32)])
+      scale = tf.convert_to_tensor(
+          [scale, 1, tf.cast(-1 / ishape[-1], tf.float32)])
       crop_size = tf.cast(tf.cast(ishape, scale.dtype) * scale, ishape.dtype)
-      
+
       shift = ishape - crop_size
-      shift = tf.random.uniform([], minval = 0, maxval = shift[0] + 1, dtype = tf.int32)
+      shift = tf.random.uniform([],
+                                minval=0,
+                                maxval=shift[0] + 1,
+                                dtype=tf.int32)
       crop_offset = tf.convert_to_tensor([shift, 0, 0])
 
     cropped_image = tf.slice(image, crop_offset, crop_size)
@@ -905,9 +872,8 @@ def random_aspect_crop(image,
                     axis=0)
     return cropped_image, info
 
-def random_jitter_crop(image,
-                       jitter = 0.2, 
-                       seed=1):
+
+def random_jitter_crop(image, jitter=0.2, seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
   
   Args:
@@ -928,14 +894,13 @@ def random_jitter_crop(image,
 
   with tf.name_scope('random_crop_image'):
     ishape = tf.shape(image)
-    
+
     if jitter > 1 or jitter < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
-    
-    
+
     original_dims = ishape[:2]
     jitter = tf.cast(jitter, tf.float32)
-    ow = tf.cast(original_dims[1], tf.float32) 
+    ow = tf.cast(original_dims[1], tf.float32)
     oh = tf.cast(original_dims[0], tf.float32)
 
     dw = ow * jitter
@@ -954,12 +919,13 @@ def random_jitter_crop(image,
 
     intersect_top = tf.maximum(crop_top, src_top)
     intersect_bottom = tf.minimum(crop_bottom, src_bottom)
-    
+
     intersect_wh = src_bottom - intersect_top - (src_bottom - intersect_bottom)
 
-    crop_offset = tf.cast(tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
-    crop_size = tf.cast(tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
-
+    crop_offset = tf.cast(
+        tf.convert_to_tensor([intersect_top[1], intersect_top[0], 0]), tf.int32)
+    crop_size = tf.cast(
+        tf.convert_to_tensor([intersect_wh[1], intersect_wh[0], -1]), tf.int32)
 
     cropped_image = tf.slice(image, crop_offset, crop_size)
 
@@ -972,6 +938,7 @@ def random_jitter_crop(image,
     ],
                     axis=0)
     return cropped_image, info
+
 
 def random_crop_mosaic(image,
                        aspect_ratio_range=(3. / 4., 4. / 3.),
@@ -1194,13 +1161,14 @@ def rotate_boxes(boxes, angle):
   boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
   return boxes
 
+
 def random_crop(image, target_height, target_width):
   ishape = tf.shape(image)
-  
+
   th = target_height if target_height < ishape[0] else ishape[0]
   tw = target_width if target_width < ishape[1] else ishape[1]
   crop_size = tf.convert_to_tensor([th, tw, -1])
-  
+
   crop_offset = ishape - crop_size
   oh = tf.random.uniform([], 0, crop_offset[0] + 1, tf.int32)
   ow = tf.random.uniform([], 0, crop_offset[1] + 1, tf.int32)
@@ -1218,6 +1186,7 @@ def random_crop(image, target_height, target_width):
                   axis=0)
 
   return cropped_image, info
+
 
 def resize_and_crop_image(image,
                           desired_size,
@@ -1300,13 +1269,10 @@ def resize_and_crop_image(image,
     scaled_image = tf.image.resize(
         image, tf.cast(scaled_size, tf.int32), method=method)
 
-    
-
     if random_jittering:
       scaled_image = scaled_image[offset[0]:offset[0] + desired_size[0],
                                   offset[1]:offset[1] + desired_size[1], :]
 
-    
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
     if random_pad:
@@ -1332,12 +1298,13 @@ def resize_and_crop_image(image,
     ])
     return output_image, image_info
 
+
 def resize_and_jitter_image(image,
                             desired_size,
                             padded_size,
-                            jitter = 0.3, 
-                            letter_box = None, 
-                            scale_aspect = 0.0, 
+                            jitter=0.3,
+                            letter_box=None,
+                            scale_aspect=0.0,
                             aug_scale_min=1.0,
                             aug_scale_max=1.0,
                             random_pad=False,
@@ -1378,26 +1345,28 @@ def resize_and_jitter_image(image,
       scaled dimension / original dimension.
   """
   with tf.name_scope('resize_and_crop_image'):
+    # if letter_box == False:
+    #   image = image = tf.image.resize(
+    #     image, (desired_size[0], desired_size[1]),preserve_aspect_ratio=False)
+
+    # elif letter_box == True:
+    #   height, width = get_image_shape(image)
+    #   clipper = tf.reduce_max((height, width))
+    #   w_scale = width / clipper
+    #   h_scale = height / clipper
+
+    #   height_, width_ = desired_size[0], desired_size[1]
+    #   height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+    #   width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+
+    #   image = image = tf.image.resize(
+    #     image, (height_, width_), preserve_aspect_ratio=False)
+
     if letter_box == False:
-      image = image = tf.image.resize(
-        image, (desired_size[0], desired_size[1]),preserve_aspect_ratio=False)
-    elif letter_box == True:
-      height, width = get_image_shape(image)
-      clipper = tf.reduce_max((height, width))
-      w_scale = width / clipper
-      h_scale = height / clipper
-
-      height_, width_ = desired_size[0], desired_size[1]
-      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-
-      image = image = tf.image.resize(
-        image, (height_, width_), preserve_aspect_ratio=False)
-    else:
       height, width = get_image_shape(image)
       clipper = tf.reduce_max((height, width))
       image = image = tf.image.resize(
-        image, (clipper, clipper),preserve_aspect_ratio=False)
+          image, (clipper, clipper), preserve_aspect_ratio=False)
 
     if scale_aspect > 0.0:
       # apply aspect ratio distortion (stretching and compressing)
@@ -1407,7 +1376,6 @@ def resize_and_jitter_image(image,
       width_ = tf.cast(tf.cast(width_, shifty.dtype) * shifty, tf.int32)
       height_ = tf.cast(tf.cast(height_, shiftx.dtype) * shiftx, tf.int32)
       image = tf.image.resize(image, (height_, width_))
-
 
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
 
@@ -1431,16 +1399,16 @@ def resize_and_jitter_image(image,
     image_scale = scaled_size / image_size
 
     scaled_image = tf.image.resize(
-          image, tf.cast(scaled_size, tf.int32), method=method)
+        image, tf.cast(scaled_size, tf.int32), method=method)
 
     if random_jittering or jitter > 0:
-      scaled_image, info2 = random_jitter_crop(scaled_image, jitter = jitter)
+      scaled_image, info2 = random_jitter_crop(scaled_image, jitter=jitter)
       offset = info2[3]
 
       jsize = rand_uniform_strong(1 - jitter, 1)
-      scaled_image, info1 = random_crop(scaled_image, 
-                                       tf.cast(desired_size[0] * jsize, tf.int32), 
-                                       tf.cast(desired_size[1] * jsize, tf.int32))
+      scaled_image, info1 = random_crop(
+          scaled_image, tf.cast(desired_size[0] * jsize, tf.int32),
+          tf.cast(desired_size[1] * jsize, tf.int32))
       offset += info1[3]
       offset = tf.cast(offset, tf.int32)
     else:
@@ -1449,12 +1417,12 @@ def resize_and_jitter_image(image,
     # if random_jittering or jitter > 0:
     #   # jsize = rand_uniform_strong(1 - jitter, 1)
     #   jsize = 1
-    #   scaled_image, info1 = random_crop(scaled_image, 
-    #                                    tf.cast(desired_size[0] * jsize, tf.int32), 
+    #   scaled_image, info1 = random_crop(scaled_image,
+    #                                    tf.cast(desired_size[0] * jsize, tf.int32),
     #                                    tf.cast(desired_size[1] * jsize, tf.int32))
     #   offset = info1[3]
 
-    #   scaled_image, info2 = random_jitter_crop(scaled_image, 
+    #   scaled_image, info2 = random_jitter_crop(scaled_image,
     #                                            jitter = jitter)
     #   offset += info2[3]
     #   offset = tf.cast(offset, tf.int32)
@@ -1463,11 +1431,9 @@ def resize_and_jitter_image(image,
 
     image_info_a = tf.stack([
         image_size,
-        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), 
-        image_scale,
+        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), image_scale,
         tf.cast(offset, tf.float32)
     ])
-
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
@@ -1485,12 +1451,11 @@ def resize_and_jitter_image(image,
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
 
-
     offset = -tf.convert_to_tensor([dy, dx])
 
     image_info_b = tf.stack([
-        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32), 
-        tf.cast(desired_size, dtype=tf.float32), 
+        tf.cast(tf.shape(scaled_image)[0:2], dtype=tf.float32),
+        tf.cast(desired_size, dtype=tf.float32),
         tf.ones_like(image_scale),
         tf.cast(offset, tf.float32)
     ])
