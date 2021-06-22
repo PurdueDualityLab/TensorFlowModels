@@ -88,7 +88,6 @@ task:
         crop_area: [0.45, 1.0]
         crop_area_mosaic: [0.4, 1.6]
         aug_scale_min: 0.4
-        aug_scale_max: 2.0
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
