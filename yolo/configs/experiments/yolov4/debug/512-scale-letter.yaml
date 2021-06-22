@@ -65,10 +65,10 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.2
+      aug_rand_crop: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
@@ -83,9 +83,10 @@ task:
       mosaic: 
         max_resolution: 640
         mosaic_frequency: 0.75
-        mosaic_crop_mode: 'crop'
-        aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.4, 1.0]
+        mosaic_crop_mode: 'crop_scale'
+        aspect_ratio_mode: 'letter'
+        crop_area: [0.45, 1.0]
+        crop_area_mosaic: [0.4, 1.6]
         aug_scale_min: 0.4
         aug_scale_max: 1.5
   validation_data:
@@ -97,7 +98,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
