@@ -325,6 +325,7 @@ class Parser(parser.Parser):
     # apply the final scale jittering of the image, if the image is mosaiced
     # ensure the minimum is larger than 0.4, or 0.1 for each image in the
     # mosaic
+
     if not data['is_mosaic']:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image, [self._image_h, self._image_w], [self._image_h, self._image_w],
@@ -341,7 +342,7 @@ class Parser(parser.Parser):
           [self._image_h, self._image_w],
           [self._image_h, self._image_w],
           letter_box=self._letter_box,
-          scale_aspect=self._aug_scale_aspect,
+          scale_aspect=0.0,
           aug_scale_min=1.0,  #self._aug_scale_min if self._aug_scale_min > 0.4 else 0.4,
           aug_scale_max=1.0,  #self._aug_scale_max, #self._aug_scale_max / 2,
           jitter=0.0,
@@ -440,6 +441,9 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
 
+    if not self._letter_box:
+      image = tf.image.resize(image, [self._image_h, self._image_w])
+
     image, infos = preprocessing_ops.resize_and_jitter_image(
         image,
         [self._image_h, self._image_w],
@@ -450,8 +454,8 @@ class Parser(parser.Parser):
         aug_scale_max=1.0,  #self._aug_scale_max, #self._aug_scale_max / 2,
         jitter=0.0,
         random_pad=False,
-        shiftx=0.0,
-        shifty=0.0)
+        shiftx=0.5,
+        shifty=0.5)
 
     # clip and clean boxes
     box_history = None

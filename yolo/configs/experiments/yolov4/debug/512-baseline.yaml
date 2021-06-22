@@ -68,8 +68,8 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
-      aug_scale_aspect: 0.0
+      aug_rand_crop: 0.1
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 0.7
@@ -84,7 +84,8 @@ task:
         mosaic_frequency: 0.85
         mosaic_crop_mode: 'crop_scale'
         aspect_ratio_mode: 'crop'
-        crop_area_mosaic: [0.4, 1.6]
+        crop_area: [0.6, 1.0]
+        crop_area_mosaic: [0.4, 1.7]
         aug_scale_min: 1.0
         aug_scale_max: 1.0
         aug_rand_crop: 0.5

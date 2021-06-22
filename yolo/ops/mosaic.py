@@ -21,8 +21,8 @@ class Mosaic(object):
                random_crop=0.0,
                random_aspect_distort=0.0,
                aspect_ratio_mode='distort',
-               aug_scale_min=0.1,
-               aug_scale_max=2.0,
+               aug_scale_min=1.0,
+               aug_scale_max=1.0,
                random_flip=True,
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
@@ -134,7 +134,7 @@ class Mosaic(object):
         seed=self._seed)
 
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-    boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
+    boxes, _ = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
 
     inds = box_ops.get_non_empty_box_indices(boxes)
@@ -177,6 +177,7 @@ class Mosaic(object):
           aug_scale_min=crop_area[0],
           aug_scale_max=crop_area[1],
           jitter=0.0,
+          # scale_aspect=self._random_aspect_distort, 
           random_pad=True,
           seed=self._seed)
       infos.extend(infos_)
@@ -238,7 +239,7 @@ class Mosaic(object):
       if docrop > 1 - self._random_crop:
         image, boxes, classes, is_crowd, area = self._crop_image(
             image, boxes, classes, is_crowd, area, self._crop_area)
-      random_crop = 0.0
+      random_crop = 0.1
       letter_box = True
     else:
       letter_box = True
@@ -251,6 +252,7 @@ class Mosaic(object):
         image, [self._output_size[0], self._output_size[1]],
         [self._output_size[0], self._output_size[1]],
         letter_box=letter_box,
+        scale_aspect = self._random_aspect_distort,
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
         jitter=random_crop,
