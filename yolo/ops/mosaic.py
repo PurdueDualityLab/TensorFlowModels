@@ -126,13 +126,16 @@ class Mosaic(object):
 
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
 
-    image, info = preprocessing_ops.random_crop_image(
-        image,
-        aspect_ratio_range=(self._output_size[1] / self._output_size[0],
-                            self._output_size[1] / self._output_size[0]),
-        area_range=crop_area,
-        seed=self._seed)
+    # image, info = preprocessing_ops.random_crop_image(
+    #     image,
+    #     aspect_ratio_range=(self._output_size[1] / self._output_size[0],
+    #                         self._output_size[1] / self._output_size[0]),
+    #     area_range=crop_area,
+    #     seed=self._seed)
 
+    image, info = preprocessing_ops.random_window_crop(image, 
+                                                       self._output_size[1] , 
+                                                       self._output_size[0])
     boxes = box_ops.denormalize_boxes(boxes, info[0, :])
     boxes, _ = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :], info[1, :],
                                                  info[3, :])
@@ -177,7 +180,7 @@ class Mosaic(object):
           aug_scale_min=crop_area[0],
           aug_scale_max=crop_area[1],
           jitter=0.0,
-          # scale_aspect=self._random_aspect_distort, 
+          scale_aspect=self._random_aspect_distort, 
           random_pad=True,
           seed=self._seed)
       infos.extend(infos_)
@@ -252,7 +255,7 @@ class Mosaic(object):
         image, [self._output_size[0], self._output_size[1]],
         [self._output_size[0], self._output_size[1]],
         letter_box=letter_box,
-        scale_aspect = self._random_aspect_distort,
+        #scale_aspect = self._random_aspect_distort,
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max,
         jitter=random_crop,
