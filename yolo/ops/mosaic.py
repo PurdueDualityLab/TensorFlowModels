@@ -189,18 +189,29 @@ class Mosaic(object):
           seed=self._seed)
       infos = [info]
 
+    # clip and clean boxes
+    box_history = None
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
-                                                   info[1, :], info[3, :])
-
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      is_crowd = tf.gather(is_crowd, inds)
-      area = tf.gather(area, inds)
+      if box_history is not None:
+        box_history = box_ops.denormalize_boxes(box_history, info[0, :])
+      boxes, box_history = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :], 
+                                                   box_history = box_history)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      box_history = box_ops.normalize_boxes(box_history, info[1, :])
 
+
+    boxes = box_ops.denormalize_boxes(boxes, info[1, :])
+    box_history = box_ops.denormalize_boxes(box_history, info[1, :])
+
+    boxes = preprocessing_ops.clip_boxes(boxes, box_history = box_history)
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    is_crowd = tf.gather(is_crowd, inds)
+    area = tf.gather(area, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
     return image, boxes, classes, is_crowd, area, info
 
   def _process_image(self,
@@ -248,18 +259,29 @@ class Mosaic(object):
         shifty=ys,
         seed=self._seed)
 
+    # clip and clean boxes
+    box_history = None
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(
-          boxes, info[2, :], info[1, :], info[3, :])
-
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
-      is_crowd = tf.gather(is_crowd, inds)
-      area = tf.gather(area, inds)
+      if box_history is not None:
+        box_history = box_ops.denormalize_boxes(box_history, info[0, :])
+      boxes, box_history = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :], 
+                                                   box_history = box_history)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      box_history = box_ops.normalize_boxes(box_history, info[1, :])
 
+
+    boxes = box_ops.denormalize_boxes(boxes, info[1, :])
+    box_history = box_ops.denormalize_boxes(box_history, info[1, :])
+
+    boxes = preprocessing_ops.clip_boxes(boxes, box_history = box_history)
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    is_crowd = tf.gather(is_crowd, inds)
+    area = tf.gather(area, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
     return image, boxes, classes, is_crowd, area
 
   def _mapped(self, sample):

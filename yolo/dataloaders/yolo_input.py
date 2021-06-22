@@ -353,17 +353,27 @@ class Parser(parser.Parser):
       #     jitter=self._aug_rand_crop,
       #     random_pad=self._random_pad)
 
-    # again crop the boxes and classes and only use those that are still
-    # in the image.
+    # clip and clean boxes
+    box_history = None
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(
-          boxes, info[2, :], info[1, :], info[3, :])
-
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
+      if box_history is not None:
+        box_history = box_ops.denormalize_boxes(box_history, info[0, :])
+      boxes, box_history = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :], 
+                                                   box_history = box_history)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      box_history = box_ops.normalize_boxes(box_history, info[1, :])
+
+
+    boxes = box_ops.denormalize_boxes(boxes, info[1, :])
+    box_history = box_ops.denormalize_boxes(box_history, info[1, :])
+
+    boxes = preprocessing_ops.clip_boxes(boxes, box_history = box_history)
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     if self._aug_rand_translate > 0.0:
       # apply random translation to the image
@@ -443,15 +453,27 @@ class Parser(parser.Parser):
         shiftx=0.0,
         shifty=0.0)
 
+    # clip and clean boxes
+    box_history = None
     for info in infos:
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
-      boxes = preprocessing_ops.resize_and_crop_boxes(
-          boxes, info[2, :], info[1, :], info[3, :], keep_thresh=0.0)
-
-      inds = box_ops.get_non_empty_box_indices(boxes)
-      boxes = tf.gather(boxes, inds)
-      classes = tf.gather(classes, inds)
+      if box_history is not None:
+        box_history = box_ops.denormalize_boxes(box_history, info[0, :])
+      boxes, box_history = preprocessing_ops.resize_and_crop_boxes(boxes, info[2, :],
+                                                   info[1, :], info[3, :], 
+                                                   box_history = box_history)
       boxes = box_ops.normalize_boxes(boxes, info[1, :])
+      box_history = box_ops.normalize_boxes(box_history, info[1, :])
+
+
+    boxes = box_ops.denormalize_boxes(boxes, info[1, :])
+    box_history = box_ops.denormalize_boxes(box_history, info[1, :])
+
+    boxes = preprocessing_ops.clip_boxes(boxes, box_history = box_history)
+    inds = box_ops.get_non_empty_box_indices(boxes)
+    boxes = tf.gather(boxes, inds)
+    classes = tf.gather(classes, inds)
+    boxes = box_ops.normalize_boxes(boxes, info[1, :])
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)

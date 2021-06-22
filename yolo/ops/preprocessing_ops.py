@@ -82,20 +82,22 @@ def box_area(box):
   return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
 
 
-def clip_boxes(boxes, image_shape, wh_thr=2, ar_thr=20, area_thr=0.1):
+def clip_boxes(clipped_boxes, image_shape = None, box_history = None, wh_thr=2, ar_thr=20, area_thr=0.1):
+  if box_history is None:
+    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
+      height, width = image_shape
+      max_length = [height, width, height, width]
+    else:
+      image_shape = tf.cast(image_shape, dtype=clipped_boxes.dtype)
+      height, width = tf.unstack(image_shape, axis=-1)
+      max_length = tf.stack([height, width, height, width], axis=-1)
 
-  if isinstance(image_shape, list) or isinstance(image_shape, tuple):
-    height, width = image_shape
-    max_length = [height, width, height, width]
-  else:
-    image_shape = tf.cast(image_shape, dtype=boxes.dtype)
-    height, width = tf.unstack(image_shape, axis=-1)
-    max_length = tf.stack([height, width, height, width], axis=-1)
+    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
+    return clipped_boxes
 
-  clipped_boxes = tf.math.maximum(tf.math.minimum(boxes, max_length), 0.0)
 
-  og_height = boxes[:, 2] - boxes[:, 0]
-  og_width = boxes[:, 3] - boxes[:, 1]
+  og_height = box_history[:, 2] - box_history[:, 0]
+  og_width = box_history[:, 3] - box_history[:, 1]
   
   clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
   clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
@@ -129,13 +131,21 @@ def resize_and_crop_boxes(boxes,
                           image_scale,
                           output_size,
                           offset,
+                          box_history = None, 
                           keep_thresh=0.0):
 
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+  
 
+  if box_history is None:
+    box_history = boxes
+  else:
+    box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
+    box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+  
   boxes = clip_boxes(boxes, output_size)
-  return boxes
+  return boxes, box_history
 
 def get_image_shape(image):
   """
