@@ -69,11 +69,11 @@ task:
       random_flip: True
       random_pad: True
       aug_rand_crop: 0.0
-      aug_scale_aspect: 0.1
+      aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 0.7
-      aug_rand_brightness: 0.4
+      aug_rand_saturation: 0.5
+      aug_rand_brightness: 0.6
       aug_rand_hue: 0.1
       aug_scale_min: 0.1
       aug_scale_max: 2.0
@@ -81,11 +81,12 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
+        output_resolution: [640, 640]
         mosaic_frequency: 0.85
         mosaic_crop_mode: 'crop_scale'
         aspect_ratio_mode: 'crop'
-        crop_area: [0.6, 1.0]
-        crop_area_mosaic: [0.4, 1.7]
+        crop_area: [0.35, 1.0]
+        crop_area_mosaic: [0.4, 2.0]
         aug_scale_min: 1.0
         aug_scale_max: 1.0
         aug_rand_crop: 0.5

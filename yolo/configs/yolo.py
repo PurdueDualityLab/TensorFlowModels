@@ -122,15 +122,16 @@ class ModelConfig(hyperparams.Config):
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   max_resolution: int = 640
-  mosaic_frequency: float = 1.0
-  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.45, 1.0])
+  mosaic_frequency: float = 0.75
+  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.35, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [0.2, 1.6])
+      default_factory=lambda: [1.0, 1.0])
   aspect_ratio_mode: str = 'crop'
-  mosaic_crop_mode: Optional[str] = None #'crop_scale'
-  aug_scale_min: Optional[float] = 1.0
-  aug_scale_max: Optional[float] = 1.0
-  aug_rand_crop: Optional[float] = 0.5
+  mosaic_crop_mode: Optional[str] = 'crop_scale'
+  aug_scale_min: Optional[float] = None
+  aug_scale_max: Optional[float] = None
+  aug_rand_crop: Optional[float] = None
+  output_resolution: Optional[List[int]] = None #dataclasses.field(default_factory=lambda: [640, 640])
 
 
 @dataclasses.dataclass
@@ -143,10 +144,10 @@ class Parser(hyperparams.Config):
   aug_scale_aspect: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
-  aug_rand_saturation: float = 0.7
-  aug_rand_brightness: float = 0.4
-  aug_rand_hue: float = 0.1
-  aug_scale_min: float = 0.2
+  aug_rand_saturation: float = 0.0 #0.7
+  aug_rand_brightness: float = 0.0  #0.4
+  aug_rand_hue: float = 0.0 #0.1
+  aug_scale_min: float = 0.1
   aug_scale_max: float = 2.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False

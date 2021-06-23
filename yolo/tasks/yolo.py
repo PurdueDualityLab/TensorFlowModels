@@ -144,8 +144,12 @@ class YoloTask(base_task.Task):
     if rcrop is None:
       rcrop = params.parser.aug_rand_crop
 
+    osize = params.parser.mosaic.output_resolution
+    if osize is None:
+      osize = model.input_size
+
     sample_fn = mosaic.Mosaic(
-        output_size=model.input_size,
+        output_size=osize,
         max_resolution=params.parser.mosaic.max_resolution,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         crop_area=params.parser.mosaic.crop_area,

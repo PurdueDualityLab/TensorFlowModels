@@ -19,46 +19,39 @@ from official.vision.beta.ops import box_ops as bops
 from official.vision.beta.tasks import retinanet
 from official.vision.beta.configs import retinanet as retcfg
 
+from official.core import train_utils
+from official.modeling import performance
+from official.core import task_factory
+
 
 def test_yolo_input_task():
-  with tf.device('/CPU:0'):
-    config = yolocfg.YoloTask(
-        model=yolocfg.Yolo(
-            base='v4',
-            min_level=3,
-            norm_activation=yolocfg.common.NormActivation(activation='mish'),
-            # norm_activation = yolocfg.common.NormActivation(activation="leaky"),
-            # boxes = ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)'],
-            # boxes = ["(10, 13)", "(16, 30)", "(33, 23)","(30, 61)", "(62, 45)", "(59, 119)","(116, 90)", "(156, 198)", "(373, 326)"],
-            # boxes =  ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)'], #, '(135, 169)'])
-            boxes=[
-                '(12, 16)', '(19, 36)', '(40, 28)', '(36, 75)', '(76, 55)',
-                '(72, 146)', '(142, 110)', '(192, 243)', '(459, 401)'
-            ],
-            # boxes=[
-            #     '[15.0, 20.0]', '[23.0, 45.0]', '[50.0, 35.0]', '[45.0, 93.0]',
-            #     '[95.0, 68.0]', '[90.0, 182.0]', '[177.0, 137.0]',
-            #     '[240.0, 303.0]', '[573.0, 501.0]'
-            # ],
-            # boxes = None,
-            filter=yolocfg.YoloLossLayer(nms_type="greedy")))
-    task = yolo.YoloTask(config)
+  # with tf.device('/CPU:0'):
+  experiment = "yolo_custom"
+  config_path = ["yolo/configs/experiments/yolov4/debug/512-sheer.yaml"]
+  config = train_utils.ParseConfigOptions(
+      experiment=experiment, config_file=config_path)
+  params = train_utils.parse_configuration(config)
+  config = params.task
 
-    # loading both causes issues, but oen at a time is not issue, why?
-    # config.train_data.global_batch_size = 64
-    # config.validation_data.global_batch_size = 64
-    config.train_data.dtype = 'float32'
-    config.validation_data.dtype = 'float32'
-    # config.train_data.tfds_name = 'coco'
-    # config.validation_data.tfds_name = 'coco'
-    # config.train_data.tfds_split = 'train'
-    # config.validation_data.tfds_split = 'validation'
-    # config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
-    # config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
-    config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-    config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
-    train_data = task.build_inputs(config.train_data)
-    test_data = task.build_inputs(config.validation_data)
+  task = task_factory.get_task(params.task)
+
+  config.train_data.global_batch_size = 1
+  config.validation_data.global_batch_size = 1
+  config.train_data.dtype = 'float32'
+  config.validation_data.dtype = 'float32'
+
+  # config.train_data.tfds_name = 'coco'
+  # config.validation_data.tfds_name = 'coco'
+  # config.train_data.tfds_split = 'train'
+  # config.validation_data.tfds_split = 'validation'
+  # config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
+  # config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
+
+  config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+  config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+
+  train_data = task.build_inputs(config.train_data)
+  test_data = task.build_inputs(config.validation_data)
   return train_data, test_data
 
 
@@ -270,6 +263,7 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
+
   # test_ret_pipeline()
   test_yolo_pipeline(is_training=True)
   # test_yolo_pipeline(is_training=False)
