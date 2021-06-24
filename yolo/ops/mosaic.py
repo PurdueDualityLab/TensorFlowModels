@@ -144,29 +144,32 @@ class Mosaic(object):
 
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
 
-    # height, width = preprocessing_ops.get_image_shape(image)
-    height, width = self._output_size[1], self._output_size[0]
-    scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
-                                                  tf.math.sqrt(crop_area[1]))
-    width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
-    height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
+    # height, width = self._output_size[1], self._output_size[0]
+    # scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
+    #                                               tf.math.sqrt(crop_area[1]))
+    # width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
+    # height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
 
-    # tf.print(width, height, scale)
-    image, info = preprocessing_ops.random_window_crop(
-      image, 
-      height, 
-      width, 
-      skip_zero=False
-    )
+    # # tf.print(width, height, scale)
+    # image, info = preprocessing_ops.random_window_crop(
+    #   image, 
+    #   height, 
+    #   width, 
+    #   skip_zero=False
+    # )
+
+    # infos = [info]
+
+    # image = tf.image.resize(image, (self._output_size[1], 
+    #                                 self._output_size[0]))
+
+    image, info = preprocessing_ops.random_crop_image(
+          image, 
+          aspect_ratio_range=[self._output_size[1]/self._output_size[0], 
+                              self._output_size[1]/self._output_size[0]], 
+          area_range=crop_area)
 
     infos = [info]
-
-    image = tf.image.resize(image, (self._output_size[1], 
-                                    self._output_size[0]))
-    # image, info = preprocessing_ops.random_window_crop(image, 
-    #                                                    self._output_size[1] , 
-    #                                                    self._output_size[0])
-
     boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -347,6 +350,9 @@ class Mosaic(object):
         if self._mosaic_crop_mode is not None:
           image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area)
+        else:
+          height, width = self._output_size[0], self._output_size[1]
+          image = tf.image.resize(image, (height, width))
 
         height, width = preprocessing_ops.get_image_shape(image)
 

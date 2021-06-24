@@ -52,7 +52,7 @@ class Parser(parser.Parser):
                random_pad=True,
                anchor_t=4.0,
                scale_xy=None,
-               use_scale_xy=True,
+               use_scale_xy=False,
                masks=None,
                anchors=None,
                letter_box=False,
