@@ -144,11 +144,31 @@ class Mosaic(object):
 
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
 
-    image, info = preprocessing_ops.random_window_crop(image, 
-                                                       self._output_size[1] , 
-                                                       self._output_size[0])
+    # height, width = preprocessing_ops.get_image_shape(image)
+    crop_area = [0.6, 1.0]
+    height, width = self._output_size[1], self._output_size[0]
+    scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
+                                                  tf.math.sqrt(crop_area[1]))
+    width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
+    height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
 
-    boxes, inds = preprocessing_ops.apply_infos(boxes, [info])
+    # tf.print(width, height, scale)
+    image, info = preprocessing_ops.random_window_crop(
+      image, 
+      height, 
+      width, 
+      skip_zero=False
+    )
+
+    infos = [info]
+
+    image = tf.image.resize(image, (self._output_size[1], 
+                                    self._output_size[0]))
+    # image, info = preprocessing_ops.random_window_crop(image, 
+    #                                                    self._output_size[1] , 
+    #                                                    self._output_size[0])
+
+    boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
@@ -219,6 +239,8 @@ class Mosaic(object):
           scale_aspect=self._random_aspect_distort, 
           random_pad=True,
           seed=self._seed)
+      height, width = self._output_size[0], self._output_size[1]
+      image = tf.image.resize(image, (height, width))
     elif self._mosaic_crop_mode == 'crop_scale':
       image, infos = self._mosaic_crop(image, self._crop_area)
       image, infos_ = preprocessing_ops.resize_and_jitter_image(
@@ -232,8 +254,16 @@ class Mosaic(object):
           random_pad=True,
           seed=self._seed)
       infos.extend(infos_)
+      height, width = self._output_size[0], self._output_size[1]
+      image = tf.image.resize(image, (height, width))
+    elif self._mosaic_crop_mode == 'pre_crop':
+      height, width = self._output_size[0], self._output_size[1]
+      image = tf.image.resize(image, (height, width))
+      image, infos = self._mosaic_crop(image, self._crop_area)
     else:
       image, infos = self._mosaic_crop(image, self._crop_area)
+      height, width = self._output_size[0], self._output_size[1]
+      image = tf.image.resize(image, (height, width))
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
@@ -319,8 +349,7 @@ class Mosaic(object):
           image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
               image, boxes, classes, is_crowd, area)
 
-        height, width = self._output_size[0], self._output_size[1]
-        image = tf.image.resize(image, (height, width))
+        height, width = preprocessing_ops.get_image_shape(image)
 
         sample['image'] = tf.expand_dims(image, axis=0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)
@@ -339,7 +368,11 @@ class Mosaic(object):
             tf.convert_to_tensor([0, 0, height, width]), axis=0)
         sample['num_detections'] = tf.expand_dims(
             tf.shape(sample['groundtruth_boxes'])[1], axis=0)
-        sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
+        
+        if self._mosaic_crop_mode == 'pre_crop':
+          sample['is_mosaic'] = tf.expand_dims(tf.cast(0.0, tf.bool), axis=0)
+        else:
+          sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
     return sample
 
   def resample_unpad(self, sample):
