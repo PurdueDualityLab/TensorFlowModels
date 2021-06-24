@@ -85,7 +85,7 @@ task:
         mosaic_frequency: 0.85
         mosaic_crop_mode: 'pre_crop'
         aspect_ratio_mode: 'crop'
-        crop_area: [0.25, 1.0]
+        crop_area: [0.35, 1.0]
         crop_area_mosaic: [0.4, 2.0]
         aug_scale_min: 1.0
         aug_scale_max: 1.0

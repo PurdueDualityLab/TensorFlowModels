@@ -145,7 +145,6 @@ class Mosaic(object):
   def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
 
     # height, width = preprocessing_ops.get_image_shape(image)
-    crop_area = [0.6, 1.0]
     height, width = self._output_size[1], self._output_size[0]
     scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
                                                   tf.math.sqrt(crop_area[1]))
@@ -259,7 +258,7 @@ class Mosaic(object):
     elif self._mosaic_crop_mode == 'pre_crop':
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
-      image, infos = self._mosaic_crop(image, self._crop_area)
+      image, infos = self._mosaic_crop(image, self._crop_area, skip_zero = False)
     else:
       image, infos = self._mosaic_crop(image, self._crop_area)
       height, width = self._output_size[0], self._output_size[1]
