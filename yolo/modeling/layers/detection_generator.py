@@ -122,7 +122,8 @@ class YoloLayer(ks.Model):
         'giou': 3,
         'ciou': 4,
         'diou': 5,
-        'class_independent': 6
+        'class_independent': 6, 
+        'weighted_diou': 7
     }
 
     self._nms_type = self._nms_types[nms_type]
@@ -236,8 +237,16 @@ class YoloLayer(ks.Model):
     class_scores = K.concatenate(class_scores, axis=1)
 
     # apply nms
-    if self._nms_type == 6:
-      # TPU supported + DIOU NMS much slower
+    if self._nms_type == 7:
+      boxes, class_scores, object_scores = nms_ops.non_max_suppression2(
+          boxes,
+          class_scores,
+          object_scores,
+          self._max_boxes,
+          pre_nms_thresh = self._thresh,
+          nms_thresh = self._nms_thresh,
+          prenms_top_k=5000)
+    elif self._nms_type == 6:
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,
           class_scores,
@@ -245,7 +254,7 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           self._thresh,
           self._nms_thresh,
-          prenms_top_k=500)
+          prenms_top_k=10)
     elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)

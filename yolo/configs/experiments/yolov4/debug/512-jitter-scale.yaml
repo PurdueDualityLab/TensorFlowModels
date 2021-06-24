@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
     base:
@@ -53,15 +51,15 @@ task:
         '4': 1.1
         '3': 1.2
       max_boxes: 200
-      nms_type: 'weighted_diou'
+      nms_type: diou
       iou_thresh: 0.001
       nms_thresh: 0.6
-      pre_nms_points: 500
+      pre_nms_points: 5000
       use_scaled_loss: false
   train_data:
-    global_batch_size: 4
+    global_batch_size: 64
     dtype: bfloat16
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -70,32 +68,32 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.0
-      aug_scale_aspect: 0.3
+      aug_rand_crop: 0.5
+      aug_scale_aspect: 0.1
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 0.5
-      aug_rand_brightness: 0.6
+      aug_rand_saturation: 0.7
+      aug_rand_brightness: 0.4
       aug_rand_hue: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 2.0
+      aug_scale_min: 0.3
+      aug_scale_max: 1.5
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        output_resolution: [640, 640]
-        mosaic_frequency: 0.85
+        output_resolution: null #[640, 640]
+        max_resolution: 640
+        mosaic_frequency: 0.75
         mosaic_crop_mode: 'crop_scale'
-        aspect_ratio_mode: 'crop'
-        crop_area: [0.35, 1.0]
-        crop_area_mosaic: [0.4, 2.0]
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
-        aug_rand_crop: 0.5
+        aspect_ratio_mode: 'distort'
+        crop_area: [0.35, 0.75]
+        crop_area_mosaic: [0.5, 1.5]
+        aug_scale_min: 0.5
+        aug_scale_max: 1.5
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -106,8 +104,8 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
-  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  # init_checkpoint_modules: 'backbone'
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -117,8 +115,8 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9998
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:

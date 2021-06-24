@@ -1,5 +1,6 @@
 import tensorflow as tf
 from yolo.ops import box_ops as box_ops
+from yolo.ops import math_ops
 from official.vision.beta.ops import box_ops as box_utils
 
 NMS_TILE_SIZE = 512
@@ -363,8 +364,7 @@ def sort_drop(objectness, box, classificationsi, k):
   classifications = tf.reshape(classifications, [bsize, k, -1])
   return objectness, box, classifications
 
-
-def segment_nms(boxes, classes, confidence, k, iou_thresh):
+def segment_nms(boxes, classes, confidence, iou_thresh):
   """This is a quick nms that works on very well for small values of k, this 
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
@@ -385,19 +385,30 @@ def segment_nms(boxes, classes, confidence, k, iou_thresh):
     classes: filtered `Tensor` of shape [batch size, k, num_classes] t
     confidence: filtered `Tensor` of shape [batch size, k] 
   """
-  mrange = tf.range(k)
-  mask_x = tf.tile(
-      tf.transpose(tf.expand_dims(mrange, axis=-1), perm=[1, 0]), [k, 1])
-  mask_y = tf.tile(tf.expand_dims(mrange, axis=-1), [1, k])
-  mask_diag = tf.expand_dims(mask_x > mask_y, axis=0)
-
   iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=0)
+  eye = tf.linalg.band_part(iou, 0, 0)
+  iou = tf.linalg.band_part(iou, 0, -1) - eye 
+
+  B = iou
+  A = tf.zeros_like(iou)
+  maxA = tf.reduce_max(A, axis = -2)
+  i = 0
+
+  while i < 200 and not tf.reduce_all(A == B):
+    A = B
+    maxA = tf.reduce_max(A, axis = -2)
+    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
+    B = iou * E
+    i += 1
 
   # duplicate boxes
-  iou_mask = iou >= iou_thresh
-  iou_mask = tf.logical_and(mask_diag, iou_mask)
-  iou *= tf.cast(iou_mask, iou.dtype)
+  conda = maxA <= iou_thresh
+  keep = tf.expand_dims(tf.cast(conda, boxes.dtype), axis = -1)
+  weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(confidence, axis = -1)
+  boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
 
+  iou_mask = B > 0
   can_suppress_others = 1 - tf.cast(
       tf.reduce_any(iou_mask, axis=-2), boxes.dtype)
 
@@ -408,7 +419,6 @@ def segment_nms(boxes, classes, confidence, k, iou_thresh):
   confidence *= tf.cast(raw, confidence.dtype)
   classes *= tf.cast(tf.expand_dims(raw, axis=-1), classes.dtype)
   return boxes, classes, confidence
-
 
 def nms(boxes,
         classes,
@@ -446,8 +456,7 @@ def nms(boxes,
                                          prenms_top_k)
 
   # apply non max supression
-  boxes, classes, confidence = segment_nms(boxes, classes, confidence,
-                                           prenms_top_k, nms_thresh)
+  boxes, classes, confidence = segment_nms(boxes, classes, confidence, nms_thresh)
 
   # sort the classes of the unspressed boxes
   class_confidence, class_ind = tf.math.top_k(
@@ -490,3 +499,133 @@ def nms(boxes,
 
   classes = tf.squeeze(classes, axis=-1)
   return boxes, classes, confidence
+
+# For batch mode Cluster-Weighted NMS
+def non_max_suppression2(boxes, 
+                         classes, 
+                         confidence, 
+                         k = 200, 
+                         pre_nms_thresh = 0.1,
+                         nms_thresh = 0.6,
+                         prenms_top_k = 5000, 
+                         perclass = True):
+    """Performs Non-Maximum Suppression (NMS) on inference results
+    Returns:
+         detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
+    """
+    dtype = boxes.dtype 
+    boxes = tf.cast(boxes, tf.float32)
+    classes = tf.cast(classes, tf.float32)
+    nc = classes.get_shape().as_list()[-1]  # number of classes
+
+    with tf.device("/cpu:0"):
+      confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
+
+      scores = tf.transpose(classes, perm=(0, 2, 1))
+      curr_scores, inds = tf.math.top_k(scores, k=100, sorted=True)
+      
+      nmsed_boxes = []
+      nmsed_classes = []
+      nmsed_scores = []
+      for j in range(nc):
+        scores_i = curr_scores[:, j, ...]
+        inds_i = inds[:, j, ...]
+  
+        boxes_i = tf.gather_nd(boxes, tf.expand_dims(inds_i, axis = -1), batch_dims = 1)
+        classes_i = tf.expand_dims(j * tf.ones_like(scores_i, dtype = boxes.dtype), axis = -1)
+        boxes_i, classes_i, confidence_i = segment_nms(boxes_i, classes_i, scores_i, nms_thresh)
+
+        nmsed_boxes.append(boxes_i)
+        nmsed_classes.append(tf.squeeze(classes_i, axis = -1))
+        nmsed_scores.append(confidence_i)
+
+      nmsed_boxes = tf.concat(nmsed_boxes, axis = -2)
+      nmsed_classes = tf.concat(nmsed_classes, axis = -1)
+      nmsed_scores = tf.concat(nmsed_scores, axis = -1)
+
+
+      (nmsed_scores, 
+      nmsed_boxes, 
+      nmsed_classes) = sort_drop(nmsed_scores, nmsed_boxes, nmsed_classes, prenms_top_k)
+
+      nmsed_classes = tf.squeeze(nmsed_classes, axis = -1)
+
+    return nmsed_boxes, nmsed_classes, nmsed_scores
+
+# def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+#   """
+#   Pad a dimension of the tensor to have a maximum number of instances filling
+#   additional entries with the `pad_value`.
+   
+#   Args:
+#     value: An input tensor.
+#     instances: An int representing the maximum number of instances.
+#     pad_value: An int representing the value used for padding until the maximum
+#       number of instances is obtained.
+#     pad_axis: An int representing the axis index to pad.
+
+#   Returns:
+#     The output tensor whose dimensions match the input tensor except with the
+#     size along the `pad_axis` replaced by `instances`.
+#   """
+#   shape = tf.shape(value)
+#   if pad_axis < 0:
+#     pad_axis = tf.rank(value) + pad_axis
+#   dim1 = shape[pad_axis]
+#   take = tf.math.reduce_min([instances, dim1])
+#   value, _ = tf.split(value, [take, -1], axis=pad_axis)
+#   pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
+#   nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
+#   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
+#   value = tf.concat([value, pad_tensor], axis=pad_axis)
+#   return value
+
+# def _diou_nms(boxes, scores, inds, confidence = None, score_thresh = 0.1, nms_thresh = 0.6, top_k:int=50):
+#   keep = scores > score_thresh
+#   any_ = tf.reduce_any(keep)
+
+#   keep_inds = tf.where(keep)
+#   inds_ = tf.gather_nd(inds, keep_inds)
+
+#   inds_ = inds_[:top_k]
+#   n = tf.shape(inds_)[0]
+#   inds_ = tf.expand_dims(inds_, axis = -1)
+
+  
+#   boxes_ = tf.gather_nd(boxes, inds_)
+#   if not any_:
+#     return boxes_, tf.squeeze(tf.cast(inds_, boxes.dtype), axis = -1), inds_
+#   else:
+#     scores = tf.gather_nd(scores, keep_inds)
+#     if confidence is None:
+#       scores_ = scores
+#     else:
+#       confidence = tf.cast(confidence, scores.dtype)
+#       scores_ = tf.gather_nd(confidence, inds_)
+
+#     iou = box_ops.aggregated_comparitive_iou(boxes_, boxes_, iou_type = 0)
+#     eye = tf.linalg.band_part(iou, 0, 0)
+#     iou = tf.linalg.band_part(iou, 0, -1) - eye 
+
+#     B = iou
+#     A = tf.zeros_like(iou)
+#     maxA = tf.reduce_max(A, axis = 0, keepdims = True)
+#     i = 0
+
+#     while i < 200 and not tf.reduce_all(A == B):
+#       A = B
+#       maxA = tf.reduce_max(A, axis = 0, keepdims = True)
+#       E = tf.cast(maxA<=nms_thresh, tf.float32)
+#       B = iou * E
+#       i += 1
+
+#     conda = tf.squeeze(maxA <= nms_thresh, axis = 0)
+#     weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(scores_, axis = -1)
+#     boxes_ = tf.linalg.matmul(weights, boxes_)/tf.reduce_sum(weights, axis = -1, keepdims = True)
+
+#     inds_ = tf.gather_nd(inds_, tf.where(conda))
+#     boxes_ = tf.gather_nd(boxes, tf.where(conda))
+#     scores_ = tf.gather_nd(scores, tf.where(conda))
+#     return boxes_, scores_, inds_
+    
+
