@@ -264,6 +264,8 @@ class Parser(parser.Parser):
       image, info = preprocessing_ops.random_crop_mosaic(
           image, aspect_ratio_range=[jmi, jma], area_range=[0.25, 1.0])
 
+      tf.print(preprocessing_ops.get_image_shape(image))
+
       boxes = box_ops.denormalize_boxes(boxes, info[0, :])
       boxes = preprocess_ops.resize_and_crop_boxes(boxes, info[2, :],
                                                    info[1, :], info[3, :])
