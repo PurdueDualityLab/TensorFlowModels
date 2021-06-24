@@ -75,8 +75,8 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.6667
-      aug_scale_max: 1.5
+      aug_scale_min: 0.3
+      aug_scale_max: 1.7
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
@@ -88,8 +88,8 @@ task:
         aspect_ratio_mode: 'distort'
         crop_area: [0.35, 0.65]
         crop_area_mosaic: [0.4, 2.0]
-        aug_scale_min: 0.6667
-        aug_scale_max: 1.5
+        aug_scale_min: 0.3
+        aug_scale_max: 1.7
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
