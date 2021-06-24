@@ -72,8 +72,8 @@ task:
       aug_scale_aspect: 0.3
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
-      aug_rand_saturation: 0.5
-      aug_rand_brightness: 0.6
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
       aug_scale_min: 0.3
       aug_scale_max: 2.0
