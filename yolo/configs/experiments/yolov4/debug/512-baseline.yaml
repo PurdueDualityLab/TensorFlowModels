@@ -75,18 +75,17 @@ task:
       aug_rand_saturation: 0.5
       aug_rand_brightness: 0.6
       aug_rand_hue: 0.1
-      aug_scale_min: 0.4
+      aug_scale_min: 0.3
       aug_scale_max: 2.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: [640, 640]
-        mosaic_frequency: 1.0
+        mosaic_frequency: 0.85
         mosaic_crop_mode: 'pre_crop'
         aspect_ratio_mode: 'crop'
         crop_area: [0.25, 1.0]
-        crop_area_mosaic: [0.4, 2.0]
         aug_scale_min: 1.0
         aug_scale_max: 1.0
         aug_rand_crop: 0.5
