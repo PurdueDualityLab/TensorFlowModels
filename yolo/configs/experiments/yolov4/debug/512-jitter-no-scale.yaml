@@ -52,7 +52,7 @@ task:
         '3': 1.2
       max_boxes: 200
       nms_type: diou
-      iou_thresh: 0.001
+      iou_thresh: 0.1
       nms_thresh: 0.6
       pre_nms_points: 5000
       use_scaled_loss: false
@@ -68,28 +68,28 @@ task:
       letter_box: False
       random_flip: True
       random_pad: True
-      aug_rand_crop: 0.5
-      aug_scale_aspect: 0.1
+      aug_rand_crop: 0.3
+      aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 1.5
+      aug_scale_min: 1.0
+      aug_scale_max: 1.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: null #[640, 640]
         max_resolution: 640
-        mosaic_frequency: 0.75
-        mosaic_crop_mode: 'crop_scale'
+        mosaic_frequency: 0.666667
+        mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
-        crop_area: [0.35, 0.75]
-        crop_area_mosaic: [0.5, 1.5]
-        aug_scale_min: 0.5
-        aug_scale_max: 1.5
+        crop_area: [0.32, 0.75]
+        crop_area_mosaic: [1.0, 1.0]
+        aug_scale_min: 1.0
+        aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
     dtype: bfloat16

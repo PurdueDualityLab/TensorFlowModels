@@ -82,11 +82,11 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: null #[640, 640]
-        max_resolution: 720
-        mosaic_frequency: 0.0
+        max_resolution: 640
+        mosaic_frequency: 0.77778
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
-        crop_area: [0.32, 0.65]
+        crop_area: [0.32, 0.75]
         crop_area_mosaic: [1.0, 1.0]
         aug_scale_min: 0.667
         aug_scale_max: 1.5
