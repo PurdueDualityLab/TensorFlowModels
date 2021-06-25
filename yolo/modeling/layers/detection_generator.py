@@ -245,7 +245,7 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           pre_nms_thresh = self._thresh,
           nms_thresh = self._nms_thresh,
-          prenms_top_k=5000)
+          prenms_top_k=self._pre_nms_points)
     elif self._nms_type == 6:
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,

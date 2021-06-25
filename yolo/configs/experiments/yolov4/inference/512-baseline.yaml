@@ -54,9 +54,9 @@ task:
         '3': 1.2
       max_boxes: 200
       nms_type: 'weighted_diou'
-      iou_thresh: 0.001
+      iou_thresh: 0.1
       nms_thresh: 0.6
-      pre_nms_points: 500
+      pre_nms_points: 1000
       use_scaled_loss: false
   train_data:
     global_batch_size: 4

@@ -231,14 +231,12 @@ class Mosaic(object):
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
  
     if self._mosaic_crop_mode == "scale":
-      image, infos = preprocessing_ops.resize_and_jitter_image(
+      image, infos = preprocessing_ops.resize_and_crop_image(
           image, [self._output_size[0] * 2, self._output_size[1] * 2],
           [self._output_size[0] * 2, self._output_size[1] * 2],
           letter_box=None,
           aug_scale_min=self._mosaic_crop_area[0],
-          aug_scale_max=self._mosaic_crop_area[1],
-          jitter=0.0,
-          scale_aspect=self._random_aspect_distort, 
+          aug_scale_max=self._mosaic_crop_area[1], 
           random_pad=True,
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]

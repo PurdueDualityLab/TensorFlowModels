@@ -522,7 +522,7 @@ def non_max_suppression2(boxes,
       confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
 
       scores = tf.transpose(classes, perm=(0, 2, 1))
-      curr_scores, inds = tf.math.top_k(scores, k=100, sorted=True)
+      curr_scores, inds = tf.math.top_k(scores, k=tf.minimum(50, prenms_top_k), sorted=True)
       
       nmsed_boxes = []
       nmsed_classes = []
@@ -542,7 +542,6 @@ def non_max_suppression2(boxes,
       nmsed_boxes = tf.concat(nmsed_boxes, axis = -2)
       nmsed_classes = tf.concat(nmsed_classes, axis = -1)
       nmsed_scores = tf.concat(nmsed_scores, axis = -1)
-
 
       (nmsed_scores, 
       nmsed_boxes, 
