@@ -52,7 +52,7 @@ task:
         '3': 1.2
       max_boxes: 200
       nms_type: diou
-      iou_thresh: 0.1
+      iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
       use_scaled_loss: false
@@ -65,11 +65,11 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: True
+      letter_box: False
       random_flip: True
-      jitter: 0.1
+      jitter: 0.3
       resize: 1.5
-      area_thresh: 0.15
+      area_thresh: 0.1
       random_pad: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -80,7 +80,7 @@ task:
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 640
-        mosaic_frequency: 0.85
+        mosaic_frequency: 0.75
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
         crop_area: [0.32, 0.75]
@@ -116,7 +116,7 @@ trainer:
       stepwise:
         boundaries: [200000, 225000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00261, 0.000261, 0.0000261] #best
     optimizer:
       type: sgd
       sgd:

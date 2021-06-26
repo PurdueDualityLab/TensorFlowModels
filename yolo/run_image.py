@@ -62,7 +62,7 @@ def resize_input_image(image,
 if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov3-tiny-eval-autodrone.yaml"],
+      config_path=["yolo/configs/experiments/yolov4/inference/512-jitter.yaml"],
       model_dir="")
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
@@ -70,10 +70,10 @@ if __name__ == "__main__":
       display_names=False,
       thickness=2)
 
-  image = url_to_image("/home/vbanna/Downloads/images/images/crop.png")
+  image = url_to_image("yolo/dataloaders/dataset_specs/unnamed.jpeg")
   save_name = "save.png"
 
-  image_ = resize_input_image(image, [416, 416, 3], normalize=True)
+  image_ = resize_input_image(image, [512, 512, 3], normalize=True)
 
   pred = model(image_, training=False)
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
