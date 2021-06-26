@@ -67,16 +67,13 @@ task:
       max_num_instances: 200
       letter_box: False
       random_flip: True
+      jitter: 0.3
+      resize: 1.5
+      area_thresh: 0.2
       random_pad: True
-      aug_rand_crop: 0.3
-      aug_scale_aspect: 0.0
-      aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 1.0
-      aug_scale_max: 1.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
@@ -87,9 +84,6 @@ task:
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
         crop_area: [0.32, 0.75]
-        crop_area_mosaic: [1.0, 1.0]
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
     dtype: bfloat16

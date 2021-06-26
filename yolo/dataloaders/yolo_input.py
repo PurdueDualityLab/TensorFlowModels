@@ -39,13 +39,14 @@ class Parser(parser.Parser):
                output_size,
                min_level=3,
                max_level=5,
-               aug_rand_crop=0.0,
+               jitter=0.0,
+               resize=1.0,
+               area_thresh = 0.1, 
                max_num_instances=200,
                aug_rand_transalate=0.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
                aug_rand_hue=1.0,
-               aug_scale_aspect=0.0,
                aug_rand_angle=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
@@ -65,7 +66,7 @@ class Parser(parser.Parser):
         output_size should be divided by the largest feature stride 2^max_level.
       min_level: `int` number of minimum level of the output feature pyramid.
       max_level: `int` number of maximum level of the output feature pyramid.
-      aug_rand_crop: `float` for the maximum change in aspect ratio expected in 
+      jitter: `float` for the maximum change in aspect ratio expected in 
         each preprocessing step.
       max_num_instances: `int` for the number of boxes to compute loss on.
       aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
@@ -137,8 +138,8 @@ class Parser(parser.Parser):
     self._max_num_instances = max_num_instances
 
     # image spatial distortion
-    self._aug_rand_crop = 0.0 if aug_rand_crop is None else aug_rand_crop
-    self._aug_scale_aspect = 0.0 if aug_scale_aspect is None else aug_scale_aspect
+    self._jitter = 0.0 if jitter is None else jitter
+    self._resize = 0.0 if resize is None else resize
     self._random_flip = random_flip
     self._letter_box = letter_box
     self._aug_scale_min = aug_scale_min
@@ -160,6 +161,7 @@ class Parser(parser.Parser):
     self._scale_up = {
         key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
     } if self._use_scale_xy else {key: 1 for key in keys}
+    self._area_thresh = area_thresh
 
     # set the data type based on input string
     if dtype == 'float16':
@@ -241,7 +243,8 @@ class Parser(parser.Parser):
           letter_box=self._letter_box,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
-          jitter=self._aug_rand_crop,
+          jitter=self._jitter,
+          resize=self._resize,
           random_pad=self._random_pad)
     else:
       # works well
@@ -260,9 +263,12 @@ class Parser(parser.Parser):
           tf.zeros_like(tf.cast(shape[:2], tf.float32)),
       ])
       infos.append(stale_a)
+      infos.append(stale_a)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
+    boxes, inds = preprocessing_ops.apply_infos(boxes, 
+                                                infos, 
+                                                area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 

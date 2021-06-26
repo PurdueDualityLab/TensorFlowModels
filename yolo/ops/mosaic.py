@@ -19,7 +19,7 @@ class Mosaic(object):
                max_resolution=640,
                mosaic_frequency=1.0,
                random_crop=0.0,
-               random_aspect_distort=0.0,
+               resize=0.0,
                aspect_ratio_mode='distort',
                aug_scale_min=1.0,
                aug_scale_max=1.0,
@@ -28,6 +28,7 @@ class Mosaic(object):
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
                aug_probability=1.0,
+               area_thresh = 0.1, 
                seed=None):
 
     self._output_size = output_size
@@ -36,13 +37,14 @@ class Mosaic(object):
     self._mosaic_frequency = mosaic_frequency
     self._aspect_ratio_mode = aspect_ratio_mode
     self._random_crop = random_crop
-    self._random_aspect_distort = random_aspect_distort
+    self._resize = resize
     self._aug_scale_max = aug_scale_max
     self._aug_scale_min = aug_scale_min
     self._random_flip = random_flip
     self._aug_probability = aug_probability
 
     self._crop_area = crop_area
+    self._area_thresh = area_thresh
 
     self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
@@ -170,7 +172,7 @@ class Mosaic(object):
           area_range=crop_area)
 
     infos = [info]
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
+    boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
@@ -218,12 +220,13 @@ class Mosaic(object):
         aug_scale_max=self._aug_scale_max,
         jitter=random_crop,
         random_pad=False,
+        resize = self._resize,
         shiftx=xs,
         shifty=ys,
         cut = cut)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
+    boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
@@ -251,7 +254,6 @@ class Mosaic(object):
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1],
           jitter=0.0,
-          scale_aspect=self._random_aspect_distort, 
           random_pad=True,
           seed=self._seed)
       infos.extend(infos_)
@@ -264,7 +266,7 @@ class Mosaic(object):
 
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos)
+    boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)

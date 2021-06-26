@@ -90,7 +90,7 @@ task:
       letter_box: True
       random_flip: True
       random_pad: False
-      aug_rand_crop: 0.0
+      jitter: 0.0
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.5
@@ -120,7 +120,7 @@ task:
       letter_box: True
       random_flip: True
       random_pad: False
-      aug_rand_crop: 0.2
+      jitter: 0.2
       aug_scale_aspect: 0.0
       aug_rand_angle: 0.0
       aug_rand_translate: 0.0

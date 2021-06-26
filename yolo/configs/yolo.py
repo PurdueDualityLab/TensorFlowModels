@@ -130,7 +130,7 @@ class Mosaic(hyperparams.Config):
   mosaic_crop_mode: Optional[str] = 'crop_scale'
   aug_scale_min: Optional[float] = None
   aug_scale_max: Optional[float] = None
-  aug_rand_crop: Optional[float] = None
+  jitter: Optional[float] = None
   output_resolution: Optional[List[int]] = None #dataclasses.field(default_factory=lambda: [640, 640])
 
 
@@ -140,18 +140,19 @@ class Parser(hyperparams.Config):
   letter_box: Optional[bool] = False
   random_flip: bool = True
   random_pad: bool = True
-  aug_rand_crop: float = 0.0
-  aug_scale_aspect: float = 0.0
+  jitter: float = 0.0
+  resize: float = 1.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.0 #0.7
   aug_rand_brightness: float = 0.0  #0.4
   aug_rand_hue: float = 0.0 #0.1
-  aug_scale_min: float = 0.1
-  aug_scale_max: float = 2.0
+  aug_scale_min: float = 1.0
+  aug_scale_max: float = 1.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213
+  area_thresh: float = 0.1
   mosaic: Mosaic = Mosaic()
 
 
