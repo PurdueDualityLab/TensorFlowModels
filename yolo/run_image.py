@@ -19,7 +19,7 @@ import os
 import tensorflow as tf
 
 from yolo.run import load_model
-from yolo.utils.demos import utils
+from yolo.utils.demos import utils, coco
 import cv2
 import numpy as np
 from skimage import io
@@ -66,11 +66,13 @@ if __name__ == "__main__":
       model_dir="")
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
-      labels=None,
-      display_names=False,
-      thickness=2)
+      labels=coco.get_coco_names(
+          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"
+      ),
+      thickness=1)
 
-  image = url_to_image("yolo/dataloaders/dataset_specs/unnamed.jpeg")
+
+  image = url_to_image("yolo/dataloaders/dataset_specs/unnamed.jpg")
   save_name = "save.png"
 
   image_ = resize_input_image(image, [512, 512, 3], normalize=True)
