@@ -68,8 +68,8 @@ task:
       letter_box: False
       random_flip: True
       jitter: 0.3
-      resize: 0.0
-      area_thresh: 0.1
+      resize: 1.0
+      area_thresh: 0.15
       random_pad: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
