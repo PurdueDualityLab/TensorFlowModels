@@ -311,7 +311,7 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
-    boxes, _, scores = segment_nms(boxes, None, scores, iou_threshold)
+    # boxes, _, scores = segment_nms(boxes, None, scores, iou_threshold)
     return scores, boxes
 
   def _select_top_k_scores(self, scores_in, pre_nms_num_detections):

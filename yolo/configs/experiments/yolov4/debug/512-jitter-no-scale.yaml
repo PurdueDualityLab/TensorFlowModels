@@ -65,11 +65,11 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
-      jitter: 0.3
+      jitter: 0.1
       resize: 1.5
-      area_thresh: 0.2
+      area_thresh: 0.15
       random_pad: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -80,7 +80,7 @@ task:
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 640
-        mosaic_frequency: 0.85
+        mosaic_frequency: 1.0
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
         crop_area: [0.32, 0.75]

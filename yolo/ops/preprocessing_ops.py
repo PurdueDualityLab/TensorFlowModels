@@ -1320,7 +1320,7 @@ def resize_and_jitter_image(image,
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
                             [0, 0, original_dims[0], original_dims[1]])
 
-    if random_pad or cut is not None:
+    if random_pad or (cut is not None and (resize < 1.5 and resize > 1.0)):
       dst_shape = [tf.maximum(0, -ptop), 
                    tf.maximum(0, -pleft), 
                    tf.maximum(0, -ptop)  + src_crop[2] - src_crop[0],
@@ -1335,6 +1335,7 @@ def resize_and_jitter_image(image,
                    rmw,  
                    rmh + h_,
                    rmw + w_]
+      ptop, pleft, pbottom, pright = dst_shape
     
     pad = dst_shape * tf.convert_to_tensor([1, 1, -1, -1]) 
     pad += tf.convert_to_tensor([0, 0, sheight, swidth])
@@ -1390,6 +1391,9 @@ def resize_and_jitter_image(image,
       h = tf.cast(h, tf.int32)
       cut_x = tf.cast(cut[1], tf.int32)
       cut_y = tf.cast(cut[0], tf.int32)
+
+      tf.print(ptop, pbottom, pright, pleft)
+      
 
       left_shift = tf.minimum(
                     tf.minimum(cut_x, 
