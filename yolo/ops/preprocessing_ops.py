@@ -1392,10 +1392,27 @@ def resize_and_jitter_image(image,
           tf.cast(src_crop[:2], tf.float32)
       ])
 
-    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
-                                    [pad[1], pad[3]], 
-                                    [0, 0]])
+    if cut is not None:
+      image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
+                                      [pad[1], pad[3]], 
+                                      [0, 0]])
+    else:
+      r, g, b = tf.split(cropped_image, 3, axis = -1)
 
+      r = tf.pad(r, [[pad[0], pad[2]], 
+                    [pad[1], pad[3]], 
+                    [0, 0]], 
+                    constant_values=tf.reduce_mean(r))
+      g = tf.pad(g, [[pad[0], pad[2]], 
+                    [pad[1], pad[3]], 
+                    [0, 0]], 
+                    constant_values=tf.reduce_mean(g))
+      b = tf.pad(b, [[pad[0], pad[2]], 
+                    [pad[1], pad[3]], 
+                    [0, 0]], 
+                    constant_values=tf.reduce_mean(b))
+    
+      image_ = tf.concat([r, g, b], axis = -1)
 
     pad_info = tf.stack([
           tf.cast(tf.shape(cropped_image)[:2], tf.float32),
