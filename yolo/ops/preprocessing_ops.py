@@ -1451,7 +1451,7 @@ def resize_and_jitter_image(image,
         pad_offset = [cut_y, cut_x]
       else:
         raise Exception("crop mosaic not supported for floating shifts")
-      tf.print(crop_offset, crop_size, pad_offset)
+
       image = tf.slice(image_, crop_offset, crop_size)
 
       crop_info = tf.stack([
