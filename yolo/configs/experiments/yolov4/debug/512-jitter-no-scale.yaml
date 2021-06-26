@@ -61,7 +61,7 @@ task:
     dtype: bfloat16
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
     parser:
       max_num_instances: 200
@@ -81,9 +81,9 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        output_resolution: null #[640, 640]
+        output_resolution: [512, 512]
         max_resolution: 640
-        mosaic_frequency: 0.666667
+        mosaic_frequency: 0.6667
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
         crop_area: [0.32, 0.75]

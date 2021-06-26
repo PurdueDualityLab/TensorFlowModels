@@ -254,7 +254,7 @@ class YoloLayer(ks.Model):
           self._max_boxes,
           self._thresh,
           self._nms_thresh,
-          prenms_top_k=10)
+          prenms_top_k=self._pre_nms_points)
     elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)

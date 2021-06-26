@@ -6,6 +6,115 @@ from official.vision.beta.ops import box_ops as box_utils
 NMS_TILE_SIZE = 512
 
 
+def segment_nms(boxes, classes, confidence, iou_thresh):
+  """This is a quick nms that works on very well for small values of k, this 
+  was developed to operate for tflite models as the tiled NMS is far too slow 
+  and typically is not able to compile with tflite. This NMS does not account 
+  for classes, and only works to quickly filter boxes on phones. 
+
+  Args: 
+    boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
+    classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
+      filtered.
+    confidence: a `Tensor` of shape [batch size, N] that needs to be 
+      filtered.
+    k: a `integer` for the maximum number of boxes to keep after filtering
+    iou_thresh: a `float` for the value above which boxes are consdered to be 
+      too similar, the closer to 1.0 the less that gets though. 
+  
+  Return:
+    boxes: filtered `Tensor` of shape [batch size, k, 4]
+    classes: filtered `Tensor` of shape [batch size, k, num_classes] t
+    confidence: filtered `Tensor` of shape [batch size, k] 
+  """
+  def cluster(iou, B, A, maxA, idx):
+    A = B
+    maxA = tf.reduce_max(A, axis = -2)
+    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
+    B = iou * E
+    return iou, B, A, maxA, idx + 1
+
+  def cluster_cond(iou, B, A, maxA, idx):
+    return idx < 200 and not tf.reduce_all(A == B)
+
+  iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=0)
+  eye = tf.linalg.band_part(iou, 0, 0)
+  iou = tf.linalg.band_part(iou, 0, -1) - eye 
+
+  B = iou
+  A = tf.zeros_like(iou)
+  maxA = tf.reduce_max(A, axis = -2)
+  i = 0
+
+  iou, B, A, maxA, idx = tf.while_loop(
+      cluster_cond, cluster, [iou, B, A, maxA, tf.constant(0)])
+
+  # duplicate boxes
+  conda = maxA <= iou_thresh
+  keep = tf.expand_dims(tf.cast(conda, boxes.dtype), axis = -1)
+  weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(confidence, axis = -1)
+  boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
+
+  iou_mask = B > 0
+  can_suppress_others = 1 - tf.cast(
+      tf.reduce_any(iou_mask, axis=-2), boxes.dtype)
+
+  # build a mask of the boxes that need to exit
+  raw = tf.cast(can_suppress_others, boxes.dtype)
+
+  boxes *= tf.expand_dims(raw, axis=-1)
+  confidence *= tf.cast(raw, confidence.dtype)
+  if classes is not None:
+    classes *= tf.cast(tf.expand_dims(raw, axis=-1), classes.dtype)
+  return boxes, classes, confidence
+
+
+def segment_iou(boxes, iou_thresh, iou_type = 0):
+  """This is a quick nms that works on very well for small values of k, this 
+  was developed to operate for tflite models as the tiled NMS is far too slow 
+  and typically is not able to compile with tflite. This NMS does not account 
+  for classes, and only works to quickly filter boxes on phones. 
+
+  Args: 
+    boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
+    classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
+      filtered.
+    confidence: a `Tensor` of shape [batch size, N] that needs to be 
+      filtered.
+    k: a `integer` for the maximum number of boxes to keep after filtering
+    iou_thresh: a `float` for the value above which boxes are consdered to be 
+      too similar, the closer to 1.0 the less that gets though. 
+  
+  Return:
+    boxes: filtered `Tensor` of shape [batch size, k, 4]
+    classes: filtered `Tensor` of shape [batch size, k, num_classes] t
+    confidence: filtered `Tensor` of shape [batch size, k] 
+  """
+  def cluster(iou, B, A, maxA, idx):
+    A = B
+    maxA = tf.reduce_max(A, axis = -2)
+    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
+    B = iou * E
+    return iou, B, A, maxA, idx + 1
+
+  def cluster_cond(iou, B, A, maxA, idx):
+    return idx < 200 and not tf.reduce_all(A == B)
+
+  iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=iou_type)
+  eye = tf.linalg.band_part(iou, 0, 0)
+  iou = tf.linalg.band_part(iou, 0, -1) - eye 
+
+  B = iou
+  A = tf.zeros_like(iou)
+  maxA = tf.reduce_max(A, axis = -2)
+  i = 0
+
+  iou, B, A, maxA, idx = tf.while_loop(
+      cluster_cond, cluster, [iou, B, A, maxA, tf.constant(0)])
+
+  return B
+
 class TiledNMS():
   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 
@@ -202,6 +311,7 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
+    boxes, _, scores = segment_nms(boxes, None, scores, iou_threshold)
     return scores, boxes
 
   def _select_top_k_scores(self, scores_in, pre_nms_num_detections):
@@ -364,61 +474,6 @@ def sort_drop(objectness, box, classificationsi, k):
   classifications = tf.reshape(classifications, [bsize, k, -1])
   return objectness, box, classifications
 
-def segment_nms(boxes, classes, confidence, iou_thresh):
-  """This is a quick nms that works on very well for small values of k, this 
-  was developed to operate for tflite models as the tiled NMS is far too slow 
-  and typically is not able to compile with tflite. This NMS does not account 
-  for classes, and only works to quickly filter boxes on phones. 
-
-  Args: 
-    boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
-    classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
-      filtered.
-    confidence: a `Tensor` of shape [batch size, N] that needs to be 
-      filtered.
-    k: a `integer` for the maximum number of boxes to keep after filtering
-    iou_thresh: a `float` for the value above which boxes are consdered to be 
-      too similar, the closer to 1.0 the less that gets though. 
-  
-  Return:
-    boxes: filtered `Tensor` of shape [batch size, k, 4]
-    classes: filtered `Tensor` of shape [batch size, k, num_classes] t
-    confidence: filtered `Tensor` of shape [batch size, k] 
-  """
-  iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=0)
-  eye = tf.linalg.band_part(iou, 0, 0)
-  iou = tf.linalg.band_part(iou, 0, -1) - eye 
-
-  B = iou
-  A = tf.zeros_like(iou)
-  maxA = tf.reduce_max(A, axis = -2)
-  i = 0
-
-  while i < 200 and not tf.reduce_all(A == B):
-    A = B
-    maxA = tf.reduce_max(A, axis = -2)
-    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
-    B = iou * E
-    i += 1
-
-  # duplicate boxes
-  conda = maxA <= iou_thresh
-  keep = tf.expand_dims(tf.cast(conda, boxes.dtype), axis = -1)
-  weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(confidence, axis = -1)
-  boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
-
-  iou_mask = B > 0
-  can_suppress_others = 1 - tf.cast(
-      tf.reduce_any(iou_mask, axis=-2), boxes.dtype)
-
-  # build a mask of the boxes that need to exit
-  raw = tf.cast(can_suppress_others, boxes.dtype)
-
-  boxes *= tf.expand_dims(raw, axis=-1)
-  confidence *= tf.cast(raw, confidence.dtype)
-  classes *= tf.cast(tf.expand_dims(raw, axis=-1), classes.dtype)
-  return boxes, classes, confidence
 
 def nms(boxes,
         classes,
@@ -455,8 +510,10 @@ def nms(boxes,
   confidence, boxes, classes = sort_drop(confidence, boxes, classes,
                                          prenms_top_k)
 
+  # tf.print(classes)
+
   # apply non max supression
-  boxes, classes, confidence = segment_nms(boxes, classes, confidence, nms_thresh)
+  # boxes, classes, confidence = segment_nms(boxes, classes, confidence, nms_thresh)
 
   # sort the classes of the unspressed boxes
   class_confidence, class_ind = tf.math.top_k(
@@ -465,7 +522,7 @@ def nms(boxes,
   # set low confidence classes to zero
   mask = tf.fill(
       tf.shape(class_confidence),
-      tf.cast(pre_nms_thresh, dtype=class_confidence.dtype))
+      tf.cast(0.001, dtype=class_confidence.dtype))
   mask = tf.math.ceil(tf.nn.relu(class_confidence - mask))
   class_confidence = tf.cast(class_confidence, mask.dtype) * mask
   class_ind = tf.cast(class_ind, mask.dtype) * mask
@@ -486,6 +543,10 @@ def nms(boxes,
   confidence = tf.reshape(confidence, [shape[0], -1])
 
   # drop all the low class confidence boxes again
+  confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
+  boxes, classes, confidence = segment_nms(boxes + classes, classes, confidence, nms_thresh)
+  boxes -= classes
+
   confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
 
   # mask the boxes classes and scores then toa final reshape before returning
@@ -498,6 +559,8 @@ def nms(boxes,
   classes = classes * mask
 
   classes = tf.squeeze(classes, axis=-1)
+
+  
   return boxes, classes, confidence
 
 # For batch mode Cluster-Weighted NMS
@@ -522,7 +585,7 @@ def non_max_suppression2(boxes,
       confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
 
       scores = tf.transpose(classes, perm=(0, 2, 1))
-      curr_scores, inds = tf.math.top_k(scores, k=tf.minimum(50, prenms_top_k), sorted=True)
+      curr_scores, inds = tf.math.top_k(scores, k=tf.minimum(500, prenms_top_k), sorted=True)
       
       nmsed_boxes = []
       nmsed_classes = []

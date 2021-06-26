@@ -554,8 +554,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
       loss function.
     scale_num_inst: A `float` to represent the scale at which to multiply the
       number of predicted boxes by to get the number of instances to write
-      to the grid.
-    use_tie_breaker: A `bool` value for wether or not to use the tie breaker.
+      to the grid.tf.print(self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop") the tie breaker.
 
   Return:
     tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
@@ -1261,10 +1260,10 @@ def resize_and_jitter_image(image,
                             scale_aspect=0.0,
                             aug_scale_min=1.0,
                             aug_scale_max=1.0,
-                            random_pad=False,
+                            random_pad=True,
                             shiftx=0.0,
                             shifty=0.0,
-                            seed=1,
+                            cut = None,
                             method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
   Resize and pad images given the desired output size of the image and
@@ -1309,8 +1308,8 @@ def resize_and_jitter_image(image,
     jitter = tf.cast(jitter, tf.float32)
     ow = tf.cast(original_dims[1], tf.float32)
     oh = tf.cast(original_dims[0], tf.float32)
-    w = desired_size[1]
-    h = desired_size[0]
+    w = tf.cast(desired_size[1], tf.float32)
+    h = tf.cast(desired_size[0], tf.float32)
 
     dw = ow * jitter
     dh = oh * jitter
@@ -1362,21 +1361,21 @@ def resize_and_jitter_image(image,
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
                             [0, 0, original_dims[0], original_dims[1]])
 
-    if random_pad:
+    if random_pad or cut is not None:
       dst_shape = [tf.maximum(0, -ptop), 
                    tf.maximum(0, -pleft), 
                    tf.maximum(0, -ptop)  + src_crop[2] - src_crop[0],
                    tf.maximum(0, -pleft) + src_crop[3] - src_crop[1],]
     else:
-      h = (src_crop[2] - src_crop[0])
-      w = (src_crop[3] - src_crop[1])
+      h_ = (src_crop[2] - src_crop[0])
+      w_ = (src_crop[3] - src_crop[1])
 
-      rmw = tf.cast(tf.cast(swidth - w, tf.float32) * shiftx, w.dtype)
-      rmh = tf.cast(tf.cast(sheight - h, tf.float32) * shifty, h.dtype)
+      rmw = tf.cast(tf.cast(swidth - w_, tf.float32) * shiftx, w_.dtype)
+      rmh = tf.cast(tf.cast(sheight - h_, tf.float32) * shifty, h_.dtype)
       dst_shape = [rmh,
                    rmw,  
-                   rmh + h,
-                   rmw + w]
+                   rmh + h_,
+                   rmw + w_]
     
     pad = dst_shape * tf.convert_to_tensor([1, 1, -1, -1]) 
     pad += tf.convert_to_tensor([0, 0, sheight, swidth])
@@ -1407,6 +1406,64 @@ def resize_and_jitter_image(image,
 
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
     infos = [crop_info, pad_info]
+
+    if cut is not None:
+      ow = tf.cast(ow, tf.int32)
+      oh = tf.cast(oh, tf.int32)
+      w = tf.cast(w, tf.int32)
+      h = tf.cast(h, tf.int32)
+      cut_x = tf.cast(cut[1], tf.int32)
+      cut_y = tf.cast(cut[0], tf.int32)
+
+      left_shift = tf.minimum(
+                    tf.minimum(cut_x, 
+                      tf.maximum(0, tf.cast(-pleft * w/ow, tf.int32))), 
+                        w - cut_x)
+      top_shift = tf.minimum(
+                    tf.minimum(cut_y, 
+                      tf.maximum(0, tf.cast(-ptop * h/oh, tf.int32))), 
+                        h - cut_y)
+
+      right_shift = tf.minimum(
+                      tf.minimum(w - cut_x, 
+                        tf.maximum(0, tf.cast(-pright * w/ow, tf.int32))), 
+                          cut_x)
+      bot_shift = tf.minimum(
+                    tf.minimum(h - cut_y, 
+                      tf.maximum(0, tf.cast(-pbottom * h/oh, tf.int32))), 
+                        cut_y)
+      
+      if shiftx == 0.0 and shifty == 0.0: 
+        crop_offset = [top_shift, left_shift, 0]
+        crop_size = [cut_y, cut_x, -1]
+        pad_offset = [0, 0]
+      elif shiftx == 1.0 and shifty == 0.0:
+        crop_offset = [top_shift, cut_x - right_shift, 0]
+        crop_size = [cut_y, w - cut_x, -1]
+        pad_offset = [0, cut_x]
+      elif shiftx == 0.0 and shifty == 1.0:
+        crop_offset = [cut_y - bot_shift, left_shift, 0]
+        crop_size = [h - cut_y, cut_x, -1]
+        pad_offset = [cut_y, 0]
+      elif shiftx == 1.0 and shifty == 1.0:
+        crop_offset = [cut_y - bot_shift, cut_x - right_shift, 0]
+        crop_size = [h - cut_y, w - cut_x, -1]
+        pad_offset = [cut_y, cut_x]
+      else:
+        raise Exception("crop mosaic not supported for floating shifts")
+      tf.print(crop_offset, crop_size, pad_offset)
+      image = tf.slice(image_, crop_offset, crop_size)
+
+      crop_info = tf.stack([
+          tf.cast(tf.shape(image_)[:2], tf.float32),
+          tf.cast(tf.shape(image)[:2], dtype=tf.float32),
+          tf.ones_like(original_dims, dtype = tf.float32),
+          tf.cast(crop_offset[:2], tf.float32)
+      ])
+
+      image_ = image
+      infos.append(crop_info)
+    
     return image_, infos 
 
 def apply_infos(boxes, infos):
