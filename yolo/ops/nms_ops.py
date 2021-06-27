@@ -522,7 +522,6 @@ class TiledNMS():
     valid_detections = tf.reduce_sum(
         input_tensor=tf.cast(tf.greater(nmsed_scores, -1), tf.int32), axis=1)
 
-    tf.print(nmsed_scores)
     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
 
 
