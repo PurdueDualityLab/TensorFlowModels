@@ -579,7 +579,7 @@ def nms(boxes,
         k,
         pre_nms_thresh,
         nms_thresh,
-        entries_per_object = 5, 
+        entries_per_object = 10, 
         prenms_top_k=500):
   """This is a quick nms that works on very well for small values of k, this 
   was developed to operate for tflite models as the tiled NMS is far too slow 
@@ -605,14 +605,16 @@ def nms(boxes,
   """
 
   # sort the boxes
-  confidence = tf.reduce_max(classes, axis=-1)
+  if confidence is None:
+    confidence = tf.reduce_max(classes, axis=-1)
   confidence, boxes, classes = sort_drop(confidence, boxes, classes,
                                          prenms_top_k)
 
   # tf.print(classes)
 
   # apply non max supression
-  # confidence, boxes, classes = segment_nms(boxes , classes, confidence, nms_thresh)
+  # if prenms_top_k < NMS_TILE_SIZE:
+  #   confidence, boxes, classes = segment_nms(boxes , classes, confidence, nms_thresh)
 
 
   # sort the classes of the unspressed boxes

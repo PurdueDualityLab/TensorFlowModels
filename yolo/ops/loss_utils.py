@@ -12,7 +12,7 @@ def _build_grid_points(lwidth, lheight, anchors, dtype):
         tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
     y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
     x_y = K.stack([x_left, y_left], axis=-1)
-    x_y = tf.cast(x_y, dtype=dtype) / tf.cast(lwidth, dtype=dtype)
+    x_y = tf.cast(x_y, dtype=dtype) #/ tf.cast(lwidth, dtype=dtype)
     x_y = tf.expand_dims(
         tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
   return x_y
@@ -58,8 +58,8 @@ class GridGenerator(object):
     anchor_grid = _build_anchor_grid(
         width, height,
         tf.cast(self._anchors, self.dtype) /
-        tf.cast(self._scale_anchors * width, self.dtype),
-        self.dtype)  #self._num, self.dtype)
+        tf.cast(self._scale_anchors, self.dtype),
+        self.dtype)  
     grid_points = self._extend_batch(grid_points, batch_size)
     anchor_grid = self._extend_batch(anchor_grid, batch_size)
     return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
