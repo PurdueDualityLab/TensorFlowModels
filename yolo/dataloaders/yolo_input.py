@@ -337,7 +337,7 @@ class Parser(parser.Parser):
         image,
         [self._image_h, self._image_w],
         [self._image_h, self._image_w],
-        letter_box=True,
+        letter_box=self._letter_box,
         aug_scale_min=1.0,
         aug_scale_max=1.0,
         random_pad=False,

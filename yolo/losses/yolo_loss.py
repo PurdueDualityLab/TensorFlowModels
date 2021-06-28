@@ -9,8 +9,11 @@ import numpy as np
 
 from functools import partial
 
-TILE_SIZE = 50
+# loss testing
+import matplotlib.pyplot as plt
+import numpy as np
 
+TILE_SIZE = 50
 
 @tf.custom_gradient
 def obj_gradient_trap(y, max_delta=np.inf):
@@ -143,7 +146,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                                             anchor_grid, grid_points, max_delta,
                                             scale_xy)
 
-  def delta(dy_xy, dy_wh, dy):
+  def delta(dy_scaler, dy_scaled, dy):
     # here we do not propgate the scaling of the prediction through the network
     # because in back prop is leads to the scaling of the gradient of a box
     # relative to the size of the box and the gradient for small boxes this will
@@ -152,18 +155,21 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
 
     # add all the gradients that may have been applied to the
     # boxes and those that have been applied to the width and height
-    dy_xy_, dy_wh_ = tf.split(dy, 2, axis=-1)
+    dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
+    dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
+
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
+ 
     # propagate the exponential applied to the width and height in
     # order to ensure the gradient propagated is of the correct
     # magnitude
     dy_wh *= tf.math.exp(pred_wh)
 
     # apply the configs weight to the propagated gradient
-    dy_xy *= tf.cast(normalizer, dy_xy.dtype)
-    dy_wh *= tf.cast(normalizer, dy_wh.dtype)
+    # dy_xy *= tf.cast(normalizer, dy_xy.dtype)
+    # dy_wh *= tf.cast(normalizer, dy_wh.dtype)
 
     # apply the gradient clipping to xy and wh
     dy_wh = math_ops.rm_nan_inf(dy_wh)
@@ -249,16 +255,18 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                                                       grid_points, max_delta,
                                                       scale_xy)
 
-  def delta(dy_xy, dy_wh, dy):
+  def delta(dy_scaler, dy_scaled, dy):
     # add all the gradients that may have been applied to the
     # boxes and those that have been applied to the width and height
-    dy_xy_, dy_wh_ = tf.split(dy, 2, axis=-1)
+    dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
+    dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
+    
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
     # apply the configs weight to the propagated gradient
-    dy_xy *= tf.cast(normalizer, dy_xy.dtype)
-    dy_wh *= tf.cast(normalizer, dy_wh.dtype)
+    # dy_xy *= tf.cast(normalizer, dy_xy.dtype)
+    # dy_wh *= tf.cast(normalizer, dy_wh.dtype)
 
     # apply the gradient clipping to xy and wh
     dy_wh = math_ops.rm_nan_inf(dy_wh)
@@ -543,7 +551,8 @@ class Yolo_Loss(object):
             classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1)
 
   def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes,
-                               classes, true_conf, fwidth, fheight, smoothed):
+                               classes, true_conf, fwidth, fheight, smoothed = False, 
+                               scaler = None):
 
     # compute the number of boxes and the total number of tiles for the search
     num_boxes = tf.shape(boxes)[-2]
@@ -551,6 +560,9 @@ class Yolo_Loss(object):
 
     # convert the grount truth boxes to the model output format
     boxes = box_ops.yxyx_to_xcycwh(boxes)
+    if scaler is not None:
+      boxes *= scaler
+
 
     # store once the predicted classes with a high confidence, greater
     # than 25%
@@ -611,10 +623,10 @@ class Yolo_Loss(object):
     # not used
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
-    obns_loss = tf.stop_gradient(obns_loss)
-    truth_loss = tf.stop_gradient(truth_loss)
+    # obns_loss = tf.stop_gradient(obns_loss)
+    # truth_loss = tf.stop_gradient(truth_loss)
     count = tf.stop_gradient(count)
-    return ignore_mask, obns_loss, truth_loss, count, true_conf, obj_mask
+    return ignore_mask, iou_mask, iou_max, count, true_conf, obj_mask
 
   def build_grid(self, indexes, truths, preds, ind_mask, update=False):
     # this function is used to broadcast all the indexes to the correct
@@ -695,7 +707,7 @@ class Yolo_Loss(object):
     #    we are using the scaled loss, do not change the gradients at all
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box *= scale
+    true_box = tf.stop_gradient(true_box * scale)
 
     # 6. find out the number of points placed in the grid mask
     num_objs = tf.cast(
@@ -837,11 +849,12 @@ class Yolo_Loss(object):
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
 
     # 6. decode the boxes to be used for optimization/loss compute
-    # _, _, pred_box = self._decode_boxes(
+    # scale, _, pred_box = self._decode_boxes(
     #     fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
+    # scale = None
     scale, pred_box, _ = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box *= scale
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
+    true_box = tf.stop_gradient(true_box * scale)
 
     # 7. compare all the predictions to all the valid or non zero boxes
     #    in the ground truth, based on any/all we will will also compare
@@ -858,6 +871,7 @@ class Yolo_Loss(object):
         true_conf,
         fwidth,
         fheight,
+        scaler = scale, 
         smoothed=self._objectness_smooth > 0)
 
     # 8. compute the one hot class maps that are used for prediction
@@ -943,7 +957,7 @@ class Yolo_Loss(object):
     #     class weights are applied selectively directly after computing
     #     the loss only to locations where a onehot is set to one
 
-    # box_loss *= self._iou_normalizer
+    box_loss *= self._iou_normalizer
     # class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
