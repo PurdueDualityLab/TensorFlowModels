@@ -84,75 +84,7 @@ def box_area(box):
   return tf.reduce_prod(box[..., 2:4] - box[..., 0:2], axis=-1)
 
 
-def clip_boxes(clipped_boxes, 
-               image_shape = None, 
-               box_history = None, 
-               wh_thr=2, 
-               ar_thr=20, 
-               area_thr=0.25):
-  if box_history is None:
-    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
-      height, width = image_shape
-      max_length = [height, width, height, width]
-    else:
-      image_shape = tf.cast(image_shape, dtype=clipped_boxes.dtype)
-      height, width = tf.unstack(image_shape, axis=-1)
-      max_length = tf.stack([height, width, height, width], axis=-1)
 
-    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
-    return clipped_boxes
-
-
-  og_height = box_history[:, 2] - box_history[:, 0]
-  og_width = box_history[:, 3] - box_history[:, 1]
-  
-  clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
-  clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
-
-  ar = tf.maximum(clipped_width/(clipped_height + 1e-16), 
-                  clipped_height/(clipped_width + 1e-16))
-  ar2 = tf.maximum(og_width/(og_height + 1e-16), 
-                   og_height/(og_width + 1e-16))
-
-
-  conda = clipped_width > wh_thr
-  condb = clipped_height > wh_thr
-
-  # conda = tf.logical_and(clipped_width > wh_thr, og_width > wh_thr)
-  # condb = tf.logical_and(clipped_height > wh_thr, og_height > wh_thr)
-
-  condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
-  condd = ar < ar_thr
-  conde = ar2 < ar_thr 
-
-  cond = tf.expand_dims(tf.logical_and(
-    tf.logical_and(conda, condb), 
-    tf.logical_and(condc, tf.logical_and(condd, conde))
-  ), axis = -1)
-
-  boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
-  return boxes
-
-
-def resize_and_crop_boxes(boxes,
-                          image_scale,
-                          output_size,
-                          offset,
-                          box_history = None, 
-                          keep_thresh=0.0):
-
-  boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
-  boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
-  
-
-  if box_history is None:
-    box_history = boxes
-  else:
-    box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
-    box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
-  
-  boxes = clip_boxes(boxes, output_size)
-  return boxes, box_history
 
 def get_image_shape(image):
   """
@@ -1320,7 +1252,7 @@ def resize_and_jitter_image(image,
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
                             [0, 0, original_dims[0], original_dims[1]])
 
-    if random_pad or (cut is not None and (resize < 1.5 and resize > 1.0)):
+    if random_pad or (cut is not None and (resize < 1.5 and resize >= 1.0)):
       dst_shape = [tf.maximum(0, -ptop), 
                    tf.maximum(0, -pleft), 
                    tf.maximum(0, -ptop)  + src_crop[2] - src_crop[0],
@@ -1392,7 +1324,7 @@ def resize_and_jitter_image(image,
       cut_x = tf.cast(cut[1], tf.int32)
       cut_y = tf.cast(cut[0], tf.int32)
 
-      tf.print(ptop, pbottom, pright, pleft)
+      # tf.print(ptop, pbottom, pright, pleft)
       
 
       left_shift = tf.minimum(
@@ -1441,14 +1373,111 @@ def resize_and_jitter_image(image,
     
     return image_, infos 
 
+def clip_boxes(clipped_boxes, 
+               image_shape = None, 
+               box_history = None, 
+               wh_thr=2, 
+               ar_thr=20, 
+               area_thr=0.25):
+  if box_history is None:
+    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
+      height, width = image_shape
+      max_length = [height, width, height, width]
+    else:
+      image_shape = tf.cast(image_shape, dtype=clipped_boxes.dtype)
+      height, width = tf.unstack(image_shape, axis=-1)
+      max_length = tf.stack([height, width, height, width], axis=-1)
+
+    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
+    return clipped_boxes
+
+  if area_thr == 0.0:
+    centers = box_ops.yxyx_to_xcycwh(box_history)[..., :2]
+
+    mask = tf.reduce_all(tf.logical_and(centers >= 0, 
+            centers < tf.cast([image_shape[1], image_shape[0]], centers.dtype)), axis = -1,
+              keepdims=True)
+    
+    clipped_boxes *= tf.cast(mask, clipped_boxes.dtype)
+
+  og_height = box_history[:, 2] - box_history[:, 0]
+  og_width = box_history[:, 3] - box_history[:, 1]
+  
+  clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
+  clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
+
+  ar = tf.maximum(clipped_width/(clipped_height + 1e-16), 
+                  clipped_height/(clipped_width + 1e-16))
+  ar2 = tf.maximum(og_width/(og_height + 1e-16), 
+                   og_height/(og_width + 1e-16))
+
+
+  conda = clipped_width > wh_thr
+  condb = clipped_height > wh_thr
+
+  # conda = tf.logical_and(clipped_width > wh_thr, og_width > wh_thr)
+  # condb = tf.logical_and(clipped_height > wh_thr, og_height > wh_thr)
+
+  condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
+  condd = ar < ar_thr
+  conde = ar2 < ar_thr 
+
+  cond = tf.expand_dims(tf.logical_and(
+    tf.logical_and(conda, condb), 
+    tf.logical_and(condc, tf.logical_and(condd, conde))
+  ), axis = -1)
+
+  boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
+  return boxes
+
+
+def resize_and_crop_boxes(boxes,
+                          image_scale,
+                          output_size,
+                          offset,
+                          box_history = None, 
+                          keep_thresh=0.0):
+
+  boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
+  boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+  
+
+  if box_history is None:
+    box_history = boxes
+  else:
+    box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
+    box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
+  
+  boxes = clip_boxes(boxes, output_size)
+  return boxes, box_history
+
+
 def apply_infos(boxes, infos, area_thresh = 0.25):
   # clip and clean boxes
   def get_valid_boxes(boxes):
     """Get indices for non-empty boxes."""
     # Selects indices if box height or width is 0.
-    height = boxes[:, 2] - boxes[:, 0]
-    width = boxes[:, 3] - boxes[:, 1]
-    return tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+
+    (x, y, width, height) = (boxes[..., 0], 
+                             boxes[..., 1], 
+                             boxes[..., 2], 
+                             boxes[..., 3])
+    
+    if area_thresh == 0.0:
+      # height = boxes[:, 2] - boxes[:, 0]
+      # width = boxes[:, 3] - boxes[:, 1]
+      return tf.logical_and(
+              tf.logical_and(
+                tf.logical_and(tf.greater(height, 0), 
+                            tf.greater(width, 0)),
+                tf.logical_and(x >= 0, 
+                              y >= 0)), 
+                tf.logical_and(x < 1, 
+                              y < 1))
+    else:
+      return tf.logical_and(tf.greater(height, 0), 
+                            tf.greater(width, 0))
 
   box_history = None
   cond = get_valid_boxes(boxes)
@@ -1467,10 +1496,14 @@ def apply_infos(boxes, infos, area_thresh = 0.25):
   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
 
+  # tf.print(cond, summarize = -1)
   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
-  boxes = clip_boxes(boxes, box_history = box_history, area_thr=area_thresh)
+  boxes = clip_boxes(boxes, image_shape = info[1, :], 
+                            box_history = box_history, 
+                            area_thr=area_thresh)
   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
 
   inds = bbox_ops.get_non_empty_box_indices(boxes)
   boxes = tf.gather(boxes, inds)
   return boxes, inds 
+
