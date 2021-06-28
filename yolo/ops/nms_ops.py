@@ -155,15 +155,15 @@ class TiledNMS():
     batch_size = tf.shape(boxes)[0]
     new_slice = tf.slice(boxes, [0, inner_idx * NMS_TILE_SIZE, 0],
                          [batch_size, NMS_TILE_SIZE, 4])
-    # iou = box_ops.aggregated_comparitive_iou(
-    #     new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
-    # mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
+    iou = box_ops.aggregated_comparitive_iou(
+        new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
+    mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
 
-    iou, _, mask = segment_iou(box_slice, 
-                               new_slice, 
-                               iou_thresh = iou_threshold, 
-                               iou_type = self._iou_type)
-    mask = tf.cast(mask, box_slice.dtype)
+#     iou, _, mask = segment_iou(box_slice, 
+#                                new_slice, 
+#                                iou_thresh = iou_threshold, 
+#                                iou_type = self._iou_type)
+#     mask = tf.cast(mask, box_slice.dtype)
     ret_slice = tf.expand_dims(mask, 2) * box_slice
     score_slice = mask * score_slice
     # tf.print(tf.shape(mask * score_slice), tf.shape(score_slice))
@@ -345,12 +345,12 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
-    iou, eye, _ = segment_iou(boxes,
-                              iou_thresh = iou_threshold, 
-                              iou_type = self._iou_type)
-    weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-    boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-                                tf.reduce_sum(weights, axis = -1, keepdims = True))
+#     iou, eye, _ = segment_iou(boxes,
+#                               iou_thresh = iou_threshold, 
+#                               iou_type = self._iou_type)
+#     weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
+#     boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+#                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
     return scores, boxes
 
   def _sorted_nms_class_indep(self, scores, boxes, classes, max_output_size, iou_threshold):
