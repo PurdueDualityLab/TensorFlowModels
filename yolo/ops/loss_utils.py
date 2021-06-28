@@ -60,8 +60,6 @@ class GridGenerator(object):
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype),
         self.dtype)  
-    tf.print(tf.cast(self._anchors, self.dtype) /
-        tf.cast(self._scale_anchors, self.dtype), self._scale_anchors)
     grid_points = self._extend_batch(grid_points, batch_size)
     anchor_grid = self._extend_batch(anchor_grid, batch_size)
     return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
