@@ -844,8 +844,9 @@ class Yolo_Loss(object):
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
 
-    grid_points /= tf.cast([width, height], grid_points.dtype)
-    anchor_grid /= tf.cast([width, height], anchor_grid.dtype)
+    # temp_code!!!!!!!!!
+#     grid_points /= tf.cast([width, height], grid_points.dtype)
+#     anchor_grid /= tf.cast([width, height], anchor_grid.dtype)
 
     # 3. split all the ground truths to use as seperate items in loss computation
     (true_box, ind_mask, true_class, _, _) = tf.split(
