@@ -854,7 +854,7 @@ class Yolo_Loss(object):
     # scale = None
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box = tf.stop_gradient(true_box * scale)
+    true_box = true_box * scale
 
     # 7. compare all the predictions to all the valid or non zero boxes
     #    in the ground truth, based on any/all we will will also compare
