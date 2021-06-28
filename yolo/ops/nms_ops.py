@@ -11,7 +11,6 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
   for classes, and only works to quickly filter boxes on phones. 
-
   Args: 
     boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
     classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
@@ -77,7 +76,6 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0):
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
   for classes, and only works to quickly filter boxes on phones. 
-
   Args: 
     boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
     classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
@@ -128,7 +126,6 @@ class TiledNMS():
   def __init__(self, iou_type='diou', beta=1.0):
     '''Initialization for all non max supression operations mainly used to 
     select hyperperamters for the iou type and scaling.
-
     Args: 
       iou_type: `str` for the version of IOU to use {diou, giou, ciou, iou}.
       beta: `float` for the amount to scale regualrization on distance iou.
@@ -155,15 +152,15 @@ class TiledNMS():
     batch_size = tf.shape(boxes)[0]
     new_slice = tf.slice(boxes, [0, inner_idx * NMS_TILE_SIZE, 0],
                          [batch_size, NMS_TILE_SIZE, 4])
-    iou = box_ops.aggregated_comparitive_iou(
-        new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
-    mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
+    # iou = box_ops.aggregated_comparitive_iou(
+    #     new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
+    # mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
 
-#     iou, _, mask = segment_iou(box_slice, 
-#                                new_slice, 
-#                                iou_thresh = iou_threshold, 
-#                                iou_type = self._iou_type)
-#     mask = tf.cast(mask, box_slice.dtype)
+    iou, _, mask = segment_iou(box_slice, 
+                               new_slice, 
+                               iou_thresh = iou_threshold, 
+                               iou_type = self._iou_type)
+    mask = tf.cast(mask, box_slice.dtype)
     ret_slice = tf.expand_dims(mask, 2) * box_slice
     score_slice = mask * score_slice
     # tf.print(tf.shape(mask * score_slice), tf.shape(score_slice))
@@ -171,7 +168,6 @@ class TiledNMS():
 
   def _suppression_loop_body(self, boxes, iou_threshold, scores, output_size, idx):
     """Process boxes in the range [idx*NMS_TILE_SIZE, (idx+1)*NMS_TILE_SIZE).
-
     Args:
       boxes: a tensor with a shape of [batch_size, anchors, 4].
       iou_threshold: a float representing the threshold for whether boxes
@@ -179,7 +175,6 @@ class TiledNMS():
       output_size: an int32 tensor of size [batch_size]. Representing the number
         of selected boxes for each batch.
       idx: an integer scalar representing induction variable.
-
     Returns:
       boxes: updated boxes.
       iou_threshold: pass down iou_threshold to the next iteration.
@@ -252,15 +247,12 @@ class TiledNMS():
   def _sorted_non_max_suppression_padded(self, scores, boxes, max_output_size,
                                          iou_threshold):
     """A wrapper that handles non-maximum suppression.
-
     Assumption:
       * The boxes are sorted by scores unless the box is a dot (all coordinates
         are zero).
       * Boxes with higher scores can be used to suppress boxes with lower 
         scores.
-
     The overal design of the algorithm is to handle boxes tile-by-tile:
-
     boxes = boxes.pad_to_multiply_of(tile_size)
     num_tiles = len(boxes) // tile_size
     output_boxes = []
@@ -288,7 +280,6 @@ class TiledNMS():
       output_boxes.append(_get_suppressing_boxes(iou))
       if len(output_boxes) >= max_output_size:
         break
-
     Args:
       scores: a tensor with a shape of [batch_size, anchors].
       boxes: a tensor with a shape of [batch_size, anchors, 4].
@@ -296,7 +287,6 @@ class TiledNMS():
         of boxes to be selected by non max suppression.
       iou_threshold: a float representing the threshold for whether boxes
         overlap too much with respect to IOU.
-
     Returns:
       nms_scores: a tensor with a shape of [batch_size, anchors]. It has same
         dtype as input scores.
@@ -345,12 +335,12 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
-#     iou, eye, _ = segment_iou(boxes,
-#                               iou_thresh = iou_threshold, 
-#                               iou_type = self._iou_type)
-#     weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-#     boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-#                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
+    iou, eye, _ = segment_iou(boxes,
+                              iou_thresh = iou_threshold, 
+                              iou_type = self._iou_type)
+    weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
+    boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+                                tf.reduce_sum(weights, axis = -1, keepdims = True))
     return scores, boxes
 
   def _sorted_nms_class_indep(self, scores, boxes, classes, max_output_size, iou_threshold):
@@ -439,12 +429,10 @@ class TiledNMS():
                    nms_iou_threshold=0.5,
                    max_num_detections=100):
     """Generate the final detections given the model outputs.
-
     This implementation unrolls classes dimension while using the tf.while_loop
     to implement the batched NMS, so that it can be parallelized at the batch
     dimension. It should give better performance comparing to v1 implementation.
     It is TPU compatible.
-
     Args:
       boxes: a tensor with shape [batch_size, N, num_classes, 4] or [batch_size,
         N, 1, 4], which box predictions on all feature levels. The N is the 
@@ -461,7 +449,6 @@ class TiledNMS():
         boxes overlap too much with respect to IOU.
       max_num_detections: a scalar representing maximum number of boxes retained
         over all classes.
-
     Returns:
       nms_boxes: `float` Tensor of shape [batch_size, max_num_detections, 4]
         representing top detected boxes in [y1, x1, y2, x2].
@@ -539,7 +526,6 @@ def sorted_non_max_suppression_padded(scores, boxes, max_output_size,
 def sort_drop(objectness, box, classificationsi, k):
   """This function sorts and drops boxes such that there are only k boxes 
   sorted by number the objectness or confidence 
-
   Args: 
     objectness: a `Tensor` of shape [batch size, N] that needs to be 
       filtered.
@@ -585,7 +571,6 @@ def nms(boxes,
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
   for classes, and only works to quickly filter boxes on phones. 
-
   Args: 
     boxes: a `Tensor` of shape [batch size, N, 4] that needs to be filtered.
     classes: a `Tensor` of shape [batch size, N, num_classes] that needs to be 
@@ -597,7 +582,6 @@ def nms(boxes,
       too similar, the closer to 1.0 the less that gets though. 
     pre_nms_top_k: an int number of top candidate detections per class
       before NMS.
-
   Return:
     boxes: filtered `Tensor` of shape [batch size, k, 4]
     classes: filtered `Tensor` of shape [batch size, k, num_classes]
@@ -800,5 +784,3 @@ def non_max_suppression2(boxes,
 #     boxes_ = tf.gather_nd(boxes, tf.where(conda))
 #     scores_ = tf.gather_nd(scores, tf.where(conda))
 #     return boxes_, scores_, inds_
-    
-
