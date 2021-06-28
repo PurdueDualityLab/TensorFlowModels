@@ -131,6 +131,7 @@ class Mosaic(hyperparams.Config):
   aug_scale_min: Optional[float] = None
   aug_scale_max: Optional[float] = None
   jitter: Optional[float] = None
+  resize: Optional[float] = None
   output_resolution: Optional[List[int]] = None #dataclasses.field(default_factory=lambda: [640, 640])
 
 

@@ -61,34 +61,24 @@ task:
     dtype: bfloat16
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
     parser:
       max_num_instances: 200
       letter_box: False
       random_flip: True
-      random_pad: True
-      jitter: 0.0
-      aug_scale_aspect: 0.3
-      aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 2.0
+      jitter: 0.3
+      resize: 1.0
+      area_thresh: 0.2
+      random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        output_resolution: [640, 640]
-        mosaic_frequency: 0.85
-        mosaic_crop_mode: 'pre_crop'
-        aspect_ratio_mode: 'crop'
-        crop_area: [0.25, 1.0]
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
-        jitter: 0.5
+        mosaic_frequency: 0.0 
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -114,14 +104,12 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
         boundaries: [200000, 225000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00261, 0.000261, 0.0000261] #best
     optimizer:
       type: sgd
       sgd:

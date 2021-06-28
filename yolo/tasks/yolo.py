@@ -141,6 +141,10 @@ class YoloTask(base_task.Task):
     if max_scale is None:
       max_scale = params.parser.aug_scale_max
 
+    rsize = params.parser.mosaic.resize
+    if rsize is None:
+      rsize = params.parser.resize
+
     rcrop = params.parser.mosaic.jitter
     if rcrop is None:
       rcrop = params.parser.jitter
@@ -158,7 +162,7 @@ class YoloTask(base_task.Task):
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
         random_crop=rcrop,
-        resize=params.parser.resize,
+        resize=rsize,
         area_thresh=params.parser.area_thresh, 
         aug_scale_min=min_scale,
         aug_scale_max=max_scale)

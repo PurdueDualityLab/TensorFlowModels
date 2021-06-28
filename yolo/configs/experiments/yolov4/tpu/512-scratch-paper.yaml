@@ -102,7 +102,7 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.75
+        mosaic_frequency: 0.66667
         crop_area: [0.25, 1.0]
         random_crop_mosaic: true
         aspect_ratio_mode: 'distort'

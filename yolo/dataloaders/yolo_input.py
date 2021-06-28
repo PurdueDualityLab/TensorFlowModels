@@ -238,14 +238,33 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     if not data['is_mosaic']:
-      image, infos = preprocessing_ops.resize_and_jitter_image(
-          image, [self._image_h, self._image_w], [self._image_h, self._image_w],
+      if self._jitter != 0:
+        image, infos = preprocessing_ops.resize_and_jitter_image(
+            image, 
+            [self._image_h, self._image_w], 
+            letter_box=self._letter_box,
+            jitter=self._jitter,
+            resize=self._resize,
+            random_pad=self._random_pad)
+      else:
+        stale_a = tf.stack([
+          tf.cast(tf.shape(image)[:2], tf.float32),
+          tf.cast(tf.shape(image)[:2], tf.float32),
+          tf.ones_like(tf.cast(shape[:2], tf.float32)),
+          tf.zeros_like(tf.cast(shape[:2], tf.float32)),
+        ])
+        infos = [stale_a] * 2
+      # works well
+      image, infos_ = preprocessing_ops.resize_and_crop_image(
+          image,
+          [self._image_h, self._image_w],
+          [self._image_h, self._image_w],
           letter_box=self._letter_box,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
-          jitter=self._jitter,
-          resize=self._resize,
           random_pad=self._random_pad)
+      
+      infos.extend(infos_)
     else:
       # works well
       image, infos = preprocessing_ops.resize_and_crop_image(

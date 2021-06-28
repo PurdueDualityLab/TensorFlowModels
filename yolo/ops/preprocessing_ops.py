@@ -1123,12 +1123,8 @@ def intersection(a, b):
 
 def resize_and_jitter_image(image,
                             desired_size,
-                            padded_size,
                             jitter=0.0,
                             letter_box=None,
-                            scale_aspect=0.0,
-                            aug_scale_min=1.0,
-                            aug_scale_max=1.0,
                             resize = 1.0, 
                             random_pad=True,
                             shiftx=0.0,
@@ -1171,25 +1167,6 @@ def resize_and_jitter_image(image,
 
     if jitter > 1 or jitter < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
-
-    image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
-    random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)
-    if random_jittering:
-      random_scale = tf.random.uniform([],
-                                       aug_scale_min,
-                                       aug_scale_max)
-      scaled_size = tf.round(random_scale * desired_size)
-    else:
-      random_scale = 1.0
-      scaled_size = desired_size
-
-    scale = tf.minimum(scaled_size[0] / image_size[0],
-                       scaled_size[1] / image_size[1])
-    scaled_size = tf.round(image_size * scale)
-    original_dims = tf.shape(image)[:2]
-    image = tf.image.resize(
-        image, tf.cast(scaled_size, tf.int32), method=method)
-    image, a_info = random_window_crop(image, original_dims[0], original_dims[1], round = False)
 
     original_dims = tf.shape(image)[:2]
     jitter = tf.cast(jitter, tf.float32)
@@ -1284,27 +1261,27 @@ def resize_and_jitter_image(image,
           tf.cast(src_crop[:2], tf.float32)
       ])
 
-    # if cut is not None:
-    #   image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
-    #                                   [pad[1], pad[3]], 
-    #                                   [0, 0]])
+    #if not random_pad or cut is not None:
+    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
+                                    [pad[1], pad[3]], 
+                                    [0, 0]])
     # else:
-    r, g, b = tf.split(cropped_image, 3, axis = -1)
+    #   r, g, b = tf.split(cropped_image, 3, axis = -1)
 
-    r = tf.pad(r, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(r))
-    g = tf.pad(g, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(g))
-    b = tf.pad(b, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(b))
+    #   r = tf.pad(r, [[pad[0], pad[2]], 
+    #                 [pad[1], pad[3]], 
+    #                 [0, 0]], 
+    #                 constant_values=tf.reduce_mean(r))
+    #   g = tf.pad(g, [[pad[0], pad[2]], 
+    #                 [pad[1], pad[3]], 
+    #                 [0, 0]], 
+    #                 constant_values=tf.reduce_mean(g))
+    #   b = tf.pad(b, [[pad[0], pad[2]], 
+    #                 [pad[1], pad[3]], 
+    #                 [0, 0]], 
+    #                 constant_values=tf.reduce_mean(b))
 
-    image_ = tf.concat([r, g, b], axis = -1)
+    #   image_ = tf.concat([r, g, b], axis = -1)
 
     pad_info = tf.stack([
           tf.cast(tf.shape(cropped_image)[:2], tf.float32),
@@ -1314,7 +1291,7 @@ def resize_and_jitter_image(image,
       ])
 
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
-    infos = [a_info, crop_info, pad_info]
+    infos = [crop_info, pad_info]
 
     if cut is not None:
       ow = tf.cast(ow, tf.int32)

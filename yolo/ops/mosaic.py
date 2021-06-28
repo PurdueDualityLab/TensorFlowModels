@@ -19,7 +19,7 @@ class Mosaic(object):
                max_resolution=640,
                mosaic_frequency=1.0,
                random_crop=0.0,
-               resize=0.0,
+               resize=1.0,
                aspect_ratio_mode='distort',
                aug_scale_min=1.0,
                aug_scale_max=1.0,
@@ -212,18 +212,29 @@ class Mosaic(object):
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    image, infos = preprocessing_ops.resize_and_jitter_image(
-        image, [self._output_size[0], self._output_size[1]],
-        [self._output_size[0], self._output_size[1]],
-        letter_box=letter_box,
-        aug_scale_min=self._aug_scale_min,
-        aug_scale_max=self._aug_scale_max,
-        jitter=random_crop,
-        random_pad=False,
-        resize = self._resize,
-        shiftx=xs,
-        shifty=ys,
-        cut = cut)
+
+    if self._random_crop != 0:
+      image, infos = preprocessing_ops.resize_and_jitter_image(
+          image,
+          [self._output_size[0], self._output_size[1]],
+          letter_box=letter_box,
+          jitter=random_crop,
+          random_pad=False,
+          resize = self._resize,
+          shiftx=xs,
+          shifty=ys,
+          cut = cut)
+    else:
+      image, infos = preprocessing_ops.resize_and_crop_image(
+          image,
+          [self._output_size[0], self._output_size[1]],
+          [self._output_size[0], self._output_size[1]],
+          letter_box=self._letter_box,
+          aug_scale_min=self._aug_scale_min,
+          aug_scale_max=self._aug_scale_max,
+          shiftx=xs,
+          shifty=ys,
+          random_pad=False)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
@@ -239,21 +250,20 @@ class Mosaic(object):
           image, [self._output_size[0] * 2, self._output_size[1] * 2],
           [self._output_size[0] * 2, self._output_size[1] * 2],
           letter_box=None,
-          aug_scale_min=self._mosaic_crop_area[0],
-          aug_scale_max=self._mosaic_crop_area[1], 
+          aug_scale_min=self._crop_area_mosaic[0],
+          aug_scale_max=self._crop_area_mosaic[1], 
           random_pad=True,
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
     elif self._mosaic_crop_mode == 'crop_scale':
       image, infos = self._mosaic_crop(image, self._crop_area)
-      image, infos_ = preprocessing_ops.resize_and_jitter_image(
+      image, infos_ = preprocessing_ops.resize_and_crop_image(
           image, [self._output_size[0] * 2, self._output_size[1] * 2],
           [self._output_size[0] * 2, self._output_size[1] * 2],
           letter_box=None,
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1],
-          jitter=0.0,
           random_pad=True,
           seed=self._seed)
       infos.extend(infos_)

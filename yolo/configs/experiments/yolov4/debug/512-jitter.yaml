@@ -67,23 +67,22 @@ task:
       max_num_instances: 200
       letter_box: False
       random_flip: True
-      jitter: 0.3
-      resize: 1.5
-      area_thresh: 0.1
-      random_pad: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
+      jitter: 0.3
+      resize: 1.0
+      area_thresh: 0.2
+      random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: [512, 512]
-        max_resolution: 640
-        mosaic_frequency: 0.75
+        max_resolution: 720
+        mosaic_frequency: 0.66667
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
-        crop_area: [0.32, 0.75]
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -109,14 +108,12 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
         boundaries: [200000, 225000]
         name: PiecewiseConstantDecay
-        values: [0.001, 0.0001, 0.00001] #best
+        values: [0.00261, 0.000261, 0.0000261] #best
     optimizer:
       type: sgd
       sgd:
