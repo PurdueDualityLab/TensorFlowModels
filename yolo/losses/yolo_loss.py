@@ -260,7 +260,7 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     # boxes and those that have been applied to the width and height
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
     dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
-    
+
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
@@ -853,7 +853,7 @@ class Yolo_Loss(object):
     #     fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
     # scale = None
     scale, pred_box, _ = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
     true_box = tf.stop_gradient(true_box * scale)
 
     # 7. compare all the predictions to all the valid or non zero boxes
