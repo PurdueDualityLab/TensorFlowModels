@@ -849,12 +849,12 @@ class Yolo_Loss(object):
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
 
     # 6. decode the boxes to be used for optimization/loss compute
-    # scale, _, pred_box = self._decode_boxes(
-    #     fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
-    # scale = None
-    scale, pred_box, _ = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box = true_box * scale
+    scale, _, pred_box = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
+    scale = None
+    # scale, pred_box, _ = self._decode_boxes(
+    #     fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+    # true_box = true_box * scale
 
     # 7. compare all the predictions to all the valid or non zero boxes
     #    in the ground truth, based on any/all we will will also compare
