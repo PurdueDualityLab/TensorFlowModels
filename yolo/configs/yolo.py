@@ -143,6 +143,7 @@ class Parser(hyperparams.Config):
   random_pad: bool = True
   jitter: float = 0.0
   resize: float = 1.0
+  sheer: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.0 #0.7

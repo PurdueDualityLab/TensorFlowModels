@@ -991,6 +991,7 @@ def resize_and_crop_image(image,
                           random_pad=False,
                           shiftx=0.5,
                           shifty=0.5,
+                          sheer=0.0,
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -1044,6 +1045,16 @@ def resize_and_crop_image(image,
 
       image = image = tf.image.resize(
         image, (height_, width_), preserve_aspect_ratio=False)
+
+    if sheer > 0.0: 
+      h_, w_ = get_image_shape(image)
+
+      hr = tf.cast(sheer * tf.cast(h_, tf.float32), tf.int32)
+      wr = tf.cast(sheer * tf.cast(w_, tf.float32), tf.int32)
+
+      h_ += rand_uniform_strong(-hr, hr + 1, tf.int32)
+      w_ += rand_uniform_strong(-wr, wr + 1, tf.int32)
+      image = tf.image.resize(image, (h_, w_))
 
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
     random_jittering = (aug_scale_min != 1.0 or aug_scale_max != 1.0)

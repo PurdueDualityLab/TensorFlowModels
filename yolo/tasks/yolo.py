@@ -178,6 +178,7 @@ class YoloTask(base_task.Task):
         random_flip=params.parser.random_flip,
         jitter=params.parser.jitter,
         resize=params.parser.resize,
+        sheer=params.parser.sheer,
         aug_rand_transalate=params.parser.aug_rand_translate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,

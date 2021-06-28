@@ -41,6 +41,7 @@ class Parser(parser.Parser):
                max_level=5,
                jitter=0.0,
                resize=1.0,
+               sheer=0.0, 
                area_thresh = 0.1, 
                max_num_instances=200,
                aug_rand_transalate=0.0,
@@ -157,6 +158,7 @@ class Parser(parser.Parser):
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._use_scale_xy = use_scale_xy
+    self._sheer = sheer
     keys = list(self._masks.keys())
     self._scale_up = {
         key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
@@ -232,7 +234,7 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
-
+      
     if self._random_flip:
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
@@ -260,6 +262,7 @@ class Parser(parser.Parser):
           [self._image_h, self._image_w],
           [self._image_h, self._image_w],
           letter_box=self._letter_box,
+          sheer = self._sheer, 
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
           random_pad=self._random_pad)
@@ -274,6 +277,7 @@ class Parser(parser.Parser):
           letter_box=True,
           aug_scale_min=1.0,
           aug_scale_max=1.0,
+          sheer = 0.0, 
           random_pad=False)
       stale_a = tf.stack([
           tf.cast(tf.shape(image)[:2], tf.float32),
