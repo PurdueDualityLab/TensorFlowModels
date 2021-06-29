@@ -24,6 +24,7 @@ class Mosaic(object):
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                random_flip=True,
+               random_pad = False, 
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
@@ -42,6 +43,7 @@ class Mosaic(object):
     self._aug_scale_min = aug_scale_min
     self._random_flip = random_flip
     self._aug_probability = aug_probability
+    self._random_pad = random_pad
 
     self._crop_area = crop_area
     self._area_thresh = area_thresh
@@ -252,7 +254,7 @@ class Mosaic(object):
           letter_box=None,
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1], 
-          random_pad=True,
+          random_pad=self._random_pad,
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
@@ -264,7 +266,7 @@ class Mosaic(object):
           letter_box=None,
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1],
-          random_pad=True,
+          random_pad=self._random_pad,
           seed=self._seed)
       infos.extend(infos_)
       height, width = self._output_size[0], self._output_size[1]
@@ -397,6 +399,7 @@ class Mosaic(object):
               image, boxes, classes, is_crowd, area)
 
         height, width = preprocessing_ops.get_image_shape(image)
+        boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
 
         sample['image'] = tf.expand_dims(image, axis=0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)

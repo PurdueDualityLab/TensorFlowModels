@@ -140,7 +140,7 @@ class Parser(hyperparams.Config):
   max_num_instances: int = 200
   letter_box: Optional[bool] = False
   random_flip: bool = True
-  random_pad: bool = True
+  random_pad: float = True
   jitter: float = 0.0
   resize: float = 1.0
   sheer: float = 0.0

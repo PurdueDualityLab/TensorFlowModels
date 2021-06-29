@@ -27,7 +27,7 @@ from official.core import task_factory
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  config_path = ["yolo/configs/experiments/yolov4/debug/512-baseline.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter.yaml"]
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
@@ -112,7 +112,7 @@ def test_yolo_pipeline(is_training=True):
   ltime = time.time()
 
   data = dataset if is_training else dsp
-  data = data.take(30)
+  data = data.take(60)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
     i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
@@ -125,7 +125,7 @@ def test_yolo_pipeline(is_training=True):
     obj5 = gt['5'][..., 0]
 
     for shind in range(1):
-      fig, axe = plt.subplots(1, 5)
+      fig, axe = plt.subplots(1, 4)
 
       image = i[shind]
       boxes = j["bbox"][shind]
@@ -148,13 +148,12 @@ def test_yolo_pipeline(is_training=True):
       # x, y = tf.split(ind_xy, 2, axis=-1)
       # ind_xy = tf.concat([y, x], axis=-1)
       # tf.print(true_xy - ind_xy, summarize=-1)
-      axe[0].imshow(i_[shind])
-      axe[1].imshow(image)
-      axe[2].imshow(obj3[shind].numpy())
-      axe[3].imshow(obj4[shind].numpy())
-      axe[4].imshow(obj5[shind].numpy())
+      axe[0].imshow(image)
+      axe[1].imshow(obj3[shind].numpy())
+      axe[2].imshow(obj4[shind].numpy())
+      axe[3].imshow(obj5[shind].numpy())
 
-      fig.set_size_inches(16.5, 5.5, forward=True)
+      fig.set_size_inches(18.5, 6.5, forward=True)
       plt.tight_layout()
       plt.show()
 

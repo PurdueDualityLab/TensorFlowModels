@@ -63,7 +63,7 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       config_path=["yolo/configs/experiments/yolov4/inference/512-jitter.yaml"],
-      model_dir="")
+      model_dir='/home/vbanna/Research/checkpoints/250k-512-lr-special-t2')
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
       labels=coco.get_coco_names(

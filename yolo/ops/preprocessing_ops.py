@@ -1,3 +1,4 @@
+from random import random
 from numpy import float32
 from numpy.core.fromnumeric import resize
 import tensorflow as tf
@@ -1078,14 +1079,16 @@ def resize_and_crop_image(image,
 
     # Selects non-zero random offset (x, y) if scaled image is larger than
     # desired_size.
+    random_pad = tf.cast(random_pad, tf.float32)
+    if random_pad == 1.0:
+      random_pad = tf.cast(0.5, tf.float32)
     if random_jittering:
       max_offset_ = scaled_size - desired_size
 
       max_offset = tf.where(
           tf.less(max_offset_, 0), tf.zeros_like(max_offset_), max_offset_)
-      offset = max_offset * tf.random.uniform([
-          2,
-      ], 0, 1, seed=seed)
+      offset = max_offset * 0.5 + max_offset * tf.random.uniform([2,], 
+                                                -random_pad, random_pad, seed=seed)
       offset = tf.cast(offset, tf.int32)
     else:
       offset = tf.zeros((2,), tf.int32)
@@ -1099,16 +1102,16 @@ def resize_and_crop_image(image,
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
-    if random_pad:
-      dy = rand_uniform_strong(0, padded_size[0] - scaled_size[0] + 1, tf.int32)
-      dx = rand_uniform_strong(0, padded_size[1] - scaled_size[1] + 1, tf.int32)
-    else:
-      dy = tf.cast(
-          tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shifty,
-          tf.int32)
-      dx = tf.cast(
-          tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
-          tf.int32)
+    if random_pad > 0.0:
+      shifty = 0.5 + rand_uniform_strong(-random_pad, random_pad, tf.float32)
+      shiftx = 0.5 + rand_uniform_strong(-random_pad, random_pad, tf.float32)
+
+    dy = tf.cast(
+        tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shifty,
+        tf.int32)
+    dx = tf.cast(
+        tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
+        tf.int32)
 
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
@@ -1178,6 +1181,11 @@ def resize_and_jitter_image(image,
 
     if jitter > 1 or jitter < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
+
+    if tf.cast(random_pad, tf.float32) > 0.0:
+      random_pad = True 
+    else:
+      random_pad = False
 
     original_dims = tf.shape(image)[:2]
     jitter = tf.cast(jitter, tf.float32)
@@ -1273,26 +1281,26 @@ def resize_and_jitter_image(image,
       ])
 
     #if not random_pad or cut is not None:
-    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
-                                    [pad[1], pad[3]], 
-                                    [0, 0]])
+    # image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
+    #                                 [pad[1], pad[3]], 
+    #                                 [0, 0]])
     # else:
-    #   r, g, b = tf.split(cropped_image, 3, axis = -1)
+    r, g, b = tf.split(cropped_image, 3, axis = -1)
 
-    #   r = tf.pad(r, [[pad[0], pad[2]], 
-    #                 [pad[1], pad[3]], 
-    #                 [0, 0]], 
-    #                 constant_values=tf.reduce_mean(r))
-    #   g = tf.pad(g, [[pad[0], pad[2]], 
-    #                 [pad[1], pad[3]], 
-    #                 [0, 0]], 
-    #                 constant_values=tf.reduce_mean(g))
-    #   b = tf.pad(b, [[pad[0], pad[2]], 
-    #                 [pad[1], pad[3]], 
-    #                 [0, 0]], 
-    #                 constant_values=tf.reduce_mean(b))
+    r = tf.pad(r, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(r))
+    g = tf.pad(g, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(g))
+    b = tf.pad(b, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(b))
 
-    #   image_ = tf.concat([r, g, b], axis = -1)
+    image_ = tf.concat([r, g, b], axis = -1)
 
     pad_info = tf.stack([
           tf.cast(tf.shape(cropped_image)[:2], tf.float32),
@@ -1376,17 +1384,9 @@ def clip_boxes(clipped_boxes,
       height, width = tf.unstack(image_shape, axis=-1)
       max_length = tf.stack([height, width, height, width], axis=-1)
 
-    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
+    if area_thr >= 0.0:
+      clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
     return clipped_boxes
-
-  if area_thr == 0.0:
-    centers = box_ops.yxyx_to_xcycwh(box_history)[..., :2]
-
-    mask = tf.reduce_all(tf.logical_and(centers >= 0, 
-            centers < tf.cast([image_shape[1], image_shape[0]], centers.dtype)), axis = -1,
-              keepdims=True)
-    
-    clipped_boxes *= tf.cast(mask, clipped_boxes.dtype)
 
   og_height = box_history[:, 2] - box_history[:, 0]
   og_width = box_history[:, 3] - box_history[:, 1]
@@ -1399,12 +1399,8 @@ def clip_boxes(clipped_boxes,
   ar2 = tf.maximum(og_width/(og_height + 1e-16), 
                    og_height/(og_width + 1e-16))
 
-
   conda = clipped_width > wh_thr
   condb = clipped_height > wh_thr
-
-  # conda = tf.logical_and(clipped_width > wh_thr, og_width > wh_thr)
-  # condb = tf.logical_and(clipped_height > wh_thr, og_height > wh_thr)
 
   condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
   condd = ar < ar_thr
@@ -1424,7 +1420,7 @@ def resize_and_crop_boxes(boxes,
                           output_size,
                           offset,
                           box_history = None, 
-                          keep_thresh=0.0):
+                          area_thresh=0.0):
 
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
@@ -1436,7 +1432,7 @@ def resize_and_crop_boxes(boxes,
     box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
     box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
   
-  boxes = clip_boxes(boxes, output_size)
+  boxes = clip_boxes(boxes, image_shape = output_size, box_history = None, area_thr = area_thresh)
   return boxes, box_history
 
 
@@ -1452,16 +1448,14 @@ def apply_infos(boxes, infos, area_thresh = 0.25):
                              boxes[..., 2], 
                              boxes[..., 3])
     
-    if area_thresh == 0.0:
-      # height = boxes[:, 2] - boxes[:, 0]
-      # width = boxes[:, 3] - boxes[:, 1]
+    if area_thresh <= 0.0:
       return tf.logical_and(
               tf.logical_and(
                 tf.logical_and(tf.greater(height, 0), 
                             tf.greater(width, 0)),
                 tf.logical_and(x >= 0, 
-                              y >= 0)), 
-                tf.logical_and(x < 1, 
+                               x < 1)), 
+                tf.logical_and(y >= 0, 
                               y < 1))
     else:
       return tf.logical_and(tf.greater(height, 0), 
@@ -1475,20 +1469,21 @@ def apply_infos(boxes, infos, area_thresh = 0.25):
       box_history = bbox_ops.denormalize_boxes(box_history, info[0, :])
     boxes, box_history = resize_and_crop_boxes(boxes, info[2, :],
                                                info[1, :], info[3, :], 
-                                               box_history = box_history)
+                                               box_history = box_history, 
+                                               area_thresh = area_thresh)
+
     boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
     box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
-
     cond = tf.logical_and(get_valid_boxes(boxes), cond)
 
   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
 
-  # tf.print(cond, summarize = -1)
+  # remove the bad boxes
   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
   boxes = clip_boxes(boxes, image_shape = info[1, :], 
                             box_history = box_history, 
-                            area_thr=area_thresh)
+                            area_thr= tf.maximum(area_thresh, 0.0))
   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
 
   inds = bbox_ops.get_non_empty_box_indices(boxes)
