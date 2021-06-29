@@ -1384,8 +1384,7 @@ def clip_boxes(clipped_boxes,
       height, width = tf.unstack(image_shape, axis=-1)
       max_length = tf.stack([height, width, height, width], axis=-1)
 
-    if area_thr >= 0.0:
-      clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
+    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
     return clipped_boxes
 
   og_height = box_history[:, 2] - box_history[:, 0]
@@ -1436,13 +1435,12 @@ def resize_and_crop_boxes(boxes,
   return boxes, box_history
 
 
-def apply_infos(boxes, infos, area_thresh = 0.25):
+def apply_infos(boxes, infos, area_thresh = 0.0):
   # clip and clean boxes
   def get_valid_boxes(boxes):
     """Get indices for non-empty boxes."""
     # Selects indices if box height or width is 0.
     boxes = box_ops.yxyx_to_xcycwh(boxes)
-
     (x, y, width, height) = (boxes[..., 0], 
                              boxes[..., 1], 
                              boxes[..., 2], 
@@ -1476,14 +1474,14 @@ def apply_infos(boxes, infos, area_thresh = 0.25):
     box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
     cond = tf.logical_and(get_valid_boxes(boxes), cond)
 
+  boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
 
   # remove the bad boxes
   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
   boxes = clip_boxes(boxes, image_shape = info[1, :], 
-                            box_history = box_history, 
-                            area_thr= tf.maximum(area_thresh, 0.0))
+                            box_history = box_history)
   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
 
   inds = bbox_ops.get_non_empty_box_indices(boxes)

@@ -399,7 +399,6 @@ class Mosaic(object):
               image, boxes, classes, is_crowd, area)
 
         height, width = preprocessing_ops.get_image_shape(image)
-        boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
 
         sample['image'] = tf.expand_dims(image, axis=0)
         sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)

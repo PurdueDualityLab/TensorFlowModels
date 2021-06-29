@@ -173,9 +173,9 @@ class YoloLayer(ks.Model):
     # in shape [1, height, width, 2]
     centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
 
-    # tempcode
-    centers /= tf.cast([width, height], centers.dtype)
-    anchors /= tf.cast([width, height], anchors.dtype)
+    # # tempcode
+    # centers /= tf.cast([width, height], centers.dtype)
+    # anchors /= tf.cast([width, height], anchors.dtype)
 
     # split the yolo detections into boxes, object score map, classes
     boxes, obns_scores, class_scores = tf.split(

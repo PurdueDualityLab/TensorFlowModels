@@ -308,7 +308,6 @@ def get_predicted_box_newcords(width,
   else:
     # if we are using the scaled loss we should propagate the decoding of the
     # boxes
-
     (scaler, scaled_box, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width,
                                                       height, anchor_grid,
                                                       grid_points, max_delta,
@@ -659,7 +658,9 @@ class Yolo_Loss(object):
 
     # scatter update the zero grid
     if update:
+      grida = tf.tensor_scatter_nd_max(grid, indexes, truths)
       grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
+      grid = tf.where(tf.logical_and(grid == 0, grida != 0), grida, grid)
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
       # clip the values between zero and one
