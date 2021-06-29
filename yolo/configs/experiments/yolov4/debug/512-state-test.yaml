@@ -88,6 +88,7 @@ task:
         mosaic_crop_mode: 'pre_crop'
         aspect_ratio_mode: 'crop'
         crop_area: [0.30, 1.00]
+        jitter: 0.5
         aug_scale_min: 1.0
         aug_scale_max: 1.0
   validation_data:
