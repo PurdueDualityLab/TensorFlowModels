@@ -42,6 +42,8 @@ task:
         'all': 1.0
       obj_normalizer: 
         'all': 1.0
+      max_delta:
+        'all': 5.0
       new_cords:
         'all': false
       objectness_smooth: 
@@ -70,23 +72,24 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      jitter: 0.3
-      resize: 1.5
-      area_thresh: 0.2
-      random_pad: True
+      sheer: 0.3
+      aug_scale_min: 0.5
+      aug_scale_max: 1.5
+      area_thresh: 0.001
+      random_pad: 0.5
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        output_resolution: [512, 512]
+        output_resolution: [640, 640]
         max_resolution: 720
-        mosaic_frequency: 0.66667
-        mosaic_crop_mode: 'crop'
-        aspect_ratio_mode: 'distort'
+        mosaic_frequency: 0.75
+        mosaic_crop_mode: 'pre_crop'
+        aspect_ratio_mode: 'crop'
         crop_area: [0.32, 0.75]
         crop_area_mosaic: [0.5, 2.0]
-        jitter: 0.3
-        resize: 1.5
+        aug_scale_min: 1.0
+        aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
     dtype: bfloat16

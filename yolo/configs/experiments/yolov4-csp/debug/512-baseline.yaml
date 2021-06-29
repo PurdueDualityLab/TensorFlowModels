@@ -1,13 +1,15 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
+  num_gpus: 1
 task:
   model:
     base:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'altered_cspdarknet53'
       decoder:
         version: v4
         type: csp
@@ -31,8 +33,6 @@ task:
       norm_momentum: 0.99
       use_sync_bn: true
     filter:
-      ignore_thresh:
-        'all': 0.7
       loss_type:  
         'all': ciou
       iou_normalizer: 
@@ -57,7 +57,7 @@ task:
       use_scaled_loss: true
   train_data:
     global_batch_size: 64
-    dtype: bfloat16
+    dtype: float16
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10
@@ -70,7 +70,7 @@ task:
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
       aug_scale_min: 0.2
-      aug_scale_max: 1.8
+      aug_scale_max: 1.9
       area_thresh: 0.1
       random_pad: 0.2
       use_tie_breaker: True
@@ -82,25 +82,23 @@ task:
         mosaic_frequency: 1.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.2, 1.8]
+        crop_area_mosaic: [0.2, 1.9]
         aug_scale_min: 1.0
         aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
-    dtype: bfloat16
+    dtype: float16
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       use_tie_breaker: True
-      use_scale_xy: False
-      anchor_thresh: 0.213
+      use_scale_xy: True
+      anchor_thresh: 4.0
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -110,8 +108,6 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
     learning_rate:
       type: cosine
       cosine:

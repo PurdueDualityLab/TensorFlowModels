@@ -255,19 +255,19 @@ class Parser(parser.Parser):
           tf.ones_like(tf.cast(shape[:2], tf.float32)),
           tf.zeros_like(tf.cast(shape[:2], tf.float32)),
         ])
-        infos = [stale_a] * 2
-      # works well
-      image, infos_ = preprocessing_ops.resize_and_crop_image(
-          image,
-          [self._image_h, self._image_w],
-          [self._image_h, self._image_w],
-          letter_box=self._letter_box,
-          sheer = self._sheer, 
-          aug_scale_min=self._aug_scale_min,
-          aug_scale_max=self._aug_scale_max,
-          random_pad=self._random_pad)
+        infos = [stale_a] 
+        # works well
+        image, infos_ = preprocessing_ops.resize_and_crop_image(
+            image,
+            [self._image_h, self._image_w],
+            [self._image_h, self._image_w],
+            letter_box=self._letter_box,
+            sheer = self._sheer, 
+            aug_scale_min=self._aug_scale_min,
+            aug_scale_max=self._aug_scale_max,
+            random_pad=self._random_pad)
       
-      infos.extend(infos_)
+        infos.extend(infos_)
     else:
       # works well
       image, infos = preprocessing_ops.resize_and_crop_image(
@@ -286,7 +286,7 @@ class Parser(parser.Parser):
           tf.zeros_like(tf.cast(shape[:2], tf.float32)),
       ])
       infos.append(stale_a)
-      infos.append(stale_a)
+      # infos.append(stale_a)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 

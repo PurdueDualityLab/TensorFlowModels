@@ -1384,7 +1384,8 @@ def clip_boxes(clipped_boxes,
       height, width = tf.unstack(image_shape, axis=-1)
       max_length = tf.stack([height, width, height, width], axis=-1)
 
-    clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
+    if area_thr >= 0.0:
+      clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
     return clipped_boxes
 
   og_height = box_history[:, 2] - box_history[:, 0]

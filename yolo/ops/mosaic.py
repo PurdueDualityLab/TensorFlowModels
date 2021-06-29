@@ -248,16 +248,18 @@ class Mosaic(object):
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
  
     if self._mosaic_crop_mode == "scale":
+      height, width = self._output_size[0], self._output_size[1]
+      image = tf.image.resize(image, (height, width))
       image, infos = preprocessing_ops.resize_and_crop_image(
-          image, [self._output_size[0] * 2, self._output_size[1] * 2],
-          [self._output_size[0] * 2, self._output_size[1] * 2],
+          image, [self._output_size[0], self._output_size[1]],
+          [self._output_size[0], self._output_size[1]],
           letter_box=None,
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1], 
           random_pad=self._random_pad,
           seed=self._seed)
-      height, width = self._output_size[0], self._output_size[1]
-      image = tf.image.resize(image, (height, width))
+      # height, width = self._output_size[0], self._output_size[1]
+      # image = tf.image.resize(image, (height, width))
     elif self._mosaic_crop_mode == 'crop_scale':
       image, infos = self._mosaic_crop(image, self._crop_area)
       image, infos_ = preprocessing_ops.resize_and_crop_image(

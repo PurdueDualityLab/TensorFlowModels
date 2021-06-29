@@ -152,15 +152,15 @@ class TiledNMS():
     batch_size = tf.shape(boxes)[0]
     new_slice = tf.slice(boxes, [0, inner_idx * NMS_TILE_SIZE, 0],
                          [batch_size, NMS_TILE_SIZE, 4])
-    # iou = box_ops.aggregated_comparitive_iou(
-    #     new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
-    # mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
+    iou = box_ops.aggregated_comparitive_iou(
+        new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
+    mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
 
-    iou, _, mask = segment_iou(box_slice, 
-                               new_slice, 
-                               iou_thresh = iou_threshold, 
-                               iou_type = self._iou_type)
-    mask = tf.cast(mask, box_slice.dtype)
+    # iou, _, mask = segment_iou(box_slice, 
+    #                            new_slice, 
+    #                            iou_thresh = iou_threshold, 
+    #                            iou_type = self._iou_type)
+    # mask = tf.cast(mask, box_slice.dtype)
     ret_slice = tf.expand_dims(mask, 2) * box_slice
     score_slice = mask * score_slice
     # tf.print(tf.shape(mask * score_slice), tf.shape(score_slice))
@@ -203,25 +203,6 @@ class TiledNMS():
                              iou_thresh = iou_threshold, 
                              iou_type = self._iou_type)
     box_slice *= tf.expand_dims(tf.cast(conda, box_slice.dtype), 2)
-
-    # weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(score_slice, axis = -1)
-    # box_slice = math_ops.divide_no_nan(tf.linalg.matmul(weights, box_slice), 
-    #                             tf.reduce_sum(weights, axis = -1, keepdims = True))
-
-    # iou = box_ops.aggregated_comparitive_iou(
-    #     box_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
-    # mask = tf.expand_dims(
-    #     tf.reshape(tf.range(NMS_TILE_SIZE), [1, -1]) > tf.reshape(
-    #         tf.range(NMS_TILE_SIZE), [-1, 1]), 0)
-    # iou *= tf.cast(tf.logical_and(mask, iou >= iou_threshold), iou.dtype)
-    # suppressed_iou, _, _ = tf.while_loop(
-    #     lambda _iou, loop_condition, _iou_sum: loop_condition,
-    #     self._self_suppression,
-    #     [iou, tf.constant(True),
-    #      tf.reduce_sum(iou, [1, 2])])
-    # suppressed_box = tf.reduce_sum(suppressed_iou, 1) > 0
-    # box_slice *= tf.expand_dims(1.0 - tf.cast(suppressed_box, box_slice.dtype),
-    #                             2)
 
     # Uses box_slice to update the input boxes.
     mask = tf.reshape(

@@ -46,6 +46,8 @@ task:
         'all': false
       objectness_smooth: 
         'all': 0.0
+      max_delta:
+        'all': 5.0
       scale_xy:
         '5': 1.05
         '4': 1.1
@@ -71,8 +73,8 @@ task:
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
       jitter: 0.3
-      resize: 1.0
-      area_thresh: 0.2
+      resize: 1.51
+      area_thresh: -1.0
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
@@ -97,6 +99,8 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
