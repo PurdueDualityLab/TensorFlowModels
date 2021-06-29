@@ -123,7 +123,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0):
 class TiledNMS():
   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 
-  def __init__(self, iou_type='diou', beta=1.0):
+  def __init__(self, iou_type='diou', beta=1.0, weighted = False):
     '''Initialization for all non max supression operations mainly used to 
     select hyperperamters for the iou type and scaling.
     Args: 
@@ -133,6 +133,7 @@ class TiledNMS():
     '''
     self._iou_type = TiledNMS.IOU_TYPES[iou_type]
     self._beta = beta
+    self._weighted = weighted
 
   def _self_suppression(self, iou, _, iou_sum):
     batch_size = tf.shape(iou)[0]
@@ -375,12 +376,13 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
-    iou, eye, _ = segment_iou(boxes,
-                              iou_thresh = iou_threshold, 
-                              iou_type = self._iou_type)
-    weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-    boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-                                tf.reduce_sum(weights, axis = -1, keepdims = True))
+    if self._weighted:
+      iou, eye, _ = segment_iou(boxes,
+                                iou_thresh = iou_threshold, 
+                                iou_type = self._iou_type)
+      weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
+      boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+                                  tf.reduce_sum(weights, axis = -1, keepdims = True))
     return scores, boxes, classes
 
   def _select_top_k_scores(self, scores_in, pre_nms_num_detections):
@@ -636,7 +638,6 @@ def nms(boxes,
 
   classes = tf.squeeze(classes, axis=-1)
 
-  
   return boxes, classes, confidence
 
 # For batch mode Cluster-Weighted NMS
