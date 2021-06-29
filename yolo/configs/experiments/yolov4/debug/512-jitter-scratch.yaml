@@ -99,8 +99,6 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
