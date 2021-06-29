@@ -231,7 +231,7 @@ class Mosaic(object):
           image,
           [self._output_size[0], self._output_size[1]],
           [self._output_size[0], self._output_size[1]],
-          letter_box=self._letter_box,
+          letter_box=letter_box,
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
           shiftx=xs,
