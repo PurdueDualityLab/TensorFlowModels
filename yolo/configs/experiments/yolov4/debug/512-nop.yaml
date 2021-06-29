@@ -1,0 +1,125 @@
+runtime:
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
+task:
+  model:
+    base:
+      backbone:
+        type: 'darknet'
+        darknet:
+          model_id: 'cspdarknet53'
+      decoder:
+        version: v4
+        type: regular
+        activation: leaky
+    num_classes: 91
+    boxes: ['[12.0, 16.0]',
+            '[19.0, 36.0]',
+            '[40.0, 28.0]',
+            '[36.0, 75.0]', 
+            '[76.0, 55.0]', 
+            '[72.0, 146.0]', 
+            '[142.0, 110.0]', 
+            '[192.0, 243.0]', 
+            '[459.0, 401.0]']
+    input_size: [512, 512, 3]
+    boxes_per_scale: 3
+    max_level: 5
+    min_level: 3
+    norm_activation:
+      activation: mish
+      norm_epsilon: 0.001
+      norm_momentum: 0.99
+      use_sync_bn: true
+    filter:
+      ignore_thresh:
+        'all': 0.7
+      loss_type:  
+        'all': ciou
+      iou_normalizer: 
+        'all': 0.07
+      cls_normalizer: 
+        'all': 1.0
+      obj_normalizer: 
+        'all': 1.0
+      new_cords:
+        'all': false
+      objectness_smooth: 
+        'all': 0.0
+      max_delta:
+        'all': 5.0
+      scale_xy:
+        '5': 1.05
+        '4': 1.1
+        '3': 1.2
+      max_boxes: 200
+      nms_type: diou
+      iou_thresh: 0.001
+      nms_thresh: 0.6
+      pre_nms_points: 5000
+      use_scaled_loss: false
+  train_data:
+    global_batch_size: 64
+    dtype: bfloat16
+    input_path: 'gs://cam2-datasets/coco/train*'
+    is_training: true
+    shuffle_buffer_size: 10
+    drop_remainder: true
+    parser:
+      max_num_instances: 200
+      letter_box: False
+      random_flip: True
+      aug_rand_saturation: 1.5
+      aug_rand_brightness: 1.5
+      aug_rand_hue: 0.1
+      jitter: 0.0
+      resize: 1.0
+      area_thresh: 0.1
+      random_pad: True
+      use_tie_breaker: True
+      use_scale_xy: False
+      anchor_thresh: 0.213
+      mosaic: 
+        mosaic_frequency: 0.0 
+  validation_data:
+    global_batch_size: 8
+    dtype: bfloat16
+    input_path: 'gs://cam2-datasets/coco/val*'
+    is_training: false
+    shuffle_buffer_size: 10000
+    drop_remainder: true
+    parser:
+      max_num_instances: 200
+      letter_box: False
+      use_tie_breaker: True
+      use_scale_xy: False
+      anchor_thresh: 0.213
+  weight_decay: 0.0005
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint_modules: 'backbone'
+  annotation_file: null
+trainer:
+  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 625
+  steps_per_loop: 10000
+  summary_interval: 10000
+  validation_interval: 20000 #00
+  checkpoint_interval: 10000
+  optimizer_config:
+    learning_rate:
+      type: stepwise
+      stepwise:
+        boundaries: [200000, 225000]
+        name: PiecewiseConstantDecay
+        values: [0.00131, 0.000131, 0.0000131] #best
+    optimizer:
+      type: sgd
+      sgd:
+        momentum: 0.949
+        nesterov: True
+        name: SGD
+    warmup:
+      type: 'polynomial'
+      polynomial:
+        power: 4
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
