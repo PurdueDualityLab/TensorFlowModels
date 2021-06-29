@@ -67,7 +67,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: None
       random_flip: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -75,7 +75,7 @@ task:
       sheer: 0.3
       aug_scale_min: 0.5
       aug_scale_max: 1.5
-      area_thresh: 0.001
+      area_thresh: 0.000
       random_pad: 0.5
       use_tie_breaker: True
       use_scale_xy: False
@@ -99,7 +99,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
