@@ -1368,49 +1368,47 @@ def resize_and_jitter_image(image,
       infos.append(crop_info)
     
     return image_, infos 
-
-def clip_boxes(clipped_boxes, 
-               image_shape = None, 
-               box_history = None, 
-               wh_thr=2, 
-               ar_thr=20, 
-               area_thr=0.25):
-  if box_history is None:
-    if isinstance(image_shape, list) or isinstance(image_shape, tuple):
-      height, width = image_shape
-      max_length = [height, width, height, width]
-    else:
-      image_shape = tf.cast(image_shape, dtype=clipped_boxes.dtype)
-      height, width = tf.unstack(image_shape, axis=-1)
-      max_length = tf.stack([height, width, height, width], axis=-1)
-
-    if area_thr >= 0.0:
-      clipped_boxes = tf.math.maximum(tf.math.minimum(clipped_boxes, max_length), 0.0)
-    return clipped_boxes
-
+  
+def boxes_candidates(clipped_boxes,  
+                     box_history, 
+                     wh_thr=2, 
+                     ar_thr=20, 
+                     area_thr=0.0):
+  
+  # area thesh can be negative if darknet clipping is used 
+  # area_thresh < 0.0 = darknet clipping 
+  # area_thresh >= 0.0 = scaled model clipping
+  area_thr = tf.math.abs(area_thr)
+  
+  # get the scaled and shifted heights of the original 
+  # unclipped boxes 
   og_height = box_history[:, 2] - box_history[:, 0]
   og_width = box_history[:, 3] - box_history[:, 1]
   
+  # get the scaled and shifted heights of the clipped boxes 
   clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
   clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
 
+  # determine the aspect ratio of the clipped boxes
   ar = tf.maximum(clipped_width/(clipped_height + 1e-16), 
                   clipped_height/(clipped_width + 1e-16))
-  ar2 = tf.maximum(og_width/(og_height + 1e-16), 
-                   og_height/(og_width + 1e-16))
-
+  
+  # ensure the clipped width adn height are larger than a preset threshold 
   conda = clipped_width > wh_thr
   condb = clipped_height > wh_thr
 
+  # ensure the area of the clipped box is larger than the area threshold 
   condc = ((clipped_height * clipped_width)/(og_width * og_height + 1e-16)) > area_thr
+  
+  # ensure the aspect ratio is not too extreme
   condd = ar < ar_thr
-  conde = ar2 < ar_thr 
-
+  
   cond = tf.expand_dims(tf.logical_and(
     tf.logical_and(conda, condb), 
-    tf.logical_and(condc, tf.logical_and(condd, conde))
+    tf.logical_and(condc, condd)
   ), axis = -1)
-
+  
+  # set all the boxes that fail the test to be equal to zero 
   boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
   return boxes
 
@@ -1419,74 +1417,102 @@ def resize_and_crop_boxes(boxes,
                           image_scale,
                           output_size,
                           offset,
-                          box_history = None, 
-                          area_thresh=0.0):
-
+                          box_history = None):
+  # shift and scale the input boxes
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
   
-
+  # check the hitory of the boxes
   if box_history is None:
     box_history = boxes
   else:
     box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
     box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
   
-  boxes = clip_boxes(boxes, image_shape = output_size, box_history = None, area_thr = area_thresh)
-  return boxes, box_history
+  # clip the shifted and scaled boxes 
+  clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
+  return clipped_boxes, boxes, box_history
 
 
-def apply_infos(boxes, infos, area_thresh = 0.0):
+def apply_infos(boxes, infos, area_thresh = 0.1):
   # clip and clean boxes
-  def get_valid_boxes(boxes):
+  def get_valid_boxes(boxes, unclipped_boxes = None):
     """Get indices for non-empty boxes."""
-    # Selects indices if box height or width is 0.
+    # convert the boxes to center width height formatting 
     boxes = box_ops.yxyx_to_xcycwh(boxes)
-    (x, y, width, height) = (boxes[..., 0], 
+    (_, _, width, height) = (boxes[..., 0], 
                              boxes[..., 1], 
                              boxes[..., 2], 
                              boxes[..., 3])
     
-    if area_thresh <= 0.0:
-      return tf.logical_and(
-              tf.logical_and(
-                tf.logical_and(tf.greater(height, 0), 
-                            tf.greater(width, 0)),
-                tf.logical_and(x >= 0, 
-                               x < 1)), 
-                tf.logical_and(y >= 0, 
-                              y < 1))
-    else:
-      return tf.logical_and(tf.greater(height, 0), 
-                            tf.greater(width, 0))
-
+    # if the width or height is less than zero the box is removed
+    base = tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
+    
+    if area_thresh < 0.0 and unclipped_boxes is not None:
+      # if the area theshold is lower than 0.0 we clip boxes 
+      # using the original darknet method. if the center of the 
+      # box is not in the frame, it gets removed. this filtering 
+      # must be done on boxes prior to box clipping. Clipping the
+      # box enusres that it is in the frame by moving the center
+      unclipped_boxes = box_ops.yxyx_to_xcycwh(unclipped_boxes)
+      x = unclipped_boxes[..., 0]
+      y = unclipped_boxes[..., 1]
+      
+      # check that the center of the unclipped box is within the 
+      # frame. 
+      condx = tf.logical_and(x >= 0, x < 1)
+      condy = tf.logical_and(y >= 0, y < 1)
+      base = tf.logical_and(base, tf.logical_and(condx, condy))
+    return base 
+  
+  # this is no history to start
   box_history = None
+  
+  # make sure all boxes are valid to start, clip to [0, 1]
+  # then check all boxes meet the conditions
+  boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
   cond = get_valid_boxes(boxes)
+  
   for info in infos:
+    # rescale the boxes
     boxes = bbox_ops.denormalize_boxes(boxes, info[0, :])
     if box_history is not None:
       box_history = bbox_ops.denormalize_boxes(box_history, info[0, :])
-    boxes, box_history = resize_and_crop_boxes(boxes, info[2, :],
-                                               info[1, :], info[3, :], 
-                                               box_history = box_history, 
-                                               area_thresh = area_thresh)
-
+     
+    # shift and scale all boxes, and keep track of box history with no 
+    # box clipping, history is used for clipping boxes that becom too small
+    # or exit the image
+    (boxes,           # clipped final boxes 
+     unclipped_boxes, # unclipped final boxes 
+     box_history) = resize_and_crop_boxes(boxes, 
+                                          info[2, :],
+                                          info[1, :], info[3, :], 
+                                          box_history = box_history)
+    
+    # normalize the boxes to [0, 1] 
     boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
+    unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1, :])
     box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
-    cond = tf.logical_and(get_valid_boxes(boxes), cond)
-
-  boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
-  cond = tf.logical_and(get_valid_boxes(boxes), cond)
-
-  boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
-  box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
+    
+    # get all the boxes that still remain in the image and store
+    # in a bit vector for later use
+    cond = tf.logical_and(
+              get_valid_boxes(boxes, 
+                              unclipped_boxes = unclipped_boxes), cond)
+    
+    # delete the unclipped boxes, they do not need to be tracked
+    del unclipped_boxes
 
   # remove the bad boxes
   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
-  boxes = clip_boxes(boxes, image_shape = info[1, :], 
-                            box_history = box_history)
+  
+  # threshold the existing boxes
+  boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
+  box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
+  boxes = boxes_candidates(boxes, box_history)
   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
-
+  
+  # select and gather the good boxes 
   inds = bbox_ops.get_non_empty_box_indices(boxes)
   boxes = tf.gather(boxes, inds)
   return boxes, inds 
