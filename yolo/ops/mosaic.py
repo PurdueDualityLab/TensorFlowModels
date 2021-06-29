@@ -215,7 +215,7 @@ class Mosaic(object):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
 
-    if self._random_crop != 0:
+    if random_crop != 0:
       image, infos = preprocessing_ops.resize_and_jitter_image(
           image,
           [self._output_size[0], self._output_size[1]],
