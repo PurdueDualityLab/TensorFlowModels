@@ -951,7 +951,6 @@ class Yolo_Loss(object):
     #     applied for the box loss in the gradeint for the box decoding
     #     class weights are applied selectively directly after computing
     #     the loss only to locations where a onehot is set to one
-
     box_loss *= self._iou_normalizer
     conf_loss *= self._obj_normalizer
 

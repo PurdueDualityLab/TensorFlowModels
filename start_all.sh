@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-nohup ./_start_all.sh > test.log &
-tail -f test.log
+chmod +x _start_all.sh 
+nohup ./_start_all.sh $1 > run.log &
+tail -f run.log
