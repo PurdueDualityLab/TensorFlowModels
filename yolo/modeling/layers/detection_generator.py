@@ -28,6 +28,7 @@ class YoloLayer(ks.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_scaled_loss=False,
+               darknet = None, 
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
@@ -106,7 +107,10 @@ class YoloLayer(ks.Model):
     self._classes = classes
     self._loss_type = loss_type
     self._use_tie_breaker = use_tie_breaker
+
     self._use_scaled_loss = use_scaled_loss
+    self._darknet = darknet
+
     self._pre_nms_points = pre_nms_points
     self._label_smoothing = label_smoothing
     self._keys = list(masks.keys())
@@ -312,6 +316,7 @@ class YoloLayer(ks.Model):
       loss_dict[key] = Yolo_Loss(
           classes=self._classes,
           anchors=self._anchors,
+          darknet=self._darknet, 
           truth_thresh=self._truth_thresh[key],
           ignore_thresh=self._ignore_thresh[key],
           loss_type=self._loss_type[key],

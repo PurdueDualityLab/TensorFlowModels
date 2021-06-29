@@ -255,6 +255,7 @@ class YoloLossLayer(hyperparams.Config):
   label_smoothing: float = 0.0
   anchor_generation_scale: int = 512
   use_scaled_loss: bool = True
+  darknet: Optional[bool] = None
 
 
 @dataclasses.dataclass

@@ -1476,6 +1476,8 @@ def apply_infos(boxes, infos, area_thresh = 0.0):
     cond = tf.logical_and(get_valid_boxes(boxes), cond)
 
   boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
+  cond = tf.logical_and(get_valid_boxes(boxes), cond)
+
   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
 

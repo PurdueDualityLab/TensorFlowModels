@@ -157,10 +157,10 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
     dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
     
-    # apply scaling for gradients if scaled boxes are
-    sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
-    dy_xy_ *= sc_xy_
-    dy_wh_ *= anchor_grid
+    # # apply scaling for gradients if scaled boxes are
+    # sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
+    # dy_xy_ *= sc_xy_
+    # dy_wh_ *= anchor_grid
 
     # add all the gradients that may have been applied to the
     # boxes and those that have been applied to the width and height
@@ -262,10 +262,10 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
     dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
     
-    # apply scaling for gradients if scaled boxes are
-    sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
-    dy_xy_ *= sc_xy_
-    dy_wh_ *= anchor_grid
+    # # apply scaling for gradients if scaled boxes are
+    # sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
+    # dy_xy_ *= sc_xy_
+    # dy_wh_ *= anchor_grid
 
     # add all the gradients that may have been applied to the
     # boxes and those that have been applied to the width and height
@@ -330,6 +330,7 @@ class Yolo_Loss(object):
                obj_normalizer=1.0,
                objectness_smooth=True,
                use_scaled_loss=False,
+               darknet = None, 
                label_smoothing=0.0,
                new_cords=False,
                scale_x_y=1.0,
@@ -406,6 +407,7 @@ class Yolo_Loss(object):
     self._label_smoothing = tf.cast(label_smoothing, tf.float32)
     self._objectness_smooth = float(objectness_smooth)
     self._use_reduction_sum = use_scaled_loss
+    self._darknet = darknet
 
     self._new_cords = new_cords
     self._any = True
@@ -844,12 +846,15 @@ class Yolo_Loss(object):
     pred_conf = obj_gradient_trap(pred_conf, np.inf)
 
     # 6. decode the boxes to be used for optimization/loss compute
-    _, _, pred_box = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
-    scale = None
-    # scale, pred_box, _ = self._decode_boxes(
-    #     fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
-    # true_box = tf.stop_gradient(true_box * scale)
+    if self._darknet is None:
+      _, _, pred_box = self._decode_boxes(
+          fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
+      scale = None
+    else:
+      scale, pred_box, _ = self._decode_boxes(
+          fwidth, fheight, 
+          pred_box, anchor_grid, grid_points, darknet=self._darknet)
+      true_box = tf.stop_gradient(true_box * scale)
 
     # 7. compare all the predictions to all the valid or non zero boxes
     #    in the ground truth, based on any/all we will will also compare
