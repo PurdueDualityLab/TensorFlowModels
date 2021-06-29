@@ -76,7 +76,7 @@ task:
       sheer: 0.3
       aug_scale_min: 0.4
       aug_scale_max: 1.5
-      area_thresh: 0.000
+      area_thresh: 0.01
       random_pad: 0.5
       use_tie_breaker: True
       use_scale_xy: False
