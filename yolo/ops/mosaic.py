@@ -205,7 +205,7 @@ class Mosaic(object):
       if docrop > 1 - self._random_crop:
         image, boxes, classes, is_crowd, area = self._crop_image(
             image, boxes, classes, is_crowd, area, self._crop_area)
-      random_crop = 0.1
+      random_crop = 0.0
       letter_box = True
     else:
       letter_box = True
