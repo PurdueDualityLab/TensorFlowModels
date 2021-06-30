@@ -351,7 +351,6 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
     else:
       # iou_raw = box_ops.compute_iou(truth_comp, anchors)
-
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
       anchors = box_ops.xcycwh_to_yxyx(anchors)
       iou_raw = box_ops.aggregated_comparitive_iou(
@@ -408,7 +407,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.20):
     hold = tf.zeros_like(true_wh)
     y_true = tf.concat([hold, true_wh], axis=-1)
 
-    # tf.print(tf.shape(true_wh), tf.shape(anchors))
   return get_best_anchor2(
       y_true, anchors, width=width, height=height, iou_thresh=iou_thresh)
 
