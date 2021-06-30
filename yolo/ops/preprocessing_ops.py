@@ -291,17 +291,18 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
     width = tf.cast(width, dtype=y_true.dtype)
     height = tf.cast(height, dtype=y_true.dtype)
     # split the boxes into center and width height
-    anchor_xy = y_true[..., 0:2]
-    true_wh = y_true[..., 2:4]
+    
 
-    # scale thhe boxes
+    # # scale thhe boxes
+    true_wh = y_true[..., 2:4]
     anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
     anchors_x = anchors[..., 0] / height
     anchors_y = anchors[..., 1] / width
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
     k = tf.shape(anchors)[0]
 
-    # # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
+    # # # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
+    # anchor_xy = y_true[..., 0:2]
     # anchors = tf.transpose(anchors, perm=[1, 0])
 
     # anchor_xy = tf.tile(
@@ -324,15 +325,13 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
     #     [1, 1, 1, tf.shape(anchors)[1]])
     # truth_comp = tf.transpose(truth_comp, perm=[0, 3, 1, 2])
 
-
-    
     # compute intersection over union of the boxes, and take the argmax of
     # comuted iou for each box. thus each box is associated with the
     # largest interection over union
+
     anchors = tf.expand_dims(
       tf.concat([tf.zeros_like(anchors), anchors], axis = -1), axis = 0)
-    truth_comp = tf.concat(
-      [tf.zeros_like(y_true[..., 2:]), y_true[..., 2:]], axis = -1)
+    truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis = -1)
 
     if iou_thresh >= 1.0:
       anchors = tf.expand_dims(anchors, axis = -2)
@@ -359,7 +358,6 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
         anchors, 
         truth_comp, 
         )
-
       values, indexes = tf.math.top_k(
           tf.transpose(iou_raw, perm=[0, 2, 1]),
           k=tf.cast(k, dtype=tf.int32),
