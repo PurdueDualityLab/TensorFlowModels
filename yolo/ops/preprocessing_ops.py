@@ -301,41 +301,41 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
     anchors = tf.stack([anchors_x, anchors_y], axis=-1)
     k = tf.shape(anchors)[0]
 
-    # # # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
-    # anchor_xy = y_true[..., 0:2]
-    # anchors = tf.transpose(anchors, perm=[1, 0])
+    # # build a matrix of anchor boxes of shape [num_anchors, num_boxes, 4]
+    anchor_xy = y_true[..., 0:2]
+    anchors = tf.transpose(anchors, perm=[1, 0])
 
-    # anchor_xy = tf.tile(
-    #     tf.expand_dims(anchor_xy, axis=-1),
-    #     [1, 1, 1, tf.shape(anchors)[-1]])
-    # anchors = tf.tile(
-    #     tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[1], 1, 1])
-    # anchors = tf.tile(
-    #     tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1, 1])
+    anchor_xy = tf.tile(
+        tf.expand_dims(anchor_xy, axis=-1),
+        [1, 1, 1, tf.shape(anchors)[-1]])
+    anchors = tf.tile(
+        tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[1], 1, 1])
+    anchors = tf.tile(
+        tf.expand_dims(anchors, axis=0), [tf.shape(anchor_xy)[0], 1, 1, 1])
 
-    # # stack the xy so, each anchor is asscoaited once with each center from
-    # # the ground truth input
-    # anchors = K.concatenate([anchor_xy, anchors], axis=2)
-    # anchors = tf.transpose(anchors, perm=[0, 3, 1, 2])
+    # stack the xy so, each anchor is asscoaited once with each center from
+    # the ground truth input
+    anchors = K.concatenate([anchor_xy, anchors], axis=2)
+    anchors = tf.transpose(anchors, perm=[0, 3, 1, 2])
 
-    # # # copy the gt n times so that each anchor from above can be compared to
-    # # # input ground truth to shape: [num_anchors, num_boxes, 4]
-    # truth_comp = tf.tile(
-    #     tf.expand_dims(y_true[..., 0:4], axis=-1),
-    #     [1, 1, 1, tf.shape(anchors)[1]])
-    # truth_comp = tf.transpose(truth_comp, perm=[0, 3, 1, 2])
+    # # copy the gt n times so that each anchor from above can be compared to
+    # # input ground truth to shape: [num_anchors, num_boxes, 4]
+    truth_comp = tf.tile(
+        tf.expand_dims(y_true[..., 0:4], axis=-1),
+        [1, 1, 1, tf.shape(anchors)[1]])
+    truth_comp = tf.transpose(truth_comp, perm=[0, 3, 1, 2])
 
     # compute intersection over union of the boxes, and take the argmax of
     # comuted iou for each box. thus each box is associated with the
     # largest interection over union
 
-    anchors = tf.expand_dims(
-      tf.concat([tf.zeros_like(anchors), anchors], axis = -1), axis = 0)
-    truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis = -1)
+    # anchors = tf.expand_dims(
+    #   tf.concat([tf.zeros_like(anchors), anchors], axis = -1), axis = 0)
+    # truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis = -1)
 
     if iou_thresh >= 1.0:
-      anchors = tf.expand_dims(anchors, axis = -2)
-      truth_comp = tf.expand_dims(truth_comp, axis=-3)
+      # anchors = tf.expand_dims(anchors, axis = -2)
+      # truth_comp = tf.expand_dims(truth_comp, axis=-3)
 
       aspect = truth_comp[..., 2:4] / anchors[..., 2:4]
       aspect = tf.where(tf.math.is_nan(aspect), tf.zeros_like(aspect), aspect)
@@ -350,13 +350,13 @@ def get_best_anchor2(y_true, anchors, width=1, height=1, iou_thresh=0.25):
       values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
     else:
-      # iou_raw = box_ops.compute_iou(truth_comp, anchors)
-      truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
-      anchors = box_ops.xcycwh_to_yxyx(anchors)
-      iou_raw = box_ops.aggregated_comparitive_iou(
-        anchors, 
-        truth_comp, 
-        )
+      iou_raw = box_ops.compute_iou(truth_comp, anchors)
+      # truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
+      # anchors = box_ops.xcycwh_to_yxyx(anchors)
+      # iou_raw = box_ops.aggregated_comparitive_iou(
+      #   anchors, 
+      #   truth_comp, 
+      #   )
       values, indexes = tf.math.top_k(
           tf.transpose(iou_raw, perm=[0, 2, 1]),
           k=tf.cast(k, dtype=tf.int32),
