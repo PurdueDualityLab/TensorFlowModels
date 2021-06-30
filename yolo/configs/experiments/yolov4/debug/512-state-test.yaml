@@ -76,7 +76,7 @@ task:
       sheer: 0.3
       aug_scale_min: 0.4
       aug_scale_max: 1.5
-      area_thresh: -0.01
+      area_thresh: 0.1
       random_pad: 0.5
       use_tie_breaker: True
       use_scale_xy: False
@@ -104,6 +104,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
+      area_thresh: 0.25
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
