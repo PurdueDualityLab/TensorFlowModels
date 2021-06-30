@@ -452,11 +452,10 @@ class Yolo_Loss(object):
   def avgiou(self, iou):
     # compute the average realtive to non zero locations, so the
     # average is not biased in sparse tensors
-    avg_iou = math_ops.divide_no_nan(
-        tf.reduce_sum(iou),
-        tf.cast(
-            tf.math.count_nonzero(tf.cast(iou, dtype=iou.dtype)),
-            dtype=iou.dtype))
+    iou_sum = tf.reduce_sum(iou, axis = tf.range(1, tf.shape(tf.shape(iou))[0]))
+    counts = tf.cast(
+      tf.math.count_nonzero(iou, axis = tf.range(1, tf.shape(tf.shape(iou))[0])), iou.dtype)
+    avg_iou = tf.reduce_mean(math_ops.divide_no_nan(iou_sum, counts))
     return tf.stop_gradient(avg_iou)
 
   def box_loss(self, true_box, pred_box, darknet=False):
