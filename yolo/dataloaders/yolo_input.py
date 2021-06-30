@@ -373,6 +373,7 @@ class Parser(parser.Parser):
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 
                                                 infos,
+                                                shuffle_boxes = False, 
                                                 area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     info = infos[-1]

@@ -74,7 +74,7 @@ task:
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
       sheer: 0.3
-      aug_scale_min: 0.4
+      aug_scale_min: 0.2
       aug_scale_max: 1.5
       area_thresh: 0.25
       random_pad: 0.5
@@ -83,8 +83,8 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: [640, 640]
-        max_resolution: 720
-        mosaic_frequency: 0.75
+        max_resolution: 640
+        mosaic_frequency: 1.85
         mosaic_crop_mode: 'pre_crop'
         aspect_ratio_mode: 'crop'
         crop_area: [0.30, 1.00]
@@ -117,8 +117,8 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9998
+    ema:
+      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:

@@ -146,39 +146,14 @@ class Mosaic(object):
     infos = [info]
     return image, infos
 
-  def _crop_image(self, image, boxes, classes, is_crowd, area, crop_area):
-
-    # height, width = self._output_size[1], self._output_size[0]
-    # scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
-    #                                               tf.math.sqrt(crop_area[1]))
-    # width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
-    # height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
-
-    # # tf.print(width, height, scale)
-    # image, info = preprocessing_ops.random_window_crop(
-    #   image, 
-    #   height, 
-    #   width, 
-    #   skip_zero=False
-    # )
-
-    # infos = [info]
-
-    # image = tf.image.resize(image, (self._output_size[1], 
-    #                                 self._output_size[0]))
-
+  def _crop_image(self, image, crop_area):
     image, info = preprocessing_ops.random_crop_image(
           image, 
           aspect_ratio_range=[self._output_size[1]/self._output_size[0], 
                               self._output_size[1]/self._output_size[0]], 
           area_range=crop_area)
 
-    infos = [info]
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
-    classes = tf.gather(classes, inds)
-    is_crowd = tf.gather(is_crowd, inds)
-    area = tf.gather(area, inds)
-    return image, boxes, classes, is_crowd, area
+    return image, info
 
   def _process_image(self,
                      image,
@@ -191,32 +166,41 @@ class Mosaic(object):
                      cut = None):
     # initialize the shape constants
     height, width = preprocessing_ops.get_image_shape(image)
+    infos = []
+
+    if self._random_flip:
+      # randomly flip the image horizontally
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     # resize the image irrespective of the aspect ratio
     random_crop = self._random_crop
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
+      shape = tf.shape(image)
+      info = tf.stack([
+          tf.cast(tf.shape(image)[:2], tf.float32),
+          tf.cast(tf.shape(image)[:2], tf.float32),
+          tf.ones_like(tf.cast(shape[:2], tf.float32)),
+          tf.zeros_like(tf.cast(shape[:2], tf.float32)),
+          ])
+      
       docrop = tf.random.uniform([],
                                  0.0,
                                  1.0,
                                  dtype=tf.float32,
                                  seed=self._seed)
       if docrop > 1 - self._random_crop:
-        image, boxes, classes, is_crowd, area = self._crop_image(
-            image, boxes, classes, is_crowd, area, self._crop_area)
+        image, info = self._crop_image(image, self._crop_area)
+      
+      infos.append(info)
       random_crop = 0.0
       letter_box = True
     else:
       letter_box = True
 
-    if self._random_flip:
-      # randomly flip the image horizontally
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
-
-
     if random_crop != 0:
-      image, infos = preprocessing_ops.resize_and_jitter_image(
+      image, infos_ = preprocessing_ops.resize_and_jitter_image(
           image,
           [self._output_size[0], self._output_size[1]],
           letter_box=letter_box,
@@ -227,7 +211,7 @@ class Mosaic(object):
           shifty=ys,
           cut = cut)
     else:
-      image, infos = preprocessing_ops.resize_and_crop_image(
+      image, infos_ = preprocessing_ops.resize_and_crop_image(
           image,
           [self._output_size[0], self._output_size[1]],
           [self._output_size[0], self._output_size[1]],
@@ -237,6 +221,7 @@ class Mosaic(object):
           shiftx=xs,
           shifty=ys,
           random_pad=False)
+    infos.extend(infos_)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
@@ -277,7 +262,6 @@ class Mosaic(object):
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
       image, infos = self._mosaic_crop(image, self._crop_area, skip_zero = False)
-
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)

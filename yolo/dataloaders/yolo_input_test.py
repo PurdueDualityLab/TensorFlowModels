@@ -264,7 +264,7 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=True, num = 30)
   test_yolo_pipeline(is_training=False, num = 10)
   # time_pipeline()
   # test_classification_pipeline()

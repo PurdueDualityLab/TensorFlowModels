@@ -1450,7 +1450,7 @@ def resize_and_crop_boxes(boxes,
   return clipped_boxes, boxes, box_history
 
 
-def apply_infos(boxes, infos, area_thresh = 0.1):
+def apply_infos(boxes, infos, shuffle_boxes = True, area_thresh = 0.1):
   # clip and clean boxes
   def get_valid_boxes(boxes, unclipped_boxes = None):
     """Get indices for non-empty boxes."""
@@ -1525,11 +1525,13 @@ def apply_infos(boxes, infos, area_thresh = 0.1):
   # threshold the existing boxes
   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
-  boxes = boxes_candidates(boxes, box_history)
+  boxes = boxes_candidates(boxes, box_history, area_thr = area_thresh)
   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
   
   # select and gather the good boxes 
   inds = bbox_ops.get_non_empty_box_indices(boxes)
+  if shuffle_boxes:
+    inds = tf.random.shuffle(inds)
   boxes = tf.gather(boxes, inds)
   return boxes, inds 
 
