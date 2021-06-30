@@ -999,6 +999,38 @@ def random_window_crop(image,
 
   return cropped_image, info
 
+# def mean_pad(image, pady, padx, targety, targetx, color = False):
+#   shape = tf.shape(image)[:2]
+#   pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
+  
+#   if color: 
+#     r, g, b = tf.split(image, 3, axis = -1)
+#     r = tf.pad(r, [[pad[0], pad[2]], 
+#                   [pad[1], pad[3]], 
+#                   [0, 0]], 
+#                   constant_values=tf.reduce_mean(r))
+#     g = tf.pad(g, [[pad[0], pad[2]], 
+#                   [pad[1], pad[3]], 
+#                   [0, 0]], 
+#                   constant_values=tf.reduce_mean(g))
+#     b = tf.pad(b, [[pad[0], pad[2]], 
+#                   [pad[1], pad[3]], 
+#                   [0, 0]], 
+#                   constant_values=tf.reduce_mean(b))
+#     image_ = tf.concat([r, g, b], axis = -1)
+#   else:
+#     image_ = tf.pad(image, [[pad[0], pad[2]], 
+#                             [pad[1], pad[3]], 
+#                             [0, 0]])
+
+#   pad_info = tf.stack([
+#         tf.cast(tf.shape(image)[:2], tf.float32),
+#         tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
+#         tf.ones_like(tf.shape(image)[:2], dtype = tf.float32),
+#         -tf.cast(pad[:2], tf.float32)
+#     ])
+#   return image_, pad_info
+
 def resize_and_crop_image(image,
                           desired_size,
                           padded_size,
@@ -1151,6 +1183,8 @@ def intersection(a, b):
   maxy = tf.minimum(a[3], b[3])
   return tf.convert_to_tensor([minx, miny, maxx, maxy])
 
+
+
 def resize_and_jitter_image(image,
                             desired_size,
                             jitter=0.0,
@@ -1296,35 +1330,16 @@ def resize_and_jitter_image(image,
           tf.cast(src_crop[:2], tf.float32)
       ])
 
-    #if not random_pad or cut is not None:
-    # image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
-    #                                 [pad[1], pad[3]], 
-    #                                 [0, 0]])
-    # else:
-    r, g, b = tf.split(cropped_image, 3, axis = -1)
-
-    r = tf.pad(r, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(r))
-    g = tf.pad(g, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(g))
-    b = tf.pad(b, [[pad[0], pad[2]], 
-                  [pad[1], pad[3]], 
-                  [0, 0]], 
-                  constant_values=tf.reduce_mean(b))
-
-    image_ = tf.concat([r, g, b], axis = -1)
-
+    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
+                                    [pad[1], pad[3]], 
+                                    [0, 0]])
     pad_info = tf.stack([
           tf.cast(tf.shape(cropped_image)[:2], tf.float32),
           tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
           tf.ones_like(original_dims, dtype = tf.float32),
-          -tf.cast(dst_shape[:2], tf.float32)
+          -tf.cast(pad[:2], tf.float32)
       ])
-
+   
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
     infos = [crop_info, pad_info]
 
