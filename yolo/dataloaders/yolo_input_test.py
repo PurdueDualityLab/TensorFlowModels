@@ -27,7 +27,7 @@ from official.core import task_factory
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  config_path = ["yolo/configs/experiments/yolov4/debug/512-state-test.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/512-baseline.yaml"]
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
@@ -97,7 +97,7 @@ def test_classification_pipeline():
 import time
 
 
-def test_yolo_pipeline(is_training=True):
+def test_yolo_pipeline(is_training=True, num = 30):
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
@@ -112,7 +112,7 @@ def test_yolo_pipeline(is_training=True):
   ltime = time.time()
 
   data = dataset if is_training else dsp
-  data = data.take(60)
+  data = data.take(num)
   for l, (i, j) in enumerate(data):
     ftime = time.time()
     i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
@@ -264,8 +264,8 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  test_yolo_pipeline(is_training=True)
-  # test_yolo_pipeline(is_training=False)
+  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=False, num = 10)
   # time_pipeline()
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po

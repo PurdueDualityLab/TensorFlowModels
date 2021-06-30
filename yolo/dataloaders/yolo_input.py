@@ -356,6 +356,9 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
 
+    if self._letter_box == False:
+      image = tf.image.resize(image, [self._image_h, self._image_w])
+
     image, infos = preprocessing_ops.resize_and_crop_image(
         image,
         [self._image_h, self._image_w],

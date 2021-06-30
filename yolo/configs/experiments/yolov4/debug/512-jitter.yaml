@@ -74,7 +74,7 @@ task:
       aug_rand_hue: 0.1
       jitter: 0.3
       resize: 1.0
-      area_thresh: 0.0
+      area_thresh: 0.25
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
