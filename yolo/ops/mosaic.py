@@ -414,7 +414,7 @@ class Mosaic(object):
     if not sample["is_mosaic"]:
       sample['image'] = self._unpad_images(
           sample['image'], sample['info'], squeeze=False)
-
+      
       (sample['groundtruth_boxes'], sample['groundtruth_classes'],
        sample['groundtruth_is_crowd'],
        sample['groundtruth_area']) = self._unpad_gt_comps(

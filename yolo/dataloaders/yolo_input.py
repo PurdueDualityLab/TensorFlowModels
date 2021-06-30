@@ -343,8 +343,10 @@ class Parser(parser.Parser):
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
+    height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
-        image, boxes, classes, width, height, info, data, is_training=True)
+        image, boxes, classes, width, height, info, inds, 
+        data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -354,7 +356,6 @@ class Parser(parser.Parser):
     image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
-    height, width = preprocessing_ops.get_image_shape(image)
 
     if self._letter_box == False:
       image = tf.image.resize(image, [self._image_h, self._image_w])
@@ -380,8 +381,10 @@ class Parser(parser.Parser):
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
+    height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
-        image, boxes, classes, width, height, info, data, is_training=False)
+        image, boxes, classes, width, height, info, inds, 
+        data, is_training=False)
     return image, labels
 
   def _build_label(self,
@@ -391,6 +394,7 @@ class Parser(parser.Parser):
                    width,
                    height,
                    info,
+                   inds, 
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
@@ -435,6 +439,7 @@ class Parser(parser.Parser):
 
     # set/fix the area shape
     area = data['groundtruth_area']
+    area = tf.gather(area, inds)
     ashape = area.get_shape().as_list()
     area = pad_max_instances(area, self._max_num_instances, 0)
     ashape[0] = self._max_num_instances
@@ -442,6 +447,7 @@ class Parser(parser.Parser):
 
     # set/fix the is_crowd shape
     is_crowd = data['groundtruth_is_crowd']
+    is_crowd = tf.gather(is_crowd, inds)
     ishape = is_crowd.get_shape().as_list()
     is_crowd = pad_max_instances(
         tf.cast(is_crowd, tf.int32), self._max_num_instances, 0)
@@ -460,7 +466,7 @@ class Parser(parser.Parser):
         'width': width,
         'height': height,
         'info': info,
-        'num_detections': tf.shape(data['groundtruth_classes'])[0]
+        'num_detections': tf.shape(inds)[0]
     }
 
     # build the grid formatted for loss computation in model output format
