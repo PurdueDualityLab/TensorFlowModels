@@ -240,7 +240,7 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     if not data['is_mosaic']:
-      if self._jitter != 0:
+      if self._jitter != 0.0 or self._resize != 1.0:
         image, infos = preprocessing_ops.resize_and_jitter_image(
             image, 
             [self._image_h, self._image_w], 
