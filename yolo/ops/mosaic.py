@@ -599,26 +599,26 @@ class Mosaic(object):
     three = dataset.shard(num_shards=4, index=2)
     four = dataset.shard(num_shards=4, index=3)
 
-    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False)
-    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False)
-    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False)
-    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False)
+    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False).prefetch(tf.data.AUTOTUNE)
+    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False).prefetch(tf.data.AUTOTUNE)
+    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False).prefetch(tf.data.AUTOTUNE)
+    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=tf.data.AUTOTUNE, deterministic = False).prefetch(tf.data.AUTOTUNE)
 
     stitched = tf.data.Dataset.zip((one, two, three, four))
     stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
     return stitched
 
   def _apply(self, dataset):
-    dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE).prefetch(tf.data.AUTOTUNE)
     dataset = dataset.padded_batch(4)
-    dataset = dataset.map(self._mapped, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(self._mapped, num_parallel_calls=tf.data.AUTOTUNE).prefetch(tf.data.AUTOTUNE)
     dataset = dataset.unbatch()
     dataset = dataset.map(
-        self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE)
+        self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE).prefetch(tf.data.AUTOTUNE)
     return dataset
 
   def _no_apply(self, dataset):
-    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE)
+    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE).prefetch(tf.data.AUTOTUNE)
 
   def mosaic_fn(self, is_training=True):
     if is_training and self._mosaic_frequency == 1.0:

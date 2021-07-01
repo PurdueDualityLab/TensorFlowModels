@@ -29,6 +29,7 @@ def test_yolo_input_task():
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
   config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/debug/512-state-test.yaml"]
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)

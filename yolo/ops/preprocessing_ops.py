@@ -430,6 +430,7 @@ def resize_and_crop_image(image,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
                           random_pad=False,
+                          random_jitter = False, 
                           shiftx=0.5,
                           shifty=0.5,
                           sheer=0.0,
@@ -523,7 +524,7 @@ def resize_and_crop_image(image,
     random_pad = tf.cast(random_pad, tf.float32)
     if random_pad == 1.0:
       random_pad = tf.cast(0.5, tf.float32)
-    if random_jittering:
+    if random_jittering and random_jitter:
       max_offset_ = scaled_size - desired_size
 
       max_offset = tf.where(
@@ -531,6 +532,7 @@ def resize_and_crop_image(image,
       offset = max_offset * 0.5 + max_offset * tf.random.uniform([2,], 
                                                 -random_pad, random_pad, seed=seed)
       offset = tf.cast(offset, tf.int32)
+      tf.print(offset, scaled_size)
     else:
       offset = tf.zeros((2,), tf.int32)
 
