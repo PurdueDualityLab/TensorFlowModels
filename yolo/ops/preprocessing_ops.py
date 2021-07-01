@@ -744,11 +744,12 @@ def resize_and_jitter_image(image,
     if random_pad:
       rmh = tf.maximum(0, -ptop)
       rmw = tf.maximum(0, -pleft)
+      dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
     else:
       rmw = tf.cast(tf.cast(swidth - w_, tf.float32) * shiftx, w_.dtype)
       rmh = tf.cast(tf.cast(sheight - h_, tf.float32) * shifty, h_.dtype)
-    dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
-    ptop, pleft, pbottom, pright = dst_shape
+      dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
+      ptop, pleft, pbottom, pright = dst_shape
 
     pad = dst_shape * tf.convert_to_tensor([1, 1, -1, -1]) 
     pad += tf.convert_to_tensor([0, 0, sheight, swidth])
