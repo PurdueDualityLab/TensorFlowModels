@@ -9,7 +9,35 @@ from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
 
 
-def rand_uniform_strong(minval, maxval, dtype=tf.float32):
+def rand_uniform_strong(minval, 
+                        maxval, 
+                        precalc_val = None, 
+                        dtype=tf.float32):
+  """
+  Equivalent to tf.random.uniform, except that minval and maxval are flipped if
+  minval is greater than maxval.
+
+  Args:
+    minval: An `int` for a lower or upper endpoint of the interval from which to
+      choose the random number.
+    maxval: An `int` for the other endpoint.
+    dtype: The output type of the tensor.
+  
+  Returns:
+    A random tensor of type dtype that falls between minval and maxval excluding
+    the bigger one.
+  """
+  if minval > maxval:
+    minval, maxval = maxval, minval
+  
+  if precalc_val is None:
+    precalc_val = tf.random.uniform([], minval=0, maxval=1, dtype=dtype) 
+    val = (precalc_val * (maxval - minval)) + minval;
+  else:
+    val = tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
+  return val 
+
+def rand_strong(minval, maxval, dtype=tf.float32):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -27,7 +55,6 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32):
   if minval > maxval:
     minval, maxval = maxval, minval
   return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
-
 
 def rand_scale(val, dtype=tf.float32):
   """
@@ -1259,7 +1286,6 @@ def resize_and_jitter_image(image,
       resize_down = resize if resize < 1.0 else 1/resize
       min_rdw = ow * (1 - (1 / resize_down)) / 2
       min_rdh = oh * (1 - (1 / resize_down)) / 2
-      # tf.print(max_rdh, max_rdw, min_rdh, min_rdw)
 
     pleft = rand_uniform_strong(-dw, dw, dw.dtype)
     pright = rand_uniform_strong(-dw, dw, dw.dtype)

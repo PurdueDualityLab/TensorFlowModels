@@ -68,13 +68,13 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      jitter: 0.3
-      resize: 1.0
+      jitter: 0.1
+      resize: 1.5
       area_thresh: 0.25
       random_pad: True
       use_tie_breaker: True
@@ -85,7 +85,7 @@ task:
         max_resolution: 640
         mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
-        aspect_ratio_mode: 'distort'
+        aspect_ratio_mode: 'letter'
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
