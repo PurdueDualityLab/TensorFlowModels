@@ -273,7 +273,7 @@ class Parser(parser.Parser):
           aug_scale_min=self._mosaic_min,
           aug_scale_max=self._mosaic_max,
           sheer = self._sheer, 
-          random_jitter = False, 
+          #random_jitter = False, 
           random_pad = self._random_pad)
       stale_a = tf.stack([
           tf.cast(tf.shape(image)[:2], tf.float32),
