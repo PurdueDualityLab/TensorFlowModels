@@ -79,7 +79,7 @@ task:
       aug_scale_max: 1.1
       mosaic_scale_min: 0.5
       mosaic_scale_max: 1.1
-      area_thresh: 0.2
+      area_thresh: 0.1
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
@@ -88,6 +88,7 @@ task:
         output_resolution: [512, 512]
         max_resolution: 640
         mosaic_frequency: 0.7
+        crop_area: [0.25]
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
   validation_data:

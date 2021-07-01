@@ -301,7 +301,7 @@ class Mosaic(object):
         info = sample['info']
 
         if self._mosaic_crop_mode == 'crop':
-          min_offset = 0.2
+          min_offset = self._crop_area[0]
           cut_x = preprocessing_ops.rand_uniform_strong(
             self._output_size[1] * min_offset, 
             self._output_size[1] * (1 - min_offset)
