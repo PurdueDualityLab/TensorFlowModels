@@ -741,7 +741,7 @@ def resize_and_jitter_image(image,
 
     h_ = (src_crop[2] - src_crop[0])
     w_ = (src_crop[3] - src_crop[1])
-    if random_pad:
+    if random_pad or resize == 1:
       rmh = tf.maximum(0, -ptop)
       rmw = tf.maximum(0, -pleft)
       dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
