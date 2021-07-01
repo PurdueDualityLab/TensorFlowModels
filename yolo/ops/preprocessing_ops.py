@@ -11,11 +11,11 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 def rand_uniform_strong(minval, 
                         maxval, 
+                        precalc_val = None, 
                         dtype=tf.float32):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
-
   Args:
     minval: An `int` for a lower or upper endpoint of the interval from which to
       choose the random number.
@@ -28,13 +28,18 @@ def rand_uniform_strong(minval,
   """
   if minval > maxval:
     minval, maxval = maxval, minval
-  return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
+  
+  if precalc_val is None:
+    precalc_val = tf.random.uniform([], minval=0, maxval=1, dtype=dtype) 
+    val = (precalc_val * (maxval - minval)) + minval;
+  else:
+    val = tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
+  return val 
 
 def rand_strong(minval, maxval, dtype=tf.float32):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
-
   Args:
     minval: An `int` for a lower or upper endpoint of the interval from which to
       choose the random number.
@@ -61,7 +66,6 @@ def rand_scale(val, dtype=tf.float32):
   Args:
     val: A float representing the maximum scaling allowed.
     dtype: The output type of the tensor.
-
   Returns:
     The random scale.
   """
@@ -83,7 +87,6 @@ def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
     pad_value: An int representing the value used for padding until the maximum
       number of instances is obtained.
     pad_axis: An int representing the axis index to pad.
-
   Returns:
     The output tensor whose dimensions match the input tensor except with the
     size along the `pad_axis` replaced by `instances`.
@@ -126,7 +129,6 @@ def random_translate(image, t):
   """
   Translate the boxes by a random fraction of the image width and height between
   [-t, t).
-
   Args:
     image: An int tensor of either 3 or 4 dimensions representing the image or a
       batch of images.
@@ -182,7 +184,6 @@ def translate_image(image, t_y, t_x):
   """
   Translate the boxes by a fix fraction of the image width and height
   represented by (t_y, t_x).
-
   Args:
     image: An int tensor of either 3 or 4 dimensions representing the image or a
       batch of images.
@@ -190,7 +191,6 @@ def translate_image(image, t_y, t_x):
       the image vertically.
     t_x: A float representing the fraction of the width by which to translate
       the image horizontally.
-
   Returns:
     A tuple with three elements: a tensor representing the translated image with
     the same dimensions as `box`, and the number of pixels that the image was
@@ -430,7 +430,6 @@ def resize_and_crop_image(image,
                           aug_scale_min=1.0,
                           aug_scale_max=1.0,
                           random_pad=False,
-                          random_jitter = False, 
                           shiftx=0.5,
                           shifty=0.5,
                           sheer=0.0,
@@ -511,7 +510,6 @@ def resize_and_crop_image(image,
       random_scale = 1.0
       scaled_size = desired_size
 
-    scaled_size = tf.cast(scaled_size, image_size.dtype)
     scale = tf.minimum(scaled_size[0] / image_size[0],
                        scaled_size[1] / image_size[1])
     scaled_size = tf.round(image_size * scale)
@@ -524,7 +522,7 @@ def resize_and_crop_image(image,
     random_pad = tf.cast(random_pad, tf.float32)
     if random_pad == 1.0:
       random_pad = tf.cast(0.5, tf.float32)
-    if random_jittering and random_jitter:
+    if random_jittering:
       max_offset_ = scaled_size - desired_size
 
       max_offset = tf.where(
@@ -532,7 +530,6 @@ def resize_and_crop_image(image,
       offset = max_offset * 0.5 + max_offset * tf.random.uniform([2,], 
                                                 -random_pad, random_pad, seed=seed)
       offset = tf.cast(offset, tf.int32)
-      tf.print(offset, scaled_size)
     else:
       offset = tf.zeros((2,), tf.int32)
 
@@ -563,8 +560,7 @@ def resize_and_crop_image(image,
 
     image_info = tf.stack([
         image_size,
-        tf.cast(tf.shape(output_image)[:2], dtype=tf.float32), 
-        image_scale,
+        tf.constant(desired_size, dtype=tf.float32), image_scale,
         tf.cast(offset, tf.float32)
     ])
 
@@ -698,11 +694,13 @@ def resize_and_jitter_image(image,
     dh = oh * jitter
     
     if resize != 1:
-      max_rdw, max_rdh = 0.0, 0.0
       if resize > 1.0:
         resize_up = resize if resize > 1.0 else 1/resize
         max_rdw = ow * (1 - (1 / resize_up)) / 2
         max_rdh = oh * (1 - (1 / resize_up)) / 2
+      else:
+        max_rdw = 0.0
+        max_rdh = 0.0 
 
       resize_down = resize if resize < 1.0 else 1/resize
       min_rdw = ow * (1 - (1 / resize_down)) / 2
@@ -722,7 +720,9 @@ def resize_and_jitter_image(image,
     if letter_box:
       image_aspect_ratio = ow/oh 
       input_aspect_ratio = w/h 
+
       distorted_aspect = image_aspect_ratio/input_aspect_ratio
+
       if distorted_aspect > 1: 
         delta_h = ((ow/input_aspect_ratio) - oh)/2
         ptop = ptop - delta_h
@@ -741,15 +741,14 @@ def resize_and_jitter_image(image,
 
     h_ = (src_crop[2] - src_crop[0])
     w_ = (src_crop[3] - src_crop[1])
-    if random_pad or resize == 1:
+    if random_pad:
       rmh = tf.maximum(0, -ptop)
       rmw = tf.maximum(0, -pleft)
-      dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
     else:
       rmw = tf.cast(tf.cast(swidth - w_, tf.float32) * shiftx, w_.dtype)
       rmh = tf.cast(tf.cast(sheight - h_, tf.float32) * shifty, h_.dtype)
-      dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
-      ptop, pleft, pbottom, pright = dst_shape
+    dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
+    ptop, pleft, pbottom, pright = dst_shape
 
     pad = dst_shape * tf.convert_to_tensor([1, 1, -1, -1]) 
     pad += tf.convert_to_tensor([0, 0, sheight, swidth])
@@ -1037,7 +1036,6 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
     scale_num_inst: A `float` to represent the scale at which to multiply the
       number of predicted boxes by to get the number of instances to write
       to the grid.tf.print(self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop") the tie breaker.
-
   Return:
     tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
   """
@@ -1251,7 +1249,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25):
       found via Kmeans
     width: int for the image width
     height: int for the image height
-
   Return:
     tf.Tensor: y_true with the anchor associated with each ground truth
     box known
