@@ -27,7 +27,8 @@ from official.core import task_factory
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter.yaml"]
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
@@ -35,8 +36,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 1
-  config.validation_data.global_batch_size = 1
+  config.train_data.global_batch_size = 64
+  config.validation_data.global_batch_size = 64
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 
@@ -264,9 +265,9 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
-  test_yolo_pipeline(is_training=False, num = 10)
   # time_pipeline()
+  # test_yolo_pipeline(is_training=True, num = 30)
+  # test_yolo_pipeline(is_training=False, num = 5)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

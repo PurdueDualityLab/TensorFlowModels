@@ -11,7 +11,6 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 def rand_uniform_strong(minval, 
                         maxval, 
-                        precalc_val = None, 
                         dtype=tf.float32):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
@@ -29,13 +28,7 @@ def rand_uniform_strong(minval,
   """
   if minval > maxval:
     minval, maxval = maxval, minval
-  
-  if precalc_val is None:
-    precalc_val = tf.random.uniform([], minval=0, maxval=1, dtype=dtype) 
-    val = (precalc_val * (maxval - minval)) + minval;
-  else:
-    val = tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
-  return val 
+  return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
 def rand_strong(minval, maxval, dtype=tf.float32):
   """
@@ -517,6 +510,7 @@ def resize_and_crop_image(image,
       random_scale = 1.0
       scaled_size = desired_size
 
+    scaled_size = tf.cast(scaled_size, image_size.dtype)
     scale = tf.minimum(scaled_size[0] / image_size[0],
                        scaled_size[1] / image_size[1])
     scaled_size = tf.round(image_size * scale)
@@ -567,7 +561,8 @@ def resize_and_crop_image(image,
 
     image_info = tf.stack([
         image_size,
-        tf.constant(desired_size, dtype=tf.float32), image_scale,
+        tf.cast(tf.shape(output_image)[:2], dtype=tf.float32), 
+        image_scale,
         tf.cast(offset, tf.float32)
     ])
 
@@ -701,13 +696,11 @@ def resize_and_jitter_image(image,
     dh = oh * jitter
     
     if resize != 1:
+      max_rdw, max_rdh = 0.0, 0.0
       if resize > 1.0:
         resize_up = resize if resize > 1.0 else 1/resize
         max_rdw = ow * (1 - (1 / resize_up)) / 2
         max_rdh = oh * (1 - (1 / resize_up)) / 2
-      else:
-        max_rdw = 0.0
-        max_rdh = 0.0 
 
       resize_down = resize if resize < 1.0 else 1/resize
       min_rdw = ow * (1 - (1 / resize_down)) / 2
@@ -727,9 +720,7 @@ def resize_and_jitter_image(image,
     if letter_box:
       image_aspect_ratio = ow/oh 
       input_aspect_ratio = w/h 
-
       distorted_aspect = image_aspect_ratio/input_aspect_ratio
-
       if distorted_aspect > 1: 
         delta_h = ((ow/input_aspect_ratio) - oh)/2
         ptop = ptop - delta_h
@@ -785,7 +776,7 @@ def resize_and_jitter_image(image,
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
     infos = [crop_info, pad_info]
 
-    if cut is not None:
+    if cut is not None or (cut[0] != -1 and cut[1] != -1):
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, 
                                     ptop, pleft, pbottom, pright, 
                                     shiftx, shifty)
