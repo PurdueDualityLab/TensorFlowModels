@@ -74,9 +74,10 @@ task:
       aug_rand_hue: 0.1
       jitter: 0.3
       resize: 1.0
+      sheer: 0.0
       aug_scale_min: 0.5
       aug_scale_max: 1.1
-      mosaic_scale_min: 0.6667
+      mosaic_scale_min: 0.5
       mosaic_scale_max: 1.1
       area_thresh: 0.2
       random_pad: True
