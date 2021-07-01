@@ -51,6 +51,8 @@ class Parser(parser.Parser):
                aug_rand_angle=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
+               mosaic_min = 1.0, 
+               mosaic_max = 1.0, 
                random_pad=True,
                anchor_t=4.0,
                scale_xy=None,
@@ -143,11 +145,15 @@ class Parser(parser.Parser):
     self._resize = 0.0 if resize is None else resize
     self._random_flip = random_flip
     self._letter_box = letter_box
-    self._aug_scale_min = aug_scale_min
-    self._aug_scale_max = aug_scale_max
     self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_translate = aug_rand_transalate
+
+    # scaleing params
+    self._aug_scale_min = aug_scale_min
+    self._aug_scale_max = aug_scale_max
+    self._mosaic_min = mosaic_min
+    self._mosaic_max = mosaic_max
 
     # color space distortion of the image
     self._aug_rand_saturation = aug_rand_saturation
@@ -240,34 +246,23 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     if not data['is_mosaic']:
-      if self._jitter != 0.0 or self._resize != 1.0:
-        image, infos = preprocessing_ops.resize_and_jitter_image(
-            image, 
-            [self._image_h, self._image_w], 
-            letter_box=self._letter_box,
-            jitter=self._jitter,
-            resize=self._resize,
-            random_pad=self._random_pad)
-      else:
-        stale_a = tf.stack([
-          tf.cast(tf.shape(image)[:2], tf.float32),
-          tf.cast(tf.shape(image)[:2], tf.float32),
-          tf.ones_like(tf.cast(shape[:2], tf.float32)),
-          tf.zeros_like(tf.cast(shape[:2], tf.float32)),
-        ])
-        infos = [stale_a] 
-        # works well
-        image, infos_ = preprocessing_ops.resize_and_crop_image(
-            image,
-            [self._image_h, self._image_w],
-            [self._image_h, self._image_w],
-            letter_box=self._letter_box,
-            sheer = self._sheer, 
-            aug_scale_min=self._aug_scale_min,
-            aug_scale_max=self._aug_scale_max,
-            random_pad=self._random_pad)
-      
-        infos.extend(infos_)
+      image, infos = preprocessing_ops.resize_and_jitter_image(
+          image, 
+          [self._image_h, self._image_w], 
+          letter_box=self._letter_box,
+          jitter=self._jitter,
+          resize=self._resize,
+          random_pad=self._random_pad)
+      image, infos_ = preprocessing_ops.resize_and_crop_image(
+          image,
+          [self._image_h, self._image_w],
+          [self._image_h, self._image_w],
+          letter_box=self._letter_box,
+          sheer = self._sheer, 
+          aug_scale_min=self._aug_scale_min,
+          aug_scale_max=self._aug_scale_max,
+          random_pad=self._random_pad)
+      infos.extend(infos_)
     else:
       # works well
       image, infos = preprocessing_ops.resize_and_crop_image(
@@ -275,10 +270,10 @@ class Parser(parser.Parser):
           [self._image_h, self._image_w],
           [self._image_h, self._image_w],
           letter_box=True,
-          aug_scale_min=1.0,
-          aug_scale_max=1.0,
-          sheer = 0.0, 
-          random_pad=False)
+          aug_scale_min=self._mosaic_min,
+          aug_scale_max=self._mosaic_max,
+          sheer = self._sheer, 
+          random_pad = self._random_pad)
       stale_a = tf.stack([
           tf.cast(tf.shape(image)[:2], tf.float32),
           tf.cast(tf.shape(image)[:2], tf.float32),
@@ -286,7 +281,7 @@ class Parser(parser.Parser):
           tf.zeros_like(tf.cast(shape[:2], tf.float32)),
       ])
       infos.append(stale_a)
-      # infos.append(stale_a)
+      infos.append(stale_a)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 

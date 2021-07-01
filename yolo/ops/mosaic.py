@@ -484,10 +484,10 @@ class Mosaic(object):
     sample['num_detections'] = tf.expand_dims(
         tf.shape(sample['groundtruth_boxes'])[1], axis=0)
     
-    if self._mosaic_crop_mode == 'pre_crop':
-      sample['is_mosaic'] = tf.expand_dims(tf.cast(0.0, tf.bool), axis=0)
-    else:
-      sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
+    #if self._mosaic_crop_mode == 'pre_crop':
+    #sample['is_mosaic'] = tf.expand_dims(tf.cast(0.0, tf.bool), axis=0)
+    
+    sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
     return sample
 
   def resample_unpad(self, sample):
@@ -587,10 +587,10 @@ class Mosaic(object):
     sample['info'] = tf.convert_to_tensor([0, 0, height, width])
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[1]
     
-    if self._mosaic_crop_mode == 'pre_crop':
-      sample['is_mosaic'] = tf.cast(0.0, tf.bool)
-    else:
-      sample['is_mosaic'] = tf.cast(1.0, tf.bool)
+    # if self._mosaic_crop_mode == 'pre_crop':
+    #   sample['is_mosaic'] = tf.cast(0.0, tf.bool)
+    # else:
+    sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
     return sample
    
   def _full_frequency_apply(self, dataset):
