@@ -26,6 +26,7 @@ class Mosaic(object):
                aug_scale_max=1.0,
                random_flip=True,
                random_pad = False, 
+               translate = 0.5, 
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
@@ -45,6 +46,7 @@ class Mosaic(object):
     self._random_flip = random_flip
     self._aug_probability = aug_probability
     self._random_pad = random_pad
+    self._translate = translate
 
     self._crop_area = crop_area
     self._area_thresh = area_thresh
@@ -190,6 +192,7 @@ class Mosaic(object):
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1], 
           random_pad=self._random_pad,
+          translate=self._translate,
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
@@ -202,6 +205,7 @@ class Mosaic(object):
           aug_scale_min=self._crop_area_mosaic[0],
           aug_scale_max=self._crop_area_mosaic[1],
           random_pad=self._random_pad,
+          translate=self._translate,
           seed=self._seed)
       infos.extend(infos_)
       height, width = self._output_size[0], self._output_size[1]

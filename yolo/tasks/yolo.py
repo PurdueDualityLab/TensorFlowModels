@@ -163,6 +163,7 @@ class YoloTask(base_task.Task):
         aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
         random_crop=rcrop,
         random_pad=params.parser.random_pad,
+        translate=params.parser.aug_rand_translate,
         resize=rsize,
         area_thresh=params.parser.area_thresh, 
         aug_scale_min=min_scale,

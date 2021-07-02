@@ -74,6 +74,7 @@ task:
       aug_rand_hue: 0.1
       jitter: 0.3
       resize: 1.5
+      aug_rand_translate: 0.0
       aug_scale_min: 1.0
       aug_scale_max: 1.0
       mosaic_scale_min: 1.0

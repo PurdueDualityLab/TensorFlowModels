@@ -78,6 +78,7 @@ task:
       aug_scale_max: 1.0
       mosaic_scale_min: 0.4
       mosaic_scale_max: 1.2
+      aug_rand_translate: 0.0
       area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True

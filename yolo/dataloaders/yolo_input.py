@@ -261,6 +261,7 @@ class Parser(parser.Parser):
           sheer = self._sheer, 
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
+          translate=self._aug_rand_translate,
           random_pad=self._random_pad)
       infos.extend(infos_)
     else:
@@ -273,6 +274,7 @@ class Parser(parser.Parser):
           aug_scale_min=self._mosaic_min,
           aug_scale_max=self._mosaic_max,
           sheer = self._sheer, 
+          translate=self._aug_rand_translate,
           #random_jitter = False, 
           random_pad = self._random_pad)
       stale_a = tf.stack([
@@ -291,11 +293,11 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    if self._aug_rand_translate > 0.0:
-      # apply random translation to the image
-      image, tx, ty = preprocessing_ops.random_translate(
-          image, self._aug_rand_translate)
-      boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
+    # if self._aug_rand_translate > 0.0:
+    #   # apply random translation to the image
+    #   image, tx, ty = preprocessing_ops.random_translate(
+    #       image, self._aug_rand_translate)
+    #   boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
 
     if self._aug_rand_angle > 0:
       # apply rotation to the images

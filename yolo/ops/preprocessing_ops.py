@@ -12,8 +12,7 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 def rand_uniform_strong(minval, 
                         maxval,
-                        dtype=tf.float32, 
-                        precalc_val = None):
+                        dtype=tf.float32):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -29,13 +28,8 @@ def rand_uniform_strong(minval,
   """
   if minval > maxval:
     minval, maxval = maxval, minval
-  
-  if precalc_val is None:
-    precalc_val = tf.random.uniform([], minval=0, maxval=1, dtype=dtype) 
-    val = (precalc_val * (maxval - minval)) + minval;
-  else:
-    val = tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
-  return val 
+
+  return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
 def rand_strong(minval, maxval, dtype=tf.float32):
   """

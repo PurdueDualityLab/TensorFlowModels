@@ -69,8 +69,9 @@ task:
       aug_rand_hue: 0.1
       aug_scale_min: 0.1
       aug_scale_max: 1.9
+      aug_rand_translate: 0.2
       area_thresh: 0.1
-      random_pad: 0.2
+      random_pad: true
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
@@ -81,8 +82,6 @@ task:
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.1, 1.9]
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
   validation_data:
     global_batch_size: 8
     dtype: float16
