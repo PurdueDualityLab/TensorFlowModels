@@ -58,7 +58,6 @@ task:
       nms_thresh: 0.6
       pre_nms_points: 5000
       use_scaled_loss: false
-      darknet: false
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -68,14 +67,14 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: True
+      letter_box: False
       random_flip: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      jitter: 0.1
-      resize: 1.5
-      area_thresh: 0.25
+      jitter: 0.3
+      resize: 1.0
+      area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
@@ -86,6 +85,7 @@ task:
         mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'letter'
+        crop_area: [0.20]
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -112,8 +112,6 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:

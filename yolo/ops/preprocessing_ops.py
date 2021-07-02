@@ -2,6 +2,7 @@ from random import random
 from numpy import float32
 from numpy.core.fromnumeric import resize
 import tensorflow as tf
+from tensorflow.python.ops.gen_image_ops import random_crop
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
@@ -10,9 +11,9 @@ from official.vision.beta.ops import box_ops as bbox_ops
 
 
 def rand_uniform_strong(minval, 
-                        maxval, 
-                        precalc_val = None, 
-                        dtype=tf.float32):
+                        maxval,
+                        dtype=tf.float32, 
+                        precalc_val = None):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -363,51 +364,48 @@ def random_crop_image(image,
                     axis=0)
     return cropped_image, info
 
+# if round:
+#   oh = tf.random.uniform([], -1, 1 + 1, tf.int32)
+#   ow = tf.random.uniform([], -1, 1 + 1, tf.int32)
 
-
+#   if skip_zero:
+#     if oh == 0:
+#       value = tf.random.uniform([], 0, 2, tf.int32)
+#       if value == 0: 
+#         oh += 1
+#       else:
+#         oh -= 1
+#     if ow == 0:
+#       value = tf.random.uniform([], 0, 2, tf.int32)
+#       if value == 0: 
+#         ow += 1
+#       else:
+#         ow -= 1
+#   oh = tf.cast(oh, tf.float32)
+#   ow = tf.cast(ow, tf.float32)
+# else:
+#   oh = tf.random.uniform([], -1, 1)
+#   ow = tf.random.uniform([], -1, 1)
 
 def random_window_crop(image, 
                        target_height, 
                        target_width, 
-                       skip_zero = False, 
-                       round = True):
-  ishape = tf.shape(image)
+                       translate = 0.0):
 
+  ishape = tf.shape(image)
   th = target_height if target_height < ishape[0] else ishape[0]
   tw = target_width if target_width < ishape[1] else ishape[1]
-  if round:
-    oh = tf.random.uniform([], -1, 1 + 1, tf.int32)
-    ow = tf.random.uniform([], -1, 1 + 1, tf.int32)
-
-    if skip_zero:
-      if oh == 0:
-        value = tf.random.uniform([], 0, 2, tf.int32)
-        if value == 0: 
-          oh += 1
-        else:
-          oh -= 1
-      if ow == 0:
-        value = tf.random.uniform([], 0, 2, tf.int32)
-        if value == 0: 
-          ow += 1
-        else:
-          ow -= 1
-    oh = tf.cast(oh, tf.float32)
-    ow = tf.cast(ow, tf.float32)
-  else:
-    oh = tf.random.uniform([], -1, 1)
-    ow = tf.random.uniform([], -1, 1)
-
   crop_size = tf.convert_to_tensor([th, tw, -1])
 
-  # tf.print(oh, ow)
   crop_offset = ishape - crop_size
   crop_offset = tf.convert_to_tensor([crop_offset[0]//2, crop_offset[1]//2, 0])
-
-  oh = tf.cast(tf.cast(crop_offset[0], oh.dtype) * oh, tf.int32)
-  ow = tf.cast(tf.cast(crop_offset[1], ow.dtype) * ow, tf.int32) 
-  crop_offset += tf.convert_to_tensor([oh, ow, 0])
-
+  shift = tf.convert_to_tensor([rand_uniform_strong(-translate, translate), 
+                                rand_uniform_strong(-translate, translate), 
+                                0])
+  crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, 
+                                                      shift.dtype), 
+                                                      crop_offset.dtype)
+  #tf.print(crop_offset, shift, ishape, crop_size)
   cropped_image = tf.slice(image, crop_offset, crop_size)
 
   scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
@@ -415,13 +413,11 @@ def random_window_crop(image,
 
   info = tf.stack([
       tf.cast(ishape[:2], tf.float32),
-      tf.cast(crop_size[:2], tf.float32), scale, offset
-  ],
-                  axis=0)
+      tf.cast(crop_size[:2], tf.float32), 
+      scale, 
+      offset],axis=0)
 
   return cropped_image, info
-
-
 
 def resize_and_crop_image(image,
                           desired_size,
@@ -433,6 +429,7 @@ def resize_and_crop_image(image,
                           shiftx=0.5,
                           shifty=0.5,
                           sheer=0.0,
+                          translate = 0.0, 
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
@@ -505,7 +502,7 @@ def resize_and_crop_image(image,
                                        aug_scale_min,
                                        aug_scale_max,
                                        seed=seed)
-      scaled_size = tf.round(random_scale * desired_size)
+      scaled_size = tf.round(random_scale * image_size)
     else:
       random_scale = 1.0
       scaled_size = desired_size
@@ -516,33 +513,29 @@ def resize_and_crop_image(image,
 
     # Computes 2D image_scale.
     image_scale = scaled_size / image_size
-
-    # Selects non-zero random offset (x, y) if scaled image is larger than
-    # desired_size.
-    random_pad = tf.cast(random_pad, tf.float32)
-    if random_pad == 1.0:
-      random_pad = tf.cast(0.5, tf.float32)
-    if random_jittering:
-      max_offset_ = scaled_size - desired_size
-
-      max_offset = tf.where(
-          tf.less(max_offset_, 0), tf.zeros_like(max_offset_), max_offset_)
-      offset = max_offset * 0.5 + max_offset * tf.random.uniform([2,], 
-                                                -random_pad, random_pad, seed=seed)
-      offset = tf.cast(offset, tf.int32)
-    else:
-      offset = tf.zeros((2,), tf.int32)
-
     scaled_image = tf.image.resize(
         image, tf.cast(scaled_size, tf.int32), method=method)
 
+    # Selects non-zero random offset (x, y) if scaled image is larger than
+    # desired_size.
     if random_jittering:
-      scaled_image = scaled_image[offset[0]:offset[0] + desired_size[0],
-                                  offset[1]:offset[1] + desired_size[1], :]
+      scaled_image, info_a = random_window_crop(
+        scaled_image, 
+        desired_size[0], 
+        desired_size[1], 
+        translate = translate
+      )
+      offset = tf.cast(info_a[-1, :], tf.int32)
+    else:
+      offset = tf.zeros((2,), tf.int32)
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
-    if random_pad > 0.0:
+    # random_pad = tf.cast(random_pad, tf.float32)
+    # if random_pad == 1.0:
+    #   random_pad = tf.cast(0.5, tf.float32)
+    if random_pad:
+      random_pad = 0.5
       shifty = 0.5 + rand_uniform_strong(-random_pad, random_pad, tf.float32)
       shiftx = 0.5 + rand_uniform_strong(-random_pad, random_pad, tf.float32)
 
@@ -617,7 +610,9 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
       crop_offset = [cut_y - bot_shift, cut_x - right_shift, 0]
       crop_size = [h - cut_y, w - cut_x, -1]
     else:
-      raise Exception("crop mosaic not supported for floating shifts")
+      crop_offset = [0, 0, 0]
+      crop_size = [-1, -1, -1]
+      #raise Exception("crop mosaic not supported for floating shifts")
 
     ishape = tf.shape(image)[:2]
     image = tf.slice(image, crop_offset, crop_size)
@@ -784,7 +779,7 @@ def resize_and_jitter_image(image,
                                     shiftx, shifty)
       infos.append(crop_info)
     
-    return image_, infos 
+    return image_, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
 
 # ops for box clipping and cleaning
