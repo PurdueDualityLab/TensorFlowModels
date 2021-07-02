@@ -17,6 +17,7 @@ import collections
 import tensorflow as tf
 import tensorflow.keras as ks
 
+from official.modeling import hyperparams
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
 
@@ -667,3 +668,29 @@ def build_darknet(
       kernel_regularizer=l2_regularizer)
   model.summary()
   return model
+
+# @factory.register_backbone_builder('darknet')
+# def build_darknet(
+#     input_specs: tf.keras.layers.InputSpec,
+#     backbone_cfg: hyperparams.Config,
+#     norm_activation_config: hyperparams.Config,
+#     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
+#   """Builds darknet."""
+
+#   backbone_cfg = backbone_cfg.get()
+
+#   model = Darknet(
+#       model_id=backbone_cfg.model_id,
+#       min_level=backbone_cfg.min_level,
+#       max_level=backbone_cfg.max_level,
+#       input_specs=input_specs,
+#       dilate=backbone_cfg.dilate,
+#       width_scale=backbone_cfg.width_scale,
+#       depth_scale=backbone_cfg.depth_scale,
+#       activation=norm_activation_config.activation,
+#       use_sync_bn=norm_activation_config.use_sync_bn,
+#       norm_momentum=norm_activation_config.norm_momentum,
+#       norm_epsilon=norm_activation_config.norm_epsilon,
+#       kernel_regularizer=l2_regularizer)
+#   model.summary()
+#   return model

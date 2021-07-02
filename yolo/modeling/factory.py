@@ -2,6 +2,7 @@ from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
+from yolo.modeling.backbones.darknet import build_darknet
 
 from yolo.modeling import yolo_model
 from yolo.configs import yolo
@@ -130,7 +131,9 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   print(input_specs)
   print(l2_regularization)
 
-  backbone = factory.build_backbone(input_specs, model_config,
+  # backbone = factory.build_backbone(input_specs, model_config,
+  #                                   l2_regularization)
+  backbone = build_darknet(input_specs, model_config,
                                     l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
