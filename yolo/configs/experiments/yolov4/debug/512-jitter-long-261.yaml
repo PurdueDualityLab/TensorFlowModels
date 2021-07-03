@@ -53,7 +53,7 @@ task:
         '4': 1.1
         '3': 1.2
       max_boxes: 200
-      nms_type: greedy
+      nms_type: diou
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
@@ -69,17 +69,12 @@ task:
       max_num_instances: 200
       letter_box: False
       random_flip: True
+      jitter: 0.3
+      resize: 1.0
+      area_thresh: 0.2
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      jitter: 0.3
-      resize: 1.5
-      aug_rand_translate: 0.0
-      aug_scale_min: 1.0
-      aug_scale_max: 1.0
-      mosaic_scale_min: 1.0
-      mosaic_scale_max: 1.0
-      area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
@@ -87,10 +82,10 @@ task:
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 640
-        mosaic_frequency: 1.0
-        crop_area: [0.20]
+        mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
+        crop_area: [0.20]
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -104,26 +99,25 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
+      area_thresh: 0.20
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [200000, 225000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] #best
+        values: [0.00261, 0.000261, 0.0000261] #best
     optimizer:
       type: sgd
       sgd:
