@@ -1,17 +1,3 @@
-# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """Normalization layers."""
 from __future__ import absolute_import
 from __future__ import division
@@ -880,7 +866,7 @@ class ShuffleBatchNormalization(normalization.BatchNormalizationBase):
         **kwargs)
 
   def _calculate_mean_and_var(self, x, axes, keep_dims):
-
+    """ work on progress: used in MOCO"""
     with K.name_scope('moments'):
       # The dynamic range of fp16 is too limited to support the collection of
       # sufficient statistics. As a workaround we simply perform the operations

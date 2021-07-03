@@ -71,7 +71,7 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
   return confidence, boxes, classes
 
 
-def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0):
+def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress = False):
   """This is a quick nms that works on very well for small values of k, this 
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
@@ -111,12 +111,12 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0):
   iou = tf.linalg.band_part(iou, 0, -1) - eye 
 
   B = iou
-  A = tf.zeros_like(iou)
+  A = B
   maxA = tf.reduce_max(A, axis = -2)
-  i = 0
-
-  iou, B, A, maxA, idx = tf.while_loop(
-      cluster_cond, cluster, [iou, B, A, maxA, tf.constant(0)])
+  
+  if suppress:
+    iou, B, A, maxA, idx = tf.while_loop(
+        cluster_cond, cluster, [iou, B, A, maxA, tf.constant(0)])
 
   return B, eye, maxA <= iou_thresh
 
@@ -684,10 +684,17 @@ class TiledNMS():
             output_size, [-1, 1]), scores.dtype)
 
     if self._weighted:
-      iou, eye, _ = segment_iou(boxes,
+      B, eye, _ = segment_iou(boxes,
                                 iou_thresh = iou_threshold, 
                                 iou_type = self._iou_type)
-      weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
+
+      # D = box_ops.aggregated_comparitive_iou(boxes, iou_type = 4)
+      # X = tf.cast(B >= 0, scores.dtype)
+      # scores = tf.reduce_prod(tf.minimum(tf.math.exp(-(B**2)/0.2) + D * tf.cast((B > 0), D.dtype), X), axis = 1) * scores
+      # scores_mask = tf.cast(scores > 0.001, scores.dtype)
+      # boxes *= tf.expand_dims(scores_mask, axis = -1)
+
+      weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(scores, axis = -1)
       boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
                                   tf.reduce_sum(weights, axis = -1, keepdims = True))
 

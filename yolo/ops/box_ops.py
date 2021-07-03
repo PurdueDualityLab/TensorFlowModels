@@ -251,6 +251,45 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
     diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, diou
 
+def distance(box1, box2, beta=1.0, yxyx=False):
+  """Calculates the distance intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    beta: a `float` indicating the amount to scale the distance iou 
+      regularization term. 
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+    darknet: a `bool` indicating whether the calling function is the yolo 
+      darknet loss.
+
+  Returns:
+    diou: a `Tensor` who represents the distance intersection over union.
+  """
+  with tf.name_scope('diou'):
+    # compute center distance
+    if not yxyx:
+      box1 = xcycwh_to_yxyx(box1)
+      box2 = xcycwh_to_yxyx(box2)
+      yxyx = True
+
+    boxc = smallest_encompassing_box(box1, box2, yxyx=yxyx)
+    if yxyx:
+      boxc = yxyx_to_xcycwh(boxc)
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
+
+    b1xy, _ = tf.split(box1, 2, axis=-1)
+    b2xy, _ = tf.split(box2, 2, axis=-1)
+    _ , bcwh = tf.split(boxc, 2, axis=-1)
+    center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
+    c_diag = tf.reduce_sum(bcwh**2, axis=-1)
+    regularization = math_ops.divide_no_nan(center_dist, c_diag)
+  return regularization**beta
+
 
 def compute_ciou(box1, box2, yxyx=False, darknet=False):
   """Calculates the complete intersection over union between box1 and box2.
@@ -320,12 +359,14 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
   else:
     boxes2 = tf.transpose(boxes1, perm=(0, 2, 1, 3))
 
-  if iou_type == 0:  #diou
+  if iou_type == 0 or iou_type == "diou":  #diou
     _, iou = compute_diou(boxes1, boxes2, beta=beta, yxyx=True)
-  elif iou_type == 1:  #giou
+  elif iou_type == 1 or iou_type == "giou":  #giou
     _, iou = compute_giou(boxes1, boxes2, yxyx=True)
-  elif iou_type == 2:  #ciou
+  elif iou_type == 2 or iou_type == "ciou":  #ciou
     _, iou = compute_ciou(boxes1, boxes2, yxyx=True)
+  elif iou_type == 4 or iou_type == "distance":  #ciou
+    iou = distance(boxes1, boxes2, yxyx=True)
   else:
     iou = compute_iou(boxes1, boxes2, yxyx=True)
   return iou

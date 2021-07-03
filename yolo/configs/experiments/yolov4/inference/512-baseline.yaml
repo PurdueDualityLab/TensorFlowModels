@@ -1,7 +1,7 @@
 runtime:
   distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float32'
-  # loss_scale: "dynamic"
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
   num_gpus: 1
 task:
   model:
@@ -54,11 +54,11 @@ task:
         '5': 1.05
         '4': 1.1
         '3': 1.2
-      max_boxes: 200
-      nms_type: greedy
+      max_boxes: 500
+      nms_type: weighted_diou
       iou_thresh: 0.001
       nms_thresh: 0.6
-      pre_nms_points: 5000
+      pre_nms_points: 500
       use_scaled_loss: false
       darknet: null
   train_data:
@@ -108,8 +108,8 @@ task:
       anchor_thresh: 0.213
       area_thresh: 0.25
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
+  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  # init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2

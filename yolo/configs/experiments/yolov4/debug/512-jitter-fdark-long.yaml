@@ -85,7 +85,7 @@ task:
         max_resolution: 640
         mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
-        aspect_ratio_mode: 'letter'
+        aspect_ratio_mode: 'distort'
         crop_area: [0.20]
   validation_data:
     global_batch_size: 8
