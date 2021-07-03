@@ -46,8 +46,8 @@ task:
         'all': false
       objectness_smooth: 
         'all': 0.0
-      max_delta:
-        'all': 5.0
+      # max_delta:
+      #   'all': 5.0
       scale_xy:
         '5': 1.05
         '4': 1.1

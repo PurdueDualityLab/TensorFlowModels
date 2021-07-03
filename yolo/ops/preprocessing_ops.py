@@ -626,6 +626,7 @@ def resize_and_jitter_image(image,
                             letter_box=None,
                             resize = 1.0, 
                             random_pad=True,
+                            crop_only = False, 
                             shiftx=0.0,
                             shifty=0.0,
                             cut = None,
@@ -742,17 +743,29 @@ def resize_and_jitter_image(image,
     pad = dst_shape * tf.convert_to_tensor([1, 1, -1, -1]) 
     pad += tf.convert_to_tensor([0, 0, sheight, swidth])
 
+    infos = []
+
     cropped_image = tf.slice(image, 
                              [src_crop[0], src_crop[1], 0], 
                              [src_crop[2] - src_crop[0], 
                               src_crop[3] - src_crop[1], -1])
-
     crop_info = tf.stack([
           tf.cast(original_dims, tf.float32),
           tf.cast(tf.shape(cropped_image)[:2], dtype=tf.float32),
           tf.ones_like(original_dims, dtype = tf.float32),
           tf.cast(src_crop[:2], tf.float32)
       ])
+    infos.append(crop_info)
+
+    if crop_only:
+      if not letter_box:
+        h_, w_ = get_image_shape(cropped_image)
+        ogh, ogw = get_image_shape(image)
+        clip = tf.maximum(ogh, ogw)
+        w = tf.cast((w_* clip)/ ogw, tf.int32)
+        h = tf.cast((h_* clip)/ ogh, tf.int32)
+        cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
+      return cropped_image, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
     image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
                                     [pad[1], pad[3]], 
@@ -763,10 +776,9 @@ def resize_and_jitter_image(image,
           tf.ones_like(original_dims, dtype = tf.float32),
           -tf.cast(pad[:2], tf.float32)
       ])
+    infos.append(pad_info)
    
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
-    infos = [crop_info, pad_info]
-
     if cut is not None:
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, 
                                     ptop, pleft, pbottom, pright, 

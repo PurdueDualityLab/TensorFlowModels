@@ -231,6 +231,16 @@ class Parser(parser.Parser):
       true_conf[key] = true_grid
     return mask, inds, upds, true_conf
 
+  def _get_identity_info(self, image):
+    shape_ = tf.shape(image)
+    val = tf.stack([
+        tf.cast(shape_[:2], tf.float32),
+        tf.cast(shape_[:2], tf.float32),
+        tf.ones_like(tf.cast(shape_[:2], tf.float32)),
+        tf.zeros_like(tf.cast(shape_[:2], tf.float32)),
+    ])
+    return val
+
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
 
@@ -245,6 +255,13 @@ class Parser(parser.Parser):
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
+    if (self._aug_scale_min != 1.0 and self._aug_scale_max != 1.0):
+      crop_only = True 
+      letter_box = None 
+    else:
+      crop_only = False 
+      letter_box = self._letter_box
+
     if not data['is_mosaic']:
       image, infos, _ = preprocessing_ops.resize_and_jitter_image(
           image, 
@@ -252,39 +269,47 @@ class Parser(parser.Parser):
           letter_box=self._letter_box,
           jitter=self._jitter,
           resize=self._resize,
+          crop_only=crop_only,
           random_pad=self._random_pad)
-      image, infos_ = preprocessing_ops.resize_and_crop_image(
+      image, info_b = preprocessing_ops.resize_and_crop_image(
           image,
           [self._image_h, self._image_w],
           [self._image_h, self._image_w],
-          letter_box=self._letter_box,
+          letter_box=letter_box,
           sheer = self._sheer, 
           aug_scale_min=self._aug_scale_min,
           aug_scale_max=self._aug_scale_max,
           translate=self._aug_rand_translate,
           random_pad=self._random_pad)
-      infos.extend(infos_)
+      infos.extend(info_b)
     else:
       # works well
-      image, infos = preprocessing_ops.resize_and_crop_image(
+      infos = []
+      if crop_only:
+        image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
+            image, 
+            [self._image_h, self._image_w], 
+            letter_box=self._letter_box,
+            jitter=self._jitter,
+            resize=self._resize,
+            crop_only=crop_only,
+            random_pad=self._random_pad)
+        infos.extend(info_a)
+      else: 
+        stale_a = self._get_identity_info(image)
+        infos.append(stale_a)
+        infos.append(stale_a)
+      image, info_a = preprocessing_ops.resize_and_crop_image(
           image,
           [self._image_h, self._image_w],
           [self._image_h, self._image_w],
-          letter_box=True,
+          letter_box=letter_box,
           aug_scale_min=self._mosaic_min,
           aug_scale_max=self._mosaic_max,
           sheer = self._sheer, 
           translate=self._aug_rand_translate,
-          #random_jitter = False, 
           random_pad = self._random_pad)
-      stale_a = tf.stack([
-          tf.cast(tf.shape(image)[:2], tf.float32),
-          tf.cast(tf.shape(image)[:2], tf.float32),
-          tf.ones_like(tf.cast(shape[:2], tf.float32)),
-          tf.zeros_like(tf.cast(shape[:2], tf.float32)),
-      ])
-      infos.append(stale_a)
-      infos.append(stale_a)
+      infos.extend(info_a)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 
