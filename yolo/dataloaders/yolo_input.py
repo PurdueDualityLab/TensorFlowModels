@@ -197,10 +197,11 @@ class Parser(parser.Parser):
 
     # based on if training or not determine how to scale up the number of
     # boxes that may result for final loss computation
-    if is_training:
-      scale_up = self._scale_up
-    else:
-      scale_up = {key: 1 for key in self._masks.keys()}
+    # if is_training:
+    #   scale_up = self._scale_up
+    # else:
+    scale_up = self._scale_up
+    # scale_up = {key: 1 for key in self._masks.keys()}
 
     # for each prediction path generate a properly scaled output prediction map
     for key in self._masks.keys():
