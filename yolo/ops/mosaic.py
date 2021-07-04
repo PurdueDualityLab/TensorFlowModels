@@ -427,6 +427,7 @@ class Mosaic(object):
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
     return sample
 
+
   def _full_frequency_apply(self, dataset):
     one = dataset.shard(num_shards=4, index=0)
     two = dataset.shard(num_shards=4, index=1)
@@ -461,7 +462,6 @@ class Mosaic(object):
     sample['is_mosaic'] = tf.cast(0.0, tf.bool)
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[0]
     return sample
-
 
   # mosaic skip
   def _no_apply(self, dataset):

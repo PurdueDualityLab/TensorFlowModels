@@ -34,13 +34,13 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.07
+        'all': 0.05
       cls_normalizer: 
-        'all': 0.5
+        'all': 0.3 # 0.5
       obj_normalizer: 
-        '5': 0.4
-        '4': 1.0
-        '3': 4.0
+        '5': 0.28 #0.4
+        '4': 0.70 #1.0
+        '3': 2.80 #4.0
       new_cords:
         'all': True
       objectness_smooth: 
@@ -50,7 +50,7 @@ task:
       max_boxes: 200
       nms_type: diou
       iou_thresh: 0.001
-      nms_thresh: 0.6
+      nms_thresh: 0.65
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
@@ -80,8 +80,10 @@ task:
         max_resolution: 640
         mosaic_frequency: 1.0
         mosaic_crop_mode: 'scale'
-        aspect_ratio_mode: 'letter'
+        aspect_ratio_mode: 'crop'
         crop_area_mosaic: [0.1, 1.9]
+        crop_area: [0.25, 1.0]
+        jitter: 0.0
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -123,7 +125,6 @@ trainer:
         nesterov: True
         name: SGD
     warmup:
-      type: 'polynomial'
-      polynomial:
-        power: 4
+      type: 'linear'
+      linear:
         warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps

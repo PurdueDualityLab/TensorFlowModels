@@ -27,15 +27,18 @@ from official.core import task_factory
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
+  #config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-long.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-resize.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-resize.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-state-test-ema.yaml"]
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
   config = params.task
+
+  # anchor gen testing
+  # config.model.boxes = None
 
   task = task_factory.get_task(params.task)
 

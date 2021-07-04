@@ -290,8 +290,8 @@ class Parser(parser.Parser):
             image, 
             [self._image_h, self._image_w], 
             letter_box=self._letter_box,
-            jitter=self._jitter,
-            resize=self._resize,
+            jitter= 0.0, #self._jitter,
+            resize= 1.0, #self._resize,
             crop_only=crop_only,
             random_pad=self._random_pad)
         infos.extend(info_a)

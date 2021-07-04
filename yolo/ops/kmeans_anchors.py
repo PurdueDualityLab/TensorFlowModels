@@ -26,6 +26,8 @@ def IOU(X, centroids):
       similarity)
   return tf.squeeze(similarity, axis=-1)
 
+
+
 # def kmean_anchors(path='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen=1000, verbose=True):
 #     """ Creates kmeans-evolved anchors from training dataset
 
@@ -171,6 +173,29 @@ class AnchorKMeans:
     # clusters = tf.concat([zeros, clusters], axis=-1)
     return IOU(boxes, clusters)
 
+  def metric(self, wh, k):  # compute metrics
+    # n = tf.shape(wh)[0]
+    # wh = tf.repeat(wh, self._k, axis=0)
+    # wh = tf.reshape(wh, (n, self._k, -1))
+    # wh = tf.cast(wh, tf.float32)
+
+    # k = tf.tile(k, [n, 1])
+    # k = tf.reshape(k, (n, self._k, -1))
+    # k = tf.cast(k, tf.float32)
+    # r = wh / k
+
+    # tf.print(r)
+    # x = tf.reduce_min(tf.minimum(r, 1. / r), axis = 2) # ratio metric
+    # tf.print(x)
+    # # x = x[0]
+    
+    x = self.iou(wh, tf.convert_to_tensor(k))  # iou metric
+    return x, tf.reduce_max(x, axis = 1)[0]  # x, best_x
+
+  def fitness(self, wh, k, thr):  # mutation fitness
+    _, best = self.metric(wh, k)
+    return (best * tf.cast(best > thr, tf.float32))  # fitness
+
   def get_box_from_dataset(self, dataset, image_w=512):
     box_ls = None
     if not isinstance(dataset, list):
@@ -183,6 +208,7 @@ class AnchorKMeans:
           box_ls = tf.concat(
               [box_ls, yxyx_to_xcycwh(el['groundtruth_boxes'])[..., 2:]],
               axis=0)
+          # tf.print(yxyx_to_xcycwh(el['groundtruth_boxes'])[..., 2:])
     self._boxes = box_ls
 
   @property
@@ -199,39 +225,66 @@ class AnchorKMeans:
 
     while tf.math.less(num_iters, max_iter):
       dists = 1 - self.iou(self._boxes, clusters)
+
       curr = tf.math.argmin(dists, axis=-1)
       if tf.math.reduce_all(curr == last):
         break
       for i in range(k):
         hold = tf.math.reduce_mean(self._boxes[curr == i], axis=0)
         clusters = tf.tensor_scatter_nd_update(clusters, [[i]], [hold])
-        tf.print(dists * 512, summarize=-1)
+        # tf.print(dists * 512, summarize=-1)
 
       last = curr
       num_iters += 1
       old_d = dists
       tf.print('k-Means box generation iteration: ', num_iters, end='\r')
-    return clusters
+    
+    f = self.fitness(self._boxes, clusters, 0.213)
+    sh = tf.shape(clusters)
+    mp = 0.9
+    s = 0.1  
+    c = clusters
+
+    npr = np.random
+    number_of_generations = 1000 
+    for k in range(number_of_generations):
+      v = tf.ones_like(clusters)
+      while tf.reduce_all(v == 1):
+        v = ((npr.random(sh) < mp) * npr.random() * npr.randn(*sh) * s + 1).clip(0.3, 3.0)
+        v = tf.convert_to_tensor(v) 
+      kg = clusters * tf.cast(v, clusters.dtype)
+      fg = self.fitness(self._boxes, kg, 0.213)
+      tf.print(fg)
+      if fg > f: 
+        f = fg 
+        clusters = kg
+    # tf.print(c * 512, clusters * 512)
+    return c, clusters
 
   def run_kmeans(self, max_iter=300):
     box_num = tf.shape(self._boxes)[0]
     cluster_select = tf.convert_to_tensor(
         np.random.choice(box_num, self._k, replace=False))
     clusters = tf.gather(self._boxes, cluster_select, axis=0)
-    clusters = self.kmeans(max_iter, box_num, clusters, self._k)
+    c, clusters = self.kmeans(max_iter, box_num, clusters, self._k)
 
+    # fitness(clusters, self._boxes, )
     clusters = clusters.numpy()
-    clusters = np.array(sorted(clusters, key=lambda x: x[0]))
-    return clusters, None
+    c = c.numpy()
+    clusters = np.array(sorted(clusters, key=lambda x: x[0] * x[1]))
+    c = np.array(sorted(c, key=lambda x: x[0] * x[1]))
+    return c, clusters, None
 
   def __call__(self, dataset, max_iter=300, image_width=416):
     if image_width is None:
       raise Warning('Using default width of 416 to generate bounding boxes')
       image_width = 416
     self.get_box_from_dataset(dataset)
-    clusters, _ = self.run_kmeans(max_iter=max_iter)
-    clusters = np.floor(clusters * image_width)
-    return clusters.tolist()
+    self._boxes *= image_width
+    c, clusters, _ = self.run_kmeans(max_iter=max_iter)
+    clusters = np.floor(clusters)
+    c = np.floor(c )
+    return clusters.tolist(), c.tolist()
 
 
 class BoxGenInputReader(input_reader.InputReader):
@@ -246,10 +299,10 @@ class BoxGenInputReader(input_reader.InputReader):
     dataset = super().read(input_context=input_context)
 
     kmeans_gen = AnchorKMeans(k=k)
-    boxes = kmeans_gen(dataset, image_width=image_width)
+    boxes, ogb = kmeans_gen(dataset, image_width=image_width)
     del kmeans_gen  # free the memory
     del dataset
 
     print('clusting complete -> default boxes used ::')
-    print(boxes)
+    print(ogb)
     return boxes
