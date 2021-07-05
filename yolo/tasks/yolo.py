@@ -318,13 +318,21 @@ class YoloTask(base_task.Task):
     if self._bias_optimizer is None:
       optimizer.apply_gradients(zip(gradients, train_vars))
     else:
-      # for i in range(model.head.num_heads)
       # bias_grad = [gradients.pop(-1), gradients.pop(-2), gradients.pop(-3)]
       # bias = [train_vars.pop(-1), train_vars.pop(-2), train_vars.pop(-3)]
-      bias_grad = list([gradients.pop(-i) for i in range(model.head.num_heads)])
-      bias = list([train_vars.pop(-i) for i in range(model.head.num_heads)])
-      optimizer.apply_gradients(zip(gradients, train_vars))
+      # optimizer.apply_gradients(zip(gradients, train_vars))
+      # self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
+
+      bias_grad = [] #[gradients[-(2 * i + 1)] for i in range(model.head.num_heads)]
+      bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
+      for i in range(model.head.num_heads):
+        bias_grad.append(gradients[-(2 * i + 1)])
+        tf.print(gradients[-(2 * i + 1)])
+        gradients[-(2 * i + 1)] *= 0
+
       self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
+      optimizer.apply_gradients(zip(gradients, train_vars))
+      
 
       # tf.print(type(gradients))
       # tf.print(self._bias_optimizer._get_hyper('momentum'), self._test_var)
@@ -554,9 +562,11 @@ class YoloTask(base_task.Task):
   # may need to comment it out
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
-    if self.task_config.model.smart_bias:
+    if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
       opta = super().create_optimizer(optimizer_config, runtime_config)
       optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+      # revert back comment the line bellow
+      optimizer_config.ema = None
       optb = super().create_optimizer(optimizer_config, runtime_config)
       self._bias_optimizer = optb
       return opta
