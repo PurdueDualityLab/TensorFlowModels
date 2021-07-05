@@ -40,20 +40,26 @@ class Parser(parser.Parser):
                min_level=3,
                max_level=5,
                jitter=0.0,
+               jitter_mosaic = 0.0, 
                resize=1.0,
+               resize_mosaic = 1.0, 
                sheer=0.0, 
+
                area_thresh = 0.1, 
                max_num_instances=200,
+
+               aug_rand_angle=0.0, 
                aug_rand_transalate=0.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
                aug_rand_hue=1.0,
-               aug_rand_angle=0.0,
+               random_pad=True,
+               
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                mosaic_min = 1.0, 
                mosaic_max = 1.0, 
-               random_pad=True,
+               
                anchor_t=4.0,
                scale_xy=None,
                use_scale_xy=False,
@@ -140,20 +146,25 @@ class Parser(parser.Parser):
     self._use_tie_breaker = use_tie_breaker
     self._max_num_instances = max_num_instances
 
-    # image spatial distortion
+
+    # image scaling params
     self._jitter = 0.0 if jitter is None else jitter
-    self._resize = 0.0 if resize is None else resize
+    self._resize = 1.0 if resize is None else resize
+    self._aug_scale_min = aug_scale_min
+    self._aug_scale_max = aug_scale_max
+
+    # mosaic scaling params
+    self._jitter_mosaic = 0.0 if jitter_mosaic is None else jitter_mosaic
+    self._resize_mosaic = 0.0 if resize_mosaic is None else resize_mosaic
+    self._mosaic_min = mosaic_min
+    self._mosaic_max = mosaic_max
+
+    # image spatial distortion
     self._random_flip = random_flip
     self._letter_box = letter_box
     self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_translate = aug_rand_transalate
-
-    # scaleing params
-    self._aug_scale_min = aug_scale_min
-    self._aug_scale_max = aug_scale_max
-    self._mosaic_min = mosaic_min
-    self._mosaic_max = mosaic_max
 
     # color space distortion of the image
     self._aug_rand_saturation = aug_rand_saturation
@@ -242,6 +253,56 @@ class Parser(parser.Parser):
     ])
     return val
 
+  def _jitter_scale(self, 
+                    image, 
+                    shape, 
+                    letter_box,
+                    jitter, 
+                    resize, 
+                    sheer,
+                    random_pad, 
+                    aug_scale_min, 
+                    aug_scale_max, 
+                    translate):
+    if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
+      crop_only = True 
+      letter_box_ = None 
+      # jitter gives you only one info object, 
+      # resize and crop gives you one
+      # max info objects possible is 3, 2 from jitter, 1 from crop  
+      # if crop only then there can be 1 form jitter and 1 from crop 
+      reps = 1
+    else:
+      crop_only = False 
+      letter_box_ = letter_box
+      reps = 0
+    infos = []
+    image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
+        image, 
+        shape, 
+        letter_box=letter_box,
+        jitter=jitter,
+        resize=resize,
+        crop_only=crop_only,
+        random_pad=random_pad)
+    infos.extend(info_a)
+    image, info_b = preprocessing_ops.resize_and_crop_image(
+        image,
+        shape, 
+        shape, 
+        letter_box=letter_box_,
+        sheer = sheer, 
+        aug_scale_min=aug_scale_min,
+        aug_scale_max=aug_scale_max,
+        translate=translate,
+        random_pad=random_pad)
+    infos.extend(info_b)
+
+    stale_a = self._get_identity_info(image)
+    for i in range(reps):
+      infos.append(stale_a)
+    return image, infos
+
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
 
@@ -256,61 +317,32 @@ class Parser(parser.Parser):
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    if (self._aug_scale_min != 1.0 and self._aug_scale_max != 1.0):
-      crop_only = True 
-      letter_box = None 
-    else:
-      crop_only = False 
-      letter_box = self._letter_box
-
     if not data['is_mosaic']:
-      image, infos, _ = preprocessing_ops.resize_and_jitter_image(
-          image, 
-          [self._image_h, self._image_w], 
-          letter_box=self._letter_box,
-          jitter=self._jitter,
-          resize=self._resize,
-          crop_only=crop_only,
-          random_pad=self._random_pad)
-      image, info_b = preprocessing_ops.resize_and_crop_image(
-          image,
-          [self._image_h, self._image_w],
-          [self._image_h, self._image_w],
-          letter_box=letter_box,
-          sheer = self._sheer, 
-          aug_scale_min=self._aug_scale_min,
-          aug_scale_max=self._aug_scale_max,
-          translate=self._aug_rand_translate,
-          random_pad=self._random_pad)
-      infos.extend(info_b)
+      image, infos = self._jitter_scale(
+        image, 
+        [self._image_h, self._image_w], 
+        self._letter_box, 
+        self._jitter, 
+        self._resize, 
+        self._sheer, 
+        self._random_pad, 
+        self._aug_scale_min, 
+        self._aug_scale_max, 
+        self._aug_rand_translate
+      )
     else:
-      # works well
-      infos = []
-      if crop_only:
-        image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
-            image, 
-            [self._image_h, self._image_w], 
-            letter_box=self._letter_box,
-            jitter=self._jitter,
-            resize=self._resize,
-            crop_only=crop_only,
-            random_pad=self._random_pad)
-        infos.extend(info_a)
-      else: 
-        stale_a = self._get_identity_info(image)
-        infos.append(stale_a)
-        infos.append(stale_a)
-      image, info_a = preprocessing_ops.resize_and_crop_image(
-          image,
-          [self._image_h, self._image_w],
-          [self._image_h, self._image_w],
-          letter_box=letter_box,
-          aug_scale_min=self._mosaic_min,
-          aug_scale_max=self._mosaic_max,
-          sheer = self._sheer, 
-          translate=self._aug_rand_translate,
-          random_pad = self._random_pad)
-      infos.extend(info_a)
+      image, infos = self._jitter_scale(
+        image, 
+        [self._image_h, self._image_w], 
+        self._letter_box, 
+        self._jitter_mosaic, 
+        self._resize_mosaic, 
+        self._sheer, 
+        self._random_pad, 
+        self._mosaic_min, 
+        self._mosaic_max, 
+        self._aug_rand_translate
+      )
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 

@@ -81,12 +81,12 @@ task:
       aug_scale_max: 1.5
       mosaic_scale_min: 0.4
       mosaic_scale_max: 1.25
-      aug_rand_translate: 0.0
+      aug_rand_translate: 0.1
       area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
-      anchor_thresh: 0.213
+      anchor_thresh: 0.15
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 640

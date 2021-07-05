@@ -758,12 +758,18 @@ def resize_and_jitter_image(image,
     infos.append(crop_info)
 
     if crop_only:
+      # if not letter_box:
+      #   h_, w_ = get_image_shape(cropped_image)
+      #   ogh, ogw = get_image_shape(image)
+      #   clip = tf.maximum(ogh, ogw)
+      #   w = tf.cast((w_* clip)/ ogw, tf.int32)
+      #   h = tf.cast((h_* clip)/ ogh, tf.int32)
+      #   cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
       if not letter_box:
         h_, w_ = get_image_shape(cropped_image)
         ogh, ogw = get_image_shape(image)
-        clip = tf.maximum(ogh, ogw)
-        w = tf.cast((w_* clip)/ ogw, tf.int32)
-        h = tf.cast((h_* clip)/ ogh, tf.int32)
+        w = tf.cast((w_* tf.cast(w, tf.int32))/ swidth, tf.int32)
+        h = tf.cast((h_* tf.cast(h, tf.int32))/ sheight, tf.int32)
         cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
       return cropped_image, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
@@ -1302,11 +1308,12 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25):
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
       anchors = box_ops.xcycwh_to_yxyx(anchors)
       iou_raw = box_ops.aggregated_comparitive_iou(
-        anchors, 
         truth_comp, 
+        anchors, 
+        iou_type = 3,
         )
       values, indexes = tf.math.top_k(
-          tf.transpose(iou_raw, perm=[0, 2, 1]),
+          iou_raw, #tf.transpose(iou_raw, perm=[0, 2, 1]),
           k=tf.cast(k, dtype=tf.int32),
           sorted=True)
       ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
