@@ -111,8 +111,6 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
 
 
 def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
-  subdivisions = 1
-
   head = YoloHead(
       min_level=model_config.min_level,
       max_level=model_config.max_level,
@@ -120,8 +118,8 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       boxes_per_level=model_config.boxes_per_scale,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
-      kernel_regularizer=l2_regularization)
-
+      kernel_regularizer=l2_regularization, 
+      smart_bias=model_config.smart_bias)
   return head
 
 
