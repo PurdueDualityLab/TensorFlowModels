@@ -1,3 +1,5 @@
+from tensorflow.python.ops.gen_array_ops import shape
+from tensorflow.python.training import optimizer
 from yolo.ops.preprocessing_ops import apply_infos
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -22,6 +24,13 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from yolo.modeling.layers import detection_generator
 from collections import defaultdict
 
+from typing import Optional
+from official.core import config_definitions
+from official.modeling import optimization
+from official.modeling import performance
+
+OptimizationConfig = optimization.OptimizationConfig
+RuntimeConfig = config_definitions.RuntimeConfig
 
 class ListMetrics(object):
 
@@ -79,6 +88,9 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
+    self._bias_optimizer = None
+    
+    # self._test_var = tf.Variable(0, trainable=False)
     return
 
   def build_model(self):
@@ -303,7 +315,19 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    optimizer.apply_gradients(zip(gradients, train_vars))
+    if self._bias_optimizer is None:
+      optimizer.apply_gradients(zip(gradients, train_vars))
+    else:
+      # for i in range(model.head.num_heads)
+      # bias_grad = [gradients.pop(-1), gradients.pop(-2), gradients.pop(-3)]
+      # bias = [train_vars.pop(-1), train_vars.pop(-2), train_vars.pop(-3)]
+      bias_grad = [gradients.pop(-i) for i in range(model.head.num_heads)]
+      bias = [train_vars.pop(-i) for i in range(model.head.num_heads)]
+      optimizer.apply_gradients(zip(gradients, train_vars))
+      self._bias_optimizer.apply_gradients(zip(bias_grad, bias))
+
+      # tf.print(self._bias_optimizer._get_hyper('momentum'), self._test_var)
+      # self._test_var.assign_add(1)
 
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
@@ -525,6 +549,18 @@ class YoloTask(base_task.Task):
 
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
+
+  # may need to comment it out
+  def create_optimizer(self, optimizer_config: OptimizationConfig,
+                       runtime_config: Optional[RuntimeConfig] = None):
+    if self.task_config.model.smart_bias:
+      opta = super().create_optimizer(optimizer_config, runtime_config)
+      optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+      optb = super().create_optimizer(optimizer_config, runtime_config)
+      self._bias_optimizer = optb
+      return opta
+    else:
+      return super().create_optimizer(optimizer_config, runtime_config)
 
 
 if __name__ == '__main__':

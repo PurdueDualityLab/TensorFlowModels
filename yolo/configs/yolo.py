@@ -306,6 +306,7 @@ class YoloTask(cfg.TaskConfig):
   load_darknet_weights: bool = False
   darknet_load_decoder: bool = False
   init_checkpoint_modules: str = None  #'backbone'
+  smart_bias_lr: float = 0.1
 
 
 @dataclasses.dataclass

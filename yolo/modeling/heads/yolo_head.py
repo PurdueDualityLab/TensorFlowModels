@@ -110,6 +110,10 @@ class YoloHead(tf.keras.layers.Layer):
           "model has to be built before number of boxes can be determined")
     return (self._max_level - self._min_level + 1) * self._boxes_per_level
 
+  @property
+  def num_heads(self):
+    return (self._max_level - self._min_level + 1)
+
   def get_config(self):
     config = dict(
         min_level=self._min_level,
