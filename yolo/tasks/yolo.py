@@ -321,11 +321,12 @@ class YoloTask(base_task.Task):
       # for i in range(model.head.num_heads)
       # bias_grad = [gradients.pop(-1), gradients.pop(-2), gradients.pop(-3)]
       # bias = [train_vars.pop(-1), train_vars.pop(-2), train_vars.pop(-3)]
-      bias_grad = [gradients.pop(-i) for i in range(model.head.num_heads)]
-      bias = [train_vars.pop(-i) for i in range(model.head.num_heads)]
+      bias_grad = list([gradients.pop(-i) for i in range(model.head.num_heads)])
+      bias = list([train_vars.pop(-i) for i in range(model.head.num_heads)])
       optimizer.apply_gradients(zip(gradients, train_vars))
       self._bias_optimizer.apply_gradients(zip(bias_grad, bias))
 
+      # tf.print(type(bias_grad))
       # tf.print(self._bias_optimizer._get_hyper('momentum'), self._test_var)
       # self._test_var.assign_add(1)
 
