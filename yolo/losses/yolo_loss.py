@@ -710,7 +710,6 @@ class Yolo_Loss(object):
     # 5. (box loss) based on input val new_cords decode the box predicitions 
     #    and because we are using the scaled loss, do not change the gradients 
     #    at all
-    # pred_box *= tf.expand_dims(grid_mask, axis = -1)
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
     true_box = tf.stop_gradient(true_box * scale)
