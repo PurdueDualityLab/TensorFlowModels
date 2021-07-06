@@ -252,8 +252,6 @@ class YoloTask(base_task.Task):
       bloss_dict +=  _loss_box
       closs_dict +=  _loss_class
       oloss_dict +=  _loss_conf
-    #   tf.print(_loss_box, _loss_conf, _loss_class)
-    # tf.print(bloss_dict, oloss_dict, closs_dict, loss_val)
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
