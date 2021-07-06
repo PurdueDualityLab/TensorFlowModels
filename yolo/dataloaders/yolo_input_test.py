@@ -22,13 +22,15 @@ from official.vision.beta.configs import retinanet as retcfg
 from official.core import train_utils
 from official.modeling import performance
 from official.core import task_factory
+from yolo.run import load_model
+from yolo.utils.run_utils import prep_gpu
 
 
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
+  # onfig_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-long.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-resize.yaml"]
@@ -43,20 +45,20 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1
   config.validation_data.global_batch_size = 1
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 
-  # config.train_data.tfds_name = 'coco'
-  # config.validation_data.tfds_name = 'coco'
-  # config.train_data.tfds_split = 'train'
-  # config.validation_data.tfds_split = 'validation'
-  # config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
-  # config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/tfds'
+  config.train_data.tfds_name = 'coco'
+  config.validation_data.tfds_name = 'coco'
+  config.train_data.tfds_split = 'train'
+  config.validation_data.tfds_split = 'validation'
+  config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
 
-  config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-  config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  # config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+  # config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 
   train_data = task.build_inputs(config.train_data)
   test_data = task.build_inputs(config.validation_data)
@@ -106,10 +108,15 @@ import time
 
 
 def test_yolo_pipeline(is_training=True, num = 30):
+  prep_gpu()
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
   dip = 0
+  task, model, params = load_model(
+      experiment="yolo_custom",
+      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
+      model_dir='')
   drawer = utils.DrawBoxes(
       labels=coco.get_coco_names(
           path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"
@@ -131,6 +138,10 @@ def test_yolo_pipeline(is_training=True, num = 30):
     obj3 = gt['3'][..., 0]
     obj4 = gt['4'][..., 0]
     obj5 = gt['5'][..., 0]
+
+    pred = model(i)
+
+    print(pred)
 
     for shind in range(1):
       fig, axe = plt.subplots(1, 4)
@@ -273,8 +284,8 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
-  # test_yolo_pipeline(is_training=False, num = 5)
+  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=False, num = 5)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

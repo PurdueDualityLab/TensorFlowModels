@@ -696,7 +696,7 @@ class Yolo_Loss(object):
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
     num_objs = tf.cast(
-        tf.reduce_sum(grid_mask, axis=(1, 2, 3)), dtype=y_pred.dtype)
+        tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
     # 3. split up the predicitons to match the ground truths shapes
     y_pred = tf.cast(
@@ -761,8 +761,8 @@ class Yolo_Loss(object):
         K.expand_dims(pred_class, axis=-1),
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    class_loss = apply_mask(ind_mask, class_loss)
     class_loss = tf.reduce_mean(class_loss, axis=2)
+    class_loss = apply_mask(tf.squeeze(ind_mask, axis = -1), class_loss)
     class_loss = tf.reduce_sum(class_loss, axis=1)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 

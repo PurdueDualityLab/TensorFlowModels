@@ -63,7 +63,7 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
-      model_dir='/home/vbanna/Research/checkpoints/yolov4-csp/tpu/512')
+      model_dir='')
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
       labels=coco.get_coco_names(
@@ -72,14 +72,14 @@ if __name__ == "__main__":
       thickness=1)
 
 
-  image = url_to_image("yolo/dataloaders/dataset_specs/unnamed.jpg")
+  image = url_to_image("/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/images/30290.jpg")
   save_name = "save.png"
 
   image_ = resize_input_image(image, params.task.model.input_size, normalize=True)
 
   pred = model(image_, training=False)
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-  image = cv2.resize(image, (1280, 720))
+  image = cv2.resize(image, params.task.model.input_size[:2])
   image = draw_fn(image / 255, pred)
 
   cv2.imshow("testframe", image)

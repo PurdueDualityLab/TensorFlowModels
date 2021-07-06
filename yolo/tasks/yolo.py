@@ -1,3 +1,4 @@
+from numpy import blackman
 from tensorflow.python.ops.gen_array_ops import shape
 from tensorflow.python.training import optimizer
 from yolo.ops.preprocessing_ops import apply_infos
@@ -145,14 +146,6 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    min_scale = params.parser.mosaic.aug_scale_min
-    if min_scale is None:
-      min_scale = params.parser.aug_scale_min
-
-    max_scale = params.parser.mosaic.aug_scale_max
-    if max_scale is None:
-      max_scale = params.parser.aug_scale_max
-
     rsize = params.parser.mosaic.resize
     if rsize is None:
       rsize = params.parser.resize
@@ -177,9 +170,7 @@ class YoloTask(base_task.Task):
         random_pad=params.parser.random_pad,
         translate=params.parser.aug_rand_translate,
         resize=rsize,
-        area_thresh=params.parser.area_thresh, 
-        aug_scale_min=min_scale,
-        aug_scale_max=max_scale)
+        area_thresh=params.parser.area_thresh)
 
     parser = yolo_input.Parser(
         output_size=model.input_size,
@@ -237,6 +228,10 @@ class YoloTask(base_task.Task):
     inds = labels['inds']
     upds = labels['upds']
 
+    bloss_dict = 0
+    closs_dict = 0
+    oloss_dict = 0
+
     scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj, _recall50,
@@ -254,7 +249,11 @@ class YoloTask(base_task.Task):
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou / scale_replicas)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj / scale_replicas)
       loss_val += _loss * scale / num_replicas
-
+      bloss_dict +=  _loss_box
+      closs_dict +=  _loss_class
+      oloss_dict +=  _loss_conf
+    #   tf.print(_loss_box, _loss_conf, _loss_class)
+    # tf.print(bloss_dict, oloss_dict, closs_dict, loss_val)
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
@@ -327,7 +326,6 @@ class YoloTask(base_task.Task):
       bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
       for i in range(model.head.num_heads):
         bias_grad.append(gradients[-(2 * i + 1)])
-        tf.print(gradients[-(2 * i + 1)])
         gradients[-(2 * i + 1)] *= 0
 
       self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))

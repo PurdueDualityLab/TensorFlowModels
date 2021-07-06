@@ -239,9 +239,9 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
       box1 = yxyx_to_xcycwh(box1)
       box2 = yxyx_to_xcycwh(box2)
 
-    b1xy, b1wh = tf.split(box1, 2, axis=-1)
-    b2xy, b2wh = tf.split(box2, 2, axis=-1)
-    bcxy, bcwh = tf.split(boxc, 2, axis=-1)
+    b1xy, _ = tf.split(box1, 2, axis=-1)
+    b2xy, _ = tf.split(box2, 2, axis=-1)
+    _, bcwh = tf.split(boxc, 2, axis=-1)
 
     center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
     c_diag = tf.reduce_sum(bcwh**2, axis=-1)
@@ -251,7 +251,7 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
     diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, diou
 
-def distance(box1, box2, beta=1.0, yxyx=False):
+def distance(box1, box2, beta=0.6, yxyx=False):
   """Calculates the distance intersection over union between box1 and box2.
 
   Args:

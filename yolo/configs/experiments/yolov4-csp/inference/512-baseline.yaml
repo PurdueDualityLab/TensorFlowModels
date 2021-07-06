@@ -41,11 +41,11 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.3 # 0.5
+        'all': 0.5
       obj_normalizer: 
-        '5': 0.28 #0.4
-        '4': 0.70 #1.0
-        '3': 2.80 #4.0
+        '5': 0.4
+        '4': 1.0
+        '3': 4.0
       new_cords:
         'all': True
       objectness_smooth: 
@@ -54,7 +54,7 @@ task:
         'all': 2.0
       max_boxes: 200
       nms_type: greedy
-      iou_thresh: 0.001
+      iou_thresh: 0.1
       nms_thresh: 0.65
       pre_nms_points: 5000
       use_scaled_loss: true
@@ -81,7 +81,7 @@ task:
       random_pad: true
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 4.0
+      anchor_thresh: 0.20
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 640
