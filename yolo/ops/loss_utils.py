@@ -23,10 +23,11 @@ def _build_anchor_grid(width, height, anchors, dtype):  #, num, dtype):
     """ get the transformed anchor boxes for each dimention """
     num = tf.shape(anchors)[0]
     anchors = tf.cast(anchors, dtype=dtype)
-    anchors = tf.reshape(anchors, [1, -1])
-    #anchors = tf.reshape(anchors, [1, num * 2])
-    anchors = tf.tile(anchors, [width * height, 1])
-    anchors = tf.reshape(anchors, [1, width, height, num, 2])
+    anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
+    # anchors = tf.reshape(anchors, [1, -1])
+    # #anchors = tf.reshape(anchors, [1, num * 2])
+    # anchors = tf.tile(anchors, [width * height, 1])
+    # anchors = tf.reshape(anchors, [1, width, height, num, 2])
   return anchors
 
 
