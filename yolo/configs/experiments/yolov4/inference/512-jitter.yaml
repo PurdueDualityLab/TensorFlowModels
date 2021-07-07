@@ -16,7 +16,7 @@ task:
         activation: leaky
       darknet_weights_file: 'cache://yolov4.weights'
       darknet_weights_cfg: 'cache://yolov4.cfg'
-    num_classes: 91
+    num_classes: 80
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -75,7 +75,7 @@ task:
       letter_box: False
       random_flip: True
       jitter: 0.3
-      resize: 1.5
+      resize: 1.0
       area_thresh: 0.1
       random_pad: True
       aug_rand_saturation: 1.5
@@ -87,10 +87,10 @@ task:
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 640
-        mosaic_frequency: 0.66667
+        mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
-        crop_area: [0.32, 0.75]
+        crop_area: [0.25]
   validation_data:
     global_batch_size: 1
     dtype: float16
@@ -108,8 +108,8 @@ task:
   # init_checkpoint: '/home/vbanna/Research/checkpoints/250k-512-lr-special-t2'
   # init_checkpoint_modules: 'all'
   annotation_file: null
-  # load_darknet_weights: true
-  # darknet_load_decoder: true
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625

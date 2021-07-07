@@ -358,29 +358,6 @@ def random_crop_image(image,
                     axis=0)
     return cropped_image, info
 
-# if round:
-#   oh = tf.random.uniform([], -1, 1 + 1, tf.int32)
-#   ow = tf.random.uniform([], -1, 1 + 1, tf.int32)
-
-#   if skip_zero:
-#     if oh == 0:
-#       value = tf.random.uniform([], 0, 2, tf.int32)
-#       if value == 0: 
-#         oh += 1
-#       else:
-#         oh -= 1
-#     if ow == 0:
-#       value = tf.random.uniform([], 0, 2, tf.int32)
-#       if value == 0: 
-#         ow += 1
-#       else:
-#         ow -= 1
-#   oh = tf.cast(oh, tf.float32)
-#   ow = tf.cast(ow, tf.float32)
-# else:
-#   oh = tf.random.uniform([], -1, 1)
-#   ow = tf.random.uniform([], -1, 1)
-
 def random_window_crop(image, 
                        target_height, 
                        target_width, 
@@ -412,6 +389,38 @@ def random_window_crop(image,
       offset],axis=0)
 
   return cropped_image, info
+
+def mean_pad(image, pady, padx, targety, targetx, color = False):
+  shape = tf.shape(image)[:2]
+  pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
+  
+  if color: 
+    r, g, b = tf.split(image, 3, axis = -1)
+    r = tf.pad(r, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(r))
+    g = tf.pad(g, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(g))
+    b = tf.pad(b, [[pad[0], pad[2]], 
+                  [pad[1], pad[3]], 
+                  [0, 0]], 
+                  constant_values=tf.reduce_mean(b))
+    image_ = tf.concat([r, g, b], axis = -1)
+  else:
+    image_ = tf.pad(image, [[pad[0], pad[2]], 
+                            [pad[1], pad[3]], 
+                            [0, 0]], constant_values=0.5)
+
+  pad_info = tf.stack([
+        tf.cast(tf.shape(image)[:2], tf.float32),
+        tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
+        tf.ones_like(tf.shape(image)[:2], dtype = tf.float32),
+        -tf.cast(pad[:2], tf.float32)
+    ])
+  return image_, pad_info
 
 def resize_and_crop_image(image,
                           desired_size,
@@ -540,7 +549,9 @@ def resize_and_crop_image(image,
         tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
         tf.int32)
 
-    output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
+    # output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
+    #                                             padded_size[0], padded_size[1])
+    output_image, _ = mean_pad(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
 
     offset -= tf.convert_to_tensor([dy, dx])

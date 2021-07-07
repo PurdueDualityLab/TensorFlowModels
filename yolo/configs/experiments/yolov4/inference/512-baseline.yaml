@@ -14,7 +14,9 @@ task:
         version: v4
         type: regular
         activation: leaky
-    num_classes: 91
+      darknet_weights_file: 'cache://yolov4.weights'
+      darknet_weights_cfg: 'cache://yolov4.cfg'
+    num_classes: 80
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -63,42 +65,45 @@ task:
       darknet: null
   train_data:
     global_batch_size: 1
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: train
     dtype: float16
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-    is_training: true
-    shuffle_buffer_size: 10
+    is_training: false
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
-      aug_rand_saturation: 1.5
+      aug_rand_saturation: 1.7
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      sheer: 0.3
-      aug_scale_min: 0.4
-      aug_scale_max: 1.5
-      area_thresh: 0.25
-      random_pad: 0.5
+      aug_scale_min: 0.1
+      aug_scale_max: 1.9
+      aug_rand_translate: 0.1
+      area_thresh: 0.1
+      random_pad: true
       use_tie_breaker: True
-      use_scale_xy: False
-      anchor_thresh: 0.213
+      use_scale_xy: True
+      anchor_thresh: 0.20
       mosaic: 
         output_resolution: [640, 640]
-        max_resolution: 720
-        mosaic_frequency: 0.75
-        mosaic_crop_mode: 'pre_crop'
+        max_resolution: 640
+        mosaic_frequency: 1.0
+        mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'crop'
-        crop_area: [0.30, 1.00]
-        jitter: 0.5
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
+        crop_area_mosaic: [0.1, 1.9]
+        crop_area: [0.25, 1.0]
+        jitter: 0.4
   validation_data:
     global_batch_size: 1
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+    tfds_download: true
+    tfds_name: coco
+    tfds_split: validation
     dtype: float16
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
-    shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
       max_num_instances: 200
@@ -106,35 +111,36 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
-      area_thresh: 0.25
   weight_decay: 0.0005
-  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  # init_checkpoint_modules: 'backbone'
   annotation_file: null
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
-  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 20
+  train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
     # ema:
-    #   average_decay: 0.9998
+    #   average_decay: 0.9999
+    #   trainable_weights_only: false
+    #   dynamic_decay: True
     learning_rate:
-      type: stepwise
-      stepwise:
-        boundaries: [200000, 225000]
-        name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] #best
+      type: cosine
+      cosine:
+        initial_learning_rate: 0.01
+        name: Cosine
+        alpha: 0.2
+        decay_steps: 370000
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.949
+        momentum: 0.937
         nesterov: True
         name: SGD
     warmup:
-      type: 'polynomial'
-      polynomial:
-        power: 4
-        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps
+      type: 'linear'
+      linear:
+        warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps

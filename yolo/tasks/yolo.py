@@ -378,9 +378,10 @@ class YoloTask(base_task.Task):
             label['source_id'],
     }
 
-    logs.update({self.coco_metric.name: (label, coco_model_outputs)})
 
     if metrics:
+      logs.update({self.coco_metric.name: (label, coco_model_outputs)})
+
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})

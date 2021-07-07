@@ -699,13 +699,14 @@ class Yolo_Loss(object):
         tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
 
     # 3. split up the predicitons to match the ground truths shapes
-    y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+    # y_pred = tf.cast(
+    #     tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+    # pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
+    y_pred = tf.transpose(y_pred, perm = (0, 3, 1, 2))
+    y_pred = tf.cast(tf.reshape(y_pred, [batch_size, num, -1, height, width]), tf.float32)
+    y_pred = tf.transpose(y_pred, perm = (0, 3, 4, 1, 2))
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    # 4. apply sigmoid to items and use the gradient trap to contol the backprop
-    #    and selective gradient clipping
-    sigmoid_conf = tf.sigmoid(pred_conf)
 
     # 5. (box loss) based on input val new_cords decode the box predicitions 
     #    and because we are using the scaled loss, do not change the gradients 
@@ -779,6 +780,10 @@ class Yolo_Loss(object):
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
+
+    # 4. apply sigmoid to items and use the gradient trap to contol the backprop
+    #    and selective gradient clipping
+    sigmoid_conf = tf.sigmoid(pred_conf)
 
     # 11. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
