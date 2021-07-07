@@ -93,9 +93,12 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   # the view of each pixel such that the offset is no longer bound by 0 and 1.
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
+  # apply the sigmoid
+  pred_xy = tf.math.sigmoid(pred_xy) 
+
   # scale the centers and find the offset of each box relative to
   # their center pixel
-  pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
+  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
