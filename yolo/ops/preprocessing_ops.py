@@ -549,10 +549,10 @@ def resize_and_crop_image(image,
         tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
         tf.int32)
 
-    # output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
-    #                                             padded_size[0], padded_size[1])
-    output_image, _ = mean_pad(scaled_image, dy, dx,
+    output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
+    # output_image, _ = mean_pad(scaled_image, dy, dx,
+    #                                             padded_size[0], padded_size[1])
 
     offset -= tf.convert_to_tensor([dy, dx])
 

@@ -781,6 +781,8 @@ class Yolo_Loss(object):
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
 
+    # tf.print(box_loss, class_loss, conf_loss, loss)
+
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
     sigmoid_conf = tf.sigmoid(pred_conf)
