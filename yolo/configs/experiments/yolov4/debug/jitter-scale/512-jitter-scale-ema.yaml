@@ -42,12 +42,12 @@ task:
         'all': 1.0
       obj_normalizer: 
         'all': 1.0
-      max_delta:
-        'all': 5.0
       new_cords:
         'all': false
       objectness_smooth: 
         'all': 0.0
+      max_delta:
+        'all': 5.0
       scale_xy:
         '5': 1.05
         '4': 1.1
@@ -58,7 +58,6 @@ task:
       nms_thresh: 0.6
       pre_nms_points: 5000
       use_scaled_loss: false
-      darknet: null
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -70,31 +69,31 @@ task:
       max_num_instances: 200
       letter_box: False
       random_flip: True
-      sheer: 0.3
-      jitter: 0.1
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 1.5
+      jitter: 0.3
+      resize: 1.0
+      jitter_mosaic: 0.0
+      resize_mosaic: 1.0
+      sheer: 0.0
+      aug_scale_min: 0.2
+      aug_scale_max: 1.8
       mosaic_scale_min: 0.2
-      mosaic_scale_max: 2.0
-      area_thresh: 0.20
-      random_pad: true 
-      aug_rand_translate: 1.0
+      mosaic_scale_max: 1.5
+      aug_rand_translate: 0.0
+      area_thresh: 0.2
+      random_pad: True
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        output_resolution: [640, 640]
-        max_resolution: 640
-        mosaic_frequency: 1.0
-        mosaic_crop_mode: 'pre_crop'
-        aspect_ratio_mode: 'crop'
-        crop_area: [0.30, 1.00]
-        jitter: 0.5
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
+        output_resolution: [512, 512]
+        max_resolution: 720
+        mosaic_frequency: 0.75
+        crop_area: [0.20]
+        mosaic_crop_mode: 'crop'
+        aspect_ratio_mode: 'distort'
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -108,13 +107,12 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
-      area_thresh: 0.25
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -125,12 +123,13 @@ trainer:
       average_decay: 0.9999
       trainable_weights_only: false
       dynamic_decay: True
+      # average_decay: 0.9998
     learning_rate:
-      stepwise:
-        boundaries: [240000, 260000]
-        name: PiecewiseConstantDecay
-        values: [0.00131, 0.0009825, 0.000655]
       type: stepwise
+      stepwise:
+        boundaries: [300000, 337500]
+        name: PiecewiseConstantDecay
+        values: [0.00131, 0.000131, 0.0000131] #best
     optimizer:
       type: sgd
       sgd:

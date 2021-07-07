@@ -16,36 +16,6 @@ import numpy as np
 TILE_SIZE = 50
 
 @tf.custom_gradient
-def obj_gradient_trap(y, max_delta=np.inf):
-  # this is an identity operation that will
-  # allow us to add some steps to the back propagation
-  def trap(dy):
-    # remove the value nan from back propagation
-    dy = math_ops.rm_nan_inf(dy)
-    # clip the gradient for the back prop
-    delta = tf.cast(max_delta, dy.dtype)
-    dy = tf.clip_by_value(dy, -1 * delta, delta)
-    return dy, 0.0
-
-  return y, trap
-
-
-@tf.custom_gradient
-def class_gradient_trap(y, max_delta=np.inf):
-  # this is an identity operation that will
-  # allow us to add some steps to the back propagation
-  def trap(dy):
-    # remove the value nan from back propagation
-    dy = math_ops.rm_nan_inf(dy)
-    # clip the gradient for the back prop
-    delta = tf.cast(max_delta, dy.dtype)
-    dy = tf.clip_by_value(dy, -1 * delta, delta)
-    return dy, 0.0
-
-  return y, trap
-
-
-@tf.custom_gradient
 def grad_sigmoid(values):
   # this is an identity operation that will
   # allow us to add some steps to the back propagation
@@ -58,12 +28,11 @@ def grad_sigmoid(values):
 
   return values, delta
 
-
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
   # this applies the sigmoid cross entropy loss
   x = tf.math.sigmoid(x_prime)
-  # y = y * (1 - label_smoothing) + 0.5 * label_smoothing
+  y = y * (1 - label_smoothing) + 0.5 * label_smoothing
   # x = math_ops.rm_nan_inf(x, val=0.0)
   # bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
 
@@ -836,11 +805,8 @@ class Yolo_Loss(object):
     # 5. compute the sigmoid of the classes and pass the unsigmoided items
     #    through a gradient trap to allow better control over the back
     #    propagation step. the sigmoided class is used for metrics only
-    sigmoid_class = tf.sigmoid(pred_class)
-    pred_class = class_gradient_trap(pred_class, np.inf)
-    sigmoid_conf = tf.sigmoid(pred_conf)
-    sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
-    pred_conf = obj_gradient_trap(pred_conf, np.inf)
+    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
+    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
     # 6. decode the boxes to be used for optimization/loss compute
     if self._darknet is None:
@@ -969,7 +935,6 @@ class Yolo_Loss(object):
     # 21. metric compute using the generated values from the loss itself
     #     done here to save time and resources
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
-    # avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,

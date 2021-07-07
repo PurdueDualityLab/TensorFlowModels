@@ -7,66 +7,47 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknettiny'
+          model_id: 'cspdarknet53'
       decoder:
         version: v4
-        type: tiny
-      darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
-      darknet_weights_cfg: 'cache://csdarknet53.cfg'
-    subdivisions: 1
+        type: regular
+        activation: leaky
     num_classes: 91
-    boxes: ["(10, 13)", 
-            "(16, 30)", 
-            "(33, 23)",
-            "(30, 61)", 
-            "(62, 45)", 
-            "(59, 119)",
-            "(116, 90)", 
-            "(156, 198)", 
-            "(373, 326)"]
+    boxes: ['[12.0, 16.0]',
+            '[19.0, 36.0]',
+            '[40.0, 28.0]',
+            '[36.0, 75.0]', 
+            '[76.0, 55.0]', 
+            '[72.0, 146.0]', 
+            '[142.0, 110.0]', 
+            '[192.0, 243.0]', 
+            '[459.0, 401.0]']
     input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
-    decoder_activation: leaky
     filter:
       ignore_thresh:
-        '5': 0.7
-        '4': 0.7
-        '3': 0.7
+        'all': 0.7
       loss_type:  
-        '5': ciou
-        '4': ciou
-        '3': ciou
+        'all': ciou
       iou_normalizer: 
-        '5': 0.07
-        '4': 0.07
-        '3': 0.07
+        'all': 0.07
       cls_normalizer: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        'all': 1.0
       obj_normalizer: 
-        '5': 1.0
-        '4': 1.0
-        '3': 1.0
+        'all': 1.0
       max_delta:
-        '5': 5.0
-        '4': 5.0
-        '3': 5.0
+        'all': 5.0
       new_cords:
-        '5': false
-        '4': false
-        '3': false
+        'all': false
       objectness_smooth: 
-        '5': 0.0
-        '4': 0.0
-        '3': 0.0
+        'all': 0.0
       scale_xy:
         '5': 1.05
         '4': 1.1
@@ -76,37 +57,45 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
-      use_reduction_sum: false
+      use_scaled_loss: false
+      darknet: null
   train_data:
     global_batch_size: 64
     dtype: bfloat16
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
     parser:
       max_num_instances: 200
       letter_box: False
       random_flip: True
-      random_pad: True
-      jitter: 0.3
-      aug_scale_aspect: 0.0
-      aug_rand_angle: 0.0
-      aug_rand_translate: 0.0
+      sheer: 0.3
+      jitter: 0.1
+      resize: 1.0
+      jitter_mosaic: 0.1
+      resize_mosaic: 1.0
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.3
-      aug_scale_max: 1.7
+      aug_scale_min: 0.1
+      aug_scale_max: 2.0
+      mosaic_scale_min: 0.4
+      mosaic_scale_max: 2.0
+      area_thresh: 0.20
+      random_pad: true 
+      aug_rand_translate: 1.0
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
       mosaic: 
-        mosaic_frequency: 0.66667
-        crop_area: [0.25, 1.0]
-        random_crop_mosaic: true
-        aspect_ratio_mode: 'distort'
-        crop_area_mosaic: [0.35, 0.75]
+        output_resolution: [640, 640]
+        max_resolution: 640
+        mosaic_frequency: 0.85
+        mosaic_crop_mode: 'pre_crop'
+        aspect_ratio_mode: 'crop'
+        crop_area: [0.30, 0.75]
+        jitter: 0.5
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -120,12 +109,13 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
+      area_thresh: 0.25
   weight_decay: 0.0005
-  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: null
+  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 1125000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -133,22 +123,23 @@ trainer:
   checkpoint_interval: 10000
   optimizer_config:
     ema:
-      average_decay: 0.9998
+      average_decay: 0.9999
+      trainable_weights_only: false
+      dynamic_decay: True
     learning_rate:
-      type: stepwise
       stepwise:
-        boundaries: [900000, 1012500]
+        boundaries: [240000, 260000]
         name: PiecewiseConstantDecay
-        values: [0.0013, 0.00013, 0.000013]
+        values: [0.00131, 0.0009825, 0.000655]
+      type: stepwise
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.9
+        momentum: 0.949
         nesterov: True
         name: SGD
     warmup:
       type: 'polynomial'
       polynomial:
         power: 4
-        warmup_steps: 4000 #learning rate rises from 0 to 0.0013 over 1000 steps
-
+        warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps

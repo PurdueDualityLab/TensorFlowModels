@@ -53,11 +53,12 @@ task:
         '4': 1.1
         '3': 1.2
       max_boxes: 200
-      nms_type: diou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.6
       pre_nms_points: 5000
       use_scaled_loss: false
+      darknet: false
   train_data:
     global_batch_size: 64
     dtype: bfloat16
@@ -85,7 +86,7 @@ task:
         mosaic_frequency: 0.7
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
-        crop_area: [0.2]
+        crop_area: [0.20]
   validation_data:
     global_batch_size: 8
     dtype: bfloat16
@@ -99,26 +100,23 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
+      area_thresh: 0.25
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: false
-      dynamic_decay: True
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [200000, 225000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000131, 0.0000131] #best
     optimizer:
