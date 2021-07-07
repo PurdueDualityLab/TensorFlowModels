@@ -58,7 +58,7 @@ if __name__ == "__main__":
   # if obj_mask.shape[1] == 16:
   #    plt.show()
 
-  lim = 2
+  lim = 3
   for p, image in enumerate(test_data):
     if p >= lim:
       break
