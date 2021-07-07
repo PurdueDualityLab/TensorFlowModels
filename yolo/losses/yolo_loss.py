@@ -62,11 +62,15 @@ def grad_sigmoid(values):
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
   # this applies the sigmoid cross entropy loss
-  y = y * (1 - label_smoothing) + 0.5 * label_smoothing
   x = tf.math.sigmoid(x_prime)
-  x = math_ops.rm_nan_inf(x, val=0.0)
-  bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
+  # y = y * (1 - label_smoothing) + 0.5 * label_smoothing
+  # x = math_ops.rm_nan_inf(x, val=0.0)
+  # bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
 
+  bce = ks.losses.binary_crossentropy(
+      y, x_prime,      
+      label_smoothing=0.0,
+      from_logits=True)
   def delta(dy):
     # this is a safer version of the sigmoid with binary cross entropy
     # bellow is the mathematic formula reduction that is used to
@@ -780,8 +784,6 @@ class Yolo_Loss(object):
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
-
-    # tf.print(box_loss, class_loss, conf_loss, loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping

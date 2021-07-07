@@ -807,6 +807,8 @@ class TiledNMS():
     valid_detections = tf.reduce_sum(
         input_tensor=tf.cast(tf.greater(nmsed_scores, -1), tf.int32), axis=1)
 
+    tf.print(valid_detections)
+
     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
 
 BASE_NMS = TiledNMS(iou_type='iou', beta=0.6)
