@@ -259,11 +259,12 @@ class Parser(parser.Parser):
                     letter_box,
                     jitter, 
                     resize, 
-                    sheer,
                     random_pad, 
                     aug_scale_min, 
                     aug_scale_max, 
-                    translate):
+                    translate, 
+                    angle, 
+                    perspective):
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True 
       letter_box_ = None 
@@ -284,24 +285,23 @@ class Parser(parser.Parser):
         jitter=jitter,
         resize=resize,
         crop_only=crop_only,
-        random_pad=random_pad)
+        random_pad=random_pad,) 
+        # seed=self._seed)
     infos.extend(info_a)
-    image, info_b = preprocessing_ops.resize_and_crop_image(
-        image,
-        shape, 
-        shape, 
-        letter_box=letter_box_,
-        sheer = sheer, 
-        aug_scale_min=aug_scale_min,
-        aug_scale_max=aug_scale_max,
-        translate=translate,
-        random_pad=random_pad)
-    infos.extend(info_b)
-
     stale_a = self._get_identity_info(image)
     for i in range(reps):
       infos.append(stale_a)
-    return image, infos
+    image, _, affine = preprocessing_ops.affine_warp_image(
+        image,
+        shape,
+        scale_min = aug_scale_min, 
+        scale_max = aug_scale_max, 
+        translate = translate,
+        degrees = angle, 
+        perspective = perspective,
+        random_pad = random_pad,)
+        # seed=self._seed)
+    return image, infos, affine
 
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
@@ -318,50 +318,41 @@ class Parser(parser.Parser):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     if not data['is_mosaic']:
-      image, infos = self._jitter_scale(
+      image, infos, affine = self._jitter_scale(
         image, 
         [self._image_h, self._image_w], 
         self._letter_box, 
         self._jitter, 
         self._resize, 
-        self._sheer, 
         self._random_pad, 
         self._aug_scale_min, 
         self._aug_scale_max, 
-        self._aug_rand_translate
+        self._aug_rand_translate, 
+        self._aug_rand_angle,
+        0.0
       )
     else:
-      image, infos = self._jitter_scale(
+      image, infos, affine = self._jitter_scale(
         image, 
         [self._image_h, self._image_w], 
         self._letter_box, 
         self._jitter_mosaic, 
         self._resize_mosaic, 
-        self._sheer, 
         self._random_pad, 
         self._mosaic_min, 
         self._mosaic_max, 
-        self._aug_rand_translate
+        self._aug_rand_translate * float(self._random_pad),
+        self._aug_rand_angle, 
+        0.0
       )
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 
                                                 infos, 
+                                                affine = affine,
                                                 area_thresh = self._area_thresh)
     classes = tf.gather(classes, inds)
     info = infos[-1]
-
-    # if self._aug_rand_translate > 0.0:
-    #   # apply random translation to the image
-    #   image, tx, ty = preprocessing_ops.random_translate(
-    #       image, self._aug_rand_translate)
-    #   boxes, classes = preprocessing_ops.translate_boxes(boxes, classes, tx, ty)
-
-    if self._aug_rand_angle > 0:
-      # apply rotation to the images
-      image, angle = preprocessing_ops.random_rotate_image(
-          image, self._aug_rand_angle)
-      boxes = preprocessing_ops.rotate_boxes(boxes, angle)
 
     image = tf.image.resize(
         image, (self._image_h, self._image_w),

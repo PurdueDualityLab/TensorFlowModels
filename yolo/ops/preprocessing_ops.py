@@ -8,6 +8,7 @@ import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
+import numpy as np
 
 
 def rand_uniform_strong(minval, 
@@ -307,11 +308,6 @@ def rotate_boxes(boxes, angle):
 
   boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
   return boxes
-
-
-
-
-
 
 def random_crop_image(image,
                       aspect_ratio_range=(3. / 4., 4. / 3.),
@@ -797,6 +793,145 @@ def resize_and_jitter_image(image,
     return image_, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
 
+def corners_to_boxes(corners):
+  corners_ = tf.reshape(corners, [-1, 4, 2])
+
+  y = corners_[..., 1]
+  x = corners_[..., 0]
+
+  y_min = tf.reduce_min(y, axis = -1)
+  x_min = tf.reduce_min(x, axis = -1)
+  y_max = tf.reduce_max(y, axis = -1)
+  x_max = tf.reduce_max(x, axis = -1)
+
+  boxes = tf.stack([y_min, x_min, y_max, x_max], axis = -1)
+  return boxes
+
+def deg_to_rad(angle):
+    return tf.cast(angle, tf.float32) * np.pi/180.0
+
+def build_transform(image, 
+                    perspective = 0.00, 
+                    degrees = 0.0, 
+                    scale_min = 1.0,
+                    scale_max = 1.0, 
+                    translate = 0.0, 
+                    random_pad = False,
+                    desired_size = None, 
+                    seed = None):
+    # height = tf.cast(tf.shape(image)[0], tf.float32)  # shape(h,w,c)
+    # width = tf.cast(tf.shape(image)[1], tf.float32)
+    height, width = get_image_shape(image)
+    height = tf.cast(height, tf.float32)
+    width = tf.cast(width, tf.float32)
+
+    ch = height 
+    cw = width 
+    if desired_size is not None:
+        desired_size = tf.cast(desired_size, tf.float32) 
+        ch = desired_size[0]
+        cw = desired_size[1]
+
+    C = tf.eye(3, dtype = tf.float32)
+    C = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [-cw/2, -ch/2])
+    Cb = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [cw/2, ch/2])
+
+    R = tf.eye(3, dtype = tf.float32)
+    a = deg_to_rad(tf.random.uniform([], -degrees, degrees, seed = seed))
+    cos = tf.math.cos(a)
+    sin = tf.math.sin(a)
+    R = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]], [cos, -sin, 
+                                                                          sin, cos])
+    Rb = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]], [cos, sin, 
+                                                                          -sin, cos])
+
+    P = tf.eye(3)
+    Px = tf.random.uniform([], -perspective, perspective, seed = seed)  # x perspective (about y)
+    Py = tf.random.uniform([], -perspective, perspective, seed = seed)  # y perspective (about x)
+    P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
+    Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
+
+    S = tf.eye(3, dtype = tf.float32)
+    s = tf.random.uniform([], scale_min, scale_max, seed = seed)
+    S = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [1/s, 1/s])
+    Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
+
+    T = tf.eye(3)
+    if random_pad and s <= 1.0 and s * width < cw and s * height < ch:
+        C = Cb = tf.eye(3, dtype = tf.float32)
+        Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width) # x translation (pixels)
+        Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)
+    else:
+        Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) * width  # x translation (pixels)
+        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) * height  # y translation (pixels)
+    T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
+    Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
+
+    M = T @ S @ R  @ C @ P 
+    Mb =  Pb @ Cb @ Rb @ Sb @ Tb 
+    return M, Mb
+
+def affine_warp_image(image, 
+                      desired_size, 
+                      perspective = 0.00, 
+                      degrees = 0.0, 
+                      scale_min = 1.0,
+                      scale_max = 1.0, 
+                      translate = 0.0,
+                      random_pad = False,
+                      seed = None):
+    image_size = tf.cast(get_image_shape(image), tf.float32)
+    M_, Mb = build_transform(image, 
+                        perspective = perspective, 
+                        degrees = degrees, 
+                        scale_min = scale_min,
+                        scale_max = scale_max, 
+                        translate = translate,
+                        random_pad = random_pad, 
+                        desired_size = desired_size,
+                        seed = seed)
+    M = tf.reshape(M_, [-1])
+    M = tf.cast(M[:-1], tf.float32)
+    image = tfa.image.transform(image, M, fill_value=0, output_shape=desired_size)
+    desired_size = tf.cast(desired_size, tf.float32)
+    return image, M_, [image_size, desired_size, Mb]
+
+
+def _aug_boxes(Mb, boxes):
+  M = Mb
+  corners = get_corners(boxes)
+  corners = tf.reshape(corners, [-1, 4, 2])
+  z = tf.expand_dims(tf.ones_like(corners[..., 1]), axis = -1)
+  corners = tf.concat([corners, z], axis = -1)
+
+  corners = tf.transpose(tf.matmul(M, corners, transpose_b=True), perm=(0, 2, 1))
+
+  corners, p = tf.split(corners, [2, 1], axis = -1)
+  corners /= p
+  corners = tf.reshape(corners, [-1, 8])
+  boxes = corners_to_boxes(corners)
+  return boxes
+
+def affine_warp_boxes(Mb, boxes, output_size, box_history = None):
+  boxes = _aug_boxes(Mb, boxes)
+
+  if box_history is not None:
+    box_history = _aug_boxes(Mb, box_history)
+  else:
+    box_history = boxes
+
+  clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
+  return clipped_boxes, boxes, box_history
+
+
+
+
+
+
+
+
+
+
 # ops for box clipping and cleaning
 def boxes_candidates(clipped_boxes,  
                      box_history, 
@@ -861,7 +996,7 @@ def resize_and_crop_boxes(boxes,
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, boxes, box_history
 
-def apply_infos(boxes, infos, shuffle_boxes = True, area_thresh = 0.1):
+def apply_infos(boxes, infos, affine = None, shuffle_boxes = True, area_thresh = 0.1, seed = None):
   # clip and clean boxes
   def get_valid_boxes(boxes, unclipped_boxes = None):
     """Get indices for non-empty boxes."""
@@ -892,6 +1027,10 @@ def apply_infos(boxes, infos, shuffle_boxes = True, area_thresh = 0.1):
       base = tf.logical_and(base, tf.logical_and(condx, condy))
     return base 
   
+  output_size = tf.cast([512, 512], tf.float32)
+  if infos is None:
+    infos = []
+
   # this is no history to start
   box_history = None
   
@@ -902,24 +1041,24 @@ def apply_infos(boxes, infos, shuffle_boxes = True, area_thresh = 0.1):
   
   for info in infos:
     # rescale the boxes
-    boxes = bbox_ops.denormalize_boxes(boxes, info[0, :])
+    boxes = bbox_ops.denormalize_boxes(boxes, info[0])
     if box_history is not None:
-      box_history = bbox_ops.denormalize_boxes(box_history, info[0, :])
+      box_history = bbox_ops.denormalize_boxes(box_history, info[0])
      
     # shift and scale all boxes, and keep track of box history with no 
     # box clipping, history is used for clipping boxes that becom too small
     # or exit the image
     (boxes,           # clipped final boxes 
-     unclipped_boxes, # unclipped final boxes 
-     box_history) = resize_and_crop_boxes(boxes, 
+    unclipped_boxes, # unclipped final boxes 
+    box_history) = resize_and_crop_boxes(boxes, 
                                           info[2, :],
                                           info[1, :], info[3, :], 
                                           box_history = box_history)
     
     # normalize the boxes to [0, 1] 
-    boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
-    unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1, :])
-    box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
+    boxes = bbox_ops.normalize_boxes(boxes, info[1])
+    unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1])
+    box_history = bbox_ops.normalize_boxes(box_history, info[1])
     
     # get all the boxes that still remain in the image and store
     # in a bit vector for later use
@@ -929,22 +1068,154 @@ def apply_infos(boxes, infos, shuffle_boxes = True, area_thresh = 0.1):
     
     # delete the unclipped boxes, they do not need to be tracked
     del unclipped_boxes
+    output_size = info[1]
+
+  if affine is not None:
+    boxes = bbox_ops.denormalize_boxes(boxes, affine[0])
+    if box_history is not None:
+      box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
+
+    (boxes,           # clipped final boxes 
+    unclipped_boxes, # unclipped final boxes 
+    box_history) = affine_warp_boxes(affine[2],
+                                      boxes, 
+                                      affine[1], 
+                                      box_history = box_history)
+
+    # normalize the boxes to [0, 1] 
+    boxes = bbox_ops.normalize_boxes(boxes, affine[1])
+    unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, affine[1])
+    box_history = bbox_ops.normalize_boxes(box_history, affine[1])
+    
+    # get all the boxes that still remain in the image and store
+    # in a bit vector for later use
+    cond = tf.logical_and(
+              get_valid_boxes(boxes, 
+                              unclipped_boxes = unclipped_boxes), cond)
+    
+    # delete the unclipped boxes, they do not need to be tracked
+    del unclipped_boxes
+    output_size = affine[1]
 
   # remove the bad boxes
   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
   
   # threshold the existing boxes
-  boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
-  box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
+  boxes = bbox_ops.denormalize_boxes(boxes, output_size)
+  box_history = bbox_ops.denormalize_boxes(box_history, output_size)
   boxes = boxes_candidates(boxes, box_history, area_thr = area_thresh)
-  boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
+  boxes = bbox_ops.normalize_boxes(boxes, output_size)
   
   # select and gather the good boxes 
   inds = bbox_ops.get_non_empty_box_indices(boxes)
   if shuffle_boxes:
-    inds = tf.random.shuffle(inds)
+    inds = tf.random.shuffle(inds, seed = seed)
   boxes = tf.gather(boxes, inds)
   return boxes, inds 
+
+# def apply_infos(boxes, infos, affine = None, shuffle_boxes = True, area_thresh = 0.1):
+#   # clip and clean boxes
+#   def get_valid_boxes(boxes, unclipped_boxes = None):
+#     """Get indices for non-empty boxes."""
+#     # convert the boxes to center width height formatting 
+#     boxes = box_ops.yxyx_to_xcycwh(boxes)
+#     (_, _, width, height) = (boxes[..., 0], 
+#                              boxes[..., 1], 
+#                              boxes[..., 2], 
+#                              boxes[..., 3])
+    
+#     # if the width or height is less than zero the box is removed
+#     base = tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
+    
+#     if area_thresh < 0.0 and unclipped_boxes is not None:
+#       # if the area theshold is lower than 0.0 we clip boxes 
+#       # using the original darknet method. if the center of the 
+#       # box is not in the frame, it gets removed. this filtering 
+#       # must be done on boxes prior to box clipping. Clipping the
+#       # box enusres that it is in the frame by moving the center
+#       unclipped_boxes = box_ops.yxyx_to_xcycwh(unclipped_boxes)
+#       x = unclipped_boxes[..., 0]
+#       y = unclipped_boxes[..., 1]
+      
+#       # check that the center of the unclipped box is within the 
+#       # frame. 
+#       condx = tf.logical_and(x >= 0, x < 1)
+#       condy = tf.logical_and(y >= 0, y < 1)
+#       base = tf.logical_and(base, tf.logical_and(condx, condy))
+#     return base 
+  
+#   # this is no history to start
+#   box_history = None
+  
+#   # make sure all boxes are valid to start, clip to [0, 1]
+#   # then check all boxes meet the conditions
+#   boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
+#   cond = get_valid_boxes(boxes)
+  
+#   for info in infos:
+#     # rescale the boxes
+#     boxes = bbox_ops.denormalize_boxes(boxes, info[0, :])
+#     if box_history is not None:
+#       box_history = bbox_ops.denormalize_boxes(box_history, info[0, :])
+     
+#     # shift and scale all boxes, and keep track of box history with no 
+#     # box clipping, history is used for clipping boxes that becom too small
+#     # or exit the image
+#     (boxes,           # clipped final boxes 
+#      unclipped_boxes, # unclipped final boxes 
+#      box_history) = resize_and_crop_boxes(boxes, 
+#                                           info[2, :],
+#                                           info[1, :], info[3, :], 
+#                                           box_history = box_history)
+    
+#     # normalize the boxes to [0, 1] 
+#     boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
+#     unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1, :])
+#     box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
+    
+#     # get all the boxes that still remain in the image and store
+#     # in a bit vector for later use
+#     cond = tf.logical_and(
+#               get_valid_boxes(boxes, 
+#                               unclipped_boxes = unclipped_boxes), cond)
+    
+#     # delete the unclipped boxes, they do not need to be tracked
+#     del unclipped_boxes
+
+#   # remove the bad boxes
+#   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
+  
+#   # threshold the existing boxes
+#   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
+#   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
+#   boxes = boxes_candidates(boxes, box_history, area_thr = area_thresh)
+#   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
+  
+#   # select and gather the good boxes 
+#   inds = bbox_ops.get_non_empty_box_indices(boxes)
+#   if shuffle_boxes:
+#     inds = tf.random.shuffle(inds)
+#   boxes = tf.gather(boxes, inds)
+#   return boxes, inds 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # write the boxes to the anchor grid
