@@ -123,7 +123,6 @@ trainer:
       average_decay: 0.9999
       trainable_weights_only: false
       dynamic_decay: True
-      # average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
