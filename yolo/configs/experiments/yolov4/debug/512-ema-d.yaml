@@ -116,7 +116,7 @@ trainer:
   validation_steps: 625
   steps_per_loop: 10
   summary_interval: 10
-  validation_interval: 20 #00
+  validation_interval: 10 #00
   checkpoint_interval: 10
   optimizer_config:
     learning_rate:
