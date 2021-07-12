@@ -892,7 +892,10 @@ def affine_warp_image(image,
                         seed = seed)
     M = tf.reshape(M_, [-1])
     M = tf.cast(M[:-1], tf.float32)
-    image = tfa.image.transform(image, M, fill_value=0, output_shape=desired_size)
+    image = tfa.image.transform(image, M, 
+                                fill_value=0, 
+                                output_shape=desired_size, 
+                                interpolation='bilinear')
     desired_size = tf.cast(desired_size, tf.float32)
     return image, M_, [image_size, desired_size, Mb]
 
