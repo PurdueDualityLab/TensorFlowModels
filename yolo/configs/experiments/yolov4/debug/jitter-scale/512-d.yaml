@@ -113,12 +113,16 @@ task:
   annotation_file: null
 trainer:
   train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 1
   steps_per_loop: 10
   summary_interval: 10
   validation_interval: 10
   checkpoint_interval: 10
   optimizer_config:
+    ema:
+      average_decay: 0.9999
+      trainable_weights_only: false
+      dynamic_decay: True
     learning_rate:
       type: stepwise
       stepwise:
