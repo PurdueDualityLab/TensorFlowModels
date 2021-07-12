@@ -78,9 +78,9 @@ task:
       resize_mosaic: 1.0
       sheer: 0.0
       aug_scale_min: 0.2
-      aug_scale_max: 1.5
-      mosaic_scale_min: 0.4
-      mosaic_scale_max: 1.25
+      aug_scale_max: 1.8
+      mosaic_scale_min: 0.2
+      mosaic_scale_max: 1.5
       aug_rand_translate: 0.0
       area_thresh: 0.2
       random_pad: True
@@ -89,9 +89,9 @@ task:
       anchor_thresh: 0.213
       mosaic: 
         output_resolution: [512, 512]
-        max_resolution: 640
-        mosaic_frequency: 0.7
-        crop_area: [0.25]
+        max_resolution: 720
+        mosaic_frequency: 0.75
+        crop_area: [0.20]
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
   validation_data:
@@ -112,7 +112,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 250000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -122,7 +122,7 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [200000, 225000]
+        boundaries: [300000, 337500]
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000131, 0.0000131] #best
     optimizer:

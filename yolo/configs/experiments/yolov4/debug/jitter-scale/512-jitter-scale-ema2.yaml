@@ -121,9 +121,8 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: false
+      trainable_weights_only: True
       dynamic_decay: True
-      # average_decay: 0.9998
     learning_rate:
       type: stepwise
       stepwise:
