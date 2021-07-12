@@ -683,20 +683,20 @@ class TiledNMS():
         tf.reshape(tf.range(max_output_size), [1, -1]) < tf.reshape(
             output_size, [-1, 1]), scores.dtype)
 
-    if self._weighted:
-      B, eye, _ = segment_iou(boxes,
-                                iou_thresh = iou_threshold, 
-                                iou_type = self._iou_type)
+    # if self._weighted:
+    #   B, eye, _ = segment_iou(boxes,
+    #                             iou_thresh = iou_threshold, 
+    #                             iou_type = self._iou_type)
 
-      # D = box_ops.aggregated_comparitive_iou(boxes, iou_type = 4)
-      # X = tf.cast(B >= 0, scores.dtype)
-      # scores = tf.reduce_prod(tf.minimum(tf.math.exp(-(B**2)/0.2) + D * tf.cast((B > 0), D.dtype), X), axis = 1) * scores
-      # scores_mask = tf.cast(scores > 0.001, scores.dtype)
-      # boxes *= tf.expand_dims(scores_mask, axis = -1)
+    #   # D = box_ops.aggregated_comparitive_iou(boxes, iou_type = 4)
+    #   # X = tf.cast(B >= 0, scores.dtype)
+    #   # scores = tf.reduce_prod(tf.minimum(tf.math.exp(-(B**2)/0.2) + D * tf.cast((B > 0), D.dtype), X), axis = 1) * scores
+    #   # scores_mask = tf.cast(scores > 0.001, scores.dtype)
+    #   # boxes *= tf.expand_dims(scores_mask, axis = -1)
 
-      weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-      boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-                                  tf.reduce_sum(weights, axis = -1, keepdims = True))
+    #   weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(scores, axis = -1)
+    #   boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+    #                               tf.reduce_sum(weights, axis = -1, keepdims = True))
 
     return scores, boxes
 
