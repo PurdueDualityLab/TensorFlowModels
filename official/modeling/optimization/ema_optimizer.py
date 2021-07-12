@@ -118,7 +118,8 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
       decay = tf.constant(0., tf.float32)
     elif self._dynamic_decay:
       decay = step - self._start_step
-      decay = tf.minimum(self._average_decay, (1. + decay) / (10. + decay))
+      # decay = tf.minimum(self._average_decay, (1. + decay) / (10. + decay))
+      decay = self._average_decay * (1 - tf.math.exp(-step / 2000))
     else:
       decay = self._average_decay
 
