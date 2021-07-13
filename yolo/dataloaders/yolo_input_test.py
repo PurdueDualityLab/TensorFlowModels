@@ -29,14 +29,14 @@ from yolo.utils.run_utils import prep_gpu
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-dark-aug.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/state-test/512-state-test-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
-  # onfig_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-long.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-resize.yaml"]
@@ -51,8 +51,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 1
-  config.validation_data.global_batch_size = 1
+  config.train_data.global_batch_size = 64
+  config.validation_data.global_batch_size = 64
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 
@@ -281,8 +281,8 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  # time_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
+  time_pipeline()
+  # test_yolo_pipeline(is_training=True, num = 30)
   # test_yolo_pipeline(is_training=False, num = 5)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po

@@ -72,4 +72,4 @@ class SGDMomentumWarmupConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum_start: float = 0.0
   momentum: float = 0.9
-  momentum_warm_up_steps: int = 1000
+  warmup_steps: int = 1000

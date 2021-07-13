@@ -747,13 +747,14 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
-    loss = box_loss + class_loss + conf_loss
-    loss = tf.reduce_sum(loss)
+    _loss = box_loss + class_loss + conf_loss
+    loss = tf.reduce_sum(_loss)
 
     # 10. compute all the individual losses to use as metrics
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
+    mean_loss = tf.reduce_mean(_loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
@@ -763,7 +764,7 @@ class Yolo_Loss(object):
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
+    return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj, recall50,
             precision50)
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):
@@ -938,7 +939,7 @@ class Yolo_Loss(object):
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
+    return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj, recall50,
             precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):

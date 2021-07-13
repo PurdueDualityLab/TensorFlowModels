@@ -5,11 +5,13 @@ from tensorflow.python.ops import gen_resource_variable_ops
 from tensorflow.python.training import gen_training_ops
 from tensorflow.python.util.tf_export import keras_export
 
+import tensorflow as tf
+
 
 __all__ = ['SGD']
 
 # problem is that sub division cannot change between saves
-class SGD(optimizer_v2.OptimizerV2):
+class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   r"""Gradient descent (with momentum) optimizer.
   Update rule for parameter `w` with gradient `g` when `momentum` is 0:
   ```python
@@ -74,11 +76,15 @@ class SGD(optimizer_v2.OptimizerV2):
   def __init__(self,
                learning_rate=0.01,
                momentum=0.0,
+               momentum_start =0.0, 
+               warmup_steps = 1000,
                nesterov=False,
                name="SGD",
                **kwargs):
-    super(SGD, self).__init__(name, **kwargs)
+    super(SGDMomentumWarmup, self).__init__(name, **kwargs)
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
+    self._set_hyper("bias_learning_rate", kwargs.get("lr", learning_rate))
+
     self._set_hyper("decay", self._initial_decay)
 
     self._momentum = False
@@ -86,9 +92,31 @@ class SGD(optimizer_v2.OptimizerV2):
       self._momentum = True
     if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
       raise ValueError("`momentum` must be between [0, 1].")
+
     self._set_hyper("momentum", momentum)
+    self._set_hyper("momentum_start", momentum_start)
+    self._set_hyper("warmup_steps", warmup_steps)
 
     self.nesterov = nesterov
+    self._LR_bias_depth = 0
+
+  def _set_bias_lr(self, lr, bias_key):
+    print("\n\n\n\n\n\n\n\n", lr, "\n\n\n\n\n\n\n\n")
+    self._LR_bias_depth = bias_key
+    self._set_hyper("bias_learning_rate", lr)
+
+  def _get_momentum(self, iteration):
+    momentum = self._get_hyper("momentum")
+    momentum_start = self._get_hyper("momentum_start")
+    momentum_warm_up_steps = tf.cast(self._get_hyper("warmup_steps"), 
+                                      iteration.dtype)
+    value = tf.cond((iteration - momentum_warm_up_steps) < 0, 
+        true_fn=lambda: (momentum_start + 
+                          (tf.cast(iteration, momentum.dtype) * 
+                             (momentum - momentum_start)/tf.cast(
+                               momentum_warm_up_steps, momentum.dtype))), 
+        false_fn=lambda: momentum)
+    return value
 
   def _create_slots(self, var_list):
     if self._momentum:
@@ -96,7 +124,8 @@ class SGD(optimizer_v2.OptimizerV2):
         self.add_slot(var, "momentum")
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(SGD, self)._prepare_local(var_device, var_dtype, apply_state)
+    super(SGDMomentumWarmup, self)._prepare_local(var_device, 
+                                                  var_dtype, apply_state)
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
 
@@ -107,25 +136,34 @@ class SGD(optimizer_v2.OptimizerV2):
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
+      momentum = self._get_momentum(self.iterations)
+      bias_lr = self._get_hyper("bias_learning_rate")(self.iterations)
+      non_bias_lr = coefficients["lr_t"]
+
+      lr = tf.cond(tf.logical_and(tf.rank(grad) == 1, 
+                                  tf.shape(grad)[0] == self._LR_bias_depth),
+        true_fn=lambda:bias_lr, 
+        false_fn=lambda:non_bias_lr)
+
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,
           accum=momentum_var.handle,
-          lr=coefficients["lr_t"],
+          lr=lr,
           grad=grad,
-          momentum=coefficients["momentum"],
+          momentum=momentum,
           use_locking=self._use_locking,
           use_nesterov=self.nesterov)
     else:
       return gen_training_ops.ResourceApplyGradientDescent(
           var=var.handle,
-          alpha=coefficients["lr_t"],
+          alpha=lr,
           delta=grad,
           use_locking=self._use_locking)
 
   def _resource_apply_sparse_duplicate_indices(self, grad, var, indices,
                                                **kwargs):
     if self._momentum:
-      return super(SGD, self)._resource_apply_sparse_duplicate_indices(
+      return super(SGDMomentumWarmup, self)._resource_apply_sparse_duplicate_indices(
           grad, var, indices, **kwargs)
     else:
       var_device, var_dtype = var.device, var.dtype.base_dtype
@@ -155,7 +193,7 @@ class SGD(optimizer_v2.OptimizerV2):
         use_nesterov=self.nesterov)
 
   def get_config(self):
-    config = super(SGD, self).get_config()
+    config = super(SGDMomentumWarmup, self).get_config()
     config.update({
         "learning_rate": self._serialize_hyperparameter("learning_rate"),
         "decay": self._initial_decay,

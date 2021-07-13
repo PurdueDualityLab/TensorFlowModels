@@ -28,3 +28,6 @@ from yolo.configs.yolo import YoloTask
 
 from yolo.tasks.image_classification import ImageClassificationTask
 from yolo.tasks.yolo import YoloTask
+
+from yolo.optimization import optimizer_factory
+from yolo.optimization.configs import learning_rate_config, optimization_config, optimizer_config

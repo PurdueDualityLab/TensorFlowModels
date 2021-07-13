@@ -84,8 +84,6 @@ task:
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.1, 1.9]
-        crop_area: [0.25, 1.0]
-        jitter: 0.0
   validation_data:
     global_batch_size: 8
     dtype: float16
@@ -102,7 +100,7 @@ task:
   weight_decay: 0.0005
   annotation_file: null
 trainer:
-  train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 562500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -119,7 +117,7 @@ trainer:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 370000
+        decay_steps: 556875
     optimizer:
       type: sgd
       sgd:

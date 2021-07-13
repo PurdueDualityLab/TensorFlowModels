@@ -22,9 +22,10 @@ import os
 
 from official.core import exp_factory
 from official.modeling import hyperparams
-from official.modeling import optimization
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
+
+from yolo import optimization
 
 from yolo.configs import backbones
 import numpy as np
@@ -346,74 +347,6 @@ def yolo_custom() -> cfg.ExperimentConfig:
               is_training=False,
               global_batch_size=eval_batch_size,
               shuffle_buffer_size=2)),
-      trainer=cfg.TrainerConfig(
-          steps_per_loop=2000,
-          summary_interval=8000,
-          checkpoint_interval=10000,
-          train_steps=num_batches,
-          validation_steps=1000,
-          validation_interval=10,
-          optimizer_config=optimization.OptimizationConfig({
-              'optimizer': {
-                  'type': 'sgd',
-                  'sgd': {
-                      'momentum': 0.9
-                  }
-              },
-              'learning_rate': {
-                  'type': 'stepwise',
-                  'stepwise': {
-                      'boundaries': [
-                          int(400000 / base_default * num_batches),
-                          int(450000 / base_default * num_batches)
-                      ],
-                      'values': [
-                          0.00261 * train_batch_size / 64,
-                          0.000261 * train_batch_size / 64,
-                          0.0000261 * train_batch_size / 64
-                      ]
-                  }
-              },
-              'warmup': {
-                  'type': 'linear',
-                  'linear': {
-                      'warmup_steps': 1000 * 64 // num_batches,
-                      'warmup_learning_rate': 0
-                  }
-              }
-          })),
-      restrictions=[
-          'task.train_data.is_training != None',
-          'task.validation_data.is_training != None'
-      ])
-
-  return config
-
-
-@exp_factory.register_config_factory('yolo_tpu')
-def yolo_tpu() -> cfg.ExperimentConfig:
-  """COCO object detection with YOLO."""
-  train_batch_size = 1
-  eval_batch_size = 1
-  base_default = 1200000
-  num_batches = 1200000 * 64 / train_batch_size
-
-  config = cfg.ExperimentConfig(
-      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
-      task=YoloTask(
-          model=Yolo(),
-          train_data=DataConfig(  # input_path=os.path.join(
-              # COCO_INPUT_PATH_BASE, 'train*'),
-              is_training=True,
-              global_batch_size=train_batch_size,
-              parser=Parser(),
-              shuffle_buffer_size=10000),
-          validation_data=DataConfig(
-              # input_path=os.path.join(COCO_INPUT_PATH_BASE,
-              #                        'val*'),
-              is_training=False,
-              global_batch_size=eval_batch_size,
-              shuffle_buffer_size=10000)),
       trainer=cfg.TrainerConfig(
           steps_per_loop=2000,
           summary_interval=8000,

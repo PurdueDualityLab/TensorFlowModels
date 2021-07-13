@@ -228,30 +228,23 @@ class YoloTask(base_task.Task):
     inds = labels['inds']
     upds = labels['upds']
 
-    bloss_dict = 0
-    closs_dict = 0
-    oloss_dict = 0
-
     scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
-      (_loss, _loss_box, _loss_conf, _loss_class, _avg_iou, _avg_obj, _recall50,
+      (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou, _avg_obj, _recall50,
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      metric_dict['global']['total_loss'] += _loss
-      metric_dict[key]['conf_loss'] = _loss_conf / scale_replicas
-      metric_dict[key]['box_loss'] = _loss_box / scale_replicas
-      metric_dict[key]['class_loss'] = _loss_class / scale_replicas
-      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50 /
-                                                      scale_replicas)
-      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50 /
-                                                         scale_replicas)
-      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou / scale_replicas)
-      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj / scale_replicas)
+      metric_dict['global']['total_loss'] += _mean_loss
+      metric_dict[key]['conf_loss'] = _loss_conf
+      metric_dict[key]['box_loss'] = _loss_box
+      metric_dict[key]['class_loss'] = _loss_class
+      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
+      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
+      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
       loss_val += _loss * scale / num_replicas
-      bloss_dict +=  _loss_box
-      closs_dict +=  _loss_class
-      oloss_dict +=  _loss_conf
+    
+    tf.print(metric_dict['global']['total_loss'] )
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
@@ -312,26 +305,8 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    if self._bias_optimizer is None:
-      optimizer.apply_gradients(zip(gradients, train_vars))
-    else:
-      # bias_grad = [gradients.pop(-1), gradients.pop(-2), gradients.pop(-3)]
-      # bias = [train_vars.pop(-1), train_vars.pop(-2), train_vars.pop(-3)]
-      # optimizer.apply_gradients(zip(gradients, train_vars))
-      # self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
-
-      bias_grad = [] #[gradients[-(2 * i + 1)] for i in range(model.head.num_heads)]
-      bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
-      for i in range(model.head.num_heads):
-        bias_grad.append(gradients[-(2 * i + 1)])
-        gradients[-(2 * i + 1)] *= 0
-
-      self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
-      optimizer.apply_gradients(zip(gradients, train_vars))
-
-      # tf.print(type(gradients))
-      # tf.print(self._bias_optimizer._get_hyper('momentum'), self._test_var)
-      # self._test_var.assign_add(1)
+    optimizer.apply_gradients(zip(gradients, train_vars))
+    
 
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
@@ -560,11 +535,22 @@ class YoloTask(base_task.Task):
                        runtime_config: Optional[RuntimeConfig] = None):
     if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
       opta = super().create_optimizer(optimizer_config, runtime_config)
-      optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
-      # revert back comment the line bellow
-      optimizer_config.ema = None
-      optb = super().create_optimizer(optimizer_config, runtime_config)
-      self._bias_optimizer = optb
+      
+      if isinstance(opta, optimization.ExponentialMovingAverage):
+        optb = opta._optimizer
+      elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
+        optb = opta.inner_optimizer
+      else:
+        optb = opta 
+
+      if hasattr(optb, "_set_bias_lr"):
+        optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+        opt_factory = optimization.OptimizerFactory(optimizer_config)
+        bias_lr = opt_factory.build_learning_rate()
+        optb._set_bias_lr(bias_lr, 
+          (self.task_config.model.num_classes +
+           5) * self.task_config.model.boxes_per_scale )
+
       return opta
     else:
       return super().create_optimizer(optimizer_config, runtime_config)

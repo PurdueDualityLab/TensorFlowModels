@@ -451,7 +451,6 @@ class Mosaic(object):
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
     return sample
 
-
   def _full_frequency_apply(self, dataset):
     one = dataset.shard(num_shards=4, index=0)
     two = dataset.shard(num_shards=4, index=1)
@@ -492,7 +491,7 @@ class Mosaic(object):
     return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE)
 
   def mosaic_fn(self, is_training=True):
-    if (is_training and self._mosaic_frequency == 1.0):
+    if (is_training and self._mosaic_frequency >= 1.0):
       return self._full_frequency_apply
     elif is_training and self._mosaic_frequency > 0.0:
       return self._apply

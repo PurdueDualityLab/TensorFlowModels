@@ -43,6 +43,7 @@ class OptimizerConfig(optimization_cfg.OptimizerConfig):
   """
   type: Optional[str] = None
   sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
+  sgd_dymo: opt_cfg.SGDMomentumWarmupConfig = opt_cfg.SGDMomentumWarmupConfig()
 
 
 
@@ -58,3 +59,4 @@ class OptimizationConfig(optimization_cfg.OptimizationConfig):
     warmup: warmup oneof config.
   """
   type: Optional[str] = None
+  optimizer: OptimizerConfig = OptimizerConfig()

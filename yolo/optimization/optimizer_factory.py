@@ -21,15 +21,14 @@ import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 from official.modeling.optimization import configs
 
-from yolo.optimization import SGDAccumulated, SGD
+from yolo.optimization import SGDAccumulated, SGDMomentumWarmup
 from official.modeling.optimization import optimizer_factory
 from official.modeling.optimization import lr_schedule
-from official.modeling.optimization.configs import optimization_config as opt_cfg
+from yolo.optimization.configs import optimization_config as opt_cfg
 
 
 optimizer_factory.OPTIMIZERS_CLS.update({
-    # 'sgd': tf.keras.optimizers.SGD,
-    'sgd_dymo': SGD.SGD,
+    'sgd_dymo': SGDMomentumWarmup.SGDMomentumWarmup,
     'sgd_accum': SGDAccumulated.SGDAccumulated
 })
 
