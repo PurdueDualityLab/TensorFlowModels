@@ -244,7 +244,6 @@ class YoloTask(base_task.Task):
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
       loss_val += _loss * scale / num_replicas
     
-    tf.print(metric_dict['global']['total_loss'] )
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
