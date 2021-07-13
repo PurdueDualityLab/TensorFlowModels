@@ -20,13 +20,14 @@ import gin
 import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 
-from official.modeling.optimization import ema_optimizer, SGDAccumulated
+from official.modeling.optimization import ema_optimizer, SGDAccumulated, SGD
 from official.modeling.optimization import lr_schedule
 from official.modeling.optimization.configs import optimization_config as opt_cfg
 from official.nlp import optimization as nlp_optimization
 
 OPTIMIZERS_CLS = {
-    'sgd': tf.keras.optimizers.SGD,
+    # 'sgd': tf.keras.optimizers.SGD,
+    'sgd': SGD.SGD,
     'adam': tf.keras.optimizers.Adam,
     'adamw': nlp_optimization.AdamWeightDecay,
     'lamb': tfa_optimizers.LAMB,

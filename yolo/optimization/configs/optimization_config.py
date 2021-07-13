@@ -24,12 +24,13 @@ import dataclasses
 
 from official.modeling.hyperparams import base_config
 from official.modeling.hyperparams import oneof
-from official.modeling.optimization.configs import learning_rate_config as lr_cfg
-from official.modeling.optimization.configs import optimizer_config as opt_cfg
+from yolo.optimization.configs import learning_rate_config as lr_cfg
+from yolo.optimization.configs import optimizer_config as opt_cfg
+from official.modeling.optimization.configs import optimization_config as optimization_cfg
 
 
 @dataclasses.dataclass
-class OptimizerConfig(oneof.OneOfConfig):
+class OptimizerConfig(optimization_cfg.OptimizerConfig):
   """Configuration for optimizer.
 
   Attributes:
@@ -41,57 +42,12 @@ class OptimizerConfig(oneof.OneOfConfig):
     rmsprop: rmsprop optimizer.
   """
   type: Optional[str] = None
-  sgd: opt_cfg.SGDConfig = opt_cfg.SGDConfig()
-  adam: opt_cfg.AdamConfig = opt_cfg.AdamConfig()
-  adamw: opt_cfg.AdamWeightDecayConfig = opt_cfg.AdamWeightDecayConfig()
-  lamb: opt_cfg.LAMBConfig = opt_cfg.LAMBConfig()
-  rmsprop: opt_cfg.RMSPropConfig = opt_cfg.RMSPropConfig()
   sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
 
 
-@dataclasses.dataclass
-class LrConfig(oneof.OneOfConfig):
-  """Configuration for lr schedule.
-
-  Attributes:
-    type: 'str', type of lr schedule to be used, on the of fields below.
-    constant: constant learning rate config.
-    stepwise: stepwise learning rate config.
-    exponential: exponential learning rate config.
-    polynomial: polynomial learning rate config.
-    cosine: cosine learning rate config.
-    power: step^power learning rate config.
-    power_linear: learning rate config of step^power followed by
-      step^power*linear.
-  """
-  type: Optional[str] = None
-  constant: lr_cfg.ConstantLrConfig = lr_cfg.ConstantLrConfig()
-  stepwise: lr_cfg.StepwiseLrConfig = lr_cfg.StepwiseLrConfig()
-  exponential: lr_cfg.ExponentialLrConfig = lr_cfg.ExponentialLrConfig()
-  polynomial: lr_cfg.PolynomialLrConfig = lr_cfg.PolynomialLrConfig()
-  cosine: lr_cfg.CosineLrConfig = lr_cfg.CosineLrConfig()
-  cosine_epoch: lr_cfg.CosineLrEpochConfig = lr_cfg.CosineLrEpochConfig()
-  power: lr_cfg.DirectPowerLrConfig = lr_cfg.DirectPowerLrConfig()
-  power_linear: lr_cfg.PowerAndLinearDecayLrConfig = (
-      lr_cfg.PowerAndLinearDecayLrConfig())
-
 
 @dataclasses.dataclass
-class WarmupConfig(oneof.OneOfConfig):
-  """Configuration for lr schedule.
-
-  Attributes:
-    type: 'str', type of warmup schedule to be used, on the of fields below.
-    linear: linear warmup config.
-    polynomial: polynomial warmup config.
-  """
-  type: Optional[str] = None
-  linear: lr_cfg.LinearWarmupConfig = lr_cfg.LinearWarmupConfig()
-  polynomial: lr_cfg.PolynomialWarmupConfig = lr_cfg.PolynomialWarmupConfig()
-
-
-@dataclasses.dataclass
-class OptimizationConfig(base_config.Config):
+class OptimizationConfig(optimization_cfg.OptimizationConfig):
   """Configuration for optimizer and learning rate schedule.
 
   Attributes:
@@ -101,7 +57,4 @@ class OptimizationConfig(base_config.Config):
     learning_rate: learning rate oneof config.
     warmup: warmup oneof config.
   """
-  optimizer: OptimizerConfig = OptimizerConfig()
-  ema: Optional[opt_cfg.EMAConfig] = None
-  learning_rate: LrConfig = LrConfig()
-  warmup: WarmupConfig = WarmupConfig()
+  type: Optional[str] = None

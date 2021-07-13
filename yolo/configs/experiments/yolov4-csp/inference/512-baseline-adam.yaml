@@ -162,11 +162,11 @@ trainer:
         alpha: 0.2
         decay_steps: 370000
     optimizer:
-      type: sgd
-      sgd:
-        momentum: 0.937
-        nesterov: True
-        name: SGD
+      type: adam
+      adam:
+        beta_1: 0.9
+        beta_2: 0.937
+        name: Adam
     warmup:
       type: 'linear'
       linear:

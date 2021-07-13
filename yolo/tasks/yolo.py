@@ -328,7 +328,6 @@ class YoloTask(base_task.Task):
 
       self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
       optimizer.apply_gradients(zip(gradients, train_vars))
-      
 
       # tf.print(type(gradients))
       # tf.print(self._bias_optimizer._get_hyper('momentum'), self._test_var)

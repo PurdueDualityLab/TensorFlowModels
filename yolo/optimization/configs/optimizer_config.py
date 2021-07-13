@@ -17,6 +17,7 @@ from typing import List, Optional
 
 import dataclasses
 from official.modeling.hyperparams import base_config
+from official.modeling.optimization.configs.optimizer_config import BaseOptimizerConfig
 
 
 @dataclasses.dataclass
@@ -37,23 +38,6 @@ class BaseOptimizerConfig(base_config.Config):
 
 
 @dataclasses.dataclass
-class SGDConfig(BaseOptimizerConfig):
-  """Configuration for SGD optimizer.
-
-  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
-
-  Attributes:
-    name: name of the optimizer.
-    decay: decay rate for SGD optimizer.
-    nesterov: nesterov for SGD optimizer.
-    momentum: momentum for SGD optimizer.
-  """
-  name: str = "SGD"
-  decay: float = 0.0
-  nesterov: bool = False
-  momentum: float = 0.0
-
-@dataclasses.dataclass
 class SGDAccumConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
 
@@ -72,118 +56,20 @@ class SGDAccumConfig(BaseOptimizerConfig):
   accumulation_steps: int = 1
 
 @dataclasses.dataclass
-class RMSPropConfig(BaseOptimizerConfig):
-  """Configuration for RMSProp optimizer.
+class SGDMomentumWarmupConfig(BaseOptimizerConfig):
+  """Configuration for SGD optimizer.
 
-  The attributes for this class matches the arguments of
-  tf.keras.optimizers.RMSprop.
-
-  Attributes:
-    name: name of the optimizer.
-    rho: discounting factor for RMSprop optimizer.
-    momentum: momentum for RMSprop optimizer.
-    epsilon: epsilon value for RMSprop optimizer, help with numerical stability.
-    centered: Whether to normalize gradients or not.
-  """
-  name: str = "RMSprop"
-  rho: float = 0.9
-  momentum: float = 0.0
-  epsilon: float = 1e-7
-  centered: bool = False
-
-
-@dataclasses.dataclass
-class AdamConfig(BaseOptimizerConfig):
-  """Configuration for Adam optimizer.
-
-  The attributes for this class matches the arguments of
-  tf.keras.optimizer.Adam.
+  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
 
   Attributes:
     name: name of the optimizer.
-    beta_1: decay rate for 1st order moments.
-    beta_2: decay rate for 2st order moments.
-    epsilon: epsilon value used for numerical stability in Adam optimizer.
-    amsgrad: boolean. Whether to apply AMSGrad variant of this algorithm from
-      the paper "On the Convergence of Adam and beyond".
+    decay: decay rate for SGD optimizer.
+    nesterov: nesterov for SGD optimizer.
+    momentum: momentum for SGD optimizer.
   """
-  name: str = "Adam"
-  beta_1: float = 0.9
-  beta_2: float = 0.999
-  epsilon: float = 1e-07
-  amsgrad: bool = False
-
-
-@dataclasses.dataclass
-class AdamWeightDecayConfig(BaseOptimizerConfig):
-  """Configuration for Adam optimizer with weight decay.
-
-  Attributes:
-    name: name of the optimizer.
-    beta_1: decay rate for 1st order moments.
-    beta_2: decay rate for 2st order moments.
-    epsilon: epsilon value used for numerical stability in the optimizer.
-    amsgrad: boolean. Whether to apply AMSGrad variant of this algorithm from
-      the paper "On the Convergence of Adam and beyond".
-    weight_decay_rate: float. Weight decay rate. Default to 0.
-    include_in_weight_decay: list[str], or None. List of weight names to include
-      in weight decay.
-    exclude_from_weight_decay: list[str], or None. List of weight names to not
-      include in weight decay.
-    gradient_clip_norm: A positive float. Clips the gradients to this maximum
-      L2-norm. Default to 1.0.
-  """
-  name: str = "AdamWeightDecay"
-  beta_1: float = 0.9
-  beta_2: float = 0.999
-  epsilon: float = 1e-07
-  amsgrad: bool = False
-  weight_decay_rate: float = 0.0
-  include_in_weight_decay: Optional[List[str]] = None
-  exclude_from_weight_decay: Optional[List[str]] = None
-  gradient_clip_norm: float = 1.0
-
-
-@dataclasses.dataclass
-class LAMBConfig(BaseOptimizerConfig):
-  """Configuration for LAMB optimizer.
-
-  The attributes for this class matches the arguments of
-  tensorflow_addons.optimizers.LAMB.
-
-  Attributes:
-    name: name of the optimizer.
-    beta_1: decay rate for 1st order moments.
-    beta_2: decay rate for 2st order moments.
-    epsilon: epsilon value used for numerical stability in LAMB optimizer.
-    weight_decay_rate: float. Weight decay rate. Default to 0.
-    exclude_from_weight_decay: List of regex patterns of variables excluded from
-      weight decay. Variables whose name contain a substring matching the
-      pattern will be excluded.
-    exclude_from_layer_adaptation: List of regex patterns of variables excluded
-      from layer adaptation. Variables whose name contain a substring matching
-      the pattern will be excluded.
-  """
-  name: str = "LAMB"
-  beta_1: float = 0.9
-  beta_2: float = 0.999
-  epsilon: float = 1e-6
-  weight_decay_rate: float = 0.0
-  exclude_from_weight_decay: Optional[List[str]] = None
-  exclude_from_layer_adaptation: Optional[List[str]] = None
-
-
-@dataclasses.dataclass
-class EMAConfig(BaseOptimizerConfig):
-  """Exponential moving average optimizer config.
-
-  Attributes:
-    name: 'str', name of the optimizer.
-    average_decay: 'float', average decay value.
-    start_step: 'int', start step to apply moving average.
-    dynamic_decay: 'bool', whether to apply dynamic decay or not.
-  """
-  name: str = "ExponentialMovingAverage"
-  average_decay: float = 0.99
-  start_step: int = 0
-  dynamic_decay: bool = True
+  name: str = "SGD"
+  decay: float = 0.0
+  nesterov: bool = False
+  momentum_start: float = 0.0
+  momentum: float = 0.9
+  momentum_warm_up_steps: int = 1000
