@@ -2,6 +2,7 @@ from tensorflow.python.framework import ops
 from tensorflow.python.keras.optimizer_v2 import optimizer_v2
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_resource_variable_ops
+from tensorflow.python.keras.optimizer_v2 import learning_rate_schedule
 from tensorflow.python.training import gen_training_ops
 from tensorflow.python.util.tf_export import keras_export
 
@@ -101,7 +102,6 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
     self._LR_bias_depth = 0
 
   def _set_bias_lr(self, lr, bias_key):
-    print("\n\n\n\n\n\n\n\n", lr, "\n\n\n\n\n\n\n\n")
     self._LR_bias_depth = bias_key
     self._set_hyper("bias_learning_rate", lr)
 
@@ -126,8 +126,18 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   def _prepare_local(self, var_device, var_dtype, apply_state):
     super(SGDMomentumWarmup, self)._prepare_local(var_device, 
                                                   var_dtype, apply_state)
-    apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
-        self._get_hyper("momentum", var_dtype))
+    
+    momentum = self._get_momentum(self.iterations)
+    momentum = tf.cast(momentum, var_dtype)
+    apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(momentum)
+
+    bias_lr = self._get_hyper("bias_learning_rate")
+    if isinstance(bias_lr, learning_rate_schedule.LearningRateSchedule):
+      bias_lr = bias_lr(self.iterations)
+
+    bias_lr = tf.cast(bias_lr, var_dtype)
+    apply_state[(var_device, var_dtype)]["bias_lr"] = array_ops.identity(bias_lr)
+    return apply_state[(var_device, var_dtype)]
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
@@ -136,14 +146,14 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
-      momentum = self._get_momentum(self.iterations)
-      bias_lr = self._get_hyper("bias_learning_rate")(self.iterations)
-      non_bias_lr = coefficients["lr_t"]
+      momentum = coefficients["momentum"]
+      lr = coefficients["lr_t"]
 
-      lr = tf.cond(tf.logical_and(tf.rank(grad) == 1, 
-                                  tf.shape(grad)[0] == self._LR_bias_depth),
-        true_fn=lambda:bias_lr, 
-        false_fn=lambda:non_bias_lr)
+      # bias_lr = coefficients["bias_lr"]
+      # lr = tf.cond(tf.logical_and(tf.rank(grad) == 1, 
+        #                           tf.shape(grad)[0] == self._LR_bias_depth),
+        # true_fn=lambda:bias_lr, 
+        # false_fn=lambda:lr)
 
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,
@@ -156,7 +166,7 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
     else:
       return gen_training_ops.ResourceApplyGradientDescent(
           var=var.handle,
-          alpha=lr,
+          alpha=coefficients["lr_t"],
           delta=grad,
           use_locking=self._use_locking)
 
