@@ -669,17 +669,12 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
-    num_objs = tf.cast(
-        tf.reduce_sum(ind_mask, axis=(1, 2)), dtype=y_pred.dtype)
+    num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
 
     # 3. split up the predicitons to match the ground truths shapes
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
-    # y_pred = tf.transpose(y_pred, perm = (0, 3, 1, 2))
-    # y_pred = tf.cast(tf.reshape(y_pred, [batch_size, num, -1, height, width]), tf.float32)
-    # y_pred = tf.transpose(y_pred, perm = (0, 3, 4, 1, 2))
-    # pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
 
     # 5. (box loss) based on input val new_cords decode the box predicitions 
@@ -698,7 +693,7 @@ class Yolo_Loss(object):
     #     within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
+    box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the 
@@ -719,8 +714,8 @@ class Yolo_Loss(object):
     #     applied
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = tf.cast(tf.reduce_mean(bce, axis=(1, 2, 3)), dtype=y_pred.dtype)
-
+    conf_loss = tf.cast(tf.reduce_mean(bce), dtype=y_pred.dtype)
+    
     # 7.  (class loss )build the one hot encoded true class values
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
@@ -732,13 +727,12 @@ class Yolo_Loss(object):
     #     compute the loss on the classes, apply the same inds mask
     #     and the compute the average of all the values
     class_loss = ks.losses.binary_crossentropy(
-        K.expand_dims(true_class, axis=-1),
-        K.expand_dims(pred_class, axis=-1),
+        true_class,
+        pred_class,
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    class_loss = tf.reduce_mean(class_loss, axis=2)
     class_loss = apply_mask(tf.squeeze(ind_mask, axis = -1), class_loss)
-    class_loss = tf.reduce_sum(class_loss, axis=1)
+    class_loss = tf.reduce_sum(class_loss)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
@@ -747,20 +741,14 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
-    _loss = box_loss + class_loss + conf_loss
-    loss = tf.reduce_sum(_loss)
-
-    # 10. compute all the individual losses to use as metrics
-    box_loss = tf.reduce_mean(box_loss)
-    conf_loss = tf.reduce_mean(conf_loss)
-    class_loss = tf.reduce_mean(class_loss)
-    mean_loss = tf.reduce_mean(_loss)
+    mean_loss = box_loss + class_loss + conf_loss
+    loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
     sigmoid_conf = tf.sigmoid(pred_conf)
 
-    # 11. compute all the values for the metrics
+    # 10. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)

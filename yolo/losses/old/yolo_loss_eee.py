@@ -16,6 +16,36 @@ import numpy as np
 TILE_SIZE = 50
 
 @tf.custom_gradient
+def obj_gradient_trap(y, max_delta=np.inf):
+  # this is an identity operation that will
+  # allow us to add some steps to the back propagation
+  def trap(dy):
+    # remove the value nan from back propagation
+    dy = math_ops.rm_nan_inf(dy)
+    # clip the gradient for the back prop
+    delta = tf.cast(max_delta, dy.dtype)
+    dy = tf.clip_by_value(dy, -1 * delta, delta)
+    return dy, 0.0
+
+  return y, trap
+
+
+@tf.custom_gradient
+def class_gradient_trap(y, max_delta=np.inf):
+  # this is an identity operation that will
+  # allow us to add some steps to the back propagation
+  def trap(dy):
+    # remove the value nan from back propagation
+    dy = math_ops.rm_nan_inf(dy)
+    # clip the gradient for the back prop
+    delta = tf.cast(max_delta, dy.dtype)
+    dy = tf.clip_by_value(dy, -1 * delta, delta)
+    return dy, 0.0
+
+  return y, trap
+
+
+@tf.custom_gradient
 def grad_sigmoid(values):
   # this is an identity operation that will
   # allow us to add some steps to the back propagation
@@ -28,18 +58,15 @@ def grad_sigmoid(values):
 
   return values, delta
 
+
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
   # this applies the sigmoid cross entropy loss
-  x = tf.math.sigmoid(x_prime)
   y = y * (1 - label_smoothing) + 0.5 * label_smoothing
-  # x = math_ops.rm_nan_inf(x, val=0.0)
-  # bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
+  x = tf.math.sigmoid(x_prime)
+  x = math_ops.rm_nan_inf(x, val=0.0)
+  bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
 
-  bce = ks.losses.binary_crossentropy(
-      y, x_prime,      
-      label_smoothing=0.0,
-      from_logits=True)
   def delta(dy):
     # this is a safer version of the sigmoid with binary cross entropy
     # bellow is the mathematic formula reduction that is used to
@@ -93,12 +120,9 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   # the view of each pixel such that the offset is no longer bound by 0 and 1.
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
-  # apply the sigmoid
-  pred_xy = tf.math.sigmoid(pred_xy) 
-
   # scale the centers and find the offset of each box relative to
   # their center pixel
-  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+  pred_xy = tf.math.sigmoid(pred_xy) * scale_xy - 0.5 * (scale_xy - 1)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
@@ -656,9 +680,11 @@ class Yolo_Loss(object):
     fheight = tf.cast(height, tf.float32)
 
     # 1. cast all input compontnts to float32 and stop gradient to save memory
-    y_true = tf.cast(y_true, tf.float32)
-    true_counts = tf.cast(true_counts, tf.float32)
-    true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
+    boxes = tf.stop_gradient(tf.cast(boxes, tf.float32))
+    classes = tf.stop_gradient(tf.cast(classes, tf.float32))
+    y_true = tf.stop_gradient(tf.cast(y_true, tf.float32))
+    true_counts = tf.stop_gradient(tf.cast(true_counts, tf.float32))
+    true_conf = tf.stop_gradient(tf.clip_by_value(true_counts, 0.0, 1.0))
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
 
@@ -676,18 +702,17 @@ class Yolo_Loss(object):
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
-    # y_pred = tf.transpose(y_pred, perm = (0, 3, 1, 2))
-    # y_pred = tf.cast(tf.reshape(y_pred, [batch_size, num, -1, height, width]), tf.float32)
-    # y_pred = tf.transpose(y_pred, perm = (0, 3, 4, 1, 2))
-    # pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
+    # 4. apply sigmoid to items and use the gradient trap to contol the backprop
+    #    and selective gradient clipping
+    sigmoid_conf = tf.sigmoid(pred_conf)
 
     # 5. (box loss) based on input val new_cords decode the box predicitions 
     #    and because we are using the scaled loss, do not change the gradients 
     #    at all
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box = true_box * scale
+    true_box = tf.stop_gradient(true_box * scale)
 
     #    gather all the indexes that a loss should be computed at also stop the
     #    gradient on grount truths to save memory
@@ -747,24 +772,19 @@ class Yolo_Loss(object):
     conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
-    _loss = box_loss + class_loss + conf_loss
-    loss = tf.reduce_sum(_loss)
+    loss = box_loss + class_loss + conf_loss
+    loss = tf.reduce_sum(loss)
 
     # 10. compute all the individual losses to use as metrics
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
-    mean_loss = tf.reduce_mean(_loss)
-
-    # 4. apply sigmoid to items and use the gradient trap to contol the backprop
-    #    and selective gradient clipping
-    sigmoid_conf = tf.sigmoid(pred_conf)
 
     # 11. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj, recall50,
+    return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
             precision50)
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):
@@ -807,8 +827,11 @@ class Yolo_Loss(object):
     # 5. compute the sigmoid of the classes and pass the unsigmoided items
     #    through a gradient trap to allow better control over the back
     #    propagation step. the sigmoided class is used for metrics only
-    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    sigmoid_class = tf.sigmoid(pred_class)
+    pred_class = class_gradient_trap(pred_class, np.inf)
+    sigmoid_conf = tf.sigmoid(pred_conf)
+    sigmoid_conf = math_ops.rm_nan_inf(sigmoid_conf, val=0.0)
+    pred_conf = obj_gradient_trap(pred_conf, np.inf)
 
     # 6. decode the boxes to be used for optimization/loss compute
     if self._darknet is None:
@@ -937,9 +960,10 @@ class Yolo_Loss(object):
     # 21. metric compute using the generated values from the loss itself
     #     done here to save time and resources
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
+    # avg_iou = self.avgiou(iou * tf.gather_nd(grid_mask, inds, batch_dims=1))
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj, recall50,
+    return (loss, box_loss, conf_loss, class_loss, avg_iou, avg_obj, recall50,
             precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
