@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   model:
     base:
       backbone:
@@ -13,7 +13,7 @@ task:
         version: v4
         type: csp
     num_classes: 91
-    smart_bias: true
+    smart_bias: false
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -29,8 +29,8 @@ task:
     min_level: 3
     norm_activation:
       activation: mish
-      norm_epsilon: 0.001
-      norm_momentum: 0.99
+      norm_epsilon: 0.0001
+      norm_momentum: 0.97
       use_sync_bn: true
     filter:
       loss_type:  
@@ -109,7 +109,7 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: false
+      trainable_weights_only: true
       dynamic_decay: True
     learning_rate:
       type: cosine
@@ -119,10 +119,12 @@ trainer:
         alpha: 0.2
         decay_steps: 556875
     optimizer:
-      type: sgd
-      sgd:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
+        momentum_start: 0.8
         nesterov: True
+        warmup_steps: 5625 
         name: SGD
     warmup:
       type: 'linear'

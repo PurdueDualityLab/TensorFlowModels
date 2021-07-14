@@ -12,8 +12,9 @@ import numpy as np
 
 
 def rand_uniform_strong(minval, 
-                        maxval,
-                        dtype=tf.float32):
+                        maxval, 
+                        dtype=tf.float32, 
+                        seed = None):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -30,25 +31,8 @@ def rand_uniform_strong(minval,
   if minval > maxval:
     minval, maxval = maxval, minval
 
-  return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
+  return tf.random.uniform([], minval=minval, maxval=maxval, seed = seed, dtype=dtype)
 
-def rand_strong(minval, maxval, dtype=tf.float32):
-  """
-  Equivalent to tf.random.uniform, except that minval and maxval are flipped if
-  minval is greater than maxval.
-  Args:
-    minval: An `int` for a lower or upper endpoint of the interval from which to
-      choose the random number.
-    maxval: An `int` for the other endpoint.
-    dtype: The output type of the tensor.
-  
-  Returns:
-    A random tensor of type dtype that falls between minval and maxval excluding
-    the bigger one.
-  """
-  if minval > maxval:
-    minval, maxval = maxval, minval
-  return tf.random.uniform([], minval=minval, maxval=maxval, dtype=dtype)
 
 def rand_scale(val, dtype=tf.float32):
   """
@@ -120,37 +104,6 @@ def get_image_shape(image):
     height = shape[0]
   return height, width
 
-
-def random_translate(image, t):
-  """
-  Translate the boxes by a random fraction of the image width and height between
-  [-t, t).
-  Args:
-    image: An int tensor of either 3 or 4 dimensions representing the image or a
-      batch of images.
-    t: A float representing the fraction of the width and height by which to
-      jitter the image.
-  
-  Returns:
-    A tuple with three elements: a tensor representing the translated image with
-    the same dimensions as `box`, and the number of pixels that the image was
-    translated in both the x and y directions.
-  """
-  with tf.name_scope('random_translate'):
-    if t != 0:
-      t_x = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
-      t_y = tf.random.uniform(minval=-t, maxval=t, shape=(), dtype=tf.float32)
-      height, width = get_image_shape(image)
-      image_jitter = tf.convert_to_tensor([t_x, t_y])
-      image_dims = tf.cast(tf.convert_to_tensor([width, height]), tf.float32)
-      image_jitter.set_shape([2])
-      image = tfa.image.translate(image, image_jitter * image_dims)
-    else:
-      t_x = 0.0
-      t_y = 0.0
-  return image, t_x, t_y
-
-
 def translate_boxes(box, classes, translate_x, translate_y):
   """
   Translate the boxes by a fixed number of pixels.
@@ -174,140 +127,6 @@ def translate_boxes(box, classes, translate_x, translate_y):
     box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
     box = box_ops.xcycwh_to_yxyx(box)
   return box, classes
-
-
-def translate_image(image, t_y, t_x):
-  """
-  Translate the boxes by a fix fraction of the image width and height
-  represented by (t_y, t_x).
-  Args:
-    image: An int tensor of either 3 or 4 dimensions representing the image or a
-      batch of images.
-    t_y: A float representing the fraction of the height by which to translate
-      the image vertically.
-    t_x: A float representing the fraction of the width by which to translate
-      the image horizontally.
-  Returns:
-    A tuple with three elements: a tensor representing the translated image with
-    the same dimensions as `box`, and the number of pixels that the image was
-    translated in both the y and x directions.
-  """
-  with tf.name_scope('translate_boxes'):
-    height, width = get_image_shape(image)
-    image_jitter = tf.convert_to_tensor([t_y, t_x])
-    image_dims = tf.cast(tf.convert_to_tensor([height, width]), tf.float32)
-    image_jitter.set_shape([2])
-    jitter = image_jitter * image_dims
-    image = tfa.image.translate(image, jitter)
-  return image, jitter[0], jitter[1]
-
-
-def random_rotate_image(image, max_angle):
-  """
-  Rotate an image by a random angle that ranges from [-max_angle, max_angle).
-  
-  Args:
-    x_: A float tensor for the x-coordinates of the points.
-    y_: A float tensor for the y-coordinates of the points.
-    angle: A float representing the counter-clockwise rotation in radians.
-  
-  Returns:
-    The rotated points.
-  """
-  angle = tf.random.uniform([],
-                            minval=-max_angle,
-                            maxval=max_angle,
-                            dtype=tf.float32)
-  deg = angle * 3.14 / 360.
-  deg.set_shape(())
-  image = tfa.image.rotate(image, deg, interpolation='BILINEAR')
-  return image, deg
-
-def get_corners(boxes):
-  """
-  Get the coordinates of the 4 courners of a set of bounding boxes.
-  
-  Args:
-    boxes: A tensor whose last axis has a length of 4 and is in the format
-      (ymin, xmin, ymax, xmax)
-  
-  Returns:
-    A tensor whose dimensions are the same as `boxes` but has an additional axis
-    of size 2 representing the 4 courners of the bounding boxes in the order
-    (tl, bl, tr, br).
-  """
-
-  ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
-
-  tl = tf.concat([xmi, ymi], axis=-1)
-  bl = tf.concat([xmi, yma], axis=-1)
-  tr = tf.concat([xma, ymi], axis=-1)
-  br = tf.concat([xma, yma], axis=-1)
-
-  corners = tf.concat([tl, bl, tr, br], axis=-1)
-  return corners
-
-
-def rotate_points(x_, y_, angle):
-  """
-  Rotate points by an angle about the center of the image.
-  
-  Args:
-    x_: A float tensor for the x-coordinates of the points.
-    y_: A float tensor for the y-coordinates of the points.
-    angle: A float representing the counter-clockwise rotation in radians.
-  
-  Returns:
-    The rotated points.
-  """
-  sx = 0.5 - x_
-  sy = 0.5 - y_
-
-  r = tf.sqrt(sx**2 + sy**2)
-  curr_theta = tf.atan2(sy, sx)
-
-  cos = tf.math.cos(curr_theta - angle)
-  sin = tf.math.sin(curr_theta - angle)
-
-  x = r * cos
-  y = r * sin
-
-  x = -x + 0.5
-  y = -y + 0.5
-  return x, y
-
-
-def rotate_boxes(boxes, angle):
-  """
-  Rotate bounding boxes by an angle about the center of the image.
-  
-  Args:
-    boxes: A float tensor whose last axis represents (ymin, xmin, ymax, xmax).
-    angle: A float representing the counter-clockwise rotation in radians.
-  
-  Returns:
-    The rotated boxes.
-  """
-
-  corners = get_corners(boxes)
-  # boxes = box_ops.yxyx_to_xcycwh(boxes)
-  ymin, xmin, ymax, xmax = tf.split(boxes, 4, axis=-1)
-
-  tlx, tly = rotate_points(xmin, ymin, angle)
-  blx, bly = rotate_points(xmin, ymax, angle)
-  trx, try_ = rotate_points(xmax, ymin, angle)
-  brx, bry = rotate_points(xmax, ymax, angle)
-
-  xs = tf.concat([tlx, blx, trx, brx], axis=-1)
-  ys = tf.concat([tly, bly, try_, bry], axis=-1)
-
-  xmin = tf.reduce_min(xs, axis=-1, keepdims=True)
-  ymin = tf.reduce_min(ys, axis=-1, keepdims=True)
-  xmax = tf.reduce_max(xs, axis=-1, keepdims=True)
-  ymax = tf.reduce_max(ys, axis=-1, keepdims=True)
-
-  boxes = tf.concat([ymin, xmin, ymax, xmax], axis=-1)
-  return boxes
 
 def random_crop_image(image,
                       aspect_ratio_range=(3. / 4., 4. / 3.),
@@ -530,9 +349,6 @@ def resize_and_crop_image(image,
 
     scaled_size = tf.cast(tf.shape(scaled_image)[0:2], tf.int32)
 
-    # random_pad = tf.cast(random_pad, tf.float32)
-    # if random_pad == 1.0:
-    #   random_pad = tf.cast(0.5, tf.float32)
     if random_pad:
       random_pad = 0.5
       shifty = 0.5 + rand_uniform_strong(-random_pad, random_pad, tf.float32)
@@ -547,8 +363,6 @@ def resize_and_crop_image(image,
 
     output_image = tf.image.pad_to_bounding_box(scaled_image, dy, dx,
                                                 padded_size[0], padded_size[1])
-    # output_image, _ = mean_pad(scaled_image, dy, dx,
-    #                                             padded_size[0], padded_size[1])
 
     offset -= tf.convert_to_tensor([dy, dx])
 
@@ -564,7 +378,6 @@ def resize_and_crop_image(image,
 def intersection(a, b):
   minx = tf.maximum(a[0], b[0])
   miny = tf.maximum(a[1], b[1])
-
   maxx = tf.minimum(a[2], b[2])
   maxy = tf.minimum(a[3], b[3])
   return tf.convert_to_tensor([minx, miny, maxx, maxy])
@@ -613,7 +426,6 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
     else:
       crop_offset = [0, 0, 0]
       crop_size = [-1, -1, -1]
-      #raise Exception("crop mosaic not supported for floating shifts")
 
     ishape = tf.shape(image)[:2]
     image = tf.slice(image, crop_offset, crop_size)
@@ -637,7 +449,8 @@ def resize_and_jitter_image(image,
                             shiftx=0.0,
                             shifty=0.0,
                             cut = None,
-                            method=tf.image.ResizeMethod.BILINEAR):
+                            method=tf.image.ResizeMethod.BILINEAR, 
+                            seed = None):
   """Resizes the input image to output size (RetinaNet style).
   Resize and pad images given the desired output size of the image and
   stride size.
@@ -703,16 +516,16 @@ def resize_and_jitter_image(image,
       min_rdw = ow * (1 - (1 / resize_down)) / 2
       min_rdh = oh * (1 - (1 / resize_down)) / 2
 
-    pleft = rand_uniform_strong(-dw, dw, dw.dtype)
-    pright = rand_uniform_strong(-dw, dw, dw.dtype)
-    ptop = rand_uniform_strong(-dh, dh, dh.dtype)
-    pbottom = rand_uniform_strong(-dh, dh, dh.dtype)
+    pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed = seed)
+    pright = rand_uniform_strong(-dw, dw, dw.dtype, seed = seed)
+    ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed = seed)
+    pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed = seed)
 
     if resize != 1:
-      pleft += rand_uniform_strong(min_rdw, max_rdw)
-      pright += rand_uniform_strong(min_rdw, max_rdw)
-      ptop += rand_uniform_strong(min_rdh, max_rdh)
-      pbottom += rand_uniform_strong(min_rdh, max_rdh)
+      pleft += rand_uniform_strong(min_rdw, max_rdw, seed = seed)
+      pright += rand_uniform_strong(min_rdw, max_rdw, seed = seed)
+      ptop += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
+      pbottom += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
 
     if letter_box:
       image_aspect_ratio = ow/oh 
@@ -857,7 +670,7 @@ def build_transform(image,
     Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
 
     T = tf.eye(3)
-    if (random_pad and s <= 1.0) or (random_pad and translate < 0.0):
+    if (random_pad and s <= 1.0) or (random_pad and s > 1.0 and translate < 0.0):
         C = Cb = tf.eye(3, dtype = tf.float32)
         Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width) # x translation (pixels)
         Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)
@@ -899,6 +712,29 @@ def affine_warp_image(image,
     desired_size = tf.cast(desired_size, tf.float32)
     return image, M_, [image_size, desired_size, Mb]
 
+def get_corners(boxes):
+  """
+  Get the coordinates of the 4 courners of a set of bounding boxes.
+  
+  Args:
+    boxes: A tensor whose last axis has a length of 4 and is in the format
+      (ymin, xmin, ymax, xmax)
+  
+  Returns:
+    A tensor whose dimensions are the same as `boxes` but has an additional axis
+    of size 2 representing the 4 courners of the bounding boxes in the order
+    (tl, bl, tr, br).
+  """
+
+  ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
+
+  tl = tf.concat([xmi, ymi], axis=-1)
+  bl = tf.concat([xmi, yma], axis=-1)
+  tr = tf.concat([xma, ymi], axis=-1)
+  br = tf.concat([xma, yma], axis=-1)
+
+  corners = tf.concat([tl, bl, tr, br], axis=-1)
+  return corners
 
 def _aug_boxes(Mb, boxes):
   M = Mb
@@ -925,6 +761,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history = None):
 
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, boxes, box_history
+
 
 
 
@@ -1115,106 +952,6 @@ def apply_infos(boxes, infos, affine = None, shuffle_boxes = True, area_thresh =
     inds = tf.random.shuffle(inds, seed = seed)
   boxes = tf.gather(boxes, inds)
   return boxes, inds 
-
-# def apply_infos(boxes, infos, affine = None, shuffle_boxes = True, area_thresh = 0.1):
-#   # clip and clean boxes
-#   def get_valid_boxes(boxes, unclipped_boxes = None):
-#     """Get indices for non-empty boxes."""
-#     # convert the boxes to center width height formatting 
-#     boxes = box_ops.yxyx_to_xcycwh(boxes)
-#     (_, _, width, height) = (boxes[..., 0], 
-#                              boxes[..., 1], 
-#                              boxes[..., 2], 
-#                              boxes[..., 3])
-    
-#     # if the width or height is less than zero the box is removed
-#     base = tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
-    
-#     if area_thresh < 0.0 and unclipped_boxes is not None:
-#       # if the area theshold is lower than 0.0 we clip boxes 
-#       # using the original darknet method. if the center of the 
-#       # box is not in the frame, it gets removed. this filtering 
-#       # must be done on boxes prior to box clipping. Clipping the
-#       # box enusres that it is in the frame by moving the center
-#       unclipped_boxes = box_ops.yxyx_to_xcycwh(unclipped_boxes)
-#       x = unclipped_boxes[..., 0]
-#       y = unclipped_boxes[..., 1]
-      
-#       # check that the center of the unclipped box is within the 
-#       # frame. 
-#       condx = tf.logical_and(x >= 0, x < 1)
-#       condy = tf.logical_and(y >= 0, y < 1)
-#       base = tf.logical_and(base, tf.logical_and(condx, condy))
-#     return base 
-  
-#   # this is no history to start
-#   box_history = None
-  
-#   # make sure all boxes are valid to start, clip to [0, 1]
-#   # then check all boxes meet the conditions
-#   boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
-#   cond = get_valid_boxes(boxes)
-  
-#   for info in infos:
-#     # rescale the boxes
-#     boxes = bbox_ops.denormalize_boxes(boxes, info[0, :])
-#     if box_history is not None:
-#       box_history = bbox_ops.denormalize_boxes(box_history, info[0, :])
-     
-#     # shift and scale all boxes, and keep track of box history with no 
-#     # box clipping, history is used for clipping boxes that becom too small
-#     # or exit the image
-#     (boxes,           # clipped final boxes 
-#      unclipped_boxes, # unclipped final boxes 
-#      box_history) = resize_and_crop_boxes(boxes, 
-#                                           info[2, :],
-#                                           info[1, :], info[3, :], 
-#                                           box_history = box_history)
-    
-#     # normalize the boxes to [0, 1] 
-#     boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
-#     unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1, :])
-#     box_history = bbox_ops.normalize_boxes(box_history, info[1, :])
-    
-#     # get all the boxes that still remain in the image and store
-#     # in a bit vector for later use
-#     cond = tf.logical_and(
-#               get_valid_boxes(boxes, 
-#                               unclipped_boxes = unclipped_boxes), cond)
-    
-#     # delete the unclipped boxes, they do not need to be tracked
-#     del unclipped_boxes
-
-#   # remove the bad boxes
-#   boxes *= tf.cast(tf.expand_dims(cond, axis = -1), boxes.dtype)
-  
-#   # threshold the existing boxes
-#   boxes = bbox_ops.denormalize_boxes(boxes, info[1, :])
-#   box_history = bbox_ops.denormalize_boxes(box_history, info[1, :])
-#   boxes = boxes_candidates(boxes, box_history, area_thr = area_thresh)
-#   boxes = bbox_ops.normalize_boxes(boxes, info[1, :])
-  
-#   # select and gather the good boxes 
-#   inds = bbox_ops.get_non_empty_box_indices(boxes)
-#   if shuffle_boxes:
-#     inds = tf.random.shuffle(inds)
-#   boxes = tf.gather(boxes, inds)
-#   return boxes, inds 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

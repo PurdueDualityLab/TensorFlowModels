@@ -288,8 +288,6 @@ class YoloTask(base_task.Task):
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
-        # for key in scaled_loss.keys():
-        #   scaled_loss[key] = optimizer.get_scaled_loss(scaled_loss[key])
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
 
     # compute the gradient

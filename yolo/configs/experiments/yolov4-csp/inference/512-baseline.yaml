@@ -141,8 +141,8 @@ task:
       anchor_thresh: 4.0
   weight_decay: 0.0005
   annotation_file: null
-  # load_darknet_weights: true
-  # darknet_load_decoder: true
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625

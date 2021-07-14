@@ -768,6 +768,8 @@ class Yolo_Loss(object):
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
+    grid_points, anchor_grid = self._anchor_generator(
+        width, height, batch_size, dtype=tf.float32)
 
     # 2. cast all input compontnts to float32 and stop gradient to save memory
     boxes = tf.stop_gradient(tf.cast(boxes, tf.float32))
@@ -775,8 +777,8 @@ class Yolo_Loss(object):
     y_true = tf.stop_gradient(tf.cast(y_true, tf.float32))
     true_counts = tf.stop_gradient(tf.cast(true_counts, tf.float32))
     true_conf = tf.stop_gradient(tf.clip_by_value(true_counts, 0.0, 1.0))
-    grid_points, anchor_grid = self._anchor_generator(
-        width, height, batch_size, dtype=tf.float32)
+    grid_points = tf.stop_gradient(grid_points)
+    anchor_grid = tf.stop_gradient(anchor_grid)
 
     # 3. split all the ground truths to use as seperate items in loss computation
     (true_box, ind_mask, true_class, _, _) = tf.split(

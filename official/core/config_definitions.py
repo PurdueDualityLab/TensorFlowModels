@@ -27,14 +27,14 @@ OptimizationConfig = optimization_config.OptimizationConfig
 @dataclasses.dataclass
 class DataConfig(base_config.Config):
   """The base configuration for building datasets.
-
   Attributes:
-    input_path: The path to the input. It can be either (1) a str indicating
-      a file path/pattern, or (2) a str indicating multiple file paths/patterns
-      separated by comma (e.g "a, b, c" or no spaces "a,b,c"), or
-      (3) a list of str, each of which is a file path/pattern or multiple file
-      paths/patterns separated by comma.
-      It should not be specified when the following `tfds_name` is specified.
+    input_path: The path to the input. It can be either (1) a str indicating a
+      file path/pattern, or (2) a str indicating multiple file paths/patterns
+      separated by comma (e.g "a, b, c" or no spaces "a,b,c"), or (3) a list of
+      str, each of which is a file path/pattern or multiple file paths/patterns
+      separated by comma, or (4) a dictionary of the previous three approaches
+      for more advanced data mixing using named access. It should not be
+      specified when the following `tfds_name` is specified.
     tfds_name: The name of the tensorflow dataset (TFDS). It should not be
       specified when the above `input_path` is specified.
     tfds_split: A str indicating which split of the data to load from TFDS. It
@@ -44,8 +44,10 @@ class DataConfig(base_config.Config):
     drop_remainder: Whether the last batch should be dropped in the case it has
       fewer than `global_batch_size` elements.
     shuffle_buffer_size: The buffer size used for shuffling training data.
-    cache: Whether to cache dataset examples. Can be used to avoid re-reading
-      from disk on the second epoch. Requires significant memory overhead.
+    cache: Whether to cache dataset examples. If `True`, we will cache the
+      dataset after applying the decode_fn and parse_fn. It can be used to avoid
+      re-reading from disk, re-decoding and re-parsing the example on the second
+      epoch, but it requires significant memory overhead.
     cycle_length: The number of files that will be processed concurrently when
       interleaving files.
     block_length: The number of consecutive elements to produce from each input
@@ -57,13 +59,11 @@ class DataConfig(base_config.Config):
     tf_data_service_address: The URI of a tf.data service to offload
       preprocessing onto during training. The URI should be in the format
       "protocol://address", e.g. "grpc://tf-data-service:5050". It can be
-      overridden by `FLAGS.tf_data_service` flag in the binary.
-    tf_data_service_job_name: The name of the tf.data service job. This
-      argument makes it possible for multiple datasets to share the same job.
-      The default behavior is that the dataset creates anonymous, exclusively
-      owned jobs.
+        overridden by `FLAGS.tf_data_service` flag in the binary.
+    tf_data_service_job_name: The name of the tf.data service job. This argument
+      makes it possible for multiple datasets to share the same job. The default
+      behavior is that the dataset creates anonymous, exclusively owned jobs.
     tfds_data_dir: A str specifying the directory to read/write TFDS data.
-    tfds_download: A bool to indicate whether to download data using TFDS.
     tfds_as_supervised: A bool. When loading dataset from TFDS, if True, the
       returned tf.data.Dataset will have a 2-tuple structure (input, label)
       according to builder.info.supervised_keys; if False, the default, the
@@ -72,14 +72,15 @@ class DataConfig(base_config.Config):
       decoding when loading dataset from TFDS. Use comma to separate multiple
       features. The main use case is to skip the image/video decoding for better
       performance.
+    seed: An optional seed to use for deterministic shuffling/preprocessing.
   """
-  input_path: Union[Sequence[str], str] = ""
+  input_path: Union[Sequence[str], str, base_config.Config] = ""
   tfds_name: str = ""
   tfds_split: str = ""
   global_batch_size: int = 0
   is_training: bool = None
   drop_remainder: bool = True
-  shuffle_buffer_size: int = 10000
+  shuffle_buffer_size: int = 100
   cache: bool = False
   cycle_length: Optional[int] = None
   block_length: int = 1
@@ -89,9 +90,9 @@ class DataConfig(base_config.Config):
   tf_data_service_address: Optional[str] = None
   tf_data_service_job_name: Optional[str] = None
   tfds_data_dir: str = ""
-  tfds_download: bool = False
   tfds_as_supervised: bool = False
   tfds_skip_decoding_feature: str = ""
+  seed: Optional[int] = None
 
 
 @dataclasses.dataclass
