@@ -80,7 +80,7 @@ def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
     x_min, y_min = tf.split(xy_min, 2, axis=-1)
     x_max, y_max = tf.split(xy_max, 2, axis=-1)
     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
-  return box, delta
+  return box
 
 # IOU
 def intersect_and_union(box1, box2, yxyx=False):
