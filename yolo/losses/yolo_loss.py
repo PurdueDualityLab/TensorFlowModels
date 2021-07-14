@@ -716,7 +716,7 @@ class Yolo_Loss(object):
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = tf.cast(tf.reduce_mean(bce), dtype=y_pred.dtype)
     
-    # 7.  (class loss )build the one hot encoded true class values
+    # 7.  (class loss) build the one hot encoded true class values
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
