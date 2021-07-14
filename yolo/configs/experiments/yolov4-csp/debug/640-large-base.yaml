@@ -49,7 +49,7 @@ task:
         'all': 1.0
       scale_xy:
         'all': 2.0
-      max_boxes: 200
+      max_boxes: 300
       nms_type: diou
       iou_thresh: 0.001
       nms_thresh: 0.60
@@ -63,7 +63,7 @@ task:
     shuffle_buffer_size: 10
     drop_remainder: true
     parser:
-      max_num_instances: 200
+      max_num_instances: 300
       letter_box: True
       random_flip: True
       aug_rand_saturation: 1.7
@@ -92,7 +92,7 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
-      max_num_instances: 200
+      max_num_instances: 300
       letter_box: True
       use_tie_breaker: True
       use_scale_xy: True
@@ -109,7 +109,7 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: true
+      trainable_weights_only: True
       dynamic_decay: True
     learning_rate:
       type: cosine
