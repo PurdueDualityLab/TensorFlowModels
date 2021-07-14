@@ -27,7 +27,7 @@ task:
             '[142.0, 110.0]', 
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
-    input_size: [640, 640, 3]
+    input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -84,8 +84,8 @@ task:
       use_scale_xy: True
       anchor_thresh: 0.20
       mosaic: 
-        output_resolution: [640, 640]
-        max_resolution: 640
+        output_resolution: [512, 512]
+        max_resolution: 720
         mosaic_frequency: 1.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'crop'

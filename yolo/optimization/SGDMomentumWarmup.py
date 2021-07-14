@@ -126,9 +126,10 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
     super(SGDMomentumWarmup, self)._prepare_local(var_device, 
                                                   var_dtype, apply_state)
     
-    momentum = self._get_momentum(self.iterations)
-    momentum = tf.cast(momentum, var_dtype)
-    apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(momentum)
+    if self._momentum:
+      momentum = self._get_momentum(self.iterations)
+      momentum = tf.cast(momentum, var_dtype)
+      apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(momentum)
 
     bias_lr = self._get_hyper("bias_learning_rate")
     if isinstance(bias_lr, learning_rate_schedule.LearningRateSchedule):
@@ -157,9 +158,9 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,
           accum=momentum_var.handle,
-          lr=lr,
+          lr=coefficients["lr_t"],
           grad=grad,
-          momentum=momentum,
+          momentum=coefficients["momentum"],
           use_locking=self._use_locking,
           use_nesterov=self.nesterov)
     else:

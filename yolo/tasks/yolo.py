@@ -234,7 +234,7 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      metric_dict['global']['total_loss'] += _mean_loss * scale / num_replicas
+      metric_dict['global']['total_loss'] += _mean_loss
       metric_dict[key]['conf_loss'] = _loss_conf
       metric_dict[key]['box_loss'] = _loss_box
       metric_dict[key]['class_loss'] = _loss_class
@@ -284,7 +284,6 @@ class YoloTask(base_task.Task):
           label,
           num_replicas=num_replicas,
           scale_replicas=1)
-      # scaled_loss = loss / num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
