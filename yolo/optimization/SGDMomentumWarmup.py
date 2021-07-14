@@ -96,10 +96,9 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
 
     self._set_hyper("momentum", momentum)
     self._set_hyper("momentum_start", momentum_start)
-    self._set_hyper("warmup_steps", warmup_steps)
+    self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
 
     self.nesterov = nesterov
-    self._LR_bias_depth = 0
 
   def _set_bias_lr(self, lr, bias_key):
     self._LR_bias_depth = bias_key
@@ -208,6 +207,8 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
         "learning_rate": self._serialize_hyperparameter("learning_rate"),
         "decay": self._initial_decay,
         "momentum": self._serialize_hyperparameter("momentum"),
+        "momentum_start": self._serialize_hyperparameter("momentum_start"),
+        "warmup_steps": self._serialize_hyperparameter("warmup_steps"),
         "nesterov": self.nesterov,
     })
     return config
