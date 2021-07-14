@@ -313,6 +313,8 @@ class YoloTask(base_task.Task):
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
 
+    tf.print(logs)
+
     return logs
 
   def validation_step(self, inputs, model, metrics=None):

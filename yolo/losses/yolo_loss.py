@@ -676,7 +676,6 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-
     # 5. (box loss) based on input val new_cords decode the box predicitions 
     #    and because we are using the scaled loss, do not change the gradients 
     #    at all

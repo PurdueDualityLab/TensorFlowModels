@@ -29,8 +29,8 @@ task:
     min_level: 3
     norm_activation:
       activation: mish
-      norm_epsilon: 0.001
-      norm_momentum: 0.99
+      norm_epsilon: 0.0001
+      norm_momentum: 0.97
       use_sync_bn: true
     filter:
       loss_type:  
