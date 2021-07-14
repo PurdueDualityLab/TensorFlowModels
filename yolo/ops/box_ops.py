@@ -24,8 +24,52 @@ def yxyx_to_xcycwh(box: tf.Tensor):
   return box
 
 
-@tf.custom_gradient
-def _xcycwh_to_yxyx(box: tf.Tensor, scale):
+# @tf.custom_gradient
+# def _xcycwh_to_yxyx(box: tf.Tensor, scale):
+#   """Private function called by xcycwh_to_yxyx to allow custom gradients
+#   with defaults.
+#   """
+#   with tf.name_scope('xcycwh_to_yxyx'):
+#     xy, wh = tf.split(box, 2, axis=-1)
+#     xy_min = xy - wh / 2
+#     xy_max = xy + wh / 2
+#     x_min, y_min = tf.split(xy_min, 2, axis=-1)
+#     x_max, y_max = tf.split(xy_max, 2, axis=-1)
+#     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
+
+#     def delta(dbox):
+#       #y_min = top, x_min = left, y_max = bottom, x_max = right
+#       dt, dl, db, dr = tf.split(dbox, 4, axis=-1)
+#       dx = dl + dr
+#       dy = dt + db
+#       dw = (dr - dl) / scale
+#       dh = (db - dt) / scale
+
+#       dbox = tf.concat([dx, dy, dw, dh], axis=-1)
+#       return dbox, 0.0
+
+#   return box, delta
+
+
+# def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
+#   """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, 
+#   xmax.
+  
+#   Args:
+#     box: any `Tensor` whose last dimension is 4 representing the coordinates of 
+#       boxes in x_center, y_center, width, height.
+  
+#   Returns:
+#     box: a `Tensor` whose shape is the same as `box` in new format.
+#   """
+#   if darknet:
+#     scale = 1.0
+#   else:
+#     scale = 2.0
+#   box = _xcycwh_to_yxyx(box, scale)
+#   return box
+
+def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
   """Private function called by xcycwh_to_yxyx to allow custom gradients
   with defaults.
   """
@@ -36,39 +80,7 @@ def _xcycwh_to_yxyx(box: tf.Tensor, scale):
     x_min, y_min = tf.split(xy_min, 2, axis=-1)
     x_max, y_max = tf.split(xy_max, 2, axis=-1)
     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
-
-    def delta(dbox):
-      #y_min = top, x_min = left, y_max = bottom, x_max = right
-      dt, dl, db, dr = tf.split(dbox, 4, axis=-1)
-      dx = dl + dr
-      dy = dt + db
-      dw = (dr - dl) / scale
-      dh = (db - dt) / scale
-
-      dbox = tf.concat([dx, dy, dw, dh], axis=-1)
-      return dbox, 0.0
-
   return box, delta
-
-
-def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
-  """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, 
-  xmax.
-  
-  Args:
-    box: any `Tensor` whose last dimension is 4 representing the coordinates of 
-      boxes in x_center, y_center, width, height.
-  
-  Returns:
-    box: a `Tensor` whose shape is the same as `box` in new format.
-  """
-  if darknet:
-    scale = 1.0
-  else:
-    scale = 2.0
-  box = _xcycwh_to_yxyx(box, scale)
-  return box
-
 
 # IOU
 def intersect_and_union(box1, box2, yxyx=False):
