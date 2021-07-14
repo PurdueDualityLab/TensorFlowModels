@@ -59,6 +59,7 @@ class Parser(parser.Parser):
                aug_scale_max=1.0,
                mosaic_min = 1.0, 
                mosaic_max = 1.0, 
+               mosaic_translate=0.0,
                
                anchor_t=4.0,
                scale_xy=None,
@@ -152,19 +153,21 @@ class Parser(parser.Parser):
     self._resize = 1.0 if resize is None else resize
     self._aug_scale_min = aug_scale_min
     self._aug_scale_max = aug_scale_max
+    self._aug_rand_translate = aug_rand_transalate
 
     # mosaic scaling params
     self._jitter_mosaic = 0.0 if jitter_mosaic is None else jitter_mosaic
     self._resize_mosaic = 0.0 if resize_mosaic is None else resize_mosaic
     self._mosaic_min = mosaic_min
     self._mosaic_max = mosaic_max
+    self._mosaic_translate = mosaic_translate
 
     # image spatial distortion
     self._random_flip = random_flip
     self._letter_box = letter_box
     self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
-    self._aug_rand_translate = aug_rand_transalate
+    
 
     # color space distortion of the image
     self._aug_rand_saturation = aug_rand_saturation
@@ -341,7 +344,7 @@ class Parser(parser.Parser):
         self._random_pad, 
         self._mosaic_min, 
         self._mosaic_max, 
-        self._aug_rand_translate * float(self._random_pad),
+        self._mosaic_translate,
         self._aug_rand_angle, 
         0.0
       )

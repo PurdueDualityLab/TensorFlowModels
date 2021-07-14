@@ -81,7 +81,7 @@ task:
       aug_scale_max: 1.8
       mosaic_scale_min: 0.2
       mosaic_scale_max: 1.5
-      aug_rand_translate: 0.0
+      aug_rand_translate: -0.01
       area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
@@ -90,7 +90,7 @@ task:
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 720
-        mosaic_frequency: 0.75
+        mosaic_frequency: 1.0
         crop_area: [0.20]
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'

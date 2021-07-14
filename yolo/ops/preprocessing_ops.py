@@ -857,7 +857,7 @@ def build_transform(image,
     Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
 
     T = tf.eye(3)
-    if random_pad and s <= 1.0 and s * width < cw and s * height < ch:
+    if (random_pad and s <= 1.0) or (random_pad and translate < 0.0):
         C = Cb = tf.eye(3, dtype = tf.float32)
         Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width) # x translation (pixels)
         Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)

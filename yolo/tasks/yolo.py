@@ -193,6 +193,7 @@ class YoloTask(base_task.Task):
         aug_scale_max=params.parser.aug_scale_max,
         mosaic_min = params.parser.mosaic_scale_min,
         mosaic_max = params.parser.mosaic_scale_max,
+        mosaic_translate = params.parser.mosaic_translate,
         random_pad=params.parser.random_pad,
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,

@@ -148,14 +148,15 @@ class Parser(hyperparams.Config):
   resize_mosaic: float = 1.0
   sheer: float = 0.0
   aug_rand_angle: float = 0.0
-  aug_rand_translate: float = 0.0
   aug_rand_saturation: float = 0.0 #0.7
   aug_rand_brightness: float = 0.0  #0.4
   aug_rand_hue: float = 0.0 #0.1
   aug_scale_min: float = 1.0
   aug_scale_max: float = 1.0
+  aug_rand_translate: float = 0.0
   mosaic_scale_min: float = 1.0
   mosaic_scale_max: float = 1.0
+  mosaic_translate: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
   anchor_thresh: float = 0.213
