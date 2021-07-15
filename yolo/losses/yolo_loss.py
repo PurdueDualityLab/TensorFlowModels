@@ -694,11 +694,10 @@ class Yolo_Loss(object):
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = apply_mask(ind_mask, true_box)
 
-    # translate ground truth to match predictions
+    #    translate ground truth to match predictions
     offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
     offset = tf.concat([offset, tf.zeros_like(offset)], axis = -1)
     true_box -= tf.cast(offset, true_box.dtype)
-
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered

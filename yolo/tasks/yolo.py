@@ -224,6 +224,9 @@ class YoloTask(base_task.Task):
     metric_dict = defaultdict(dict)
     loss_val = 0
     metric_dict['global']['total_loss'] = 0
+    metric_dict['global']['total_box'] = 0
+    metric_dict['global']['total_class'] = 0
+    metric_dict['global']['total_conf'] = 0
 
     grid = labels['true_conf']
     inds = labels['inds']
@@ -236,6 +239,9 @@ class YoloTask(base_task.Task):
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
       metric_dict['global']['total_loss'] += _mean_loss
+      metric_dict['global']['total_box'] += _loss_box
+      metric_dict['global']['total_class'] += _loss_class
+      metric_dict['global']['total_conf'] += _loss_conf
       metric_dict[key]['conf_loss'] = _loss_conf
       metric_dict[key]['box_loss'] = _loss_box
       metric_dict[key]['class_loss'] = _loss_class
@@ -438,6 +444,9 @@ class YoloTask(base_task.Task):
       metric_names[key].append("avg_obj")
 
     metric_names['global'].append('total_loss')
+    metric_names['global'].append('total_box')
+    metric_names['global'].append('total_class')
+    metric_names['global'].append('total_conf')
 
     print(metric_names)
 

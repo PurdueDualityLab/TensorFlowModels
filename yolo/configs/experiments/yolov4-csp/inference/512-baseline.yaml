@@ -53,10 +53,10 @@ task:
         'all': 1.0
       scale_xy:
         'all': 2.0
-      max_boxes: 200
+      max_boxes: 300
       nms_type: greedy
-      iou_thresh: 0.1
-      nms_thresh: 0.65
+      iou_thresh: 0.001
+      nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
   # train_data:
@@ -102,7 +102,7 @@ task:
     is_training: false
     drop_remainder: true
     parser:
-      max_num_instances: 200
+      max_num_instances: 300
       letter_box: True
       random_flip: True
       aug_rand_saturation: 0.0
@@ -145,7 +145,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 5000
   steps_per_loop: 10000
   summary_interval: 10000
   validation_interval: 20000 #00
