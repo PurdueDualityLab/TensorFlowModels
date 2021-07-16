@@ -201,6 +201,7 @@ class YoloTask(base_task.Task):
         scale_xy=xy_scales,
         area_thresh=params.parser.area_thresh, 
         use_scale_xy=params.parser.use_scale_xy,
+        best_match_only=params.parser.best_match_only, 
         anchor_t=params.parser.anchor_thresh,
         dtype=params.dtype)
 
@@ -310,7 +311,6 @@ class YoloTask(base_task.Task):
 
     optimizer.apply_gradients(zip(gradients, train_vars))
     
-
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
       for m in metrics:

@@ -64,6 +64,7 @@ class Parser(parser.Parser):
                anchor_t=4.0,
                scale_xy=None,
                use_scale_xy=False,
+               best_match_only=False, 
                masks=None,
                anchors=None,
                letter_box=False,
@@ -173,6 +174,7 @@ class Parser(parser.Parser):
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_hue = aug_rand_hue
+    self._best_match_only = best_match_only
 
     # set the per level values needed for operation
     self._scale_xy = scale_xy
@@ -461,7 +463,8 @@ class Parser(parser.Parser):
         self._anchors,
         width=self._image_w,
         height=self._image_h,
-        iou_thresh=self._anchor_t)
+        iou_thresh=self._anchor_t, 
+        best_match_only=self._best_match_only)
 
     # set/fix the boxes shape
     bshape = boxes.get_shape().as_list()

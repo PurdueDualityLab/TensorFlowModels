@@ -159,6 +159,7 @@ class Parser(hyperparams.Config):
   mosaic_translate: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
+  best_match_only: bool = False
   anchor_thresh: float = 0.213
   area_thresh: float = 0.1
   mosaic: Mosaic = Mosaic()

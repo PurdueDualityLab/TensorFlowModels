@@ -75,6 +75,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
@@ -95,6 +96,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: True
   weight_decay: 0.0005
   annotation_file: null
 trainer:

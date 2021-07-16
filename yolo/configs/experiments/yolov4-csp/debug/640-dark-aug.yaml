@@ -84,6 +84,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: True
       mosaic: 
         output_resolution: [512, 512]
         max_resolution: 720
@@ -104,6 +105,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: True
   weight_decay: 0.0005
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
