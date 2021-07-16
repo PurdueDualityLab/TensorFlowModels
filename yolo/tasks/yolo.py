@@ -278,7 +278,8 @@ class YoloTask(base_task.Task):
 
     scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
-      num_replicas = 1
+      # num_replicas = 1
+      num_replicas = 1/scale_replicas
     else:
       num_replicas = scale_replicas
 
