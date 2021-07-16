@@ -239,7 +239,9 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      loss_val += _loss * scale / num_replicas # multiply times the world size?
+      loss_val += _loss * scale / num_replicas # scale loss by the world size: 
+                                               # scaled = multiply by gpus? if aggreagation method is the mean
+                                               # scaled = divide by gpus?
       
       # detach all the below gradients: none of them should make a contribution to the 
       # gradient form this point forwards
