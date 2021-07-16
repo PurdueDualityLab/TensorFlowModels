@@ -238,10 +238,6 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      metric_dict['global']['total_loss'] += _mean_loss
-      metric_dict['global']['total_box'] += _loss_box
-      metric_dict['global']['total_class'] += _loss_class
-      metric_dict['global']['total_conf'] += _loss_conf
       metric_dict[key]['conf_loss'] = _loss_conf
       metric_dict[key]['box_loss'] = _loss_box
       metric_dict[key]['class_loss'] = _loss_class
@@ -249,6 +245,10 @@ class YoloTask(base_task.Task):
       metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
+      metric_dict['global']['total_loss'] += _mean_loss
+      metric_dict['global']['total_box'] += _loss_box
+      metric_dict['global']['total_class'] += _loss_class
+      metric_dict['global']['total_conf'] += _loss_conf
       loss_val += _loss * scale / num_replicas
     
     return loss_val, metric_dict
@@ -284,7 +284,7 @@ class YoloTask(base_task.Task):
     with tf.GradientTape() as tape:
       # compute a prediction
       # cast to float32
-      y_pred = model(image, training=True)
+      y_pred = model(image, training=False)
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
       scaled_loss, loss_metrics = self.build_losses(
           y_pred['raw_output'],
@@ -308,6 +308,7 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
+    tf.print(label["source_id"][0], tf.reduce_sum(tf.square(gradients[-2])), loss_metrics['global']['total_box'], loss_metrics['global']['total_conf'], loss_metrics['global']['total_class'], loss_metrics['global']['total_loss'])
     optimizer.apply_gradients(zip(gradients, train_vars))
     
 

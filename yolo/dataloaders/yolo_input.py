@@ -403,7 +403,8 @@ class Parser(parser.Parser):
 
     # get the image shape constants
     shape = tf.shape(data['image'])
-    image = data['image'] / 255
+    # image = data['image'] / 255
+    image = data['image']
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -414,7 +415,7 @@ class Parser(parser.Parser):
         image,
         [self._image_h, self._image_w],
         [self._image_h, self._image_w],
-        letter_box=self._letter_box,
+        letter_box=True,
         aug_scale_min=1.0,
         aug_scale_max=1.0,
         random_pad=False,
@@ -430,7 +431,7 @@ class Parser(parser.Parser):
     info = infos[-1]
 
     # cast the image to the selcted datatype
-    image = tf.cast(image, self._dtype)
+    image = tf.cast(image, self._dtype) /255.0
     height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 

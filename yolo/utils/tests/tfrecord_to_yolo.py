@@ -138,7 +138,7 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
 
   dataset = build_ds(params)
 
-  lim = 2
+  lim = 100
   for k, sample in enumerate(dataset):
     if k > lim:
       break

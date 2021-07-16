@@ -171,7 +171,7 @@ def compute_iou(box1, box2, yxyx=False):
   with tf.name_scope('iou'):
     intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
-    iou = math_ops.rm_nan_inf(iou, val=0.0)
+    # iou = math_ops.rm_nan_inf(iou, val=0.0)
   return iou
 
 
@@ -212,7 +212,7 @@ def compute_giou(box1, box2, yxyx=False, darknet=False):
     # compute giou
     regularization = math_ops.divide_no_nan((c - union), c)
     giou = iou - regularization
-    giou = tf.clip_by_value(giou, clip_value_min=-1.0, clip_value_max=1.0)
+    # giou = tf.clip_by_value(giou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, giou
 
 
@@ -260,7 +260,7 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
 
     regularization = math_ops.divide_no_nan(center_dist, c_diag)
     diou = iou - regularization**beta
-    diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
+    # diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, diou
 
 def distance(box1, box2, beta=0.6, yxyx=False):
@@ -338,8 +338,9 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     v = tf.cast(v, b1w.dtype)
 
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
+    # a = math_ops.divide_no_nan(v, ((1 - iou) + v))
     ciou = diou - (v * a)
-    ciou = tf.clip_by_value(ciou, clip_value_min=-1.0, clip_value_max=1.0)
+    # ciou = tf.clip_by_value(ciou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, ciou
 
 

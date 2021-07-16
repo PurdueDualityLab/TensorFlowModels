@@ -1317,6 +1317,11 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25):
           sorted=True)
       values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
+
+      # pad the indexs such that all values less than the thresh are -1
+      # add one, multiply the mask to zeros all the bad locations
+      # subtract 1 makeing all the bad locations 0.
+      iou_index = ((indexes[..., 0:] + 1) * ind_mask[..., 0:]) - 1
     else:
       # iou_raw = box_ops.compute_iou(truth_comp, anchors)
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
@@ -1332,14 +1337,14 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25):
           sorted=True)
       ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
 
-    # pad the indexs such that all values less than the thresh are -1
-    # add one, multiply the mask to zeros all the bad locations
-    # subtract 1 makeing all the bad locations 0.
-    iou_index = tf.concat([
-        K.expand_dims(indexes[..., 0], axis=-1),
-        ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
-    ],
-                          axis=-1)
+      # pad the indexs such that all values less than the thresh are -1
+      # add one, multiply the mask to zeros all the bad locations
+      # subtract 1 makeing all the bad locations 0.
+      iou_index = tf.concat([
+          K.expand_dims(indexes[..., 0], axis=-1),
+          ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
+      ],
+                            axis=-1)
 
     true_prod = tf.reduce_prod(true_wh, axis=-1, keepdims=True)
     iou_index = tf.where(true_prod > 0, iou_index, tf.zeros_like(iou_index) - 1)

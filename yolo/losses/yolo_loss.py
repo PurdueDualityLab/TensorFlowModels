@@ -656,6 +656,7 @@ class Yolo_Loss(object):
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
     # training
+    # tf.print(tf.reduce_sum(tf.square(y_pred)))
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
@@ -682,6 +683,11 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
+    # y_pred = tf.transpose(y_pred, perm = (0, 3, 1, 2))
+    # y_pred = tf.cast(tf.reshape(y_pred, [batch_size, num, -1, height, width]), tf.float32)
+    # y_pred = tf.transpose(y_pred, perm = (0, 3, 4, 1, 2))
+    # pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
+
     # 5. (box loss) based on input val new_cords decode the box predicitions 
     #    and because we are using the scaled loss, do not change the gradients 
     #    at all
@@ -701,10 +707,19 @@ class Yolo_Loss(object):
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
-    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+    _, iou, box_loss_ = self.box_loss(true_box, pred_box, darknet=False)
+    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss_)
     box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
+    tf.print(num_objs)
+
+    # if scale[0] == 20:
+    # # tf.print(tf.concat([tf.expand_dims(box_loss_, axis = -1), tf.expand_dims(iou, axis = -1), true_box, pred_box], axis = -1), summarize = -1)
+    #   iou = tf.clip_by_value(iou, 0.0, 1.0)
+    #   lgn = tf.concat([tf.expand_dims(iou, axis = -1), pred_box, true_box, tf.cast(inds, true_box.dtype)], axis = -1)
+    #   lgn = tf.sort(lgn, axis = 1)
+    #   tf.print(lgn, summarize = -1)
+
 
     # 6.  (confidence loss) build a selective between the ground truth and the 
     #     iou to take only a certain percent of the iou or the ground truth, 

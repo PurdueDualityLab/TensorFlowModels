@@ -65,7 +65,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
-    dtype: float16
+    dtype: float32
     is_training: false
     drop_remainder: true
     parser:
@@ -91,7 +91,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
-    dtype: float16
+    dtype: float32
     is_training: false
     drop_remainder: true
     parser:
@@ -105,7 +105,7 @@ task:
   load_darknet_weights: true
   darknet_load_decoder: true
 trainer:
-  train_steps: 5000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 100 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 5000
   steps_per_loop: 10000
   summary_interval: 10000
