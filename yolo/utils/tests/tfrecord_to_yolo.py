@@ -133,10 +133,56 @@ def build_ds(params, input_context = None):
   dataset = reader.read(input_context=input_context)
   return dataset
 
+import shutil
+import os
 def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/"):
   params = DataConfig()
 
   dataset = build_ds(params)
+
+  name_set = [
+    75162, 
+    118921, 
+    46847, 
+    220819, 
+    238147, 
+    320370, 
+    464018, 
+    259335, 
+    184205, 
+    124429, 
+    294908, 
+    574411, 
+    209728, 
+    155192, 
+    276146, 
+    260020, 
+    467468, 
+    473121, 
+    30465, 
+    283441, 
+    172595, 
+    69959, 
+    537907, 
+    522665, 
+    463611, 
+    298137, 
+    443818, 
+    18149
+  ]
+
+  # name_set = [
+  #   46847, 
+  #   18149, 
+  # ]
+  name_set = set([str(name) for name in name_set])
+  if os.path.isdir(f"{path}images/"):
+    shutil.rmtree(f"{path}images/")
+  if os.path.isdir(f"{path}labels/"):
+    shutil.rmtree(f"{path}labels/")
+
+  os.mkdir(f"{path}images/")
+  os.mkdir(f"{path}labels/")
 
   lim = 100
   for k, sample in enumerate(dataset):
@@ -150,12 +196,15 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
     for i in range(tf.shape(source_ids)[0]):
       name = source_ids[i].numpy().decode('utf-8')
 
+      if name_set is not None and name not in name_set:
+        continue
+
       image = images[i].numpy()
-      plt.imsave(f"{path}/images/{name}.jpg", image)
+      plt.imsave(f"{path}images/{name}.jpg", image)
 
       box = yxyx_to_xcycwh(boxes[i])
       classif = classes[i]
-      with open(f"{path}/labels/{name}.txt", "w") as f:
+      with open(f"{path}labels/{name}.txt", "w") as f:
         for j in range(tf.shape(classif)[0]):
           #value = f"{int(classif[j].numpy())} {float(box[j][1].numpy())} {float(box[j][0].numpy())} {float(box[j][3].numpy())} {float(box[j][2].numpy())}\n"
           value = f"{int(classif[j].numpy())} {float(box[j][0].numpy())} {float(box[j][1].numpy())} {float(box[j][2].numpy())} {float(box[j][3].numpy())}\n"

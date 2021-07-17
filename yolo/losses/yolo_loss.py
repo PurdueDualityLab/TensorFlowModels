@@ -448,6 +448,7 @@ class Yolo_Loss(object):
       iou, liou = box_ops.compute_giou(true_box, pred_box, darknet=darknet)
     elif self._loss_type == 2:
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
+      # iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2=False, CIoU=True)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
       liou = iou
@@ -705,21 +706,28 @@ class Yolo_Loss(object):
     offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
     offset = tf.concat([offset, tf.zeros_like(offset)], axis = -1)
     true_box -= tf.cast(offset, true_box.dtype)
+    true_box = apply_mask(ind_mask, true_box)
+    pred_box = apply_mask(ind_mask, pred_box)
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss_ = self.box_loss(true_box, pred_box, darknet=False)
-    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss_)
-    box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
+    box_loss_ = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss_)
+    box_loss = tf.cast(tf.reduce_sum(box_loss_), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     tf.print(num_objs)
 
     # if scale[0] == 20:
     # # tf.print(tf.concat([tf.expand_dims(box_loss_, axis = -1), tf.expand_dims(iou, axis = -1), true_box, pred_box], axis = -1), summarize = -1)
-    #   iou = tf.clip_by_value(iou, 0.0, 1.0)
-    #   lgn = tf.concat([tf.expand_dims(iou, axis = -1), pred_box, true_box, tf.cast(inds, true_box.dtype)], axis = -1)
-    #   lgn = tf.sort(lgn, axis = 1)
-    #   tf.print(lgn, summarize = -1)
+    # iou = apply_mask(tf.squeeze(ind_mask, axis=-1), iou)
+    # iou = tf.clip_by_value(iou, 0.0, 1.0)
+
+    # bloss = apply_mask(tf.squeeze(ind_mask, axis=-1), 1 - iou)
+    # lgn = tf.concat([tf.expand_dims(iou, axis = -1), tf.expand_dims(bloss, axis = -1), pred_box, true_box, tf.cast(inds, true_box.dtype)], axis = -1)
+    # lgn = lgn[0] #tf.sort(lgn[0], axis = 0)
+    # for i in range(tf.shape(lgn)[0]):
+    #   if tf.reduce_sum(lgn[i, -3:]) != 0:
+    #     tf.print(lgn[i], summarize = -1)
 
 
     # 6.  (confidence loss) build a selective between the ground truth and the 
@@ -768,13 +776,16 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer
-    class_loss *= self._cls_normalizer
-    conf_loss *= self._obj_normalizer
+    box_loss *= self._iou_normalizer #* 0
+    class_loss *= self._cls_normalizer #* 0
+    conf_loss *= self._obj_normalizer #* 0
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss
     loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
+
+    # ## TEMP LOSS
+    # loss = tf.reduce_mean(tf.square(1 - tf.math.sigmoid(y_pred)))
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping

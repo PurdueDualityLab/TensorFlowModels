@@ -383,3 +383,61 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
   else:
     iou = compute_iou(boxes1, boxes2, yxyx=True)
   return iou
+
+
+def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, EIoU=False, ECIoU=False, eps=1e-9):
+    # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
+    # Get the coordinates of bounding boxes
+    if x1y1x2y2:  # x1, y1, x2, y2 = box1
+        b1_x1, b1_y1, b1_x2, b1_y2 = box1[..., 1], box1[..., 0], box1[..., 3], box1[..., 2]
+        b2_x1, b2_y1, b2_x2, b2_y2 = box2[..., 1], box2[..., 0], box2[..., 3], box2[..., 2]
+    else:  # transform from xywh to xyxy
+        b1_x1, b1_x2 = box1[..., 1] - box1[..., 3] / 2, box1[..., 1] + box1[..., 3] / 2
+        b1_y1, b1_y2 = box1[..., 0] - box1[..., 2] / 2, box1[..., 0] + box1[..., 2] / 2
+        b2_x1, b2_x2 = box2[..., 1] - box2[..., 3] / 2, box2[..., 1] + box2[..., 3] / 2
+        b2_y1, b2_y2 = box2[..., 0] - box2[..., 2] / 2, box2[..., 0] + box2[..., 2] / 2
+
+    # Intersection area
+    inter = tf.math.maximum((tf.minimum(b1_x2, b2_x2) - tf.maximum(b1_x1, b2_x1)), 0) * \
+            tf.math.maximum((tf.minimum(b1_y2, b2_y2) - tf.maximum(b1_y1, b2_y1)), 0)
+
+    # Union Area
+    w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
+    w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
+    union = w1 * h1 + w2 * h2 - inter + eps
+
+    iou = inter / union
+    if GIoU or DIoU or CIoU or EIoU or ECIoU:
+        cw = tf.maximum(b1_x2, b2_x2) - tf.minimum(b1_x1, b2_x1)  # convex (smallest enclosing box) width
+        ch = tf.maximum(b1_y2, b2_y2) - tf.minimum(b1_y1, b2_y1)  # convex height
+        if CIoU or DIoU or EIoU or ECIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
+            c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
+            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
+                    (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
+            if DIoU:
+                return iou - rho2 / c2  # DIoU
+            elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
+                v = (4 / math.pi ** 2) * tf.math.pow(tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
+          
+                alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))
+                return iou - (rho2 / c2 + v * alpha)  # CIoU
+            elif EIoU: # Efficient IoU https://arxiv.org/abs/2101.08158
+                rho3 = (w1-w2) **2
+                c3 = cw ** 2 + eps
+                rho4 = (h1-h2) **2
+                c4 = ch ** 2 + eps
+                return iou - rho2 / c2 - rho3 / c3 - rho4 / c4  # EIoU
+            elif ECIoU:
+                v = (4 / math.pi ** 2) * tf.math.pow(tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
+           
+                alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))
+                rho3 = (w1-w2) **2
+                c3 = cw ** 2 + eps
+                rho4 = (h1-h2) **2
+                c4 = ch ** 2 + eps
+                return iou - v * alpha - rho2 / c2 - rho3 / c3 - rho4 / c4  # ECIoU
+        else:  # GIoU https://arxiv.org/pdf/1902.09630.pdf
+            c_area = cw * ch + eps  # convex area
+            return iou - (c_area - union) / c_area  # GIoU
+    else:
+        return iou  # IoU
