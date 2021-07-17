@@ -1136,6 +1136,84 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   return indexs, samples, full
 
 
+# def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
+#                  width, num_written):
+#   """
+#   Write out the y and x grid cell location and the anchor into the `ind_val`
+#   TensorArray and write the `sample` to the `ind_sample` TensorArray.
+  
+#   Args:
+#     box: An `int` Tensor with two elements for the relative position of the
+#       box in the image.
+#     anchor_id: An `int` representing the anchor box.
+#     offset: A `float` representing the offset from the grid cell.
+#     sample: A `float` Tensor representing the data to write out.
+#     ind_val: A TensorArray representing the indices for the detected boxes.
+#     ind_sample: A TensorArray representing the indices for the detected boxes.
+#     height: An `int` representing the height of the image.
+#     width: An `int` representing the width of the image.
+#     num_written: A `int` representing the number of samples that have been
+#       written.
+  
+#   Returns:
+#     Modified `ind_val`, `ind_sample`, and `num_written`.
+#   """
+
+#   a_ = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
+
+#   y = box[1] * height
+#   x = box[0] * width
+
+#   # idk if this is right!!! just testing it now
+#   if offset > 0:
+#     y_ = tf.math.floor(y + offset)
+#     x_ = x
+#     if y_ >= 0 and y_ < height and y_ != tf.floor(y):
+#       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
+#       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
+#       grid_idx = tf.concat([y_, x_, a_], axis=-1)
+#       ind_val = ind_val.write(num_written, grid_idx)
+#       ind_sample = ind_sample.write(num_written, sample)
+#       num_written += 1
+
+#     y_ = tf.math.floor(y - offset)
+#     x_ = x
+#     if y_ >= 0 and y_ < height and y_ != tf.floor(y):
+#       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
+#       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
+#       grid_idx = tf.concat([y_, x_, a_], axis=-1)
+#       ind_val = ind_val.write(num_written, grid_idx)
+#       ind_sample = ind_sample.write(num_written, sample)
+#       num_written += 1
+
+#     y_ = y
+#     x_ = tf.math.floor(x + offset)
+#     if x_ >= 0 and x_ < height and x_ != tf.floor(x):
+#       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
+#       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
+#       grid_idx = tf.concat([y_, x_, a_], axis=-1)
+#       ind_val = ind_val.write(num_written, grid_idx)
+#       ind_sample = ind_sample.write(num_written, sample)
+#       num_written += 1
+
+#     y_ = y
+#     x_ = tf.math.floor(x - offset)
+#     if x_ >= 0 and x_ < height and x_ != tf.floor(x):
+#       y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
+#       x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
+#       grid_idx = tf.concat([y_, x_, a_], axis=-1)
+#       ind_val = ind_val.write(num_written, grid_idx)
+#       ind_sample = ind_sample.write(num_written, sample)
+#       num_written += 1
+#   else:
+#     y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+#     x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+#     grid_idx = tf.concat([y_, x_, a_], axis=-1)
+#     ind_val = ind_val.write(num_written, grid_idx)
+#     ind_sample = ind_sample.write(num_written, sample)
+#     num_written += 1
+#   return ind_val, ind_sample, num_written
+
 def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
                  width, num_written):
   """
@@ -1166,45 +1244,36 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
   # idk if this is right!!! just testing it now
   if offset > 0:
-    y_ = tf.math.floor(y + offset)
-    x_ = x
-    if y_ >= 0 and y_ < height and y_ != tf.floor(y):
-      y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
-      x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis=-1)
-      ind_val = ind_val.write(num_written, grid_idx)
-      ind_sample = ind_sample.write(num_written, sample)
-      num_written += 1
+    g = tf.cast(offset, tf.float32)
+    gain = tf.cast(tf.convert_to_tensor([width, height]), tf.float32)
+    gxy = tf.cast(tf.convert_to_tensor([x, y]), tf.float32)
+    gxyi = gxy - tf.floor(gxy)
+    clamp = lambda x, ma: tf.maximum(tf.minimum(x, tf.cast(ma, x.dtype)), tf.zeros_like(x))
+  
+    ps = ((gxyi < g) & (gxy > 1.))
+    ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
 
-    y_ = tf.math.floor(y - offset)
-    x_ = x
-    if y_ >= 0 and y_ < height and y_ != tf.floor(y):
-      y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
-      x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis=-1)
-      ind_val = ind_val.write(num_written, grid_idx)
-      ind_sample = ind_sample.write(num_written, sample)
-      num_written += 1
+    # my adds
+    # ps = ((gxyi <= g) & (gxy > 1.))
+    # ns = ((gxyi >= (1 - g)) & (gxy < (gain - 1.)))
+  
+    # my adds 2
+    # ps = ((gxyi < g) & (gxy > 1.))
+    # ns = ((gxyi >= (1 - g)) & (gxy < (gain - 1.)))
 
-    y_ = y
-    x_ = tf.math.floor(x + offset)
-    if x_ >= 0 and x_ < height and x_ != tf.floor(x):
-      y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
-      x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis=-1)
-      ind_val = ind_val.write(num_written, grid_idx)
-      ind_sample = ind_sample.write(num_written, sample)
-      num_written += 1
+    shifts = [ps[0], ps[1], ns[0], ns[1]]
+    offset = [[1, 0], [0, 1], [-1, 0], [0, -1]]
 
-    y_ = y
-    x_ = tf.math.floor(x - offset)
-    if x_ >= 0 and x_ < height and x_ != tf.floor(x):
-      y_ = tf.convert_to_tensor([tf.cast(y_, tf.int32)])
-      x_ = tf.convert_to_tensor([tf.cast(x_, tf.int32)])
-      grid_idx = tf.concat([y_, x_, a_], axis=-1)
-      ind_val = ind_val.write(num_written, grid_idx)
-      ind_sample = ind_sample.write(num_written, sample)
-      num_written += 1
+    for i in range(4):
+      if shifts[i]:
+        x_ = x - offset[i][0]
+        y_ = y - offset[i][1]
+        x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width)
+        y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height)
+        grid_idx = tf.concat([y_, x_, a_], axis=-1)
+        ind_val = ind_val.write(num_written, grid_idx)
+        ind_sample = ind_sample.write(num_written, sample)
+        num_written += 1
   else:
     y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
     x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
@@ -1213,7 +1282,6 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     ind_sample = ind_sample.write(num_written, sample)
     num_written += 1
   return ind_val, ind_sample, num_written
-
 
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):

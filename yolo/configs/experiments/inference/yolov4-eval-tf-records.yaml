@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: mirrored
-  mixed_precision_dtype: float16
+  mixed_precision_dtype: float32
   loss_scale: "dynamic"
   num_gpus: 1
 task:
@@ -73,7 +73,7 @@ task:
       use_reduction_sum: false
   train_data:
     global_batch_size: 4
-    dtype: float16
+    dtype: float32
     input_path: 'gs://tensorflow2/coco_records/train/2017*'
     is_training: true
     shuffle_buffer_size: 10000
@@ -105,7 +105,7 @@ task:
         crop_area_mosaic: [0.25, 0.95]
   validation_data:
     global_batch_size: 8
-    dtype: float16
+    dtype: float32
     input_path: 'gs://tensorflow2/coco_records/val/2017*'
     is_training: false
     shuffle_buffer_size: 10000

@@ -65,7 +65,7 @@ task:
       darknet: null
   train_data:
     global_batch_size: 1
-    dtype: float16
+    dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
@@ -93,7 +93,7 @@ task:
         crop_area: [0.25]
   validation_data:
     global_batch_size: 1
-    dtype: float16
+    dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10000

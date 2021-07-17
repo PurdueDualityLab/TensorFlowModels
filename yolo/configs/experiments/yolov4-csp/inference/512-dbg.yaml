@@ -65,7 +65,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
-    dtype: float16
+    dtype: float32
     is_training: false
     drop_remainder: true
     parser:
@@ -91,7 +91,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
-    dtype: float16
+    dtype: float32
     is_training: false
     drop_remainder: true
     parser:
