@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as ks
 from tensorflow.keras import backend as K
+from tensorflow.python.ops.gen_batch_ops import batch
 
 from yolo.ops.loss_utils import GridGenerator
 from yolo.ops import box_ops
@@ -725,15 +726,21 @@ class Yolo_Loss(object):
     #     iou to take only a certain percent of the iou or the ground truth, 
     #     i.e smooth the detection map
     iou = tf.clip_by_value(iou, 0.0, 1.0)
+
+    # self._objectness_smooth = 0
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
 
-    #    build a the ground truth detection map
+    # #    build a the ground truth detection map
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)
+
+    # for i in range(batch_size):
+    #   plt.imshow(true_conf[i].numpy())
+    #   plt.show()
 
     #     compute the detection map loss, there should be no masks
     #     applied

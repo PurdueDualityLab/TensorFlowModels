@@ -29,12 +29,12 @@ from yolo.utils.run_utils import prep_gpu
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema-bmo.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-dymo.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]

@@ -59,6 +59,47 @@ task:
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
+  # train_data:
+  #   global_batch_size: 1
+  #   tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  #   tfds_download: true
+  #   tfds_name: coco
+  #   tfds_split: validation
+  #   dtype: float32
+  #   is_training: false
+  #   drop_remainder: true
+  #   parser:
+  #     max_num_instances: 300
+  #     letter_box: True
+  #     random_flip: False
+  #     aug_rand_saturation: 0.0
+  #     aug_rand_brightness: 0.0
+  #     aug_rand_hue: 0.0
+  #     aug_scale_min: 1.0
+  #     aug_scale_max: 1.0
+  #     aug_rand_translate: 0.0
+  #     area_thresh: 0.0
+  #     random_pad: False
+  #     use_tie_breaker: True
+  #     use_scale_xy: True
+  #     anchor_thresh: 4.0
+  #     mosaic: 
+  #       mosaic_frequency: 0.0
+  # validation_data:
+  #   global_batch_size: 1
+  #   tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  #   tfds_download: true
+  #   tfds_name: coco
+  #   tfds_split: validation
+  #   dtype: float32
+  #   is_training: false
+  #   drop_remainder: true
+  #   parser:
+  #     max_num_instances: 200
+  #     letter_box: True
+  #     use_tie_breaker: True
+  #     use_scale_xy: True
+  #     anchor_thresh: 4.0
   train_data:
     global_batch_size: 1
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
@@ -70,13 +111,13 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: True
+      letter_box: False
       random_flip: False
       aug_rand_saturation: 0.0
       aug_rand_brightness: 0.0
       aug_rand_hue: 0.0
-      aug_scale_min: 1.0
-      aug_scale_max: 1.0
+      aug_scale_min: 0.0
+      aug_scale_max: 0.0
       aug_rand_translate: 0.0
       area_thresh: 0.0
       random_pad: False
@@ -84,7 +125,13 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       mosaic: 
+        output_resolution: [640, 640]
+        max_resolution: 
         mosaic_frequency: 0.0
+        mosaic_crop_mode: 'scale'
+        aspect_ratio_mode: 'crop'
+        crop_area_mosaic: [0.1, 1.9]
+        crop_area: [0.25, 1.0]
   validation_data:
     global_batch_size: 1
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
@@ -96,10 +143,15 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: True
+      letter_box: False
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      area_thresh: 0.0
+  weight_decay: 0.0005
+  annotation_file: null
+  load_darknet_weights: true
+  darknet_load_decoder: true
   weight_decay: 0.0005
   annotation_file: null
   load_darknet_weights: true

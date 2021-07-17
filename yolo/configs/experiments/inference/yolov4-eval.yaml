@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: mirrored
-  mixed_precision_dtype: float16
+  mixed_precision_dtype: float32
   loss_scale: "dynamic"
   num_gpus: 1
 task:
@@ -79,7 +79,7 @@ task:
     tfds_download: true
     tfds_name: coco
     tfds_split: validation
-    dtype: float16
+    dtype: float32
     is_training: false
     drop_remainder: true
     parser:
