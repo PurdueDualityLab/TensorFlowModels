@@ -239,19 +239,24 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      metric_dict['global']['total_loss'] += _mean_loss
-      metric_dict['global']['total_box'] += _loss_box
-      metric_dict['global']['total_class'] += _loss_class
-      metric_dict['global']['total_conf'] += _loss_conf
-      metric_dict[key]['conf_loss'] = _loss_conf
-      metric_dict[key]['box_loss'] = _loss_box
-      metric_dict[key]['class_loss'] = _loss_class
+      loss_val += _loss * scale / num_replicas # scale loss by the world size: 
+                                               # scaled = multiply by gpus? if aggreagation method is the mean
+                                               # scaled = divide by gpus?
+      
+      # detach all the below gradients: none of them should make a contribution to the 
+      # gradient form this point forwards
+      metric_dict['global']['total_loss'] +=tf.stop_gradient(_mean_loss)
+      metric_dict['global']['total_box'] += tf.stop_gradient(_loss_box)
+      metric_dict['global']['total_class'] += tf.stop_gradient(_loss_class)
+      metric_dict['global']['total_conf'] += tf.stop_gradient(_loss_conf)
+      metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
+      metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
+      metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
       metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
       metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
-      loss_val += _loss * scale / num_replicas
-    
+      
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
@@ -276,10 +281,10 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
+      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
       num_replicas = scale_replicas
 
     with tf.GradientTape() as tape:
@@ -323,8 +328,11 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    num_replicas = scale_replicas
+    if self._task_config.model.filter.use_scaled_loss:
+      num_replicas = 1
+    else:
+      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+      num_replicas = scale_replicas
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
