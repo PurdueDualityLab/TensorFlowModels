@@ -1091,8 +1091,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
-  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
+  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True, element_shape=[3, ])
+  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True, element_shape=[8, ])
 
   (ind_val, ind_sample,
    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,

@@ -438,6 +438,27 @@ class Parser(parser.Parser):
         data, is_training=False)
     return image, labels
 
+  def _parse_passthrough_data(self, data):
+
+    # get the image shape constants
+    shape = tf.shape(data['image'])
+    image = data['image']
+    boxes = data['groundtruth_boxes']
+    classes = data['groundtruth_classes']
+    area = data['groundtruth_area']
+    is_crowd = data['groundtruth_is_crowd']
+    source_id = data['source_id']
+
+    height, width = preprocessing_ops.get_image_shape(image)
+
+    info = self._get_identity_info(image)
+    inds = box_ops.get_non_empty_box_indices(boxes)
+
+    image, labels = self._build_label(
+        image, boxes, classes, width, height, info, inds, 
+        data, is_training=False)
+    return image, labels
+
   def _build_label(self,
                    image,
                    boxes,
