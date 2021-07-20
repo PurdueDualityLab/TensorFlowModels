@@ -110,12 +110,13 @@ trainer:
       trainable_weights_only: false
       dynamic_decay: True
     learning_rate:
-      type: cosine
-      cosine:
-        initial_learning_rate: 0.001
+      type: cosine_epoch
+      cosine_epoch:
+        initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
         decay_steps: 556875
+        steps_per_epoch: 1875
     optimizer:
       type: adam
       adam:

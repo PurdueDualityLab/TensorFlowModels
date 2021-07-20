@@ -107,14 +107,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     
     task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"],
+      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-dbg-lren.yaml"],
       model_dir='')
     
     parser = task.get_parser()
     optimizer = task.create_optimizer(params.trainer.optimizer_config,
                                       params.runtime)
 
-    batch_size = 2
+    batch_size = 1
     loader = get_n(dataloader, parser) 
     loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
                                                                 {'source_id': tf.int64, 

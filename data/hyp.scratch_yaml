@@ -1,5 +1,5 @@
-lr0: 0.00 # initial learning rate (SGD=1E-2, Adam=1E-3)
-lrf: 0.2  # final OneCycleLR learning rate (lr0 * lrf)
+lr0: 0.0  # initial learning rate (SGD=1E-2, Adam=1E-3)
+lrf: 0.0  # final OneCycleLR learning rate (lr0 * lrf)
 momentum: 1.0 # SGD momentum/Adam beta1
 weight_decay: 0.0005  # optimizer weight decay 5e-4
 warmup_epochs: 0.0  # warmup epochs (fractions ok)

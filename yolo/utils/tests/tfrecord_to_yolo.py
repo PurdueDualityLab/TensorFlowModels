@@ -176,6 +176,8 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
   #   18149, 
   # ]
   name_set = set([str(name) for name in name_set])
+
+  name_set = None
   if os.path.isdir(f"{path}images/"):
     shutil.rmtree(f"{path}images/")
   if os.path.isdir(f"{path}labels/"):
@@ -184,7 +186,7 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
   os.mkdir(f"{path}images/")
   os.mkdir(f"{path}labels/")
 
-  lim = 100
+  lim = 200
   for k, sample in enumerate(dataset):
     if k > lim:
       break
