@@ -177,10 +177,6 @@ class YoloLayer(ks.Model):
     # in shape [1, height, width, 2]
     centers, anchors = generator(height, width, batchsize, dtype=data.dtype)
 
-    # # tempcode
-    # centers /= tf.cast([width, height], centers.dtype)
-    # anchors /= tf.cast([width, height], anchors.dtype)
-
     # split the yolo detections into boxes, object score map, classes
     boxes, obns_scores, class_scores = tf.split(
         data, [4, 1, self._classes], axis=-1)
@@ -203,23 +199,16 @@ class YoloLayer(ks.Model):
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_utils.xcycwh_to_yxyx(boxes)
-
     # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
-
-    # threshold the detection map
-    obns_mask = tf.cast(obns_scores > self._thresh, obns_scores.dtype)
-
     # convert detection map to class detection probabailities
-    class_scores = tf.math.sigmoid(class_scores) * obns_mask * obns_scores
-    class_scores *= tf.cast(class_scores > self._thresh, class_scores.dtype)
+    class_scores = tf.math.sigmoid(class_scores) * obns_scores
 
-    fill = height * width * len_mask
     # platten predictions to [batchsize, N, -1] for non max supression
+    fill = height * width * len_mask
     boxes = tf.reshape(boxes, [-1, fill, 4])
     class_scores = tf.reshape(class_scores, [-1, fill, classes])
     obns_scores = tf.reshape(obns_scores, [-1, fill])
-
     return obns_scores, boxes, class_scores
 
   def call(self, inputs):
@@ -243,6 +232,11 @@ class YoloLayer(ks.Model):
     boxes = tf.concat(boxes, axis=1)
     object_scores = K.concatenate(object_scores, axis=1)
     class_scores = K.concatenate(class_scores, axis=1)
+
+    object_mask = tf.cast(object_scores > self._thresh, object_scores.dtype)
+    class_mask = tf.cast(class_scores > self._thresh, class_scores.dtype)
+    object_scores *= object_mask
+    class_scores *= (tf.expand_dims(object_mask, axis = -1) * class_mask)
 
     # apply nms
     if self._nms_type == 7:

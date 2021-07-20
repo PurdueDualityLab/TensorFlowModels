@@ -33,8 +33,9 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
@@ -52,8 +53,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
-  config.validation_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1
+  config.validation_data.global_batch_size = 1
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 

@@ -471,6 +471,25 @@ class Mosaic(object):
     stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
     return stitched
 
+  def _full_frequency_mixup(self, dataset):
+    one = dataset.shard(num_shards=4, index=0)
+    two = dataset.shard(num_shards=4, index=1)
+
+
+    num = tf.data.AUTOTUNE
+    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
+      num_parallel_calls=num)
+    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), 
+      num_parallel_calls=num)
+    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), 
+      num_parallel_calls=num)
+    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
+      num_parallel_calls=num)
+
+    stitched = tf.data.Dataset.zip((one, two, three, four))
+    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
+    return stitched
+
   def _apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
     dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE)

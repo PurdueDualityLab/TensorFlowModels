@@ -38,11 +38,11 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.5
+        'all': 0.3 # 0.5
       obj_normalizer: 
-        '5': 0.4
-        '4': 1.0
-        '3': 4.0
+        '5': 0.28 #0.4
+        '4': 0.70 #1.0
+        '3': 2.80 #4.0
       new_cords:
         'all': True
       objectness_smooth: 
@@ -50,7 +50,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: diou
+      nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -69,8 +69,8 @@ task:
       aug_rand_saturation: 1.7
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 0.5
-      aug_scale_max: 1.5
+      aug_scale_min: 0.1
+      aug_scale_max: 1.9
       aug_rand_translate: 0.5
       area_thresh: 0.1
       random_pad: False
@@ -84,7 +84,7 @@ task:
         mosaic_frequency: 1.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.5, 1.5]
+        crop_area_mosaic: [0.2, 1.8]
   validation_data:
     global_batch_size: 8
     dtype: float32
@@ -111,7 +111,7 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: True
+      trainable_weights_only: true
       dynamic_decay: True
     learning_rate:
       type: cosine_epoch
