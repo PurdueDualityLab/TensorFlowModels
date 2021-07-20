@@ -1,0 +1,1036 @@
+linear
+linear
+linear
+Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 255, kernel_size=(1, 1), stride=(1, 1))
+0
+15
+24
+101919 0.016603233 0.010092432 0.03206236 0.018847177 0.061001964
+30
+60
+45
+106172 0.049307056 0.05482004 0.1434378 0.04399449 0.24225232
+12
+48
+54
+106344 0.02874978 0.07069707 0.13292515 0.0564091 0.2600313
+6
+18
+9
+109537 0.28075808 0.016155051 0.017814148 0.0014059502 0.03537515
+15
+36
+42
+111878 0.024582932 0.063061915 0.07881279 0.10882276 0.25069746
+0
+3
+15
+113579 0.13196665 0.01498878 0.011678243 0.072980575 0.0996476
+60
+141
+105
+113720 0.017073361 0.03903981 0.17513102 0.05912539 0.2732962
+3
+30
+51
+116095 0.021385973 0.028347641 0.05321662 0.16510792 0.24667218
+6
+30
+36
+116261 0.015293982 0.028391315 0.03670835 0.046125986 0.11122565
+0
+0
+6
+117441 0.32396632 0.006399408 0.025630211 0.044419784 0.07644941
+6
+21
+18
+118921 0.17838418 0.05934151 0.029484266 0.0010500344 0.08987581
+0
+0
+18
+120398 0.08827157 0.016328208 0.030842727 0.022398977 0.069569916
+39
+66
+51
+122588 0.029287249 0.05558729 0.16409516 0.09479597 0.31447843
+6
+39
+51
+124429 0.017351702 0.051416554 0.11474654 0.09738509 0.2635482
+0
+0
+9
+126345 0.07767341 0.0048176525 0.014181825 0.04137487 0.06037435
+141
+219
+84
+12897 0.03360045 0.05883434 0.2619313 0.049892284 0.37065792
+48
+27
+6
+129159 0.1335467 0.032497592 0.037287872 0.015706189 0.08549165
+24
+27
+18
+134558 0.044643287 0.05140997 0.0424491 0.022699015 0.11655809
+12
+66
+57
+135410 0.016952593 0.041073646 0.08172967 0.028117029 0.15092035
+63
+93
+69
+142620 0.051465 0.035265546 0.114523575 0.021715418 0.17150454
+3
+24
+21
+14265 0.12733325 0.014690831 0.017700259 0.003074856 0.035465945
+6
+15
+15
+155192 0.06578065 0.027676096 0.015233045 0.008032317 0.05094146
+168
+126
+36
+155885 0.031662665 0.07461749 0.30068853 0.08618573 0.46149173
+0
+0
+9
+15746 0.16835944 0.003581001 0.009434678 0.025697852 0.03871353
+6
+33
+36
+160260 0.026108503 0.0450869 0.078072384 0.10858007 0.23173936
+3
+9
+3
+16241 2.6694987 0.026973361 0.016072212 0.111041725 0.1540873
+48
+60
+60
+168491 0.015295269 0.07032129 0.14970395 0.046708535 0.26673377
+45
+48
+30
+170127 0.03796372 0.045158375 0.07019886 0.02841476 0.14377199
+45
+96
+60
+172595 0.06302234 0.040190887 0.14603296 0.07777545 0.26399928
+0
+0
+9
+173235 0.023368062 0.009554528 0.021364648 0.034316733 0.06523591
+9
+18
+12
+1779 0.085730135 0.037021156 0.028933788 0.09229428 0.15824923
+0
+0
+6
+179273 0.11538544 0.031110603 0.018709023 0.05710185 0.10692148
+0
+6
+24
+180366 0.031746216 0.0342103 0.027313516 0.046949744 0.108473554
+18
+12
+6
+18149 0.055206534 0.06667485 0.024286067 0.045706943 0.13666786
+24
+24
+9
+184205 0.5974641 0.0184769 0.039015114 0.028969266 0.086461276
+30
+27
+3
+192291 0.67719173 0.047679555 0.028563252 0.031032044 0.107274845
+36
+54
+42
+192406 0.012069013 0.04888615 0.10013077 0.020329084 0.169346
+45
+45
+24
+197279 0.17957015 0.028509457 0.037751075 0.0035668684 0.0698274
+3
+9
+3
+205531 0.60036445 0.028313166 0.011686537 0.034430657 0.07443036
+0
+3
+18
+209728 0.145032 0.009838127 0.014804637 0.08799419 0.11263695
+72
+93
+45
+212112 0.050910246 0.03250834 0.09148527 0.04189688 0.16589049
+0
+12
+21
+212198 0.15190978 0.01017153 0.019579599 0.0061783507 0.03592948
+6
+6
+21
+212605 0.06608457 0.079886116 0.054790635 0.12805457 0.2627313
+0
+0
+15
+213795 0.022317255 0.03118745 0.024606751 0.027963948 0.083758146
+9
+36
+30
+220819 0.038580734 0.018201888 0.06250295 0.124540895 0.20524573
+0
+3
+21
+223241 0.07827385 0.0674408 0.026838865 0.054242477 0.14852214
+93
+102
+30
+223426 0.037435547 0.06921736 0.12443071 0.07375923 0.2674073
+57
+24
+9
+224554 0.104344256 0.052252173 0.0383492 0.017031552 0.10763292
+0
+18
+39
+224557 0.033531673 0.016386703 0.033047106 0.022399578 0.07183339
+0
+15
+24
+224907 0.08162571 0.021136357 0.056433883 0.06960493 0.14717516
+72
+36
+18
+226097 0.2031458 0.046483032 0.04927003 0.06483338 0.16058645
+102
+141
+69
+227031 0.018564038 0.057855196 0.14190789 0.031751595 0.23151469
+15
+60
+33
+231325 0.06563881 0.04808504 0.06652674 0.04076257 0.15537435
+0
+9
+15
+232453 0.042539258 0.016096285 0.02376397 0.021423515 0.06128377
+12
+18
+6
+233140 0.2864726 0.02507087 0.020130914 0.045628097 0.09082988
+3
+18
+21
+234807 0.1879278 0.01309251 0.00810316 0.0174586 0.03865427
+0
+9
+12
+237316 0.19300656 0.024247935 0.019734412 0.0028717096 0.04685406
+72
+114
+57
+237324 0.022560675 0.06308952 0.11720512 0.040465992 0.22076063
+3
+9
+24
+238147 0.043095235 0.050431848 0.03793963 0.15158229 0.23995376
+12
+78
+54
+239148 0.032196295 0.06782323 0.08728661 0.09619949 0.25130934
+24
+6
+9
+242868 0.08888163 0.034269687 0.02978408 0.062471054 0.12652482
+6
+27
+21
+245049 0.17233808 0.017802177 0.015424546 0.0018883063 0.035115026
+135
+123
+60
+246014 0.016214933 0.06357241 0.1963051 0.042873446 0.30275095
+36
+63
+36
+246061 0.06152556 0.03780375 0.043607607 0.011013411 0.09242477
+120
+48
+3
+25034 0.052171722 0.08141034 0.057154622 0.04779306 0.18635802
+33
+21
+9
+250571 0.73241115 0.058459174 0.02936309 0.08991995 0.17774221
+0
+6
+12
+250594 0.05902096 0.021297812 0.011086805 0.0058307764 0.038215395
+0
+9
+12
+252696 0.13511921 0.034297 0.025677089 0.033972718 0.09394681
+0
+18
+18
+253718 0.025825668 0.05124687 0.058122143 0.071763515 0.18113253
+27
+60
+45
+253770 0.037074566 0.03913765 0.07871857 0.009769183 0.1276254
+78
+60
+15
+254711 0.16879 0.042459995 0.043978367 0.016820844 0.103259206
+0
+0
+9
+255974 0.19651257 0.009156389 0.006945665 0.019333528 0.03543558
+14
+30
+33
+258346 0.052789856 0.051017344 0.049815822 0.029648263 0.13048142
+30
+33
+24
+259335 0.12421091 0.0397787 0.033859797 0.034066588 0.10770509
+93
+39
+3
+259452 1.37064 0.046926558 0.055922568 0.0048289592 0.107678086
+0
+0
+6
+259614 0.12331345 0.0069104396 0.008739041 0.029043214 0.044692695
+0
+9
+9
+260020 0.87112653 0.006315174 0.007206307 0.001036973 0.014558454
+6
+30
+42
+264654 0.053702537 0.0520566 0.069725156 0.0372089 0.15899065
+15
+60
+69
+265916 0.023178661 0.039006677 0.10894951 0.035828102 0.18378429
+57
+48
+6
+274708 0.56663877 0.04363379 0.03365363 0.0036418866 0.08092931
+3
+18
+9
+275058 0.26927155 0.037824407 0.021333212 0.09078621 0.14994383
+0
+12
+33
+276146 0.07075862 0.010954902 0.028920202 0.00358002 0.043455124
+55
+156
+117
+27642 0.012685705 0.04492975 0.20484684 0.041461166 0.29123777
+12
+18
+6
+283441 0.44241655 0.035019755 0.035921022 0.066376895 0.13731767
+24
+36
+18
+293175 0.05258264 0.03550163 0.05080716 0.061726067 0.14803486
+9
+18
+21
+294908 0.1258849 0.029620964 0.02101098 0.0016304378 0.05226238
+0
+0
+15
+296383 0.102136016 0.01460722 0.016113611 0.04915818 0.07987901
+9
+21
+15
+296759 0.14875619 0.03662761 0.04297609 0.030612882 0.11021659
+3
+9
+3
+298137 1.4494877 0.044340204 0.008258619 0.00061636977 0.05321519
+0
+0
+24
+30290 0.050179414 0.022055034 0.014713625 0.035236955 0.072005615
+72
+138
+66
+304404 0.021175325 0.0415298 0.13175431 0.013354646 0.18663876
+12
+21
+18
+30465 0.07636709 0.02179351 0.022604533 0.00698618 0.05138422
+33
+78
+63
+305609 0.025564067 0.05451866 0.13202225 0.07365617 0.26019707
+0
+9
+24
+306395 0.10028714 0.016298609 0.01767238 0.010089134 0.044060122
+0
+9
+9
+316000 0.21329111 0.03127713 0.010032218 0.0051026437 0.04641199
+36
+0
+3
+31601 0.5742881 0.044485826 0.022486849 0.044265732 0.111238405
+0
+0
+0
+317130 0.00021659599 0.0 0.003609572 0.0 0.003609572
+18
+63
+54
+318219 0.02524172 0.081000924 0.14739938 0.1332216 0.36162192
+15
+33
+27
+319830 0.06116751 0.04867953 0.06817364 0.076864034 0.19371721
+9
+9
+3
+320370 0.22444265 0.029336179 0.010712881 0.0015499303 0.04159899
+0
+15
+39
+322503 0.0518229 0.03668446 0.062684104 0.072052285 0.17142084
+6
+27
+27
+322848 0.07454492 0.02765416 0.04078708 0.024246862 0.092688106
+0
+0
+15
+33372 0.114662625 0.01189783 0.016832255 0.024791779 0.053521864
+36
+60
+33
+334371 0.14186606 0.043736544 0.044327624 0.028443106 0.11650727
+0
+6
+9
+337065 0.18432757 0.020045498 0.012879899 0.05760014 0.09052554
+9
+42
+51
+344548 0.027445273 0.023799976 0.051028527 0.0035946642 0.07842317
+369
+260
+36
+353409 0.020743743 0.07710464 0.37211183 0.078413874 0.5276303
+3
+6
+12
+354729 0.29811275 0.021240039 0.01744075 0.11756707 0.15624785
+99
+87
+30
+355441 0.09176654 0.04234266 0.065288946 0.003293395 0.110925004
+48
+45
+18
+36053 0.20183392 0.04778708 0.051312312 0.031492893 0.13059229
+93
+12
+6
+365485 0.47431663 0.08637228 0.05920311 0.051387478 0.19696286
+0
+6
+18
+369667 0.063372545 0.02337289 0.021589445 0.048514683 0.09347702
+12
+63
+33
+372819 0.05244758 0.049248565 0.040390305 0.08424011 0.17387898
+0
+12
+24
+375376 0.11200647 0.021620242 0.035137944 0.061097905 0.11785609
+0
+0
+9
+377738 0.08378226 0.016452083 0.019128945 0.024451457 0.060032487
+0
+0
+9
+378859 0.3896683 0.01255847 0.0044037946 0.00039077 0.017353034
+126
+153
+60
+381608 0.011816821 0.07222909 0.2334504 0.061608255 0.36728776
+9
+9
+12
+38721 0.09893675 0.038346376 0.021351382 0.031076282 0.090774044
+0
+9
+15
+388464 0.14658377 0.022717698 0.013904066 0.0030709812 0.039692745
+72
+63
+27
+389753 0.05089797 0.063168705 0.076185815 0.024478922 0.16383345
+12
+33
+48
+394050 0.013389144 0.041861083 0.07428822 0.061665136 0.17781444
+30
+114
+93
+394334 0.028588358 0.04688414 0.14228766 0.091095015 0.28026682
+27
+69
+57
+395904 0.025105214 0.052315045 0.13063782 0.06565188 0.24860474
+120
+36
+15
+402248 0.07028924 0.05036294 0.086995736 0.056658834 0.19401751
+24
+78
+93
+403995 0.016712457 0.065326735 0.17210902 0.053791065 0.29122683
+21
+69
+30
+405882 0.06756741 0.065464966 0.052112058 0.11376296 0.23133999
+9
+18
+9
+406744 0.14556544 0.06869771 0.020898849 0.077863194 0.16745976
+3
+24
+30
+408859 0.028882151 0.06569964 0.043443628 0.099419296 0.20856255
+0
+0
+15
+415823 0.117800735 0.015590103 0.012628302 0.035896253 0.06411466
+0
+6
+9
+423396 0.25863054 0.028369088 0.009940302 0.003740066 0.042049453
+18
+30
+33
+432213 0.030692685 0.041381296 0.060632776 0.07486331 0.17687738
+0
+0
+18
+432906 0.051658727 0.015890365 0.018728206 0.025265804 0.059884377
+0
+0
+6
+436280 0.088871285 0.027333576 0.008302471 0.026541315 0.06217736
+0
+0
+15
+443818 0.053183507 0.02445611 0.015529219 0.0391312 0.07911653
+72
+60
+66
+457877 0.015637035 0.083481126 0.1428552 0.061079 0.28741533
+3
+9
+15
+459304 0.07338896 0.03993938 0.020154778 0.015806865 0.075901024
+3
+3
+15
+459887 0.10922888 0.04182539 0.016872095 0.12423734 0.18293482
+0
+21
+60
+460866 0.012374996 0.050216842 0.082395725 0.09738787 0.23000044
+153
+153
+45
+462565 0.020551361 0.06550454 0.13499239 0.035262585 0.23575953
+3
+24
+28
+463611 0.052735325 0.037204072 0.034398586 0.070480585 0.14208324
+0
+12
+21
+464018 0.06275985 0.020996219 0.035019375 0.066305295 0.12232089
+27
+33
+21
+466346 0.025331989 0.05535227 0.048122596 0.03917252 0.14264739
+9
+12
+9
+467468 0.17653935 0.06875232 0.028939186 0.046369564 0.14406107
+132
+96
+51
+46847 0.009952743 0.084040515 0.16441368 0.08406943 0.3325236
+3
+9
+9
+473121 0.050952006 0.06142663 0.015560787 0.051288255 0.12827566
+0
+33
+36
+474881 0.07383673 0.031788107 0.03903254 0.03306979 0.103890434
+96
+120
+45
+475182 0.012269572 0.08702089 0.15692753 0.049882323 0.29383075
+0
+9
+6
+475856 0.21903975 0.022349095 0.008965561 0.008879462 0.040194117
+96
+84
+6
+479075 0.05749166 0.07836326 0.07161754 0.100005604 0.24998641
+129
+93
+18
+48133 0.043442715 0.07656664 0.10938353 0.06182315 0.2477733
+33
+96
+63
+483446 0.020378284 0.062965654 0.12417558 0.077030174 0.26417142
+12
+18
+6
+485773 0.15104531 0.06689752 0.023944797 0.080147594 0.1709899
+3
+9
+12
+486162 0.088275954 0.05650049 0.02462821 0.122842334 0.20397103
+0
+0
+15
+488743 0.015504926 0.018524041 0.013007101 0.030128524 0.061659664
+0
+12
+15
+491294 0.0612453 0.036317814 0.026881319 0.08921875 0.15241788
+3
+9
+12
+494555 0.038583796 0.057246316 0.014299545 0.0044035604 0.07594942
+15
+36
+30
+494846 0.036408484 0.06401321 0.056013867 0.12821466 0.24824174
+15
+36
+18
+499727 0.05088787 0.046364944 0.031820428 0.1575217 0.23570707
+0
+6
+24
+502644 0.051510964 0.054446932 0.026809996 0.06351292 0.14476985
+0
+0
+15
+512938 0.048568614 0.013200941 0.01849417 0.044160277 0.07585539
+51
+90
+78
+517399 0.01991186 0.063005894 0.11317094 0.08185206 0.2580289
+27
+84
+72
+520124 0.00872121 0.05561514 0.134776 0.05773911 0.24813025
+9
+6
+9
+52017 0.038877986 0.08368562 0.02265935 0.06951289 0.17585786
+12
+6
+15
+520324 0.016295636 0.10238936 0.023943445 0.043862388 0.17019519
+30
+56
+68
+522665 0.011876065 0.08081528 0.09959328 0.09315227 0.27356082
+6
+9
+6
+530998 0.20890456 0.029775484 0.015578212 0.06396977 0.109323464
+102
+117
+39
+531697 0.024012506 0.062490147 0.14320412 0.09474605 0.3004403
+66
+54
+24
+536201 0.058204345 0.074911885 0.06656205 0.041403834 0.18287776
+36
+69
+42
+53668 0.017754812 0.06618083 0.08910999 0.050315823 0.20560664
+0
+3
+18
+537907 0.02125861 0.0577676 0.03360582 0.06411481 0.15548822
+3
+21
+18
+540642 0.022151373 0.08046265 0.03630799 0.07759447 0.19436511
+6
+9
+3
+541435 0.14486837 0.05662483 0.019606281 0.046323974 0.12255508
+0
+3
+15
+542388 0.03383686 0.022586918 0.021009639 0.0627978 0.10639436
+0
+30
+42
+547759 0.035282623 0.02917154 0.04814411 0.080906734 0.15822238
+0
+3
+6
+552656 0.24383174 0.018751672 0.012326758 0.11491055 0.14598899
+0
+9
+15
+556966 0.02452453 0.048350036 0.02190231 0.031328134 0.10158048
+0
+3
+18
+559955 0.033707388 0.07146992 0.022841314 0.08367635 0.17798758
+6
+81
+84
+563882 0.0067777378 0.07705309 0.11211628 0.072899416 0.2620688
+0
+15
+36
+564659 0.051015474 0.04214878 0.038150404 0.0704993 0.15079848
+78
+102
+54
+566975 0.014707222 0.075315244 0.14232726 0.107061386 0.3247039
+9
+36
+30
+572802 0.036903188 0.08648352 0.034902394 0.09240418 0.21379009
+3
+21
+42
+573206 0.019206518 0.05405524 0.046786934 0.09336701 0.19420919
+0
+3
+15
+574411 0.006664327 0.08094408 0.013277791 0.08675486 0.18097673
+0
+0
+9
+575032 0.057980765 0.011790705 0.017442541 0.030585213 0.05981846
+150
+222
+99
+579070 0.0066599445 0.067736685 0.26009366 0.06494305 0.3927734
+93
+126
+33
+580720 0.009489701 0.07646175 0.13457552 0.070806295 0.28184354
+0
+18
+15
+65231 0.01477647 0.0660781 0.02076339 0.088731565 0.17557305
+120
+75
+15
+65798 0.03722355 0.07807371 0.10419038 0.030688778 0.21295287
+99
+74
+39
+69670 0.014562439 0.07796975 0.10378191 0.044317454 0.22606912
+0
+9
+15
+69959 0.02079973 0.052141584 0.019065067 0.07767016 0.14887682
+93
+96
+87
+70478 0.0052826703 0.08792057 0.12773518 0.080602795 0.29625854
+0
+0
+6
+75162 0.09427838 0.027905827 0.012930228 0.045201916 0.08603797
+6
+15
+40
+79113 0.04093015 0.05949085 0.04806854 0.041217394 0.14877677
+0
+9
+15
+80671 0.035411783 0.061158326 0.020398526 0.045046568 0.12660342
+6
+15
+21
+80949 0.06805182 0.055298187 0.08008221 0.1257905 0.2611709
+0
+3
+24
+83658 0.016175231 0.05424769 0.03030587 0.09348534 0.1780389
+0
+0
+9
+85292 0.093011305 0.021092959 0.017184064 0.050240185 0.088517204
+102
+48
+9
+8775 0.062502645 0.08440357 0.07266077 0.06346315 0.22052749
+0
+9
+27
+92768 0.02112002 0.03501747 0.03042803 0.04066032 0.10610582
+24
+51
+27
+93140 0.017793192 0.06936435 0.060409464 0.102246925 0.23202074
+6
+18
+12
+96625 0.029878963 0.08668573 0.02466353 0.09130603 0.20265529
+Optimizer stripped from runs/train/exp27/weights/last.pt, 212.2MB
+Optimizer stripped from runs/train/exp27/weights/best.pt, 212.2MB

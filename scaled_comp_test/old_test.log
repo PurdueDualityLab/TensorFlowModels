@@ -1,0 +1,1639 @@
+2021-07-16 23:22:33.618130: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-16 23:22:34.730864: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-16 23:22:34.731500: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2021-07-16 23:22:34.765669: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-16 23:22:34.765708: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-16 23:22:34.767531: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-16 23:22:34.767610: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-16 23:22:34.768301: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-16 23:22:34.768489: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-16 23:22:34.770261: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-16 23:22:34.770693: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-16 23:22:34.770789: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-16 23:22:34.771659: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-16 23:22:34.771976: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-07-16 23:22:34.772574: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-16 23:22:34.773051: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-16 23:22:34.773071: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-16 23:22:34.773095: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-16 23:22:34.773102: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-16 23:22:34.773110: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-16 23:22:34.773118: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-16 23:22:34.773125: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-16 23:22:34.773133: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-16 23:22:34.773141: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-16 23:22:34.773988: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-16 23:22:34.774015: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-16 23:22:35.135353: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-07-16 23:22:35.135395: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2021-07-16 23:22:35.135400: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2021-07-16 23:22:35.136606: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 6997 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2070 SUPER, pci bus id: 0000:65:00.0, compute capability: 7.5)
+I0716 23:22:35.816356 140162721253184 train_utils.py:285] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'mirrored',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': None,
+             'mixed_precision_dtype': 'float32',
+             'num_cores_per_replica': 1,
+             'num_gpus': 1,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': True,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': '',
+          'init_checkpoint_modules': None,
+          'load_darknet_weights': True,
+          'model': {'base': {'type': None},
+                    'boxes': ['[12.0, 16.0]',
+                              '[19.0, 36.0]',
+                              '[40.0, 28.0]',
+                              '[36.0, 75.0]',
+                              '[76.0, 55.0]',
+                              '[72.0, 146.0]',
+                              '[142.0, 110.0]',
+                              '[192.0, 243.0]',
+                              '[459.0, 401.0]'],
+                    'boxes_per_scale': 3,
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': {'3': 1.0,
+                                                  '4': 1.0,
+                                                  '5': 1.0,
+                                                  'all': 0.5},
+                               'darknet': None,
+                               'ignore_thresh': {'3': 0.7,
+                                                 '4': 0.7,
+                                                 '5': 0.7,
+                                                 'all': None},
+                               'iou_normalizer': {'3': 0.75,
+                                                  '4': 0.75,
+                                                  '5': 0.75,
+                                                  'all': 0.05},
+                               'iou_thresh': 0.001,
+                               'label_smoothing': 0.0,
+                               'loss_type': {'3': 'ciou',
+                                             '4': 'ciou',
+                                             '5': 'ciou',
+                                             'all': 'ciou'},
+                               'max_boxes': 300,
+                               'max_delta': {'3': inf,
+                                             '4': inf,
+                                             '5': inf,
+                                             'all': None},
+                               'max_level': 5,
+                               'min_level': 3,
+                               'new_cords': {'3': True,
+                                             '4': True,
+                                             '5': True,
+                                             'all': True},
+                               'nms_thresh': 0.6,
+                               'nms_type': 'greedy',
+                               'obj_normalizer': {'3': 4.0,
+                                                  '4': 1.0,
+                                                  '5': 0.4,
+                                                  'all': None},
+                               'objectness_smooth': {'3': 0.0,
+                                                     '4': 0.0,
+                                                     '5': 0.0,
+                                                     'all': 1.0},
+                               'path_scales': {'3': 8, '4': 16, '5': 32},
+                               'pre_nms_points': 5000,
+                               'scale_xy': {'3': 2.0,
+                                            '4': 2.0,
+                                            '5': 2.0,
+                                            'all': 2.0},
+                               'truth_thresh': {'3': 1.0,
+                                                '4': 1.0,
+                                                '5': 1.0,
+                                                'all': None},
+                               'use_scaled_loss': True},
+                    'input_size': [640, 640, 3],
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.0001,
+                                        'norm_momentum': 0.97,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'smart_bias': True,
+                    'subdivisions': 1},
+          'per_category_metrics': False,
+          'smart_bias_lr': 0.0,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'float32',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 1,
+                         'input_path': '',
+                         'is_training': False,
+                         'parser': {'anchor_thresh': 4.0,
+                                    'area_thresh': 0.0,
+                                    'aug_rand_angle': 0.0,
+                                    'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_translate': 0.0,
+                                    'aug_scale_max': 0.0,
+                                    'aug_scale_min': 0.0,
+                                    'jitter': 0.0,
+                                    'jitter_mosaic': 0.0,
+                                    'letter_box': False,
+                                    'max_num_instances': 300,
+                                    'mosaic': {'aspect_ratio_mode': 'crop',
+                                               'aug_scale_max': None,
+                                               'aug_scale_min': None,
+                                               'crop_area': [0.25, 1.0],
+                                               'crop_area_mosaic': [0.1, 1.9],
+                                               'jitter': None,
+                                               'max_resolution': None,
+                                               'mosaic_crop_mode': 'scale',
+                                               'mosaic_frequency': 0.0,
+                                               'output_resolution': [640, 640],
+                                               'resize': None},
+                                    'mosaic_scale_max': 1.0,
+                                    'mosaic_scale_min': 1.0,
+                                    'mosaic_translate': 0.0,
+                                    'random_flip': False,
+                                    'random_pad': False,
+                                    'resize': 1.0,
+                                    'resize_mosaic': 1.0,
+                                    'sheer': 0.0,
+                                    'use_scale_xy': True,
+                                    'use_tie_breaker': True},
+                         'seed': None,
+                         'sharding': True,
+                         'shuffle_buffer_size': 2,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'validation'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'float32',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 1,
+                              'input_path': '',
+                              'is_training': False,
+                              'parser': {'anchor_thresh': 4.0,
+                                         'area_thresh': 0.0,
+                                         'aug_rand_angle': 0.0,
+                                         'aug_rand_brightness': 0.0,
+                                         'aug_rand_hue': 0.0,
+                                         'aug_rand_saturation': 0.0,
+                                         'aug_rand_translate': 0.0,
+                                         'aug_scale_max': 1.0,
+                                         'aug_scale_min': 1.0,
+                                         'jitter': 0.0,
+                                         'jitter_mosaic': 0.0,
+                                         'letter_box': False,
+                                         'max_num_instances': 200,
+                                         'mosaic': {'aspect_ratio_mode': 'crop',
+                                                    'aug_scale_max': None,
+                                                    'aug_scale_min': None,
+                                                    'crop_area': [0.2, 1.0],
+                                                    'crop_area_mosaic': [1.0,
+                                                                         1.0],
+                                                    'jitter': None,
+                                                    'max_resolution': 640,
+                                                    'mosaic_crop_mode': 'crop_scale',
+                                                    'mosaic_frequency': 0.75,
+                                                    'output_resolution': None,
+                                                    'resize': None},
+                                         'mosaic_scale_max': 1.0,
+                                         'mosaic_scale_min': 1.0,
+                                         'mosaic_translate': 0.0,
+                                         'random_flip': True,
+                                         'random_pad': True,
+                                         'resize': 1.0,
+                                         'resize_mosaic': 1.0,
+                                         'sheer': 0.0,
+                                         'use_scale_xy': True,
+                                         'use_tie_breaker': True},
+                              'seed': None,
+                              'sharding': True,
+                              'shuffle_buffer_size': 2,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 10000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'cosine': {'alpha': 0.2,
+                                                               'decay_steps': 370000,
+                                                               'initial_learning_rate': 0.0,
+                                                               'name': 'Cosine'},
+                                                    'type': 'cosine'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.937,
+                                                        'name': 'SGD',
+                                                        'nesterov': True},
+                                                'type': 'sgd'},
+                                  'type': None,
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 0},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 10000,
+             'summary_interval': 10000,
+             'train_steps': 100,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 20000,
+             'validation_steps': 5000}}
+I0716 23:22:35.816875 140162721253184 train_utils.py:295] Saving experiment configuration to ../checkpoints/sdssfsffd/params.yaml
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+I0716 23:22:35.833038 140162721253184 mirrored_strategy.py:350] Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+I0716 23:22:35.833959 140162721253184 train_utils.py:214] Running default trainer.
+2021-07-16 23:22:35.956339: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.015565 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.016337 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.017448 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.017935 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.018631 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.020505 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.099250 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.099838 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.100675 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0716 23:22:36.101106 140162721253184 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+!--PREPPING GPU--! 
+1 Physical GPUs, 1 Logical GPUs
+yolo_custom
+{'task': {'init_checkpoint': '', 'model': {'num_classes': 80, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': True, '4': True, '5': True, 'all': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}, 'train_data': {'input_path': '', 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 1, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow', 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'seed': None, 'dtype': 'float32', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'max_num_instances': 300, 'letter_box': False, 'random_flip': False, 'random_pad': False, 'jitter': 0.0, 'resize': 1.0, 'jitter_mosaic': 0.0, 'resize_mosaic': 1.0, 'sheer': 0.0, 'aug_rand_angle': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_hue': 0.0, 'aug_scale_min': 0.0, 'aug_scale_max': 0.0, 'aug_rand_translate': 0.0, 'mosaic_scale_min': 1.0, 'mosaic_scale_max': 1.0, 'mosaic_translate': 0.0, 'use_tie_breaker': True, 'use_scale_xy': True, 'anchor_thresh': 4.0, 'area_thresh': 0.0, 'mosaic': {'max_resolution': None, 'mosaic_frequency': 0.0, 'crop_area': [0.25, 1.0], 'crop_area_mosaic': [0.1, 1.9], 'aspect_ratio_mode': 'crop', 'mosaic_crop_mode': 'scale', 'aug_scale_min': None, 'aug_scale_max': None, 'jitter': None, 'resize': None, 'output_resolution': [640, 640]}}, 'tfds_download': True}, 'validation_data': {'input_path': '', 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 1, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow', 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'seed': None, 'dtype': 'float32', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'max_num_instances': 200, 'letter_box': False, 'random_flip': True, 'random_pad': True, 'jitter': 0.0, 'resize': 1.0, 'jitter_mosaic': 0.0, 'resize_mosaic': 1.0, 'sheer': 0.0, 'aug_rand_angle': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_hue': 0.0, 'aug_scale_min': 1.0, 'aug_scale_max': 1.0, 'aug_rand_translate': 0.0, 'mosaic_scale_min': 1.0, 'mosaic_scale_max': 1.0, 'mosaic_translate': 0.0, 'use_tie_breaker': True, 'use_scale_xy': True, 'anchor_thresh': 4.0, 'area_thresh': 0.0, 'mosaic': {'max_resolution': 640, 'mosaic_frequency': 0.75, 'crop_area': [0.2, 1.0], 'crop_area_mosaic': [1.0, 1.0], 'aspect_ratio_mode': 'crop', 'mosaic_crop_mode': 'crop_scale', 'aug_scale_min': None, 'aug_scale_max': None, 'jitter': None, 'resize': None, 'output_resolution': None}}, 'tfds_download': True}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': True, 'darknet_load_decoder': True, 'init_checkpoint_modules': None, 'smart_bias_lr': 0.0}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': True, 'momentum': 0.937}}, 'ema': None, 'learning_rate': {'type': 'cosine', 'cosine': {'name': 'Cosine', 'initial_learning_rate': 0.0, 'decay_steps': 370000, 'alpha': 0.2}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 0}}, 'type': None}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 10000, 'summary_interval': 10000, 'checkpoint_interval': 10000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 100, 'validation_steps': 5000, 'validation_interval': 20000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'mirrored', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 1, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'float32', 'loss_scale': None, 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'num_classes': 80, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': True, '4': True, '5': True, 'all': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}
+InputSpec(shape=(None, 640, 640, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7f7807410460>
+Model: "altered_cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 640, 640, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 640, 640, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_residual_down (DarkRe (None, 320, 320, 64) 39552       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 160, 160, 64 91136       DarkRes_1_residual_down[0][0]    
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 160, 160, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 80, 80, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_3_0 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 80, 80, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 40, 40, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 40, 40, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 20, 20, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_5_0 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 20, 20, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,631,008
+Trainable params: 26,596,192
+Non-trainable params: 34,816
+__________________________________________________________________________________________________
+{'embed_spp': False, 'use_fpn': True, 'max_level_process_len': None, 'csp_stack': 5, 'fpn_depth': 5, 'path_process_len': 6, 'activation': 'mish', 'subdivisions': 1, 'use_spatial_attention': False, 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001, 'kernel_regularizer': <tensorflow.python.keras.regularizers.L2 object at 0x7f7807410460>}
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}
+{'3': 0.05, '4': 0.05, '5': 0.05, 'all': 0.05}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}[[0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+I0716 23:22:40.798028 140162721253184 dataset_builder.py:858] No config specified, defaulting to first: coco/2014
+I0716 23:22:40.798731 140162721253184 dataset_info.py:365] Load dataset info from /media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0
+I0716 23:22:40.800838 140162721253184 dataset_info.py:422] Field info.description from disk and from code do not match. Keeping the one from code.
+I0716 23:22:40.800940 140162721253184 dataset_info.py:422] Field info.config_description from disk and from code do not match. Keeping the one from code.
+I0716 23:22:40.801067 140162721253184 dataset_info.py:422] Field info.module_name from disk and from code do not match. Keeping the one from code.
+I0716 23:22:40.801185 140162721253184 dataset_builder.py:351] Reusing dataset coco (/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0)
+I0716 23:22:40.801261 140162721253184 logging_logger.py:33] Constructing tf.data.Dataset coco for split validation, from /media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0
+I0716 23:22:45.659658 140162721253184 controller.py:362] restoring or initializing model...
+
+{'3': 0.5, '4': 0.5, '5': 0.5, 'all': 0.5}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 1.0}
+Model: "YoloDecoder"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 80, 80, 256) 0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 40, 40, 512) 0                                            
+__________________________________________________________________________________________________
+input_4 (InputLayer)            [(None, 20, 20, 1024 0                                            
+__________________________________________________________________________________________________
+yolo_fpn (YoloFPN)              {'5': (None, 20, 20, 9626112     input_2[0][0]                    
+                                                                 input_3[0][0]                    
+                                                                 input_4[0][0]                    
+__________________________________________________________________________________________________
+yolo_pan (YoloPAN)              {'3': (None, 80, 80, 16271360    yolo_fpn[0][0]                   
+                                                                 yolo_fpn[0][1]                   
+                                                                 yolo_fpn[0][2]                   
+==================================================================================================
+Total params: 25,897,472
+Trainable params: 25,867,520
+Non-trainable params: 29,952
+__________________________________________________________________________________________________
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+altered_cspdarknet53 (Darkne OrderedDict([('3', (None, 26631008  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 80, 80, 256) 25897472  
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  457725    
+=================================================================
+Total params: 52,986,205
+Trainable params: 52,921,437
+Non-trainable params: 64,768
+_________________________________________________________________
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+<PrefetchDataset shapes: ((1, 640, 640, 3), {source_id: (1,), bbox: (1, 300, 4), classes: (1, 300), area: (1, 300), is_crowd: (1, 300), best_anchors: (1, 300, 9), best_iou_match: (1, 300, 9), width: (1,), height: (1,), info: (1, 4, 2), num_detections: (1,), upds: {3: (1, 2100, 8), 4: (1, 1800, 8), 5: (1, 1500, 8)}, inds: {3: (1, 2100, 3), 4: (1, 1800, 3), 5: (1, 1500, 3)}, true_conf: {3: (1, 80, 80, 3, 1), 4: (1, 40, 40, 3, 1), 5: (1, 20, 20, 3, 1)}}), types: (tf.float32, {source_id: tf.int64, bbox: tf.float32, classes: tf.float32, area: tf.float32, is_crowd: tf.int32, best_anchors: tf.float32, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.float32, num_detections: tf.int32, upds: {3: tf.float32, 4: tf.float32, 5: tf.float32}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float32, 4: tf.float32, 5: tf.float32}})>
+restoring or initializing model...
+64 seen
+major: 0
+minor: 2
+revision: 5
+iseen: 0
+{'_type': 'net', 'batch': 64, 'subdivisions': 8, 'width': 512, 'height': 512, 'channels': 3, 'momentum': 0.949, 'decay': 0.0005, 'angle': 0, 'saturation': 1.5, 'exposure': 1.5, 'hue': 0.1, 'learning_rate': 0.00261, 'burn_in': 1000, 'max_batches': 500500, 'policy': 'steps', 'steps': (400000, 450000), 'scales': (0.1, 0.1), 'mosaic': 1}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -10)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -16)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'maxpool', 'stride': 1, 'size': 5}
+{'_type': 'route', 'layers': -2}
+{'_type': 'maxpool', 'stride': 1, 'size': 9}
+{'_type': 'route', 'layers': -4}
+{'_type': 'maxpool', 'stride': 1, 'size': 13}
+{'_type': 'route', 'layers': (-1, -3, -5, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -13)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 79}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 48}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (0, 1, 2), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -20)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (3, 4, 5), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -49)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 1024, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (6, 7, 8), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+full net: 
+512 512 3	convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+512 512 32	convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+256 256 32	convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+256 256 64	shortcutCFG(_type='shortcut', w=256, h=256, c=64, _from=(-3,), activation='linear')
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-2,))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-1, -10))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-2,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -28))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-2,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -28))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -16))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=5)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=9)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-4,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=13)
+16 16 2048	routeCFG(_type='route', w=16, h=16, c=2048, layers=(-1, -3, -5, -6))
+16 16 2048	convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -13))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+16 16 256	upsampleCFG(_type='upsample', w=16, h=16, c=256, stride=2)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(79,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -3))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+32 32 128	upsampleCFG(_type='upsample', w=32, h=32, c=128, stride=2)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(48,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -3))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-2,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -6))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=255)
+64 64 255	yoloCFG(_type='yolo', w=64, h=64, c=255, mask=(0, 1, 2), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-4,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -20))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=255)
+32 32 255	yoloCFG(_type='yolo', w=32, h=32, c=255, mask=(3, 4, 5), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-4,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -49))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -6))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=255)
+16 16 255	yoloCFG(_type='yolo', w=16, h=16, c=255, mask=(6, 7, 8), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+bytes_read: 211944840, original_size: 211944840, final_position: 211944840
+ConvBN_0_0 convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+conv_bn convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+conv_bn_2 convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn_2 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_2 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+private__identity_route
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f78065b2af0>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f78065a7d90>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f78065b2df0>
+path conv
+path conv
+path conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f78065b27f0>
+path conv
+path conv
+path conv
+csp_route_1
+conv_bn_10
+conv_bn_11
+conv_bn_12
+csp_connect_1
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_10
+sync_batch_normalization_10
+conv2d_11
+sync_batch_normalization_11
+conv2d_12
+sync_batch_normalization_12
+conv2d_13
+sync_batch_normalization_13
+conv2d_14
+sync_batch_normalization_14
+concatenate_3
+conv2d_15
+sync_batch_normalization_15
+csp_route
+conv_bn
+conv_bn_1
+spp
+conv_bn_2
+conv_bn_3
+csp_connect
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+sync_batch_normalization
+conv2d_1
+sync_batch_normalization_1
+conv2d_2
+sync_batch_normalization_2
+conv2d_3
+sync_batch_normalization_3
+max_pooling2d
+max_pooling2d_1
+max_pooling2d_2
+conv2d_4
+sync_batch_normalization_4
+conv2d_5
+sync_batch_normalization_5
+concatenate_1
+conv2d_6
+sync_batch_normalization_6
+concatenate_4
+conv_bn_16
+conv_bn_17
+conv_bn_18
+conv2d_16
+sync_batch_normalization_16
+conv2d_17
+sync_batch_normalization_17
+conv2d_18
+sync_batch_normalization_18
+concatenate_2
+conv_bn_7
+conv_bn_8
+conv_bn_9
+conv2d_7
+sync_batch_normalization_7
+conv2d_8
+sync_batch_normalization_8
+conv2d_9
+sync_batch_normalization_9
+19 44
+conv_bn_5 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_6 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_1 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+conv_bn_3 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_4 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_7 256.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_8 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_10 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_11 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_12 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_13 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_16 128.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_17 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_18 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)I0716 23:22:46.505729 140162721253184 controller.py:368] initialized model.
+I0716 23:22:46.505876 140162721253184 train_lib.py:96] Starts to execute mode: train
+I0716 23:22:46.506494 140162721253184 controller.py:211] train | step:      0 | training until step 100...
+2021-07-16 23:22:47.064056: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2021-07-16 23:22:47.082581: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3499910000 Hz
+0
+2021-07-16 23:23:08.842987: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+0
+24
+2021-07-16 23:23:10.249046: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-16 23:23:10.569904: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-16 23:23:10.733786: I tensorflow/stream_executor/cuda/cuda_driver.cc:789] failed to allocate 3.83G (4117025280 bytes) from device: CUDA_ERROR_OUT_OF_MEMORY: out of memory
+30290 -0.14601852 0.0101966057 0.00983017497 0.00719990814 0.0272266883
+93
+126
+33
+580720 -0.190028042 0.0454783924 0.0944849327 0.0253752097 0.165338531
+0
+0
+18
+120398 -1.07598543 0.00361469574 0.00696966238 0.000868240371 0.0114525985
+0
+12
+24
+375376 -2.08995485 0.00668214587 0.0087716775 0.000445341168 0.0158991646
+93
+12
+6
+365485 -1.45367217 0.0338605121 0.0585497059 0.00991977938 0.10233
+3
+9
+3
+16241 0.58373785 0.00977107 0.00152879662 0.000647342589 0.011947209
+72
+93
+45
+212112 -2.4093411 0.0293806028 0.0696885362 0.0133297294 0.112398863
+0
+12
+15
+491294 5.97425652 0.0126708141 0.00849848613 0.000960797595 0.0221300982
+93
+96
+87
+70478 -1.3469367 0.0496900789 0.093963474 0.0135532739 0.157206833
+0
+0
+15
+415823 -2.53253269 0.00328063034 0.00916043669 0.00030324512 0.0127443122
+93
+39
+3
+259452 -1.30445302 0.0403901488 0.04523414 0.00727125 0.0928955451
+96
+120
+45
+475182 0.471569955 0.0493538342 0.133247033 0.00264583924 0.185246706
+0
+12
+21
+212198 -3.12209511 0.00644215941 0.00696600368 0.000827724696 0.0142358877
+0
+0
+6
+75162 5.27134037 0.00179505942 0.00161188561 0.000164477155 0.00357142207
+15
+33
+27
+319830 2.19027233 0.0372345112 0.0404996127 0.00367894676 0.0814130679
+6
+33
+36
+160260 -2.80131 0.0161389392 0.0397046953 0.000486609293 0.0563302413
+6
+30
+36
+116261 -0.883584857 0.00921709742 0.0208658408 0.00195563538 0.0320385732
+0
+18
+39
+224557 1.57165098 0.00985465199 0.0263389479 0.00981753 0.0460111275
+120
+36
+15
+402248 2.97462916 0.0393277593 0.0518611036 0.0212728139 0.112461671
+0
+0
+6
+259614 -4.0903511 0.00259018596 0.00287462235 0.000158820287 0.00562362839
+6
+21
+18
+118921 -0.2424483 0.0561784767 0.012988206 0.000766261306 0.0699329376
+0
+3
+6
+552656 1.60764122 0.00395586714 0.00338484254 0.000675307354 0.00801601727
+0
+9
+9
+316000 -2.76287341 0.0199999977 0.00729448954 0.000429836306 0.0277243219
+132
+96
+51
+46847 0.248403132 0.0472159 0.103099525 0.0058634528 0.156178892
+9
+36
+30
+220819 0.424362034 0.0125230672 0.0214409791 0.000746602076 0.0347106457
+12
+63
+33
+372819 -1.40353703 0.0285961628 0.022987321 0.0347544812 0.0863379613
+6
+18
+9
+109537 -5.88580799 0.0162910279 0.00821147 0.000712505833 0.0252150018
+0
+6
+18
+369667 4.34787607 0.00600730348 0.00618086103 0.000286563591 0.0124747287
+3
+9
+24
+238147 1.27735186 0.0222789235 0.0205506478 0.00278348499 0.0456130579
+9
+9
+3
+320370 5.52903032 0.0241777115 0.00390768098 0.000643989304 0.028729381
+0
+0
+0
+317130 0.0103021 0 0.000449791958 0 0.000449791958
+0
+12
+21
+464018 0.838711143 0.00903927907 0.0228513144 0.00183352153 0.0337241143
+9
+21
+15
+296759 4.24420643 0.0228173789 0.0352480859 0.00157156086 0.059637025
+9
+6
+9
+52017 0.0109356605 0.0531416535 0.00769912265 0.000427612977 0.061268393
+0
+0
+15
+33372 1.4886632 0.00437844219 0.0119110513 0.00323308702 0.0195225812
+0
+9
+15
+80671 1.5957284 0.0182804149 0.00961000752 0.000420920755 0.0283113439
+30
+33
+24
+259335 1.02219534 0.027360579 0.0170533881 0.0152390078 0.059652973
+24
+24
+9
+184205 -0.584438562 0.0182790216 0.0274980664 0.0284544937 0.0742315799
+3
+3
+15
+459887 4.58655643 0.0433752723 0.0143515132 0.0551574 0.112884186
+72
+63
+27
+389753 2.28410888 0.0414159149 0.0523948073 0.00562452199 0.09943524
+45
+45
+24
+197279 0.980132818 0.0249550659 0.0282423217 0.0011407166 0.0543381087
+57
+24
+9
+224554 -1.72608912 0.0433957167 0.0235948283 0.00145835395 0.0684489
+135
+123
+60
+246014 1.57021761 0.049866423 0.144245252 0.00796397775 0.202075645
+3
+9
+12
+486162 1.1242615 0.0131750619 0.0110362675 0.00837694202 0.0325882696
+6
+39
+51
+124429 0.262846947 0.0314122699 0.0664086714 0.0272592418 0.125080168
+3
+18
+21
+234807 0.807531834 0.00656164065 0.00474501774 0.000767198624 0.0120738558
+9
+18
+21
+294908 0.86771822 0.0114952773 0.0111021679 0.000758809387 0.023356257
+36
+54
+42
+192406 -1.26285052 0.0435359292 0.0764094368 0.00485339109 0.124798752
+0
+3
+15
+574411 -2.73806477 0.0261289068 0.00606301241 0.00720803905 0.0393999554
+0
+3
+21
+223241 -2.28657222 0.0409171246 0.0215634666 0.0306709521 0.0931515396
+0
+3
+18
+209728 0.11508058 0.00599743379 0.00485698879 0.000322897598 0.011177321
+129
+93
+18
+48133 -4.00525665 0.0444215648 0.090880014 0.00836059544 0.143662155
+0
+3
+15
+542388 1.15599978 0.00698868139 0.0136450967 0.000378808763 0.0210125856
+0
+0
+9
+377738 2.73876214 0.0206496511 0.0183878448 0.0349768251 0.074014321
+0
+0
+9
+173235 5.18373728 0.00359322433 0.0126976715 0.000378619 0.0166695155
+51
+93
+78
+517399 -0.490977645 0.0255326033 0.0657079 0.0221749544 0.113415457
+12
+33
+48
+394050 1.93694043 0.0296846628 0.0684594512 0.00739592966 0.105540037
+0
+15
+24
+101919 4.54629898 0.00867241155 0.0131882299 0.000393052818 0.022253694
+6
+15
+15
+155192 -0.695678055 0.0142060192 0.00662041735 0.000392408867 0.0212188456
+72
+36
+18
+226097 0.69399929 0.0362353586 0.0385403968 0.016563423 0.0913391858
+99
+87
+30
+355441 0.730282068 0.024810154 0.0443322137 0.00140164373 0.0705440119
+6
+6
+21
+212605 -0.102648914 0.0412566774 0.0377751887 0.00347028254 0.082502149
+27
+69
+57
+395904 -0.970166683 0.0176786315 0.0660460889 0.0179534 0.101678118
+24
+6
+9
+242868 1.62529278 0.0333809331 0.0187592581 0.00482075708 0.0569609441
+3
+21
+42
+573206 -1.37367094 0.0338183045 0.030316934 0.00150322064 0.0656384602
+0
+6
+9
+423396 -3.82071161 0.018407071 0.00351262372 0.000413121481 0.0223328173
+24
+36
+18
+293175 -1.47676682 0.0300613083 0.0391717032 0.0071746693 0.076407671
+0
+12
+33
+276146 0.486550868 0.00544970715 0.022960579 0.000564012676 0.0289742984
+9
+42
+51
+344548 0.812122881 0.0182491355 0.0249820985 0.000947737484 0.0441789739
+0
+9
+9
+260020 -0.221440688 0.00370265241 0.00128779816 0.000635341159 0.00562579185
+9
+18
+9
+406744 -4.27794504 0.0418529473 0.00907735806 0.000906072382 0.0518363751
+9
+12
+9
+467468 0.361678064 0.0214450117 0.0128568858 0.0040563629 0.0383582599
+12
+18
+6
+233140 0.192376077 0.00967862178 0.00795554742 0.00112183113 0.018756
+3
+9
+9
+473121 3.70515823 0.0218310058 0.0108399279 0.000516706903 0.0331876427
+57
+156
+117
+27642 0.148721769 0.0355446339 0.144328281 0.00494392496 0.184816852
+12
+21
+18
+30465 -0.0999217331 0.0154260239 0.0157578066 0.0248785429 0.0560623705
+12
+18
+6
+283441 3.69915533 0.0127440486 0.0169061869 0.00167153159 0.0313217677
+27
+33
+21
+466346 -0.213360548 0.0265051071 0.033326406 0.000695800409 0.0605273172
+3
+18
+9
+275058 1.67911661 0.0178556833 0.00737987831 0.00049328967 0.0257288516
+6
+27
+27
+322848 -3.16171074 0.0230431147 0.0305424556 0.00110785081 0.0546934195
+27
+60
+45
+253770 -0.581519 0.0280719493 0.054909952 0.000902831729 0.0838847384
+12
+78
+54
+239148 1.32302046 0.0277601425 0.0362622924 0.000586485141 0.0646089166
+45
+96
+60
+172595 0.309838 0.0374442115 0.0725911707 0.02440672 0.134442106
+0
+9
+15
+69959 -1.69684839 0.00398622127 0.00880660675 0.000577259401 0.0133700874
+0
+3
+18
+537907 2.84915757 0.0100741358 0.0138654169 0.00675448216 0.030694034
+6
+27
+21
+245049 -1.11796355 0.0131081166 0.00955191 0.000688881206 0.0233489089
+33
+21
+9
+250571 4.88506126 0.0302028842 0.0229287855 0.00198655017 0.0551182218
+30
+56
+68
+522665 -0.332885802 0.0334033035 0.0835119784 0.00422593299 0.12114121
+0
+9
+15
+232453 -0.151007 0.0149004702 0.0101405419 0.00121677434 0.026257785
+72
+114
+57
+237324 0.364753157 0.0401809961 0.0850063041 0.00979283731 0.134980127
+0
+6
+24
+180366 1.16210318 0.0092514893 0.0179079175 0.00780715421 0.0349665619
+0
+0
+18
+432906 3.70850563 0.00515099708 0.0149056958 0.00296435761 0.0230210498
+0
+3
+15
+113579 3.93653893 0.00815772451 0.00670400728 0.000384253275 0.0152459852
+60
+141
+105
+113720 1.99160123 0.0262491386 0.126506642 0.0121848136 0.164940596
+3
+24
+30
+463611 1.44996631 0.0154312616 0.0163150541 0.00325295795 0.0349992737
+3
+9
+3
+298137 0.50339824 0.00602222374 0.00105683587 0.000743202807 0.00782226212
+12
+18
+6
+485773 7.92299747 0.0135263698 0.00462323288 0.000613145356 0.0187627468
+0
+0
+15
+443818 1.72025061 0.00375873898 0.0133704217 0.0243921969 0.0415213555
+18
+12
+6
+18149 3.84932041 0.0390196405 0.0103450092 0.0280816127 0.0774462596
+15
+36
+30
+494846 0.399094939 0.0254295655 0.0299648196 0.00103577645 0.0564301647
+I0716 23:23:27.503206 140162721253184 controller.py:425] train | step:    100 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.5181635,
+           'avg_obj': 0.21107256,
+           'box_loss': 0.0076228175,
+           'class_loss': 0.0019475983,
+           'conf_loss': 0.009907953,
+           'precision50': 0.38497284,
+           'recall50': 0.2073428},
+     '4': {'avg_iou': 0.73510003,
+           'avg_obj': 0.41782477,
+           'box_loss': 0.00790193,
+           'class_loss': 0.0017892207,
+           'conf_loss': 0.0103954915,
+           'precision50': 0.63412386,
+           'recall50': 0.43356946},
+     '5': {'avg_iou': 0.8568264,
+           'avg_obj': 0.58895487,
+           'box_loss': 0.006711029,
+           'class_loss': 0.003004948,
+           'conf_loss': 0.010532026,
+           'precision50': 0.8087006,
+           'recall50': 0.64753073},
+     'global': {'total_box': 0.022235775,
+                'total_class': 0.006741767,
+                'total_conf': 0.030835472,
+                'total_loss': 0.059813034},
+     'learning_rate': 0.0,
+     'training_loss': 0.059813034}
+I0716 23:23:28.334993 140162721253184 controller.py:455] saved checkpoint to ../checkpoints/sdssfsffd/ckpt-100.
+I0716 23:23:28.347245 140162721253184 train_lib.py:122] Number of trainable params in model: 52.986205 Millions.
+
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f78064d5130>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f78064d5a90>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_2
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f78064c70a0>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f78064d5250>
+path conv
+path conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f78064d5be0>
+path conv
+path conv
+csp_route
+conv_bn
+conv_bn_1
+conv_bn_2
+csp_connect
+conv_bn_3
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+sync_batch_normalization
+conv2d_1
+sync_batch_normalization_1
+conv2d_2
+sync_batch_normalization_2
+conv2d_3
+sync_batch_normalization_3
+conv2d_4
+sync_batch_normalization_4
+concatenate
+conv2d_5
+sync_batch_normalization_5
+conv2d_6
+sync_batch_normalization_6
+csp_route_1
+conv_bn_9
+conv_bn_10
+conv_bn_11
+csp_connect_1
+conv_bn_12
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_9
+sync_batch_normalization_9
+conv2d_10
+sync_batch_normalization_10
+conv2d_11
+sync_batch_normalization_11
+conv2d_12
+sync_batch_normalization_12
+conv2d_13
+sync_batch_normalization_13
+concatenate_2
+conv2d_14
+sync_batch_normalization_14
+conv2d_15
+sync_batch_normalization_15
+csp_route_2
+conv_bn_18
+conv_bn_19
+conv_bn_20
+csp_connect_2
+conv_bn_21
+conv_bn_22
+conv_bn_23
+conv_bn_24
+conv2d_18
+sync_batch_normalization_18
+conv2d_19
+sync_batch_normalization_19
+conv2d_20
+sync_batch_normalization_20
+conv2d_21
+sync_batch_normalization_21
+conv2d_22
+sync_batch_normalization_22
+concatenate_4
+conv2d_23
+sync_batch_normalization_23
+conv2d_24
+sync_batch_normalization_24
+concatenate_1
+conv_bn_7
+conv_bn_8
+conv2d_7
+sync_batch_normalization_7
+conv2d_8
+sync_batch_normalization_8
+concatenate_3
+conv_bn_16
+conv_bn_17
+conv2d_16
+sync_batch_normalization_16
+conv2d_17
+sync_batch_normalization_17
+25 25
+conv_bn_5 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_6 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_1 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_3 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_4 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+conv_bn_7 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_8 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_10 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_11 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_12 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_13 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+conv_bn_16 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_17 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_23 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_24 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_18 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_19 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_20 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_21 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_22 1024 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+initialized model.
+train | step:      0 | training until step 100...
+train | step:    100 | steps/sec:    2.4 | output: 
+    {'3': {'avg_iou': 0.5181635,
+           'avg_obj': 0.21107256,
+           'box_loss': 0.0076228175,
+           'class_loss': 0.0019475983,
+           'conf_loss': 0.009907953,
+           'precision50': 0.38497284,
+           'recall50': 0.2073428},
+     '4': {'avg_iou': 0.73510003,
+           'avg_obj': 0.41782477,
+           'box_loss': 0.00790193,
+           'class_loss': 0.0017892207,
+           'conf_loss': 0.0103954915,
+           'precision50': 0.63412386,
+           'recall50': 0.43356946},
+     '5': {'avg_iou': 0.8568264,
+           'avg_obj': 0.58895487,
+           'box_loss': 0.006711029,
+           'class_loss': 0.003004948,
+           'conf_loss': 0.010532026,
+           'precision50': 0.8087006,
+           'recall50': 0.64753073},
+     'global': {'total_box': 0.022235775,
+                'total_class': 0.006741767,
+                'total_conf': 0.030835472,
+                'total_loss': 0.059813034},
+     'learning_rate': 0.0,
+     'training_loss': 0.059813034}
+saved checkpoint to ../checkpoints/sdssfsffd/ckpt-100.

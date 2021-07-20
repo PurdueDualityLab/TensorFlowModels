@@ -1,0 +1,4673 @@
+2021-07-19 21:53:11.006563: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-19 21:53:12.020015: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-19 21:53:12.020650: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2021-07-19 21:53:12.054378: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-19 21:53:12.054457: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-19 21:53:12.058612: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-19 21:53:12.058736: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-19 21:53:12.060523: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-19 21:53:12.060899: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-19 21:53:12.064648: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-19 21:53:12.065129: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-19 21:53:12.065219: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-19 21:53:12.066131: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-19 21:53:12.066464: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-07-19 21:53:12.067144: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-19 21:53:12.067706: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-19 21:53:12.067728: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-19 21:53:12.067752: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-19 21:53:12.067762: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-19 21:53:12.067771: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-19 21:53:12.067780: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-19 21:53:12.067789: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-19 21:53:12.067798: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-19 21:53:12.067807: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-19 21:53:12.068766: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-19 21:53:12.068793: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-19 21:53:12.426653: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-07-19 21:53:12.426700: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2021-07-19 21:53:12.426707: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2021-07-19 21:53:12.427928: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 6969 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2070 SUPER, pci bus id: 0000:65:00.0, compute capability: 7.5)
+I0719 21:53:13.059660 139672348555072 train_utils.py:285] Final experiment parameters: {'runtime': {'all_reduce_alg': None,
+             'batchnorm_spatial_persistent': False,
+             'dataset_num_private_threads': None,
+             'default_shard_dim': -1,
+             'distribution_strategy': 'mirrored',
+             'enable_xla': False,
+             'gpu_thread_mode': None,
+             'loss_scale': 'dynamic',
+             'mixed_precision_dtype': 'float16',
+             'num_cores_per_replica': 1,
+             'num_gpus': 1,
+             'num_packs': 1,
+             'per_gpu_thread_count': 0,
+             'run_eagerly': False,
+             'task_index': -1,
+             'tpu': None,
+             'worker_hosts': None},
+ 'task': {'annotation_file': None,
+          'darknet_load_decoder': True,
+          'gradient_clip_norm': 0.0,
+          'init_checkpoint': '',
+          'init_checkpoint_modules': None,
+          'load_darknet_weights': True,
+          'model': {'base': {'type': None},
+                    'boxes': ['[12.0, 16.0]',
+                              '[19.0, 36.0]',
+                              '[40.0, 28.0]',
+                              '[36.0, 75.0]',
+                              '[76.0, 55.0]',
+                              '[72.0, 146.0]',
+                              '[142.0, 110.0]',
+                              '[192.0, 243.0]',
+                              '[459.0, 401.0]'],
+                    'boxes_per_scale': 3,
+                    'filter': {'anchor_generation_scale': 512,
+                               'cls_normalizer': {'3': 1.0,
+                                                  '4': 1.0,
+                                                  '5': 1.0,
+                                                  'all': 0.5},
+                               'darknet': None,
+                               'ignore_thresh': {'3': 0.7,
+                                                 '4': 0.7,
+                                                 '5': 0.7,
+                                                 'all': None},
+                               'iou_normalizer': {'3': 0.75,
+                                                  '4': 0.75,
+                                                  '5': 0.75,
+                                                  'all': 0.05},
+                               'iou_thresh': 0.001,
+                               'label_smoothing': 0.0,
+                               'loss_type': {'3': 'ciou',
+                                             '4': 'ciou',
+                                             '5': 'ciou',
+                                             'all': 'ciou'},
+                               'max_boxes': 300,
+                               'max_delta': {'3': inf,
+                                             '4': inf,
+                                             '5': inf,
+                                             'all': None},
+                               'max_level': 5,
+                               'min_level': 3,
+                               'new_cords': {'3': True,
+                                             '4': True,
+                                             '5': True,
+                                             'all': True},
+                               'nms_thresh': 0.6,
+                               'nms_type': 'greedy',
+                               'obj_normalizer': {'3': 4.0,
+                                                  '4': 1.0,
+                                                  '5': 0.4,
+                                                  'all': None},
+                               'objectness_smooth': {'3': 0.0,
+                                                     '4': 0.0,
+                                                     '5': 0.0,
+                                                     'all': 1.0},
+                               'path_scales': {'3': 8, '4': 16, '5': 32},
+                               'pre_nms_points': 5000,
+                               'scale_xy': {'3': 2.0,
+                                            '4': 2.0,
+                                            '5': 2.0,
+                                            'all': 2.0},
+                               'truth_thresh': {'3': 1.0,
+                                                '4': 1.0,
+                                                '5': 1.0,
+                                                'all': None},
+                               'use_scaled_loss': True},
+                    'input_size': [640, 640, 3],
+                    'max_level': 5,
+                    'min_level': 3,
+                    'norm_activation': {'activation': 'mish',
+                                        'norm_epsilon': 0.0001,
+                                        'norm_momentum': 0.97,
+                                        'use_sync_bn': True},
+                    'num_classes': 80,
+                    'smart_bias': True,
+                    'subdivisions': 1},
+          'per_category_metrics': False,
+          'smart_bias_lr': 0.0,
+          'train_data': {'block_length': 1,
+                         'cache': False,
+                         'cycle_length': None,
+                         'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                     'type': 'simple_decoder'},
+                         'deterministic': None,
+                         'drop_remainder': True,
+                         'dtype': 'float32',
+                         'enable_tf_data_service': False,
+                         'global_batch_size': 1,
+                         'input_path': '',
+                         'is_training': False,
+                         'parser': {'anchor_thresh': 4.0,
+                                    'area_thresh': 0.0,
+                                    'aug_rand_angle': 0.0,
+                                    'aug_rand_brightness': 0.0,
+                                    'aug_rand_hue': 0.0,
+                                    'aug_rand_saturation': 0.0,
+                                    'aug_rand_translate': 0.0,
+                                    'aug_scale_max': 1.0,
+                                    'aug_scale_min': 1.0,
+                                    'best_match_only': False,
+                                    'jitter': 0.0,
+                                    'jitter_mosaic': 0.0,
+                                    'letter_box': True,
+                                    'max_num_instances': 300,
+                                    'mosaic': {'aspect_ratio_mode': 'crop',
+                                               'aug_scale_max': None,
+                                               'aug_scale_min': None,
+                                               'crop_area': [0.2, 1.0],
+                                               'crop_area_mosaic': [1.0, 1.0],
+                                               'jitter': None,
+                                               'max_resolution': 640,
+                                               'mosaic_crop_mode': 'crop_scale',
+                                               'mosaic_frequency': 0.0,
+                                               'output_resolution': None,
+                                               'resize': None},
+                                    'mosaic_scale_max': 1.0,
+                                    'mosaic_scale_min': 1.0,
+                                    'mosaic_translate': 0.0,
+                                    'random_flip': False,
+                                    'random_pad': False,
+                                    'resize': 1.0,
+                                    'resize_mosaic': 1.0,
+                                    'sheer': 0.0,
+                                    'use_scale_xy': True,
+                                    'use_tie_breaker': True},
+                         'seed': None,
+                         'sharding': True,
+                         'shuffle_buffer_size': 2,
+                         'tf_data_service_address': None,
+                         'tf_data_service_job_name': None,
+                         'tfds_as_supervised': False,
+                         'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow',
+                         'tfds_download': True,
+                         'tfds_name': 'coco',
+                         'tfds_skip_decoding_feature': '',
+                         'tfds_split': 'validation'},
+          'validation_data': {'block_length': 1,
+                              'cache': False,
+                              'cycle_length': None,
+                              'decoder': {'simple_decoder': {'regenerate_source_id': False},
+                                          'type': 'simple_decoder'},
+                              'deterministic': None,
+                              'drop_remainder': True,
+                              'dtype': 'float32',
+                              'enable_tf_data_service': False,
+                              'global_batch_size': 1,
+                              'input_path': '',
+                              'is_training': False,
+                              'parser': {'anchor_thresh': 4.0,
+                                         'area_thresh': 0.1,
+                                         'aug_rand_angle': 0.0,
+                                         'aug_rand_brightness': 0.0,
+                                         'aug_rand_hue': 0.0,
+                                         'aug_rand_saturation': 0.0,
+                                         'aug_rand_translate': 0.0,
+                                         'aug_scale_max': 1.0,
+                                         'aug_scale_min': 1.0,
+                                         'best_match_only': False,
+                                         'jitter': 0.0,
+                                         'jitter_mosaic': 0.0,
+                                         'letter_box': True,
+                                         'max_num_instances': 200,
+                                         'mosaic': {'aspect_ratio_mode': 'crop',
+                                                    'aug_scale_max': None,
+                                                    'aug_scale_min': None,
+                                                    'crop_area': [0.2, 1.0],
+                                                    'crop_area_mosaic': [1.0,
+                                                                         1.0],
+                                                    'jitter': None,
+                                                    'max_resolution': 640,
+                                                    'mosaic_crop_mode': 'crop_scale',
+                                                    'mosaic_frequency': 0.75,
+                                                    'output_resolution': None,
+                                                    'resize': None},
+                                         'mosaic_scale_max': 1.0,
+                                         'mosaic_scale_min': 1.0,
+                                         'mosaic_translate': 0.0,
+                                         'random_flip': True,
+                                         'random_pad': True,
+                                         'resize': 1.0,
+                                         'resize_mosaic': 1.0,
+                                         'sheer': 0.0,
+                                         'use_scale_xy': True,
+                                         'use_tie_breaker': True},
+                              'seed': None,
+                              'sharding': True,
+                              'shuffle_buffer_size': 2,
+                              'tf_data_service_address': None,
+                              'tf_data_service_job_name': None,
+                              'tfds_as_supervised': False,
+                              'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow',
+                              'tfds_download': True,
+                              'tfds_name': 'coco',
+                              'tfds_skip_decoding_feature': '',
+                              'tfds_split': 'validation'},
+          'weight_decay': 0.0005},
+ 'trainer': {'allow_tpu_summary': False,
+             'best_checkpoint_eval_metric': '',
+             'best_checkpoint_export_subdir': '',
+             'best_checkpoint_metric_comp': 'higher',
+             'checkpoint_interval': 10000,
+             'continuous_eval_timeout': 3600,
+             'eval_tf_function': True,
+             'eval_tf_while_loop': False,
+             'loss_upper_bound': 1000000.0,
+             'max_to_keep': 5,
+             'optimizer_config': {'ema': None,
+                                  'learning_rate': {'cosine_epoch': {'alpha': 0.2,
+                                                                     'decay_steps': 370000,
+                                                                     'initial_learning_rate': 0.0,
+                                                                     'name': 'Cosine',
+                                                                     'steps_per_epoch': 1875},
+                                                    'type': 'cosine_epoch'},
+                                  'optimizer': {'sgd': {'clipnorm': None,
+                                                        'clipvalue': None,
+                                                        'decay': 0.0,
+                                                        'global_clipnorm': None,
+                                                        'momentum': 0.937,
+                                                        'name': 'SGD',
+                                                        'nesterov': True},
+                                                'type': 'sgd'},
+                                  'type': None,
+                                  'warmup': {'linear': {'name': 'linear',
+                                                        'warmup_learning_rate': 0,
+                                                        'warmup_steps': 0},
+                                             'type': 'linear'}},
+             'recovery_begin_steps': 0,
+             'recovery_max_trials': 0,
+             'steps_per_loop': 10000,
+             'summary_interval': 10000,
+             'train_steps': 5000,
+             'train_tf_function': True,
+             'train_tf_while_loop': True,
+             'validation_interval': 20000,
+             'validation_steps': 5000}}
+I0719 21:53:13.060118 139672348555072 train_utils.py:295] Saving experiment configuration to ../checkpoints/sdssfsffhfd/params.yaml
+2021-07-19 21:53:13.072040: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: GeForce RTX 2070 SUPER, compute capability 7.5
+I0719 21:53:13.072571 139672348555072 device_compatibility_check.py:120] Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: GeForce RTX 2070 SUPER, compute capability 7.5
+WARNING:tensorflow:From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+W0719 21:53:13.072694 139672348555072 deprecation.py:333] From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+I0719 21:53:13.076023 139672348555072 mirrored_strategy.py:350] Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+I0719 21:53:13.076581 139672348555072 train_utils.py:214] Running default trainer.
+2021-07-19 21:53:13.194363: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.244050 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.244846 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.245958 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.246409 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.247403 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.249212 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.329328 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.329938 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.330814 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+INFO:tensorflow:Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+I0719 21:53:13.331374 139672348555072 cross_device_ops.py:563] Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+
+!--PREPPING GPU--! 
+1 Physical GPUs, 1 Logical GPUs
+yolo_custom
+{'task': {'init_checkpoint': '', 'model': {'num_classes': 80, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': True, '4': True, '5': True, 'all': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}, 'train_data': {'input_path': '', 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 1, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow', 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'seed': None, 'dtype': 'float32', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'max_num_instances': 300, 'letter_box': True, 'random_flip': False, 'random_pad': False, 'jitter': 0.0, 'resize': 1.0, 'jitter_mosaic': 0.0, 'resize_mosaic': 1.0, 'sheer': 0.0, 'aug_rand_angle': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_hue': 0.0, 'aug_scale_min': 1.0, 'aug_scale_max': 1.0, 'aug_rand_translate': 0.0, 'mosaic_scale_min': 1.0, 'mosaic_scale_max': 1.0, 'mosaic_translate': 0.0, 'use_tie_breaker': True, 'use_scale_xy': True, 'best_match_only': False, 'anchor_thresh': 4.0, 'area_thresh': 0.0, 'mosaic': {'max_resolution': 640, 'mosaic_frequency': 0.0, 'crop_area': [0.2, 1.0], 'crop_area_mosaic': [1.0, 1.0], 'aspect_ratio_mode': 'crop', 'mosaic_crop_mode': 'crop_scale', 'aug_scale_min': None, 'aug_scale_max': None, 'jitter': None, 'resize': None, 'output_resolution': None}}, 'tfds_download': True}, 'validation_data': {'input_path': '', 'tfds_name': 'coco', 'tfds_split': 'validation', 'global_batch_size': 1, 'is_training': False, 'drop_remainder': True, 'shuffle_buffer_size': 2, 'cache': False, 'cycle_length': None, 'block_length': 1, 'deterministic': None, 'sharding': True, 'enable_tf_data_service': False, 'tf_data_service_address': None, 'tf_data_service_job_name': None, 'tfds_data_dir': '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow', 'tfds_as_supervised': False, 'tfds_skip_decoding_feature': '', 'seed': None, 'dtype': 'float32', 'decoder': {'type': 'simple_decoder', 'simple_decoder': {'regenerate_source_id': False}}, 'parser': {'max_num_instances': 200, 'letter_box': True, 'random_flip': True, 'random_pad': True, 'jitter': 0.0, 'resize': 1.0, 'jitter_mosaic': 0.0, 'resize_mosaic': 1.0, 'sheer': 0.0, 'aug_rand_angle': 0.0, 'aug_rand_saturation': 0.0, 'aug_rand_brightness': 0.0, 'aug_rand_hue': 0.0, 'aug_scale_min': 1.0, 'aug_scale_max': 1.0, 'aug_rand_translate': 0.0, 'mosaic_scale_min': 1.0, 'mosaic_scale_max': 1.0, 'mosaic_translate': 0.0, 'use_tie_breaker': True, 'use_scale_xy': True, 'best_match_only': False, 'anchor_thresh': 4.0, 'area_thresh': 0.1, 'mosaic': {'max_resolution': 640, 'mosaic_frequency': 0.75, 'crop_area': [0.2, 1.0], 'crop_area_mosaic': [1.0, 1.0], 'aspect_ratio_mode': 'crop', 'mosaic_crop_mode': 'crop_scale', 'aug_scale_min': None, 'aug_scale_max': None, 'jitter': None, 'resize': None, 'output_resolution': None}}, 'tfds_download': True}, 'weight_decay': 0.0005, 'annotation_file': None, 'gradient_clip_norm': 0.0, 'per_category_metrics': False, 'load_darknet_weights': True, 'darknet_load_decoder': True, 'init_checkpoint_modules': None, 'smart_bias_lr': 0.0}, 'trainer': {'optimizer_config': {'optimizer': {'type': 'sgd', 'sgd': {'clipnorm': None, 'clipvalue': None, 'global_clipnorm': None, 'name': 'SGD', 'decay': 0.0, 'nesterov': True, 'momentum': 0.937}}, 'ema': None, 'learning_rate': {'type': 'cosine_epoch', 'cosine_epoch': {'name': 'Cosine', 'initial_learning_rate': 0.0, 'decay_steps': 370000, 'steps_per_epoch': 1875, 'alpha': 0.2}}, 'warmup': {'type': 'linear', 'linear': {'name': 'linear', 'warmup_learning_rate': 0, 'warmup_steps': 0}}, 'type': None}, 'train_tf_while_loop': True, 'train_tf_function': True, 'eval_tf_function': True, 'eval_tf_while_loop': False, 'allow_tpu_summary': False, 'steps_per_loop': 10000, 'summary_interval': 10000, 'checkpoint_interval': 10000, 'max_to_keep': 5, 'continuous_eval_timeout': 3600, 'train_steps': 5000, 'validation_steps': 5000, 'validation_interval': 20000, 'best_checkpoint_export_subdir': '', 'best_checkpoint_eval_metric': '', 'best_checkpoint_metric_comp': 'higher', 'loss_upper_bound': 1000000.0, 'recovery_begin_steps': 0, 'recovery_max_trials': 0}, 'runtime': {'distribution_strategy': 'mirrored', 'enable_xla': False, 'gpu_thread_mode': None, 'dataset_num_private_threads': None, 'per_gpu_thread_count': 0, 'tpu': None, 'num_gpus': 1, 'worker_hosts': None, 'task_index': -1, 'all_reduce_alg': None, 'num_packs': 1, 'mixed_precision_dtype': 'float16', 'loss_scale': 'dynamic', 'run_eagerly': False, 'batchnorm_spatial_persistent': False, 'num_cores_per_replica': 1, 'default_shard_dim': -1}}
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'num_classes': 80, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': True, '4': True, '5': True, 'all': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}
+InputSpec(shape=(None, 640, 640, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7f05dac23490>
+Model: "altered_cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 640, 640, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 640, 640, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_residual_down (DarkRe (None, 320, 320, 64) 39552       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 160, 160, 64 91136       DarkRes_1_residual_down[0][0]    
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 160, 160, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 80, 80, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_3_0 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 80, 80, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 40, 40, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 40, 40, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 20, 20, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_5_0 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 20, 20, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,631,008
+Trainable params: 26,596,192
+Non-trainable params: 34,816
+__________________________________________________________________________________________________
+{'embed_spp': False, 'use_fpn': True, 'max_level_process_len': None, 'csp_stack': 5, 'fpn_depth': 5, 'path_process_len': 6, 'activation': 'mish', 'subdivisions': 1, 'use_spatial_attention': False, 'use_sync_bn': True, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001, 'kernel_regularizer': <tensorflow.python.keras.regularizers.L2 object at 0x7f05dac23490>}
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}[[0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
+  opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
+W0719 21:53:18.362643 139672348555072 loss_scale_optimizer.py:1039] tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
+  opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
+I0719 21:53:18.595797 139672348555072 dataset_builder.py:858] No config specified, defaulting to first: coco/2014
+I0719 21:53:18.596421 139672348555072 dataset_info.py:365] Load dataset info from /media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0
+I0719 21:53:18.598339 139672348555072 dataset_info.py:422] Field info.description from disk and from code do not match. Keeping the one from code.
+I0719 21:53:18.598420 139672348555072 dataset_info.py:422] Field info.config_description from disk and from code do not match. Keeping the one from code.
+I0719 21:53:18.598527 139672348555072 dataset_info.py:422] Field info.module_name from disk and from code do not match. Keeping the one from code.
+I0719 21:53:18.598651 139672348555072 dataset_builder.py:351] Reusing dataset coco (/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0)
+I0719 21:53:18.598723 139672348555072 logging_logger.py:33] Constructing tf.data.Dataset coco for split validation, from /media/vbanna/DATA_SHARE/CV/datasets/tensorflow/coco/2014/1.1.0
+I0719 21:53:23.322247 139672348555072 controller.py:362] restoring or initializing model...
+
+{'3': 0.05, '4': 0.05, '5': 0.05, 'all': 0.05}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}
+{'3': 0.5, '4': 0.5, '5': 0.5, 'all': 0.5}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 1.0}
+Model: "YoloDecoder"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 80, 80, 256) 0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 40, 40, 512) 0                                            
+__________________________________________________________________________________________________
+input_4 (InputLayer)            [(None, 20, 20, 1024 0                                            
+__________________________________________________________________________________________________
+yolo_fpn (YoloFPN)              {'5': (None, 20, 20, 9626112     input_2[0][0]                    
+                                                                 input_3[0][0]                    
+                                                                 input_4[0][0]                    
+__________________________________________________________________________________________________
+yolo_pan (YoloPAN)              {'3': (None, 80, 80, 16271360    yolo_fpn[0][0]                   
+                                                                 yolo_fpn[0][1]                   
+                                                                 yolo_fpn[0][2]                   
+==================================================================================================
+Total params: 25,897,472
+Trainable params: 25,867,520
+Non-trainable params: 29,952
+__________________________________________________________________________________________________
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+altered_cspdarknet53 (Darkne OrderedDict([('3', (None, 26631008  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 80, 80, 256) 25897472  
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  457725    
+=================================================================
+Total params: 52,986,205
+Trainable params: 52,921,437
+Non-trainable params: 64,768
+_________________________________________________________________
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+<PrefetchDataset shapes: ((1, 640, 640, 3), {source_id: (1,), bbox: (1, 300, 4), classes: (1, 300), area: (1, 300), is_crowd: (1, 300), best_anchors: (1, 300, 9), best_iou_match: (1, 300, 9), width: (1,), height: (1,), info: (1, 4, 2), num_detections: (1,), upds: {3: (1, 2100, 8), 4: (1, 1800, 8), 5: (1, 1500, 8)}, inds: {3: (1, 2100, 3), 4: (1, 1800, 3), 5: (1, 1500, 3)}, true_conf: {3: (1, 80, 80, 3, 1), 4: (1, 40, 40, 3, 1), 5: (1, 20, 20, 3, 1)}}), types: (tf.float32, {source_id: tf.int64, bbox: tf.float32, classes: tf.float32, area: tf.float32, is_crowd: tf.int32, best_anchors: tf.float32, best_iou_match: tf.float32, width: tf.int32, height: tf.int32, info: tf.float32, num_detections: tf.int32, upds: {3: tf.float32, 4: tf.float32, 5: tf.float32}, inds: {3: tf.int32, 4: tf.int32, 5: tf.int32}, true_conf: {3: tf.float32, 4: tf.float32, 5: tf.float32}})>
+restoring or initializing model...
+64 seen
+major: 0
+minor: 2
+revision: 5
+iseen: 0
+{'_type': 'net', 'batch': 64, 'subdivisions': 8, 'width': 512, 'height': 512, 'channels': 3, 'momentum': 0.949, 'decay': 0.0005, 'angle': 0, 'saturation': 1.5, 'exposure': 1.5, 'hue': 0.1, 'learning_rate': 0.00261, 'burn_in': 1000, 'max_batches': 500500, 'policy': 'steps', 'steps': (400000, 450000), 'scales': (0.1, 0.1), 'mosaic': 1}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -10)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -16)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'maxpool', 'stride': 1, 'size': 5}
+{'_type': 'route', 'layers': -2}
+{'_type': 'maxpool', 'stride': 1, 'size': 9}
+{'_type': 'route', 'layers': -4}
+{'_type': 'maxpool', 'stride': 1, 'size': 13}
+{'_type': 'route', 'layers': (-1, -3, -5, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -13)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 79}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 48}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (0, 1, 2), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -20)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (3, 4, 5), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -49)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 1024, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (6, 7, 8), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+full net: 
+512 512 3	convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+512 512 32	convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+256 256 32	convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+256 256 64	shortcutCFG(_type='shortcut', w=256, h=256, c=64, _from=(-3,), activation='linear')
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-2,))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-1, -10))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-2,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -28))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-2,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -28))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -16))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=5)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=9)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-4,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=13)
+16 16 2048	routeCFG(_type='route', w=16, h=16, c=2048, layers=(-1, -3, -5, -6))
+16 16 2048	convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -13))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+16 16 256	upsampleCFG(_type='upsample', w=16, h=16, c=256, stride=2)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(79,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -3))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+32 32 128	upsampleCFG(_type='upsample', w=32, h=32, c=128, stride=2)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(48,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -3))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-2,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -6))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=255)
+64 64 255	yoloCFG(_type='yolo', w=64, h=64, c=255, mask=(0, 1, 2), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-4,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -20))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=255)
+32 32 255	yoloCFG(_type='yolo', w=32, h=32, c=255, mask=(3, 4, 5), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-4,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -49))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -6))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=255)
+16 16 255	yoloCFG(_type='yolo', w=16, h=16, c=255, mask=(6, 7, 8), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+bytes_read: 211944840, original_size: 211944840, final_position: 211944840
+ConvBN_0_0 convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+conv_bn convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+conv_bn_2 convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn_2 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_2 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+private__identity_route
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f05d9c457c0>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f05d9c4fe50>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f05d9beeaf0>
+path conv
+path conv
+path conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f05d9c9f7f0>
+path conv
+path conv
+path conv
+csp_route_1
+conv_bn_10
+conv_bn_11
+conv_bn_12
+csp_connect_1
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_10
+sync_batch_normalization_10
+conv2d_11
+sync_batch_normalization_11
+conv2d_12
+sync_batch_normalization_12
+conv2d_13
+sync_batch_normalization_13
+conv2d_14
+sync_batch_normalization_14
+concatenate_3
+conv2d_15
+sync_batch_normalization_15
+csp_route
+conv_bn
+conv_bn_1
+spp
+conv_bn_2
+conv_bn_3
+csp_connect
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+sync_batch_normalization
+conv2d_1
+sync_batch_normalization_1
+conv2d_2
+sync_batch_normalization_2
+conv2d_3
+sync_batch_normalization_3
+max_pooling2d
+max_pooling2d_1
+max_pooling2d_2
+conv2d_4
+sync_batch_normalization_4
+conv2d_5
+sync_batch_normalization_5
+concatenate_1
+conv2d_6
+sync_batch_normalization_6
+concatenate_4
+conv_bn_16
+conv_bn_17
+conv_bn_18
+conv2d_16
+sync_batch_normalization_16
+conv2d_17
+sync_batch_normalization_17
+conv2d_18
+sync_batch_normalization_18
+concatenate_2
+conv_bn_7
+conv_bn_8
+conv_bn_9
+conv2d_7
+sync_batch_normalization_7
+conv2d_8
+sync_batch_normalization_8
+conv2d_9
+sync_batch_normalization_9
+19 44
+conv_bn_5 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_6 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_1 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+conv_bn_3 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_4 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_7 256.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_8 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_10 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_11 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_12 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_13 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_16 128.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_17 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)I0719 21:53:24.307296 139672348555072 controller.py:368] initialized model.
+I0719 21:53:24.307438 139672348555072 train_lib.py:96] Starts to execute mode: train
+I0719 21:53:24.308007 139672348555072 controller.py:211] train | step:      0 | training until step 5000...
+2021-07-19 21:53:24.873946: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2021-07-19 21:53:24.891999: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3499910000 Hz
+2021-07-19 21:54:12.275262: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+0
+0
+24
+2021-07-19 21:54:13.508431: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-19 21:54:13.837267: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+30290 0.0446394347 0.0278278627 0.0159064122 0.0267107692 0.0704450384
+138
+114
+18
+580720 0.0925768614 0.0682806596 0.133336335 0.052276887 0.253893852
+0
+0
+18
+120398 0.0279206373 0.00692192186 0.0195642188 0.0112099051 0.0376960486
+0
+12
+27
+375376 0.0861936584 0.00922564603 0.0127264513 0.0340889543 0.0560410544
+84
+9
+6
+365485 0.385121107 0.0517674088 0.0568879917 0.0404292196 0.149084613
+3
+6
+3
+16241 1.80775023 0.0214132071 0.0109215556 0.0688728 0.101207562
+81
+96
+48
+212112 0.055666171 0.0305974372 0.0763709247 0.0209448636 0.127913222
+0
+12
+18
+491294 0.0835575089 0.0163619686 0.0406896472 0.0776357651 0.134687379
+99
+105
+90
+70478 0.0198899265 0.0535549782 0.104852773 0.0206184015 0.179026157
+0
+0
+15
+415823 0.0839305818 0.00688020373 0.0169054642 0.0472950898 0.0710807592
+87
+30
+0
+259452 0.000262261718 0.0384282656 0.0492208488 0.00283250888 0.090481624
+111
+123
+45
+475182 0.0291147474 0.0719502717 0.16574651 0.023293443 0.260990202
+0
+12
+21
+212198 0.115195647 0.0103469854 0.0102961287 0.00235237041 0.022995485
+0
+0
+9
+75162 0.185186312 0.00325881015 0.0032206641 0.000733037188 0.00721251126
+12
+33
+27
+319830 0.129997537 0.0408228301 0.0538226552 0.0208602678 0.115505755
+6
+36
+30
+160260 0.0127040502 0.0718584433 0.0779571 0.0867282748 0.236543819
+12
+36
+36
+116261 0.0531304106 0.0151564702 0.0324903131 0.00325602829 0.0509028137
+3
+24
+39
+224557 0.0297316313 0.0154166315 0.0225067921 0.0349518135 0.0728752315
+114
+21
+18
+402248 0.0523812175 0.047971148 0.0500832088 0.0221120641 0.120166421
+0
+0
+9
+259614 0.12113943 0.0074438462 0.00896718726 0.00419884035 0.0206098743
+9
+18
+18
+118921 0.15922606 0.0455492437 0.0229312479 0.00105617964 0.069536671
+0
+3
+6
+552656 0.955539048 0.0191173833 0.00958642922 0.0561893508 0.084893167
+0
+9
+9
+316000 0.185493201 0.0159089919 0.0211872645 0.000962588878 0.0380588472
+144
+84
+45
+46847 0.0418137386 0.0597869754 0.137135372 0.0841933936 0.281115741
+12
+36
+30
+220819 0.0737900659 0.0167524368 0.0434041545 0.0960685611 0.156225145
+30
+60
+30
+372819 0.0449202657 0.026733676 0.0454759263 0.051400993 0.123610593
+12
+18
+9
+109537 0.259510279 0.0208742619 0.0133123742 0.00550913392 0.0396957695
+0
+9
+18
+369667 0.132000342 0.0107918978 0.0233337693 0.00473467819 0.0388603471
+6
+9
+30
+238147 0.0496058166 0.0442846231 0.0567427129 0.0821992606 0.1832266
+12
+9
+3
+320370 0.536346316 0.0254583862 0.00701399939 0.0178706944 0.0503430814
+0
+0
+0
+317130 0.000434799469 0 0.0121301413 0 0.0121301413
+0
+12
+27
+464018 0.0334309861 0.0184147656 0.0253359489 0.0483573191 0.0921080336
+12
+21
+18
+296759 0.0819469243 0.0288250204 0.0645104125 0.0311831869 0.124518625
+9
+6
+9
+52017 0.391935825 0.0684944317 0.00921412185 0.0122659123 0.089974463
+0
+3
+15
+33372 0.147928149 0.0181859583 0.0229533911 0.0270677768 0.0682071298
+0
+9
+12
+80671 0.00909321755 0.0285647903 0.0138833383 0.0335417278 0.0759898573
+30
+33
+21
+259335 0.176207721 0.0264327265 0.0325223431 0.0248273313 0.0837824047
+27
+21
+6
+184205 0.48630935 0.0161120482 0.0288597792 0.0159009285 0.0608727522
+3
+6
+15
+459887 0.162504688 0.0454016291 0.019315619 0.136482611 0.201199859
+75
+54
+27
+389753 0.103149727 0.048642911 0.069628 0.0376142152 0.15588513
+45
+45
+21
+197279 0.108610429 0.0301304497 0.032727357 0.00348103372 0.0663388371
+57
+15
+9
+224554 0.247793913 0.0505379811 0.0235111732 0.0048512686 0.0789004192
+138
+120
+33
+246014 0.0399913564 0.0455107465 0.154468298 0.0251320433 0.225111097
+3
+9
+12
+486162 0.122458503 0.0624900833 0.0296702702 0.153143108 0.245303452
+9
+48
+51
+124429 0.0294349715 0.047065556 0.0715973526 0.0760151297 0.194678038
+3
+24
+18
+234807 0.0867373124 0.00840201322 0.00864304 0.0328339227 0.0498789735
+9
+21
+15
+294908 0.144979581 0.0200515389 0.0144580184 0.000919638085 0.0354291946
+45
+51
+39
+192406 0.0571872741 0.0477556959 0.083595857 0.0264896266 0.157841176
+0
+3
+15
+574411 0.0302200578 0.0575066321 0.021911459 0.0210549384 0.100473031
+0
+3
+21
+223241 0.0888863057 0.0516240895 0.040980868 0.0480700098 0.140674978
+0
+3
+18
+209728 0.162071392 0.0121628335 0.01268759 0.0736938 0.0985442176
+141
+78
+12
+48133 0.0393431671 0.0693910643 0.102812275 0.0441419929 0.21634534
+0
+3
+15
+542388 0.187800512 0.0295548495 0.0282156318 0.00533130579 0.0631017834
+0
+0
+9
+377738 0.0970181599 0.0298571326 0.0251801554 0.0339765884 0.0890138745
+0
+0
+9
+173235 0.0509946 0.00819059927 0.02120791 0.0328701288 0.0622686371
+57
+99
+75
+517399 0.0319016054 0.0338161364 0.0937580094 0.0257658679 0.153340012
+15
+42
+36
+394050 0.0229707584 0.0332929865 0.0684359223 0.0475311875 0.149260089
+0
+15
+24
+101919 0.0342012383 0.0105841821 0.0246685706 0.0218122602 0.0570650138
+9
+21
+12
+155192 0.0838454515 0.015855981 0.0159114078 0.000628133421 0.0323955193
+72
+33
+18
+226097 0.191888124 0.0366532505 0.0353067853 0.0383659452 0.110325977
+96
+75
+21
+355441 0.293136 0.0293867048 0.0506738648 0.0128018847 0.092862457
+6
+6
+21
+212605 0.0569439232 0.0860404074 0.0477327 0.134051725 0.267824829
+33
+87
+54
+395904 0.0334334746 0.022514008 0.0856437758 0.0246173088 0.132775098
+21
+3
+6
+242868 0.221218154 0.0509777032 0.0233223 0.0297050811 0.104005083
+9
+27
+45
+573206 0.0638523549 0.0350312181 0.043398086 0.0133723337 0.0918016359
+0
+6
+9
+423396 0.358268976 0.0199638288 0.0194884241 0.0020737052 0.0415259562
+30
+39
+18
+293175 0.0535057969 0.0286965072 0.0417176373 0.0524401218 0.122854263
+0
+12
+27
+276146 0.0917259231 0.0088280607 0.0220927522 0.00202995911 0.0329507701
+15
+45
+45
+344548 0.0419859886 0.0281258132 0.0492033325 0.00496017514 0.0822893232
+3
+9
+9
+260020 0.390287906 0.00656614918 0.00727785658 0.00131244899 0.0151564553
+12
+15
+9
+406744 0.193340197 0.0548928268 0.0258241445 0.109998271 0.190715224
+9
+15
+9
+467468 0.372224867 0.0394367464 0.011527108 0.0109908041 0.0619546585
+12
+18
+6
+233140 0.59611547 0.0186202098 0.0215178709 0.00385768642 0.0439957678
+3
+6
+9
+473121 0.135344148 0.0392133221 0.00896742567 0.00678276969 0.0549635179
+72
+162
+108
+27642 0.00757574383 0.0400200821 0.167119965 0.0284679942 0.235608041
+18
+24
+18
+30465 0.152900085 0.0117870746 0.0222877841 0.00221322034 0.0362880789
+15
+18
+3
+283441 1.16234922 0.020626653 0.0477624163 0.0148532381 0.0832423046
+30
+30
+15
+466346 0.0573278069 0.0376750343 0.0295741763 0.00239533233 0.0696445405
+6
+18
+9
+275058 0.269397587 0.0155602936 0.0216432251 0.0834073871 0.120610908
+9
+30
+33
+322848 0.0136529412 0.0273674969 0.0385694467 0.00694430433 0.0728812516
+30
+63
+51
+253770 0.0269792154 0.0336193852 0.0715785548 0.00979025476 0.114988193
+32
+75
+48
+239148 0.0355177596 0.0531470738 0.0811247826 0.0834449753 0.217716843
+63
+90
+63
+172595 0.0386831835 0.0366626158 0.0845759958 0.0390941352 0.160332739
+3
+9
+15
+69959 0.278870255 0.00996877905 0.0160107426 0.027422484 0.053402
+0
+6
+18
+537907 0.0923755 0.0586955547 0.0196959432 0.0358230397 0.114214532
+9
+27
+18
+245049 0.307183325 0.0240249876 0.0188244134 0.00257844152 0.0454278402
+36
+18
+6
+250571 0.662057281 0.0375384353 0.026182102 0.0418658555 0.105586395
+33
+59
+57
+522665 0.0203311499 0.0515571609 0.0905276686 0.110385403 0.252470225
+0
+9
+18
+232453 0.129426047 0.013387139 0.0237614401 0.0247931182 0.0619417
+90
+108
+54
+237324 0.0341496393 0.0450407378 0.0855097175 0.0216729194 0.152223378
+0
+6
+21
+180366 0.0188750252 0.0268826615 0.0395010374 0.0271714386 0.0935551375
+0
+0
+24
+432906 0.0167586692 0.0230756905 0.0356099904 0.0210298467 0.0797155276
+0
+9
+18
+113579 0.0840314478 0.0063457042 0.0164430253 0.036128059 0.0589167885
+84
+141
+93
+113720 0.0243420415 0.0304904077 0.126102746 0.0244276356 0.181020796
+6
+24
+28
+463611 0.0407521352 0.0245076176 0.0217158645 0.0458976626 0.0921211466
+3
+9
+3
+298137 2.75565171 0.0114552118 0.0109774396 0.0806846246 0.103117272
+15
+18
+3
+485773 1.92339993 0.0150060728 0.0110237617 0.000986291678 0.0270161256
+0
+0
+18
+443818 0.0222518742 0.00491172215 0.0264758505 0.0180378556 0.0494254306
+18
+12
+9
+18149 0.0195655338 0.0368130766 0.0245986357 0.0458258279 0.10723754
+18
+42
+33
+494846 0.0436954126 0.0368063711 0.0445863083 0.0241171457 0.105509833
+111
+135
+69
+227031 0.0120809721 0.0499521568 0.111664809 0.0267907046 0.188407674
+387
+213
+30
+353409 0.0306823403 0.0789455101 0.255533814 0.0560926273 0.390571952
+18
+36
+33
+258346 0.03438228 0.0481215604 0.0443598852 0.0274794027 0.119960852
+3
+9
+9
+494555 0.0136570856 0.0270668622 0.00882487 0.000497612229 0.0363893472
+0
+3
+15
+488743 0.0204915777 0.0517128892 0.0238016322 0.0751172602 0.150631785
+15
+57
+60
+106344 0.0118616484 0.0544593818 0.126030803 0.0491940491 0.229684219
+51
+63
+33
+246061 0.0529194847 0.033503022 0.0345752686 0.0103835789 0.0784618706
+90
+129
+57
+304404 0.0118294396 0.0380317345 0.127970561 0.013285242 0.179287553
+0
+0
+15
+512938 0.125264525 0.00938751735 0.0176555 0.0383404642 0.065383479
+18
+45
+42
+111878 0.0864717364 0.0462676473 0.0673888922 0.035309907 0.148966432
+3
+9
+15
+388464 0.254184067 0.0184437633 0.0138692902 0.00061348523 0.0329265371
+15
+60
+69
+265916 0.0113571417 0.0446641222 0.104491256 0.0338996649 0.183055043
+0
+6
+9
+337065 0.165235937 0.0173436292 0.029784482 0.0744475573 0.121575661
+9
+96
+87
+563882 0.00886267144 0.0541448183 0.110260963 0.0362220556 0.200627834
+165
+90
+24
+155885 0.0275336392 0.0793429911 0.218155667 0.0759878755 0.373486519
+81
+114
+69
+457877 0.00907410868 0.0409612171 0.106223449 0.0162483603 0.16343303
+3
+27
+27
+408859 0.0707406625 0.0391949378 0.0409906358 0.0614576787 0.141643256
+78
+57
+12
+254711 0.0519246459 0.036433816 0.0407846794 0.010846125 0.0880646259
+6
+30
+42
+264654 0.0308537818 0.0369334035 0.0419137888 0.0366624892 0.115509674
+0
+0
+9
+575032 0.0536422804 0.00404723035 0.00579326553 0.00338274706 0.0132232429
+3
+18
+18
+540642 0.233872622 0.0233868118 0.0192266479 0.00706709176 0.0496805534
+24
+36
+18
+499727 0.318865955 0.0131218685 0.0261127502 0.0925283283 0.131762952
+174
+201
+99
+579070 0.0121007413 0.0390407965 0.22655575 0.0224823263 0.288078874
+126
+57
+15
+65798 0.0574715436 0.0548961274 0.106560089 0.0213401597 0.182796374
+3
+15
+24
+224907 0.126586482 0.0340125971 0.0281644743 0.101909094 0.164086163
+30
+60
+33
+231325 0.0739626586 0.0345154218 0.0783844516 0.0246443972 0.137544274
+3
+15
+12
+237316 0.265981495 0.0390878245 0.0261372011 0.00699938182 0.0722244084
+0
+15
+27
+92768 0.0601352751 0.00521918619 0.022130724 0.0357465968 0.0630965084
+42
+114
+78
+394334 0.0505504385 0.0355772376 0.137797654 0.088772662 0.262147546
+39
+69
+39
+53668 0.0502467826 0.0178504642 0.0298867505 0.00867095403 0.0564081706
+180
+153
+39
+462565 0.0658026785 0.0442904718 0.0892703235 0.0175562054 0.151117
+36
+6
+3
+31601 1.34018588 0.0692393407 0.0297990292 0.00966609921 0.10870447
+51
+48
+24
+170127 0.0665334165 0.0353794545 0.0545246378 0.0123791127 0.10228321
+0
+9
+6
+475856 0.334174454 0.0145986183 0.0167513974 0.00120642735 0.0325564407
+18
+33
+30
+432213 0.0793606937 0.0289125443 0.0616967455 0.038074024 0.128683314
+0
+27
+60
+460866 0.0137813818 0.0448592715 0.0675844327 0.095838137 0.20828186
+102
+39
+9
+8775 0.212152019 0.0591495894 0.0662759095 0.0237216242 0.149147123
+9
+9
+15
+38721 0.039640341 0.0285959076 0.0213585384 0.0196165126 0.0695709586
+75
+90
+63
+142620 0.0288802125 0.032129582 0.102150202 0.0197954364 0.15407522
+6
+9
+3
+541435 1.03631616 0.0206977781 0.0192954689 0.0021266141 0.0421198606
+57
+48
+6
+274708 1.09602523 0.0309346449 0.0353765637 0.0091013927 0.0754126
+3
+9
+15
+354729 0.39557749 0.00831410941 0.00822693668 0.00189917 0.0184402168
+24
+27
+12
+134558 0.100659654 0.0478022359 0.027972104 0.00843044557 0.0842047781
+147
+147
+60
+381608 0.00897691585 0.0579234138 0.185292423 0.0361234471 0.279339314
+0
+18
+15
+65231 0.143138513 0.0452976041 0.0159993 0.00254241237 0.0638393164
+87
+99
+54
+566975 0.0805348307 0.0329894051 0.0882824287 0.0493840612 0.170655906
+9
+18
+6
+1779 0.733886957 0.0282424744 0.0224542376 0.0618547574 0.112551481
+0
+39
+42
+547759 0.0384966955 0.0151734352 0.0280798599 0.0277470704 0.07100036
+9
+36
+27
+572802 0.103527956 0.0216480717 0.0327149257 0.0226863138 0.077049315
+6
+9
+3
+205531 1.50349617 0.030548498 0.0231010746 0.00422456861 0.0578741394
+0
+9
+27
+306395 0.120317601 0.00495041208 0.0111561446 0.00236360542 0.0184701607
+0
+6
+12
+250594 0.089984417 0.0166962575 0.0112351505 0.0377520621 0.0656834692
+36
+48
+27
+93140 0.0265094806 0.0270315111 0.0413343534 0.0370294042 0.105395272
+108
+111
+39
+531697 0.0756837875 0.0377887376 0.0982321054 0.0103204306 0.146341264
+177
+210
+78
+12897 0.0203850493 0.0536830723 0.185560286 0.0288171805 0.268060535
+0
+6
+18
+559955 0.0940626413 0.0649480149 0.0237391014 0.0466157869 0.135302901
+12
+6
+12
+520324 0.0646527782 0.0700063109 0.0243343581 0.00284260744 0.0971832871
+21
+72
+54
+135410 0.0527699776 0.0322666578 0.0782660693 0.0237076692 0.134240404
+0
+15
+21
+502644 0.0669829845 0.0195625573 0.0189210065 0.0178906489 0.0563742109
+0
+0
+6
+436280 0.335838 0.0217911545 0.0139529929 0.0208519753 0.0565961227
+30
+15
+3
+192291 0.23877 0.060944546 0.0277456455 0.00721412245 0.0959043056
+3
+18
+21
+253718 0.0398714915 0.0558852814 0.0435206816 0.105925731 0.205331698
+33
+96
+90
+403995 0.0299022011 0.0344840959 0.095121026 0.0243792813 0.153984398
+96
+57
+6
+479075 1.30139518 0.0320213735 0.0533462055 0.0592119023 0.144579485
+114
+36
+3
+25034 0.449473828 0.0666568205 0.0421697907 0.0224536806 0.131280288
+6
+6
+9
+530998 0.104895696 0.0175960623 0.0118090156 0.00199833885 0.0314034149
+3
+36
+48
+116095 0.0281269159 0.0248677917 0.0534063205 0.12668772 0.204961836
+51
+36
+18
+36053 0.29643169 0.031306643 0.0344013572 0.0166469626 0.0823549628
+0
+0
+9
+255974 0.0962965861 0.00464127026 0.00904244836 0.0286607742 0.0423444957
+0
+0
+15
+213795 0.0154232597 0.0183690321 0.0164857488 0.0189148374 0.0537696145
+9
+18
+9
+96625 0.0945757627 0.044662077 0.0165264346 0.0155955665 0.0767840818
+42
+63
+48
+122588 0.0521379188 0.0445249751 0.121683553 0.0729005337 0.239109054
+45
+57
+27
+334371 0.0664409846 0.0391198881 0.0694808289 0.0276435781 0.136244297
+3
+33
+36
+474881 0.138547033 0.0171595104 0.0246220138 0.0484497584 0.0902312845
+45
+24
+3
+129159 0.22261256 0.0357772484 0.0226106215 0.0147319715 0.0731198341
+0
+24
+36
+564659 0.132345989 0.00604442926 0.0275173262 0.0552039295 0.0887656882
+99
+65
+30
+69670 0.0636388958 0.0408951715 0.0655133128 0.0263855048 0.132794
+0
+0
+9
+126345 0.0922507271 0.0054856292 0.00854684785 0.0226184782 0.036650952
+6
+15
+48
+79113 0.0423933715 0.0171130039 0.0423894525 0.0115282778 0.071030736
+0
+3
+9
+15746 0.47294724 0.0101302555 0.00616813172 0.00366646471 0.0199648514
+9
+27
+18
+14265 0.0419749059 0.0159049463 0.0222697146 0.00351533573 0.04169
+48
+57
+36
+106172 0.0657379776 0.0551720671 0.0774542838 0.0207841322 0.153410494
+69
+51
+12
+536201 0.429569542 0.0298854858 0.0358763 0.00187124708 0.0676330328
+0
+0
+9
+85292 0.114176422 0.00906907301 0.0225473978 0.0199896824 0.0516061559
+39
+93
+72
+520124 0.0418935418 0.0305406544 0.0817577839 0.0193252824 0.13162373
+0
+9
+12
+252696 0.203757584 0.0175569989 0.017554272 0.000727588369 0.035838861
+33
+78
+63
+305609 0.0307278633 0.0502513535 0.149354085 0.0673017353 0.266907185
+33
+72
+30
+405882 0.0234454013 0.0474781282 0.0545765497 0.0377587862 0.139813453
+0
+3
+27
+83658 0.0395515561 0.0204649698 0.0237785298 0.0846721381 0.128915623
+0
+0
+9
+179273 0.0280803926 0.01802155 0.0293789133 0.0580221489 0.105422616
+54
+54
+72
+168491 0.00946634077 0.0469620153 0.11623133 0.0199917573 0.183185101
+0
+0
+9
+378859 0.45689252 0.00495575415 0.00483037392 0.000236487787 0.010022616
+0
+21
+39
+322503 0.0553202331 0.0223745909 0.0712795481 0.0750767291 0.168730855
+6
+18
+21
+80949 0.0605228879 0.0392817147 0.0344728157 0.0188082159 0.09256275
+6
+12
+15
+459304 0.0583631694 0.0228906181 0.014189899 0.00546093285 0.042541448
+0
+0
+15
+296383 0.0710661 0.0199243333 0.0268490389 0.0493551 0.0961284712
+33
+93
+48
+483446 0.0285140164 0.0414831601 0.0759514049 0.065042831 0.182477385
+24
+63
+45
+318219 0.0204360094 0.0777595788 0.106827363 0.113902703 0.29848963
+0
+9
+15
+556966 0.0409011878 0.0299006291 0.0267159548 0.0204257872 0.077042371
+91
+87
+18
+223426 0.0117602665 0.090371266 0.097375989 0.081401445 0.269148707
+0
+0
+6
+117441 0.127593502 0.00704623386 0.0253603458 0.0535127968 0.0859193802
+0
+3
+15
+375755 0.142348766 0.0203947462 0.00812774152 0.0355355591 0.0640580505
+0
+6
+15
+68005 0.11982394 0.03602162 0.0359534547 0.0497039706 0.121679045
+0
+0
+21
+49258 0.0432537198 0.0109048197 0.0126106218 0.00444537681 0.0279608183
+60
+69
+42
+523212 0.0481359065 0.0259623863 0.0554926172 0.0184835568 0.0999385566
+39
+45
+33
+555144 0.0484600589 0.0352366716 0.0266386811 0.0221180245 0.0839933753
+0
+21
+45
+114479 0.0328114405 0.0206786394 0.0636588708 0.0676675737 0.152005091
+119
+252
+111
+393267 0.0171811059 0.0443069637 0.213905841 0.0386285 0.296841323
+6
+9
+6
+440409 1.34758782 0.0207283385 0.0114528276 0.0368492901 0.0690304562
+87
+84
+27
+195204 0.0930595696 0.0330585949 0.0853562951 0.0921927691 0.210607663
+0
+3
+18
+175611 0.102528408 0.0123380478 0.0231723078 0.0152062615 0.0507166162
+15
+21
+18
+89839 0.242901891 0.0297517907 0.0293590911 0.0308344029 0.0899452865
+15
+15
+15
+198550 0.0655519068 0.0703121051 0.0394688919 0.0208228473 0.13060385
+3
+12
+18
+219135 0.12061771 0.0227394886 0.0151084717 0.0158489905 0.0536969528
+51
+96
+51
+415949 0.0383402109 0.0426600091 0.0821895748 0.0276769474 0.152526528
+51
+39
+18
+279256 0.0695985705 0.037167836 0.0422050245 0.0210989974 0.100471854
+42
+51
+24
+86426 0.147718638 0.0276890229 0.0495145693 0.00699357921 0.084197171
+129
+45
+6
+149155 0.11249961 0.034333203 0.0792915374 0.0396599844 0.153284729
+0
+6
+18
+312278 0.0849596485 0.0307578929 0.0319186151 0.0687449872 0.131421506
+48
+51
+24
+354724 0.127680153 0.0224620048 0.0287989136 0.00361861708 0.054879535
+36
+90
+36
+559483 0.0481648818 0.0284201205 0.0491767824 0.00872014742 0.0863170549
+42
+60
+30
+471273 0.0699343458 0.0506527498 0.066957742 0.0088678645 0.126478359
+165
+75
+48
+522262 0.0196976773 0.0546506755 0.102427661 0.0487985536 0.205876902
+0
+9
+33
+467157 0.00899601169 0.0222120844 0.0288016051 0.0526632182 0.103676915
+0
+0
+9
+38772 0.454482973 0.00337579078 0.00844278559 0.000418018026 0.0122365952
+15
+36
+12
+81070 0.135739297 0.0363385789 0.0469263494 0.00624987856 0.0895148069
+21
+36
+15
+56267 0.180390954 0.0234196521 0.0197300818 0.00472455379 0.0478742868
+33
+69
+57
+216861 0.045028165 0.0251472797 0.0570177287 0.00977673 0.0919417441
+3
+48
+33
+567320 0.0532447882 0.056561 0.0417374596 0.0514131263 0.149711579
+6
+9
+6
+167964 0.225185603 0.0141668739 0.00978215225 0.00116577977 0.0251148064
+3
+21
+27
+139130 0.0819241926 0.0167260151 0.0228532888 0.159947306 0.199526608
+0
+6
+18
+173490 0.195048973 0.00877687801 0.022673605 0.00333586521 0.034786351
+39
+99
+81
+176271 0.0256266259 0.0572907105 0.165272802 0.0969540179 0.319517553
+24
+57
+60
+173500 0.0161376409 0.036407 0.0862565637 0.0431265 0.165790051
+30
+78
+45
+124157 0.0112917405 0.097974956 0.103128865 0.0995869488 0.30069077
+0
+3
+9
+489266 0.257198751 0.0111698909 0.00915993843 0.00482243625 0.025152266
+81
+75
+36
+168713 0.0385039337 0.0411724336 0.0647179484 0.00482953573 0.110719919
+93
+150
+99
+227851 0.0123742642 0.03907 0.220586792 0.0398922637 0.299549043
+6
+15
+9
+328306 0.0256605968 0.0551938415 0.0167513397 0.050977312 0.122922495
+6
+18
+9
+467477 0.101879194 0.0336174928 0.0176575948 0.0264498778 0.0777249709
+48
+75
+48
+111259 0.0286386535 0.0429219604 0.051996015 0.00299650431 0.0979144797
+123
+18
+3
+480133 0.0235362668 0.0990828648 0.0727198273 0.0574139394 0.229216635
+6
+42
+39
+462327 0.0438006036 0.0195952114 0.0485150404 0.0108299246 0.0789401755
+0
+15
+30
+343903 0.0326506421 0.0364989676 0.0454577431 0.0419442356 0.123900943
+42
+24
+9
+188766 0.0742352158 0.0746188536 0.0655690581 0.0360342935 0.176222205
+30
+30
+15
+485485 0.150009051 0.0482203588 0.0295516644 0.0269972906 0.104769319
+54
+69
+45
+11172 0.0441922806 0.0393056311 0.134189188 0.0442770235 0.217771843
+0
+6
+15
+340007 0.174127489 0.0154587198 0.00900460687 0.0127610909 0.0372244157
+3
+9
+12
+163585 0.193661869 0.022526687 0.0160835143 0.131296128 0.169906318
+6
+18
+9
+370315 0.205773115 0.0476682745 0.0287745222 0.00191984535 0.0783626437
+96
+63
+21
+157416 0.0700075552 0.0349135213 0.0376414023 0.00898433104 0.0815392584
+6
+9
+12
+498533 0.173353299 0.0715333521 0.0212252475 0.0711646304 0.163923234
+0
+3
+6
+482514 0.560718656 0.0165304281 0.0349931419 0.0280049443 0.079528518
+0
+3
+18
+456127 0.0277998187 0.0229710434 0.0151956119 0.0225935038 0.0607601628
+0
+6
+9
+473728 0.522269666 0.0111852149 0.00609123521 0.00258476706 0.0198612176
+90
+204
+144
+65655 0.0239644665 0.0472493581 0.358431101 0.0512603968 0.45694086
+6
+63
+72
+94055 0.0177789032 0.0316361 0.0514689684 0.00836848188 0.0914735571
+69
+18
+12
+210804 0.0799804553 0.0505304709 0.0337196738 0.063365 0.14761515
+0
+12
+27
+66011 0.0478378087 0.0309443716 0.0393901914 0.0351681262 0.105502687
+69
+72
+21
+193112 0.0633060038 0.0406629071 0.045999486 0.016289 0.102951393
+33
+63
+51
+486986 0.019263532 0.0475903526 0.0558015369 0.0337336026 0.137125492
+63
+90
+48
+400247 0.0208439417 0.0546250939 0.11274872 0.0162927136 0.183666527
+66
+123
+54
+450970 0.0207728259 0.0389761738 0.0747165605 0.0149911772 0.12868391
+3
+15
+33
+187236 0.0500582941 0.0368347615 0.0580223873 0.0833316147 0.178188771
+0
+0
+6
+509609 0.0343584605 0.0400765277 0.0247789845 0.0524262488 0.117281757
+81
+123
+63
+118911 0.0240010675 0.0615638271 0.120018609 0.0352716073 0.216854036
+15
+36
+21
+82986 0.127174288 0.0273122042 0.0277355667 0.00155886076 0.0566066355
+12
+24
+33
+215744 0.0412004627 0.0309945848 0.0586779714 0.0384333432 0.128105894
+0
+0
+6
+39871 0.0250446927 0.042243138 0.0213249363 0.0505241156 0.114092186
+24
+33
+21
+33697 0.104416505 0.0472681709 0.0312269107 0.0378009155 0.116295993
+0
+24
+36
+502214 0.0510991588 0.0270761903 0.0274415538 0.00713910116 0.0616568439
+36
+30
+42
+39512 0.0390471369 0.0549093 0.0468155369 0.0163472854 0.118072122
+0
+0
+12
+573853 0.087904945 0.0113709373 0.0224068202 0.0375290811 0.0713068396
+33
+81
+51
+227882 0.0196391307 0.0417969041 0.0882297158 0.0251282696 0.155154899
+21
+33
+24
+568132 0.151987284 0.0180466231 0.022900831 0.0212468039 0.062194258
+27
+27
+18
+78465 0.0552873649 0.0422579 0.0341171958 0.0261123776 0.102487475
+93
+135
+60
+71209 0.0428655706 0.034278892 0.0990581661 0.0434494428 0.176786512
+54
+33
+21
+564061 0.0367912725 0.0488250628 0.0605749786 0.0262108482 0.135610893
+105
+135
+81
+52996 0.0203300025 0.0389855281 0.131557688 0.0241259523 0.194669187
+9
+12
+18
+188689 0.105758838 0.0531297 0.043437846 0.00879328232 0.105360836
+0
+0
+18
+323602 0.112407379 0.00416743755 0.011864515 0.00924952514 0.0252814796
+0
+0
+9
+25005 0.0617244467 0.0145173687 0.010607563 0.010050755 0.0351756848
+21
+51
+51
+1626 0.0124764 0.053548526 0.102120668 0.0459872223 0.201656401
+0
+0
+6
+396692 0.194260925 0.0115610771 0.0205141716 0.00520094 0.0372761898
+0
+9
+18
+458572 0.205927193 0.0217379835 0.0264906399 0.00173298502 0.0499616079
+0
+9
+12
+323202 0.100604385 0.0369118936 0.0287665986 0.0780826658 0.143761158
+9
+6
+9
+170654 0.141083688 0.0494377501 0.035716068 0.032000497 0.117154308
+6
+15
+24
+4212 0.0970261842 0.0316575281 0.022577446 0.0223454647 0.076580435
+0
+3
+12
+161781 0.0449593961 0.00578550948 0.00589443045 0.00173365534 0.013413595
+36
+30
+6
+324553 0.0812053084 0.048953671 0.0242609084 0.00312235299 0.0763369352
+111
+102
+57
+119709 0.0437660515 0.0420964 0.114470862 0.0173052438 0.173872501
+18
+60
+39
+240537 0.045421496 0.0100295097 0.0200529676 0.0117225237 0.041805
+30
+57
+39
+8170 0.0656870306 0.0400253944 0.054875344 0.0437990427 0.138699785
+24
+45
+39
+492846 0.0234956536 0.0855904743 0.0782200247 0.107991852 0.271802366
+3
+12
+9
+372150 0.497149855 0.0447653979 0.01091024 0.0075640888 0.0632397309
+192
+183
+108
+139457 0.00659739 0.0460546203 0.187701777 0.0215039067 0.255260289
+15
+18
+6
+412876 0.138189897 0.0247414522 0.0264584832 0.0114157451 0.0626156777
+0
+12
+21
+514731 0.0429671854 0.0237275716 0.0395535901 0.0151059758 0.0783871338
+42
+24
+9
+350003 0.3386935 0.0292386245 0.0127750924 0.0197459571 0.0617596731
+87
+132
+72
+505157 0.0144394282 0.0395637527 0.0871468484 0.0113173276 0.138027936
+0
+18
+24
+547155 0.0809247866 0.0254418459 0.0306685716 0.0470201895 0.103130609
+0
+0
+6
+24566 0.357123673 0.00684424629 0.0156106446 0.00986640248 0.0323212966
+18
+33
+33
+472582 0.050911691 0.0205181278 0.0270469077 0.00203193305 0.0495969653
+6
+12
+9
+170955 0.0395736545 0.0231836718 0.0208128542 0.000742183882 0.0447387099
+21
+54
+54
+468784 0.0206910148 0.0518533476 0.0818006918 0.010778958 0.144432992
+0
+0
+0
+208708 0.000477852649 0 0.0110183842 0 0.0110183842
+0
+0
+15
+516766 0.0560631715 0.0237276275 0.0169294812 0.0467467792 0.087403886
+0
+0
+6
+429558 0.114970297 0.0206478722 0.0187265426 0.0409141704 0.080288589
+3
+42
+63
+79926 0.0135257039 0.0854821205 0.085338 0.107712045 0.278532147
+12
+18
+12
+444631 0.145980448 0.0437011085 0.0162525475 0.0166059714 0.076559633
+99
+114
+60
+84000 0.012858063 0.0518395789 0.113969892 0.0159628354 0.181772321
+39
+60
+36
+391067 0.068624787 0.0367043354 0.0703443512 0.0572147369 0.164263427
+216
+117
+48
+105177 0.0604030788 0.0586383939 0.125822157 0.0374875143 0.221948087
+0
+6
+9
+242940 0.841911852 0.00678368378 0.00965123903 0.00128407753 0.017719
+150
+114
+36
+579859 0.0688028932 0.0433228537 0.0764123201 0.0235346071 0.143269777
+36
+39
+18
+124654 0.14394322 0.0430634879 0.0642781779 0.00395043287 0.111292101
+9
+9
+3
+318171 1.99570858 0.0417060219 0.0132133933 0.028398186 0.0833176
+18
+42
+48
+527535 0.0185260698 0.0372132547 0.0949439853 0.0511222035 0.18327944
+27
+63
+48
+467500 0.0418192036 0.0499404334 0.134454891 0.0915307179 0.275926054
+9
+51
+63
+251344 0.0194635019 0.0435827151 0.0917632 0.0812255 0.21657142
+6
+84
+78
+175908 0.0190462321 0.0793034658 0.102818981 0.133951277 0.316073745
+15
+48
+54
+519330 0.0123430248 0.0464204662 0.0660566092 0.0336843655 0.146161437
+0
+18
+12
+524725 0.723347127 0.00746933697 0.007844056 0.0469056964 0.0622190908
+39
+9
+0
+164672 0.000655564945 0.0175746325 0.0217645019 0.00185098301 0.0411901176
+0
+0
+9
+541887 0.550752163 0.00309122936 0.00906527415 0.00352104171 0.0156775452
+3
+12
+36
+451952 0.0417828821 0.0137532679 0.0399501622 0.0709600747 0.124663517
+63
+0
+9
+264506 0.0661923736 0.0623483323 0.0399142504 0.084308 0.186570585
+0
+9
+15
+156806 0.172166795 0.0397546254 0.0166969113 0.00471456628 0.0611661
+9
+33
+18
+266866 0.115816511 0.0254966561 0.0174369179 0.00284986175 0.0457834378
+90
+105
+45
+386210 0.0237919316 0.0559533723 0.107970893 0.0604579486 0.224382207
+72
+51
+33
+220307 0.0978081077 0.037403632 0.022203641 0.0265780278 0.0861852914
+12
+42
+45
+554459 0.0285234712 0.0378846414 0.0535232201 0.0285875406 0.1199954
+3
+9
+15
+216603 0.0458354093 0.0314536 0.0526717529 0.11221604 0.196341395
+18
+45
+30
+288599 0.0528781377 0.028277358 0.0252729394 0.00689879479 0.0604490936
+168
+108
+39
+302787 0.0719968379 0.0476572 0.0994794518 0.0268398803 0.173976526
+3
+18
+18
+61515 0.167209744 0.0178496372 0.0227783546 0.0201607533 0.0607887432
+0
+3
+15
+273642 0.120172009 0.0226844735 0.0475519411 0.0251075067 0.0953439176
+0
+6
+9
+291655 0.38234961 0.0229871813 0.0174226761 0.00778713496 0.0481969938
+30
+24
+6
+161635 0.334748775 0.0253494587 0.0198285282 0.0116478391 0.0568258241
+81
+123
+72
+303520 0.0225027036 0.0410296395 0.115351185 0.0335710496 0.189951882
+63
+87
+42
+120776 0.0589364 0.0368896686 0.0517120771 0.0256356709 0.11423742
+39
+36
+15
+178592 0.359733731 0.0463282503 0.0395311 0.00497641647 0.0908357725
+0
+12
+27
+312544 0.0915816873 0.0169588737 0.0209808685 0.0128433574 0.0507830977
+0
+0
+9
+428168 0.153380677 0.00747244572 0.0105268164 0.000862004643 0.0188612677
+15
+36
+21
+425077 0.17430678 0.0210638437 0.0248720609 0.0499015 0.0958374068
+27
+30
+33
+292033 0.033790715 0.0787572265 0.0560046285 0.0963780358 0.231139898
+144
+66
+24
+444390 0.134150743 0.0477014296 0.087201938 0.0217659399 0.156669319
+0
+15
+15
+382554 0.03721793 0.00912676658 0.013855543 0.00270555285 0.0256878622
+0
+0
+27
+77951 0.0505977571 0.0244498719 0.0147807579 0.0337499827 0.0729806051
+0
+3
+6
+454854 0.123089574 0.0276345648 0.0186908599 0.0140318805 0.0603573024
+12
+18
+9
+366714 0.160398901 0.0262350682 0.0373995975 0.0211485419 0.0847832114
+105
+105
+42
+406103 0.0706484616 0.0419250131 0.0679347217 0.0184389874 0.128298715
+12
+18
+0
+135900 0.00260668201 0.0135428598 0.0263220891 0.0284096655 0.0682746172
+0
+0
+9
+157124 0.131712526 0.0170309376 0.0159505699 0.0065457914 0.0395273
+0
+6
+9
+354061 0.312262237 0.00749571947 0.017190706 0.00818402413 0.0328704491
+0
+0
+12
+579402 0.0991794392 0.025995275 0.0198886208 0.0524866097 0.0983705
+66
+42
+9
+269942 0.42992118 0.030345032 0.0539973564 0.00518306717 0.0895254612
+0
+3
+9
+282427 0.221253574 0.0122946296 0.00756913144 0.000606825575 0.0204705875
+21
+18
+12
+361623 0.0970097482 0.0186367463 0.019434331 0.00294302194 0.0410141
+180
+84
+45
+402514 0.0419216 0.04959343 0.0976411551 0.0292812698 0.176515862
+0
+0
+15
+363853 0.109303139 0.0177658424 0.0179084409 0.0171534419 0.0528277233
+6
+18
+12
+399129 0.153882176 0.0319809206 0.0122546982 0.00953035615 0.0537659787
+0
+9
+18
+338057 0.162426025 0.00483825943 0.00818719715 0.0143166501 0.0273421071
+0
+6
+18
+373848 0.0960836709 0.013698848 0.0124874022 0.0381995067 0.0643857643
+0
+9
+12
+374369 0.130820647 0.0122506125 0.0105271507 0.0245331787 0.0473109409
+6
+36
+48
+466222 0.0514548942 0.0386545323 0.0682309866 0.126816452 0.233701974
+0
+9
+12
+547102 0.0214962382 0.0486726649 0.0316239148 0.0292380098 0.109534599
+54
+54
+21
+479633 0.135745123 0.0219809562 0.0325502492 0.00956422556 0.0640954301
+27
+51
+30
+340069 0.0378067866 0.0560225137 0.0618959963 0.0395565815 0.157475099
+18
+30
+30
+44877 0.0302433614 0.0433632135 0.0512626469 0.0937376469 0.188363507
+3
+24
+36
+254983 0.0408145301 0.0611660741 0.0383459963 0.0493006259 0.148812696
+0
+0
+9
+212166 0.0916803 0.0034549241 0.0179359112 0.000595872058 0.021986708
+30
+18
+3
+17365 0.596875668 0.0293833707 0.0147949308 0.00296199019 0.0471402928
+213
+222
+105
+483027 0.0140607785 0.0514713638 0.239821702 0.0184896067 0.309782684
+0
+27
+45
+36012 0.0855163932 0.0166638698 0.0277666971 0.0409326777 0.0853632465
+0
+9
+9
+24053 0.0230050385 0.00535479328 0.0117853899 0.000603154767 0.0177433379
+0
+3
+9
+254164 0.0274417475 0.00987191219 0.0153442007 0.000934276846 0.0261503886
+0
+3
+9
+2061 0.698548436 0.00695498288 0.012225573 0.000646940432 0.0198274963
+96
+117
+42
+213132 0.0186841413 0.0755457878 0.179555669 0.0468516201 0.301953077
+0
+0
+0
+104829 0.000331091345 0 0.0153999887 0 0.0153999887
+0
+6
+6
+181742 0.268596798 0.0469233766 0.0333230533 0.00693464698 0.0871810764
+168
+115
+18
+212761 0.0944808573 0.0457269661 0.0704338253 0.00447487086 0.120635673
+0
+9
+6
+519555 0.0567064434 0.00388292968 0.0088666426 0.000942486688 0.0136920586
+27
+45
+63
+376295 0.0189670082 0.0423368923 0.0574715212 0.0302825142 0.130090922
+9
+36
+39
+177194 0.0259449091 0.0428732894 0.062770009 0.0175455455 0.123188846
+39
+78
+63
+356570 0.0301874783 0.0296267904 0.0667183697 0.0104220798 0.106767237
+57
+6
+0
+553165 0.000925606641 0.0492373072 0.0545273684 0.0340430737 0.137807742
+258
+207
+102
+370591 0.00762964226 0.0565079115 0.238105327 0.0335528329 0.328166068
+6
+15
+18
+474464 0.208066717 0.0358685739 0.0415122584 0.0823040828 0.159684911
+63
+21
+6
+172924 0.427858859 0.0549156368 0.0560275 0.0209433902 0.131886542
+18
+27
+6
+47263 0.36472553 0.0156297386 0.0117032854 0.0138149541 0.0411479771
+0
+9
+6
+384850 0.687291 0.0164160077 0.0245225877 0.001102885 0.0420414805
+33
+72
+75
+291686 0.0245927013 0.0284184609 0.0569669157 0.0248690825 0.110254452
+9
+21
+12
+160811 0.116026752 0.0262860358 0.016718965 0.00373440655 0.0467394069
+0
+27
+24
+430286 0.144913673 0.0104903923 0.0152655263 0.033827927 0.0595838465
+0
+0
+6
+39468 0.660920143 0.00458263513 0.00578916306 0.0302426945 0.0406144895
+81
+72
+21
+76625 0.0661866665 0.0387669615 0.0493295453 0.00543128327 0.0935277864
+9
+21
+21
+566756 0.0339701325 0.0249163453 0.0327116512 0.0182341412 0.0758621395
+3
+3
+18
+548550 0.102527454 0.0669009462 0.043900039 0.102613501 0.213414475
+0
+3
+9
+553162 0.460461617 0.00487947837 0.00579607487 0.00674961228 0.0174251664
+0
+3
+9
+94025 0.465013951 0.00624143844 0.0037180041 0.00153195625 0.0114913983
+60
+33
+15
+261744 0.408237636 0.0288519859 0.0275219772 0.00838132 0.0647552833
+114
+129
+72
+97423 0.00971982908 0.0458517782 0.131954134 0.010817484 0.188623399
+0
+9
+27
+216161 0.106882721 0.00722323358 0.0224415697 0.0169541463 0.0466189533
+24
+24
+15
+517465 0.11195343 0.0222171657 0.0195474103 0.00680571 0.0485702865
+78
+99
+27
+113397 0.0450314432 0.0514494441 0.110368833 0.0254952945 0.187313557
+3
+9
+12
+422725 0.116445564 0.0116099436 0.00714346813 0.000841571717 0.0195949841
+3
+9
+6
+299609 0.0392085 0.0143321473 0.0113033522 0.00207877811 0.0277142767
+111
+123
+30
+151480 0.0630696 0.0474885516 0.111937992 0.0191501305 0.178576678
+114
+66
+9
+167588 0.245635524 0.0511192083 0.0562485904 0.0208448842 0.12821269
+69
+18
+9
+462342 0.0836468041 0.0463222638 0.0365106836 0.00347211072 0.0863050595
+0
+6
+24
+508373 0.0519755036 0.0309290942 0.0235590283 0.00415828638 0.0586464107
+0
+0
+9
+138556 0.165838733 0.003048738 0.00440670596 0.0306698903 0.0381253362
+0
+0
+12
+262275 0.0755782574 0.00555135636 0.0197464656 0.00468790112 0.029985724
+18
+21
+39
+443969 0.032265339 0.0446684361 0.0530444719 0.0188537985 0.116566703
+3
+18
+12
+299077 0.312340975 0.0184794925 0.0219766218 0.00220067962 0.0426567942
+3
+18
+33
+347352 0.0389733836 0.0265924092 0.0344011374 0.0164232701 0.0774168149
+15
+27
+33
+520237 0.130314305 0.0363422148 0.0510547124 0.0342465416 0.121643469
+0
+12
+24
+170519 0.118996829 0.00557398936 0.0126637351 0.0369998924 0.0552376211
+12
+24
+18
+254283 0.166472226 0.0470994599 0.0376075804 0.046552904 0.131259948
+0
+4
+9
+15113 0.0148636904 0.020112345 0.0249622781 0.0519933179 0.0970679373
+3
+15
+9
+209664 0.294475883 0.0162708871 0.0108476281 0.000589061063 0.0277075749
+0
+0
+12
+209868 0.0699197724 0.0212519746 0.0153445331 0.0393150151 0.0759115219
+3
+15
+12
+439710 0.045310881 0.0375856981 0.0288238227 0.0191756282 0.0855851471
+6
+9
+3
+460049 2.71286798 0.00893874373 0.0225528739 0.0021076675 0.0335992835
+0
+24
+24
+84258 0.0238665 0.0567813218 0.0489985421 0.0424967073 0.148276582
+75
+27
+6
+264619 0.415759861 0.0489057712 0.0558421314 0.033239577 0.13798748
+9
+6
+0
+28285 0.000229006284 0.00875876 0.00945365615 0.000503314601 0.0187157299
+33
+38
+27
+314313 0.0769362152 0.0275835078 0.036517147 0.0189061966 0.0830068439
+0
+9
+6
+392928 0.724859715 0.00794161763 0.0113804545 0.000628684182 0.0199507568
+9
+18
+9
+535135 0.226900756 0.0239185225 0.0152153783 0.00488096615 0.0440148637
+48
+66
+45
+4265 0.0578621961 0.0315718949 0.0718211681 0.0726219043 0.17601496
+6
+18
+15
+52232 0.0809719414 0.0181664564 0.0241008215 0.0222551301 0.0645224079
+177
+195
+93
+389644 0.00514901243 0.0379665047 0.146961167 0.0132936575 0.198221326
+9
+36
+45
+145019 0.0282188803 0.0168407317 0.0473788 0.000698963122 0.0649184957
+144
+105
+36
+47837 0.0339447409 0.0405526087 0.0820416957 0.0154417539 0.138036057
+3
+24
+30
+252203 0.0191240311 0.0680611655 0.0571189597 0.0464519411 0.171632066
+38
+53
+42
+350231 0.0511041246 0.0424583666 0.0709999353 0.0263224579 0.13978076
+21
+33
+42
+35975 0.0528099537 0.0259833876 0.060436327 0.0384422541 0.124861963
+3
+36
+45
+96110 0.034776248 0.0175454598 0.0620670244 0.0339554101 0.113567889
+0
+0
+9
+248087 0.162199706 0.0139793009 0.0137081 0.00168251572 0.0293699186
+0
+102
+114
+571990 0.0179785043 0.0399660468 0.180463821 0.0943296477 0.314759523
+15
+33
+30
+520812 0.0502336547 0.04091933 0.0523685515 0.0422572643 0.135545149
+165
+135
+75
+497438 0.00766040478 0.0465766191 0.137776986 0.0237441268 0.208097726
+0
+3
+9
+511849 0.220340729 0.0307926591 0.013029227 0.00476133032 0.0485832207
+9
+27
+33
+114348 0.233544499 0.0418947935 0.0488617681 0.0445655063 0.135322064
+0
+6
+15
+159282 0.0613389686 0.0261017382 0.0265794564 0.0116658 0.064347
+0
+3
+9
+13632 0.113856927 0.0163612682 0.00884562917 0.0320255645 0.0572324656
+3
+21
+18
+186240 0.0909206122 0.0379131511 0.0272230841 0.0334180854 0.0985543281
+36
+24
+15
+356302 0.113369152 0.0628777668 0.0565722138 0.0445124432 0.163962424
+51
+57
+18
+420658 0.0786179602 0.033376772 0.0391449369 0.00215538312 0.0746770874
+0
+6
+15
+126914 0.0395740084 0.0122276982 0.0261405967 0.00891738199 0.047285676
+30
+57
+33
+135356 0.0834043622 0.0240755212 0.0455539227 0.0246943086 0.0943237543
+0
+0
+6
+535326 0.364478 0.00574882096 0.0106791118 0.0216874629 0.0381153971
+3
+9
+15
+227218 0.153879076 0.0310844537 0.0184780285 0.0541052148 0.103667691
+87
+132
+66
+2890 0.0240456685 0.0357455276 0.0941080451 0.0174401533 0.147293732
+42
+36
+15
+187933 0.308502227 0.0459576286 0.0346981138 0.0257598441 0.106415585
+84
+72
+9
+176527 0.440637946 0.0383506194 0.0726563707 0.061048381 0.172055364
+24
+45
+36
+569722 0.0318547785 0.059686739 0.0798027 0.0589008555 0.198390305
+114
+78
+9
+292822 0.37718451 0.0558985956 0.0783413127 0.0331656411 0.167405546
+0
+0
+3
+113387 0.0608455 0.0437233597 0.015940927 0.0430599861 0.102724284
+105
+204
+129
+37734 0.0197400488 0.0528975092 0.322821617 0.102322981 0.478042126
+12
+63
+78
+323370 0.023902975 0.0288591422 0.0910033 0.0740537345 0.193916187
+30
+54
+39
+425361 0.0676341206 0.0328960605 0.085998863 0.0248252749 0.143720195
+24
+42
+21
+398606 0.138667166 0.0292848926 0.0270309653 0.00865866058 0.0649745166
+0
+0
+9
+508952 0.103458092 0.00598917948 0.0143542513 0.0376213193 0.0579647459
+0
+0
+0
+464296 0.000632843061 0 0.0121116061 0 0.012111607
+18
+36
+12
+154087 0.0360428393 0.0436955281 0.0311420038 0.00986681227 0.084704347
+24
+24
+9
+50956 0.275045693 0.0224567875 0.0149127133 0.0021136438 0.0394831449
+3
+9
+6
+510299 0.0560091399 0.0125130732 0.00887953676 0.00091001275 0.0223026238
+57
+42
+15
+143217 0.154986441 0.0251544695 0.0483884662 0.00284159509 0.0763845295
+0
+3
+9
+331223 0.457374573 0.012054475 0.0188991 0.00284512714 0.0337987021
+27
+33
+27
+83441 0.0393858105 0.0469592214 0.0755189881 0.0491794124 0.171657622
+24
+18
+15
+14352 0.023225598 0.026344372 0.0209602844 0.0367356092 0.0840402693
+15
+30
+12
+386257 0.447263241 0.0389477648 0.0352731198 0.0484621041 0.122682989
+0
+12
+36
+216428 0.0615787059 0.0203113556 0.03179105 0.0277831852 0.0798855871
+3
+12
+21
+314193 0.0931316167 0.0330116823 0.0165989641 0.00927153 0.0588821769
+27
+15
+9
+267224 0.283395201 0.0308132228 0.0178924967 0.0252819825 0.0739877075
+12
+21
+6
+62363 0.342199326 0.0412641242 0.0201088581 0.00664838217 0.0680213571
+42
+30
+30
+384015 0.0772949904 0.0343613885 0.0417221934 0.0091296928 0.0852132738
+156
+99
+12
+517945 0.0912333578 0.0633868948 0.146811396 0.0333797224 0.243578
+0
+18
+24
+392753 0.0683635 0.0200437196 0.0179478526 0.0140961967 0.0520877689
+18
+48
+54
+97036 0.0284055788 0.0381654 0.0745852 0.0241951607 0.136945769
+27
+51
+33
+475906 0.0553901605 0.0241823308 0.0588558242 0.0215959139 0.104634069
+156
+105
+30
+418535 0.104912363 0.0367537588 0.0789678097 0.0124622583 0.128183842
+6
+9
+6
+418757 0.838842571 0.00712382374 0.00547073875 0.000868088799 0.0134626506
+0
+12
+30
+437351 0.0499766022 0.0309712477 0.0336196423 0.0737218484 0.138312742
+9
+6
+15
+170000 0.0555947497 0.0345847681 0.0223834682 0.0162107889 0.0731790215
+132
+201
+165
+208363 0.00733368751 0.0507605337 0.243590668 0.0278927647 0.322244
+0
+0
+18
+480657 0.0456950665 0.00895876903 0.0331621058 0.0179620758 0.0600829497
+0
+21
+45
+384983 0.0166746974 0.0244361367 0.0547840707 0.0320675522 0.111287758
+108
+45
+24
+104095 0.284243524 0.0305013489 0.0534692071 0.052201 0.13617155
+102
+75
+27
+91341 0.130735785 0.0424062833 0.0642563626 0.0539167076 0.160579354
+0
+12
+15
+398309 0.0928091556 0.0049251616 0.0136196706 0.000544506765 0.0190893374
+0
+6
+18
+67867 0.0776057839 0.0657275543 0.0278883465 0.0465385467 0.140154451
+15
+48
+43
+353320 0.0876266062 0.022499701 0.0446690172 0.0379497558 0.105118468
+3
+18
+21
+202653 0.0463204235 0.0311127193 0.0363139249 0.00465975888 0.0720864
+18
+51
+57
+175619 0.0563497581 0.0369788595 0.0831281841 0.0255957916 0.145702839
+39
+93
+63
+123627 0.0159681 0.0369474851 0.0938823074 0.00528204674 0.136111826
+51
+26
+3
+429174 1.77969527 0.0333427303 0.0146192508 0.00197707489 0.049939055
+0
+0
+6
+109750 0.193325788 0.0216904487 0.00816054735 0.0393036194 0.0691546127
+9
+33
+21
+452027 0.114569977 0.018188931 0.0282397531 0.0155200753 0.0619487613
+0
+0
+9
+537955 0.123310849 0.00331528042 0.0169546921 0.0224559568 0.0427259281
+3
+15
+9
+371129 0.0852054805 0.0201488808 0.0155512933 0.0051622726 0.0408624485
+87
+99
+33
+222781 0.0551049858 0.0340766087 0.0544011928 0.0127776805 0.101255476
+27
+54
+39
+531594 0.0609930679 0.0468770079 0.104103297 0.0474795029 0.198459804
+80
+72
+21
+478862 0.0481033437 0.0483588688 0.0514710657 0.00891778432 0.108747721
+39
+84
+54
+448871 0.0160811022 0.0467450097 0.075510323 0.0161922015 0.138447523
+3
+12
+33
+423201 0.0652853325 0.0142848669 0.0353942737 0.0142851416 0.0639642775
+9
+24
+9
+60431 0.0880270749 0.0144460723 0.0106054237 0.000707579777 0.0257590767
+3
+33
+39
+295336 0.026368048 0.0437731221 0.0234256163 0.108302027 0.175500751
+0
+6
+18
+10678 0.0850064456 0.0332491882 0.0284474269 0.00329124276 0.0649878532
+90
+108
+57
+181267 0.0664396 0.042185612 0.155087024 0.0828284 0.280101061
+3
+12
+15
+497145 0.0898600519 0.0204783 0.00923075713 0.000869485666 0.0305785425
+96
+36
+12
+247141 0.118407853 0.0472853184 0.0520998873 0.0277567618 0.127141967
+9
+3
+0
+196681 0.000562984031 0.00785861444 0.0113784429 0.00166973565 0.020906793
+0
+6
+6
+339943 0.425113201 0.0182455014 0.0259838402 0.0401162952 0.0843456388
+0
+0
+0
+459590 0.000618798251 0 0.00589774502 0 0.00589774502
+132
+81
+48
+34445 0.0305736512 0.0368802547 0.110473499 0.0260114782 0.173365235
+0
+15
+30
+64264 0.0478278026 0.0193846356 0.0284575019 0.0128074465 0.0606495813
+15
+57
+60
+6771 0.0132400841 0.027977949 0.0635666326 0.019577 0.11112158
+0
+0
+0
+192817 0.000271498808 0 0.00774671882 0 0.00774671836
+15
+33
+33
+391392 0.0994046256 0.0204664 0.0207502805 0.0281598847 0.0693765655
+0
+15
+18
+7888 0.649833441 0.0130267916 0.0131899603 0.00658661406 0.0328033678
+0
+18
+27
+450075 0.0442909971 0.030327199 0.0297178905 0.00311032054 0.0631554127
+6
+18
+9
+418606 0.412942111 0.0154003194 0.0365080871 0.045012448 0.0969208553
+6
+24
+21
+377355 0.06726183 0.0348138176 0.0327036 0.0503246039 0.117842019
+42
+18
+9
+85813 0.0444064885 0.0286358241 0.026471965 0.00468868902 0.0597964749
+18
+12
+3
+517443 3.25239849 0.0490614325 0.0152108353 0.00089697924 0.065169245
+3
+24
+57
+168812 0.0477797687 0.0439544618 0.0447633713 0.0464556888 0.135173529
+9
+42
+66
+410810 0.0266739577 0.0305569526 0.0542567372 0.0476022884 0.13241598
+0
+0
+24
+574184 0.0474172607 0.0206260215 0.0184395481 0.0249871 0.0640526637
+180
+192
+87
+9707 0.041294869 0.0412681811 0.233655944 0.042339202 0.317263335
+0
+12
+27
+153607 0.100485578 0.0126077849 0.0295147616 0.0560151078 0.0981376618
+0
+12
+12
+270677 0.309437096 0.0247371085 0.024874229 0.00437317695 0.0539845116
+0
+6
+12
+562243 0.219741851 0.0172359161 0.00963858142 0.00180550432 0.02868
+177
+229
+102
+337866 0.0169734694 0.0562217496 0.23070699 0.014060108 0.300988853
+21
+48
+48
+93534 0.0265093744 0.0442701392 0.0587684661 0.0173736755 0.120412275
+120
+123
+36
+467705 0.174114853 0.0369248 0.133891955 0.0624077246 0.233224481
+56
+75
+42
+142346 0.0773132145 0.03112619 0.0686555952 0.0142597361 0.114041515
+75
+123
+75
+543895 0.036962986 0.0325928591 0.0897724107 0.021118205 0.143483475
+0
+6
+15
+273688 0.188975841 0.0064987326 0.0167632848 0.116969571 0.14023158
+27
+39
+27
+444382 0.0921659842 0.0482148565 0.0452971943 0.0351290815 0.128641129
+0
+0
+9
+76513 0.0999314189 0.0088708112 0.0164862126 0.00277269143 0.0281297155
+0
+12
+15
+428079 0.291064739 0.0116095943 0.0248518325 0.0346360393 0.0710974634
+0
+0
+9
+243027 0.438866049 0.00542429322 0.0113161812 0.00391059509 0.0206510704
+36
+39
+30
+171201 0.0396804325 0.0335715786 0.0349612609 0.00221468 0.070747517
+60
+57
+9
+179346 0.194300592 0.0461727902 0.0421591848 0.067498073 0.155830055
+9
+15
+21
+537069 0.0717951059 0.054003682 0.0247553196 0.0516735353 0.130432531
+9
+24
+27
+373539 0.0745364428 0.0374478586 0.0392685309 0.0267974287 0.103513822
+66
+39
+3
+122839 0.201967865 0.0330234841 0.0480543636 0.0198310614 0.100908905
+90
+78
+27
+499618 0.0311102793 0.0417575799 0.0692412332 0.0208687745 0.131867588
+3
+3
+9
+523360 0.539590836 0.0517840758 0.00437683612 0.0841866285 0.14034754
+3
+18
+9
+334530 0.323868096 0.0224091243 0.00958573539 0.00138114183 0.0333760045
+57
+54
+27
+147725 0.0829561502 0.0360718668 0.043902047 0.0284075923 0.10838151
+0
+27
+36
+431370 0.0418032706 0.0349579751 0.0907790214 0.0745958909 0.20033288
+15
+54
+27
+503005 0.107944384 0.0256519262 0.0441781916 0.0365753397 0.106405452
+177
+186
+60
+369259 0.0296301823 0.0443019271 0.150012895 0.0156502314 0.20996505
+126
+36
+6
+342460 0.0430099145 0.0741176754 0.0427176468 0.0380164981 0.154851824
+3
+9
+15
+446461 0.284576178 0.0172133688 0.0264558643 0.00125580735 0.0449250415
+15
+12
+12
+278323 0.239461407 0.0148366541 0.0150459874 0.00242961338 0.0323122591
+111
+78
+60
+560797 0.0214312337 0.052988451 0.0871741176 0.0174380243 0.157600597
+6
+9
+9
+135275 0.218843237 0.0524906702 0.0139393779 0.0151167028 0.0815467462
+0
+0
+27
+335954 0.065847978 0.0192967523 0.0327779278 0.0389666818 0.0910413638
+0
+9
+12
+477949 0.0516872033 0.0569469 0.0294178948 0.0781796575 0.164544463
+6
+12
+12
+484584 0.0799467489 0.0117843477 0.0088944044 0.000641189748 0.0213199407
+9
+9
+3
+315909 1.288041 0.018975921 0.00965460669 0.00168010418 0.0303106308
+0
+6
+18
+89329 0.137948379 0.0230961423 0.0216429364 0.000485267024 0.0452243462
+9
+9
+18
+289423 0.00621193694 0.0172563922 0.0142858196 0.000857775332 0.0323999897
+51
+51
+27
+433904 0.135602191 0.0241222959 0.0280003548 0.00318977749 0.0553124286
+0
+6
+15
+198510 0.0544647351 0.0533985 0.0322514437 0.0289260801 0.114576027
+21
+45
+36
+310342 0.0299427323 0.0295757484 0.0438625 0.0517388061 0.125177056
+84
+39
+21
+197254 0.0970458388 0.0435448326 0.0490971468 0.0114098713 0.104051858
+96
+59
+6
+47828 0.05859451 0.0803943425 0.0499732457 0.0364894159 0.166857
+63
+120
+48
+220367 0.0256047174 0.0344136916 0.096542947 0.0191392172 0.150095865
+0
+0
+12
+332940 0.134875864 0.0169165507 0.0201823208 0.0324755609 0.069574438
+183
+168
+48
+561919 0.0167110376 0.0815358162 0.276526242 0.0675354078 0.425597429
+0
+6
+12
+533288 0.161779284 0.00766485324 0.00822327472 0.000671407674 0.0165595356
+60
+120
+69
+144243 0.0208932236 0.0349908508 0.063579604 0.0181472171 0.116717666
+3
+15
+9
+430036 0.19972688 0.0453740731 0.0330112725 0.00612785807 0.0845132
+6
+9
+3
+122825 1.22360659 0.0105453022 0.00942197442 0.0366812944 0.056648571
+54
+0
+9
+479030 0.0665435344 0.0403182469 0.0290454682 0.0107161729 0.0800798833
+6
+27
+27
+508822 0.0787195042 0.0263360441 0.0413114354 0.0142318448 0.0818793178
+3
+15
+9
+387074 0.0320078395 0.0670737252 0.0428389758 0.0560519397 0.165964648
+69
+114
+72
+243222 0.0186746847 0.0273060855 0.0776726678 0.00716014765 0.112138912
+3
+9
+21
+537128 0.0682954937 0.013556811 0.0274564195 0.00370427826 0.0447175056
+66
+90
+69
+292463 0.0404132977 0.0253742542 0.0726786107 0.0170227401 0.115075603
+6
+9
+6
+504152 0.0716556534 0.0491548181 0.0387235768 0.0238389 0.111717291
+3
+18
+9
+2261 0.0603123195 0.0528874658 0.0334007964 0.0269953124 0.113283567
+18
+9
+9
+372265 0.0359149 0.0224380158 0.0213934984 0.0216591842 0.0654907
+0
+0
+6
+518719 0.24990949 0.0211036615 0.010791162 0.0592269488 0.0911217704
+21
+24
+39
+527427 0.0442850888 0.0292488821 0.0547366366 0.00676106149 0.0907465816
+135
+81
+18
+93766 0.15520978 0.0493600741 0.0612523817 0.0216223821 0.132234842
+0
+15
+30
+2225 0.0504811257 0.0196104031 0.0570800304 0.0586054549 0.135295898
+12
+33
+33
+253665 0.117033854 0.0228781141 0.0261867419 0.0104709622 0.0595358163
+84
+108
+87
+144804 0.0248156954 0.0476210378 0.144072339 0.034979187 0.22667256
+0
+27
+39
+397734 0.0388721265 0.0210633464 0.02686923 0.0162848495 0.0642174259
+150
+72
+30
+506942 0.0322375894 0.0369178914 0.0701990351 0.0133311413 0.120448068
+0
+0
+18
+86249 0.0711376145 0.0228034258 0.0451151133 0.0169072673 0.0848258063
+6
+27
+18
+503392 0.11631386 0.0152723892 0.0115748206 0.00595389213 0.0328011
+63
+42
+6
+406841 0.114129886 0.0738437101 0.0389911607 0.0560599864 0.168894842
+0
+6
+18
+202658 0.150412023 0.024005238 0.0221691579 0.0200173724 0.0661917701
+33
+81
+75
+424162 0.0261686333 0.0421008579 0.0844926834 0.0238017086 0.150395244
+3
+9
+12
+566758 0.145268798 0.0138811516 0.00668145716 0.00954724103 0.0301098488
+6
+48
+48
+176007 0.02714446 0.0458875895 0.0540926233 0.10270007 0.20268029
+36
+93
+60
+325327 0.0320035815 0.0287490729 0.062215291 0.0050039948 0.0959683582
+3
+18
+9
+224368 0.161433011 0.0166270919 0.012087319 0.00916523207 0.0378796421
+12
+30
+36
+147338 0.0942332447 0.0169694 0.0252045691 0.0885647833 0.130738765
+0
+0
+18
+364307 0.0712474883 0.00568715483 0.0233781114 0.00940918084 0.0384744443
+21
+63
+42
+481239 0.0328961685 0.0225124154 0.0463531725 0.00460272655 0.0734683126
+0
+3
+33
+418816 0.0229078531 0.031464573 0.0361849 0.0315803103 0.0992297828
+0
+6
+18
+248441 0.0775774345 0.0126591688 0.0104805594 0.0164407976 0.039580524
+9
+15
+15
+48104 0.09253297 0.0174746308 0.0111794509 0.0146022877 0.0432563648
+96
+117
+63
+293200 0.00771141332 0.0644460246 0.128296882 0.0344691388 0.227212042
+39
+84
+69
+530052 0.0165320057 0.0806456432 0.173900738 0.119971134 0.3745175
+0
+0
+18
+541664 0.0394236073 0.018265361 0.0457484946 0.0336526893 0.0976665467
+18
+66
+48
+20774 0.0245117396 0.0320668109 0.0395098776 0.00846830569 0.080045
+57
+54
+33
+528738 0.132095501 0.0408824086 0.0834964514 0.0124224424 0.136801302
+66
+105
+57
+322352 0.0187367033 0.0378613248 0.103863806 0.0300440639 0.171769202
+93
+111
+57
+361147 0.0240070913 0.036862053 0.088168405 0.010033207 0.135063678
+9
+6
+21
+18193 0.0516116582 0.0236914735 0.0467135794 0.0644911826 0.134896234
+0
+15
+27
+491061 0.0323886648 0.0278578941 0.0306791738 0.0400319695 0.0985690355
+9
+18
+12
+556240 0.365806937 0.0163305327 0.0265925638 0.00183565426 0.044758752
+21
+9
+3
+451435 0.654498696 0.0255278777 0.0126390783 0.0219558347 0.060122788
+18
+69
+66
+360849 0.0417198353 0.0275435448 0.0575414412 0.0162904616 0.101375446
+30
+84
+78
+13991 0.0146477781 0.059870448 0.157350585 0.103190333 0.320411384
+0
+6
+12
+133567 0.166859478 0.00642319769 0.0299949236 0.00934755057 0.0457656682
+63
+14
+0
+42144 0.00042485795 0.0593490563 0.0500439964 0.0518551394 0.161248192
+18
+12
+3
+2822 3.29439 0.0272894353 0.0151277483 0.0104386881 0.0528558716
+96
+81
+9
+154584 0.882614672 0.0336032584 0.0459662899 0.0115868207 0.0911563709
+0
+12
+24
+546210 0.0278276782 0.0232671928 0.02905095 0.0182088763 0.0705270171
+45
+63
+30
+473406 0.075288564 0.0399017446 0.0784863234 0.0177884139 0.136176467
+0
+12
+15
+530860 0.0784211904 0.0137882149 0.0237868726 0.0681855306 0.105760612
+0
+9
+15
+115898 0.234469593 0.0113639636 0.0134783546 0.000400635588 0.0252429508
+75
+117
+36
+319726 0.0233177841 0.047402 0.0782290101 0.0180600304 0.143691033
+15
+27
+9
+186413 0.366750658 0.0165645313 0.0238379389 0.0906468183 0.13104929
+42
+81
+90
+340089 0.0278030336 0.021918511 0.0910832286 0.0345711187 0.147572875
+12
+18
+6
+184388 0.1917184 0.042865511 0.0284097381 0.0349670164 0.106242254
+45
+93
+63
+566276 0.0215214957 0.0225301776 0.0584888868 0.00840052776 0.0894195884
+0
+15
+24
+409217 0.0414338633 0.042395886 0.0385324359 0.0461375415 0.127065867
+12
+6
+6
+308316 0.115343854 0.106582046 0.028589651 0.094069615 0.229241312
+9
+15
+18
+471483 0.107372843 0.0115405656 0.00611673854 0.00117812969 0.0188354328
+27
+35
+24
+346412 0.0867780373 0.0366473161 0.0361737236 0.0484830514 0.121304102
+273
+210
+54
+321886 0.0413099 0.0529948063 0.141557395 0.0213781986 0.215930402
+0
+27
+39
+325102 0.0647225454 0.0216452908 0.0317339301 0.0233596601 0.0767388791
+15
+75
+51
+349926 0.0121826977 0.0323078446 0.0822945088 0.0176697671 0.132272124
+0
+0
+15
+5184 0.0982384384 0.0122966254 0.0345162079 0.0540230609 0.100835897
+105
+102
+42
+162858 0.0517893657 0.0328728966 0.0572807193 0.0317522548 0.121905871
+0
+9
+18
+124300 0.186637551 0.0168136116 0.0189339984 0.0245887861 0.0603364035
+6
+30
+27
+397309 0.0717338 0.0093715433 0.011919857 0.0431481041 0.0644395
+27
+24
+15
+154520 0.240691349 0.021253325 0.0204889569 0.0135445511 0.0552868359
+9
+9
+6
+394941 0.116651349 0.0264619831 0.0206568949 0.00509212865 0.0522110052
+12
+21
+21
+566277 0.0377144478 0.0207298826 0.0196478143 0.0712054819 0.111583173
+0
+0
+15
+319024 0.037781816 0.0269838665 0.0520789549 0.0215373393 0.100600161
+117
+111
+51
+158497 0.0297526363 0.0531266592 0.122337505 0.0757396743 0.251203835
+69
+99
+60
+203629 0.0125821326 0.0404774025 0.114611462 0.00603100844 0.161119878
+99
+81
+21
+490178 0.0566013828 0.0435651839 0.0907417238 0.0351891257 0.16949603
+0
+3
+6
+471235 0.0766502246 0.0784162208 0.0127452854 0.0103139365 0.10147544
+69
+54
+15
+476722 0.121129371 0.0427970365 0.0601077601 0.0352713279 0.138176128
+0
+0
+9
+372861 0.114668369 0.0102211526 0.0187190678 0.0332444571 0.0621846765
+12
+39
+48
+85568 0.0566053689 0.0639661476 0.0558949336 0.0398685634 0.159729645
+0
+0
+15
+475108 0.160128936 0.0214946251 0.00885568373 0.0285115186 0.0588618293
+0
+6
+9
+490720 0.560091674 0.00608469686 0.0118329711 0.047385864 0.0653035343
+84
+69
+33
+54334 0.0850208402 0.03940323 0.057049606 0.0501004234 0.146553248
+3
+12
+15
+462486 0.23190251 0.0162224919 0.00885915197 0.000884689623 0.0259663332
+0
+0
+6
+327479 0.426049471 0.00794857368 0.0118453819 0.0170287844 0.03682274
+75
+102
+63
+116405 0.0275859926 0.0307798889 0.093538031 0.0139813349 0.138299271
+123
+78
+21
+228472 0.0858344883 0.0327468812 0.0502233207 0.00110470573 0.0840749145
+0
+9
+15
+8350 0.170141801 0.00743606826 0.0184921976 0.0251772776 0.051105544
+57
+24
+18
+493544 0.115452677 0.0405428782 0.029838955 0.00501246518 0.0753942952
+0
+0
+27
+208761 0.0495035537 0.0110323289 0.0234668162 0.0350141786 0.0695133135
+24
+24
+6
+292225 0.118523285 0.028315682 0.0206405111 0.0145788901 0.0635350794
+0
+0
+6
+12010 0.1855499 0.021484714 0.0327509344 0.0324243717 0.0866600201
+6
+9
+21
+125100 0.0999020562 0.0209187251 0.0292502809 0.0947606117 0.144929618
+0
+0
+9
+91227 0.138780445 0.00366210262 0.0212157331 0.0345597714 0.0594376065
+9
+27
+18
+93601 0.159595698 0.0376275927 0.0292621627 0.0521536 0.119043365
+27
+54
+24
+422025 0.082811892 0.0333259553 0.0433668345 0.0167764965 0.0934692919
+6
+33
+33
+536990 0.0963957757 0.0531746931 0.0468208417 0.0357491784 0.135744706
+0
+6
+6
+151387 0.0792000741 0.021964943 0.0173144303 0.0119084055 0.0511877798
+3
+9
+12
+449976 0.0956430733 0.0796924159 0.024062125 0.124444172 0.228198707
+63
+42
+15
+323668 0.0192767978 0.0340717 0.0348787 0.0257566534 0.0947070569
+57
+60
+33
+23294 0.0153227914 0.0620906465 0.0643866807 0.0241991933 0.150676519
+75
+75
+27
+38034 0.075698331 0.0460356548 0.141608924 0.0378687344 0.225513309
+0
+24
+36
+433044 0.0492789708 0.025671158 0.0921941549 0.0653802156 0.18324554
+0
+9
+15
+94306 0.108964413 0.00567203 0.0103981011 0.0290549919 0.0451251268
+45
+87
+60
+401642 0.0445961654 0.048039902 0.0794394836 0.0808434039 0.208322793
+0
+6
+9
+52949 0.567367136 0.00637479592 0.0185665302 0.00193731335 0.0268786401
+6
+15
+15
+306444 0.0907989144 0.0111721558 0.0142785963 0.03908097 0.0645317286
+87
+63
+12
+27611 0.141484886 0.0357285254 0.0386213027 0.011250128 0.0855999589
+12
+18
+12
+314027 0.0286648236 0.0169826839 0.0126702879 0.00119192083 0.0308448914
+117
+96
+36
+391972 0.0556137748 0.042835094 0.170726359 0.0932329074 0.306794375
+75
+60
+15
+311295 0.0912783816 0.0587776192 0.0689148158 0.0730999559 0.200792402
+9
+0
+18
+118598 0.081528604 0.0196807664 0.0269150436 0.0775639564 0.124159768
+98
+99
+15
+550514 0.0730023533 0.0340746343 0.0702775046 0.0128516806 0.117203832
+9
+9
+18
+80316 0.0444699302 0.044953417 0.0189638622 0.015001351 0.0789186358
+171
+114
+63
+12700 0.027645193 0.0436303094 0.145844102 0.030068405 0.219542801
+36
+63
+18
+214224 0.118096583 0.0398517251 0.0533954315 0.0608619712 0.15410912
+12
+63
+57
+145318 0.0650552213 0.0239511728 0.0630591139 0.0259474404 0.112957731
+0
+18
+33
+579457 0.0364268795 0.0186974779 0.0217080042 0.000808440032 0.0412139222
+24
+42
+12
+164469 0.0671082512 0.0343316905 0.041377 0.00146803353 0.0771767199
+66
+6
+9
+82263 0.123471692 0.0698986053 0.039100565 0.074838 0.18383716
+3
+15
+24
+212462 0.120021842 0.0206703786 0.0279509202 0.00836186204 0.0569831654
+51
+60
+39
+486175 0.0867391676 0.0289215799 0.0581134073 0.0219584629 0.108993456
+0
+0
+6
+175969 0.107427038 0.0231310967 0.0166792888 0.0301552322 0.0699656233
+3
+27
+30
+293125 0.032062903 0.0332504921 0.0450462028 0.0346822143 0.112978905
+18
+27
+12
+25864 0.144771069 0.0428443663 0.0269479044 0.00734514929 0.0771374255
+0
+0
+18
+293837 0.0497069806 0.0041605942 0.0241372343 0.0367371291 0.0650349557
+12
+51
+39
+110156 0.0193081535 0.0304019805 0.0454601198 0.0122879036 0.0881500095
+9
+9
+9
+343954 0.0354855955 0.0598038323 0.0541656241 0.0543314405 0.168300897
+9
+12
+18
+311928 0.144285262 0.0146261109 0.016929308 0.0161887426 0.0477441624
+12
+12
+18
+51181 0.0843450278 0.0397438109 0.0215879418 0.0099614393 0.0712931901
+12
+18
+15
+7088 0.108313188 0.0277439188 0.0193220135 0.00911058951 0.0561765209
+0
+0
+9
+189966 0.041678112 0.00478453329 0.0151262488 0.0146570122 0.0345677957
+0
+9
+18
+53788 0.0799712092 0.0215095263 0.0394261181 0.0398915671 0.10082721
+69
+24
+12
+55167 0.268408209 0.0336574614 0.041007936 0.0115521858 0.0862175822
+0
+0
+12
+281296 0.0712291 0.0352830887 0.0165304206 0.0333919041 0.0852054209
+39
+12
+0
+124876 9.9569952e-05 0.033074826 0.0234882534 0.0147442296 0.071307309
+0
+9
+15
+143333 0.372711152 0.0115730716 0.0152770504 0.00110997877 0.0279601
+9
+18
+12
+374734 0.0767561644 0.0467760079 0.0282960869 0.0208507814 0.0959228799
+0
+9
+12
+55810 0.22576645 0.00976585224 0.0105622681 0.00115083065 0.021478951
+0
+6
+9
+185305 0.0806145221 0.00549753755 0.0139320474 0.000356644974 0.0197862312
+6
+21
+30
+498687 0.0441793352 0.041530706 0.0241090283 0.0287111737 0.0943509042
+12
+18
+15
+176408 0.209988654 0.0245487224 0.0275628697 0.0776332468 0.129744828
+0
+6
+9
+180495 0.0524998456 0.0190318897 0.0278024599 0.0580362 0.10487055
+129
+165
+75
+36451 0.0109543037 0.0701596513 0.170087785 0.0605392382 0.300786674
+144
+96
+51
+36936 0.0519387648 0.0417553969 0.103955552 0.013588042 0.159298986
+72
+144
+96
+226147 0.0156432893 0.0489552282 0.134239316 0.0375089124 0.220703453
+0
+27
+27
+493623 0.0235348754 0.0185168236 0.0302786566 0.00678002369 0.0555755049
+57
+57
+24
+145873 0.118131831 0.0351300426 0.0836705 0.0413978212 0.160198376
+12
+15
+9
+98520 0.509972811 0.0243386235 0.0214437656 0.0112071559 0.0569895431
+12
+18
+9
+296098 0.284075469 0.0133985197 0.0126587208 0.00145557127 0.0275128111
+9
+9
+9
+407970 0.217904061 0.0482562855 0.026613256 0.0201887842 0.095058322
+9
+18
+15
+486388 0.247753412 0.0180331394 0.0143927075 0.00394710759 0.0363729522
+0
+3
+12
+203483 0.0327973366 0.0720577613 0.0120064933 0.0649944916 0.149058744
+84
+60
+33
+320182 0.034089081 0.0367702283 0.0713475794 0.0758867189 0.18400453
+222
+210
+99
+490022 0.0164312236 0.0455087908 0.205921546 0.0270016305 0.278431952
+51
+24
+9
+40681 0.10016714 0.0379388966 0.0292667244 0.0111226644 0.0783282816
+24
+27
+12
+456756 0.124331377 0.027189 0.0308257379 0.0299450383 0.0879597738
+0
+0
+6
+470032 0.246528521 0.0106548844 0.0213236231 0.0521578304 0.084136337
+0
+30
+30
+357024 0.0304072797 0.0359001644 0.0608684868 0.0440850258 0.140853688
+0
+0
+3
+96988 0.0369341597 0.0436376594 0.0111508602 0.0247870889 0.0795756057
+0
+0
+15
+75886 0.0686336 0.0282054488 0.0236696899 0.0270878635 0.0789630115
+0
+9
+6
+387244 0.741395354 0.00654126843 0.0110569969 0.00120907975 0.018807346
+12
+27
+24
+136841 0.0322417468 0.0335039347 0.0303040519 0.0127932839 0.0766012669
+3
+18
+36
+46905 0.0310878549 0.0322478488 0.025938049 0.0514166951 0.109602593
+15
+30
+12
+363981 0.139304549 0.0340771042 0.0339509733 0.00407769065 0.0721057653
+0
+0
+6
+335589 0.192323655 0.0194957536 0.0278699063 0.0353641883 0.0827298462
+6
+27
+18
+104751 0.131846577 0.0253149569 0.0232319683 0.00294645387 0.0514933765
+9
+3
+9
+192168 0.109996982 0.0705750734 0.0137300668 0.00368319894 0.0879883394
+99
+51
+18
+133233 0.049288936 0.0838220045 0.0779972076 0.0718824118 0.233701617
+0
+0
+15
+380609 0.0317125395 0.00860119145 0.01214776 0.00390289072 0.0246518441
+105
+123
+69
+579697 0.0125521328 0.0759773478 0.177780554 0.104209647 0.357967556
+0
+0
+6
+376443 0.111443296 0.0186879933 0.0129814893 0.020969009 0.0526384935
+111
+150
+87
+153104 0.00834936276 0.0542905703 0.143479675 0.0244807918 0.222251028
+3
+69
+66
+231580 0.0279727392 0.0330777876 0.0579264238 0.0209097788 0.111913987
+57
+117
+69
+417355 0.014955977 0.054561317 0.122737318 0.0171040222 0.194402665
+3
+15
+21
+128224 0.0768096298 0.0149742542 0.0185859427 0.00249781203 0.0360580124
+9
+3
+9
+399864 0.139808267 0.0133455368 0.00990218297 0.000869080191 0.0241168011
+0
+3
+9
+83923 0.446995616 0.0220505614 0.0118459612 0.026927121 0.0608236417
+54
+51
+15
+445002 0.102497637 0.027597785 0.0354387835 0.0328687429 0.0959053114
+195
+207
+99
+236370 0.00795147941 0.0497081541 0.151496798 0.0182962045 0.219501138
+0
+6
+18
+561366 0.136560261 0.0219536386 0.0338340029 0.0778912082 0.133678854
+3
+9
+6
+293782 0.0922180414 0.0173414405 0.0205573253 0.00169116957 0.0395899341
+48
+21
+12
+419378 0.215783089 0.0353686102 0.0396207422 0.0043138708 0.0793032199
+0
+0
+9
+113313 0.146992236 0.00492528453 0.00992932916 0.0329087228 0.0477633402
+21
+24
+15
+367128 0.191585928 0.0213835295 0.0212128516 0.00110498618 0.0437013656
+18
+15
+15
+450488 0.208632618 0.0390264 0.0226834975 0.0237055421 0.0854154378
+0
+0
+18
+555705 0.118622042 0.00554583 0.0243254118 0.024433231 0.0543044731
+0
+6
+9
+374669 0.381592453 0.00770352781 0.00990608893 0.03299639 0.0506060049
+33
+135
+108
+475195 0.0274283923 0.0454800539 0.246666729 0.125447661 0.417594463
+0
+0
+15
+455422 0.0769568607 0.00686058775 0.0287512 0.0578991137 0.0935109
+165
+183
+72
+460461 0.0125258081 0.0468191765 0.138545722 0.0200174227 0.205382332
+0
+18
+24
+19447 0.119056031 0.0108116074 0.0396830849 0.056127511 0.106622204
+36
+57
+39
+457400 0.0635075867 0.0343323536 0.064004153 0.0270969607 0.125433475
+6
+15
+12
+200284 0.0757102221 0.0398516655 0.0231398083 0.00837158784 0.0713630617
+39
+45
+18
+17018 0.0754922628 0.0572465062 0.0465479717 0.00774742709 0.111541905
+0
+0
+9
+342614 0.153875858 0.00325181941 0.0164064821 0.0515619591 0.0712202564
+0
+6
+18
+287574 0.0421676971 0.0189765841 0.0172019601 0.0263212211 0.0624997653
+0
+0
+9
+256367 0.453812599 0.00185542181 0.016455723 0.00028876256 0.0185999069
+21
+66
+51
+312216 0.0343455784 0.0325409882 0.052407898 0.0300599076 0.115008786
+30
+51
+30
+92416 0.0376763679 0.0403676853 0.0488266945 0.0120596578 0.101254031
+0
+0
+9
+76731 0.0654597059 0.0398164652 0.00985352509 0.0465815365 0.0962515324
+0
+9
+27
+318722 0.0242559165 0.0440478399 0.0325579867 0.0398513749 0.116457194
+9
+36
+42
+401027 0.0329712927 0.0424710773 0.0728732198 0.0753000602 0.190644354
+54
+0
+6
+311883 0.0518580899 0.0663956 0.0416621603 0.0434212163 0.151478991
+3
+15
+15
+15797 0.22753866 0.0180228017 0.0137491599 0.00637169648 0.0381436571
+120
+54
+12
+101703 0.405018181 0.0544024594 0.0601387806 0.0144367833 0.128978014
+0
+30
+57
+83565 0.0260889959 0.0241901204 0.0439291634 0.0503668487 0.118486121
+0
+0
+18
+133778 0.0615601689 0.0137386909 0.00770799629 0.0208289549 0.0422756411
+6
+21
+42
+562292 0.0763746649 0.0210644454 0.0625385493 0.0491661951 0.132769182
+9
+6
+0
+484760 0.00098271342 0.0155901406 0.0174483657 0.000440980017 0.0334794819
+6
+18
+15
+183409 0.13719058 0.0565409176 0.0263175108 0.0612296686 0.144088104
+3
+6
+9
+512760 0.596247 0.0129876109 0.0145210335 0.00330578187 0.030814426
+0
+6
+6
+376937 0.0720542222 0.0100567406 0.00866037421 0.000430073647 0.0191471875
+93
+117
+63
+19624 0.0455684885 0.0387261473 0.102641493 0.0252839066 0.166651547
+0
+0
+15
+254368 0.0698362887 0.0140527813 0.0248350389 0.0107619613 0.0496497825
+0
+0
+15
+96097 0.047622323 0.0124369292 0.0185742974 0.0273021255 0.0583133511
+51
+101
+69
+164548 0.0180370193 0.0467070974 0.13361086 0.0677756593 0.24809362
+105
+171
+81
+404655 0.0160755441 0.0601709895 0.160433263 0.0296418965 0.250246167
+15
+21
+12
+577631 0.041017253 0.0550723858 0.033117082 0.0563473925 0.144536868
+6
+30
+36
+161840 0.0757056773 0.0270421691 0.0358197838 0.048276417 0.111138374
+156
+156
+66
+65001 0.0204193965 0.0530217662 0.123054765 0.0252157394 0.201292261
+15
+30
+33
+140691 0.0249779169 0.0469193868 0.0343336537 0.069101125 0.150354177
+0
+24
+30
+203697 0.0374378935 0.0167779513 0.0351046361 0.00718339486 0.0590659827
+6
+15
+9
+1655 0.0941362306 0.0334787406 0.028137777 0.00134489278 0.0629614145
+6
+39
+36
+60449 0.102139086 0.0295354314 0.0344168022 0.0259824842 0.0899347216
+0
+0
+9
+576614 0.16677098 0.00843177922 0.0239184462 0.0366850793 0.0690353
+0
+3
+9
+521231 0.242351 0.00933920871 0.00750521 0.0221756063 0.0390200205
+75
+45
+12
+250893 0.0292981043 0.0289506651 0.0309785288 0.002643049 0.0625722408
+33
+30
+9
+363058 0.37757194 0.0197109785 0.0252468679 0.00487046 0.0498283058
+9
+18
+21
+110449 0.0334688053 0.0413137563 0.0368423276 0.0334753245 0.111631408
+0
+9
+15
+248363 0.0576951653 0.0419312194 0.0281014685 0.0343943164 0.104426987
+0
+9
+18
+321790 0.226074904 0.0087045338 0.00744974706 0.000587404124 0.0167416837
+0
+0
+15
+224426 0.0861187056 0.0157581177 0.046441406 0.0385299325 0.100729458
+69
+120
+90
+16308 0.0180922411 0.0261935648 0.116406672 0.0092787575 0.151878983
+18
+45
+51
+153229 0.0182896387 0.0302518662 0.037895821 0.0230636708 0.0912113562
+0
+6
+9
+331024 0.0333236 0.0200949796 0.0170298 0.0529215559 0.0900463387
+3
+27
+24
+200296 0.0662719309 0.0330239274 0.0287032668 0.0529669411 0.114694133
+90
+147
+69
+123555 0.0218254607 0.0356459953 0.0684005544 0.00678794645 0.110834494
+0
+15
+12
+486203 0.308702379 0.00563446525 0.00829572603 0.0533219054 0.0672520921
+9
+9
+12
+145015 0.0977930948 0.0969736502 0.0305601358 0.119160056 0.24669385
+57
+105
+69
+557130 0.0140791051 0.0387558378 0.100414544 0.0296927989 0.168863177
+6
+12
+15
+167724 0.0228633061 0.047193747 0.0310601257 0.069050774 0.147304654
+0
+9
+12
+296353 0.0976286232 0.0122352112 0.0152634792 0.0150602441 0.0425589345
+111
+150
+48
+10149 0.0438430756 0.0407131277 0.175069451 0.0190735739 0.234856158
+0
+0
+6
+366421 0.137285531 0.0126182018 0.011922786 0.0022992345 0.026840223
+126
+201
+108
+402206 0.0160699524 0.0483074747 0.211564079 0.0202131178 0.28008467
+6
+36
+21
+563603 0.0250182822 0.0578224026 0.0228320044 0.0111121442 0.0917665511
+9
+15
+6
+153570 0.381321 0.0159307756 0.0120246047 0.00741374353 0.0353691205
+12
+36
+39
+161220 0.0616262183 0.0151390005 0.0268792138 0.118422121 0.160440341
+0
+9
+6
+466449 0.424937 0.0164050572 0.0167576745 0.123210527 0.156373262
+0
+6
+18
+302292 0.0531345978 0.0203232169 0.020081237 0.00704734074 0.0474517941
+111
+66
+6
+304044 0.241574764 0.0408697724 0.096628733 0.0254190639 0.162917569
+42
+51
+63
+517306 0.0236713439 0.0270433426 0.061015822 0.024296578 0.112355739
+0
+0
+6
+333371 0.0742125213 0.031792324 0.0107855396 0.0323828496 0.0749607161
+45
+48
+36
+479659 0.0410459861 0.0474332944 0.0735176 0.0262068883 0.147157788
+9
+15
+18
+246746 0.0733655393 0.0345328934 0.0261099674 0.0853149369 0.145957798
+6
+15
+21
+218494 0.150125802 0.025804257 0.044171989 0.0777142048 0.147690445
+12
+15
+18
+439427 0.270070553 0.0194188375 0.0220901333 0.0509438328 0.0924528092
+93
+126
+48
+74853 0.0295935329 0.0453930274 0.0844076276 0.0112210317 0.141021684
+0
+6
+18
+409496 0.0279259048 0.02286027 0.0123395696 0.00958135352 0.0447811931
+45
+21
+2
+29252 0.552835703 0.0301955529 0.026570987 0.010618452 0.067385
+21
+36
+30
+74135 0.0479975604 0.0269093197 0.0565914214 0.0184354801 0.101936221
+3
+9
+27
+337275 0.0564375259 0.0487292111 0.0236214213 0.0384376943 0.11078833
+3
+9
+15
+166896 0.0378779732 0.0368102826 0.019276958 0.0328951553 0.0889823958
+0
+6
+27
+140542 0.0810189843 0.0130705936 0.020147508 0.00110384915 0.0343219526
+6
+60
+51
+391154 0.00991288 0.047489997 0.0676153 0.0344049335 0.149510235
+57
+42
+18
+361029 0.0632216334 0.032106 0.0623669252 0.015108142 0.109581068
+0
+3
+9
+348483 0.203900799 0.00638158573 0.019126093 0.00198423816 0.0274919178
+0
+12
+18
+523426 0.180823088 0.0074165347 0.0112690134 0.0070051793 0.0256907288
+288
+279
+96
+236762 0.0122051314 0.0379194468 0.231971145 0.0193110146 0.289201617
+0
+9
+15
+322475 0.0217462443 0.0513933413 0.0219178 0.0669394135 0.140250549
+102
+30
+12
+24553 0.0566305257 0.0492543578 0.0619195774 0.0192553885 0.130429327
+105
+124
+66
+451308 0.0221634433 0.0768544823 0.166887581 0.0913816094 0.335123688
+0
+6
+27
+167128 0.0315204374 0.0131119117 0.0332976244 0.0438468 0.0902563408
+0
+3
+42
+574315 0.028667409 0.0173605829 0.0252061337 0.0214046277 0.0639713407
+3
+9
+21
+49942 0.0297142286 0.0426400788 0.0327065438 0.024657445 0.10000407
+0
+0
+3
+131627 0.226422802 0.00565522444 0.0131870303 0.0299820434 0.0488243
+0
+3
+18
+147000 0.064983964 0.0564252622 0.0269703642 0.0524453297 0.135840967
+0
+6
+27
+385057 0.0166303776 0.0235216059 0.028128162 0.0161673743 0.0678171441
+67
+20
+24
+421060 0.0523050427 0.060796123 0.0602400377 0.0238765534 0.14491272
+3
+9
+3
+54603 2.50709724 0.0123528903 0.0104076155 0.0911370367 0.11389754
+15
+30
+30
+316762 0.077549845 0.0257157478 0.0470195785 0.0089387 0.0816740245
+9
+15
+21
+194716 0.0303026643 0.0325631686 0.028937947 0.00421814201 0.0657192618
+0
+0
+12
+527670 0.0964361876 0.0277365353 0.0148694944 0.0294407755 0.0720468089
+3
+51
+57
+42215 0.0741540864 0.0276213288 0.0569234341 0.0896238461 0.174168602
+18
+18
+12
+270297 0.394439369 0.0460941 0.0235008746 0.079476878 0.149071857
+0
+12
+21
+227582 0.0701675266 0.0129095884 0.0287015475 0.0462058336 0.0878169686
+9
+18
+18
+159627 0.0939285 0.0406241417 0.0294021349 0.0173788145 0.0874050856
+12
+21
+30
+438077 0.0580707043 0.0353967622 0.0316331275 0.0545041636 0.121534057
+0
+18
+30
+546626 0.0805817917 0.0191106033 0.0316512734 0.00589084672 0.056652721
+72
+69
+24
+56068 0.140706778 0.0412650071 0.0533095561 0.0107117193 0.105286285
+81
+136
+96
+285597 0.0224397443 0.0452021062 0.155588895 0.0681361333 0.268927157
+18
+33
+24
+126216 0.0235805959 0.0475556031 0.0531833917 0.0297895037 0.130528495
+60
+105
+66
+528600 0.0127691124 0.047703959 0.100968994 0.0264999308 0.17517288
+0
+0
+0
+571242 0.00164645852 0 0.0144128222 0 0.0144128231
+15
+51
+39
+229997 0.0458184928 0.0178222246 0.0403856859 0.0707470253 0.128954932
+0
+3
+18
+3926 0.200511217 0.00903602131 0.00738333445 0.0249076914 0.0413270481
+12
+42
+33
+574135 0.0118802786 0.0392849632 0.0578728914 0.00594102871 0.103098877
+6
+12
+27
+437283 0.0746605173 0.0356608145 0.0232823696 0.141336024 0.200279221
+18
+39
+39
+89228 0.0429865196 0.0290003 0.0467557237 0.0148030128 0.0905590355
+18
+99
+99
+262113 0.0244083274 0.0415141098 0.206794754 0.153237849 0.401546717
+18
+45
+39
+564820 0.0671798959 0.0335503668 0.0616701618 0.0617869645 0.157007486
+6
+12
+12
+352217 0.245343149 0.0376882367 0.014064664 0.00275053643 0.0545034371
+123
+120
+60
+156341 0.0146452906 0.0510404669 0.189025268 0.0299767703 0.270042479
+168
+93
+33
+96762 0.0671702251 0.0413581021 0.0682964325 0.00932823494 0.118982777
+0
+3
+12
+149912 0.0797835439 0.0420435145 0.0271446835 0.024983976 0.0941721648
+6
+9
+15
+309317 0.100405246 0.0218273606 0.0197835453 0.00342364842 0.0450345576
+6
+9
+15
+556892 0.0542150848 0.0292771757 0.0307003316 0.100655526 0.160633028
+0
+15
+18
+313063 0.137656972 0.00861132052 0.020347 0.00370173948 0.0326600596
+9
+63
+75
+458313 0.0311530735 0.0320418887 0.122867845 0.108208343 0.263118088
+30
+63
+60
+122997 0.0175799057 0.0278849844 0.0533499643 0.0326980278 0.113932975
+3
+12
+12
+340559 0.0816994682 0.0515995584 0.0318425447 0.0200370736 0.103479177
+15
+15
+18
+17179 0.11697796 0.017518511 0.0200845506 0.0250105876 0.0626136512
+15
+36
+33
+80725 0.0246024709 0.0313032232 0.0462768 0.0231374614 0.100717485
+0
+6
+9
+60760 0.0938650668 0.0404619053 0.0296323821 0.108903572 0.178997844
+9
+33
+36
+87889 0.0712528452 0.0309727974 0.0304625574 0.00469333306 0.0661286861
+18
+18
+6
+136780 1.06434405 0.0149310855 0.0230233744 0.00143655785 0.0393910185
+0
+6
+36
+426165 0.00949726 0.0225156676 0.0183075182 0.0270882975 0.0679114759
+18
+27
+18
+149304 0.129032254 0.0151173621 0.0303149726 0.0607619248 0.106194258
+0
+3
+15
+53550 0.0345414653 0.0136183603 0.00986265484 0.000568901422 0.0240499172
+231
+165
+42
+184324 0.0415029898 0.042654179 0.130241632 0.0179131255 0.190808952
+0
+18
+45
+177015 0.0339810513 0.0391250327 0.0389194265 0.0487362146 0.126780659
+0
+9
+6
+32285 1.15176105 0.00514703663 0.0108100064 0.000530453806 0.0164874978
+0
+9
+12
+284341 0.105630293 0.0328607149 0.0148961898 0.00433824956 0.0520951562
+210
+93
+27
+512191 0.0185791142 0.0566322 0.121882834 0.0199123509 0.198427379
+6
+12
+21

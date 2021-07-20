@@ -1,0 +1,2305 @@
+2021-07-20 00:07:14.911823: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-20 00:07:16.097056: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-20 00:07:16.097764: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2021-07-20 00:07:16.136229: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-20 00:07:16.136351: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-20 00:07:16.138263: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-20 00:07:16.138346: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-20 00:07:16.139079: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-20 00:07:16.139298: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-20 00:07:16.141132: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-20 00:07:16.141561: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-20 00:07:16.141681: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-20 00:07:16.142499: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-20 00:07:16.142809: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-07-20 00:07:16.143587: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2021-07-20 00:07:16.144168: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:65:00.0 name: GeForce RTX 2070 SUPER computeCapability: 7.5
+coreClock: 1.77GHz coreCount: 40 deviceMemorySize: 7.79GiB deviceMemoryBandwidth: 417.29GiB/s
+2021-07-20 00:07:16.144214: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-20 00:07:16.144233: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-20 00:07:16.144246: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2021-07-20 00:07:16.144258: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2021-07-20 00:07:16.144269: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2021-07-20 00:07:16.144281: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2021-07-20 00:07:16.144293: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2021-07-20 00:07:16.144305: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-20 00:07:16.145142: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2021-07-20 00:07:16.145180: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2021-07-20 00:07:16.515291: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-07-20 00:07:16.515338: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2021-07-20 00:07:16.515345: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2021-07-20 00:07:16.516699: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 6974 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2070 SUPER, pci bus id: 0000:65:00.0, compute capability: 7.5)
+0it [00:00, ?it/s]Scanning labels /media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/labels.cache3 (200 found, 0 missing, 1 empty, 0 duplicate, for 201 images): 201it [00:00, 21598.52it/s]2021-07-20 00:07:16.994653: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+
+WARNING:tensorflow:From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+WARNING:tensorflow:From /home/vbanna/.local/lib/python3.8/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:56: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+2021-07-20 00:07:17.005624: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+
+!--PREPPING GPU--! 
+1 Physical GPUs, 1 Logical GPUs
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'num_classes': 80, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': True, '4': True, '5': True, 'all': True}, 'scale_xy': {'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': False, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}
+InputSpec(shape=(None, 640, 640, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7fa0ee8974f0>
+Model: "altered_cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 640, 640, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 640, 640, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_residual_down (DarkRe (None, 320, 320, 64) 39552       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 160, 160, 64 91136       DarkRes_1_residual_down[0][0]    
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 160, 160, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 80, 80, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_3_0 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 80, 80, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 40, 40, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 40, 40, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 20, 20, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________[[0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -15.0023775 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -16.3886719 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0 0 0 0 -17.7749672 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+
+DarkRes_5_0 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 20, 20, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,631,008
+Trainable params: 26,596,192
+Non-trainable params: 34,816
+__________________________________________________________________________________________________
+{'embed_spp': False, 'use_fpn': True, 'max_level_process_len': None, 'csp_stack': 5, 'fpn_depth': 5, 'path_process_len': 6, 'activation': 'mish', 'subdivisions': 1, 'use_spatial_attention': False, 'use_sync_bn': False, 'norm_momentum': 0.97, 'norm_epsilon': 0.0001, 'kernel_regularizer': <tensorflow.python.keras.regularizers.L2 object at 0x7fa0ee8974f0>}
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': 0.75, '4': 0.75, '5': 0.75, 'all': 0.05}
+{'3': 0.05, '4': 0.05, '5': 0.05, 'all': 0.05}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}
+{'3': 0.5, '4': 0.5, '5': 0.5, 'all': 0.5}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.7, '4': 0.7, '5': 0.7, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 1.0}
+Model: "YoloDecoder"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 80, 80, 256) 0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 40, 40, 512) 0                                            
+__________________________________________________________________________________________________
+input_4 (InputLayer)            [(None, 20, 20, 1024 0                                            
+__________________________________________________________________________________________________
+yolo_fpn (YoloFPN)              {'5': (None, 20, 20, 9626112     input_2[0][0]                    
+                                                                 input_3[0][0]                    
+                                                                 input_4[0][0]                    
+__________________________________________________________________________________________________
+yolo_pan (YoloPAN)              {'3': (None, 80, 80, 16271360    yolo_fpn[0][0]                   
+                                                                 yolo_fpn[0][1]                   
+                                                                 yolo_fpn[0][2]                   
+==================================================================================================
+Total params: 25,897,472
+Trainable params: 25,867,520
+Non-trainable params: 29,952
+__________________________________________________________________________________________________
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+altered_cspdarknet53 (Darkne OrderedDict([('3', (None, 26631008  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 80, 80, 256) 25897472  
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  457725    
+=================================================================
+Total params: 52,986,205
+Trainable params: 52,921,437
+Non-trainable params: 64,768
+_________________________________________________________________
+64 seen
+major: 0
+minor: 2
+revision: 5
+iseen: 0
+{'_type': 'net', 'batch': 64, 'subdivisions': 8, 'width': 512, 'height': 512, 'channels': 3, 'momentum': 0.949, 'decay': 0.0005, 'angle': 0, 'saturation': 1.5, 'exposure': 1.5, 'hue': 0.1, 'learning_rate': 0.00261, 'burn_in': 1000, 'max_batches': 500500, 'policy': 'steps', 'steps': (400000, 450000), 'scales': (0.1, 0.1), 'mosaic': 1}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -10)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -16)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'maxpool', 'stride': 1, 'size': 5}
+{'_type': 'route', 'layers': -2}
+{'_type': 'maxpool', 'stride': 1, 'size': 9}
+{'_type': 'route', 'layers': -4}
+{'_type': 'maxpool', 'stride': 1, 'size': 13}
+{'_type': 'route', 'layers': (-1, -3, -5, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -13)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 79}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 48}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (0, 1, 2), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -20)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (3, 4, 5), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -49)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 1024, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (6, 7, 8), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+full net: 
+512 512 3	convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+512 512 32	convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+256 256 32	convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+256 256 64	shortcutCFG(_type='shortcut', w=256, h=256, c=64, _from=(-3,), activation='linear')
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-2,))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-1, -10))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-2,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -28))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-2,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -28))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -16))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=5)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=9)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-4,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=13)
+16 16 2048	routeCFG(_type='route', w=16, h=16, c=2048, layers=(-1, -3, -5, -6))
+16 16 2048	convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -13))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+16 16 256	upsampleCFG(_type='upsample', w=16, h=16, c=256, stride=2)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(79,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -3))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+32 32 128	upsampleCFG(_type='upsample', w=32, h=32, c=128, stride=2)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(48,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -3))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-2,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -6))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=255)
+64 64 255	yoloCFG(_type='yolo', w=64, h=64, c=255, mask=(0, 1, 2), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-4,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -20))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=255)
+32 32 255	yoloCFG(_type='yolo', w=32, h=32, c=255, mask=(3, 4, 5), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-4,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -49))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -6))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=255)
+16 16 255	yoloCFG(_type='yolo', w=16, h=16, c=255, mask=(6, 7, 8), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+bytes_read: 211944840, original_size: 211944840, final_position: 211944840
+ConvBN_0_0 convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+conv_bn convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+conv_bn_2 convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn_2 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_2 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+private__identity_route
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7fa0ee67d400>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7fa0ee67d430>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7fa0ee65d6d0>
+path conv
+path conv
+path conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7fa0ee666040>
+path conv
+path conv
+path conv
+csp_route_1
+conv_bn_10
+conv_bn_11
+conv_bn_12
+csp_connect_1
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_10
+batch_normalization_10
+conv2d_11
+batch_normalization_11
+conv2d_12
+batch_normalization_12
+conv2d_13
+batch_normalization_13
+conv2d_14
+batch_normalization_14
+concatenate_3
+conv2d_15
+batch_normalization_15
+csp_route
+conv_bn
+conv_bn_1
+spp
+conv_bn_2
+conv_bn_3
+csp_connect
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+batch_normalization
+conv2d_1
+batch_normalization_1
+conv2d_2
+batch_normalization_2
+conv2d_3
+batch_normalization_3
+max_pooling2d
+max_pooling2d_1
+max_pooling2d_2
+conv2d_4
+batch_normalization_4
+conv2d_5
+batch_normalization_5
+concatenate_1
+conv2d_6
+batch_normalization_6
+concatenate_4
+conv_bn_16
+conv_bn_17
+conv_bn_18
+conv2d_16
+batch_normalization_16
+conv2d_17
+batch_normalization_17
+conv2d_18
+batch_normalization_18
+concatenate_2
+conv_bn_7
+conv_bn_8
+conv_bn_9
+conv2d_7
+batch_normalization_7
+conv2d_8
+batch_normalization_8
+conv2d_9
+batch_normalization_9
+19 44
+conv_bn_5 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_6 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_1 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+conv_bn_3 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_4 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_7 256.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_8 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_10 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
+  opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
+WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example
+  opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(opt)
+2021-07-20 00:07:21.372198: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2021-07-20 00:07:21.392141: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3499910000 Hz
+2021-07-20 00:07:21.555253: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2021-07-20 00:07:22.796992: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2021-07-20 00:07:23.157739: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+0
+15
+24
+101919 0.0101242056 0.0320830569 0.0188297816 0.0610370412
+	 [3 3 3 32] 	 -0.180903196
+	 [1 1 1024 255] 	 1.87907684
+	 [255] 	 -0.0278825536
+30
+60
+45
+106172 0.0553374 0.142503 0.0440691449 0.241909534
+	 [3 3 3 32] 	 0.155003369
+	 [1 1 1024 255] 	 -4.55183125
+	 [255] 	 -0.0281763896
+12
+48
+54
+106344 0.0712978318 0.131970748 0.0563527867 0.259621382
+	 [3 3 3 32] 	 -0.309986621
+	 [1 1 1024 255] 	 -7.23554659
+	 [255] 	 -0.0243418664
+6
+18
+9
+109537 0.0162645765 0.0178478751 0.00140644121 0.0355188921
+	 [3 3 3 32] 	 1.03029537
+	 [1 1 1024 255] 	 1.77366495
+	 [255] 	 0.0496280752
+15
+36
+42
+111878 0.0637243092 0.0780090541 0.108876348 0.250609696
+	 [3 3 3 32] 	 -0.0327232778
+	 [1 1 1024 255] 	 -5.56901598
+	 [255] 	 -0.01289743
+0
+3
+15
+113579 0.0150424782 0.011683872 0.0729337409 0.0996600911
+	 [3 3 3 32] 	 0.821404815
+	 [1 1 1024 255] 	 -2.18763208
+	 [255] 	 -0.025079187
+60
+141
+105
+113720 0.0396154523 0.174170166 0.0591228977 0.272908509
+	 [3 3 3 32] 	 -0.602163732
+	 [1 1 1024 255] 	 0.0171721578
+	 [255] 	 -0.0094920136
+3
+30
+51
+116095 0.0285474192 0.0532526225 0.165227 0.247027025
+	 [3 3 3 32] 	 0.553892195
+	 [1 1 1024 255] 	 0.460101485
+	 [255] 	 -0.00241488917
+6
+30
+36
+116261 0.028700307 0.0366395861 0.0459451973 0.11128509
+	 [3 3 3 32] 	 0.508113682
+	 [1 1 1024 255] 	 1.18866074
+	 [255] 	 -0.0126436511
+0
+0
+6
+117441 0.00640554959 0.0256868713 0.0444847643 0.0765771866
+	 [3 3 3 32] 	 -4.10011292
+	 [1 1 1024 255] 	 2.05949402
+	 [255] 	 0.0124329031
+6
+21
+18
+118921 0.0597019531 0.0294018 0.00104902103 0.0901527703
+	 [3 3 3 32] 	 -0.17090787
+	 [1 1 1024 255] 	 4.72852802
+	 [255] 	 0.0102851652
+0
+0
+18
+120398 0.0164261442 0.0307216756 0.0224770345 0.0696248561
+	 [3 3 3 32] 	 -4.33864737
+	 [1 1 1024 255] 	 -13.0967398
+	 [255] 	 -0.0323752612
+39
+66
+51
+122588 0.0562515259 0.163279518 0.0947783366 0.314309388
+	 [3 3 3 32] 	 -0.00344373286
+	 [1 1 1024 255] 	 -4.63225937
+	 [255] 	 -0.0149246007
+6
+39
+51
+124429 0.0519862697 0.114025563 0.097385861 0.263397694
+	 [3 3 3 32] 	 -0.528499603
+	 [1 1 1024 255] 	 -3.96983242
+	 [255] 	 -0.0152272061
+0
+0
+9
+126345 0.00481851678 0.014608914 0.0421482809 0.0615757145
+	 [3 3 3 32] 	 -3.70321918
+	 [1 1 1024 255] 	 -0.486842
+	 [255] 	 -0.0171312634
+141
+219
+84
+12897 0.0599500164 0.258775741 0.0499162599 0.368642032
+	 [3 3 3 32] 	 -2.13533521
+	 [1 1 1024 255] 	 -4.95465088
+	 [255] 	 -0.00425466709
+48
+27
+6
+129159 0.0335062146 0.0371201746 0.0156991761 0.0863255635
+	 [3 3 3 32] 	 0.74629885
+	 [1 1 1024 255] 	 -4.48186827
+	 [255] 	 0.0605586395
+24
+27
+18
+134558 0.052599635 0.0422776714 0.0230632257 0.11794053
+	 [3 3 3 32] 	 0.170059323
+	 [1 1 1024 255] 	 -9.01772118
+	 [255] 	 -0.0251651891
+12
+66
+57
+135410 0.0414577499 0.0814697891 0.0281380527 0.151065588
+	 [3 3 3 32] 	 0.602043271
+	 [1 1 1024 255] 	 -1.29994547
+	 [255] 	 -0.0158934742
+63
+93
+69
+142620 0.0361040384 0.114193425 0.0216958616 0.17199333
+	 [3 3 3 32] 	 -0.826773047
+	 [1 1 1024 255] 	 -2.59909
+	 [255] 	 -0.0103097036
+3
+24
+21
+14265 0.0147209484 0.0180962831 0.00311832502 0.0359355547
+	 [3 3 3 32] 	 -1.84770048
+	 [1 1 1024 255] 	 2.07281876
+	 [255] 	 0.0254470557
+6
+15
+15
+155192 0.0278382339 0.0150391078 0.00756113697 0.0504384786
+	 [3 3 3 32] 	 2.1983459
+	 [1 1 1024 255] 	 -0.664088607
+	 [255] 	 -0.014542304
+168
+126
+36
+155885 0.0753641427 0.303776026 0.0859825313 0.46512267
+	 [3 3 3 32] 	 6.88637924
+	 [1 1 1024 255] 	 0.481977582
+	 [255] 	 0.00824403856
+0
+0
+9
+15746 0.00367279956 0.0096003795 0.0275008045 0.040773984
+	 [3 3 3 32] 	 -0.364052296
+	 [1 1 1024 255] 	 -3.79612327
+	 [255] 	 -0.0272926539
+6
+33
+36
+160260 0.0423575416 0.0807606 0.109536543 0.232654676
+	 [3 3 3 32] 	 -0.161797538
+	 [1 1 1024 255] 	 -4.95616722
+	 [255] 	 -0.0279750507
+3
+9
+3
+16241 0.0279095117 0.0164829511 0.117687255 0.162079722
+	 [3 3 3 32] 	 1.35316992
+	 [1 1 1024 255] 	 15.9274216
+	 [255] 	 0.0993878096
+48
+60
+60
+168491 0.0716065541 0.149381518 0.0464247167 0.267412812
+	 [3 3 3 32] 	 3.08622074
+	 [1 1 1024 255] 	 -3.12537718
+	 [255] 	 -0.00976533536
+45
+48
+30
+170127 0.0452363789 0.0699771345 0.0288471933 0.144060701
+	 [3 3 3 32] 	 -1.69624627
+	 [1 1 1024 255] 	 2.40237236
+	 [255] 	 0.00163987104
+45
+96
+60
+172595 0.0414271839 0.1443986 0.07896 0.264785767
+	 [3 3 3 32] 	 1.58456933
+	 [1 1 1024 255] 	 -5.82035398
+	 [255] 	 -0.0337269232
+0
+0
+9
+173235 0.0101165799 0.0213755947 0.0360805206 0.0675727
+	 [3 3 3 32] 	 2.23866558
+	 [1 1 1024 255] 	 1.74401879
+	 [255] 	 0.00733602885
+9
+18
+12
+1779 0.0388950743 0.0296664666 0.0977679 0.166329443
+	 [3 3 3 32] 	 -1.93955469
+	 [1 1 1024 255] 	 -3.53156328
+	 [255] 	 -0.0250807032
+0
+0
+6
+179273 0.0296361428 0.0192966741 0.0578253269 0.10675814
+	 [3 3 3 32] 	 0.375279099
+	 [1 1 1024 255] 	 -6.97469139
+	 [255] 	 -0.0174241886
+0
+6
+24
+180366 0.0355873853 0.0275057331 0.04842069 0.111513808
+	 [3 3 3 32] 	 -0.634152
+	 [1 1 1024 255] 	 -2.03170109
+	 [255] 	 -0.0186105371
+18
+12
+6
+18149 0.0662623718 0.0240087174 0.0467163846 0.136987478
+	 [3 3 3 32] 	 -0.566408455
+	 [1 1 1024 255] 	 -1.06492293
+	 [255] 	 0.00167474383
+24
+24
+9
+184205 0.0183183886 0.0403618477 0.0326124504 0.0912926942
+	 [3 3 3 32] 	 2.19424438
+	 [1 1 1024 255] 	 5.14938784
+	 [255] 	 0.0824936479
+30
+27
+3
+192291 0.0489289686 0.0302558225 0.0349077955 0.114092581
+	 [3 3 3 32] 	 -8.28813839
+	 [1 1 1024 255] 	 8.47417068
+	 [255] 	 0.0430007651
+36
+54
+42
+192406 0.0491185151 0.10086327 0.0210136734 0.170995474
+	 [3 3 3 32] 	 -2.17730021
+	 [1 1 1024 255] 	 -0.544989407
+	 [255] 	 -0.0108996937
+45
+45
+24
+197279 0.0297820661 0.0383181795 0.00358933769 0.0716895834
+	 [3 3 3 32] 	 -0.0542480797
+	 [1 1 1024 255] 	 1.44888043
+	 [255] 	 0.0605538711
+3
+9
+3
+205531 0.028788995 0.0125491861 0.0242485777 0.0655867606
+	 [3 3 3 32] 	 -1.54784107
+	 [1 1 1024 255] 	 2.97443
+	 [255] 	 0.0948847383
+0
+3
+18
+209728 0.011525508 0.0140131302 0.0985772759 0.124115914
+	 [3 3 3 32] 	 3.35652661
+	 [1 1 1024 255] 	 -4.67051268
+	 [255] 	 -0.0590322241
+72
+93
+45
+212112 0.0334506929 0.0911656618 0.0433969535 0.168013319
+	 [3 3 3 32] 	 -0.349477857
+	 [1 1 1024 255] 	 -1.416412
+	 [255] 	 -0.0197515767
+0
+12
+21
+212198 0.0165212117 0.0243775584 0.00501025841 0.0459090248
+	 [3 3 3 32] 	 -0.047737211
+	 [1 1 1024 255] 	 -0.631347537
+	 [255] 	 0.00998873729
+6
+6
+21
+212605 0.0786614567 0.0572723523 0.132097051 0.268030882
+	 [3 3 3 32] 	 -0.832263529
+	 [1 1 1024 255] 	 -10.9957829
+	 [255] 	 -0.030149
+0
+0
+15
+213795 0.0331010446 0.026072273 0.0298945792 0.0890679061
+	 [3 3 3 32] 	 0.804403
+	 [1 1 1024 255] 	 -5.90911865
+	 [255] 	 -0.0146711208
+9
+36
+30
+220819 0.0184535664 0.0649657622 0.120640963 0.204060286
+	 [3 3 3 32] 	 -0.497055829
+	 [1 1 1024 255] 	 2.04769611
+	 [255] 	 -0.0149675235
+0
+3
+21
+223241 0.0728675723 0.0246891193 0.0526483655 0.150205061
+	 [3 3 3 32] 	 -1.12650371
+	 [1 1 1024 255] 	 -7.36439514
+	 [255] 	 -0.0307709165
+93
+102
+30
+223426 0.0723003 0.128967911 0.0822935253 0.283561736
+	 [3 3 3 32] 	 -0.64920944
+	 [1 1 1024 255] 	 2.0735054
+	 [255] 	 0.0164871942
+57
+24
+9
+224554 0.0551601835 0.0429985151 0.0243487768 0.122507483
+	 [3 3 3 32] 	 2.28337216
+	 [1 1 1024 255] 	 -0.864708483
+	 [255] 	 -0.00487389648
+0
+18
+39
+224557 0.0144308638 0.0376945958 0.031582661 0.0837081224
+	 [3 3 3 32] 	 -2.07779455
+	 [1 1 1024 255] 	 -0.151851386
+	 [255] 	 -0.00551643688
+0
+15
+24
+224907 0.021184437 0.0508823134 0.0609534904 0.133020252
+	 [3 3 3 32] 	 1.49723649
+	 [1 1 1024 255] 	 -15.1579838
+	 [255] 	 -0.0581526868
+72
+36
+18
+226097 0.0473208353 0.0503662862 0.0714255497 0.169112667
+	 [3 3 3 32] 	 -0.875152528
+	 [1 1 1024 255] 	 0.904469311
+	 [255] 	 -0.00274222577
+102
+141
+69
+227031 0.0611553788 0.140806466 0.0330659449 0.23502779
+	 [3 3 3 32] 	 -0.518891096
+	 [1 1 1024 255] 	 -1.17324018
+	 [255] 	 -0.00135668344
+15
+60
+33
+231325 0.0479033329 0.0826236308 0.0424470752 0.17297405
+	 [3 3 3 32] 	 -2.15325856
+	 [1 1 1024 255] 	 -0.683216691
+	 [255] 	 0.01323778
+0
+9
+15
+232453 0.019832341 0.032899119 0.0233927332 0.0761241913
+	 [3 3 3 32] 	 -0.974581957
+	 [1 1 1024 255] 	 -2.44423
+	 [255] 	 0.0255633295
+12
+18
+6
+233140 0.0293119699 0.0245386399 0.0482510403 0.102101654
+	 [3 3 3 32] 	 0.71566397
+	 [1 1 1024 255] 	 -5.70508862
+	 [255] 	 -0.0449131764
+3
+18
+21
+234807 0.0115482546 0.00896961801 0.0164350551 0.0369529277
+	 [3 3 3 32] 	 -0.00322857127
+	 [1 1 1024 255] 	 -2.19869566
+	 [255] 	 -0.0043549207
+0
+9
+12
+237316 0.0205133334 0.0207447894 0.0016937519 0.0429518744
+	 [3 3 3 32] 	 -0.355183
+	 [1 1 1024 255] 	 3.46297073
+	 [255] 	 0.0543899164
+72
+114
+57
+237324 0.0637227222 0.110002443 0.0451963916 0.218921572
+	 [3 3 3 32] 	 -1.31327009
+	 [1 1 1024 255] 	 -1.69748259
+	 [255] 	 0.00245656492
+3
+9
+24
+238147 0.0541846603 0.0381065458 0.161049441 0.253340632
+	 [3 3 3 32] 	 0.208058894
+	 [1 1 1024 255] 	 -4.29824448
+	 [255] 	 -0.0164415836
+12
+78
+54
+239148 0.0633453578 0.0917064101 0.0999104306 0.254962206
+	 [3 3 3 32] 	 0.254173726
+	 [1 1 1024 255] 	 1.78614533
+	 [255] 	 0.0223144535
+24
+6
+9
+242868 0.0401709899 0.0320704728 0.0787253529 0.150966823
+	 [3 3 3 32] 	 -7.90324354
+	 [1 1 1024 255] 	 -7.74509907
+	 [255] 	 -0.0352129675
+6
+27
+21
+245049 0.0162228458 0.0152698485 0.00182774104 0.0333204344
+	 [3 3 3 32] 	 -0.139058962
+	 [1 1 1024 255] 	 -2.41616
+	 [255] 	 -0.0346003808
+135
+123
+60
+246014 0.0652858913 0.208948165 0.0432019196 0.31743598
+	 [3 3 3 32] 	 -0.344886661
+	 [1 1 1024 255] 	 3.25545835
+	 [255] 	 -0.00349334488
+36
+63
+36
+246061 0.0390922576 0.0522095561 0.00900473073 0.100306548
+	 [3 3 3 32] 	 1.30638397
+	 [1 1 1024 255] 	 -0.732050657
+	 [255] 	 0.0182557106
+120
+48
+3
+25034 0.0853397846 0.0573090091 0.0372281298 0.179876924
+	 [3 3 3 32] 	 7.71302271
+	 [1 1 1024 255] 	 -0.588276327
+	 [255] 	 0.00370873883
+33
+21
+9
+250571 0.0569613166 0.0267968457 0.0723678246 0.156125993
+	 [3 3 3 32] 	 1.70019257
+	 [1 1 1024 255] 	 17.7926598
+	 [255] 	 0.107389733
+0
+6
+12
+250594 0.0191756338 0.00989077426 0.00197465322 0.0310410634
+	 [3 3 3 32] 	 2.04337049
+	 [1 1 1024 255] 	 0.218252271
+	 [255] 	 0.0113148745
+0
+9
+12
+252696 0.0306100044 0.024515409 0.0116916783 0.0668170899
+	 [3 3 3 32] 	 -1.8834784
+	 [1 1 1024 255] 	 1.48416781
+	 [255] 	 0.00567070534
+0
+18
+18
+253718 0.0680447742 0.0364883579 0.0768342 0.181367338
+	 [3 3 3 32] 	 3.16010952
+	 [1 1 1024 255] 	 -0.607646346
+	 [255] 	 0.000992488815
+27
+60
+45
+253770 0.037263304 0.0797514096 0.0137107298 0.130725443
+	 [3 3 3 32] 	 1.26565444
+	 [1 1 1024 255] 	 -2.68937659
+	 [255] 	 0.00488788215
+78
+60
+15
+254711 0.0391199626 0.0421738513 0.0159356482 0.0972294509
+	 [3 3 3 32] 	 1.16984212
+	 [1 1 1024 255] 	 -1.81839347
+	 [255] 	 -0.0248522833
+0
+0
+9
+255974 0.00241071428 0.0080899559 0.0324253254 0.0429259948
+	 [3 3 3 32] 	 -0.995807827
+	 [1 1 1024 255] 	 -5.79797
+	 [255] 	 -0.0437379964
+14
+30
+33
+258346 0.0526975803 0.0497507825 0.0426649675 0.145113334
+	 [3 3 3 32] 	 6.00448799
+	 [1 1 1024 255] 	 4.65538311
+	 [255] 	 0.016661305
+30
+33
+24
+259335 0.0370749235 0.0346985087 0.0328112654 0.104584701
+	 [3 3 3 32] 	 1.12310648
+	 [1 1 1024 255] 	 -2.38030434
+	 [255] 	 -0.0143757435
+93
+39
+3
+259452 0.0455348045 0.0520133 0.00659551518 0.10414362
+	 [3 3 3 32] 	 0.871033311
+	 [1 1 1024 255] 	 0.453973085
+	 [255] 	 0.0211118646
+0
+0
+6
+259614 0.00673522 0.0129940193 0.0422308445 0.0619600862
+	 [3 3 3 32] 	 -1.29714704
+	 [1 1 1024 255] 	 -7.52834225
+	 [255] 	 -0.0459310636
+0
+9
+9
+260020 0.00343920384 0.0252398513 0.000900414074 0.0295794681
+	 [3 3 3 32] 	 -0.900100529
+	 [1 1 1024 255] 	 -0.536886513
+	 [255] 	 -0.0421371795
+6
+30
+42
+264654 0.0649636388 0.0748941451 0.0425561182 0.182413906
+	 [3 3 3 32] 	 -5.10979176
+	 [1 1 1024 255] 	 -2.89064121
+	 [255] 	 -0.023697203
+15
+60
+69
+265916 0.042508252 0.105957672 0.0315811 0.180047035
+	 [3 3 3 32] 	 3.84239173
+	 [1 1 1024 255] 	 -4.15281105
+	 [255] 	 -0.0163409375
+57
+48
+6
+274708 0.0313768163 0.03061877 0.00272639957 0.0647219867
+	 [3 3 3 32] 	 0.460942507
+	 [1 1 1024 255] 	 2.64456558
+	 [255] 	 0.0723911598
+3
+18
+9
+275058 0.0560245737 0.0326742157 0.0605592206 0.149258018
+	 [3 3 3 32] 	 18.7301197
+	 [1 1 1024 255] 	 0.957988858
+	 [255] 	 0.0160226841
+0
+12
+33
+276146 0.00792347454 0.0341756791 0.00383317401 0.0459323265
+	 [3 3 3 32] 	 -0.49634403
+	 [1 1 1024 255] 	 -5.13509035
+	 [255] 	 -0.0365096293
+55
+156
+117
+27642 0.042904377 0.19296208 0.0440004393 0.279866904
+	 [3 3 3 32] 	 -0.246021777
+	 [1 1 1024 255] 	 -2.07018661
+	 [255] 	 -0.022438949
+12
+18
+6
+283441 0.0299165919 0.0438888744 0.0480345786 0.121840037
+	 [3 3 3 32] 	 1.7523452
+	 [1 1 1024 255] 	 0.404313207
+	 [255] 	 0.0357835144
+24
+36
+18
+293175 0.0394659564 0.0722936466 0.0736741722 0.185433775
+	 [3 3 3 32] 	 -0.168008253
+	 [1 1 1024 255] 	 -3.55004382
+	 [255] 	 -0.00357865635
+9
+18
+21
+294908 0.037430767 0.0258896165 0.00671197381 0.0700323582
+	 [3 3 3 32] 	 0.133732036
+	 [1 1 1024 255] 	 -0.216513872
+	 [255] 	 -0.0607762337
+0
+0
+15
+296383 0.0140236458 0.020047985 0.050380636 0.084452264
+	 [3 3 3 32] 	 0.251755953
+	 [1 1 1024 255] 	 -10.4801121
+	 [255] 	 -0.051651407
+9
+21
+15
+296759 0.0442398787 0.050592266 0.0309220161 0.125754148
+	 [3 3 3 32] 	 0.201807678
+	 [1 1 1024 255] 	 -5.87042475
+	 [255] 	 -0.0416592881
+3
+9
+3
+298137 0.0220635831 0.0237306356 0.0396207385 0.085414961
+	 [3 3 3 32] 	 -6.83053541
+	 [1 1 1024 255] 	 14.6181412
+	 [255] 	 0.111287177
+0
+0
+24
+30290 0.0217469409 0.0157154202 0.0157591198 0.0532214753
+	 [3 3 3 32] 	 -0.0879791602
+	 [1 1 1024 255] 	 -2.39149332
+	 [255] 	 -0.0198740177
+72
+138
+66
+304404 0.0339686051 0.136916921 0.0161603447 0.187045872
+	 [3 3 3 32] 	 -0.0343490243
+	 [1 1 1024 255] 	 1.74111509
+	 [255] 	 0.0144950375
+12
+21
+18
+30465 0.0200583097 0.0234096013 0.00226495927 0.0457328707
+	 [3 3 3 32] 	 0.235297471
+	 [1 1 1024 255] 	 -2.59328508
+	 [255] 	 -0.0170037821
+33
+78
+63
+305609 0.052117236 0.161544114 0.0839301348 0.297591478
+	 [3 3 3 32] 	 -2.71564078
+	 [1 1 1024 255] 	 0.643122435
+	 [255] 	 0.0155284237
+0
+9
+24
+306395 0.00966450293 0.0139082354 0.0036279792 0.0272007175
+	 [3 3 3 32] 	 -0.00450096373
+	 [1 1 1024 255] 	 -1.41585183
+	 [255] 	 -0.0458024666
+0
+9
+9
+316000 0.0195123348 0.0156987067 0.00156778377 0.0367788225
+	 [3 3 3 32] 	 -0.128529966
+	 [1 1 1024 255] 	 -1.97632718
+	 [255] 	 -0.0657095686
+36
+0
+3
+31601 0.0461510643 0.0249300227 0.0336047597 0.104685843
+	 [3 3 3 32] 	 0.0614473075
+	 [1 1 1024 255] 	 -14.1744852
+	 [255] 	 -0.0633078068
+0
+0
+0
+317130 0 0.0162037369 0 0.0162037369
+	 [3 3 3 32] 	 -0.395231545
+	 [1 1 1024 255] 	 0.105298325
+	 [255] 	 0.00507116318
+18
+63
+54
+318219 0.0774673671 0.13134031 0.125581607 0.334389269
+	 [3 3 3 32] 	 0.579363585
+	 [1 1 1024 255] 	 -1.27824521
+	 [255] 	 -0.00201355014
+15
+33
+27
+319830 0.0442861 0.0471069477 0.0615101494 0.152903199
+	 [3 3 3 32] 	 -3.83288169
+	 [1 1 1024 255] 	 4.62105465
+	 [255] 	 0.026501026
+9
+9
+3
+320370 0.0248233043 0.0124874394 0.0117118126 0.0490225554
+	 [3 3 3 32] 	 7.99879217
+	 [1 1 1024 255] 	 -5.27086306
+	 [255] 	 0.072854124
+0
+15
+39
+322503 0.0236573853 0.0777130574 0.0686878 0.170058236
+	 [3 3 3 32] 	 0.0812274
+	 [1 1 1024 255] 	 -5.13660431
+	 [255] 	 -0.0144025469
+6
+27
+27
+322848 0.0262354612 0.040943224 0.0442014039 0.111380085
+	 [3 3 3 32] 	 -3.17702651
+	 [1 1 1024 255] 	 -0.405300856
+	 [255] 	 -0.026795553
+0
+0
+15
+33372 0.0170457363 0.0192531571 0.0258849133 0.0621838048
+	 [3 3 3 32] 	 0.0586345978
+	 [1 1 1024 255] 	 -4.16152239
+	 [255] 	 -0.0468733124
+36
+60
+33
+334371 0.0419663303 0.0723264962 0.0360497385 0.150342554
+	 [3 3 3 32] 	 -0.822497845
+	 [1 1 1024 255] 	 -1.4078747
+	 [255] 	 -0.00394582562
+0
+6
+9
+337065 0.0191741697 0.0332284868 0.0814063251 0.13380897
+	 [3 3 3 32] 	 -2.33296037
+	 [1 1 1024 255] 	 9.10904694
+	 [255] 	 0.0405391902
+9
+42
+51
+344548 0.0202723201 0.0487558246 0.0090840077 0.0781121477
+	 [3 3 3 32] 	 -0.255616844
+	 [1 1 1024 255] 	 -1.45572078
+	 [255] 	 -0.0234762058
+369
+260
+36
+353409 0.0775964186 0.36694932 0.0760780349 0.520623744
+	 [3 3 3 32] 	 0.772636473
+	 [1 1 1024 255] 	 -1.79078817
+	 [255] 	 0.00612188503
+3
+6
+12
+354729 0.0193845518 0.0306827035 0.0343758278 0.0844430774
+	 [3 3 3 32] 	 3.45779538
+	 [1 1 1024 255] 	 -8.3125267
+	 [255] 	 -0.0468826145
+99
+87
+30
+355441 0.0257328153 0.0602389425 0.00340928347 0.0893810391
+	 [3 3 3 32] 	 0.226429522
+	 [1 1 1024 255] 	 1.19744778
+	 [255] 	 0.0611829609
+48
+45
+18
+36053 0.0368980542 0.0699010938 0.0502971746 0.157096326
+	 [3 3 3 32] 	 2.54684114
+	 [1 1 1024 255] 	 -3.66322732
+	 [255] 	 -0.0421965234
+93
+12
+6
+365485 0.0576114 0.0678214058 0.0547433347 0.180176139
+	 [3 3 3 32] 	 0.116624817
+	 [1 1 1024 255] 	 3.17436314
+	 [255] 	 0.0302086528
+0
+6
+18
+369667 0.0164585859 0.0231934451 0.0624557 0.102107733
+	 [3 3 3 32] 	 0.0668173432
+	 [1 1 1024 255] 	 -4.01617
+	 [255] 	 -0.0288230442
+12
+63
+33
+372819 0.037150085 0.0430038199 0.0893561095 0.169510037
+	 [3 3 3 32] 	 -0.373661727
+	 [1 1 1024 255] 	 -2.24655724
+	 [255] 	 0.00620561605
+0
+12
+24
+375376 0.010303719 0.0145551106 0.0781777427 0.103036568
+	 [3 3 3 32] 	 -3.17524338
+	 [1 1 1024 255] 	 -1.06327391
+	 [255] 	 -0.0348777473
+0
+0
+9
+377738 0.034189295 0.024378188 0.0322671235 0.0908346102
+	 [3 3 3 32] 	 -0.229092777
+	 [1 1 1024 255] 	 -11.2304201
+	 [255] 	 -0.0258656256
+0
+0
+9
+378859 0.00466142735 0.0103989309 0.00132218644 0.0163825452
+	 [3 3 3 32] 	 0.0676189587
+	 [1 1 1024 255] 	 2.28204203
+	 [255] 	 0.0382030495
+126
+153
+60
+381608 0.0611909479 0.228074193 0.0620434508 0.351308584
+	 [3 3 3 32] 	 -1.2570138
+	 [1 1 1024 255] 	 -0.00645107031
+	 [255] 	 -0.00520816166
+9
+9
+12
+38721 0.0273732245 0.0218302161 0.0177035443 0.0669069812
+	 [3 3 3 32] 	 0.327039063
+	 [1 1 1024 255] 	 -7.54796171
+	 [255] 	 -0.0497710332
+0
+9
+15
+388464 0.0133040287 0.0162321534 0.000881636166 0.0304178186
+	 [3 3 3 32] 	 -0.552188098
+	 [1 1 1024 255] 	 -1.41970432
+	 [255] 	 -0.0576765761
+72
+63
+27
+389753 0.0667672679 0.0888231844 0.0626218095 0.218212277
+	 [3 3 3 32] 	 -0.922490597
+	 [1 1 1024 255] 	 0.417451352
+	 [255] 	 0.0243417695
+12
+33
+48
+394050 0.0446263477 0.0946703255 0.0390043184 0.178300992
+	 [3 3 3 32] 	 -0.790308356
+	 [1 1 1024 255] 	 -2.06526542
+	 [255] 	 -0.00238747429
+30
+114
+93
+394334 0.0377895087 0.161685213 0.101374 0.300848722
+	 [3 3 3 32] 	 1.27895689
+	 [1 1 1024 255] 	 -0.747181296
+	 [255] 	 0.00713414699
+27
+69
+57
+395904 0.0321452618 0.0889652222 0.0361523144 0.157262802
+	 [3 3 3 32] 	 0.419710547
+	 [1 1 1024 255] 	 0.344418
+	 [255] 	 0.00821043458
+120
+36
+15
+402248 0.0464717299 0.0776165724 0.0263114553 0.150399759
+	 [3 3 3 32] 	 -6.35638
+	 [1 1 1024 255] 	 0.907482505
+	 [255] 	 -0.0493234545
+24
+78
+93
+403995 0.0554855242 0.172885954 0.0357980505 0.264169544
+	 [3 3 3 32] 	 0.133824453
+	 [1 1 1024 255] 	 -3.3150773
+	 [255] 	 -0.00425619259
+21
+69
+30
+405882 0.0639658123 0.0532296896 0.05572588 0.172921389
+	 [3 3 3 32] 	 -3.98953605
+	 [1 1 1024 255] 	 4.06517506
+	 [255] 	 0.0272751935
+9
+18
+9
+406744 0.0645101815 0.0209634453 0.196778446 0.282252073
+	 [3 3 3 32] 	 -13.3172903
+	 [1 1 1024 255] 	 -1.45322084
+	 [255] 	 -0.0434449464
+3
+24
+30
+408859 0.0414126217 0.0657034218 0.111323074 0.218439117
+	 [3 3 3 32] 	 0.784163892
+	 [1 1 1024 255] 	 1.67238605
+	 [255] 	 0.0134001467
+0
+0
+15
+415823 0.00473501 0.0152097978 0.0377123356 0.057657145
+	 [3 3 3 32] 	 0.217203781
+	 [1 1 1024 255] 	 -13.1114159
+	 [255] 	 -0.0550178103
+0
+6
+9
+423396 0.0252062418 0.014037976 0.000798200315 0.040042419
+	 [3 3 3 32] 	 -0.0401833355
+	 [1 1 1024 255] 	 -3.17003584
+	 [255] 	 -0.0440686494
+18
+30
+33
+432213 0.0274375714 0.0577076934 0.0460402556 0.131185517
+	 [3 3 3 32] 	 0.0867437646
+	 [1 1 1024 255] 	 -6.16601181
+	 [255] 	 -0.00907461345
+0
+0
+18
+432906 0.0247660484 0.035171248 0.0321399719 0.0920772702
+	 [3 3 3 32] 	 -0.391040295
+	 [1 1 1024 255] 	 -8.14231205
+	 [255] 	 -0.0194799565
+0
+0
+6
+436280 0.0103988387 0.00992776733 0.0393322222 0.0596588291
+	 [3 3 3 32] 	 0.547246635
+	 [1 1 1024 255] 	 1.57768
+	 [255] 	 0.010609325
+0
+0
+15
+443818 0.0102519765 0.0176765248 0.0384834185 0.0664119199
+	 [3 3 3 32] 	 0.0277275294
+	 [1 1 1024 255] 	 -11.4600611
+	 [255] 	 -0.0469227284
+72
+60
+66
+457877 0.0854936764 0.142557934 0.070633173 0.298684776
+	 [3 3 3 32] 	 -5.67255831
+	 [1 1 1024 255] 	 -3.11541605
+	 [255] 	 -0.0083153937
+3
+9
+15
+459304 0.0296063572 0.0233066231 0.0012474556 0.0541604385
+	 [3 3 3 32] 	 0.457264841
+	 [1 1 1024 255] 	 4.38213348
+	 [255] 	 -0.0392393395
+3
+3
+15
+459887 0.0382414907 0.0414857604 0.176458299 0.256185561
+	 [3 3 3 32] 	 2.95439577
+	 [1 1 1024 255] 	 -11.4940128
+	 [255] 	 -0.0276807584
+0
+21
+60
+460866 0.0495655723 0.0764654875 0.100002289 0.226033345
+	 [3 3 3 32] 	 0.584041476
+	 [1 1 1024 255] 	 -1.05407977
+	 [255] 	 -0.00175535167
+153
+153
+45
+462565 0.0509563833 0.101082474 0.0287051313 0.180743992
+	 [3 3 3 32] 	 0.548311889
+	 [1 1 1024 255] 	 1.50040054
+	 [255] 	 0.0189878196
+3
+24
+28
+463611 0.0237657689 0.0405075364 0.0877239853 0.151997298
+	 [3 3 3 32] 	 -0.854979515
+	 [1 1 1024 255] 	 -0.0504718125
+	 [255] 	 0.0285675544
+0
+12
+21
+464018 0.0232506096 0.0491062775 0.0664521 0.138809
+	 [3 3 3 32] 	 0.237953231
+	 [1 1 1024 255] 	 1.73231304
+	 [255] 	 0.00493935123
+27
+33
+21
+466346 0.0417616591 0.0545016453 0.016271472 0.112534776
+	 [3 3 3 32] 	 0.37419951
+	 [1 1 1024 255] 	 2.56803703
+	 [255] 	 -0.0455161259
+9
+12
+9
+467468 0.0284228846 0.0200157128 0.0207214803 0.069160074
+	 [3 3 3 32] 	 -2.85843253
+	 [1 1 1024 255] 	 0.29760161
+	 [255] 	 0.000454682624
+132
+96
+51
+46847 0.0803021491 0.203105345 0.0863790885 0.369786561
+	 [3 3 3 32] 	 -1.14580345
+	 [1 1 1024 255] 	 -1.99406099
+	 [255] 	 -0.0145847499
+3
+9
+9
+473121 0.0252300445 0.00997418817 0.00451900857 0.0397232436
+	 [3 3 3 32] 	 0.829874754
+	 [1 1 1024 255] 	 -4.83006382
+	 [255] 	 0.0396872237
+0
+33
+36
+474881 0.0125043187 0.0319080316 0.0588870049 0.103299357
+	 [3 3 3 32] 	 8.71079445
+	 [1 1 1024 255] 	 -2.86587191
+	 [255] 	 -0.0467584655
+96
+120
+45
+475182 0.0786731169 0.198114708 0.046831917 0.323619723
+	 [3 3 3 32] 	 -1.63458586
+	 [1 1 1024 255] 	 -1.09479046
+	 [255] 	 0.000245446339
+0
+9
+6
+475856 0.00777016673 0.013623368 0.00102407066 0.0224176049
+	 [3 3 3 32] 	 0.280762255
+	 [1 1 1024 255] 	 -1.95726633
+	 [255] 	 -0.0196498502
+96
+84
+6
+479075 0.0273796245 0.0673916861 0.0651944354 0.159965754
+	 [3 3 3 32] 	 -0.406273425
+	 [1 1 1024 255] 	 1.64756227
+	 [255] 	 0.0309631452
+129
+93
+18
+48133 0.0641602129 0.136790261 0.0489089526 0.249859422
+	 [3 3 3 32] 	 0.546396911
+	 [1 1 1024 255] 	 -2.78466892
+	 [255] 	 0.0304218214
+33
+96
+63
+483446 0.0367786288 0.106744081 0.0617129803 0.20523569
+	 [3 3 3 32] 	 0.284021556
+	 [1 1 1024 255] 	 0.37394619
+	 [255] 	 -0.0102411155
+12
+18
+6
+485773 0.0221325215 0.0120766722 0.00225041853 0.0364596099
+	 [3 3 3 32] 	 0.174233362
+	 [1 1 1024 255] 	 3.25905752
+	 [255] 	 0.0282071792
+3
+9
+12
+486162 0.0555785783 0.052471593 0.140299231 0.248349398
+	 [3 3 3 32] 	 -1.12176549
+	 [1 1 1024 255] 	 4.9266758
+	 [255] 	 0.0295695
+0
+0
+15
+488743 0.0207350105 0.0136453649 0.0462818071 0.0806621835
+	 [3 3 3 32] 	 -1.29827487
+	 [1 1 1024 255] 	 -1.04027247
+	 [255] 	 -0.0033505708
+0
+12
+15
+491294 0.0251118243 0.0406517498 0.0643741861 0.130137756
+	 [3 3 3 32] 	 2.79986095
+	 [1 1 1024 255] 	 3.97436428
+	 [255] 	 0.0240285844
+3
+9
+12
+494555 0.032765422 0.0180720743 0.00819362607 0.0590311214
+	 [3 3 3 32] 	 -0.650068521
+	 [1 1 1024 255] 	 5.38470364
+	 [255] 	 -0.0346488506
+15
+36
+30
+494846 0.0385402143 0.0633943602 0.0382237285 0.140158311
+	 [3 3 3 32] 	 -0.875554204
+	 [1 1 1024 255] 	 0.701996744
+	 [255] 	 0.0179169197
+15
+36
+18
+499727 0.0287518241 0.0283667222 0.119386181 0.176504716
+	 [3 3 3 32] 	 1.4644959
+	 [1 1 1024 255] 	 8.80206871
+	 [255] 	 0.0665795878
+0
+6
+24
+502644 0.0147819193 0.0264973063 0.0324360952 0.0737153217
+	 [3 3 3 32] 	 -0.886650085
+	 [1 1 1024 255] 	 -2.64193535
+	 [255] 	 -0.0399450399
+0
+0
+15
+512938 0.0119904215 0.0273521654 0.0587116145 0.0980542079
+	 [3 3 3 32] 	 2.24509263
+	 [1 1 1024 255] 	 -2.44373608
+	 [255] 	 -0.02381007
+51
+90
+78
+517399 0.034980271 0.0990886241 0.0547093 0.188778192
+	 [3 3 3 32] 	 -1.84906614
+	 [1 1 1024 255] 	 0.645658374
+	 [255] 	 0.0172039028
+27
+84
+72
+520124 0.0413180292 0.109240696 0.0359082595 0.186466992
+	 [3 3 3 32] 	 0.151563212
+	 [1 1 1024 255] 	 -0.358347028
+	 [255] 	 -0.0318199731
+9
+6
+9
+52017 0.0746199861 0.0184476748 0.0877801925 0.180847853
+	 [3 3 3 32] 	 -3.49727631
+	 [1 1 1024 255] 	 1.35118353
+	 [255] 	 0.00822635926
+12
+6
+15
+520324 0.0620450117 0.0473332405 0.0133951912 0.122773446
+	 [3 3 3 32] 	 2.11509323
+	 [1 1 1024 255] 	 -2.576056
+	 [255] 	 -0.000359504949
+30
+56
+68
+522665 0.0626674816 0.136779815 0.0762526691 0.275699973
+	 [3 3 3 32] 	 -0.26529628
+	 [1 1 1024 255] 	 -3.91359901
+	 [255] 	 -0.0125792492
+6
+9
+6
+530998 0.011004963 0.00568765216 0.000830097531 0.017522715
+	 [3 3 3 32] 	 -0.117250159
+	 [1 1 1024 255] 	 -0.912808061
+	 [255] 	 0.0107618906
+102
+117
+39
+531697 0.0432246029 0.15114522 0.0494010933 0.243770927
+	 [3 3 3 32] 	 -2.9263382
+	 [1 1 1024 255] 	 -0.136102274
+	 [255] 	 0.00384760113
+66
+54
+24
+536201 0.0361993797 0.0402474143 0.00466973474 0.0811165273
+	 [3 3 3 32] 	 0.0217183232
+	 [1 1 1024 255] 	 3.08944941
+	 [255] 	 0.032702513
+36
+69
+42
+53668 0.0206945632 0.0341186076 0.0139005911 0.0687137619
+	 [3 3 3 32] 	 -0.146234393
+	 [1 1 1024 255] 	 -0.28454268
+	 [255] 	 -0.0165128037
+0
+3
+18
+537907 0.0739885122 0.0187909473 0.0772410333 0.170020491
+	 [3 3 3 32] 	 -0.749183118
+	 [1 1 1024 255] 	 -2.23560214
+	 [255] 	 -0.0281646419
+3
+21
+18
+540642 0.033404097 0.0265460014 0.0405233391 0.100473434
+	 [3 3 3 32] 	 -0.982815385
+	 [1 1 1024 255] 	 2.91609907
+	 [255] 	 0.0603755675
+6
+9
+3
+541435 0.0108743953 0.0128101781 0.00244011078 0.0261246823
+	 [3 3 3 32] 	 0.491852731
+	 [1 1 1024 255] 	 1.34222889
+	 [255] 	 0.108533405
+0
+3
+15
+542388 0.061870873 0.0424011275 0.0482670963 0.152539104
+	 [3 3 3 32] 	 -3.11522317
+	 [1 1 1024 255] 	 -3.80827785
+	 [255] 	 -0.00242461613
+0
+30
+42
+547759 0.0177405663 0.0347844027 0.0414929166 0.0940178931
+	 [3 3 3 32] 	 -0.876389086
+	 [1 1 1024 255] 	 -2.64896
+	 [255] 	 -0.0408430547
+0
+3
+6
+552656 0.00683144573 0.00633988436 0.0596304 0.0728017241
+	 [3 3 3 32] 	 1.70905042
+	 [1 1 1024 255] 	 -0.131036222
+	 [255] 	 -0.00229861587
+0
+9
+15
+556966 0.035766609 0.024819931 0.0368009135 0.097387448
+	 [3 3 3 32] 	 2.48696518
+	 [1 1 1024 255] 	 3.25019407
+	 [255] 	 -0.0237963814
+0
+3
+18
+559955 0.0637815148 0.0245641284 0.0763538554 0.164699495
+	 [3 3 3 32] 	 1.00663948
+	 [1 1 1024 255] 	 -3.38006067
+	 [255] 	 -0.0207281187
+6
+81
+84
+563882 0.0448735952 0.122522458 0.0290828981 0.196478963
+	 [3 3 3 32] 	 3.50341535
+	 [1 1 1024 255] 	 -1.41793656
+	 [255] 	 -0.00456661358
+0
+15
+36
+564659 0.00658525527 0.0325636789 0.0687979758 0.107946903
+	 [3 3 3 32] 	 -1.03073668
+	 [1 1 1024 255] 	 -1.47061968
+	 [255] 	 -0.00809999183
+78
+102
+54
+566975 0.0526742749 0.129016 0.0779892057 0.259679496
+	 [3 3 3 32] 	 0.0322430134
+	 [1 1 1024 255] 	 2.10438013
+	 [255] 	 0.01494209
+9
+36
+30
+572802 0.0327479 0.036580842 0.0274902806 0.0968190283
+	 [3 3 3 32] 	 3.92285919
+	 [1 1 1024 255] 	 -0.407700747
+	 [255] 	 0.0152996061
+3
+21
+42
+573206 0.0414924696 0.0588847883 0.037771523 0.138148785
+	 [3 3 3 32] 	 2.43715024
+	 [1 1 1024 255] 	 -4.701231
+	 [255] 	 -0.0257214159
+0
+3
+15
+574411 0.0464768186 0.0163676124 0.0404371843 0.103281617
+	 [3 3 3 32] 	 0.532860398
+	 [1 1 1024 255] 	 -7.0365696
+	 [255] 	 -0.0325979367
+0
+0
+9
+575032 0.0010313153 0.013831906 0.000869132578 0.0157323536
+	 [3 3 3 32] 	 0.303255975
+	 [1 1 1024 255] 	 1.1032362
+	 [255] 	 0.0210007355
+150
+222
+99
+579070 0.0477848351 0.353624761 0.0522578694 0.453667462
+	 [3 3 3 32] 	 1.95168543
+	 [1 1 1024 255] 	 -0.905956626
+	 [255] 	 -0.0148346778
+93
+126
+33
+580720 0.0680090189 0.151856616 0.0690731183 0.288938761
+	 [3 3 3 32] 	 1.65322328
+	 [1 1 1024 255] 	 1.02428532
+	 [255] 	 0.0279778559
+0
+18
+15
+65231 0.0448952317 0.0153396362 0.0123579577 0.0725928247
+	 [3 3 3 32] 	 -1.16158676
+	 [1 1 1024 255] 	 -0.810110867
+	 [255] 	 -0.00528303068
+120
+75
+15
+65798 0.0668252185 0.131406799 0.022440888 0.220672905
+	 [3 3 3 32] 	 0.349378705
+	 [1 1 1024 255] 	 -2.65995073
+	 [255] 	 0.0241125766
+99
+74
+39
+69670 0.0401511751 0.0760539323 0.0261985268 0.142403632
+	 [3 3 3 32] 	 -0.81682229
+	 [1 1 1024 255] 	 -1.06250811
+	 [255] 	 -0.0255144686
+0
+9
+15
+69959 0.00570631167 0.0185992569 0.0273136627 0.0516192317
+	 [3 3 3 32] 	 -2.00562429
+	 [1 1 1024 255] 	 -0.670151114
+	 [255] 	 0.000816948479
+93
+96
+87
+70478 0.0623082891 0.110439628 0.0318656042 0.204613537
+	 [3 3 3 32] 	 -0.93832159
+	 [1 1 1024 255] 	 0.605302751
+	 [255] 	 0.0125859026
+0
+0
+6
+75162 0.00284764613 0.0115887132 0.00696736434 0.0214037225
+	 [3 3 3 32] 	 2.09861922
+	 [1 1 1024 255] 	 0.813562334
+	 [255] 	 0.00949038751
+6
+15
+40
+79113 0.0293916445 0.0658222586 0.0302866362 0.125500545
+	 [3 3 3 32] 	 0.388585657
+	 [1 1 1024 255] 	 -7.12841034
+	 [255] 	 -0.0397655554
+0
+9
+15
+80671 0.0336856097 0.0231369026 0.0317346081 0.0885571092
+	 [3 3 3 32] 	 1.20115423
+	 [1 1 1024 255] 	 3.23205543
+	 [255] 	 0.00812526233
+6
+15
+21
+80949 0.0315954 0.0385905206 0.119956449 0.190142363
+	 [3 3 3 32] 	 -3.51130152
+	 [1 1 1024 255] 	 -2.56576562
+	 [255] 	 0.00511211576
+0
+3
+24
+83658 0.0173040144 0.0257989168 0.0740330443 0.117135987
+	 [3 3 3 32] 	 -1.51119316
+	 [1 1 1024 255] 	 -1.82674718
+	 [255] 	 -0.0253354162
+0
+0
+9
+85292 0.00834539812 0.0169993509 0.0160319936 0.0413767397
+	 [3 3 3 32] 	 -0.377936
+	 [1 1 1024 255] 	 -3.98816323
+	 [255] 	 -0.0122748483
+102
+48
+9
+8775 0.0597520731 0.0653042719 0.0284286719 0.153485015
+	 [3 3 3 32] 	 0.949727356
+	 [1 1 1024 255] 	 1.58922029
+	 [255] 	 0.0466530062
+0
+9
+27
+92768 0.0128237437 0.0268781744 0.0239970013 0.0636989176
+	 [3 3 3 32] 	 1.22194839
+	 [1 1 1024 255] 	 0.595886111
+	 [255] 	 -0.0295483097
+24
+51
+27
+93140 0.0254799314 0.06440074 0.050841704 0.140722364
+	 [3 3 3 32] 	 1.02452147
+	 [1 1 1024 255] 	 -6.91943741
+	 [255] 	 -0.000606372952
+6
+18
+12
+96625 0.0331136435 0.019232288 0.0280474499 0.0803933889
+	 [3 3 3 32] 	 -6.49978876
+	 [1 1 1024 255] 	 2.08614731
+	 [255] 	 0.0197869502
+
+conv_bn_11 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_12 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_13 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_16 128.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_17 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_18 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7fa0ee1c5a90>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7fa0ee1c55b0>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_2
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7fa0ee1b6a30>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7fa0ee1c5430>
+path conv
+path conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7fa0ee1b6250>
+path conv
+path conv
+csp_route
+conv_bn
+conv_bn_1
+conv_bn_2
+csp_connect
+conv_bn_3
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+batch_normalization
+conv2d_1
+batch_normalization_1
+conv2d_2
+batch_normalization_2
+conv2d_3
+batch_normalization_3
+conv2d_4
+batch_normalization_4
+concatenate
+conv2d_5
+batch_normalization_5
+conv2d_6
+batch_normalization_6
+csp_route_1
+conv_bn_9
+conv_bn_10
+conv_bn_11
+csp_connect_1
+conv_bn_12
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_9
+batch_normalization_9
+conv2d_10
+batch_normalization_10
+conv2d_11
+batch_normalization_11
+conv2d_12
+batch_normalization_12
+conv2d_13
+batch_normalization_13
+concatenate_2
+conv2d_14
+batch_normalization_14
+conv2d_15
+batch_normalization_15
+csp_route_2
+conv_bn_18
+conv_bn_19
+conv_bn_20
+csp_connect_2
+conv_bn_21
+conv_bn_22
+conv_bn_23
+conv_bn_24
+conv2d_18
+batch_normalization_18
+conv2d_19
+batch_normalization_19
+conv2d_20
+batch_normalization_20
+conv2d_21
+batch_normalization_21
+conv2d_22
+batch_normalization_22
+concatenate_4
+conv2d_23
+batch_normalization_23
+conv2d_24
+batch_normalization_24
+concatenate_1
+conv_bn_7
+conv_bn_8
+conv2d_7
+batch_normalization_7
+conv2d_8
+batch_normalization_8
+concatenate_3
+conv_bn_16
+conv_bn_17
+conv2d_16
+batch_normalization_16
+conv2d_17
+batch_normalization_17
+25 25
+conv_bn_5 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_6 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_1 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_3 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_4 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+conv_bn_7 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_8 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_10 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_11 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_12 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_13 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+conv_bn_16 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_17 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_23 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_24 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_18 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_19 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_20 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_21 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_22 1024 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]

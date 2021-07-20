@@ -1,0 +1,345 @@
+linear
+linear
+linear
+Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 255, kernel_size=(1, 1), stride=(1, 1))
+28
+6
+21
+18
+['118921'] 0.0005 0.2023097 [   0.058529    0.013674  0.00078699     0.07299]
+6
+39
+51
+['124429'] 0.0005 0.02962004 [   0.028732    0.065482    0.033974     0.12819]
+6
+15
+15
+['155192'] 0.0005 0.16378586 [   0.013781   0.0062546  0.00041871    0.020454]
+45
+96
+60
+['172595'] 0.0005 0.031046964 [   0.038666    0.091398    0.025791     0.15586]
+18
+12
+6
+['18149'] 0.0005 0.5019273 [   0.038039    0.010204    0.018822    0.067066]
+24
+24
+9
+['184205'] 0.0005 0.52886766 [   0.021677    0.031931    0.022154    0.075761]
+0
+3
+18
+['209728'] 0.0005 0.015502986 [  0.0057995   0.0040616  0.00032988    0.010191]
+9
+36
+30
+['220819'] 0.0005 0.030097043 [   0.013877     0.02135  0.00072879    0.035956]
+3
+9
+24
+['238147'] 0.0005 0.06262035 [   0.022405     0.01876   0.0031514    0.044316]
+30
+33
+24
+['259335'] 0.0005 0.06757977 [     0.0255    0.018185    0.019946    0.063632]
+0
+9
+9
+['260020'] 0.0005 0.7327224 [  0.0037569   0.0017899  0.00061383   0.0061607]
+0
+12
+33
+['276146'] 0.0005 0.11652802 [  0.0060862    0.022039  0.00059333    0.028719]
+12
+18
+6
+-->>>>['283441'] 0.0005 0.37059978 [   0.018695    0.023316   0.0021966    0.044207]
+9
+18
+21
+['294908'] 0.0005 0.27229154 [   0.016118    0.013233  0.00077292    0.030124]
+3
+9
+3
+--->>>>> ['298137'] 0.0005 2.2546616 [  0.0088189   0.0016922  0.00083528    0.011346]
+12
+21
+18
+['30465'] 0.0005 0.013147768 [   0.017814    0.016158    0.020065    0.054037]
+9
+9
+3
+---->>>> ['320370'] 0.0005 0.0685435 [    0.03507    0.005403  0.00074614    0.041219]
+0
+0
+15
+['443818'] 0.0005 0.17581251 [  0.0031639    0.011093    0.023389    0.037646]
+3
+24
+28
+['463611'] 0.0005 0.055558834 [   0.016965    0.019349   0.0054648    0.041779]
+0
+12
+21
+['464018'] 0.0005 0.055042755 [   0.010055    0.032617   0.0062855    0.048957]
+9
+12
+9
+['467468'] 0.0005 0.4340459 [   0.017186    0.012048   0.0025541    0.031788]
+132
+96
+51
+['46847'] 0.0005 0.07358743 [   0.052168     0.12337    0.008356      0.1839]
+3
+9
+9
+['473121'] 0.0005 0.05938076 [   0.023266   0.0099618  0.00072267    0.033951]
+30
+56
+68
+['522665'] 0.0005 0.05762961 [   0.033474    0.078887   0.0072629     0.11962]
+0
+3
+18
+---->>>> ['537907'] 0.0005 0.044001423 [   0.016387    0.014609    0.018707    0.049704]
+0
+3
+15
+---->>>> ['574411'] 0.0005 0.057287782 [   0.036163   0.0064642   0.0077768    0.050404]
+0
+9
+15
+---->>>>> ['69959'] 0.0005 0.0770495 [  0.0038824   0.0086291  0.00059196    0.013103]
+0
+0
+6
+['75162'] 0.0005 0.6948523 [  0.0012794   0.0022102  0.00016286   0.0036525]
+Optimizer stripped from runs/train/exp343/weights/last.pt, 212.2MB
+Optimizer stripped from runs/train/exp343/weights/best.pt, 212.2MB
