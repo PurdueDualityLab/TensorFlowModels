@@ -38,7 +38,7 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.5
+        'all': 0.56875 #0.5
       obj_normalizer: 
         '5': 0.4
         '4': 1.0
