@@ -1,4 +1,6 @@
 from numpy import blackman
+from tensorflow.python.keras.backend import int_shape
+from tensorflow.python.ops.clip_ops import clip_by_value
 from tensorflow.python.ops.gen_array_ops import shape
 from tensorflow.python.training import optimizer
 from yolo.ops.preprocessing_ops import apply_infos
@@ -324,6 +326,33 @@ class YoloTask(base_task.Task):
 
     return logs
 
+
+  def _reorg_boxes(self, boxes, num_detections, info):
+    mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
+    mask = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype)
+
+    # split all infos 
+    inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    offset = tf.expand_dims(info[:, 3, :], axis = 1)
+
+    # reorg to image shape
+    boxes = box_ops.denormalize_boxes(boxes, inshape)
+    boxes /= tf.tile(scale, [1, 1, 2])
+    boxes += tf.tile(offset, [1, 1, 2])
+
+    # #testing
+    # boxes = tf.ones_like(boxes)
+    # boxes = box_ops.denormalize_boxes(boxes, inshape)
+    # boxes /= tf.tile(scale, [1, 1, 2])
+    # boxes += tf.tile(offset, [1, 1, 2]) * 2
+
+    # mask the boxes for usage
+    boxes *= mask 
+    boxes += (mask - 1)
+    return boxes
+
   def validation_step(self, inputs, model, metrics=None):
     # get the data point
     image, label = inputs
@@ -343,34 +372,30 @@ class YoloTask(base_task.Task):
         scale_replicas=1)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
-    image_shape = tf.shape(image)[1:-1]
-
-    label['boxes'] = box_ops.denormalize_boxes(
-        tf.cast(label['bbox'], tf.float32), image_shape)
-    del label['bbox']
+    boxes = self._reorg_boxes(y_pred['bbox'], 
+                         y_pred['num_detections'], 
+                         label['groundtruths']['image_info'])
+    label['groundtruths']["boxes"] = self._reorg_boxes(
+                                label['groundtruths']["boxes"], 
+                                label['groundtruths']["num_detections"], 
+                                label['groundtruths']['image_info'])
 
     coco_model_outputs = {
-        'detection_boxes':
-            box_ops.denormalize_boxes(
-                tf.cast(y_pred['bbox'], tf.float32), image_shape),
-        'detection_scores':
-            y_pred['confidence'],
-        'detection_classes':
-            y_pred['classes'],
-        'num_detections':
-            y_pred['num_detections'],
-        'source_id':
-            label['source_id'],
+        'detection_boxes': boxes,
+        'detection_scores': y_pred['confidence'],
+        'detection_classes': y_pred['classes'],
+        'num_detections': y_pred['num_detections'],
+        'source_id': label['groundtruths']['source_id'],
+        'image_info': label['groundtruths']['image_info']
     }
-
+    
 
     if metrics:
-      logs.update({self.coco_metric.name: (label, coco_model_outputs)})
-
+      logs.update({self.coco_metric.name: (label['groundtruths'], 
+                                           coco_model_outputs)})
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
-
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):

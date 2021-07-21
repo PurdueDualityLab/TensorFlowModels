@@ -404,22 +404,22 @@ class Parser(parser.Parser):
   def _parse_eval_data(self, data):
 
     # get the image shape constants
-    shape = tf.shape(data['image'])
     image = data['image'] / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    if self._letter_box == False:
-      image = tf.image.resize(image, [self._image_h, self._image_w])
+    # shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
+    # shape *= 1.25 
+    # image = tf.image.resize(
+    #   image, 
+    #   tf.cast(shape, tf.int32),
+    # )
 
-    image, infos = preprocessing_ops.resize_and_crop_image(
+    image, infos = preprocessing_ops.letter_box(
         image,
         [self._image_h, self._image_w],
         [self._image_h, self._image_w],
         letter_box=self._letter_box,
-        aug_scale_min=1.0,
-        aug_scale_max=1.0,
-        random_pad=False,
         shiftx=0.5,
         shifty=0.5)
 
@@ -441,7 +441,7 @@ class Parser(parser.Parser):
 
   def _build_label(self,
                    image,
-                   boxes,
+                   boxes_,
                    classes,
                    width,
                    height,
@@ -457,7 +457,7 @@ class Parser(parser.Parser):
     image.set_shape(imshape)
 
     # get the best anchors
-    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    boxes = box_utils.yxyx_to_xcycwh(boxes_)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes,
         self._anchors,
@@ -534,4 +534,24 @@ class Parser(parser.Parser):
     labels['upds'] = upds
     labels['inds'] = inds
     labels['true_conf'] = true_conf
+
+
+    # Sets up groundtruth data for evaluation.
+    groundtruths = {
+        'source_id': data['source_id'],
+        'height': data['height'],
+        'width': data['width'],
+        'num_detections': labels['num_detections'],
+        'image_info': info,
+        'boxes': boxes_,
+        'classes': labels['classes'],
+        'areas': data['groundtruth_area'],
+        'is_crowds': tf.cast(data['groundtruth_is_crowd'], tf.int32),
+    }
+    groundtruths['source_id'] = utils.process_source_id(
+        groundtruths['source_id'])
+    groundtruths = utils.pad_groundtruths_to_fixed_size(
+        groundtruths, self._max_num_instances)
+
+    labels['groundtruths'] = groundtruths
     return image, labels

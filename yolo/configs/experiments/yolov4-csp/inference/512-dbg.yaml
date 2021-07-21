@@ -95,7 +95,7 @@ task:
     is_training: false
     drop_remainder: true
     parser:
-      max_num_instances: 200
+      max_num_instances: 300
       letter_box: True
       use_tie_breaker: True
       use_scale_xy: True

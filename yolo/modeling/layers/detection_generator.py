@@ -248,6 +248,9 @@ class YoloLayer(ks.Model):
           pre_nms_thresh = self._thresh,
           nms_thresh = self._nms_thresh,
           prenms_top_k=self._pre_nms_points)
+      # compute the number of valid detections
+      num_detections = tf.reduce_sum(
+        input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
     elif self._nms_type == 6:
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,
@@ -257,26 +260,29 @@ class YoloLayer(ks.Model):
           self._thresh,
           self._nms_thresh,
           prenms_top_k=self._pre_nms_points)
+    # compute the number of valid detections
+      num_detections = tf.reduce_sum(
+        input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
     elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
-      nms_items = tf.image.combined_non_max_suppression(
+      boxes, object_scores_, class_scores, num_detections = (
+        tf.image.combined_non_max_suppression(
           tf.expand_dims(boxes, axis=-2),
           class_scores,
           self._pre_nms_points,
           self._max_boxes,
           iou_threshold=self._nms_thresh,
-          score_threshold=self._thresh)
+          score_threshold=self._thresh))
       # cast the boxes and predicitons abck to original datatype
-      boxes = tf.cast(nms_items.nmsed_boxes, object_scores.dtype)
-      class_scores = tf.cast(nms_items.nmsed_classes, object_scores.dtype)
-      object_scores = tf.cast(nms_items.nmsed_scores, object_scores.dtype)
-
+      boxes = tf.cast(boxes, object_scores.dtype)
+      class_scores = tf.cast(class_scores, object_scores.dtype)
+      object_scores = tf.cast(object_scores_, object_scores.dtype)
     else:
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
-      boxes, confidence, classes, valid = self._nms.complete_nms(
+      boxes, confidence, classes, num_detections = self._nms.complete_nms(
           tf.expand_dims(boxes, axis=-2),
           class_scores,
           pre_nms_top_k=self._pre_nms_points,
@@ -286,9 +292,6 @@ class YoloLayer(ks.Model):
       boxes = tf.cast(boxes, object_scores.dtype)
       class_scores = tf.cast(classes, object_scores.dtype)
       object_scores = tf.cast(confidence, object_scores.dtype)
-
-    # compute the number of valid detections
-    num_detections = tf.math.reduce_sum(tf.math.ceil(object_scores), axis=-1)
 
     # format and return
     return {

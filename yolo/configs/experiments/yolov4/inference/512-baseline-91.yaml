@@ -59,8 +59,8 @@ task:
       max_boxes: 500
       nms_type: greedy
       iou_thresh: 0.001
-      nms_thresh: 0.65
-      pre_nms_points: 500
+      nms_thresh: 0.60
+      pre_nms_points: 5000
       use_scaled_loss: false
       darknet: null
   train_data:
@@ -95,7 +95,7 @@ task:
         jitter: 0.3
         resize: 1.0
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 8
     dtype: bfloat16
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
