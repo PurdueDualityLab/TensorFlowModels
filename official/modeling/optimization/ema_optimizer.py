@@ -113,6 +113,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
 
   @tf.function
   def update_average(self, step: tf.Tensor):
+    
     # step = tf.cast(step, tf.float32)
     # if step < self._start_step:
     #   decay = tf.constant(0., tf.float32)
