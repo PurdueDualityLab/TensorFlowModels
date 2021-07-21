@@ -32,7 +32,9 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-2.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-2.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
@@ -284,7 +286,7 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=True, num = 30)
   test_yolo_pipeline(is_training=False, num = 5)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
