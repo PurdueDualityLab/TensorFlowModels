@@ -112,7 +112,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 375000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 10000
   summary_interval: 10000
@@ -126,9 +126,10 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [300000, 337500]
+        boundaries: [240000, 260000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] #best
+        # values: [0.00131, 0.000131, 0.0000131] #best
+        values: [0.00131, 0.0009825, 0.000655]
     optimizer:
       type: sgd
       sgd:
