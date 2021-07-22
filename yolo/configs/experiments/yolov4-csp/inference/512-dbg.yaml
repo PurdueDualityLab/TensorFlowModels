@@ -4,7 +4,7 @@ runtime:
   loss_scale: "dynamic"
   num_gpus: 1
 task:
-  smart_bias_lr: 0.0
+  smart_bias_lr: 0.1
   model:
     base:
       backbone:
@@ -102,8 +102,8 @@ task:
       anchor_thresh: 4.0
   weight_decay: 0.0005
   annotation_file: null
-  load_darknet_weights: true
-  darknet_load_decoder: true
+  # load_darknet_weights: true
+  # darknet_load_decoder: true
 trainer:
   train_steps: 5000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 5000
@@ -129,4 +129,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 0 #5625 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps

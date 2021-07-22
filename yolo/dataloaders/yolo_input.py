@@ -408,13 +408,6 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    # shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
-    # shape *= 1.25 
-    # image = tf.image.resize(
-    #   image, 
-    #   tf.cast(shape, tf.int32),
-    # )
-
     image, infos = preprocessing_ops.letter_box(
         image,
         [self._image_h, self._image_w],
@@ -461,8 +454,8 @@ class Parser(parser.Parser):
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes,
         self._anchors,
-        width=self._image_w,
-        height=self._image_h,
+        width=width,
+        height=height,
         iou_thresh=self._anchor_t, 
         best_match_only=self._best_match_only)
 

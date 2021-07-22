@@ -316,7 +316,18 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    optimizer.apply_gradients(zip(gradients, train_vars))
+    # optimizer.apply_gradients(zip(gradients, train_vars))
+    if self._bias_optimizer is None:
+      optimizer.apply_gradients(zip(gradients, train_vars))
+    else:
+      bias_grad = []
+      bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
+      for i in range(model.head.num_heads):
+        bias_grad.append(gradients[-(2 * i + 1)])
+        gradients[-(2 * i + 1)] *= 0
+
+      self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
+      optimizer.apply_gradients(zip(gradients, train_vars))
     
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
@@ -341,6 +352,7 @@ class YoloTask(base_task.Task):
     boxes = box_ops.denormalize_boxes(boxes, inshape)
     boxes /= tf.tile(scale, [1, 1, 2])
     boxes += tf.tile(offset, [1, 1, 2])
+    boxes = box_ops.clip_boxes(boxes, ogshape)
 
     # #testing
     # boxes = tf.ones_like(boxes)
@@ -569,27 +581,40 @@ class YoloTask(base_task.Task):
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
 
-  # may need to comment it out
+  # # may need to comment it out
+  # def create_optimizer(self, optimizer_config: OptimizationConfig,
+  #                      runtime_config: Optional[RuntimeConfig] = None):
+  #   if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
+  #     opta = super().create_optimizer(optimizer_config, runtime_config)
+      
+  #     if isinstance(opta, optimization.ExponentialMovingAverage):
+  #       optb = opta._optimizer
+  #     elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
+  #       optb = opta.inner_optimizer
+  #     else:
+  #       optb = opta 
+
+  #     if hasattr(optb, "_set_bias_lr"):
+  #       optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+  #       opt_factory = optimization.OptimizerFactory(optimizer_config)
+  #       bias_lr = opt_factory.build_learning_rate()
+  #       optb._set_bias_lr(bias_lr, 
+  #         (self.task_config.model.num_classes +
+  #          5) * self.task_config.model.boxes_per_scale )
+
+  #     return opta
+  #   else:
+  #     return super().create_optimizer(optimizer_config, runtime_config)
+  
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
       opta = super().create_optimizer(optimizer_config, runtime_config)
-      
-      if isinstance(opta, optimization.ExponentialMovingAverage):
-        optb = opta._optimizer
-      elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
-        optb = opta.inner_optimizer
-      else:
-        optb = opta 
-
-      if hasattr(optb, "_set_bias_lr"):
-        optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
-        opt_factory = optimization.OptimizerFactory(optimizer_config)
-        bias_lr = opt_factory.build_learning_rate()
-        optb._set_bias_lr(bias_lr, 
-          (self.task_config.model.num_classes +
-           5) * self.task_config.model.boxes_per_scale )
-
+      optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+      # revert back comment the line bellow
+      optimizer_config.ema = None
+      optb = super().create_optimizer(optimizer_config, runtime_config)
+      self._bias_optimizer = optb
       return opta
     else:
       return super().create_optimizer(optimizer_config, runtime_config)

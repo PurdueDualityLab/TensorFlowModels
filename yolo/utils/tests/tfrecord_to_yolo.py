@@ -89,10 +89,10 @@ class DataDecoder(hyperparams.OneOfConfig):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   global_batch_size: int = 1
-  input_path: str = "" #'/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/records/val*'
-  tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
-  tfds_name: str = "coco"
-  tfds_split: str = "validation"
+  input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  # tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
+  # tfds_name: str = "coco"
+  # tfds_split: str = "validation"
   is_training: bool = False
   dtype: str = 'float16'
   decoder: DataDecoder = DataDecoder()
@@ -101,6 +101,16 @@ class DataConfig(cfg.DataConfig):
   tfds_download: bool = True
   cache: bool = False
 
+def coco80_to_coco91_class():  # converts 80-index (val2014) to 91-index (paper)
+    # https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
+    # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
+    # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
+    # x1 = [list(a[i] == b).index(True) + 1 for i in range(80)]  # darknet to coco
+    # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]  # coco to darknet
+    x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34,
+         35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+         64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
+    return tf.expand_dims(tf.convert_to_tensor(x), axis = 0)
 
 def get_decoder(params):
   if params.tfds_name:
@@ -138,7 +148,8 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
 
   dataset = build_ds(params)
 
-  lim = 2
+  lim = 5000
+  nte = True
   for k, sample in enumerate(dataset):
     if k > lim:
       break
@@ -155,6 +166,16 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
 
       box = yxyx_to_xcycwh(boxes[i])
       classif = classes[i]
+
+      if nte:
+        no = coco80_to_coco91_class()
+        ce = tf.expand_dims(classif, axis = -1)
+        ind = ce == tf.cast(no, ce.dtype)
+        co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis = -1), [-1])
+        ind = tf.where(tf.reduce_any(ind, axis = -1))
+        classif = tf.gather_nd(co, ind)
+        box = tf.gather_nd(box, ind)
+
       with open(f"{path}/labels/{name}.txt", "w") as f:
         for j in range(tf.shape(classif)[0]):
           #value = f"{int(classif[j].numpy())} {float(box[j][1].numpy())} {float(box[j][0].numpy())} {float(box[j][3].numpy())} {float(box[j][2].numpy())}\n"
