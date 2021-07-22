@@ -404,7 +404,7 @@ class Parser(parser.Parser):
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
-    height, width = preprocessing_ops.get_image_shape(image)
+    height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 
         data, is_training=True)
