@@ -429,6 +429,7 @@ class Parser(parser.Parser):
         image, 
         [self._image_h, self._image_w]
       )
+      height, width = self._image_h, self._image_w
     else:
       fit = lambda x: tf.cast((tf.math.ceil((x / self._net_down_scale) + 0.5) 
                                           * self._net_down_scale), x.dtype)
@@ -453,7 +454,7 @@ class Parser(parser.Parser):
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
-    height, width = preprocessing_ops.get_image_shape(image)
+    # height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 
         data, is_training=False)
