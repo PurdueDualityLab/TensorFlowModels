@@ -44,6 +44,7 @@ class Parser(parser.Parser):
                resize=1.0,
                resize_mosaic = 1.0, 
                sheer=0.0, 
+               
 
                area_thresh = 0.1, 
                max_num_instances=200,
@@ -62,6 +63,8 @@ class Parser(parser.Parser):
                mosaic_translate=0.0,
                
                anchor_t=4.0,
+               dynamic_conv=False, 
+               stride = None, 
                scale_xy=None,
                use_scale_xy=False,
                best_match_only=False, 
@@ -130,7 +133,11 @@ class Parser(parser.Parser):
     # base initialization
     image_w = output_size[1]
     image_h = output_size[0]
-    self._net_down_scale = 2**max_level
+    if stride is None:
+      self._net_down_scale = 2**max_level
+    else: 
+      self._net_down_scale = stride
+
 
     # assert that the width and height is viable
     assert image_w % self._net_down_scale == 0
@@ -177,6 +184,7 @@ class Parser(parser.Parser):
     self._best_match_only = best_match_only
 
     # set the per level values needed for operation
+    self._dynamic_conv = dynamic_conv
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._use_scale_xy = use_scale_xy
@@ -202,6 +210,7 @@ class Parser(parser.Parser):
   def _build_grid(self,
                   raw_true,
                   width,
+                  height,
                   batch=False,
                   use_tie_breaker=False,
                   is_training=True):
@@ -229,7 +238,7 @@ class Parser(parser.Parser):
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
-          raw_true, self._masks[key], width // 2**int(key), 0,
+          raw_true, self._masks[key], width // 2**int(key), height // 2**int(key), 0,
           raw_true['bbox'].dtype, scale_xy, scale_up[key], use_tie_breaker)
 
       # set/fix the shape of the indexes
@@ -408,13 +417,31 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    image, infos = preprocessing_ops.letter_box(
-        image,
-        [self._image_h, self._image_w],
-        [self._image_h, self._image_w],
-        letter_box=self._letter_box,
-        shiftx=0.5,
-        shifty=0.5)
+    if not self._dynamic_conv:
+      image, infos = preprocessing_ops.letter_box(
+          image,
+          [self._image_h, self._image_w],
+          [self._image_h, self._image_w],
+          letter_box=self._letter_box,
+          shiftx=0.5,
+          shifty=0.5)
+      image = tf.image.resize(
+        image, 
+        [self._image_h, self._image_w]
+      )
+    else:
+      fit = lambda x: tf.cast((tf.math.ceil((x / self._net_down_scale) + 0.5) 
+                                          * self._net_down_scale), x.dtype)
+      height, width = preprocessing_ops._resize_letter(image, 
+                                        [self._image_h, self._image_w])                                   
+      height, width = fit(height), fit(width)
+      image, infos = preprocessing_ops.letter_box(
+          image,
+          [height, width],
+          [height, width],
+          letter_box=False,
+          shiftx=0.5,
+          shifty=0.5)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 
@@ -518,7 +545,8 @@ class Parser(parser.Parser):
     # build the grid formatted for loss computation in model output format
     grid, inds, upds, true_conf = self._build_grid(
         labels,
-        self._image_w,
+        width,
+        height,
         use_tie_breaker=self._use_tie_breaker,
         is_training=is_training)
 

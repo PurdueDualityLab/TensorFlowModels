@@ -375,6 +375,19 @@ def mean_pad(image, pady, padx, targety, targetx, color = False):
 #     infos = [image_info]
 #     return output_image, infos
 
+def _resize_letter(image, 
+                   desired_size):
+  height, width = get_image_shape(image)
+  clipper = tf.reduce_max((height, width))
+  w_scale = width / clipper
+  h_scale = height / clipper
+
+  height_, width_ = desired_size[0], desired_size[1]
+  height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+  width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+  return height_, width_
+
+
 def letter_box( image,
                 desired_size,
                 padded_size,
@@ -418,31 +431,34 @@ def letter_box( image,
 
     image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
     if not letter_box:
-      image = tf.image.resize(
-          image, desired_size, preserve_aspect_ratio=False, method=method)
-    else:
-      height, width = get_image_shape(image)
-      clipper = tf.reduce_max((height, width))
-      w_scale = width / clipper
-      h_scale = height / clipper
-
       height_, width_ = desired_size[0], desired_size[1]
-      height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-      width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+    else:
+      height_, width_ = _resize_letter(image, desired_size, method = method)
+    image = tf.image.resize(
+          image, (height_, width_), preserve_aspect_ratio=False, method=method)
+      # height, width = get_image_shape(image)
+      # clipper = tf.reduce_max((height, width))
+      # w_scale = width / clipper
+      # h_scale = height / clipper
 
-      image = image = tf.image.resize(
-        image, (height_, width_), preserve_aspect_ratio=False, method=method)
+      # height_, width_ = desired_size[0], desired_size[1]
+      # height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
+      # width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
+
+      # image = image = tf.image.resize(
+      #   image, (height_, width_), preserve_aspect_ratio=False, method=method)
 
     
     scaled_size = tf.cast(tf.shape(image)[0:2], tf.float32)
     image_scale = scaled_size / image_size
     offset = tf.zeros((2,), tf.int32)
 
+    padded_size_ = tf.cast(padded_size, scaled_size.dtype)
     dy = tf.cast(
-        tf.cast(padded_size[0] - scaled_size[0], tf.float32) * shifty,
+        tf.cast(padded_size_[0] - scaled_size[0], tf.float32) * shifty,
         tf.int32)
     dx = tf.cast(
-        tf.cast(padded_size[1] - scaled_size[1], tf.float32) * shiftx,
+        tf.cast(padded_size_[1] - scaled_size[1], tf.float32) * shiftx,
         tf.int32)
     offset -= tf.convert_to_tensor([dy, dx])
 
@@ -452,7 +468,7 @@ def letter_box( image,
 
     image_info = tf.stack([
         image_size,
-        tf.constant(desired_size, dtype=tf.float32), 
+        tf.cast(desired_size, dtype=tf.float32), 
         image_scale,
         tf.cast(offset, tf.float32)
     ])
@@ -1122,7 +1138,7 @@ def _gen_offsets(scale_xy, dtype):
   return tf.cast(0.5 * (scale_xy - 1), dtype)
 
 
-def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
+def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype, scale_xy,
                         scale_num_inst, use_tie_breaker):
   """
   convert ground truth for use in loss functions
@@ -1151,8 +1167,8 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   anchors = tf.cast(y_true['best_anchors'], dtype)
   ious = tf.cast(y_true['best_iou_match'], dtype)
 
-  width = tf.cast(size, boxes.dtype)
-  height = tf.cast(size, boxes.dtype)
+  width = tf.cast(sizew, boxes.dtype)
+  height = tf.cast(sizeh, boxes.dtype)
   # get the number of boxes in the ground truth boxs
   num_boxes = tf.shape(boxes)[-2]
   # get the number of anchor boxes used for this anchor scale
@@ -1210,7 +1226,7 @@ def build_grided_gt_ind(y_true, mask, size, num_classes, dtype, scale_xy,
   (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
       samples, [4, 1, 1, 1, 1], axis=-1)
 
-  full = tf.zeros([size, size, len_masks, 1], dtype=dtype)
+  full = tf.zeros([sizeh, sizew, len_masks, 1], dtype=dtype)
   full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
 
   if num_written >= num_instances:

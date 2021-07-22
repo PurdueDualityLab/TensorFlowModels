@@ -162,6 +162,7 @@ class Parser(hyperparams.Config):
   best_match_only: bool = False
   anchor_thresh: float = 0.213
   area_thresh: float = 0.1
+  stride: Optional[int] = None
   mosaic: Mosaic = Mosaic()
 
 
@@ -277,6 +278,7 @@ class YoloBase(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class Yolo(ModelConfig):
   num_classes: int = 91
+  dynamic_conv: bool = False
   input_size: Optional[List[int]] = dataclasses.field(
       default_factory=lambda: [512, 512, 3])
   min_level: int = 3

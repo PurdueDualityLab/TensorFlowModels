@@ -161,6 +161,9 @@ class YoloLayer(ks.Model):
     shape = inputs.get_shape().as_list()
     batchsize, height, width = shape_[0], shape[1], shape[2]
 
+    if height is None or width is None:
+      height, width = shape_[1], shape_[2]
+
     generator = self._generator[key]
     len_mask = self._len_mask[key]
     scale_xy = self._scale_xy[key]

@@ -12,7 +12,7 @@ def _build_grid_points(lwidth, lheight, anchors, dtype):
         tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
     y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
     x_y = K.stack([x_left, y_left], axis=-1)
-    x_y = tf.cast(x_y, dtype=dtype) #/ tf.cast(lwidth, dtype=dtype)
+    x_y = tf.cast(x_y, dtype=dtype) 
     x_y = tf.expand_dims(
         tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
   return x_y
@@ -24,9 +24,6 @@ def _build_anchor_grid(width, height, anchors, dtype):  #, num, dtype):
     num = tf.shape(anchors)[0]
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
-    # anchors = tf.reshape(anchors, [1, -1])
-    # anchors = tf.tile(anchors, [width * height, 1])
-    # anchors = tf.reshape(anchors, [1, width, height, num, 2])
   return anchors
 
 
@@ -60,13 +57,4 @@ class GridGenerator(object):
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype),
         self.dtype)  
-    
-    # temp code!!!!
-    # scaler = tf.cast([width, height], anchor_grid.dtype)
-    # grid_points = grid_points / scaler
-    # anchor_grid = anchor_grid / scaler
-    
-    grid_points = self._extend_batch(grid_points, batch_size)
-    anchor_grid = self._extend_batch(anchor_grid, batch_size)
-    # return tf.stop_gradient(grid_points), tf.stop_gradient(anchor_grid)
     return grid_points, anchor_grid

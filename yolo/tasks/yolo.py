@@ -108,8 +108,15 @@ class YoloTask(base_task.Task):
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    input_specs = tf.keras.layers.InputSpec(shape=[None] +
-                                            model_base_cfg.input_size)
+    input_size = model_base_cfg.input_size.copy()
+    if model_base_cfg.dynamic_conv:
+      print("WARNING: dynamic convolution is only supported on GPU and may \
+             require significantly more memory. Validation will only work at \
+             a batchsize of 1. The model will be trained at the input \
+             resolution and evaluated at a dynamic resolution")
+      input_size[0] = None
+      input_size[1] = None 
+    input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
 
@@ -200,7 +207,9 @@ class YoloTask(base_task.Task):
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,
+        dynamic_conv=model.dynamic_conv,
         scale_xy=xy_scales,
+        stride=params.parser.stride, 
         area_thresh=params.parser.area_thresh, 
         use_scale_xy=params.parser.use_scale_xy,
         best_match_only=params.parser.best_match_only, 
@@ -344,15 +353,15 @@ class YoloTask(base_task.Task):
 
     # split all infos 
     inshape = tf.expand_dims(info[:, 1, :], axis = 1)
-    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
-    scale = tf.expand_dims(info[:, 2, :], axis = 1)
-    offset = tf.expand_dims(info[:, 3, :], axis = 1)
+    # ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    # scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    # offset = tf.expand_dims(info[:, 3, :], axis = 1)
 
     # reorg to image shape
     boxes = box_ops.denormalize_boxes(boxes, inshape)
-    boxes /= tf.tile(scale, [1, 1, 2])
-    boxes += tf.tile(offset, [1, 1, 2])
-    boxes = box_ops.clip_boxes(boxes, ogshape)
+    # boxes /= tf.tile(scale, [1, 1, 2])
+    # boxes += tf.tile(offset, [1, 1, 2])
+    # boxes = box_ops.clip_boxes(boxes, ogshape)
 
     # #testing
     # boxes = tf.ones_like(boxes)
@@ -363,6 +372,7 @@ class YoloTask(base_task.Task):
     # mask the boxes for usage
     boxes *= mask 
     boxes += (mask - 1)
+    # tf.print(boxes)
     return boxes
 
   def validation_step(self, inputs, model, metrics=None):
@@ -605,7 +615,7 @@ class YoloTask(base_task.Task):
   #     return opta
   #   else:
   #     return super().create_optimizer(optimizer_config, runtime_config)
-  
+
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:

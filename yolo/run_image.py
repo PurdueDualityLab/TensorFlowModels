@@ -2,6 +2,7 @@
 # pylint: skip-file
 from absl import app
 from absl import flags
+import math
 import gin
 import sys
 
@@ -49,7 +50,7 @@ def resize_input_image(image,
   else:
     width, height = shape[0], shape[1]
 
-  image = cv2.resize(image, (width, height))
+  image = cv2.resize(image, (height, width))
   image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
   if normalize and (dtype is not np.uint8 and dtype is not np.int8):
     image = image / 255
@@ -62,7 +63,8 @@ def resize_input_image(image,
 if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
+      # config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
+      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"],
       model_dir='')
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
@@ -72,15 +74,19 @@ if __name__ == "__main__":
       thickness=1)
 
 
-  image = url_to_image("/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/images/30290.jpg")
+  image = url_to_image("/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/images/139.jpg")
   save_name = "save.png"
 
-  image_ = resize_input_image(image, params.task.model.input_size, normalize=True)
+  size = params.task.model.input_size
+  fit = lambda x: int(math.ceil((x / 32) + 0.5) * 32)
+  size = list(image.shape)
+  size[0], size[1] = fit(size[0]), fit(size[1])
+  image_ = resize_input_image(image, size, normalize=True)
 
   pred = model(image_, training=False)
-  image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-  image = cv2.resize(image, params.task.model.input_size[:2])
-  image = draw_fn(image / 255, pred)
+  image = cv2.cvtColor(image_[0], cv2.COLOR_BGR2RGB)
+  # image = cv2.resize(image, size[:2])
+  image = draw_fn(image_[0], pred)
 
   cv2.imshow("testframe", image)
   k = cv2.waitKey(0)
