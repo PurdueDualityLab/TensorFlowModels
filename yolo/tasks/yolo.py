@@ -353,26 +353,14 @@ class YoloTask(base_task.Task):
 
     # split all infos 
     inshape = tf.expand_dims(info[:, 1, :], axis = 1)
-    # ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
-    # scale = tf.expand_dims(info[:, 2, :], axis = 1)
-    # offset = tf.expand_dims(info[:, 3, :], axis = 1)
 
     # reorg to image shape
     boxes = box_ops.denormalize_boxes(boxes, inshape)
-    # boxes /= tf.tile(scale, [1, 1, 2])
-    # boxes += tf.tile(offset, [1, 1, 2])
-    # boxes = box_ops.clip_boxes(boxes, ogshape)
-
-    # #testing
-    # boxes = tf.ones_like(boxes)
-    # boxes = box_ops.denormalize_boxes(boxes, inshape)
-    # boxes /= tf.tile(scale, [1, 1, 2])
-    # boxes += tf.tile(offset, [1, 1, 2]) * 2
+    boxes = box_ops.clip_boxes(boxes, inshape)
 
     # mask the boxes for usage
     boxes *= mask 
     boxes += (mask - 1)
-    # tf.print(boxes)
     return boxes
 
   def validation_step(self, inputs, model, metrics=None):
