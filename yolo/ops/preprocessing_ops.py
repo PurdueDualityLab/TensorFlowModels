@@ -535,8 +535,8 @@ def resize_and_jitter_image(image,
                             resize = 1.0, 
                             random_pad=True,
                             crop_only = False, 
-                            shiftx=0.0,
-                            shifty=0.0,
+                            shiftx=0.5,
+                            shifty=0.5,
                             cut = None,
                             method=tf.image.ResizeMethod.BILINEAR, 
                             seed = None):
@@ -616,20 +616,21 @@ def resize_and_jitter_image(image,
       ptop += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
       pbottom += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
 
-    if letter_box:
+    if letter_box == True or letter_box is None:
       image_aspect_ratio = ow/oh 
       input_aspect_ratio = w/h 
 
       distorted_aspect = image_aspect_ratio/input_aspect_ratio
-
       if distorted_aspect > 1: 
         delta_h = ((ow/input_aspect_ratio) - oh)/2
-        ptop = ptop - delta_h
-        pbottom = pbottom - delta_h
+        delta_w = 0.0
       else:
         delta_w = ((oh * input_aspect_ratio) - ow)/2
-        pright = pright - delta_w
-        pleft = pleft - delta_w
+        delta_h = 0.0
+      ptop = ptop - delta_h
+      pbottom = pbottom - delta_h
+      pright = pright - delta_w
+      pleft = pleft - delta_w
 
     swidth = tf.cast(ow - pleft - pright, tf.int32)
     sheight = tf.cast(oh - ptop - pbottom, tf.int32)

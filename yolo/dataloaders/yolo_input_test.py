@@ -37,10 +37,10 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/inference/512-baseline-91.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
@@ -59,18 +59,22 @@ def test_yolo_input_task():
 
   config.train_data.global_batch_size = 128
   config.validation_data.global_batch_size = 1
+  
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 
-  # config.train_data.tfds_name = 'coco'
-  # config.validation_data.tfds_name = 'coco'
-  # config.train_data.tfds_split = 'train'
-  # config.validation_data.tfds_split = 'validation'
-  # config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
-  # config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  config.validation_data.shuffle_buffer_size = 1
+  config.train_data.shuffle_buffer_size = 1
 
-  config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-  config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  config.train_data.tfds_name = 'coco'
+  config.validation_data.tfds_name = 'coco'
+  config.train_data.tfds_split = 'train'
+  config.validation_data.tfds_split = 'validation'
+  config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+
+  # config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+  # config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 
   train_data = task.build_inputs(config.train_data)
   test_data = task.build_inputs(config.validation_data)

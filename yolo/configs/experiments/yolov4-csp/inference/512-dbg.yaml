@@ -67,11 +67,11 @@ task:
     tfds_name: coco
     tfds_split: validation
     dtype: float32
-    is_training: false
+    is_training: True
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: True
+      letter_box: null
       random_flip: False
       aug_rand_saturation: 0.0
       aug_rand_brightness: 0.0

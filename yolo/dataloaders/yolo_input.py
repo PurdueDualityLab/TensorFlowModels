@@ -281,7 +281,6 @@ class Parser(parser.Parser):
                     perspective):
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True 
-      letter_box_ = None 
       # jitter gives you only one info object, 
       # resize and crop gives you one
       # max info objects possible is 3, 2 from jitter, 1 from crop  
@@ -289,7 +288,6 @@ class Parser(parser.Parser):
       reps = 1
     else:
       crop_only = False 
-      letter_box_ = letter_box
       reps = 0
     infos = []
     image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
