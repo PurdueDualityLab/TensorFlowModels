@@ -616,6 +616,10 @@ class Yolo_Loss(object):
     # into the correct ground truth mask, used for iou detection map
     # in the scaled loss and the classification mask in the darknet loss
     num_flatten = tf.shape(preds)[-1]
+    
+    # is there a way to verify that we are not on the CPU?
+    ind_mask = tf.cast(ind_mask, indexes.dtype)
+    indexes = (indexes + ind_mask) - 1
 
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
@@ -641,9 +645,7 @@ class Yolo_Loss(object):
 
     # scatter update the zero grid
     if update:
-      grida = tf.tensor_scatter_nd_max(grid, indexes, truths)
       grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
-      grid = tf.where(tf.logical_and(grid == 0, grida != 0), grida, grid)
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
       # clip the values between zero and one
