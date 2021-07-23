@@ -214,6 +214,7 @@ class YoloTask(base_task.Task):
         use_scale_xy=params.parser.use_scale_xy,
         best_match_only=params.parser.best_match_only, 
         anchor_t=params.parser.anchor_thresh,
+        coco91to80=params.parser.coco91to80, 
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
@@ -230,8 +231,6 @@ class YoloTask(base_task.Task):
   def build_losses(self,
                    outputs,
                    labels,
-                   num_replicas=1,
-                   scale_replicas=1,
                    aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
@@ -250,9 +249,7 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      loss_val += _loss * scale / num_replicas # scale loss by the world size: 
-                                               # scaled = multiply by gpus? if aggreagation method is the mean
-                                               # scaled = divide by gpus?
+      loss_val += _loss * scale 
       
       # detach all the below gradients: none of them should make a contribution to the 
       # gradient form this point forwards
@@ -300,14 +297,19 @@ class YoloTask(base_task.Task):
 
     with tf.GradientTape() as tape:
       # compute a prediction
-      # cast to float32
       y_pred = model(image, training=True)
+
+      # cast to float 32
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-      scaled_loss, loss_metrics = self.build_losses(
-          y_pred['raw_output'],
-          label,
-          num_replicas=num_replicas,
-          scale_replicas=1)
+
+      # get the total loss
+      loss, loss_metrics = self.build_losses(y_pred['raw_output'],label)
+
+      # TF will aggregate gradients via sum, so we need to divide by the world 
+      # size when computing the mean of loss over batches. For scaled loss 
+      # we want the sum over all batches, so we instead use num replicas equal 
+      # to 1 in order to aggregate the sum of the gradients
+      scaled_loss = loss/num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
@@ -353,10 +355,17 @@ class YoloTask(base_task.Task):
 
     # split all infos 
     inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    offset = tf.expand_dims(info[:, 3, :], axis = 1)
 
     # reorg to image shape
     boxes = box_ops.denormalize_boxes(boxes, inshape)
-    boxes = box_ops.clip_boxes(boxes, inshape)
+
+    if self.task_config.model.dynamic_conv:
+      boxes /= tf.tile(scale, [1, 1, 2])
+      boxes += tf.tile(offset, [1, 1, 2])
+      boxes = box_ops.clip_boxes(boxes, ogshape)
 
     # mask the boxes for usage
     boxes *= mask 
@@ -367,28 +376,18 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    if self._task_config.model.filter.use_scaled_loss:
-      num_replicas = 1
-    else:
-      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-      num_replicas = scale_replicas
-
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss, loss_metrics = self.build_losses(
-        y_pred['raw_output'],
-        label,
-        num_replicas=num_replicas,
-        scale_replicas=1)
+    _, loss_metrics = self.build_losses(y_pred['raw_output'],label)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     boxes = self._reorg_boxes(y_pred['bbox'], 
-                         y_pred['num_detections'], 
-                         label['groundtruths']['image_info'])
+                      y_pred['num_detections'], 
+                      tf.cast(label['groundtruths']['image_info'], tf.float32))
     label['groundtruths']["boxes"] = self._reorg_boxes(
-                                label['groundtruths']["boxes"], 
-                                label['groundtruths']["num_detections"], 
-                                label['groundtruths']['image_info'])
+                      label['groundtruths']["boxes"], 
+                      label['groundtruths']["num_detections"], 
+                      tf.cast(label['groundtruths']['image_info'], tf.float32))
 
     coco_model_outputs = {
         'detection_boxes': boxes,
@@ -399,7 +398,6 @@ class YoloTask(base_task.Task):
         'image_info': label['groundtruths']['image_info']
     }
     
-
     if metrics:
       logs.update({self.coco_metric.name: (label['groundtruths'], 
                                            coco_model_outputs)})

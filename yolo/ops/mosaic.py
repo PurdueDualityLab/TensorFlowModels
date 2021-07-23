@@ -153,7 +153,7 @@ class Mosaic(object):
     # resize the image irrespective of the aspect ratio
     infos = []
     random_crop = self._random_crop
-    letter_box = True
+    letter_box = None
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':

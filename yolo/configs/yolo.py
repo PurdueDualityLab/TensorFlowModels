@@ -163,6 +163,7 @@ class Parser(hyperparams.Config):
   anchor_thresh: float = 0.213
   area_thresh: float = 0.1
   stride: Optional[int] = None
+  coco91to80: bool = False
   mosaic: Mosaic = Mosaic()
 
 

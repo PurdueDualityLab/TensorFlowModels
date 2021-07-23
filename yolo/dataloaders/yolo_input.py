@@ -4,6 +4,7 @@ into (image, labels) tuple for RetinaNet.
 """
 
 # Import libraries
+from yolo.utils.tests.tfrecord_to_yolo import coco80_to_coco91_class
 import tensorflow as tf
 import tensorflow_addons as tfa
 
@@ -13,6 +14,27 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser, utils
 from yolo.ops import loss_utils as loss_ops
 
+def coco91_to_80(classif, box, areas, iscrowds):
+  # key vector
+  x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 
+        22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 
+        43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 
+        62, 63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 
+        85, 86, 87, 88, 89, 90]
+  no = tf.expand_dims(tf.convert_to_tensor(x), axis = 0)
+
+  ce = tf.expand_dims(classif, axis = -1)
+  ind = ce == tf.cast(no, ce.dtype)
+  co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis = -1), [-1])
+  ind = tf.where(tf.reduce_any(ind, axis = -1))
+  classif = tf.gather_nd(co, ind)
+  box = tf.gather_nd(box, ind)
+
+  areas = tf.gather_nd(areas, ind)
+  iscrowds = tf.gather_nd(iscrowds, ind)
+
+  num_detections = tf.shape(classif)[0]
+  return classif, box, areas, iscrowds, num_detections
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -27,9 +49,6 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
   value = tf.concat([value, pad_tensor], axis=pad_axis)
   return value
-
-
-# image_w=608, image_h=608
 
 
 class Parser(parser.Parser):
@@ -73,7 +92,9 @@ class Parser(parser.Parser):
                letter_box=False,
                random_flip=True,
                use_tie_breaker=True,
-               dtype='float32'):
+               dtype='float32', 
+               
+               coco91to80 = False):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
@@ -129,6 +150,7 @@ class Parser(parser.Parser):
       dtype: `str` indicating the output datatype of the datapipeline selecting 
         from {"float32", "float16", "bfloat16"}
     """
+    self._coco91to80 = coco91to80
 
     # base initialization
     image_w = output_size[1]
@@ -315,8 +337,22 @@ class Parser(parser.Parser):
         # seed=self._seed)
     return image, infos, affine
 
+  def reorg91to80(self, data):
+
+    if self._coco91to80:
+      (data['groundtruth_classes'], 
+      data['groundtruth_boxes'], 
+      data['groundtruth_area'], 
+      data['groundtruth_is_crowd'],
+      _) = coco91_to_80(data['groundtruth_classes'], 
+                        data['groundtruth_boxes'], 
+                        data['groundtruth_area'], 
+                        data['groundtruth_is_crowd'])
+    return data
+
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
+    data = self.reorg91to80(data)
 
     # initialize the shape constants
     shape = tf.shape(data['image'])
@@ -409,6 +445,8 @@ class Parser(parser.Parser):
     return image, labels
 
   def _parse_eval_data(self, data):
+    data = self.reorg91to80(data)
+
 
     # get the image shape constants
     image = data['image'] / 255
@@ -416,31 +454,22 @@ class Parser(parser.Parser):
     classes = data['groundtruth_classes']
 
     if not self._dynamic_conv:
-      image, infos = preprocessing_ops.letter_box(
-          image,
-          [self._image_h, self._image_w],
-          [self._image_h, self._image_w],
-          letter_box=self._letter_box,
-          shiftx=0.5,
-          shifty=0.5)
-      image = tf.image.resize(
-        image, 
-        [self._image_h, self._image_w]
-      )
       height, width = self._image_h, self._image_w
     else:
       fit = lambda x: tf.cast((tf.math.ceil((x / self._net_down_scale) + 0.5) 
-                                          * self._net_down_scale), x.dtype)
-      height, width = preprocessing_ops._resize_letter(image, 
-                                        [self._image_h, self._image_w])                                   
+                                          * self._net_down_scale), x.dtype)  
+      height, width = preprocessing_ops.get_image_shape(image)                               
       height, width = fit(height), fit(width)
-      image, infos = preprocessing_ops.letter_box(
+
+    image, infos, _ = preprocessing_ops.resize_and_jitter_image(
           image,
           [height, width],
-          [height, width],
-          letter_box=False,
+          letter_box=self._letter_box,
+          random_pad=False, 
           shiftx=0.5,
-          shifty=0.5)
+          shifty=0.5, 
+          jitter=0.0, 
+          resize=1.0)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 

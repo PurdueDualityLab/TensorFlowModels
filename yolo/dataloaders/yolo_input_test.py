@@ -29,7 +29,7 @@ from yolo.utils.run_utils import prep_gpu
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/debug/jitter/512-jitter-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-2.yaml"]
@@ -37,10 +37,10 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-dark-aug.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/inference/512-baseline-91.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
@@ -57,7 +57,7 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 128
+  config.train_data.global_batch_size = 1
   config.validation_data.global_batch_size = 1
   
   config.train_data.dtype = 'float32'
@@ -66,15 +66,16 @@ def test_yolo_input_task():
   config.validation_data.shuffle_buffer_size = 1
   config.train_data.shuffle_buffer_size = 1
 
-  config.train_data.tfds_name = 'coco'
-  config.validation_data.tfds_name = 'coco'
-  config.train_data.tfds_split = 'train'
-  config.validation_data.tfds_split = 'validation'
-  config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
-  config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
-
-  # config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-  # config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  if config.train_data.input_path == '':
+    config.train_data.tfds_name = 'coco'
+    config.validation_data.tfds_name = 'coco'
+    config.train_data.tfds_split = 'train'
+    config.validation_data.tfds_split = 'validation'
+    config.train_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+    config.validation_data.tfds_data_dir = '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+  else:
+    config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 
   train_data = task.build_inputs(config.train_data)
   test_data = task.build_inputs(config.validation_data)
@@ -131,7 +132,7 @@ def test_yolo_pipeline(is_training=True, num = 30):
   dip = 0
   drawer = utils.DrawBoxes(
       labels=coco.get_coco_names(
-          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"
+          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
       ),
       thickness=2,
       classes=91)
@@ -293,7 +294,7 @@ if __name__ == '__main__':
   # test_ret_pipeline()
   # time_pipeline()
   test_yolo_pipeline(is_training=True, num = 30)
-  # test_yolo_pipeline(is_training=False, num = 5)
+  test_yolo_pipeline(is_training=False, num = 10)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
