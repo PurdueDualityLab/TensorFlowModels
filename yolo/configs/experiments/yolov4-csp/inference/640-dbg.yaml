@@ -4,6 +4,7 @@ runtime:
   loss_scale: "dynamic"
   num_gpus: 1
 task:
+  coco91to80: True
   smart_bias_lr: 0.1
   model:
     base:
@@ -54,7 +55,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -82,7 +83,6 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-      coco91to80: True
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
@@ -91,7 +91,7 @@ task:
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.1, 1.9]
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 1
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -104,14 +104,13 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-      coco91to80: True
   weight_decay: 0.001
   annotation_file: null
   load_darknet_weights: true
   darknet_load_decoder: true
 trainer:
   train_steps: 281250 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 5000
   steps_per_loop: 5000
   summary_interval: 5000
   validation_interval: 10000 #00

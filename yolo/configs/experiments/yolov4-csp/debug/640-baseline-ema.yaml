@@ -2,6 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
+  coco91to80: True
   smart_bias_lr: 0.1
   model:
     base:
@@ -78,7 +79,6 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-      coco91to80: True
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
@@ -100,7 +100,6 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-      coco91to80: True
   weight_decay: 0.001
   annotation_file: null
 trainer:

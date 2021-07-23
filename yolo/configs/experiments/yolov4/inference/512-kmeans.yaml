@@ -14,7 +14,7 @@ task:
         version: v4
         type: regular
         activation: leaky
-    num_classes: 91
+    num_classes: 80
     boxes: null
     input_size: [512, 512, 3]
     boxes_per_scale: 3

@@ -163,7 +163,6 @@ class Parser(hyperparams.Config):
   anchor_thresh: float = 0.213
   area_thresh: float = 0.1
   stride: Optional[int] = None
-  coco91to80: bool = False
   mosaic: Mosaic = Mosaic()
 
 
@@ -313,6 +312,7 @@ class YoloTask(cfg.TaskConfig):
   darknet_load_decoder: bool = False
   init_checkpoint_modules: str = None  #'backbone'
   smart_bias_lr: float = 0.0
+  coco91to80: bool = False
 
 
 @dataclasses.dataclass

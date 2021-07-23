@@ -12,7 +12,7 @@ task:
         version: v4
         type: regular
         activation: leaky
-    num_classes: 91
+    num_classes: 80
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',

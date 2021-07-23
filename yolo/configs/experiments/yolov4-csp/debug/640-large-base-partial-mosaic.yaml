@@ -2,6 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
+  coco91to80: True
   smart_bias_lr: 0.0
   model:
     base:
@@ -12,7 +13,7 @@ task:
       decoder:
         version: v4
         type: csp
-    num_classes: 91
+    num_classes: 80
     smart_bias: false
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',

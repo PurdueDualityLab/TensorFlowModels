@@ -214,7 +214,7 @@ class YoloTask(base_task.Task):
         use_scale_xy=params.parser.use_scale_xy,
         best_match_only=params.parser.best_match_only, 
         anchor_t=params.parser.anchor_thresh,
-        coco91to80=params.parser.coco91to80, 
+        coco91to80=self.task_config.coco91to80, 
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
