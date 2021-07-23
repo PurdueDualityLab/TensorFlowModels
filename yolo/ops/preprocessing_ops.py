@@ -1363,8 +1363,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype, scale_xy
   viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
-  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True, element_shape=[3, ])
-  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True, element_shape=[8, ])
+  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
+  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
 
   (ind_val, ind_sample,
    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
@@ -1657,11 +1657,6 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25, best_ma
           sorted=True)
       values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
-
-      # pad the indexs such that all values less than the thresh are -1
-      # add one, multiply the mask to zeros all the bad locations
-      # subtract 1 makeing all the bad locations 0.
-      iou_index = ((indexes[..., 0:] + 1) * ind_mask[..., 0:]) - 1
     else:
       # iou_raw = box_ops.compute_iou(truth_comp, anchors)
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
