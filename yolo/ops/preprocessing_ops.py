@@ -854,9 +854,9 @@ def resize_and_jitter_image(image,
 
     if crop_only:
       if not letter_box:
-        h_, w_ = get_image_shape(cropped_image)
-        w = tf.cast((w_* tf.cast(w, tf.int32))/ swidth, tf.int32)
-        h = tf.cast((h_* tf.cast(h, tf.int32))/ sheight, tf.int32)
+        h_, w_ = cast(get_image_shape(cropped_image), w.dtype)
+        w = tf.cast(tf.round((w_* w)/ swidth), tf.int32)
+        h = tf.cast(tf.round((h_* h)/ sheight), tf.int32)
         cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
       return cropped_image, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 

@@ -30,7 +30,7 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter/512-jitter-ema.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-playground.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/512-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/jitter-scale/608-jitter-scale-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-2.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
@@ -40,7 +40,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/inference/512-baseline-91.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/512-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale-lthresh.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/debug/512-jitter-scale.yaml"]
@@ -132,7 +132,7 @@ def test_yolo_pipeline(is_training=True, num = 30):
   dip = 0
   drawer = utils.DrawBoxes(
       labels=coco.get_coco_names(
-          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
+          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco-91.names"
       ),
       thickness=2,
       classes=91)
@@ -293,8 +293,8 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  # test_yolo_pipeline(is_training=True, num = 30)
-  test_yolo_pipeline(is_training=False, num = 11)
+  test_yolo_pipeline(is_training=True, num = 30)
+  # test_yolo_pipeline(is_training=False, num = 11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
