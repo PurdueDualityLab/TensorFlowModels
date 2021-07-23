@@ -99,7 +99,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: null
+      letter_box: true
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0

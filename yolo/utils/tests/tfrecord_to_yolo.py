@@ -89,10 +89,10 @@ class DataDecoder(hyperparams.OneOfConfig):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   global_batch_size: int = 1
-  input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
-  # tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
-  # tfds_name: str = "coco"
-  # tfds_split: str = "validation"
+  # input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
+  tfds_name: str = "coco"
+  tfds_split: str = "validation"
   is_training: bool = False
   dtype: str = 'float16'
   decoder: DataDecoder = DataDecoder()
@@ -148,8 +148,8 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
 
   dataset = build_ds(params)
 
-  lim = 5000
-  nte = True
+  lim = 10
+  nte = False
   for k, sample in enumerate(dataset):
     if k > lim:
       break

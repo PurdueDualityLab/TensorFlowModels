@@ -355,8 +355,8 @@ class Parser(parser.Parser):
     data = self.reorg91to80(data)
 
     # initialize the shape constants
-    shape = tf.shape(data['image'])
-    image = data['image'] / 255
+    image = tf.cast(data['image'], self._dtype)
+    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
@@ -447,9 +447,10 @@ class Parser(parser.Parser):
   def _parse_eval_data(self, data):
     data = self.reorg91to80(data)
 
-
     # get the image shape constants
-    image = data['image'] / 255
+    # cast the image to the selcted datatype
+    image = tf.cast(data['image'], self._dtype)
+    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -479,8 +480,7 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    # cast the image to the selcted datatype
-    image = tf.cast(image, self._dtype)
+
     # height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 

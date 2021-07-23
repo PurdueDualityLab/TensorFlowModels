@@ -84,6 +84,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: False
       mosaic: 
         mosaic_frequency: 0.0
   validation_data:
@@ -97,11 +98,12 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: null
+      letter_box: true
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
       stride: 64
+      best_match_only: True
   weight_decay: 0.0005
   annotation_file: null
   load_darknet_weights: true

@@ -2,6 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
+  coco91to80: True
   model:
     base:
       backbone:
