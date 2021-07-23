@@ -16,7 +16,7 @@ task:
       darknet_weights_file: 'cache://csdarknet53-omega_final.weights'
       darknet_weights_cfg: 'cache://csdarknet53.cfg'
     subdivisions: 16
-    num_classes: 91
+    num_classes: 80
     _boxes: ['[13,17]', 
              '[31,25]', 
              '[24,51]', 

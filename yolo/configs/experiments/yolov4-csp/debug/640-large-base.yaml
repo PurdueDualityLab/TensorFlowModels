@@ -2,7 +2,8 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  smart_bias_lr: 0.0
+  coco91to80: True
+  smart_bias_lr: 0.1
   model:
     base:
       backbone:
@@ -12,8 +13,8 @@ task:
       decoder:
         version: v4
         type: csp
-    num_classes: 91
-    smart_bias: false
+    num_classes: 80
+    smart_bias: true
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -50,17 +51,17 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: diou
+      nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 64
+    global_batch_size: 128
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
-    shuffle_buffer_size: 10
+    shuffle_buffer_size: 10000
     drop_remainder: true
     parser:
       max_num_instances: 300
@@ -77,13 +78,14 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
+      best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
-        mosaic_frequency: 0.0
+        mosaic_frequency: 1.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.1, 1.9]
+        crop_area_mosaic: [0.5, 1.5]
   validation_data:
     global_batch_size: 8
     dtype: float32
@@ -97,36 +99,38 @@ task:
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
-  weight_decay: 0.0005
+      best_match_only: True
+  weight_decay: 0.001
   annotation_file: null
 trainer:
-  train_steps: 562500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 281250 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 10000
-  summary_interval: 10000
-  validation_interval: 20000 #00
-  checkpoint_interval: 10000
+  steps_per_loop: 5000
+  summary_interval: 5000
+  validation_interval: 10000 #00
+  checkpoint_interval: 5000
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: True
+      trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
-      type: cosine
-      cosine:
+      type: cosine_epoch
+      cosine_epoch:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 556875
+        decay_steps: 278438
+        steps_per_epoch: 937
     optimizer:
       type: sgd_dymo
       sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 5625 
+        warmup_steps: 2812 
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 2812 #learning rate rises from 0 to 0.0013 over 1000 steps

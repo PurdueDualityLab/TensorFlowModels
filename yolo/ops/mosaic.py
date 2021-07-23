@@ -153,7 +153,7 @@ class Mosaic(object):
     # resize the image irrespective of the aspect ratio
     infos = []
     random_crop = self._random_crop
-    letter_box = True
+    letter_box = None
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
@@ -456,6 +456,25 @@ class Mosaic(object):
     two = dataset.shard(num_shards=4, index=1)
     three = dataset.shard(num_shards=4, index=2)
     four = dataset.shard(num_shards=4, index=3)
+
+    num = tf.data.AUTOTUNE
+    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
+      num_parallel_calls=num)
+    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), 
+      num_parallel_calls=num)
+    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), 
+      num_parallel_calls=num)
+    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
+      num_parallel_calls=num)
+
+    stitched = tf.data.Dataset.zip((one, two, three, four))
+    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
+    return stitched
+
+  def _full_frequency_mixup(self, dataset):
+    one = dataset.shard(num_shards=4, index=0)
+    two = dataset.shard(num_shards=4, index=1)
+
 
     num = tf.data.AUTOTUNE
     one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 

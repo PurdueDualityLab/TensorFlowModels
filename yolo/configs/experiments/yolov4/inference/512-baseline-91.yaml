@@ -16,7 +16,7 @@ task:
         activation: leaky
       darknet_weights_file: 'cache://yolov4.weights'
       darknet_weights_cfg: 'cache://yolov4.cfg'
-    num_classes: 91
+    num_classes: 80
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -27,6 +27,7 @@ task:
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
     input_size: [512, 512, 3]
+    dynamic_conv: false
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -59,8 +60,8 @@ task:
       max_boxes: 500
       nms_type: greedy
       iou_thresh: 0.001
-      nms_thresh: 0.65
-      pre_nms_points: 500
+      nms_thresh: 0.60
+      pre_nms_points: 5000
       use_scaled_loss: false
       darknet: null
   train_data:
@@ -107,6 +108,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
+      stride: 32
   weight_decay: 0.0005
   annotation_file: null
 trainer:

@@ -86,7 +86,7 @@ def apply_mask(mask, x):
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
-  scaler = tf.convert_to_tensor([width, height, width, height])
+  scaler = tf.convert_to_tensor([height, width, height, width])
   
   # cast the grid scaling value to a tensorflow data type, in yolo each pixel is
   # used to predict the center of a box, the center must be with in the bounds
@@ -199,7 +199,7 @@ def get_predicted_box(width,
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
-  scaler = tf.convert_to_tensor([width, height, width, height])
+  scaler = tf.convert_to_tensor([height, width, height, width])
   
   # cast the grid scaling value to a tensorflow data type, in yolo each pixel is
   # used to predict the center of a box, the center must be with in the bounds
@@ -618,6 +618,10 @@ class Yolo_Loss(object):
     # into the correct ground truth mask, used for iou detection map
     # in the scaled loss and the classification mask in the darknet loss
     num_flatten = tf.shape(preds)[-1]
+    
+    # is there a way to verify that we are not on the CPU?
+    ind_mask = tf.cast(ind_mask, indexes.dtype)
+    indexes = (indexes + ind_mask) - 1
 
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
@@ -643,9 +647,7 @@ class Yolo_Loss(object):
 
     # scatter update the zero grid
     if update:
-      grida = tf.tensor_scatter_nd_max(grid, indexes, truths)
       grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
-      grid = tf.where(tf.logical_and(grid == 0, grida != 0), grida, grid)
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
       # clip the values between zero and one
@@ -736,7 +738,7 @@ class Yolo_Loss(object):
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
 
-    # #    build a the ground truth detection map
+    #     build a the ground truth detection map
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)

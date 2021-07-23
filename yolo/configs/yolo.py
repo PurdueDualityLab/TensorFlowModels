@@ -159,8 +159,10 @@ class Parser(hyperparams.Config):
   mosaic_translate: float = 0.0
   use_tie_breaker: bool = True
   use_scale_xy: bool = False
+  best_match_only: bool = False
   anchor_thresh: float = 0.213
   area_thresh: float = 0.1
+  stride: Optional[int] = None
   mosaic: Mosaic = Mosaic()
 
 
@@ -276,6 +278,7 @@ class YoloBase(hyperparams.OneOfConfig):
 @dataclasses.dataclass
 class Yolo(ModelConfig):
   num_classes: int = 91
+  dynamic_conv: bool = False
   input_size: Optional[List[int]] = dataclasses.field(
       default_factory=lambda: [512, 512, 3])
   min_level: int = 3
@@ -309,6 +312,7 @@ class YoloTask(cfg.TaskConfig):
   darknet_load_decoder: bool = False
   init_checkpoint_modules: str = None  #'backbone'
   smart_bias_lr: float = 0.0
+  coco91to80: bool = False
 
 
 @dataclasses.dataclass

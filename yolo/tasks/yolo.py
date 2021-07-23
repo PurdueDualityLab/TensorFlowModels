@@ -1,4 +1,6 @@
 from numpy import blackman
+from tensorflow.python.keras.backend import int_shape
+from tensorflow.python.ops.clip_ops import clip_by_value
 from tensorflow.python.ops.gen_array_ops import shape
 from tensorflow.python.training import optimizer
 from yolo.ops.preprocessing_ops import apply_infos
@@ -106,8 +108,15 @@ class YoloTask(base_task.Task):
 
     anchors = self._get_boxes(gen_boxes=params.is_training)
 
-    input_specs = tf.keras.layers.InputSpec(shape=[None] +
-                                            model_base_cfg.input_size)
+    input_size = model_base_cfg.input_size.copy()
+    if model_base_cfg.dynamic_conv:
+      print("WARNING: dynamic convolution is only supported on GPU and may \
+             require significantly more memory. Validation will only work at \
+             a batchsize of 1. The model will be trained at the input \
+             resolution and evaluated at a dynamic resolution")
+      input_size[0] = None
+      input_size[1] = None 
+    input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
 
@@ -198,10 +207,14 @@ class YoloTask(base_task.Task):
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,
+        dynamic_conv=model.dynamic_conv,
         scale_xy=xy_scales,
+        stride=params.parser.stride, 
         area_thresh=params.parser.area_thresh, 
         use_scale_xy=params.parser.use_scale_xy,
+        best_match_only=params.parser.best_match_only, 
         anchor_t=params.parser.anchor_thresh,
+        coco91to80=self.task_config.coco91to80, 
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
@@ -286,8 +299,6 @@ class YoloTask(base_task.Task):
   def build_losses(self,
                    outputs,
                    labels,
-                   num_replicas=1,
-                   scale_replicas=1,
                    aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
@@ -306,19 +317,22 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      metric_dict[key]['conf_loss'] = _loss_conf
-      metric_dict[key]['box_loss'] = _loss_box
-      metric_dict[key]['class_loss'] = _loss_class
+      loss_val += _loss * scale 
+      
+      # detach all the below gradients: none of them should make a contribution to the 
+      # gradient form this point forwards
+      metric_dict['global']['total_loss'] +=tf.stop_gradient(_mean_loss)
+      metric_dict['global']['total_box'] += tf.stop_gradient(_loss_box)
+      metric_dict['global']['total_class'] += tf.stop_gradient(_loss_class)
+      metric_dict['global']['total_conf'] += tf.stop_gradient(_loss_conf)
+      metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
+      metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
+      metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
       metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
       metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
-      metric_dict['global']['total_loss'] += _mean_loss
-      metric_dict['global']['total_box'] += _loss_box
-      metric_dict['global']['total_class'] += _loss_class
-      metric_dict['global']['total_conf'] += _loss_conf
-      loss_val += _loss * scale / num_replicas
-    
+      
     return loss_val, metric_dict
 
   def build_metrics(self, training=True):
@@ -343,22 +357,27 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
+      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
       num_replicas = scale_replicas
 
     with tf.GradientTape() as tape:
       # compute a prediction
-      # cast to float32
-      y_pred = model(image, training=False)
+      y_pred = model(image, training=True)
+
+      # cast to float 32
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-      scaled_loss, loss_metrics = self.build_losses(
-          y_pred['raw_output'],
-          label,
-          num_replicas=num_replicas,
-          scale_replicas=1)
+
+      # get the total loss
+      loss, loss_metrics = self.build_losses(y_pred['raw_output'],label)
+
+      # TF will aggregate gradients via sum, so we need to divide by the world 
+      # size when computing the mean of loss over batches. For scaled loss 
+      # we want the sum over all batches, so we instead use num replicas equal 
+      # to 1 in order to aggregate the sum of the gradients
+      scaled_loss = loss/num_replicas
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
@@ -376,17 +395,19 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    #tf.print(label["source_id"][0], tf.reduce_sum(tf.square(gradients[-2])), loss_metrics['global']['total_box'], loss_metrics['global']['total_conf'], loss_metrics['global']['total_class'], loss_metrics['global']['total_loss'])
-    # tf.print(label["source_id"][0], tf.reduce_sum(tf.square(gradients[-2])), loss_metrics['global']['total_box'], loss_metrics['global']['total_conf'], loss_metrics['global']['total_class'], loss_metrics['global']['total_loss'])
-    tf.print(label["source_id"][0], loss_metrics['global']['total_box'], loss_metrics['global']['total_conf'], loss_metrics['global']['total_class'], loss_metrics['global']['total_loss'])
-    # for g in gradients:
-    tf.print("\t", tf.shape(gradients[0]), "\t", tf.reduce_sum(gradients[0]))
-    tf.print("\t", tf.shape(gradients[-2]), "\t", tf.reduce_sum(gradients[-2]))
-    tf.print("\t", tf.shape(gradients[-1]), "\t", tf.reduce_sum(gradients[-1]))
+    # optimizer.apply_gradients(zip(gradients, train_vars))
+    if self._bias_optimizer is None:
+      optimizer.apply_gradients(zip(gradients, train_vars))
+    else:
+      bias_grad = []
+      bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
+      for i in range(model.head.num_heads):
+        bias_grad.append(gradients[-(2 * i + 1)])
+        gradients[-(2 * i + 1)] *= 0
 
-    optimizer.apply_gradients(zip(gradients, train_vars))
+      self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
+      optimizer.apply_gradients(zip(gradients, train_vars))
     
-
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
       for m in metrics:
@@ -395,50 +416,62 @@ class YoloTask(base_task.Task):
 
     return logs
 
+
+  def _reorg_boxes(self, boxes, num_detections, info):
+    mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
+    mask = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype)
+
+    # split all infos 
+    inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    offset = tf.expand_dims(info[:, 3, :], axis = 1)
+
+    # reorg to image shape
+    boxes = box_ops.denormalize_boxes(boxes, inshape)
+
+    if self.task_config.model.dynamic_conv:
+      boxes /= tf.tile(scale, [1, 1, 2])
+      boxes += tf.tile(offset, [1, 1, 2])
+      boxes = box_ops.clip_boxes(boxes, ogshape)
+
+    # mask the boxes for usage
+    boxes *= mask 
+    boxes += (mask - 1)
+    return boxes
+
   def validation_step(self, inputs, model, metrics=None):
     # get the data point
     image, label = inputs
 
-    scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    num_replicas = scale_replicas
-
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    loss, loss_metrics = self.build_losses(
-        y_pred['raw_output'],
-        label,
-        num_replicas=num_replicas,
-        scale_replicas=1)
+    _, loss_metrics = self.build_losses(y_pred['raw_output'],label)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
-    image_shape = tf.shape(image)[1:-1]
-
-    label['boxes'] = box_ops.denormalize_boxes(
-        tf.cast(label['bbox'], tf.float32), image_shape)
-    del label['bbox']
+    boxes = self._reorg_boxes(y_pred['bbox'], 
+                      y_pred['num_detections'], 
+                      tf.cast(label['groundtruths']['image_info'], tf.float32))
+    label['groundtruths']["boxes"] = self._reorg_boxes(
+                      label['groundtruths']["boxes"], 
+                      label['groundtruths']["num_detections"], 
+                      tf.cast(label['groundtruths']['image_info'], tf.float32))
 
     coco_model_outputs = {
-        'detection_boxes':
-            box_ops.denormalize_boxes(
-                tf.cast(y_pred['bbox'], tf.float32), image_shape),
-        'detection_scores':
-            y_pred['confidence'],
-        'detection_classes':
-            y_pred['classes'],
-        'num_detections':
-            y_pred['num_detections'],
-        'source_id':
-            label['source_id'],
+        'detection_boxes': boxes,
+        'detection_scores': y_pred['confidence'],
+        'detection_classes': y_pred['classes'],
+        'num_detections': y_pred['num_detections'],
+        'source_id': label['groundtruths']['source_id'],
+        'image_info': label['groundtruths']['image_info']
     }
-
-
+    
     if metrics:
-      logs.update({self.coco_metric.name: (label, coco_model_outputs)})
-
+      logs.update({self.coco_metric.name: (label['groundtruths'], 
+                                           coco_model_outputs)})
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
-
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
@@ -612,27 +645,40 @@ class YoloTask(base_task.Task):
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
 
-  # may need to comment it out
+  # # may need to comment it out
+  # def create_optimizer(self, optimizer_config: OptimizationConfig,
+  #                      runtime_config: Optional[RuntimeConfig] = None):
+  #   if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
+  #     opta = super().create_optimizer(optimizer_config, runtime_config)
+      
+  #     if isinstance(opta, optimization.ExponentialMovingAverage):
+  #       optb = opta._optimizer
+  #     elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
+  #       optb = opta.inner_optimizer
+  #     else:
+  #       optb = opta 
+
+  #     if hasattr(optb, "_set_bias_lr"):
+  #       optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+  #       opt_factory = optimization.OptimizerFactory(optimizer_config)
+  #       bias_lr = opt_factory.build_learning_rate()
+  #       optb._set_bias_lr(bias_lr, 
+  #         (self.task_config.model.num_classes +
+  #          5) * self.task_config.model.boxes_per_scale )
+
+  #     return opta
+  #   else:
+  #     return super().create_optimizer(optimizer_config, runtime_config)
+
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
       opta = super().create_optimizer(optimizer_config, runtime_config)
-      
-      if isinstance(opta, optimization.ExponentialMovingAverage):
-        optb = opta._optimizer
-      elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
-        optb = opta.inner_optimizer
-      else:
-        optb = opta 
-
-      if hasattr(optb, "_set_bias_lr"):
-        optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
-        opt_factory = optimization.OptimizerFactory(optimizer_config)
-        bias_lr = opt_factory.build_learning_rate()
-        optb._set_bias_lr(bias_lr, 
-          (self.task_config.model.num_classes +
-           5) * self.task_config.model.boxes_per_scale )
-
+      optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+      # revert back comment the line bellow
+      optimizer_config.ema = None
+      optb = super().create_optimizer(optimizer_config, runtime_config)
+      self._bias_optimizer = optb
       return opta
     else:
       return super().create_optimizer(optimizer_config, runtime_config)

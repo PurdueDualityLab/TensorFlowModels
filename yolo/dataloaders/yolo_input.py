@@ -4,6 +4,7 @@ into (image, labels) tuple for RetinaNet.
 """
 
 # Import libraries
+from yolo.utils.tests.tfrecord_to_yolo import coco80_to_coco91_class
 import tensorflow as tf
 import tensorflow_addons as tfa
 
@@ -13,6 +14,27 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser, utils
 from yolo.ops import loss_utils as loss_ops
 
+def coco91_to_80(classif, box, areas, iscrowds):
+  # key vector
+  x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 
+        22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 
+        43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 
+        62, 63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 
+        85, 86, 87, 88, 89, 90]
+  no = tf.expand_dims(tf.convert_to_tensor(x), axis = 0)
+
+  ce = tf.expand_dims(classif, axis = -1)
+  ind = ce == tf.cast(no, ce.dtype)
+  co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis = -1), [-1])
+  ind = tf.where(tf.reduce_any(ind, axis = -1))
+  classif = tf.gather_nd(co, ind)
+  box = tf.gather_nd(box, ind)
+
+  areas = tf.gather_nd(areas, ind)
+  iscrowds = tf.gather_nd(iscrowds, ind)
+
+  num_detections = tf.shape(classif)[0]
+  return classif, box, areas, iscrowds, num_detections
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -29,9 +51,6 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   return value
 
 
-# image_w=608, image_h=608
-
-
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
@@ -44,6 +63,7 @@ class Parser(parser.Parser):
                resize=1.0,
                resize_mosaic = 1.0, 
                sheer=0.0, 
+               
 
                area_thresh = 0.1, 
                max_num_instances=200,
@@ -62,14 +82,19 @@ class Parser(parser.Parser):
                mosaic_translate=0.0,
                
                anchor_t=4.0,
+               dynamic_conv=False, 
+               stride = None, 
                scale_xy=None,
                use_scale_xy=False,
+               best_match_only=False, 
                masks=None,
                anchors=None,
                letter_box=False,
                random_flip=True,
                use_tie_breaker=True,
-               dtype='float32'):
+               dtype='float32', 
+               
+               coco91to80 = False):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
@@ -125,11 +150,16 @@ class Parser(parser.Parser):
       dtype: `str` indicating the output datatype of the datapipeline selecting 
         from {"float32", "float16", "bfloat16"}
     """
+    self._coco91to80 = coco91to80
 
     # base initialization
     image_w = output_size[1]
     image_h = output_size[0]
-    self._net_down_scale = 2**max_level
+    if stride is None:
+      self._net_down_scale = 2**max_level
+    else: 
+      self._net_down_scale = stride
+
 
     # assert that the width and height is viable
     assert image_w % self._net_down_scale == 0
@@ -173,8 +203,10 @@ class Parser(parser.Parser):
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_hue = aug_rand_hue
+    self._best_match_only = best_match_only
 
     # set the per level values needed for operation
+    self._dynamic_conv = dynamic_conv
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._use_scale_xy = use_scale_xy
@@ -200,6 +232,7 @@ class Parser(parser.Parser):
   def _build_grid(self,
                   raw_true,
                   width,
+                  height,
                   batch=False,
                   use_tie_breaker=False,
                   is_training=True):
@@ -227,7 +260,7 @@ class Parser(parser.Parser):
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
-          raw_true, self._masks[key], width // 2**int(key), 0,
+          raw_true, self._masks[key], width // 2**int(key), height // 2**int(key), 0,
           raw_true['bbox'].dtype, scale_xy, scale_up[key], use_tie_breaker)
 
       # set/fix the shape of the indexes
@@ -270,7 +303,6 @@ class Parser(parser.Parser):
                     perspective):
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True 
-      letter_box_ = None 
       # jitter gives you only one info object, 
       # resize and crop gives you one
       # max info objects possible is 3, 2 from jitter, 1 from crop  
@@ -278,7 +310,6 @@ class Parser(parser.Parser):
       reps = 1
     else:
       crop_only = False 
-      letter_box_ = letter_box
       reps = 0
     infos = []
     image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
@@ -306,12 +337,26 @@ class Parser(parser.Parser):
         # seed=self._seed)
     return image, infos, affine
 
+  def reorg91to80(self, data):
+
+    if self._coco91to80:
+      (data['groundtruth_classes'], 
+      data['groundtruth_boxes'], 
+      data['groundtruth_area'], 
+      data['groundtruth_is_crowd'],
+      _) = coco91_to_80(data['groundtruth_classes'], 
+                        data['groundtruth_boxes'], 
+                        data['groundtruth_area'], 
+                        data['groundtruth_is_crowd'])
+    return data
+
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
+    data = self.reorg91to80(data)
 
     # initialize the shape constants
-    shape = tf.shape(data['image'])
-    image = data['image'] / 255
+    image = tf.cast(data['image'], self._dtype)
+    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
@@ -393,34 +438,39 @@ class Parser(parser.Parser):
 
     # cast the image to the selcted datatype
     image = tf.cast(image, self._dtype)
-    height, width = preprocessing_ops.get_image_shape(image)
+    height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 
         data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
+    data = self.reorg91to80(data)
 
     # get the image shape constants
-    shape = tf.shape(data['image'])
-    # image = data['image'] / 255
-    image = data['image']
+    # cast the image to the selcted datatype
+    image = tf.cast(data['image'], self._dtype)
+    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    if self._letter_box == False:
-      image = tf.image.resize(image, [self._image_h, self._image_w])
+    if not self._dynamic_conv:
+      height, width = self._image_h, self._image_w
+    else:
+      fit = lambda x: tf.cast((tf.math.ceil((x / self._net_down_scale) + 0.5) 
+                                          * self._net_down_scale), x.dtype)  
+      height, width = preprocessing_ops.get_image_shape(image)                               
+      height, width = fit(height), fit(width)
 
-    image, infos = preprocessing_ops.resize_and_crop_image(
-        image,
-        [self._image_h, self._image_w],
-        [self._image_h, self._image_w],
-        letter_box=True,
-        aug_scale_min=1.0,
-        aug_scale_max=1.0,
-        random_pad=False,
-        shiftx=0.5,
-        shifty=0.5)
+    image, infos, _ = preprocessing_ops.resize_and_jitter_image(
+          image,
+          [height, width],
+          letter_box=self._letter_box,
+          random_pad=False, 
+          shiftx=0.5,
+          shifty=0.5, 
+          jitter=0.0, 
+          resize=1.0)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(boxes, 
@@ -430,9 +480,8 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    # cast the image to the selcted datatype
-    image = tf.cast(image, self._dtype) /255.0
-    height, width = preprocessing_ops.get_image_shape(image)
+
+    # height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
         image, boxes, classes, width, height, info, inds, 
         data, is_training=False)
@@ -461,7 +510,7 @@ class Parser(parser.Parser):
 
   def _build_label(self,
                    image,
-                   boxes,
+                   boxes_,
                    classes,
                    width,
                    height,
@@ -477,13 +526,14 @@ class Parser(parser.Parser):
     image.set_shape(imshape)
 
     # get the best anchors
-    boxes = box_utils.yxyx_to_xcycwh(boxes)
+    boxes = box_utils.yxyx_to_xcycwh(boxes_)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes,
         self._anchors,
-        width=self._image_w,
-        height=self._image_h,
-        iou_thresh=self._anchor_t)
+        width=width,
+        height=height,
+        iou_thresh=self._anchor_t, 
+        best_match_only=self._best_match_only)
 
     # set/fix the boxes shape
     bshape = boxes.get_shape().as_list()
@@ -544,7 +594,8 @@ class Parser(parser.Parser):
     # build the grid formatted for loss computation in model output format
     grid, inds, upds, true_conf = self._build_grid(
         labels,
-        self._image_w,
+        width,
+        height,
         use_tie_breaker=self._use_tie_breaker,
         is_training=is_training)
 
@@ -553,4 +604,24 @@ class Parser(parser.Parser):
     labels['upds'] = upds
     labels['inds'] = inds
     labels['true_conf'] = true_conf
+
+
+    # Sets up groundtruth data for evaluation.
+    groundtruths = {
+        'source_id': data['source_id'],
+        'height': data['height'],
+        'width': data['width'],
+        'num_detections': labels['num_detections'],
+        'image_info': info,
+        'boxes': boxes_,
+        'classes': labels['classes'],
+        'areas': data['groundtruth_area'],
+        'is_crowds': tf.cast(data['groundtruth_is_crowd'], tf.int32),
+    }
+    groundtruths['source_id'] = utils.process_source_id(
+        groundtruths['source_id'])
+    groundtruths = utils.pad_groundtruths_to_fixed_size(
+        groundtruths, self._max_num_instances)
+
+    labels['groundtruths'] = groundtruths
     return image, labels

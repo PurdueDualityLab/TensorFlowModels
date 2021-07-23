@@ -76,7 +76,8 @@ class YoloHead(tf.keras.layers.Layer):
       base = tf.zeros(shape, dtype = dtype)
       base = tf.reshape(base, [self._boxes_per_level, -1])
       box, conf, classes = tf.split(base, [4, 1, -1], axis = -1)
-      conf += tf.math.log(no_per_conf/((isize * scale) ** 2))
+      box += 0.01
+      conf += tf.math.log(no_per_conf/((isize / scale) ** 2))
       classes += tf.math.log(0.6/(self._classes - 0.99))
       base = tf.concat([box, conf, classes], axis = -1)
 
