@@ -834,8 +834,10 @@ def resize_and_jitter_image(image,
     pad = dst_shape * tf.cast([1, 1, -1, -1], ptop.dtype) 
     pad += tf.cast([0, 0, sheight, swidth], ptop.dtype)
 
-    src_crop = tf.cast(tf.round(src_crop), tf.int32)
-    pad = tf.cast(tf.round(pad), tf.int32)
+    # src_crop = tf.cast(tf.round(src_crop), tf.int32)
+    # pad = tf.cast(tf.round(pad), tf.int32)
+    src_crop = tf.cast(src_crop, tf.int32)
+    pad = tf.cast(pad, tf.int32)
  
     infos = []
     cropped_image = tf.slice(image, 
@@ -1627,14 +1629,12 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25, best_ma
     elif ytrue_shape.ndims != 3:
       raise ValueError('\'box\' (shape %s) must have either 3 or 4 dimensions.')
 
-    width = tf.cast(width, dtype=y_true.dtype)
-    height = tf.cast(height, dtype=y_true.dtype)
+    width = tf.cast(width, dtype=tf.float32)
+    height = tf.cast(height, dtype=tf.float32)
+    scaler = tf.convert_to_tensor([width, height])
 
-    true_wh = y_true[..., 2:4]
-    anchors = tf.convert_to_tensor(anchors, dtype=y_true.dtype)
-    anchors_x = anchors[..., 0] / height
-    anchors_y = anchors[..., 1] / width
-    anchors = tf.stack([anchors_x, anchors_y], axis=-1)
+    true_wh = tf.cast(y_true[..., 2:4], dtype=tf.float32) * scaler
+    anchors = tf.cast(anchors, dtype=tf.float32)
     k = tf.shape(anchors)[0]
 
     anchors = tf.expand_dims(
