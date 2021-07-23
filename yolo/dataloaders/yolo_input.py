@@ -507,7 +507,7 @@ class Parser(parser.Parser):
         image, boxes, classes, width, height, info, inds, 
         data, is_training=False)
     return image, labels
-
+    
   def _build_label(self,
                    image,
                    boxes_,
