@@ -38,6 +38,7 @@ from official.modeling import optimization
 from official.modeling import performance
 
 import matplotlib.pyplot as plt
+import cv2
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
@@ -161,8 +162,8 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
     for i in range(tf.shape(source_ids)[0]):
       name = source_ids[i].numpy().decode('utf-8')
 
-      image = images[i].numpy()
-      plt.imsave(f"{path}/images/{name}.jpg", image)
+      image = cv2.cvtColor(images[i].numpy(), cv2.COLOR_BGR2RGB)
+      cv2.imwrite(f"{path}/images/{name}.png", image)
 
       box = yxyx_to_xcycwh(boxes[i])
       classif = classes[i]
