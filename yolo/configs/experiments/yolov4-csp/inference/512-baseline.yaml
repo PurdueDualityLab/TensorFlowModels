@@ -28,7 +28,7 @@ task:
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
     input_size: [640, 640, 3]
-    dynamic_conv: False
+    dynamic_conv: true
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -137,11 +137,12 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: true
+      letter_box: null
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
+      stride: 64
   weight_decay: 0.0005
   annotation_file: null
   load_darknet_weights: true
