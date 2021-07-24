@@ -153,7 +153,7 @@ class Mosaic(object):
     # resize the image irrespective of the aspect ratio
     infos = []
     random_crop = self._random_crop
-    letter_box = None
+    letter_box = True
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
@@ -235,8 +235,8 @@ class Mosaic(object):
         tf.ones_like(shape), 
         -tf.cast([ch, cw], tf.float32)
       ])
-
       infos = [info]
+      
       image, _, affine = preprocessing_ops.affine_warp_image(
           image,
           [self._output_size[0], self._output_size[1]],

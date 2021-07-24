@@ -600,11 +600,9 @@ def build_transform(image,
     # height = tf.cast(tf.shape(image)[0], tf.float32)  # shape(h,w,c)
     # width = tf.cast(tf.shape(image)[1], tf.float32)
     height, width = get_image_shape(image)
-    height = tf.cast(height, tf.float32)
-    width = tf.cast(width, tf.float32)
+    ch = height = tf.cast(height, tf.float32)
+    cw = width = tf.cast(width, tf.float32)
 
-    ch = height 
-    cw = width 
     if desired_size is not None:
         desired_size = tf.cast(desired_size, tf.float32) 
         ch = desired_size[0]
@@ -640,12 +638,26 @@ def build_transform(image,
         Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width) # x translation (pixels)
         Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)
     else:
-        Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) * width  # x translation (pixels)
-        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) * height  # y translation (pixels)
+        Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) # x translation (pixels)
+        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed)  # y translation (pixels)
+
+        dx = (width - cw)/width
+        dy = (height - ch)/height 
+        sx = 1 - dx
+        sy = 1 - dy
+        bx = dx/2
+        by = dy/2
+
+        Tx = bx + sx * Tx
+        Ty = by + sy * Ty
+
+        Tx *= width
+        Ty *= height
+
     T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
     Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
 
-    M = T @ S @ R  @ C @ P 
+    M = T @ S @ R @ C @ P 
     Mb =  Pb @ Cb @ Rb @ Sb @ Tb 
     return M, Mb
 
@@ -1056,8 +1068,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype, scale_xy
   viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
-  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
+  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True, element_shape=[3,])
+  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True, element_shape=[8,])
 
   (ind_val, ind_sample,
    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
