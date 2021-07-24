@@ -525,10 +525,10 @@ def resize_and_jitter_image(image,
     pad = dst_shape * tf.cast([1, 1, -1, -1], ptop.dtype) 
     pad += tf.cast([0, 0, sheight, swidth], ptop.dtype)
 
-    src_crop = tf.cast(tf.round(src_crop), tf.int32)
-    pad = tf.cast(tf.round(pad), tf.int32)
-    # src_crop = tf.cast(src_crop, tf.int32)
-    # pad = tf.cast(pad, tf.int32)
+    # src_crop = tf.cast(tf.round(src_crop), tf.int32)
+    # pad = tf.cast(tf.round(pad), tf.int32)
+    src_crop = tf.cast(src_crop, tf.int32)
+    pad = tf.cast(pad, tf.int32)
  
     infos = []
     cropped_image = tf.slice(image, 
