@@ -854,9 +854,9 @@ def resize_and_jitter_image(image,
 
     if crop_only:
       if not letter_box:
-        h_, w_ = get_image_shape(cropped_image)
-        w = tf.cast((w_* tf.cast(w, tf.int32))/ swidth, tf.int32)
-        h = tf.cast((h_* tf.cast(h, tf.int32))/ sheight, tf.int32)
+        h_, w_ = cast(get_image_shape(cropped_image), w.dtype)
+        w = tf.cast(tf.round((w_* w)/ swidth), tf.int32)
+        h = tf.cast(tf.round((h_* h)/ sheight), tf.int32)
         cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
       return cropped_image, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
@@ -1365,8 +1365,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype, scale_xy
   viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
-  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True)
-  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True)
+  ind_val = tf.TensorArray(tf.int32, size=0, dynamic_size=True, element_shape=[3,])
+  ind_sample = tf.TensorArray(dtype, size=0, dynamic_size=True, element_shape=[8,])
 
   (ind_val, ind_sample,
    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,

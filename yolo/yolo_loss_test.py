@@ -91,8 +91,9 @@ if __name__ == "__main__":
   ]
   
   name_set = set([str(name) for name in name_set])
+  name_set = None
 
-  lim = 1000
+  lim = 10
   for p, image in enumerate(test_data):
     if p >= lim:
       break
@@ -105,6 +106,6 @@ if __name__ == "__main__":
     elif p >= lim:
       break
     # plt.imshow(tf.cast(i[0], tf.float32).numpy())
-    # a = task.validation_step(image, model)
-    a = task.train_step(image, model, optimizer)
+    a = task.validation_step(image, model)
+    # a = task.train_step(image, model, optimizer)
     print(id, a['loss'].numpy())

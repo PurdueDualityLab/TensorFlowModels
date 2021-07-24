@@ -609,8 +609,8 @@ class Parser(parser.Parser):
     # Sets up groundtruth data for evaluation.
     groundtruths = {
         'source_id': data['source_id'],
-        'height': data['height'],
-        'width': data['width'],
+        'height': data['height'] if 'height' in data else height,
+        'width': data['width'] if 'width' in data else width,
         'num_detections': labels['num_detections'],
         'image_info': info,
         'boxes': boxes_,
