@@ -144,12 +144,23 @@ def build_ds(params, input_context = None):
   dataset = reader.read(input_context=input_context)
   return dataset
 
+import shutil
+import os
 def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/"):
   params = DataConfig()
 
   dataset = build_ds(params)
 
-  lim = 10
+  if os.path.isdir(f"{path}images/"):
+    shutil.rmtree(f"{path}images/")
+  if os.path.isdir(f"{path}labels/"):
+    shutil.rmtree(f"{path}labels/")
+
+  os.mkdir(f"{path}images/")
+  os.mkdir(f"{path}labels/")
+
+
+  lim = 1000
   nte = False
   for k, sample in enumerate(dataset):
     if k > lim:
