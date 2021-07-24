@@ -50,9 +50,7 @@ task:
       max_delta:
         'all': 5.0
       scale_xy:
-        '5': 1.05
-        '4': 1.1
-        '3': 1.2
+        'all': 2.0
       max_boxes: 200
       nms_type: iou
       iou_thresh: 0.001
