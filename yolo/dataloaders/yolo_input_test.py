@@ -59,8 +59,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 1
-  config.validation_data.global_batch_size = 1
+  config.train_data.global_batch_size = 64
+  config.validation_data.global_batch_size = 64
   
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
@@ -216,7 +216,7 @@ def time_pipeline():
     times.append(ftime - ltime)
     ltime = time.time()
     print(times[-1], l)
-    if l >= 100:
+    if l >= 1000:
       break
 
   plt.plot(times)
@@ -294,9 +294,9 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  # time_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
-  test_yolo_pipeline(is_training=False, num = 11)
+  time_pipeline()
+  # test_yolo_pipeline(is_training=True, num = 30)
+  # test_yolo_pipeline(is_training=False, num = 11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

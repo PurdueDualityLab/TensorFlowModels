@@ -237,94 +237,6 @@ def mean_pad(image, pady, padx, targety, targetx, color = False):
     ])
   return image_, pad_info
 
-def _resize_letter(image, 
-                   desired_size):
-  height, width = get_image_shape(image)
-  clipper = tf.reduce_max((height, width))
-  w_scale = width / clipper
-  h_scale = height / clipper
-
-  height_, width_ = desired_size[0], desired_size[1]
-  height_ = tf.cast(h_scale * tf.cast(height_, h_scale.dtype), tf.int32)
-  width_ = tf.cast(w_scale * tf.cast(width_, w_scale.dtype), tf.int32)
-  return height_, width_
-
-
-def letter_box( image,
-                desired_size,
-                padded_size,
-                letter_box=True,
-                shiftx=0.5,
-                shifty=0.5,
-                method=tf.image.ResizeMethod.BILINEAR):
-  """Resizes the input image to output size (RetinaNet style).
-  Resize and pad images given the desired output size of the image and
-  stride size.
-  Here are the preprocessing steps.
-  1. For a given image, keep its aspect ratio and rescale the image to make it
-     the largest rectangle to be bounded by the rectangle specified by the
-     `desired_size`.
-  2. Pad the rescaled image to the padded_size.
-  Args:
-    image: a `Tensor` of shape [height, width, 3] representing an image.
-    desired_size: a `Tensor` or `int` list/tuple of two elements representing
-      [height, width] of the desired actual output image size.
-    padded_size: a `Tensor` or `int` list/tuple of two elements representing
-      [height, width] of the padded output image size. Padding will be applied
-      after scaling the image to the desired_size.
-    aug_scale_min: a `float` with range between [0, 1.0] representing minimum
-      random scale applied to desired_size for training scale jittering.
-    aug_scale_max: a `float` with range between [1.0, inf] representing maximum
-      random scale applied to desired_size for training scale jittering.
-    seed: seed for random scale jittering.
-    method: function to resize input image to scaled image.
-  Returns:
-    output_image: `Tensor` of shape [height, width, 3] where [height, width]
-      equals to `output_size`.
-    image_info: a 2D `Tensor` that encodes the information of the image and the
-      applied preprocessing. It is in the format of
-      [[original_height, original_width], [desired_height, desired_width],
-       [y_scale, x_scale], [y_offset, x_offset]], where [desired_height,
-      desired_width] is the actual scaled image size, and [y_scale, x_scale] is
-      the scaling factor, which is the ratio of
-      scaled dimension / original dimension.
-  """
-  with tf.name_scope('resize_and_crop_image'):
-
-    image_size = tf.cast(tf.shape(image)[0:2], tf.float32)
-    if not letter_box:
-      height_, width_ = desired_size[0], desired_size[1]
-    else:
-      height_, width_ = _resize_letter(image, desired_size)
-    image = tf.image.resize(
-          image, (height_, width_), preserve_aspect_ratio=False, method=method)
-
-    scaled_size = tf.cast(tf.shape(image)[0:2], tf.float32)
-    image_scale = scaled_size / image_size
-    offset = tf.zeros((2,), tf.int32)
-
-    padded_size_ = tf.cast(padded_size, scaled_size.dtype)
-    dy = tf.cast(
-        tf.cast(padded_size_[0] - scaled_size[0], tf.float32) * shifty,
-        tf.int32)
-    dx = tf.cast(
-        tf.cast(padded_size_[1] - scaled_size[1], tf.float32) * shiftx,
-        tf.int32)
-    offset -= tf.convert_to_tensor([dy, dx])
-
-    output_image = tf.image.pad_to_bounding_box(image, dy, dx,
-                                                padded_size[0],
-                                                padded_size[1])
-
-    image_info = tf.stack([
-        image_size,
-        tf.cast(desired_size, dtype=tf.float32), 
-        image_scale,
-        tf.cast(offset, tf.float32)
-    ])
-
-    infos = [image_info]
-    return output_image, infos
 
 def intersection(a, b):
   minx = tf.maximum(a[0], b[0])
@@ -343,7 +255,7 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
     # h = tf.cast(h, tf.int32)
     # cut_x = tf.cast(cut[1], tf.int32)
     # cut_y = tf.cast(cut[0], tf.int32)
-
+    cut = tf.cast(cut, w.dtype)
     cut_x, cut_y = cut[1], cut[0]
 
     left_shift = tf.minimum(
@@ -439,7 +351,7 @@ def resize_and_jitter_image(image,
       the scaling factor, which is the ratio of
       scaled dimension / original dimension.
   """
-  with tf.name_scope('resize_and_crop_image'):
+  with tf.name_scope('resize_and_jitter_image'):
 
     if jitter > 1 or jitter < 0:
       raise Exception("maximum change in aspect ratio must be between 0 and 1")
