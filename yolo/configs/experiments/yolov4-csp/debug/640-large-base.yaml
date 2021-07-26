@@ -87,7 +87,6 @@ task:
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.5, 1.5]
         crop_area: [0.25]
-        jitter: 0.0
   validation_data:
     global_batch_size: 8
     dtype: float32

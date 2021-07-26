@@ -831,17 +831,20 @@ class Yolo_Loss(object):
     #    may have been predicted, but the ground truth may not have placed
     #    a box. For this indexes, the detection map loss will be ignored.
     #    obj_mask dictates the locations where the loss is ignored.
-    (_, _, _, _, true_conf, obj_mask) = self._tiled_global_box_search(
-        pred_box,
-        sigmoid_class,
-        sigmoid_conf,
-        boxes,
-        classes,
-        true_conf,
-        fwidth,
-        fheight,
-        smoothed=self._objectness_smooth > 0,
-        scale = scale)
+    if self._ignore_thresh != 0.0:
+      (_, _, _, _, true_conf, obj_mask) = self._tiled_global_box_search(
+          pred_box,
+          sigmoid_class,
+          sigmoid_conf,
+          boxes,
+          classes,
+          true_conf,
+          fwidth,
+          fheight,
+          smoothed=self._objectness_smooth > 0,
+          scale = scale)
+    else: 
+      obj_mask = tf.ones_like(true_conf)
 
     # 8. compute the one hot class maps that are used for prediction
     #    done in the loss function side to save memory and improve

@@ -292,8 +292,7 @@ class YoloTask(base_task.Task):
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
-      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-      num_replicas = scale_replicas
+      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
 
     with tf.GradientTape() as tape:
       # compute a prediction

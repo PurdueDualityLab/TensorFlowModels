@@ -1265,6 +1265,8 @@ def get_best_anchor(y_true, anchors, width=1, height=1, iou_thresh=0.25, best_ma
     anchors = tf.cast(anchors, dtype=tf.float32)
     k = tf.shape(anchors)[0]
 
+    # tf.print(true_wh, summarize = -1)
+
     anchors = tf.expand_dims(
       tf.concat([tf.zeros_like(anchors), anchors], axis = -1), axis = 0)
     truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis = -1)

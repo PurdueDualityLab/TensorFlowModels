@@ -160,7 +160,7 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
   os.mkdir(f"{path}labels/")
 
 
-  lim = 1000
+  lim = 10
   nte = False
   for k, sample in enumerate(dataset):
     if k > lim:
