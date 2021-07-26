@@ -245,9 +245,6 @@ def intersection(a, b):
   maxy = tf.minimum(a[3], b[3])
   return tf.convert_to_tensor([minx, miny, maxx, maxy])
 
-def cast(values, dtype):
-  return [tf.cast(tf.round(value), dtype) for value in values]
-
 def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, shifty):
     # ow = tf.cast(ow, tf.int32)
     # oh = tf.cast(oh, tf.int32)
@@ -255,6 +252,8 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
     # h = tf.cast(h, tf.int32)
     # cut_x = tf.cast(cut[1], tf.int32)
     # cut_y = tf.cast(cut[0], tf.int32)
+
+  with tf.name_scope('mosaic_cut'):
     cut = tf.cast(cut, w.dtype)
     cut_x, cut_y = cut[1], cut[0]
 
@@ -292,9 +291,14 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
       crop_offset = [0, 0, 0]
       crop_size = [-1, -1, -1]
 
-    ishape = tf.shape(image)[:2]
-    image = tf.slice(image, tf.cast(tf.round(crop_offset), tf.int32), 
-                            tf.cast(tf.round(crop_size), tf.int32))
+    ishape = tf.cast(tf.shape(image)[:2], crop_size[0].dtype)
+    crop_size[0] = tf.minimum(crop_size[0], ishape[0])
+    crop_size[1] = tf.minimum(crop_size[1], ishape[1])
+
+    crop_offset = tf.cast(crop_offset, tf.int32)
+    crop_size = tf.cast(crop_size, tf.int32)
+   
+    image = tf.slice(image, crop_offset, crop_size)
     crop_info = tf.stack([
         tf.cast(ishape, tf.float32),
         tf.cast(tf.shape(image)[:2], dtype=tf.float32),
@@ -302,7 +306,7 @@ def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx, s
         tf.cast(crop_offset[:2], tf.float32)
     ])
 
-    return image, crop_info
+  return image, crop_info
 
 
 
@@ -351,6 +355,9 @@ def resize_and_jitter_image(image,
       the scaling factor, which is the ratio of
       scaled dimension / original dimension.
   """
+  def cast(values, dtype):
+    return [tf.cast(value, dtype) for value in values]
+
   with tf.name_scope('resize_and_jitter_image'):
 
     if jitter > 1 or jitter < 0:
@@ -419,6 +426,12 @@ def resize_and_jitter_image(image,
       pright = pright - delta_w - pullin_w
       pleft = pleft - delta_w - pullin_w
 
+    # swidth = tf.math.floor(ow - pleft - pright)
+    # sheight = tf.math.floor(oh - ptop - pbottom)
+    # swidth = tf.round(ow - pleft - pright)
+    # sheight = tf.round(oh - ptop - pbottom)
+    # src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
+    #                         [0, 0, oh - 1, ow - 1])
     swidth = ow - pleft - pright
     sheight = oh - ptop - pbottom
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 

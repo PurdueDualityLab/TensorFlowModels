@@ -28,7 +28,7 @@ task:
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
     input_size: [640, 640, 3]
-    dynamic_conv: true
+    dynamic_conv: false
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
