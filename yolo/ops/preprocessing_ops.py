@@ -1168,12 +1168,12 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
     for i in range(4):
       if shifts[i]:
-        # x_ = x - offset[i][0]
-        # y_ = y - offset[i][1]
+        x_ = x - offset[i][0]
+        y_ = y - offset[i][1]
         
         # may need to revert
-        x_ = tf.round(x - (offset[i][0] * g))
-        y_ = tf.round(y - (offset[i][1] * g))
+#         x_ = tf.round(x - (offset[i][0] * g))
+#         y_ = tf.round(y - (offset[i][1] * g))
     
         x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width)
         y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height)
