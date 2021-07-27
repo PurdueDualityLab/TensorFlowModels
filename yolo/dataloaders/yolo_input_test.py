@@ -32,8 +32,8 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
 
   config = train_utils.ParseConfigOptions(
@@ -281,7 +281,7 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  # time_pipeline()
+  time_pipeline()
   test_yolo_pipeline(is_training=True, num = 30)
   # test_yolo_pipeline(is_training=False, num = 11)
   # test_classification_pipeline()

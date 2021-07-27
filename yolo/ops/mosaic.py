@@ -457,10 +457,20 @@ class Mosaic(object):
 
   def _full_frequency_apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    one = dataset.shuffle(100) #.shard(num_shards=4, index=0)
-    two = dataset.shuffle(100) #.shard(num_shards=4, index=1)
-    three = dataset.shuffle(100) #.shard(num_shards=4, index=2)
-    four = dataset.shuffle(100) #.shard(num_shards=4, index=3)
+    one = dataset.shuffle(10) #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(10) #.shard(num_shards=4, index=1)
+    three = dataset.shuffle(10) #.shard(num_shards=4, index=2)
+    four = dataset.shuffle(10) #.shard(num_shards=4, index=3)
+
+    # one = dataset #.shuffle(100) #.shard(num_shards=4, index=0)
+    # two = dataset.skip(1)
+    # three = dataset.skip(2)
+    # four = dataset.skip(3)
+
+    # one = dataset#.shuffle(10) #.shard(num_shards=4, index=0)
+    # two = dataset#.shuffle(10) #.shard(num_shards=4, index=1)
+    # three = dataset#.shuffle(10) #.shard(num_shards=4, index=2)
+    # four = dataset#.shuffle(10) #.shard(num_shards=4, index=3)
 
     num = tf.data.AUTOTUNE
     one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
