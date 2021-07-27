@@ -79,11 +79,11 @@ task:
       jitter_mosaic: 0.0
       resize_mosaic: 1.0
       sheer: 0.0
-      aug_scale_min: 0.2
-      aug_scale_max: 1.8
+      aug_scale_min: 0.1
+      aug_scale_max: 1.9
       mosaic_scale_min: 0.2
-      mosaic_scale_max: 1.5
-      aug_rand_translate: -0.01
+      mosaic_scale_max: 1.6
+      aug_rand_translate: 0.0 
       area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
