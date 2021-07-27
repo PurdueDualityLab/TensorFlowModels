@@ -126,7 +126,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
       thickness=2,
       classes=91)
 
-    batch_size = 1
+    batch_size = 2
     loader = get_n(dataloader, parser) 
     loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
                                                                     {'source_id': tf.int64, 
@@ -139,51 +139,51 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     loader = loader.batch(batch_size)
     for epoch in range(0, epochs):  # epoch ------------------------------------------------------------------
         for sample in loader:
-            i, j = sample
-            ftime = time.time()
-            i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+            # i, j = sample
+            # ftime = time.time()
+            # i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
 
-            gt = j['true_conf']
-            inds = j['inds']
+            # gt = j['true_conf']
+            # inds = j['inds']
 
-            obj3 = gt['3'][..., 0]
-            obj4 = gt['4'][..., 0]
-            obj5 = gt['5'][..., 0]
+            # obj3 = gt['3'][..., 0]
+            # obj4 = gt['4'][..., 0]
+            # obj5 = gt['5'][..., 0]
 
-            for shind in range(1):
-                fig, axe = plt.subplots(1, 4)
+            # for shind in range(1):
+            #     fig, axe = plt.subplots(1, 4)
 
-                image = i[shind]
-                boxes = j["bbox"][shind]
-                classes = j["classes"][shind]
-                confidence = j["classes"][shind]
+            #     image = i[shind]
+            #     boxes = j["bbox"][shind]
+            #     classes = j["classes"][shind]
+            #     confidence = j["classes"][shind]
 
-                draw_dict = {
-                    'bbox': boxes,
-                    'classes': classes,
-                    'confidence': confidence,
-                }
-                # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
-                image = drawer(image, draw_dict)
+            #     draw_dict = {
+            #         'bbox': boxes,
+            #         'classes': classes,
+            #         'confidence': confidence,
+            #     }
+            #     # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
+            #     image = drawer(image, draw_dict)
 
-                (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
-                    j['upds']['5'], [4, 1, 1, 1, 1], axis=-1)
+            #     (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
+            #         j['upds']['5'], [4, 1, 1, 1, 1], axis=-1)
 
-                # true_xy = true_box[shind][..., 0:2] * 20
-                # ind_xy = tf.cast(j['inds']['5'][shind][..., 0:2], true_xy.dtype)
-                # x, y = tf.split(ind_xy, 2, axis=-1)
-                # ind_xy = tf.concat([y, x], axis=-1)
-                # tf.print(true_xy - ind_xy, summarize=-1)
-                axe[0].imshow(image)
-                axe[1].imshow(obj3[shind].numpy())
-                axe[2].imshow(obj4[shind].numpy())
-                axe[3].imshow(obj5[shind].numpy())
+            #     # true_xy = true_box[shind][..., 0:2] * 20
+            #     # ind_xy = tf.cast(j['inds']['5'][shind][..., 0:2], true_xy.dtype)
+            #     # x, y = tf.split(ind_xy, 2, axis=-1)
+            #     # ind_xy = tf.concat([y, x], axis=-1)
+            #     # tf.print(true_xy - ind_xy, summarize=-1)
+            #     axe[0].imshow(image)
+            #     axe[1].imshow(obj3[shind].numpy())
+            #     axe[2].imshow(obj4[shind].numpy())
+            #     axe[3].imshow(obj5[shind].numpy())
 
-                fig.set_size_inches(18.5, 6.5, forward=True)
-                plt.tight_layout()
-                # plt.show()
+            #     fig.set_size_inches(18.5, 6.5, forward=True)
+            #     plt.tight_layout()
+            #     # plt.show()
 
-            ltime = time.time()
+            # ltime = time.time()
 
             # if l >= 100:
             #     break
