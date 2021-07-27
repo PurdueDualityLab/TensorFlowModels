@@ -482,12 +482,12 @@ class Mosaic(object):
     four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
       num_parallel_calls=num)
 
-    patch1 = tf.data.Dataset.zip((one, two)).prefetch(tf.data.AUTOTUNE)
+    patch1 = tf.data.Dataset.zip((one, two))#.prefetch(tf.data.AUTOTUNE)
     patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
-    patch2 = tf.data.Dataset.zip((three, four)).prefetch(tf.data.AUTOTUNE)
+    patch2 = tf.data.Dataset.zip((three, four))#.prefetch(tf.data.AUTOTUNE)
     patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
 
-    stitched = tf.data.Dataset.zip((patch1, patch2)).prefetch(tf.data.AUTOTUNE)
+    stitched = tf.data.Dataset.zip((patch1, patch2))#.prefetch(tf.data.AUTOTUNE)
     stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE)
     return stitched
 

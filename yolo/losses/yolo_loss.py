@@ -40,6 +40,7 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
       y, x_prime,      
       label_smoothing=0.0,
       from_logits=True)
+      
   def delta(dy):
     # this is a safer version of the sigmoid with binary cross entropy
     # bellow is the mathematic formula reduction that is used to
