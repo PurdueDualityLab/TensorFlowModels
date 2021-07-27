@@ -127,7 +127,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25, 1.0]
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 2
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
     tfds_download: true
     tfds_name: coco
