@@ -771,6 +771,7 @@ class Yolo_Loss(object):
             precision50)
 
   # def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
+  #   # this should not work!
   #   # 0. generate shape constants using tf.shat to support feature multi scale
   #   # training
   #   shape = tf.shape(true_counts)
