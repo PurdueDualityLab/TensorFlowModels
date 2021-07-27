@@ -326,7 +326,6 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    # optimizer.apply_gradients(zip(gradients, train_vars))
     if self._bias_optimizer is None:
       optimizer.apply_gradients(zip(gradients, train_vars))
     else:
