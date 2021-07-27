@@ -46,21 +46,3 @@ def divide_no_nan(a, b):
   """
   zero = tf.cast(0.0, b.dtype)
   return tf.where(b == zero, zero, a / b)
-
-
-# def mul_no_nan(x, y):
-#   """Nan safe multiply operation built to allow model compilation in tflite and 
-#   to allowing one tensor to mask another. Where ever x is zero the 
-#   multiplication is not computed and the value is replaced with a zero. This is 
-#   requred because 0 * nan = nan. This can make computation unstable in some 
-#   cases where the intended behavior is for zero to mean ignore.  
-
-#   Args:
-#     x: any `Tensor` of any type. 
-#     y: any `Tensor` of any type with the same shape as tensor x. 
-
-#   Return:
-#     a `Tensor` representing x times y, where x is used to safely mask the 
-#     tensor y. 
-#   """
-#   return tf.where(x == 0, tf.cast(0, x.dtype), x * y)
