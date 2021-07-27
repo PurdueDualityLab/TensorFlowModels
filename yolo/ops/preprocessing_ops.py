@@ -368,6 +368,7 @@ def resize_and_jitter_image(image,
     else:
       random_pad = False
 
+    original_dtype = image.dtype
     original_dims = tf.shape(image)[:2]
     jitter = tf.cast(jitter, tf.float32)
     ow = tf.cast(original_dims[1], tf.float32)
@@ -488,12 +489,13 @@ def resize_and_jitter_image(image,
     infos.append(pad_info)
    
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
+    image_ = tf.cast(image_, original_dtype)
+
     if cut is not None:
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, 
                                     ptop, pleft, pbottom, pright, 
                                     shiftx, shifty)
       infos.append(crop_info)
-    
     return image_, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
 def corners_to_boxes(corners):

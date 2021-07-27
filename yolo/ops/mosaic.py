@@ -386,6 +386,16 @@ class Mosaic(object):
                                           boxes, classes, is_crowd, area, 
                                           shiftx, shifty, None)
 
+    cut, ishape = self._generate_cut()
+
+    (boxes, 
+    classes) = self.scale_boxes(image, 
+                                ishape, 
+                                boxes, 
+                                classes, 
+                                1 - shiftx, 
+                                1 - shifty)
+
     sample['image'] = image
     sample['groundtruth_boxes'] = boxes
     sample['groundtruth_classes'] = classes
@@ -397,36 +407,37 @@ class Mosaic(object):
     return sample
 
   def _map_concat(self, one, two, three, four):
-    cut, ishape = self._generate_cut()
-    for sample in [one, two, three, four]:
-      if cut is not None:
-        sample["image"], info = preprocessing_ops.mosaic_cut(
-          sample["image"], 
-          sample["crop_points"][0], sample["crop_points"][1], 
-          sample["crop_points"][2], sample["crop_points"][3], cut, 
-          sample["crop_points"][4], sample["crop_points"][5], 
-          sample["crop_points"][6], sample["crop_points"][7], 
-          sample["shiftx"], sample["shifty"]
-        ) 
-        sample['groundtruth_boxes'], inds = preprocessing_ops.apply_infos(
-                                                sample['groundtruth_boxes'], 
-                                                [info], 
-                                                area_thresh = self._area_thresh)
-        sample['groundtruth_classes'] = tf.gather(sample['groundtruth_classes'], 
-                                                  inds)
-        sample['groundtruth_is_crowd'] = tf.gather(sample['groundtruth_is_crowd'],
-                                                    inds)
-        sample['groundtruth_area'] = tf.gather(sample['groundtruth_area'], inds)
+    # cut, ishape = self._generate_cut()
+    # for sample in [one, two, three, four]:
+      # if cut is not None:
+      #   sample["image"], info = preprocessing_ops.mosaic_cut(
+      #     sample["image"], 
+      #     sample["crop_points"][0], sample["crop_points"][1], 
+      #     sample["crop_points"][2], sample["crop_points"][3], cut, 
+      #     sample["crop_points"][4], sample["crop_points"][5], 
+      #     sample["crop_points"][6], sample["crop_points"][7], 
+      #     sample["shiftx"], sample["shifty"]
+      #   ) 
+      #   sample['groundtruth_boxes'], inds = preprocessing_ops.apply_infos(
+      #                                           sample['groundtruth_boxes'], 
+      #                                           [info], 
+      #                                           area_thresh = self._area_thresh)
+      #   sample['groundtruth_classes'] = tf.gather(sample['groundtruth_classes'], 
+      #                                             inds)
+      #   sample['groundtruth_is_crowd'] = tf.gather(sample['groundtruth_is_crowd'],
+      #                                               inds)
+      #   sample['groundtruth_area'] = tf.gather(sample['groundtruth_area'], inds)
 
-      (sample['groundtruth_boxes'], 
-      sample['groundtruth_classes']) = self.scale_boxes(
-        sample["image"], ishape, sample['groundtruth_boxes'], 
-        sample['groundtruth_classes'], 1 - sample["shiftx"], 1 - sample["shifty"]
-      )
+      # (sample['groundtruth_boxes'], 
+      # sample['groundtruth_classes']) = self.scale_boxes(
+      #   sample["image"], ishape, sample['groundtruth_boxes'], 
+      #   sample['groundtruth_classes'], 1 - sample["shiftx"], 1 - sample["shifty"]
+      # )
 
     patch1 = tf.concat([one["image"], two["image"]], axis=-2)
     patch2 = tf.concat([three["image"], four["image"]], axis=-2)
     image = tf.concat([patch1, patch2], axis=-3)
+    # tf.print(image.dtype)
 
     boxes = tf.concat([one['groundtruth_boxes'], 
                        two['groundtruth_boxes'], 
@@ -468,10 +479,11 @@ class Mosaic(object):
     return sample
 
   def _full_frequency_apply(self, dataset):
-    one = dataset.shard(num_shards=4, index=0)
-    two = dataset.shard(num_shards=4, index=1)
-    three = dataset.shard(num_shards=4, index=2)
-    four = dataset.shard(num_shards=4, index=3)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    one = dataset.shuffle(100) #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(100) #.shard(num_shards=4, index=1)
+    three = dataset.shuffle(100) #.shard(num_shards=4, index=2)
+    four = dataset.shuffle(100) #.shard(num_shards=4, index=3)
 
     num = tf.data.AUTOTUNE
     one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
@@ -487,24 +499,6 @@ class Mosaic(object):
     stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
     return stitched
 
-  def _full_frequency_mixup(self, dataset):
-    one = dataset.shard(num_shards=4, index=0)
-    two = dataset.shard(num_shards=4, index=1)
-
-
-    num = tf.data.AUTOTUNE
-    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
-      num_parallel_calls=num)
-    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), 
-      num_parallel_calls=num)
-    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), 
-      num_parallel_calls=num)
-    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
-      num_parallel_calls=num)
-
-    stitched = tf.data.Dataset.zip((one, two, three, four))
-    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
-    return stitched
 
   def _apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
