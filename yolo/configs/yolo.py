@@ -234,13 +234,13 @@ class YoloLossLayer(hyperparams.Config):
   min_level: int = 3
   max_level: int = 5
   ignore_thresh: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 0.7))
+      default_factory=_build_dict(min_level, max_level, 0.0))
   truth_thresh: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 1.0))
   loss_type: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 'ciou'))
   iou_normalizer: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 0.75))
+      default_factory=_build_dict(min_level, max_level, 1.0))
   cls_normalizer: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 1.0))
   obj_normalizer: Dict = dataclasses.field(
@@ -248,9 +248,9 @@ class YoloLossLayer(hyperparams.Config):
   max_delta: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, np.inf))
   new_cords: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, True))
+      default_factory=_build_dict(min_level, max_level, False))
   scale_xy: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 2.0))
+      default_factory=_build_dict(min_level, max_level, 1.0))
   path_scales: Dict = dataclasses.field(
       default_factory=_build_path_scales(min_level, max_level))
   objectness_smooth: Dict = dataclasses.field(

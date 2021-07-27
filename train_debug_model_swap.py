@@ -37,6 +37,11 @@ from yolo.run import load_model
 from yolo.ops.box_ops import xcycwh_to_yxyx
 from yolo.utils.run_utils import prep_gpu
 import tensorflow as tf
+import matplotlib.pyplot as plt 
+import matplotlib
+import numpy as np
+matplotlib.use('TkAgg')
+from yolo.utils.demos import utils, coco
 
 prep_gpu()
 
@@ -103,16 +108,23 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     gs = 64 #int(max(model.stride))  # grid size (max stride)
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
     dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt,
-                                            hyp=hyp, augment=True, cache=opt.cache_images, rect=opt.rect)
+                                            hyp=hyp, augment=False, cache=False, rect=opt.rect)
     
     task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-dbg-lren.yaml"],
+      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
       model_dir='')
     
     parser = task.get_parser()
     optimizer = task.create_optimizer(params.trainer.optimizer_config,
                                       params.runtime)
+
+    drawer = utils.DrawBoxes(
+      labels=coco.get_coco_names(
+          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
+      ),
+      thickness=2,
+      classes=91)
 
     batch_size = 1
     loader = get_n(dataloader, parser) 
@@ -127,6 +139,54 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     loader = loader.batch(batch_size)
     for epoch in range(0, epochs):  # epoch ------------------------------------------------------------------
         for sample in loader:
+            i, j = sample
+            ftime = time.time()
+            i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+
+            gt = j['true_conf']
+            inds = j['inds']
+
+            obj3 = gt['3'][..., 0]
+            obj4 = gt['4'][..., 0]
+            obj5 = gt['5'][..., 0]
+
+            for shind in range(1):
+                fig, axe = plt.subplots(1, 4)
+
+                image = i[shind]
+                boxes = j["bbox"][shind]
+                classes = j["classes"][shind]
+                confidence = j["classes"][shind]
+
+                draw_dict = {
+                    'bbox': boxes,
+                    'classes': classes,
+                    'confidence': confidence,
+                }
+                # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
+                image = drawer(image, draw_dict)
+
+                (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
+                    j['upds']['5'], [4, 1, 1, 1, 1], axis=-1)
+
+                # true_xy = true_box[shind][..., 0:2] * 20
+                # ind_xy = tf.cast(j['inds']['5'][shind][..., 0:2], true_xy.dtype)
+                # x, y = tf.split(ind_xy, 2, axis=-1)
+                # ind_xy = tf.concat([y, x], axis=-1)
+                # tf.print(true_xy - ind_xy, summarize=-1)
+                axe[0].imshow(image)
+                axe[1].imshow(obj3[shind].numpy())
+                axe[2].imshow(obj4[shind].numpy())
+                axe[3].imshow(obj5[shind].numpy())
+
+                fig.set_size_inches(18.5, 6.5, forward=True)
+                plt.tight_layout()
+                # plt.show()
+
+            ltime = time.time()
+
+            # if l >= 100:
+            #     break
             a = task.train_step(sample, model, optimizer)
         
         # end epoch ----------------------------------------------------------------------------------------------------

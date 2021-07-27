@@ -38,6 +38,7 @@ from official.modeling import optimization
 from official.modeling import performance
 
 import matplotlib.pyplot as plt
+import cv2
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
@@ -196,7 +197,8 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
   os.mkdir(f"{path}images/")
   os.mkdir(f"{path}labels/")
 
-  lim = 200
+
+  lim = 10
   nte = False
   for k, sample in enumerate(dataset):
     if k > lim:
@@ -211,9 +213,9 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
 
       if name_set is not None and name not in name_set:
         continue
-
-      image = images[i].numpy()
-      plt.imsave(f"{path}images/{name}.jpg", image)
+      
+      image = cv2.cvtColor(images[i].numpy(), cv2.COLOR_BGR2RGB)
+      cv2.imwrite(f"{path}/images/{name}.png", image)
 
       box = yxyx_to_xcycwh(boxes[i])
       classif = classes[i]
@@ -233,8 +235,6 @@ def write_to_folder(path = "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testin
           value = f"{int(classif[j].numpy())} {float(box[j][0].numpy())} {float(box[j][1].numpy())} {float(box[j][2].numpy())} {float(box[j][3].numpy())}\n"
           f.write(value)
           
-
-
   return 
 
 

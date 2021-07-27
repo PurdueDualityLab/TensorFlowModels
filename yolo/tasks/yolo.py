@@ -288,10 +288,14 @@ class YoloTask(base_task.Task):
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,
+        dynamic_conv=model.dynamic_conv,
         scale_xy=xy_scales,
+        stride=params.parser.stride, 
         area_thresh=params.parser.area_thresh, 
         use_scale_xy=params.parser.use_scale_xy,
+        best_match_only=params.parser.best_match_only, 
         anchor_t=params.parser.anchor_thresh,
+        coco91to80=self.task_config.coco91to80, 
         dtype=params.dtype)
 
     return parser
@@ -360,12 +364,11 @@ class YoloTask(base_task.Task):
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
     else:
-      scale_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-      num_replicas = scale_replicas
+      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
 
     with tf.GradientTape() as tape:
       # compute a prediction
-      y_pred = model(image, training=True)
+      y_pred = model(image, training=False)
 
       # cast to float 32
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
@@ -395,7 +398,7 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    tf.print(loss_metrics['global']['total_loss'])
+    tf.print(label["source_id"], tf.reduce_sum(gradients[-2]), loss_metrics['global']['total_loss'])
 
     # optimizer.apply_gradients(zip(gradients, train_vars))
     if self._bias_optimizer is None:
@@ -521,6 +524,15 @@ class YoloTask(base_task.Task):
                  xy_exponential=True,
                  exp_base=2,
                  xy_scale_base='default_value'):
+
+    def _build(values):
+      if "all" in values and values["all"] is not None:
+        for key in values:
+          if key != 'all':
+            values[key] = values["all"]
+      print(values)
+      return values
+
     start = 0
     boxes = {}
     path_scales = {}
@@ -541,8 +553,8 @@ class YoloTask(base_task.Task):
         start += params.boxes_per_scale
 
       self._masks = boxes
-      self._path_scales = params.filter.path_scales.as_dict()
-      self._x_y_scales = params.filter.scale_xy.as_dict()
+      self._path_scales = _build(params.filter.path_scales.as_dict())
+      self._x_y_scales = _build(params.filter.scale_xy.as_dict())
 
     metric_names = defaultdict(list)
     for key in self._masks.keys():

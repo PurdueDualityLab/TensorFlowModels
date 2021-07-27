@@ -921,19 +921,20 @@ class LoadImagesAndLabels9(Dataset):  # for training/testing
 # Ancillary functions --------------------------------------------------------------------------------------------------
 def load_image(self, index):
     # loads 1 image from dataset, returns img, original hw, resized hw
-    img = self.imgs[index]
-    if img is None:  # not cached
-        path = self.img_files[index]
-        img = cv2.imread(path)  # BGR
-        assert img is not None, 'Image Not Found ' + path
-        h0, w0 = img.shape[:2]  # orig hw
-        # r = self.img_size / max(h0, w0)  # resize image to img_size
-        # if r != 1:  # always resize down, only resize up if training with augmentation
-        #     interp = cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR
-        #     img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=cv2.INTER_LINEAR)
-        return img, (h0, w0), img.shape[:2]  # img, hw_original, hw_resized
-    else:
-        return self.imgs[index], self.img_hw0[index], self.img_hw[index]  # img, hw_original, hw_resized
+    # img = self.imgs[index]
+    # if img is None:  # not cached
+    path = self.img_files[index]
+    img = cv2.imread(path)  # BGR
+    print(path.split('/')[-1].split('.')[-2], np.sum(img))
+    assert img is not None, 'Image Not Found ' + path
+    h0, w0 = img.shape[:2]  # orig hw
+    r = self.img_size / max(h0, w0)  # resize image to img_size
+    if r != 1:  # always resize down, only resize up if training with augmentation
+        interp = cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR
+        img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=interp)
+    return img, (h0, w0), img.shape[:2]  # img, hw_original, hw_resized
+    # else:
+    #     return self.imgs[index], self.img_hw0[index], self.img_hw[index]  # img, hw_original, hw_resized
 
 
 def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
@@ -961,6 +962,7 @@ def load_mosaic(self, index):
     labels4 = []
     s = self.img_size
     yc, xc = [int(random.uniform(-x, 2 * s + x)) for x in self.mosaic_border]  # mosaic center x, y
+
     indices = [index] + [random.randint(0, len(self.labels) - 1) for _ in range(3)]  # 3 additional image indices
     for i, index in enumerate(indices):
         # Load image
@@ -1113,6 +1115,7 @@ def letterbox(img, new_shape=(640, 640), color=(0, 0, 0), auto=True, scaleFill=F
     # Scale ratio (new / old)
     r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
     if not scaleup:  # only scale down, do not scale up (for better test mAP)
+        print("here")
         r = min(r, 1.0)
 
     # Compute padding
@@ -1134,13 +1137,6 @@ def letterbox(img, new_shape=(640, 640), color=(0, 0, 0), auto=True, scaleFill=F
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-
-    # import matplotlib.pyplot as plt
-    # import matplotlib
-    # matplotlib.use('TkAgg')
-    # plt.imshow(img)
-    # plt.show()
-
     return img, ratio, (dw, dh)
 
 

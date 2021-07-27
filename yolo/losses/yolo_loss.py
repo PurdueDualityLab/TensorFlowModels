@@ -712,7 +712,7 @@ class Yolo_Loss(object):
     box_loss_ = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss_)
     box_loss = tf.cast(tf.reduce_sum(box_loss_), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
-    tf.print(num_objs)
+    tf.print(num_objs, summarize = -1)
 
     # if scale[0] == 20:
     # # tf.print(tf.concat([tf.expand_dims(box_loss_, axis = -1), tf.expand_dims(iou, axis = -1), true_box, pred_box], axis = -1), summarize = -1)
@@ -976,17 +976,20 @@ class Yolo_Loss(object):
     #    may have been predicted, but the ground truth may not have placed
     #    a box. For this indexes, the detection map loss will be ignored.
     #    obj_mask dictates the locations where the loss is ignored.
-    (_, _, _, _, true_conf, obj_mask) = self._tiled_global_box_search(
-        pred_box,
-        sigmoid_class,
-        sigmoid_conf,
-        boxes,
-        classes,
-        true_conf,
-        fwidth,
-        fheight,
-        smoothed=self._objectness_smooth > 0,
-        scale = scale)
+    if self._ignore_thresh != 0.0:
+      (_, _, _, _, true_conf, obj_mask) = self._tiled_global_box_search(
+          pred_box,
+          sigmoid_class,
+          sigmoid_conf,
+          boxes,
+          classes,
+          true_conf,
+          fwidth,
+          fheight,
+          smoothed=self._objectness_smooth > 0,
+          scale = scale)
+    else: 
+      obj_mask = tf.ones_like(true_conf)
 
     # 8. compute the one hot class maps that are used for prediction
     #    done in the loss function side to save memory and improve
