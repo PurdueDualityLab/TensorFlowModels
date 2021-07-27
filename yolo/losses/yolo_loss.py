@@ -74,11 +74,12 @@ def apply_mask(mask, x):
   # this function is used to apply no nan mask to an input tensor
   # as such this will apply a mask and remove NAN for both the
   # forward AND backward propagation
-  masked = math_ops.mul_no_nan(mask, x)
+  masked = tf.where(mask == 0, tf.cast(0, x.dtype), x)
 
   def delta(dy):
     # mask the incoming derivative as well.
-    return tf.zeros_like(mask), math_ops.mul_no_nan(mask, dy)
+    masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
+    return tf.zeros_like(mask), masked_dy 
 
   return masked, delta
 
@@ -419,8 +420,7 @@ class Yolo_Loss(object):
     dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
 
     # compute the total number of true positive predictions
-    true_pos = tf.reduce_sum(
-        math_ops.mul_no_nan(true_conf, dets), axis=(1, 2, 3))
+    true_pos = tf.reduce_sum(true_conf * dets, axis=(1, 2, 3))
     # compute the total number of poitives
     gt_pos = tf.reduce_sum(true_conf, axis=(1, 2, 3))
     # compute the total number of predictions, positve and negative
