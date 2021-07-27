@@ -375,16 +375,15 @@ class Mosaic(object):
 
   # mosaic full frequency doubles model speed
   def _im_process(self, sample, shiftx, shifty):
-    image = sample['image']
-    boxes = sample['groundtruth_boxes']
-    classes = sample['groundtruth_classes']
-    is_crowd = sample['groundtruth_is_crowd']
-    area = sample['groundtruth_area']
-
     (image, boxes, classes, 
-    is_crowd, area, crop_points) = self._process_image(image, 
-                                          boxes, classes, is_crowd, area, 
-                                          shiftx, shifty, None)
+    is_crowd, area, crop_points) = self._process_image(sample['image'], 
+                                                       sample['groundtruth_boxes'], 
+                                                       sample['groundtruth_classes'], 
+                                                       sample['groundtruth_is_crowd'], 
+                                                       sample['groundtruth_area'], 
+                                                       shiftx, 
+                                                       shifty, 
+                                                       None)
 
     cut, ishape = self._generate_cut()
 
@@ -406,55 +405,31 @@ class Mosaic(object):
     sample['crop_points'] = crop_points
     return sample
 
-  def _map_concat(self, one, two, three, four):
-    # cut, ishape = self._generate_cut()
-    # for sample in [one, two, three, four]:
-      # if cut is not None:
-      #   sample["image"], info = preprocessing_ops.mosaic_cut(
-      #     sample["image"], 
-      #     sample["crop_points"][0], sample["crop_points"][1], 
-      #     sample["crop_points"][2], sample["crop_points"][3], cut, 
-      #     sample["crop_points"][4], sample["crop_points"][5], 
-      #     sample["crop_points"][6], sample["crop_points"][7], 
-      #     sample["shiftx"], sample["shifty"]
-      #   ) 
-      #   sample['groundtruth_boxes'], inds = preprocessing_ops.apply_infos(
-      #                                           sample['groundtruth_boxes'], 
-      #                                           [info], 
-      #                                           area_thresh = self._area_thresh)
-      #   sample['groundtruth_classes'] = tf.gather(sample['groundtruth_classes'], 
-      #                                             inds)
-      #   sample['groundtruth_is_crowd'] = tf.gather(sample['groundtruth_is_crowd'],
-      #                                               inds)
-      #   sample['groundtruth_area'] = tf.gather(sample['groundtruth_area'], inds)
+  def _patch2(self, one, two):
+    sample = one
+    sample['image'] = tf.concat([one["image"], two["image"]], axis=-2)
 
-      # (sample['groundtruth_boxes'], 
-      # sample['groundtruth_classes']) = self.scale_boxes(
-      #   sample["image"], ishape, sample['groundtruth_boxes'], 
-      #   sample['groundtruth_classes'], 1 - sample["shiftx"], 1 - sample["shifty"]
-      # )
+    sample['groundtruth_boxes'] = tf.concat([one['groundtruth_boxes'], 
+                       two['groundtruth_boxes']] , axis=0)
+    sample['groundtruth_classes'] = tf.concat([one['groundtruth_classes'] , 
+                        two['groundtruth_classes']] , axis=0)
+    sample['groundtruth_is_crowd'] = tf.concat([one['groundtruth_is_crowd'], 
+                          two['groundtruth_is_crowd']], axis=0)
+    sample['groundtruth_area'] = tf.concat([one['groundtruth_area'], 
+                      two['groundtruth_area']], axis=0)
+    return sample
 
-    patch1 = tf.concat([one["image"], two["image"]], axis=-2)
-    patch2 = tf.concat([three["image"], four["image"]], axis=-2)
-    image = tf.concat([patch1, patch2], axis=-3)
-    # tf.print(image.dtype)
+  def _patch(self, one, two):
+    image = tf.concat([one["image"], two["image"]], axis=-3)
 
     boxes = tf.concat([one['groundtruth_boxes'], 
-                       two['groundtruth_boxes'], 
-                       three['groundtruth_boxes'], 
-                       four['groundtruth_boxes']] , axis=0)
+                       two['groundtruth_boxes']] , axis=0)
     classes = tf.concat([one['groundtruth_classes'] , 
-                        two['groundtruth_classes'] , 
-                        three['groundtruth_classes'] , 
-                        four['groundtruth_classes']] , axis=0)
+                        two['groundtruth_classes']] , axis=0)
     is_crowd = tf.concat([one['groundtruth_is_crowd'], 
-                          two['groundtruth_is_crowd'], 
-                          three['groundtruth_is_crowd'], 
-                          four['groundtruth_is_crowd']], axis=0)
+                          two['groundtruth_is_crowd']], axis=0)
     area = tf.concat([one['groundtruth_area'], 
-                      two['groundtruth_area'], 
-                      three['groundtruth_area'], 
-                      four['groundtruth_area']], axis=0)
+                      two['groundtruth_area']], axis=0)
 
     if self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop":
       height, width = self._output_size[0], self._output_size[1]
@@ -466,17 +441,19 @@ class Mosaic(object):
     sample = one
     height, width = preprocessing_ops.get_image_shape(image)
     sample['image'] = image
-    sample['source_id'] = sample['source_id']
+    sample['groundtruth_boxes'] = boxes
+    sample['groundtruth_area'] = area
+    sample['groundtruth_classes'] = tf.cast(classes,
+                                            sample['groundtruth_classes'].dtype)
+    sample['groundtruth_is_crowd'] = tf.cast(is_crowd, tf.bool)
+
     sample['width'] = tf.cast(width, sample['width'].dtype)
     sample['height'] = tf.cast(height, sample['height'].dtype)
-    sample['groundtruth_boxes'] = boxes
-    sample['groundtruth_classes'] = tf.cast(classes,sample['groundtruth_classes'].dtype)
-    sample['groundtruth_is_crowd'] = tf.cast(is_crowd, tf.bool)
-    sample['groundtruth_area'] = area
-    sample['info'] = tf.convert_to_tensor([0, 0, height, width])
+    
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[1]
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
     return sample
+
 
   def _full_frequency_apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
@@ -495,8 +472,13 @@ class Mosaic(object):
     four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
       num_parallel_calls=num)
 
-    stitched = tf.data.Dataset.zip((one, two, three, four))
-    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
+    patch1 = tf.data.Dataset.zip((one, two)).prefetch(tf.data.AUTOTUNE)
+    patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
+    patch2 = tf.data.Dataset.zip((three, four)).prefetch(tf.data.AUTOTUNE)
+    patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
+
+    stitched = tf.data.Dataset.zip((patch1, patch2)).prefetch(tf.data.AUTOTUNE)
+    stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE)
     return stitched
 
 

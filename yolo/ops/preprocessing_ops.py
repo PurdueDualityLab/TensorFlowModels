@@ -566,7 +566,7 @@ def build_transform(image,
         Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)
     else:
         Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) # x translation (pixels)
-        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed)  # y translation (pixels)
+        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) # y translation (pixels)
 
         dx = (width - cw)/width
         dy = (height - ch)/height 
@@ -575,8 +575,8 @@ def build_transform(image,
         bx = dx/2
         by = dy/2
 
-        Tx = bx + sx * Tx
-        Ty = by + sy * Ty
+        Tx = bx/s + (sx * Tx)
+        Ty = by/s + (sy * Ty)
 
         Tx *= width
         Ty *= height
