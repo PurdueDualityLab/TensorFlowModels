@@ -30,11 +30,11 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)

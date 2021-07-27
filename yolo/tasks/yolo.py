@@ -450,6 +450,15 @@ class YoloTask(base_task.Task):
                  xy_exponential=True,
                  exp_base=2,
                  xy_scale_base='default_value'):
+
+    def _build(values):
+      if "all" in values and values["all"] is not None:
+        for key in values:
+          if key != 'all':
+            values[key] = values["all"]
+      print(values)
+      return values
+
     start = 0
     boxes = {}
     path_scales = {}
@@ -470,8 +479,8 @@ class YoloTask(base_task.Task):
         start += params.boxes_per_scale
 
       self._masks = boxes
-      self._path_scales = params.filter.path_scales.as_dict()
-      self._x_y_scales = params.filter.scale_xy.as_dict()
+      self._path_scales = _build(params.filter.path_scales.as_dict())
+      self._x_y_scales = _build(params.filter.scale_xy.as_dict())
 
     metric_names = defaultdict(list)
     for key in self._masks.keys():

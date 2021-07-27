@@ -1155,24 +1155,17 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     ps = ((gxyi < g) & (gxy > 1.))
     ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
 
-    # my adds
-    # ps = ((gxyi <= g) & (gxy > 1.))
-    # ns = ((gxyi >= (1 - g)) & (gxy < (gain - 1.)))
-  
-    # my adds 2
-    # ps = ((gxyi < g) & (gxy > 1.))
-    # ns = ((gxyi >= (1 - g)) & (gxy < (gain - 1.)))
-
     shifts = [ps[0], ps[1], ns[0], ns[1]]
-    offset = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
 
+    xc = clamp(tf.convert_to_tensor([tf.cast(x, tf.int32)]), width - 1)
+    yc = clamp(tf.convert_to_tensor([tf.cast(y, tf.int32)]), height - 1)
     for i in range(4):
-      if shifts[i]:
-        x_ = x - offset[i][0]
-        y_ = y - offset[i][1]
-    
-        x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width)
-        y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height)
+      x_ = x - offset[i, 0]
+      y_ = y - offset[i, 1]
+      x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
+      y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
+      if shifts[i] and (xc != x_ or yc != y_):
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
