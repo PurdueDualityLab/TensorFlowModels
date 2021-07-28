@@ -7,6 +7,7 @@ from official.vision.beta.ops import spatial_transform_ops
 
 TPU_BASE = False
 
+
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
 

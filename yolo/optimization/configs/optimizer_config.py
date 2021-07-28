@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Dataclasses for optimizer configs."""
 from typing import List, Optional
 
@@ -54,6 +53,7 @@ class SGDAccumConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum: float = 0.0
   accumulation_steps: int = 1
+
 
 @dataclasses.dataclass
 class SGDMomentumWarmupConfig(BaseOptimizerConfig):

@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Optimizer factory class."""
 from typing import Callable, Union
-
 
 import gin
 import tensorflow as tf
@@ -26,7 +24,6 @@ from official.modeling.optimization import optimizer_factory
 from official.modeling.optimization import lr_schedule
 from yolo.optimization.configs import optimization_config as opt_cfg
 
-
 optimizer_factory.OPTIMIZERS_CLS.update({
     'sgd_dymo': SGDMomentumWarmup.SGDMomentumWarmup,
     'sgd_accum': SGDAccumulated.SGDAccumulated
@@ -35,4 +32,3 @@ optimizer_factory.OPTIMIZERS_CLS.update({
 OPTIMIZERS_CLS = optimizer_factory.OPTIMIZERS_CLS
 LR_CLS = optimizer_factory.LR_CLS
 WARMUP_CLS = optimizer_factory.WARMUP_CLS
-

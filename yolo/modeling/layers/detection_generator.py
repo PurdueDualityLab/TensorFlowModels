@@ -28,7 +28,7 @@ class YoloLayer(ks.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_scaled_loss=False,
-               darknet = None, 
+               darknet=None,
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
@@ -126,7 +126,7 @@ class YoloLayer(ks.Model):
         'giou': 3,
         'ciou': 4,
         'diou': 5,
-        'class_independent': 6, 
+        'class_independent': 6,
         'weighted_diou': 7
     }
 
@@ -239,7 +239,7 @@ class YoloLayer(ks.Model):
     object_mask = tf.cast(object_scores > self._thresh, object_scores.dtype)
     class_mask = tf.cast(class_scores > self._thresh, class_scores.dtype)
     object_scores *= object_mask
-    class_scores *= (tf.expand_dims(object_mask, axis = -1) * class_mask)
+    class_scores *= (tf.expand_dims(object_mask, axis=-1) * class_mask)
 
     # apply nms
     if self._nms_type == 7:
@@ -248,12 +248,12 @@ class YoloLayer(ks.Model):
           class_scores,
           object_scores,
           self._max_boxes,
-          pre_nms_thresh = self._thresh,
-          nms_thresh = self._nms_thresh,
+          pre_nms_thresh=self._thresh,
+          nms_thresh=self._nms_thresh,
           prenms_top_k=self._pre_nms_points)
       # compute the number of valid detections
       num_detections = tf.reduce_sum(
-        input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
+          input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
     elif self._nms_type == 6:
       boxes, class_scores, object_scores = nms_ops.nms(
           boxes,
@@ -263,21 +263,21 @@ class YoloLayer(ks.Model):
           self._thresh,
           self._nms_thresh,
           prenms_top_k=self._pre_nms_points)
-    # compute the number of valid detections
+      # compute the number of valid detections
       num_detections = tf.reduce_sum(
-        input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
+          input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
     elif self._nms_type == 1:
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
       boxes, object_scores_, class_scores, num_detections = (
-        tf.image.combined_non_max_suppression(
-          tf.expand_dims(boxes, axis=-2),
-          class_scores,
-          self._pre_nms_points,
-          self._max_boxes,
-          iou_threshold=self._nms_thresh,
-          score_threshold=self._thresh))
+          tf.image.combined_non_max_suppression(
+              tf.expand_dims(boxes, axis=-2),
+              class_scores,
+              self._pre_nms_points,
+              self._max_boxes,
+              iou_threshold=self._nms_thresh,
+              score_threshold=self._thresh))
       # cast the boxes and predicitons abck to original datatype
       boxes = tf.cast(boxes, object_scores.dtype)
       class_scores = tf.cast(class_scores, object_scores.dtype)
@@ -316,7 +316,7 @@ class YoloLayer(ks.Model):
       loss_dict[key] = Yolo_Loss(
           classes=self._classes,
           anchors=self._anchors,
-          darknet=self._darknet, 
+          darknet=self._darknet,
           truth_thresh=self._truth_thresh[key],
           ignore_thresh=self._ignore_thresh[key],
           loss_type=self._loss_type[key],

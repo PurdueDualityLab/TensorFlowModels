@@ -26,10 +26,11 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
     classes: filtered `Tensor` of shape [batch size, k, num_classes] t
     confidence: filtered `Tensor` of shape [batch size, k] 
   """
+
   def cluster(iou, B, A, maxA, idx):
     A = B
-    maxA = tf.reduce_max(A, axis = -2)
-    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
+    maxA = tf.reduce_max(A, axis=-2)
+    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis=-1)
     B = iou * E
     co = tf.cast(tf.reduce_all(A == B), idx.dtype)
     return iou, B, A, maxA, (idx + 1 + 200 * co)
@@ -39,11 +40,11 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
 
   iou = box_ops.aggregated_comparitive_iou(boxes, iou_type=0)
   eye = tf.linalg.band_part(iou, 0, 0)
-  iou = tf.linalg.band_part(iou, 0, -1) - eye 
+  iou = tf.linalg.band_part(iou, 0, -1) - eye
 
   B = iou
   A = tf.zeros_like(iou)
-  maxA = tf.reduce_max(A, axis = -2)
+  maxA = tf.reduce_max(A, axis=-2)
   i = 0
 
   iou, B, A, maxA, idx = tf.while_loop(
@@ -51,10 +52,12 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
 
   # duplicate boxes
   conda = maxA <= iou_thresh
-  keep = tf.expand_dims(tf.cast(conda, boxes.dtype), axis = -1)
-  weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(confidence, axis = -1)
-  boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
-                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
+  keep = tf.expand_dims(tf.cast(conda, boxes.dtype), axis=-1)
+  weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(
+      confidence, axis=-1)
+  boxes = math_ops.divide_no_nan(
+      tf.linalg.matmul(weights, boxes),
+      tf.reduce_sum(weights, axis=-1, keepdims=True))
 
   iou_mask = B > 0
   can_suppress_others = 1 - tf.cast(
@@ -67,11 +70,15 @@ def segment_nms(boxes, classes, confidence, iou_thresh):
   confidence *= tf.cast(raw, confidence.dtype)
   if classes is not None:
     classes *= tf.cast(tf.expand_dims(raw, axis=-1), classes.dtype)
-  
+
   return confidence, boxes, classes
 
 
-def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress = False):
+def segment_iou(boxes,
+                boxes_2=None,
+                iou_thresh=0.6,
+                iou_type=0,
+                suppress=False):
   """This is a quick nms that works on very well for small values of k, this 
   was developed to operate for tflite models as the tiled NMS is far too slow 
   and typically is not able to compile with tflite. This NMS does not account 
@@ -91,45 +98,48 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
     classes: filtered `Tensor` of shape [batch size, k, num_classes] t
     confidence: filtered `Tensor` of shape [batch size, k] 
   """
+
   def cluster(iou, B, A, maxA, idx):
     A = B
-    maxA = tf.reduce_max(A, axis = -2)
-    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis = -1)
+    maxA = tf.reduce_max(A, axis=-2)
+    E = tf.expand_dims(tf.cast(maxA < iou_thresh, B.dtype), axis=-1)
     B = iou * E
 
     co = tf.cast(tf.reduce_all(A == B), idx.dtype)
     return iou, B, A, maxA, (idx + 1 + 200 * co)
 
   def cluster_cond(iou, B, A, maxA, idx):
-    return idx < 200 #and not tf.reduce_all(A == B)
+    return idx < 200  #and not tf.reduce_all(A == B)
 
   if boxes_2 is None:
-    boxes_2 = boxes 
+    boxes_2 = boxes
   iou = box_ops.aggregated_comparitive_iou(boxes, boxes_2, iou_type=iou_type)
-  
+
   eye = tf.linalg.band_part(iou, 0, 0)
-  iou = tf.linalg.band_part(iou, 0, -1) - eye 
+  iou = tf.linalg.band_part(iou, 0, -1) - eye
 
   B = iou
   A = B
-  maxA = tf.reduce_max(A, axis = -2)
-  
+  maxA = tf.reduce_max(A, axis=-2)
+
   if suppress:
     iou, B, A, maxA, idx = tf.while_loop(
-        cluster_cond, cluster, [iou, B, A, maxA, tf.constant(0)])
+        cluster_cond, cluster,
+        [iou, B, A, maxA, tf.constant(0)])
 
   return B, eye, maxA <= iou_thresh
+
 
 # class TiledNMS():
 #   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 
 #   def __init__(self, iou_type='diou', beta=1.0, weighted = False):
-#     '''Initialization for all non max supression operations mainly used to 
+#     '''Initialization for all non max supression operations mainly used to
 #     select hyperperamters for the iou type and scaling.
-#     Args: 
+#     Args:
 #       iou_type: `str` for the version of IOU to use {diou, giou, ciou, iou}.
 #       beta: `float` for the amount to scale regualrization on distance iou.
-    
+
 #     '''
 #     self._iou_type = TiledNMS.IOU_TYPES[iou_type]
 #     self._beta = beta
@@ -157,9 +167,9 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 #         new_slice, box_slice, beta=self._beta, iou_type=self._iou_type)
 #     mask = tf.cast(tf.reduce_all(iou < iou_threshold, [1]), box_slice.dtype)
 
-#     # iou, _, mask = segment_iou(box_slice, 
-#     #                            new_slice, 
-#     #                            iou_thresh = iou_threshold, 
+#     # iou, _, mask = segment_iou(box_slice,
+#     #                            new_slice,
+#     #                            iou_thresh = iou_threshold,
 #     #                            iou_type = self._iou_type)
 #     # mask = tf.cast(mask, box_slice.dtype)
 #     ret_slice = tf.expand_dims(mask, 2) * box_slice
@@ -190,7 +200,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 #                          [batch_size, NMS_TILE_SIZE, 4])
 #     score_slice = tf.slice(scores, [0, idx * NMS_TILE_SIZE],
 #                          [batch_size, NMS_TILE_SIZE])
-    
+
 #     # tf.print(tf.shape(score_slice))
 
 #     _, _, box_slice, score_slice, _, _ = tf.while_loop(
@@ -201,7 +211,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 
 #     # Iterates over the current tile to compute self-suppression.
 #     iou, eye, conda = segment_iou(box_slice,
-#                              iou_thresh = iou_threshold, 
+#                              iou_thresh = iou_threshold,
 #                              iou_type = self._iou_type)
 #     box_slice *= tf.expand_dims(tf.cast(conda, box_slice.dtype), 2)
 
@@ -232,7 +242,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 #     Assumption:
 #       * The boxes are sorted by scores unless the box is a dot (all coordinates
 #         are zero).
-#       * Boxes with higher scores can be used to suppress boxes with lower 
+#       * Boxes with higher scores can be used to suppress boxes with lower
 #         scores.
 #     The overal design of the algorithm is to handle boxes tile-by-tile:
 #     boxes = boxes.pad_to_multiply_of(tile_size)
@@ -292,7 +302,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 
 #     selected_boxes, _, _, output_size, _ = tf.while_loop(
 #         _loop_cond, self._suppression_loop_body, [
-#             boxes, iou_threshold, scores, 
+#             boxes, iou_threshold, scores,
 #             tf.zeros([batch_size], tf.int32),
 #             tf.constant(0)
 #         ])
@@ -318,10 +328,10 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 #             output_size, [-1, 1]), scores.dtype)
 
 #     iou, eye, _ = segment_iou(boxes,
-#                               iou_thresh = iou_threshold, 
+#                               iou_thresh = iou_threshold,
 #                               iou_type = self._iou_type)
 #     weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-#     boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+#     boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes),
 #                                 tf.reduce_sum(weights, axis = -1, keepdims = True))
 #     return scores, boxes
 
@@ -345,7 +355,7 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 
 #     selected_boxes, _, _, output_size, _ = tf.while_loop(
 #         _loop_cond, self._suppression_loop_body, [
-#             boxes, iou_threshold, scores, 
+#             boxes, iou_threshold, scores,
 #             tf.zeros([batch_size], tf.int32),
 #             tf.constant(0)
 #         ])
@@ -378,10 +388,10 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 
 #     if self._weighted:
 #       iou, eye, _ = segment_iou(boxes,
-#                                 iou_thresh = iou_threshold, 
+#                                 iou_thresh = iou_threshold,
 #                                 iou_type = self._iou_type)
 #       weights = (iou * tf.cast(iou > 0.8, iou.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-#       boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+#       boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes),
 #                                   tf.reduce_sum(weights, axis = -1, keepdims = True))
 #     return scores, boxes, classes
 
@@ -418,11 +428,11 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 #     It is TPU compatible.
 #     Args:
 #       boxes: a tensor with shape [batch_size, N, num_classes, 4] or [batch_size,
-#         N, 1, 4], which box predictions on all feature levels. The N is the 
+#         N, 1, 4], which box predictions on all feature levels. The N is the
 #         number of total anchors on all levels.
-#       scores: a tensor with shape [batch_size, N, num_classes], which stacks 
-#         class probability on all feature levels. The N is the number of total 
-#         anchors on all levels. The num_classes is the number of classes the 
+#       scores: a tensor with shape [batch_size, N, num_classes], which stacks
+#         class probability on all feature levels. The N is the number of total
+#         anchors on all levels. The num_classes is the number of classes the
 #         model predicted. Note that the class_outputs here is the raw score.
 #       pre_nms_top_k: an int number of top candidate detections per class
 #         before NMS.
@@ -494,10 +504,11 @@ def segment_iou(boxes, boxes_2 = None, iou_thresh = 0.6, iou_type = 0, suppress 
 
 #     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
 
+
 class TiledNMS():
   IOU_TYPES = {'diou': 0, 'giou': 1, 'ciou': 2, 'iou': 3}
 
-  def __init__(self, iou_type='diou', beta=0.6, weighted = True):
+  def __init__(self, iou_type='diou', beta=0.6, weighted=True):
     '''initialization for all non max supression operations mainly used to 
     select hyperperamters for the iou type and scaling.
     Args: 
@@ -685,7 +696,7 @@ class TiledNMS():
 
     # if self._weighted:
     #   B, eye, _ = segment_iou(boxes,
-    #                             iou_thresh = iou_threshold, 
+    #                             iou_thresh = iou_threshold,
     #                             iou_type = self._iou_type)
 
     #   # D = box_ops.aggregated_comparitive_iou(boxes, iou_type = 4)
@@ -695,7 +706,7 @@ class TiledNMS():
     #   # boxes *= tf.expand_dims(scores_mask, axis = -1)
 
     #   weights = (B * tf.cast(B > 0.8, B.dtype) + eye) * tf.expand_dims(scores, axis = -1)
-    #   boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes), 
+    #   boxes = math_ops.divide_no_nan(tf.linalg.matmul(weights, boxes),
     #                               tf.reduce_sum(weights, axis = -1, keepdims = True))
 
     return scores, boxes
@@ -808,7 +819,9 @@ class TiledNMS():
         input_tensor=tf.cast(tf.greater(nmsed_scores, -1), tf.int32), axis=1)
     return nmsed_boxes, nmsed_scores, nmsed_classes, valid_detections
 
+
 BASE_NMS = TiledNMS(iou_type='iou', beta=0.6)
+
 
 def sorted_non_max_suppression_padded(scores, boxes, max_output_size,
                                       iou_threshold):
@@ -860,7 +873,7 @@ def nms(boxes,
         k,
         pre_nms_thresh,
         nms_thresh,
-        entries_per_object = 10, 
+        entries_per_object=10,
         prenms_top_k=500):
   """This is a quick nms that works on very well for small values of k, this 
   was developed to operate for tflite models as the tiled NMS is far too slow 
@@ -895,15 +908,13 @@ def nms(boxes,
   # if prenms_top_k < NMS_TILE_SIZE:
   #   confidence, boxes, classes = segment_nms(boxes , classes, confidence, nms_thresh)
 
-
   # sort the classes of the unspressed boxes
   class_confidence, class_ind = tf.math.top_k(
       classes, k=tf.shape(classes)[-1], sorted=True)
 
   # set low confidence classes to zero
   mask = tf.fill(
-      tf.shape(class_confidence),
-      tf.cast(0.001, dtype=class_confidence.dtype))
+      tf.shape(class_confidence), tf.cast(0.001, dtype=class_confidence.dtype))
   mask = tf.math.ceil(tf.nn.relu(class_confidence - mask))
   class_confidence = tf.cast(class_confidence, mask.dtype) * mask
   class_ind = tf.cast(class_ind, mask.dtype) * mask
@@ -924,17 +935,19 @@ def nms(boxes,
   confidence = tf.reshape(confidence, [shape[0], -1])
 
   # drop all the low class confidence boxes again
-  
-  
+
   if prenms_top_k > NMS_TILE_SIZE:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, tf.shape(confidence)[-1])
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes,
+                                           tf.shape(confidence)[-1])
     confidence, boxes, classes = BASE_NMS._sorted_nms_class_indep(
-      confidence, boxes + classes, tf.squeeze(classes, axis = -1), k, nms_thresh
-    )
-    boxes -= tf.expand_dims(classes, axis = -1)
+        confidence, boxes + classes, tf.squeeze(classes, axis=-1), k,
+        nms_thresh)
+    boxes -= tf.expand_dims(classes, axis=-1)
   else:
-    confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
-    confidence, boxes, classes = segment_nms(boxes + classes, classes, confidence, nms_thresh)
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes,
+                                           prenms_top_k)
+    confidence, boxes, classes = segment_nms(boxes + classes, classes,
+                                             confidence, nms_thresh)
     boxes -= classes
 
   confidence, boxes, classes = sort_drop(confidence, boxes, classes, k)
@@ -952,62 +965,69 @@ def nms(boxes,
 
   return boxes, classes, confidence
 
+
 # For batch mode Cluster-Weighted NMS
-def non_max_suppression2(boxes, 
-                         classes, 
-                         confidence, 
-                         k = 200, 
-                         pre_nms_thresh = 0.1,
-                         nms_thresh = 0.6,
-                         prenms_top_k = 5000, 
-                         perclass = True):
-    """Performs Non-Maximum Suppression (NMS) on inference results
+def non_max_suppression2(boxes,
+                         classes,
+                         confidence,
+                         k=200,
+                         pre_nms_thresh=0.1,
+                         nms_thresh=0.6,
+                         prenms_top_k=5000,
+                         perclass=True):
+  """Performs Non-Maximum Suppression (NMS) on inference results
     Returns:
          detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
     """
-    dtype = boxes.dtype 
-    boxes = tf.cast(boxes, tf.float32)
-    classes = tf.cast(classes, tf.float32)
-    nc = classes.get_shape().as_list()[-1]  # number of classes
+  dtype = boxes.dtype
+  boxes = tf.cast(boxes, tf.float32)
+  classes = tf.cast(classes, tf.float32)
+  nc = classes.get_shape().as_list()[-1]  # number of classes
 
-    with tf.device("/cpu:0"):
-      confidence, boxes, classes = sort_drop(confidence, boxes, classes, prenms_top_k)
+  with tf.device("/cpu:0"):
+    confidence, boxes, classes = sort_drop(confidence, boxes, classes,
+                                           prenms_top_k)
 
-      scores = tf.transpose(classes, perm=(0, 2, 1))
-      curr_scores, inds = tf.math.top_k(scores, k=tf.minimum(500, prenms_top_k), sorted=True)
-      
-      nmsed_boxes = []
-      nmsed_classes = []
-      nmsed_scores = []
-      for j in range(nc):
-        scores_i = curr_scores[:, j, ...]
-        inds_i = inds[:, j, ...]
-  
-        boxes_i = tf.gather_nd(boxes, tf.expand_dims(inds_i, axis = -1), batch_dims = 1)
-        classes_i = tf.expand_dims(j * tf.ones_like(scores_i, dtype = boxes.dtype), axis = -1)
-        boxes_i, classes_i, confidence_i = segment_nms(boxes_i, classes_i, scores_i, nms_thresh)
+    scores = tf.transpose(classes, perm=(0, 2, 1))
+    curr_scores, inds = tf.math.top_k(
+        scores, k=tf.minimum(500, prenms_top_k), sorted=True)
 
-        nmsed_boxes.append(boxes_i)
-        nmsed_classes.append(tf.squeeze(classes_i, axis = -1))
-        nmsed_scores.append(confidence_i)
+    nmsed_boxes = []
+    nmsed_classes = []
+    nmsed_scores = []
+    for j in range(nc):
+      scores_i = curr_scores[:, j, ...]
+      inds_i = inds[:, j, ...]
 
-      nmsed_boxes = tf.concat(nmsed_boxes, axis = -2)
-      nmsed_classes = tf.concat(nmsed_classes, axis = -1)
-      nmsed_scores = tf.concat(nmsed_scores, axis = -1)
+      boxes_i = tf.gather_nd(
+          boxes, tf.expand_dims(inds_i, axis=-1), batch_dims=1)
+      classes_i = tf.expand_dims(
+          j * tf.ones_like(scores_i, dtype=boxes.dtype), axis=-1)
+      boxes_i, classes_i, confidence_i = segment_nms(boxes_i, classes_i,
+                                                     scores_i, nms_thresh)
 
-      (nmsed_scores, 
-      nmsed_boxes, 
-      nmsed_classes) = sort_drop(nmsed_scores, nmsed_boxes, nmsed_classes, prenms_top_k)
+      nmsed_boxes.append(boxes_i)
+      nmsed_classes.append(tf.squeeze(classes_i, axis=-1))
+      nmsed_scores.append(confidence_i)
 
-      nmsed_classes = tf.squeeze(nmsed_classes, axis = -1)
+    nmsed_boxes = tf.concat(nmsed_boxes, axis=-2)
+    nmsed_classes = tf.concat(nmsed_classes, axis=-1)
+    nmsed_scores = tf.concat(nmsed_scores, axis=-1)
 
-    return nmsed_boxes, nmsed_classes, nmsed_scores
+    (nmsed_scores, nmsed_boxes,
+     nmsed_classes) = sort_drop(nmsed_scores, nmsed_boxes, nmsed_classes,
+                                prenms_top_k)
+
+    nmsed_classes = tf.squeeze(nmsed_classes, axis=-1)
+
+  return nmsed_boxes, nmsed_classes, nmsed_scores
+
 
 # def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
 #   """
 #   Pad a dimension of the tensor to have a maximum number of instances filling
 #   additional entries with the `pad_value`.
-   
+
 #   Args:
 #     value: An input tensor.
 #     instances: An int representing the maximum number of instances.
@@ -1042,7 +1062,6 @@ def non_max_suppression2(boxes,
 #   n = tf.shape(inds_)[0]
 #   inds_ = tf.expand_dims(inds_, axis = -1)
 
-  
 #   boxes_ = tf.gather_nd(boxes, inds_)
 #   if not any_:
 #     return boxes_, tf.squeeze(tf.cast(inds_, boxes.dtype), axis = -1), inds_
@@ -1056,7 +1075,7 @@ def non_max_suppression2(boxes,
 
 #     iou = box_ops.aggregated_comparitive_iou(boxes_, boxes_, iou_type = 0)
 #     eye = tf.linalg.band_part(iou, 0, 0)
-#     iou = tf.linalg.band_part(iou, 0, -1) - eye 
+#     iou = tf.linalg.band_part(iou, 0, -1) - eye
 
 #     B = iou
 #     A = tf.zeros_like(iou)

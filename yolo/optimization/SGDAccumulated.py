@@ -1,25 +1,25 @@
 import tensorflow as tf
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.ops import math_ops, state_ops, control_flow_ops, array_ops
-from tensorflow.python import ops 
+from tensorflow.python import ops
 # from tensorflow.python.keras.utils import control_flow_util
 # from tensorflow.python.keras import backend_config
 
-
 __all__ = ['SGDAccumulated']
+
 
 # problem is that sub division cannot change between saves
 class SGDAccumulated(OptimizerV2):
   """Optimizer that implements the Adam algorithm with gradient accumulation."""
 
   def __init__(self,
-                accumulation_steps = 1,
-                accumulation_type = 'mean', 
-                learning_rate=0.01,
-                momentum=0.0,
-                nesterov=False,
-                name="SGD",
-                **kwargs):
+               accumulation_steps=1,
+               accumulation_type='mean',
+               learning_rate=0.01,
+               momentum=0.0,
+               nesterov=False,
+               name="SGD",
+               **kwargs):
     r"""Construct a new SGD optimizer.
     Args:
         accumulation_steps: An integer. Update gradient in every accumulation steps.
@@ -57,7 +57,7 @@ class SGDAccumulated(OptimizerV2):
       raise ValueError("`momentum` must be between [0, 1].")
     self._set_hyper("momentum", momentum)
     self.nesterov = nesterov
-    
+
     self._accumulation_type = accumulation_type
 
   def _create_slots(self, var_list):
@@ -68,7 +68,8 @@ class SGDAccumulated(OptimizerV2):
         self.add_slot(var, "momentum")
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(SGDAccumulated, self)._prepare_local(var_device, var_dtype, apply_state)
+    super(SGDAccumulated, self)._prepare_local(var_device, var_dtype,
+                                               apply_state)
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
 
@@ -82,8 +83,6 @@ class SGDAccumulated(OptimizerV2):
   #     momentum_g = state_ops.assign(momentum_grad, momentum_g, use_locking=self._use_locking)
   #   return control_flow_ops.group(*[var_update, momentum_g])
 
-
-
   # def no_momentum_update(self, coefficients, var, grad):
   #   lr = coefficients["lr_t"]
   #   var_update = state_ops.assign_sub(
@@ -91,7 +90,7 @@ class SGDAccumulated(OptimizerV2):
   #               lr * grad,
   #               use_locking=self._use_locking)
   #   return control_flow_ops.group(*[var_update])
-  
+
   def momentum_update(self, coefficients, var, grad, update_cond):
     momentum_var = self.get_slot(var, "momentum")
     return tf.raw_ops.ResourceApplyKerasMomentum(
@@ -105,32 +104,36 @@ class SGDAccumulated(OptimizerV2):
 
   def no_momentum_update(self, coefficients, var, grad):
     return tf.raw_ops.ResourceApplyGradientDescent(
-          var=var.handle,
-          alpha=coefficients["lr_t"],
-          delta=grad,
-          use_locking=self._use_locking)
-  
+        var=var.handle,
+        alpha=coefficients["lr_t"],
+        delta=grad,
+        use_locking=self._use_locking)
+
   def raw_update(self, coefficients, var, grad, update_cond):
+
     def func():
       # tf.print("up")
       if self._momentum:
         return self.momentum_update(coefficients, var, grad, update_cond)
       else:
         return self.no_momentum_update(coefficients, var, grad)
+
     return func
 
   def no_update(self, var):
+
     def func():
       # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
       return control_flow_ops.group(*[var_update])
+
     return func
 
-  def _resource_apply_dense(self, grad, var, apply_state = None):
+  def _resource_apply_dense(self, grad, var, apply_state=None):
     # tf.print('opt', self.iterations)
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                  or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     accumulation_steps = self._get_hyper('accumulation_steps', 'int64')
     update_cond = tf.equal((self.iterations + 1) % accumulation_steps, 0)
@@ -140,27 +143,27 @@ class SGDAccumulated(OptimizerV2):
     #gradient accumulation sum
     # if self._accumulation_type == 'sum':
     #   g = self.get_slot(var, 'g') # accumulated gradient
-    #   g_a = grad 
+    #   g_a = grad
     #   g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
-    #   g_t = state_ops.assign(g, g_t, use_locking=self._use_locking) 
+    #   g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
     # else:
-    g = self.get_slot(var, 'g') # accumulated gradient
+    g = self.get_slot(var, 'g')  # accumulated gradient
     g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
     g_t = tf.where(tf.equal(sub_step, 1), g_a, g_a + g)
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
 
-    updates = tf.cond(update_cond, 
-                                true_fn = self.raw_update(coefficients, var, g_t, update_cond), 
-                                false_fn = self.no_update(var))
+    updates = tf.cond(
+        update_cond,
+        true_fn=self.raw_update(coefficients, var, g_t, update_cond),
+        false_fn=self.no_update(var))
     return updates
-
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
 
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     lr_t = coefficients["lr_t"]
     accumulation_steps = self._get_hyper('accumulation_steps', 'int64')
@@ -168,37 +171,43 @@ class SGDAccumulated(OptimizerV2):
 
     # steps = 500500 * accumulation steps
     sub_step = self.iterations % accumulation_steps + 1
-    local_step = math_ops.cast(self.iterations // accumulation_steps + 1, var_dtype)
+    local_step = math_ops.cast(self.iterations // accumulation_steps + 1,
+                               var_dtype)
 
     # used to control when updates happen (zero when substeps != accumulation steps)
     lr = tf.where(update_cond, lr_t, 0.0)
 
     #gradient accumulation
-    g = self.get_slot(var, 'g') # accumulated gradient
+    g = self.get_slot(var, 'g')  # accumulated gradient
     g_a = grad / math_ops.cast(accumulation_steps, var_dtype)
-    g_t = tf.where(tf.equal(sub_step, 1),
-                    g_a,
-                    g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
+    g_t = tf.where(
+        tf.equal(sub_step, 1), g_a,
+        g + (g_a - g) / math_ops.cast(sub_step, var_dtype))
     g_t = state_ops.assign(g, g_t, use_locking=self._use_locking)
-    
-    
 
     # momentum update
     momentum = coefficients["momentum"]
     momuentum_grad = self.get_slot(var, 'momentum')
-    momuentum_g = tf.where(update_cond, momentum * momuentum_grad + (1 - momentum) * g_t , momuentum_grad)
-    var_update = state_ops.assign_sub(var, lr * momuentum_grad, use_locking=self._use_locking)
-    momuentum_grad = state_ops.assign(momuentum_g, momuentum_grad, use_locking=self._use_locking)
+    momuentum_g = tf.where(update_cond,
+                           momentum * momuentum_grad + (1 - momentum) * g_t,
+                           momuentum_grad)
+    var_update = state_ops.assign_sub(
+        var, lr * momuentum_grad, use_locking=self._use_locking)
+    momuentum_grad = state_ops.assign(
+        momuentum_g, momuentum_grad, use_locking=self._use_locking)
     return control_flow_ops.group(*[var_update, momuentum_grad])
-
 
   def get_config(self):
     config = super(SGDAccumulated, self).get_config()
     config.update({
-        'accumulation_steps': self._serialize_hyperparameter('accumulation_steps'),
-        'learning_rate': self._serialize_hyperparameter('learning_rate'),
-        'decay': self._serialize_hyperparameter('decay'),
-        'momentum': self._serialize_hyperparameter('momentum'),
+        'accumulation_steps':
+            self._serialize_hyperparameter('accumulation_steps'),
+        'learning_rate':
+            self._serialize_hyperparameter('learning_rate'),
+        'decay':
+            self._serialize_hyperparameter('decay'),
+        'momentum':
+            self._serialize_hyperparameter('momentum'),
     })
     return config
 
@@ -215,5 +224,5 @@ class SGDAccumulated(OptimizerV2):
 
 #   train_data = task.build_inputs(task.task_config.train_data)
 #   validation_data = task.build_inputs(task.task_config.train_data)
-  
+
 #   model.compile(optimizer = optimizer)

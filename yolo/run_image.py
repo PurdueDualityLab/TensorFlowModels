@@ -64,7 +64,9 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       # config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"],
+      config_path=[
+          "yolo/configs/experiments/yolov4-csp/inference/512-dbg.yaml"
+      ],
       model_dir='')
   draw_fn = utils.DrawBoxes(
       classes=params.task.model.num_classes,
@@ -73,8 +75,9 @@ if __name__ == "__main__":
       ),
       thickness=1)
 
-
-  image = url_to_image("/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/images/139.jpg")
+  image = url_to_image(
+      "/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/images/139.jpg"
+  )
   save_name = "save.png"
 
   size = params.task.model.input_size

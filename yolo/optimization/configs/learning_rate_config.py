@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Dataclasses for learning rate schedule config."""
 from typing import List, Optional
 
 import dataclasses
 from official.modeling.hyperparams import base_config
 # from official.modeling.optimization.configs import learning_rate_config
-

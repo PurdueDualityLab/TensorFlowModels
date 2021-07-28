@@ -24,7 +24,9 @@ from official.modeling import performance
 from official.core import task_factory
 from yolo.run import load_model
 from yolo.utils.run_utils import prep_gpu
+
 prep_gpu()
+
 
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
@@ -34,7 +36,9 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
+  config_path = [
+      "yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"
+  ]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
@@ -48,7 +52,7 @@ def test_yolo_input_task():
 
   config.train_data.global_batch_size = 64
   config.validation_data.global_batch_size = 64
-  
+
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
 
@@ -65,7 +69,7 @@ def test_yolo_input_task():
   else:
     config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
-    
+
   with tf.device('/CPU:0'):
     train_data = task.build_inputs(config.train_data)
     test_data = task.build_inputs(config.validation_data)
@@ -114,7 +118,7 @@ def test_classification_pipeline():
 import time
 
 
-def test_yolo_pipeline(is_training=True, num = 30):
+def test_yolo_pipeline(is_training=True, num=30):
   dataset, dsp = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
@@ -283,7 +287,7 @@ if __name__ == '__main__':
   # test_ret_pipeline()
   # time_pipeline()
   # test_yolo_pipeline(is_training=True, num = 30)
-  test_yolo_pipeline(is_training=False, num = 11)
+  test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()

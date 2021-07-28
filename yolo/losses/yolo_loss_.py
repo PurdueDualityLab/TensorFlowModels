@@ -15,6 +15,7 @@ import numpy as np
 
 TILE_SIZE = 50
 
+
 @tf.custom_gradient
 def grad_sigmoid(values):
   # this is an identity operation that will
@@ -28,6 +29,7 @@ def grad_sigmoid(values):
 
   return values, delta
 
+
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
   # this applies the sigmoid cross entropy loss
@@ -37,10 +39,8 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   # bce = tf.reduce_sum(tf.square(-y + x), axis=-1)
 
   bce = ks.losses.binary_crossentropy(
-      y, x_prime,      
-      label_smoothing=0.0,
-      from_logits=True)
-      
+      y, x_prime, label_smoothing=0.0, from_logits=True)
+
   def delta(dy):
     # this is a safer version of the sigmoid with binary cross entropy
     # bellow is the mathematic formula reduction that is used to
@@ -79,7 +79,7 @@ def apply_mask(mask, x):
   def delta(dy):
     # mask the incoming derivative as well.
     masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
-    return tf.zeros_like(mask), masked_dy 
+    return tf.zeros_like(mask), masked_dy
 
   return masked, delta
 
@@ -88,7 +88,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
-  
+
   # cast the grid scaling value to a tensorflow data type, in yolo each pixel is
   # used to predict the center of a box, the center must be with in the bounds
   # of representation of each pixel, typically 1/width pixels. Scale_xy, extends
@@ -96,7 +96,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
   # apply the sigmoid
-  pred_xy = tf.math.sigmoid(pred_xy) 
+  pred_xy = tf.math.sigmoid(pred_xy)
 
   # scale the centers and find the offset of each box relative to
   # their center pixel
@@ -124,8 +124,8 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                   max_delta, scale_xy, normalizer):
 
   (scaler, scaled_box, pred_box) = scale_boxes(pred_xy, pred_wh, width, height,
-                                            anchor_grid, grid_points, max_delta,
-                                            scale_xy)
+                                               anchor_grid, grid_points,
+                                               max_delta, scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
     # here we do not propgate the scaling of the prediction through the network
@@ -137,7 +137,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     # dy_scaled *= scaler
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
     dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
-    
+
     # # apply scaling for gradients if scaled boxes are
     # sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
     # dy_xy_ *= sc_xy_
@@ -161,7 +161,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     dy_xy = math_ops.rm_nan_inf(dy_xy)
     delta = tf.cast(max_delta, dy_xy.dtype)
     dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
-             
+
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
         grid_points), 0.0, 0.0, 0.0
 
@@ -184,15 +184,15 @@ def get_predicted_box(width,
   if darknet:
     # if we are using the darknet loss we shoud nto propagate the
     # decoding of the box
-    (scaler, scaled_box, pred_box) = darknet_boxes(pred_xy, pred_wh, width, height,
-                                              anchor_grid, grid_points,
-                                              max_delta, scale_xy, normalizer)
+    (scaler, scaled_box,
+     pred_box) = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+                               grid_points, max_delta, scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
-    (scaler, scaled_box, pred_box) = scale_boxes(pred_xy, pred_wh, width, height,
-                                            anchor_grid, grid_points, max_delta,
-                                            scale_xy)
+    (scaler, scaled_box,
+     pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+                             grid_points, max_delta, scale_xy)
 
   return (scaler, scaled_box, pred_box)
 
@@ -201,7 +201,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
-  
+
   # cast the grid scaling value to a tensorflow data type, in yolo each pixel is
   # used to predict the center of a box, the center must be with in the bounds
   # of representation of each pixel, typically 1/width pixels. Scale_xy, extends
@@ -236,16 +236,16 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
 @tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                             grid_points, max_delta, scale_xy, normalizer):
-  (scaler, scaled_box, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width,
-                                                      height, anchor_grid,
-                                                      grid_points, max_delta,
-                                                      scale_xy)
+  (scaler, scaled_box,
+   pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height,
+                                     anchor_grid, grid_points, max_delta,
+                                     scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
     # dy_scaled *= scaler
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
     dy_xy_, dy_wh_ = tf.split(dy_scaled, 2, axis=-1)
-    
+
     # # apply scaling for gradients if scaled boxes are
     # sc_xy_, sc_wh_ = tf.split(scaler, 2, axis=-1)
     # dy_xy_ *= sc_xy_
@@ -285,17 +285,17 @@ def get_predicted_box_newcords(width,
   if darknet:
     # if we are using the darknet loss we shoud nto propagate the decoding
     # of the box
-    (scaler, scaled_box, pred_box) = darknet_new_coord_boxes(pred_xy, pred_wh, width,
-                                                        height, anchor_grid,
-                                                        grid_points, max_delta,
-                                                        scale_xy, normalizer)
+    (scaler, scaled_box,
+     pred_box) = darknet_new_coord_boxes(pred_xy, pred_wh, width, height,
+                                         anchor_grid, grid_points, max_delta,
+                                         scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of the
     # boxes
-    (scaler, scaled_box, pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width,
-                                                      height, anchor_grid,
-                                                      grid_points, max_delta,
-                                                      scale_xy)
+    (scaler, scaled_box,
+     pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height,
+                                       anchor_grid, grid_points, max_delta,
+                                       scale_xy)
   return (scaler, scaled_box, pred_box)
 
 
@@ -314,7 +314,7 @@ class Yolo_Loss(object):
                obj_normalizer=1.0,
                objectness_smooth=True,
                use_scaled_loss=False,
-               darknet = None, 
+               darknet=None,
                label_smoothing=0.0,
                new_cords=False,
                scale_x_y=1.0,
@@ -435,9 +435,11 @@ class Yolo_Loss(object):
   def avgiou(self, iou):
     # compute the average realtive to non zero locations, so the
     # average is not biased in sparse tensors
-    iou_sum = tf.reduce_sum(iou, axis = tf.range(1, tf.shape(tf.shape(iou))[0]))
+    iou_sum = tf.reduce_sum(iou, axis=tf.range(1, tf.shape(tf.shape(iou))[0]))
     counts = tf.cast(
-      tf.math.count_nonzero(iou, axis = tf.range(1, tf.shape(tf.shape(iou))[0])), iou.dtype)
+        tf.math.count_nonzero(
+            iou, axis=tf.range(1,
+                               tf.shape(tf.shape(iou))[0])), iou.dtype)
     avg_iou = tf.reduce_mean(math_ops.divide_no_nan(iou_sum, counts))
     return tf.stop_gradient(avg_iou)
 
@@ -535,8 +537,17 @@ class Yolo_Loss(object):
     return (pred_boxes_, pred_classes_, pred_conf, pred_classes_max, boxes,
             classes, iou_max_, ignore_mask_, conf_loss_, loss_, count, idx + 1)
 
-  def _tiled_global_box_search(self, pred_boxes, pred_classes, pred_conf, boxes,
-                               classes, true_conf, fwidth, fheight, smoothed, scale = None):
+  def _tiled_global_box_search(self,
+                               pred_boxes,
+                               pred_classes,
+                               pred_conf,
+                               boxes,
+                               classes,
+                               true_conf,
+                               fwidth,
+                               fheight,
+                               smoothed,
+                               scale=None):
 
     # compute the number of boxes and the total number of tiles for the search
     num_boxes = tf.shape(boxes)[-2]
@@ -617,7 +628,7 @@ class Yolo_Loss(object):
     # into the correct ground truth mask, used for iou detection map
     # in the scaled loss and the classification mask in the darknet loss
     num_flatten = tf.shape(preds)[-1]
-    
+
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
     indexes = (indexes + ind_mask) - 1
@@ -686,8 +697,8 @@ class Yolo_Loss(object):
   #       tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
   #   pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-  #   # 5. (box loss) based on input val new_cords decode the box predicitions 
-  #   #    and because we are using the scaled loss, do not change the gradients 
+  #   # 5. (box loss) based on input val new_cords decode the box predicitions
+  #   #    and because we are using the scaled loss, do not change the gradients
   #   #    at all
   #   scale, pred_box, _ = self._decode_boxes(
   #       fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
@@ -712,8 +723,8 @@ class Yolo_Loss(object):
   #   box_loss = tf.cast(tf.reduce_sum(box_loss_, axis = 1), dtype=y_pred.dtype)
   #   box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
-  #   # 6.  (confidence loss) build a selective between the ground truth and the 
-  #   #     iou to take only a certain percent of the iou or the ground truth, 
+  #   # 6.  (confidence loss) build a selective between the ground truth and the
+  #   #     iou to take only a certain percent of the iou or the ground truth,
   #   #     i.e smooth the detection map
   #   iou = tf.clip_by_value(iou, 0.0, 1.0)
   #   smoothed_iou = ((
@@ -731,7 +742,7 @@ class Yolo_Loss(object):
   #   bce = ks.losses.binary_crossentropy(
   #       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
   #   conf_loss = tf.cast(tf.reduce_mean(bce, axis = (1, 2, 3)), dtype=y_pred.dtype)
-    
+
   #   # 7.  (class loss) build the one hot encoded true class values
   #   true_class = tf.one_hot(
   #       tf.cast(true_class, tf.int32),
@@ -771,7 +782,7 @@ class Yolo_Loss(object):
   #   avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
   #   return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj, recall50,
   #           precision50)
-  
+
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
     # training
@@ -801,8 +812,8 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    # 5. (box loss) based on input val new_cords decode the box predicitions 
-    #    and because we are using the scaled loss, do not change the gradients 
+    # 5. (box loss) based on input val new_cords decode the box predicitions
+    #    and because we are using the scaled loss, do not change the gradients
     #    at all
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
@@ -815,7 +826,7 @@ class Yolo_Loss(object):
 
     #    translate ground truth to match predictions
     offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
-    offset = tf.concat([offset, tf.zeros_like(offset)], axis = -1)
+    offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
     true_box -= tf.cast(offset, true_box.dtype)
     true_box = apply_mask(ind_mask, true_box)
     pred_box = apply_mask(ind_mask, pred_box)
@@ -827,8 +838,8 @@ class Yolo_Loss(object):
     box_loss = tf.cast(tf.reduce_sum(box_loss_), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
-    # 6.  (confidence loss) build a selective between the ground truth and the 
-    #     iou to take only a certain percent of the iou or the ground truth, 
+    # 6.  (confidence loss) build a selective between the ground truth and the
+    #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
     iou = tf.clip_by_value(iou, 0.0, 1.0)
     smoothed_iou = ((
@@ -846,14 +857,15 @@ class Yolo_Loss(object):
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = tf.cast(tf.reduce_mean(bce), dtype=y_pred.dtype)
-    
+
     # 7.  (class loss) build the one hot encoded true class values
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
-    true_class = apply_mask(ind_mask,true_class)
-    pred_class = apply_mask(ind_mask,tf.gather_nd(pred_class,inds,batch_dims=1))
+    true_class = apply_mask(ind_mask, true_class)
+    pred_class = apply_mask(ind_mask,
+                            tf.gather_nd(pred_class, inds, batch_dims=1))
 
     #     compute the loss on the classes, apply the same inds mask
     #     and the compute the average of all the values
@@ -862,14 +874,14 @@ class Yolo_Loss(object):
         pred_class,
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    class_loss = apply_mask(tf.squeeze(ind_mask, axis = -1), class_loss)
+    class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
     class_loss = tf.reduce_sum(class_loss)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer #* 0
-    class_loss *= self._cls_normalizer #* 0
-    conf_loss *= self._obj_normalizer #* 0
+    box_loss *= self._iou_normalizer  #* 0
+    class_loss *= self._cls_normalizer  #* 0
+    conf_loss *= self._obj_normalizer  #* 0
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss
@@ -883,8 +895,8 @@ class Yolo_Loss(object):
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj, recall50,
-            precision50)
+    return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj,
+            recall50, precision50)
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. if smoothign is used, they prop the gradient of the sigmoid first
@@ -938,8 +950,12 @@ class Yolo_Loss(object):
       scale = None
     else:
       scale, pred_box, _ = self._decode_boxes(
-          fwidth, fheight, 
-          pred_box, anchor_grid, grid_points, darknet=self._darknet)
+          fwidth,
+          fheight,
+          pred_box,
+          anchor_grid,
+          grid_points,
+          darknet=self._darknet)
       true_box = tf.stop_gradient(true_box * scale)
 
     # 7. compare all the predictions to all the valid or non zero boxes
@@ -959,8 +975,8 @@ class Yolo_Loss(object):
           fwidth,
           fheight,
           smoothed=self._objectness_smooth > 0,
-          scale = scale)
-    else: 
+          scale=scale)
+    else:
       obj_mask = tf.ones_like(true_conf)
 
     # 8. compute the one hot class maps that are used for prediction
@@ -1063,8 +1079,8 @@ class Yolo_Loss(object):
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj, recall50,
-            precision50)
+    return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj,
+            recall50, precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum:
@@ -1072,5 +1088,3 @@ class Yolo_Loss(object):
     else:
       return self.call_darknet(true_counts, inds, y_true, boxes, classes,
                                y_pred)
-
-

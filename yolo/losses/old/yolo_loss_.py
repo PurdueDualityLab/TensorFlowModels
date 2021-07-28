@@ -163,7 +163,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     # apply the configs weight to the propagated gradient
     dy_xy *= tf.cast(normalizer, dy_xy.dtype)
     dy_wh *= tf.cast(normalizer, dy_wh.dtype)
-    
+
     tf.print(tf.reduce_sum(dy_wh), tf.reduce_sum(dy_xy))
 
     # apply the gradient clipping to xy and wh
@@ -302,6 +302,7 @@ def get_predicted_box_newcords(width,
                                                       grid_points, max_delta,
                                                       scale_xy)
   return pred_xy, box_wh, pred_box
+
 
 class Yolo_Loss(object):
 

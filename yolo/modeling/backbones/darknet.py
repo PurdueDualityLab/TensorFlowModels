@@ -669,6 +669,7 @@ def build_darknet(
   model.summary()
   return model
 
+
 # @factory.register_backbone_builder('darknet')
 # def build_darknet(
 #     input_specs: tf.keras.layers.InputSpec,

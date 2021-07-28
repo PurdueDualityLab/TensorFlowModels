@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Exponential moving average optimizer."""
 
 from typing import List, Optional, Text
@@ -132,8 +131,8 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
         strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
 
     ctx = tf.distribute.get_replica_context()
-    return ctx.merge_call(_update, args=(zip(self._average_weights,
-                                             self._model_weights),))
+    return ctx.merge_call(
+        _update, args=(zip(self._average_weights, self._model_weights),))
 
   def swap_weights(self):
     """Swap the average and moving weights.
@@ -152,12 +151,15 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
 
   @tf.function
   def _swap_weights(self):
+
     def fn_0(a, b):
       a.assign_add(b)
       return a
+
     def fn_1(b, a):
       b.assign(a - b)
       return b
+
     def fn_2(a, b):
       a.assign_sub(b)
       return a
@@ -183,7 +185,8 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
         variables to their average.
     """
     assign_op = tf.group([
-        var.assign(self.get_slot(var, 'average')) for var in var_list
+        var.assign(self.get_slot(var, 'average'))
+        for var in var_list
         if var.trainable
     ])
     return assign_op
