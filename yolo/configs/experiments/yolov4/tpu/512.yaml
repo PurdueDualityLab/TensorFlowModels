@@ -77,7 +77,6 @@ task:
       resize: 1.0
       jitter_mosaic: 0.0
       resize_mosaic: 1.0
-      sheer: 0.0
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       mosaic_scale_min: 0.2

@@ -357,55 +357,45 @@ def resize_and_jitter_image(image,
   """
   def cast(values, dtype):
     return [tf.cast(value, dtype) for value in values]
+  if jitter > 0.5 or jitter < 0:
+    raise Exception("maximum change in aspect ratio must be between 0 and 0.5")
 
   with tf.name_scope('resize_and_jitter_image'):
-
-    if jitter > 1 or jitter < 0:
-      raise Exception("maximum change in aspect ratio must be between 0 and 1")
-
-    if tf.cast(random_pad, tf.float32) > 0.0:
-      random_pad = True 
-    else:
-      random_pad = False
-
-    original_dtype = image.dtype
-    original_dims = tf.shape(image)[:2]
+    # cast all parameters to a usable float data type
     jitter = tf.cast(jitter, tf.float32)
-    ow = tf.cast(original_dims[1], tf.float32)
-    oh = tf.cast(original_dims[0], tf.float32)
-    w = tf.cast(desired_size[1], tf.float32)
-    h = tf.cast(desired_size[0], tf.float32)
+    original_dtype, original_dims = image.dtype, tf.shape(image)[:2]
+    ow, oh, w, h = cast([
+      original_dims[1], original_dims[0], desired_size[1], desired_size[0]
+    ], tf.float32)
 
+    # compute the random delta width and height etc. and randomize the 
+    # location of the corner points 
     dw = ow * jitter
     dh = oh * jitter
-    
-    if resize != 1:
-      if resize > 1.0:
-        resize_up = resize if resize > 1.0 else 1/resize
-        max_rdw = ow * (1 - (1 / resize_up)) / 2
-        max_rdh = oh * (1 - (1 / resize_up)) / 2
-      else:
-        max_rdw = 0.0
-        max_rdh = 0.0 
-
-      resize_down = resize if resize < 1.0 else 1/resize
-      min_rdw = ow * (1 - (1 / resize_down)) / 2
-      min_rdh = oh * (1 - (1 / resize_down)) / 2
-
     pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed = seed)
     pright = rand_uniform_strong(-dw, dw, dw.dtype, seed = seed)
     ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed = seed)
     pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed = seed)
 
+    # bounded resizing of the images 
     if resize != 1:
+      max_rdw, max_rdh = 0.0, 0.0 
+      if resize > 1.0:
+        max_rdw = ow * (1 - (1 / resize)) / 2
+        max_rdh = oh * (1 - (1 / resize)) / 2
+
+      resize_down = resize if resize < 1.0 else 1/resize
+      min_rdw = ow * (1 - (1 / resize_down)) / 2
+      min_rdh = oh * (1 - (1 / resize_down)) / 2
+
       pleft += rand_uniform_strong(min_rdw, max_rdw, seed = seed)
       pright += rand_uniform_strong(min_rdw, max_rdw, seed = seed)
       ptop += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
       pbottom += rand_uniform_strong(min_rdh, max_rdh, seed = seed)
 
+    # letter box the image
     if letter_box == True or letter_box is None:
-      image_aspect_ratio = ow/oh 
-      input_aspect_ratio = w/h 
+      image_aspect_ratio, input_aspect_ratio = ow/oh, w/h 
       distorted_aspect = image_aspect_ratio/input_aspect_ratio
 
       delta_h, delta_w = 0.0, 0.0
@@ -427,17 +417,14 @@ def resize_and_jitter_image(image,
       pright = pright - delta_w - pullin_w
       pleft = pleft - delta_w - pullin_w
 
-    # swidth = tf.math.floor(ow - pleft - pright)
-    # sheight = tf.math.floor(oh - ptop - pbottom)
-    # swidth = tf.round(ow - pleft - pright)
-    # sheight = tf.round(oh - ptop - pbottom)
-    # src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
-    #                         [0, 0, oh - 1, ow - 1])
+    # compute the width and height to crop or pad too, and clip all crops to
+    # to be contained within the image
     swidth = ow - pleft - pright
     sheight = oh - ptop - pbottom
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft], 
                             [0, 0, oh, ow])
 
+    # random padding used for mosaic
     h_ = src_crop[2] - src_crop[0]
     w_ = src_crop[3] - src_crop[1]
     if random_pad:
@@ -446,17 +433,20 @@ def resize_and_jitter_image(image,
     else:
       rmw = (swidth - w_) * shiftx
       rmh = (sheight - h_) * shifty
+
+    # cast cropping params to usable dtype
+    src_crop = tf.cast(src_crop, tf.int32)
+
+    # compute padding parmeters
     dst_shape = [rmh,rmw,rmh + h_,rmw + w_]
     ptop, pleft, pbottom, pright = dst_shape
     pad = dst_shape * tf.cast([1, 1, -1, -1], ptop.dtype) 
     pad += tf.cast([0, 0, sheight, swidth], ptop.dtype)
-
-    # src_crop = tf.cast(tf.round(src_crop), tf.int32)
-    # pad = tf.cast(tf.round(pad), tf.int32)
-    src_crop = tf.cast(src_crop, tf.int32)
     pad = tf.cast(pad, tf.int32)
- 
+
     infos = []
+
+    # crop the image to desired size
     cropped_image = tf.slice(image, 
                              [src_crop[0], src_crop[1], 0], 
                              [src_crop[2] - src_crop[0], 
@@ -477,6 +467,7 @@ def resize_and_jitter_image(image,
         cropped_image = tf.image.resize(cropped_image, [h, w], method = method)
       return cropped_image, infos, cast([ow,oh,w,h,ptop,pleft,pbottom,pright],tf.int32)
 
+    # pad the image to desired size
     image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
                                     [pad[1], pad[3]], 
                                     [0, 0]])
@@ -490,7 +481,6 @@ def resize_and_jitter_image(image,
    
     image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
     image_ = tf.cast(image_, original_dtype)
-
     if cut is not None:
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, 
                                     ptop, pleft, pbottom, pright, 
@@ -524,8 +514,7 @@ def build_transform(image,
                     random_pad = False,
                     desired_size = None, 
                     seed = None):
-    # height = tf.cast(tf.shape(image)[0], tf.float32)  # shape(h,w,c)
-    # width = tf.cast(tf.shape(image)[1], tf.float32)
+
     height, width = get_image_shape(image)
     ch = height = tf.cast(height, tf.float32)
     cw = width = tf.cast(width, tf.float32)
@@ -543,14 +532,20 @@ def build_transform(image,
     a = deg_to_rad(tf.random.uniform([], -degrees, degrees, seed = seed))
     cos = tf.math.cos(a)
     sin = tf.math.sin(a)
-    R = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]], [cos, -sin, 
-                                                                          sin, cos])
-    Rb = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]], [cos, sin, 
-                                                                          -sin, cos])
+    R = tf.tensor_scatter_nd_update(R, [[0, 0], 
+                                        [0, 1], 
+                                        [1, 0], 
+                                        [1, 1]], [cos, -sin, 
+                                                  sin,  cos])
+    Rb = tf.tensor_scatter_nd_update(R,[[0, 0], 
+                                        [0, 1], 
+                                        [1, 0], 
+                                        [1, 1]], [ cos, sin, 
+                                                  -sin, cos])
 
     P = tf.eye(3)
-    Px = tf.random.uniform([], -perspective, perspective, seed = seed)  # x perspective (about y)
-    Py = tf.random.uniform([], -perspective, perspective, seed = seed)  # y perspective (about x)
+    Px = tf.random.uniform([], -perspective, perspective, seed = seed)
+    Py = tf.random.uniform([], -perspective, perspective, seed = seed) 
     P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
     Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
 
@@ -560,26 +555,24 @@ def build_transform(image,
     Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
 
     T = tf.eye(3)
-    if (random_pad and s <= 1.0) or (random_pad and s > 1.0 and translate < 0.0):
-        C = Cb = tf.eye(3, dtype = tf.float32)
-        Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width) # x translation (pixels)
-        Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height)# y translation (pixels)
+    if ((random_pad and s <= 1.0) 
+                or (random_pad and s > 1.0 and translate < 0.0)):
+      C = Cb = tf.eye(3, dtype = tf.float32)
+      Tx = tf.random.uniform([], -1, 0, seed = seed) * (cw/s - width)
+      Ty = tf.random.uniform([], -1, 0, seed = seed) * (ch/s - height) 
     else:
-        Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) # x translation (pixels)
-        Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) # y translation (pixels)
+      Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) 
+      Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed = seed) 
 
-        dx = (width - cw/s)/width
-        dy = (height - ch/s)/height 
-        sx = 1 - dx
-        sy = 1 - dy
-        bx = dx/2
-        by = dy/2
+      # center and scale the image such that the window of translation is 
+      # the desired size 
+      dx, dy = (width - cw/s)/width, (height - ch/s)/height 
+      sx, sy = 1 - dx, 1 - dy
+      bx, by = dx/2, dy/2
+      Tx, Ty = bx + (sx * Tx), by + (sy * Ty)
 
-        Tx = bx + (sx * Tx)
-        Ty = by + (sy * Ty)
-
-        Tx *= width
-        Ty *= height
+      Tx *= width
+      Ty *= height
 
     T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
     Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
