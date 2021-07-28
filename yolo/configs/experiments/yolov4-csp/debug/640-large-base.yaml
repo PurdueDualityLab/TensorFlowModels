@@ -83,12 +83,13 @@ task:
         output_resolution: [640, 640]
         max_resolution: 720
         mosaic_frequency: 1.0
+        mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.5, 1.5]
         crop_area: [0.0]
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 128
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
@@ -105,7 +106,7 @@ task:
   annotation_file: null
 trainer:
   train_steps: 281250 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 39
   steps_per_loop: 5000
   summary_interval: 5000
   validation_interval: 10000 #00
