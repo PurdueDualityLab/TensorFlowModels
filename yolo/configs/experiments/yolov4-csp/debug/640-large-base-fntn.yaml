@@ -104,7 +104,7 @@ task:
       best_match_only: True
   weight_decay: 0.0005
   annotation_file: null
-  init_checkpoint: 'gs://cam2-models/yolov4-csp/debug/640-large-base-wd'
+  init_checkpoint: 'gs://cam2-models/yolov4-csp/debug/640-large-base-wd-e1'
   init_checkpoint_modules: 'all'
 trainer:
   train_steps: 140625 # 160 epochs at 64 batchsize -> 500500 * 64/2
