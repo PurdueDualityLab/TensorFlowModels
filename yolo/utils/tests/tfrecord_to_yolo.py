@@ -93,9 +93,9 @@ class DataDecoder(hyperparams.OneOfConfig):
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   global_batch_size: int = 1
-  # input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
   tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
-  tfds_name: str = "coco"
+  tfds_name: str = "" #"coco"
   tfds_split: str = "validation"
   is_training: bool = False
   dtype: str = 'float16'
@@ -170,8 +170,8 @@ def write_to_folder(
   os.mkdir(f"{path}images/")
   os.mkdir(f"{path}labels/")
 
-  lim = 10
-  nte = False
+  lim = 5000
+  nte = True
   for k, sample in enumerate(dataset):
     if k > lim:
       break

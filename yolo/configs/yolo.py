@@ -124,6 +124,7 @@ class ModelConfig(hyperparams.Config):
 class Mosaic(hyperparams.Config):
   max_resolution: int = 640
   mosaic_frequency: float = 0.75
+  mixup_frequency: float = 0.0
   crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.2, 1.0])
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [1.0, 1.0])

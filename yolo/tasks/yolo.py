@@ -172,6 +172,7 @@ class YoloTask(base_task.Task):
         output_size=osize,
         max_resolution=params.parser.mosaic.max_resolution,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
+        mixup_frequency=params.parser.mosaic.mixup_frequency,
         crop_area=params.parser.mosaic.crop_area,
         crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
@@ -180,6 +181,7 @@ class YoloTask(base_task.Task):
         random_pad=params.parser.random_pad,
         translate=params.parser.aug_rand_translate,
         resize=rsize,
+        seed=params.seed, 
         area_thresh=params.parser.area_thresh)
 
     parser = yolo_input.Parser(
@@ -216,6 +218,7 @@ class YoloTask(base_task.Task):
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
+        seed=params.seed, 
         dtype=params.dtype)
 
     reader = input_reader.InputReader(

@@ -35,7 +35,7 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
                            dtype=dtype)
 
 
-def rand_scale(val, dtype=tf.float32):
+def rand_scale(val, dtype=tf.float32, seed=None):
   """
   Generates a random number for the scale. Half the time, the value is between
   [1.0, val) with uniformly distributed probability. The other half, the value
@@ -51,7 +51,7 @@ def rand_scale(val, dtype=tf.float32):
     The random scale.
   """
   scale = rand_uniform_strong(1.0, val, dtype=dtype)
-  do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)
+  do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32, seed=seed)
   if (do_ret == 1):
     return scale
   return 1.0 / scale
@@ -458,6 +458,7 @@ def resize_and_jitter_image(image,
         w = tf.cast(tf.round((w_ * w) / swidth), tf.int32)
         h = tf.cast(tf.round((h_ * h) / sheight), tf.int32)
         cropped_image = tf.image.resize(cropped_image, [h, w], method=method)
+        cropped_image = tf.cast(cropped_image, original_dtype)
       return cropped_image, infos, cast(
           [ow, oh, w, h, ptop, pleft, pbottom, pright], tf.int32)
 
