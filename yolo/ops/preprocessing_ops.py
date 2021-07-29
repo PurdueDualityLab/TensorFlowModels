@@ -1060,10 +1060,10 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     g = tf.cast(offset, x.dtype)
     gain = tf.cast(tf.convert_to_tensor([width, height]), x.dtype)
     gxy = tf.cast(tf.convert_to_tensor([x, y]), x.dtype)
-    gxyi = gxy - tf.floor(gxy)
     clamp = lambda x, ma: tf.maximum(
         tf.minimum(x, tf.cast(ma, x.dtype)), tf.zeros_like(x))
 
+    gxyi = gxy - tf.floor(gxy)
     ps = ((gxyi < g) & (gxy > 1.))
     ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
 
