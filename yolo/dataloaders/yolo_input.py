@@ -401,7 +401,12 @@ class Parser(parser.Parser):
       delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
                                                     self._aug_rand_hue, 
                                                     seed = self._seed)
-      image = tf.image.adjust_hue(image, delta)
+      hsv = tf.image.rgb_to_hsv(image)
+      h, s, v = tf.split(hsv, 3, axis = -1)
+      h *= (1 + delta)
+      hsv = tf.concat([h, s, v], axis = -1)
+      image = tf.image.hsv_to_rgb(hsv)
+
     if self._aug_rand_saturation > 0.0:
       # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
       #                                       seed = self._seed)
