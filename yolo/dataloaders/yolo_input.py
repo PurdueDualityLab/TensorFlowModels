@@ -342,8 +342,7 @@ class Parser(parser.Parser):
     data = self.reorg91to80(data)
 
     # initialize the shape constants
-    image = tf.cast(data['image'], self._dtype)
-    image = image / 255
+    image = data['image']
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
@@ -397,34 +396,34 @@ class Parser(parser.Parser):
 
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
-    
-    hsv = tf.image.rgb_to_hsv(image)
-    h, s, v = tf.split(hsv, 3, axis = -1)
+    image = tf.cast(image, self._dtype)
+    image = image / 255
     if self._aug_rand_hue > 0.0:
       delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
                                                     self._aug_rand_hue, 
                                                     seed = self._seed)
-      h *= (1 + delta)
-      # image = tf.image.adjust_hue(image, delta)
+      # hsv = tf.image.rgb_to_hsv(image)
+      # h, s, v = tf.split(hsv, 3, axis = -1)
+      # h *= (1 + delta)
+      # hsv = tf.concat([h, s, v], axis = -1)
+      # image = tf.image.hsv_to_rgb(hsv)
+      image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
       # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
       #                                       seed = self._seed)
       delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_saturation,
                                                         self._aug_rand_saturation, 
                                                         seed = self._seed)
-      # image = tf.image.adjust_saturation(image, delta)
-      s *= delta
+      image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness > 0.0:
       # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
       #                                       seed = self._seed)
       delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_brightness,
                                                         self._aug_rand_brightness, 
                                                         seed = self._seed)
-      #image *= delta
-      v *= delta 
+      image *= delta
+      
     # clip the values of the image between 0.0 and 1.0
-    hsv = tf.concat([h, s, v], axis = -1)
-    image = tf.image.hsv_to_rgb(hsv)
     image = tf.clip_by_value(image, 0.0, 1.0)
 
     # cast the image to the selcted datatype
