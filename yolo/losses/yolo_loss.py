@@ -717,9 +717,9 @@ class Yolo_Loss(object):
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss_ = self.box_loss(true_box, pred_box, darknet=False)
-    box_loss_ = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss_)
-    box_loss = tf.cast(tf.reduce_sum(box_loss_), dtype=y_pred.dtype)
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the
@@ -763,9 +763,9 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer  #* 0
-    class_loss *= self._cls_normalizer  #* 0
-    conf_loss *= self._obj_normalizer  #* 0
+    box_loss *= self._iou_normalizer 
+    class_loss *= self._cls_normalizer 
+    conf_loss *= self._obj_normalizer 
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss
@@ -773,7 +773,7 @@ class Yolo_Loss(object):
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
-    sigmoid_conf = tf.sigmoid(pred_conf)
+    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
     # 10. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)

@@ -114,7 +114,7 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: False
+      trainable_weights_only: True
       dynamic_decay: True
     learning_rate:
       type: cosine_epoch
