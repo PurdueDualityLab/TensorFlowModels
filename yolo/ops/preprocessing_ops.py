@@ -1092,7 +1092,6 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     num_written += 1
   return ind_val, ind_sample, num_written
 
-
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):
   """
