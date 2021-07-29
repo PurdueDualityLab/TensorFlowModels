@@ -119,14 +119,21 @@ class Mosaic(object):
     return image, [info]
 
   def _crop_image(self, image, crop_area):
-    image, info = preprocessing_ops.random_crop_image(
-        image,
-        aspect_ratio_range=[
-            self._output_size[1] / self._output_size[0],
-            self._output_size[1] / self._output_size[0]
-        ],
-        seed = self._seed, 
-        area_range=crop_area)
+    # image, info = preprocessing_ops.random_crop_image(
+    #     image,
+    #     aspect_ratio_range=[
+    #         self._output_size[1] / self._output_size[0],
+    #         self._output_size[1] / self._output_size[0]
+    #     ],
+    #     seed = self._seed, 
+    #     area_range=crop_area)
+    scale = preprocessing_ops.rand_uniform_strong(
+        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
+    height, width = preprocessing_ops.get_image_shape(image)
+    width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
+    height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
+    image, info = preprocessing_ops.random_window_crop(
+        image, height, width, translate=1.0)
     return image, info
 
   def _gen_blank_info(self, image):
@@ -165,6 +172,7 @@ class Mosaic(object):
         image, info = self._crop_image(image, [0.25, 1.0])
       infos.append(info)
       random_crop = 0.0
+      letter_box = None
 
     image, infos_, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],

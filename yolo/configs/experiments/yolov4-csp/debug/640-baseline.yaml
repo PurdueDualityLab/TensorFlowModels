@@ -67,9 +67,9 @@ task:
       max_num_instances: 300
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 1.7
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
+      aug_rand_saturation: 0.7
+      aug_rand_brightness: 0.4
+      aug_rand_hue: 0.015
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
@@ -112,10 +112,6 @@ trainer:
   validation_interval: 10000 #00
   checkpoint_interval: 5000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9999
-    #   trainable_weights_only: True
-    #   dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:

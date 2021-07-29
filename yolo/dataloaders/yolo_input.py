@@ -403,12 +403,18 @@ class Parser(parser.Parser):
                                                     seed = self._seed)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
-                                            seed = self._seed)
+      # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+      #                                       seed = self._seed)
+      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_saturation,
+                                                        self._aug_rand_saturation, 
+                                                        seed = self._seed)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
-                                            seed = self._seed)
+      # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+      #                                       seed = self._seed)
+      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_brightness,
+                                                        self._aug_rand_brightness, 
+                                                        seed = self._seed)
       image *= delta
     # clip the values of the image between 0.0 and 1.0
     image = tf.clip_by_value(image, 0.0, 1.0)

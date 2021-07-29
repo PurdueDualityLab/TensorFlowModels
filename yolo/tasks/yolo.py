@@ -291,11 +291,10 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
+    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
-    else:
-      num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-
+      
     with tf.GradientTape() as tape:
       # compute a prediction
       y_pred = model(image, training=True)
