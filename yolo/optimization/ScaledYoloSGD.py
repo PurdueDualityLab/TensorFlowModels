@@ -12,21 +12,6 @@ import tensorflow as tf
 
 __all__ = ['SGD']
 
-class _UnwrapPreventer(object):
-  """Wrapper that DistributionStrategy will not unwrap.
-  Typically, DistributionStrategy will unwrap values when going from a cross-
-  replica context to a replica context via `call_for_each_replica`. This class
-  is a wrapper that DistributionStrategy will not unwrap, so it can be used to
-  prevent it from unwrapping a value.
-  TODO(reedwm): Find/implement a better way of preventing values from being
-  unwrapped by DistributionStrategy
-  """
-
-  __slots__ = ['value']
-
-  def __init__(self, value):
-    self.value = value
-
 @keras_export("keras.optimizers.SGD")
 class ScaledYoloSGD(optimizer_v2.OptimizerV2):
   r"""Gradient descent (with momentum) optimizer.
@@ -92,43 +77,56 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
 
   def __init__(self,
                learning_rate=0.01,
-               momentum=0.0,
+               momentum=0.937,
+               momentum_start=0.9,
+               warmup_steps=1000,
                nesterov=False,
                name="SGD",
                **kwargs):
     super(ScaledYoloSGD, self).__init__(name, **kwargs)
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
+    self._set_hyper("default_learning_rate", kwargs.get("lr", learning_rate))
+    self._set_hyper("bias_learning_rate", kwargs.get("lr", learning_rate))
+
     self._set_hyper("decay", self._initial_decay)
-    self._names = None
 
     self._momentum = False
     if isinstance(momentum, ops.Tensor) or callable(momentum) or momentum > 0:
       self._momentum = True
     if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
       raise ValueError("`momentum` must be between [0, 1].")
+
     self._set_hyper("momentum", momentum)
+    self._set_hyper("momentum_start", momentum_start)
+    self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
 
     self.nesterov = nesterov
 
-    self._weight_up = False 
-    self._biases_up = False 
-    self._other_up = False
-
-  def _set_model_names(self, names):
-    self._names = names
-    return
+  def set_bias_lr(self, lr):
+    return self._set_hyper("bias_learning_rate", lr)
 
   def _create_slots(self, var_list):
     if self._momentum:
       for var in var_list:
         self.add_slot(var, "momentum")
 
+  def _get_momentum(self, iteration):
+    momentum = self._get_hyper("momentum")
+    momentum_start = self._get_hyper("momentum_start")
+    momentum_warm_up_steps = tf.cast(
+        self._get_hyper("warmup_steps"), iteration.dtype)
+    value = tf.cond(
+        (iteration - momentum_warm_up_steps) < 0,
+        true_fn=lambda: (momentum_start +
+                         (tf.cast(iteration, momentum.dtype) *
+                          (momentum - momentum_start) / tf.cast(
+                              momentum_warm_up_steps, momentum.dtype))),
+        false_fn=lambda: momentum)
+    return value
+
   def _momentum_t(self, var_dtype):
     """Get decayed learning rate as a Tensor with dtype=var_dtype."""
-    momentum_t = self._get_hyper("momentum", var_dtype)
-    if isinstance(momentum_t, learning_rate_schedule.LearningRateSchedule):
-      local_step = tf.cast(self.iterations, var_dtype)
-      momentum_t = tf.cast(momentum_t(local_step), var_dtype)
+    momentum_t = tf.cast(self._get_momentum(self.iterations), var_dtype)
     return momentum_t
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
@@ -186,29 +184,17 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
     return config
 
   def apply_gradients(self, grads_and_vars, name = None, experimental_aggregate_gradients=True):
+    if name != "bias":
+      self._set_hyper("learning_rate", self._get_hyper("default_learning_rate"))
+    else:
+      self._set_hyper("learning_rate", self._get_hyper("bias_learning_rate"))
+
+    results = super().apply_gradients(grads_and_vars, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
     
-    grads_and_vars = tuple(grads_and_vars)
-    grads = [g for g, _ in grads_and_vars]
-    wrapped_vars = _UnwrapPreventer([v for _, v in grads_and_vars])
+    if name == "weights" or name == "bias":
+      self.iterations.assign_add(-1)
 
-    bias = []
-    weights = []
-    other = []
-    for var, grad, name in zip(wrapped_vars.value, grads, self._names):
-      if "bias" in name:
-        bias.append((grad, var))
-      elif "beta" in name:
-        bias.append((grad, var))
-      elif "kernel" in name or "weight" in name:
-        weights.append((grad, var))
-      else:
-        other.append((grad, var))
-
-
-    super().apply_gradients(weights, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
-    super().apply_gradients(bias, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
-    super().apply_gradients(other, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
-    return #super().apply_gradients(zipped, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
+    return results
 
 
 # if __name__ == "__main__":

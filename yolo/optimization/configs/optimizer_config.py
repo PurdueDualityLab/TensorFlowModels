@@ -89,4 +89,6 @@ class ScaledYoloSGDConfig(BaseOptimizerConfig):
   name: str = "SGD"
   decay: float = 0.0
   nesterov: bool = False
-  momentum: float = 0.0
+  momentum_start: float = 0.0
+  momentum: float = 0.8
+  warmup_steps: int = 1000
