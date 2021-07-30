@@ -130,7 +130,7 @@ trainer:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 2812 
+        warmup_steps: 5625 
         name: SGD
     warmup:
       type: 'linear'
