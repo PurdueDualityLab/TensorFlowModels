@@ -11,6 +11,7 @@ from yolo.modeling.backbones.darknet import Darknet
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
+from yolo.modeling.layers import nn_blocks
 
 # static base Yolo Models that do not require configuration
 # similar to a backbone model id.
@@ -135,3 +136,60 @@ class Yolo(ks.Model):
   @classmethod
   def from_config(cls, config):
     return cls(**config)
+
+  # def get_grouped_train_vars(self, train_vars, gradients):
+  #   """Sequence of trainable variables owned by this module and its submodules.
+  #   Note: this method uses reflection to find variables on the current instance
+  #   and submodules. For performance reasons you may wish to cache the result
+  #   of calling this method if you don't expect the return value to change.
+  #   Returns:
+  #     A sequence of variables for the current module (sorted by attribute
+  #     name) followed by variables from all submodules recursively (breadth
+  #     first).
+  #   """
+  #   # def predicate(x):
+  #   #   return isinstance(x, tf.Variable) and getattr(x, "trainable", False)
+
+  #   # gen = self._flatten(predicate=predicate)
+  #   gen = train_vars
+
+  #   bias = []
+  #   weights = []
+  #   other = []
+  #   zipped = []
+  #   for var, grad in zip(train_vars, gradients):
+  #     if "bias" in var.name:
+  #       bias.append((grad, var))
+  #     elif "beta" in var.name:
+  #       bias.append((grad, var))
+  #     elif "kernel" in var.name or "weight" in var.name:
+  #       weights.append((grad, var))
+  #     else:
+  #       other.append((grad, var))
+  #     zipped.append((grad, var))
+
+  #   tf.print(len(bias), len(weights), len(other))
+  #   return {"weights":iter(weights), 
+  #           "bias":iter(bias), 
+  #           "other":iter(other)}, iter(zipped)
+  def train_var_names(self, train_vars):
+    """Sequence of trainable variables owned by this module and its submodules.
+    Note: this method uses reflection to find variables on the current instance
+    and submodules. For performance reasons you may wish to cache the result
+    of calling this method if you don't expect the return value to change.
+    Returns:
+      A sequence of variables for the current module (sorted by attribute
+      name) followed by variables from all submodules recursively (breadth
+      first).
+    """
+    # def predicate(x):
+    #   return isinstance(x, tf.Variable) and getattr(x, "trainable", False)
+
+    # gen = self._flatten(predicate=predicate)
+    gen = train_vars
+
+    names = []
+    for var in train_vars:
+      names.append(var.name.split("/")[-1].split(":")[-2])
+
+    return names

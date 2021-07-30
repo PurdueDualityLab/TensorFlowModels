@@ -73,3 +73,20 @@ class SGDMomentumWarmupConfig(BaseOptimizerConfig):
   momentum_start: float = 0.0
   momentum: float = 0.9
   warmup_steps: int = 1000
+
+@dataclasses.dataclass
+class ScaledYoloSGDConfig(BaseOptimizerConfig):
+  """Configuration for SGD optimizer.
+
+  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+
+  Attributes:
+    name: name of the optimizer.
+    decay: decay rate for SGD optimizer.
+    nesterov: nesterov for SGD optimizer.
+    momentum: momentum for SGD optimizer.
+  """
+  name: str = "SGD"
+  decay: float = 0.0
+  nesterov: bool = False
+  momentum: float = 0.0

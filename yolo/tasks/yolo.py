@@ -30,6 +30,7 @@ from collections import defaultdict
 from typing import Optional
 from official.core import config_definitions
 from official.modeling import optimization
+from yolo import optimization as yolo_opt
 from official.modeling import performance
 
 OptimizationConfig = optimization.OptimizationConfig
@@ -95,6 +96,7 @@ class YoloTask(base_task.Task):
     self._bias_optimizer = None
 
     # self._test_var = tf.Variable(0, trainable=False)
+    self._var_names = []
     return
 
   def build_model(self):
@@ -123,6 +125,8 @@ class YoloTask(base_task.Task):
 
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales)
+
+    self._var_names = model.train_var_names(model.trainable_variables)
     self._loss_dict = losses
     return model
 
@@ -295,7 +299,7 @@ class YoloTask(base_task.Task):
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
       
-    with tf.GradientTape() as tape:
+    with tf.GradientTape(persistent=False) as tape:
       # compute a prediction
       y_pred = model(image, training=True)
 
@@ -327,17 +331,28 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
-    if self._bias_optimizer is None:
-      optimizer.apply_gradients(zip(gradients, train_vars))
-    else:
-      bias_grad = []
-      bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
-      for i in range(model.head.num_heads):
-        bias_grad.append(gradients[-(2 * i + 1)])
-        gradients[-(2 * i + 1)] *= 0
+    # hold = optimizer
+    # if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+    #   hold = optimizer.inner_optimizer
+    # elif isinstance(optimizer, optimization.ExponentialMovingAverage):
+    #   hold = optimizer._optimizer
 
-      self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
-      optimizer.apply_gradients(zip(gradients, train_vars))
+
+    # if isinstance(hold, yolo_opt.ScaledYoloSGD):
+    #   hold._set_model_names(model.train_var_names(train_vars))
+
+    optimizer.apply_gradients(zip(gradients, train_vars))
+    # if self._bias_optimizer is None:
+    #   # optimizer.apply_gradients(zip(gradients, train_vars))
+    # else:
+    #   bias_grad = []
+    #   bias = [train_vars[-(2 * i + 1)] for i in range(model.head.num_heads)]
+    #   for i in range(model.head.num_heads):
+    #     bias_grad.append(gradients[-(2 * i + 1)])
+    #     gradients[-(2 * i + 1)] *= 0
+
+    #   self._bias_optimizer.apply_gradients(zip(iter(bias_grad), iter(bias)))
+    #   optimizer.apply_gradients(zip(gradients, train_vars))
 
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
@@ -584,43 +599,31 @@ class YoloTask(base_task.Task):
                    ckpt_dir_or_file)
 
   # # may need to comment it out
-  # def create_optimizer(self, optimizer_config: OptimizationConfig,
-  #                      runtime_config: Optional[RuntimeConfig] = None):
-  #   if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
-  #     opta = super().create_optimizer(optimizer_config, runtime_config)
-
-  #     if isinstance(opta, optimization.ExponentialMovingAverage):
-  #       optb = opta._optimizer
-  #     elif isinstance(opta, tf.keras.mixed_precision.LossScaleOptimizer):
-  #       optb = opta.inner_optimizer
-  #     else:
-  #       optb = opta
-
-  #     if hasattr(optb, "_set_bias_lr"):
-  #       optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
-  #       opt_factory = optimization.OptimizerFactory(optimizer_config)
-  #       bias_lr = opt_factory.build_learning_rate()
-  #       optb._set_bias_lr(bias_lr,
-  #         (self.task_config.model.num_classes +
-  #          5) * self.task_config.model.boxes_per_scale )
-
-  #     return opta
-  #   else:
-  #     return super().create_optimizer(optimizer_config, runtime_config)
-
   def create_optimizer(self,
                        optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
-    if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
-      opta = super().create_optimizer(optimizer_config, runtime_config)
-      optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
-      # revert back comment the line bellow
-      optimizer_config.ema = None
-      optb = super().create_optimizer(optimizer_config, runtime_config)
-      self._bias_optimizer = optb
-      return opta
-    else:
-      return super().create_optimizer(optimizer_config, runtime_config)
+    # if self.task_config.model.smart_bias and self.task_config.smart_bias_lr > 0.0:
+    #   opta = super().create_optimizer(optimizer_config, runtime_config)
+    #   optimizer_config.warmup.linear.warmup_learning_rate = self.task_config.smart_bias_lr
+    #   # revert back comment the line bellow
+    #   optimizer_config.ema = None
+    #   optb = super().create_optimizer(optimizer_config, runtime_config)
+    #   self._bias_optimizer = optb
+    #   return opta
+    # else:
+    optimizer = super().create_optimizer(optimizer_config, runtime_config)
+
+    hold = optimizer
+    if isinstance(optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
+      hold = optimizer.inner_optimizer
+    elif isinstance(optimizer, optimization.ExponentialMovingAverage):
+      hold = optimizer._optimizer
+
+
+    if isinstance(hold, yolo_opt.ScaledYoloSGD):
+      hold._set_model_names(self._var_names)
+
+    return optimizer
 
 
 if __name__ == '__main__':

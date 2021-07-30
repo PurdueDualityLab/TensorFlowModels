@@ -168,8 +168,8 @@ trainer:
         decay_steps: 556875
         steps_per_epoch: 1875
     optimizer:
-      type: sgd
-      sgd:
+      type: scaled_sgd
+      scaled_sgd:
         momentum: 0.937
         nesterov: True
         name: SGD

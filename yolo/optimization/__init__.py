@@ -19,3 +19,4 @@ from yolo.optimization.configs.optimization_config import *
 from yolo.optimization.configs.optimizer_config import *
 from official.modeling.optimization.ema_optimizer import ExponentialMovingAverage
 from official.modeling.optimization.optimizer_factory import OptimizerFactory
+from yolo.optimization.ScaledYoloSGD import ScaledYoloSGD
