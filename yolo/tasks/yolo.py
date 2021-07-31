@@ -349,7 +349,7 @@ class YoloTask(base_task.Task):
     else:
       optimizer.apply_gradients(gradvar, name = "other")
 
-    tf.print(optimizer.iterations, loss_metrics['global']['total_loss'])
+    # tf.print(optimizer.iterations, loss_metrics['global']['total_loss'])
 
     logs = {self.loss: loss_metrics['global']['total_loss'],
             "iteration": tf.cast(optimizer.iterations, tf.float32)}
