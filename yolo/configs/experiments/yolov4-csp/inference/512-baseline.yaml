@@ -1,26 +1,26 @@
 runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
+  # loss_scale: "dynamic"
   num_gpus: 2
 task:
   smart_bias_lr: 0.1
   model:
     base:
-      # backbone:
-      #   type: 'darknet'
-      #   darknet:
-      #     model_id: 'altered_cspdarknet53'
-      # decoder:
-      #   version: v4
-      #   type: csp
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknettiny'
+          model_id: 'altered_cspdarknet53'
       decoder:
         version: v4
-        type: tiny
+        type: csp
+      # backbone:
+      #   type: 'darknet'
+      #   darknet:
+      #     model_id: 'cspdarknettiny'
+      # decoder:
+      #   version: v4
+      #   type: tiny
       darknet_weights_file: 'cache://yolov4-csp.weights'
       darknet_weights_cfg: 'cache://yolov4-csp.cfg'
     num_classes: 80

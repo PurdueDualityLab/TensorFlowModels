@@ -345,7 +345,7 @@ class YoloTask(base_task.Task):
       #optimizer.iterations.assign(iteration)
       optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
       optimizer.update_average(optimizer.iterations)
-    elif self.task_config.model.smart_bias and isinstance(optimizer._optimizer, 
+    elif self.task_config.model.smart_bias and isinstance(optimizer, 
                                 optimization.ScaledYoloSGD.ScaledYoloSGD):
       #iteration = optimizer.iterations
       optimizer.apply_gradients(group_grads["weights"], name = "weights")
