@@ -1,0 +1,2114 @@
+2021-07-31 07:21:31.907768: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcudart.so.11.0
+2021-07-31 07:21:34.228353: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcuda.so.1
+2021-07-31 07:21:37.582513: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.583465: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 0 with properties: 
+pciBusID: 0000:00:04.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:37.583595: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.584571: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 1 with properties: 
+pciBusID: 0000:00:05.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:37.584692: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.585635: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 2 with properties: 
+pciBusID: 0000:00:06.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:37.585704: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.586533: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 3 with properties: 
+pciBusID: 0000:00:07.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:37.586592: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcudart.so.11.0
+2021-07-31 07:21:37.590191: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcublas.so.11
+2021-07-31 07:21:37.590315: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcublasLt.so.11
+2021-07-31 07:21:37.591709: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcufft.so.10
+2021-07-31 07:21:37.592178: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcurand.so.10
+2021-07-31 07:21:37.595392: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcusolver.so.10
+2021-07-31 07:21:37.596170: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcusparse.so.11
+2021-07-31 07:21:37.596373: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcudnn.so.8
+2021-07-31 07:21:37.596482: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.597567: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.598556: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.599570: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.600603: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.601610: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.602579: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.603577: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:37.604468: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1871] Adding visible gpu devices: 0, 1, 2, 3
+2021-07-31 07:21:37.605088: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-07-31 07:21:38.015335: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.016272: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 0 with properties: 
+pciBusID: 0000:00:04.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:38.016457: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.017324: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 1 with properties: 
+pciBusID: 0000:00:05.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:38.017429: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.018288: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 2 with properties: 
+pciBusID: 0000:00:06.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:38.018362: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.019250: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1733] Found device 3 with properties: 
+pciBusID: 0000:00:07.0 name: Tesla T4 computeCapability: 7.5
+coreClock: 1.59GHz coreCount: 40 deviceMemorySize: 14.75GiB deviceMemoryBandwidth: 298.08GiB/s
+2021-07-31 07:21:38.019337: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.020232: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.021148: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.022282: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.023210: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.024138: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.025145: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.026235: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:38.027211: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1871] Adding visible gpu devices: 0, 1, 2, 3
+2021-07-31 07:21:38.027316: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcudart.so.11.0
+2021-07-31 07:21:39.500408: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1258] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-07-31 07:21:39.500464: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1264]      0 1 2 3 
+2021-07-31 07:21:39.500474: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1277] 0:   N Y N N 
+2021-07-31 07:21:39.500480: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1277] 1:   Y N N N 
+2021-07-31 07:21:39.500486: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1277] 2:   N N N Y 
+2021-07-31 07:21:39.500492: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1277] 3:   N N Y N 
+2021-07-31 07:21:39.500881: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.502058: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.503041: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.504051: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.505101: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.506020: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.506933: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.507949: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.508936: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.509792: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1418] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 13837 MB memory) -> physical GPU (device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5)
+2021-07-31 07:21:39.510316: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.511263: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1418] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:1 with 13837 MB memory) -> physical GPU (device: 1, name: Tesla T4, pci bus id: 0000:00:05.0, compute capability: 7.5)
+2021-07-31 07:21:39.512178: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.513074: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1418] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:2 with 13837 MB memory) -> physical GPU (device: 2, name: Tesla T4, pci bus id: 0000:00:06.0, compute capability: 7.5)
+2021-07-31 07:21:39.513891: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:39.514797: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1418] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:3 with 13837 MB memory) -> physical GPU (device: 3, name: Tesla T4, pci bus id: 0000:00:07.0, compute capability: 7.5)
+0it [00:00, ?it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (1480 found, 0 missing, 16 empty, 0 duplicate, for 118287 images): 1496it [00:00, 14952.28it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (2977 found, 0 missing, 33 empty, 0 duplicate, for 118287 images): 3010it [00:00, 15006.17it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (4463 found, 0 missing, 43 empty, 0 duplicate, for 118287 images): 4506it [00:00, 14990.16it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (5948 found, 0 missing, 61 empty, 0 duplicate, for 118287 images): 6009it [00:00, 14998.72it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (7445 found, 0 missing, 76 empty, 0 duplicate, for 118287 images): 7521it [00:00, 15032.28it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (8928 found, 0 missing, 88 empty, 0 duplicate, for 118287 images): 9016it [00:00, 15007.41it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (10397 found, 0 missing, 100 empty, 0 duplicate, for 118287 images): 10497it [00:00, 14946.31it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (11816 found, 0 missing, 111 empty, 0 duplicate, for 118287 images): 11927it [00:00, 14744.46it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (13309 found, 0 missing, 126 empty, 0 duplicate, for 118287 images): 13435it [00:00, 14842.32it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (14812 found, 0 missing, 140 empty, 0 duplicate, for 118287 images): 14952it [00:01, 14937.48it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (16310 found, 0 missing, 154 empty, 0 duplicate, for 118287 images): 16464it [00:01, 14989.95it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (17819 found, 0 missing, 166 empty, 0 duplicate, for 118287 images): 17985it [00:01, 15054.27it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (19330 found, 0 missing, 182 empty, 0 duplicate, for 118287 images): 19512it [00:01, 15116.14it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (20836 found, 0 missing, 200 empty, 0 duplicate, for 118287 images): 21036it [00:01, 15150.06it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (22342 found, 0 missing, 214 empty, 0 duplicate, for 118287 images): 22556it [00:01, 15164.98it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (23850 found, 0 missing, 225 empty, 0 duplicate, for 118287 images): 24075it [00:01, 15170.82it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (25346 found, 0 missing, 242 empty, 0 duplicate, for 118287 images): 25588it [00:01, 15104.88it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (26847 found, 0 missing, 255 empty, 0 duplicate, for 118287 images): 27102it [00:01, 15113.49it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (28344 found, 0 missing, 268 empty, 0 duplicate, for 118287 images): 28612it [00:01, 15097.96it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (29843 found, 0 missing, 278 empty, 0 duplicate, for 118287 images): 30121it [00:02, 15069.30it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (31338 found, 0 missing, 292 empty, 0 duplicate, for 118287 images): 31630it [00:02, 15073.36it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (32835 found, 0 missing, 302 empty, 0 duplicate, for 118287 images): 33137it [00:02, 15018.23it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (34327 found, 0 missing, 312 empty, 0 duplicate, for 118287 images): 34639it [00:02, 14977.18it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (35812 found, 0 missing, 325 empty, 0 duplicate, for 118287 images): 36137it [00:02, 14873.09it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (37293 found, 0 missing, 332 empty, 0 duplicate, for 118287 images): 37625it [00:02, 14824.48it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (38767 found, 0 missing, 343 empty, 0 duplicate, for 118287 images): 39110it [00:02, 14830.63it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (40257 found, 0 missing, 362 empty, 0 duplicate, for 118287 images): 40619it [00:02, 14906.24it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (41746 found, 0 missing, 370 empty, 0 duplicate, for 118287 images): 42116it [00:02, 14923.19it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (43251 found, 0 missing, 381 empty, 0 duplicate, for 118287 images): 43632it [00:02, 14992.33it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (44743 found, 0 missing, 398 empty, 0 duplicate, for 118287 images): 45141it [00:03, 15021.45it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (46247 found, 0 missing, 412 empty, 0 duplicate, for 118287 images): 46659it [00:03, 15066.72it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (47741 found, 0 missing, 425 empty, 0 duplicate, for 118287 images): 48166it [00:03, 15048.38it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (49229 found, 0 missing, 445 empty, 0 duplicate, for 118287 images): 49674it [00:03, 15056.52it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (50718 found, 0 missing, 462 empty, 0 duplicate, for 118287 images): 51180it [00:03, 15015.46it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (52213 found, 0 missing, 474 empty, 0 duplicate, for 118287 images): 52687it [00:03, 15030.83it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (53733 found, 0 missing, 491 empty, 0 duplicate, for 118287 images): 54224it [00:03, 15129.57it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (55236 found, 0 missing, 502 empty, 0 duplicate, for 118287 images): 55738it [00:03, 15119.56it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (56733 found, 0 missing, 521 empty, 0 duplicate, for 118287 images): 57254it [00:03, 15130.47it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (58236 found, 0 missing, 532 empty, 0 duplicate, for 118287 images): 58768it [00:03, 15115.88it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (59738 found, 0 missing, 542 empty, 0 duplicate, for 118287 images): 60280it [00:04, 15095.47it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (61231 found, 0 missing, 559 empty, 0 duplicate, for 118287 images): 61790it [00:04, 15017.38it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (62724 found, 0 missing, 568 empty, 0 duplicate, for 118287 images): 63292it [00:04, 14995.11it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (64223 found, 0 missing, 579 empty, 0 duplicate, for 118287 images): 64802it [00:04, 15024.76it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (65735 found, 0 missing, 589 empty, 0 duplicate, for 118287 images): 66324it [00:04, 15080.11it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (67239 found, 0 missing, 600 empty, 0 duplicate, for 118287 images): 67839it [00:04, 15100.62it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (68751 found, 0 missing, 615 empty, 0 duplicate, for 118287 images): 69366it [00:04, 15147.94it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (70261 found, 0 missing, 630 empty, 0 duplicate, for 118287 images): 70891it [00:04, 15178.02it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (71770 found, 0 missing, 639 empty, 0 duplicate, for 118287 images): 72409it [00:04, 15151.52it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (73279 found, 0 missing, 658 empty, 0 duplicate, for 118287 images): 73937it [00:04, 15188.99it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (74786 found, 0 missing, 670 empty, 0 duplicate, for 118287 images): 75456it [00:05, 15161.24it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (76303 found, 0 missing, 680 empty, 0 duplicate, for 118287 images): 76983it [00:05, 15191.33it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (77809 found, 0 missing, 694 empty, 0 duplicate, for 118287 images): 78503it [00:05, 15180.15it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (79336 found, 0 missing, 703 empty, 0 duplicate, for 118287 images): 80039it [00:05, 15230.91it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (80848 found, 0 missing, 715 empty, 0 duplicate, for 118287 images): 81563it [00:05, 15215.66it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (82345 found, 0 missing, 741 empty, 0 duplicate, for 118287 images): 83086it [00:05, 15219.87it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (83852 found, 0 missing, 757 empty, 0 duplicate, for 118287 images): 84609it [00:05, 15200.82it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (85366 found, 0 missing, 764 empty, 0 duplicate, for 118287 images): 86130it [00:05, 15114.14it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (86861 found, 0 missing, 781 empty, 0 duplicate, for 118287 images): 87642it [00:05, 15017.90it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (88369 found, 0 missing, 796 empty, 0 duplicate, for 118287 images): 89165it [00:05, 15080.36it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (89868 found, 0 missing, 809 empty, 0 duplicate, for 118287 images): 90677it [00:06, 15091.51it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (91367 found, 0 missing, 825 empty, 0 duplicate, for 118287 images): 92192it [00:06, 15108.13it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (92873 found, 0 missing, 834 empty, 0 duplicate, for 118287 images): 93707it [00:06, 15118.59it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (94379 found, 0 missing, 845 empty, 0 duplicate, for 118287 images): 95224it [00:06, 15133.81it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (95908 found, 0 missing, 851 empty, 0 duplicate, for 118287 images): 96759it [00:06, 15195.18it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (97421 found, 0 missing, 858 empty, 0 duplicate, for 118287 images): 98279it [00:06, 15185.84it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (98931 found, 0 missing, 867 empty, 0 duplicate, for 118287 images): 99798it [00:06, 15120.94it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (100436 found, 0 missing, 875 empty, 0 duplicate, for 118287 images): 101311it [00:06, 15110.66it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (101927 found, 0 missing, 896 empty, 0 duplicate, for 118287 images): 102823it [00:06, 15107.48it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (103436 found, 0 missing, 911 empty, 0 duplicate, for 118287 images): 104347it [00:06, 15144.32it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (104938 found, 0 missing, 924 empty, 0 duplicate, for 118287 images): 105862it [00:07, 15096.80it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (106436 found, 0 missing, 936 empty, 0 duplicate, for 118287 images): 107372it [00:07, 14996.05it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (107923 found, 0 missing, 949 empty, 0 duplicate, for 118287 images): 108872it [00:07, 14925.27it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (109418 found, 0 missing, 962 empty, 0 duplicate, for 118287 images): 110380it [00:07, 14969.36it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (110909 found, 0 missing, 976 empty, 0 duplicate, for 118287 images): 111885it [00:07, 14991.07it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (112399 found, 0 missing, 986 empty, 0 duplicate, for 118287 images): 113385it [00:07, 14949.55it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (113887 found, 0 missing, 994 empty, 0 duplicate, for 118287 images): 114881it [00:07, 14914.82it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (115415 found, 0 missing, 1008 empty, 0 duplicate, for 118287 images): 116423it [00:07, 15062.29it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (116920 found, 0 missing, 1020 empty, 0 duplicate, for 118287 images): 117940it [00:07, 15092.92it/s]Scanning labels /home/purdue/darknet/scripts/coco/labels/train2017.cache3 (117266 found, 0 missing, 1021 empty, 0 duplicate, for 118287 images): 118287it [00:07, 15060.02it/s]
+!--PREPPING GPU--! 
+4 Physical GPUs, 4 Logical GPUs
+
+2021-07-31 07:21:50.997556: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:50.998839: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:50.999981: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-07-31 07:21:51.001181: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+WARNING:tensorflow:From /opt/conda/lib/python3.7/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:51: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+WARNING:tensorflow:From /opt/conda/lib/python3.7/site-packages/tensorflow/python/keras/mixed_precision/loss_scale.py:51: DynamicLossScale.__init__ (from tensorflow.python.training.experimental.loss_scale) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.keras.mixed_precision.LossScaleOptimizer instead. LossScaleOptimizer now has all the functionality of DynamicLossScale
+2021-07-31 07:21:51.063818: W tensorflow/python/util/util.cc:348] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+{'3': 8, '4': 16, '5': 32}
+{'3': 2.0, '4': 2.0, '5': 2.0, 'all': 2.0}
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'num_classes': 80, 'dynamic_conv': False, 'input_size': [640, 640, 3], 'min_level': 3, 'max_level': 5, 'boxes_per_scale': 3, 'base': {'type': None}, 'subdivisions': 1, 'filter': {'min_level': 3, 'max_level': 5, 'ignore_thresh': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': None}, 'truth_thresh': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}, 'loss_type': {'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}, 'iou_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.05}, 'cls_normalizer': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}, 'obj_normalizer': {'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}, 'max_delta': {'3': inf, '4': inf, '5': inf, 'all': None}, 'new_cords': {'3': False, '4': False, '5': False, 'all': True}, 'scale_xy': {'3': 1.0, '4': 1.0, '5': 1.0, 'all': 2.0}, 'path_scales': {'3': 8, '4': 16, '5': 32}, 'objectness_smooth': {'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}, 'nms_type': 'greedy', 'iou_thresh': 0.001, 'nms_thresh': 0.6, 'max_boxes': 300, 'pre_nms_points': 5000, 'label_smoothing': 0.0, 'anchor_generation_scale': 512, 'use_scaled_loss': True, 'darknet': None}, 'norm_activation': {'activation': 'mish', 'use_sync_bn': False, 'norm_momentum': 0.99, 'norm_epsilon': 0.001}, 'boxes': ['[12.0, 16.0]', '[19.0, 36.0]', '[40.0, 28.0]', '[36.0, 75.0]', '[76.0, 55.0]', '[72.0, 146.0]', '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]'], 'smart_bias': True}
+InputSpec(shape=(None, 640, 640, 3), ndim=4)
+<tensorflow.python.keras.regularizers.L2 object at 0x7f19bd0f3b10>
+Model: "altered_cspdarknet53"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_1 (InputLayer)            [(None, 640, 640, 3) 0                                            
+__________________________________________________________________________________________________
+ConvBN_0_0 (ConvBN)             (None, 640, 640, 32) 992         input_1[0][0]                    
+__________________________________________________________________________________________________
+DarkRes_1_residual_down (DarkRe (None, 320, 320, 64) 39552       ConvBN_0_0[0][0]                 
+__________________________________________________________________________________________________
+DarkRes_2_csp_down (CSPRoute)   ((None, 160, 160, 64 91136       DarkRes_1_residual_down[0][0]    
+__________________________________________________________________________________________________
+DarkRes_2_0 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_2_1 (DarkResidual)      (None, 160, 160, 64) 41472       DarkRes_2_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_2_csp_connect (CSPConne (None, 160, 160, 128 21248       DarkRes_2_1[0][0]                
+                                                                 DarkRes_2_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_3_csp_down (CSPRoute)   ((None, 80, 80, 128) 362496      DarkRes_2_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_3_0 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_3_1 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_2 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_3 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_4 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_5 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_6 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_7 (DarkResidual)      (None, 80, 80, 128)  164864      DarkRes_3_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_3_csp_connect (CSPConne (None, 80, 80, 256)  83456       DarkRes_3_7[0][0]                
+                                                                 DarkRes_3_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_4_csp_down (CSPRoute)   ((None, 40, 40, 256) 1445888     DarkRes_3_csp_connect[0][0]      
+__________________________________________________________________________________________________
+DarkRes_4_0 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_4_1 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_2 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_3 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_4 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_3[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_5 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_4[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_6 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_5[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_7 (DarkResidual)      (None, 40, 40, 256)  657408      DarkRes_4_6[0][0]                
+__________________________________________________________________________________________________
+DarkRes_4_csp_connect (CSPConne (None, 40, 40, 512)  330752      DarkRes_4_7[0][0]                
+                                                                 DarkRes_4_csp_down[0][1]         
+__________________________________________________________________________________________________
+DarkRes_5_csp_down (CSPRoute)   ((None, 20, 20, 512) 5775360     DarkRes_4_csp_connect[0][0]      
+__________________________________________________________________________________________________[[0.01 0.01 0.01 0.01 -6.6846118 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -6.6846118 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -6.6846118 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0.01 0.01 0.01 0.01 -5.29831743 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -5.29831743 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -5.29831743 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+[[0.01 0.01 0.01 0.01 -3.91202307 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -3.91202307 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]
+ [0.01 0.01 0.01 0.01 -3.91202307 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804 -4.8804]]
+
+DarkRes_5_0 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_csp_down[0][0]         
+__________________________________________________________________________________________________
+DarkRes_5_1 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_0[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_2 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_1[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_3 (DarkResidual)      (None, 20, 20, 512)  2625536     DarkRes_5_2[0][0]                
+__________________________________________________________________________________________________
+DarkRes_5_csp_connect (CSPConne (None, 20, 20, 1024) 1316864     DarkRes_5_3[0][0]                
+                                                                 DarkRes_5_csp_down[0][1]         
+==================================================================================================
+Total params: 26,631,008
+Trainable params: 26,596,192
+Non-trainable params: 34,816
+__________________________________________________________________________________________________
+{'embed_spp': False, 'use_fpn': True, 'max_level_process_len': None, 'csp_stack': 5, 'fpn_depth': 5, 'path_process_len': 6, 'activation': 'mish', 'subdivisions': 1, 'use_spatial_attention': False, 'use_sync_bn': False, 'norm_momentum': 0.99, 'norm_epsilon': 0.001, 'kernel_regularizer': <tensorflow.python.keras.regularizers.L2 object at 0x7f19bd0f3b10>}
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': None}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': 'ciou', '4': 'ciou', '5': 'ciou', 'all': 'ciou'}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': inf, '4': inf, '5': inf, 'all': None}
+{'3': False, '4': False, '5': False, 'all': True}
+{'3': True, '4': True, '5': True, 'all': True}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.05}
+{'3': 0.05, '4': 0.05, '5': 0.05, 'all': 0.05}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 0.5}
+{'3': 0.5, '4': 0.5, '5': 0.5, 'all': 0.5}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 4.0, '4': 1.0, '5': 0.4, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': None}
+{'3': 0.0, '4': 0.0, '5': 0.0, 'all': 1.0}
+{'3': 1.0, '4': 1.0, '5': 1.0, 'all': 1.0}
+Model: "YoloDecoder"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_2 (InputLayer)            [(None, 80, 80, 256) 0                                            
+__________________________________________________________________________________________________
+input_3 (InputLayer)            [(None, 40, 40, 512) 0                                            
+__________________________________________________________________________________________________
+input_4 (InputLayer)            [(None, 20, 20, 1024 0                                            
+__________________________________________________________________________________________________
+yolo_fpn (YoloFPN)              {'5': (None, 20, 20, 9626112     input_2[0][0]                    
+                                                                 input_3[0][0]                    
+                                                                 input_4[0][0]                    
+__________________________________________________________________________________________________
+yolo_pan (YoloPAN)              {'3': (None, 80, 80, 16271360    yolo_fpn[0][0]                   
+                                                                 yolo_fpn[0][1]                   
+                                                                 yolo_fpn[0][2]                   
+==================================================================================================
+Total params: 25,897,472
+Trainable params: 25,867,520
+Non-trainable params: 29,952
+__________________________________________________________________________________________________
+Model: "yolo"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+altered_cspdarknet53 (Darkne OrderedDict([('3', (None, 26631008  
+_________________________________________________________________
+YoloDecoder (YoloDecoder)    {'3': (None, 80, 80, 256) 25897472  
+_________________________________________________________________
+yolo_layer (YoloLayer)       multiple                  0         
+_________________________________________________________________
+yolo_head (YoloHead)         multiple                  457725    
+=================================================================
+Total params: 52,986,205
+Trainable params: 52,921,437
+Non-trainable params: 64,768
+_________________________________________________________________
+64 seen
+major: 0
+minor: 2
+revision: 5
+iseen: 0
+{'_type': 'net', 'batch': 64, 'subdivisions': 8, 'width': 512, 'height': 512, 'channels': 3, 'momentum': 0.949, 'decay': 0.0005, 'angle': 0, 'saturation': 1.5, 'exposure': 1.5, 'hue': 0.1, 'learning_rate': 0.00261, 'burn_in': 1000, 'max_batches': 500500, 'policy': 'steps', 'steps': (400000, 450000), 'scales': (0.1, 0.1), 'mosaic': 1}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 32, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 64, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -10)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -28)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 3, 'stride': 2, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 3, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'shortcut', 'from': -3, 'activation': 'linear'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -16)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 1024, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'maxpool', 'stride': 1, 'size': 5}
+{'_type': 'route', 'layers': -2}
+{'_type': 'maxpool', 'stride': 1, 'size': 9}
+{'_type': 'route', 'layers': -4}
+{'_type': 'maxpool', 'stride': 1, 'size': 13}
+{'_type': 'route', 'layers': (-1, -3, -5, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -13)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 79}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'upsample', 'stride': 2}
+{'_type': 'route', 'layers': 48}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -3)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 128, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 128, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (0, 1, 2), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -20)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 256, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 256, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (3, 4, 5), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+{'_type': 'route', 'layers': -4}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 2, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -49)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'route', 'layers': -2}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 512, 'activation': 'mish'}
+{'_type': 'route', 'layers': (-1, -6)}
+{'_type': 'convolutional', 'batch_normalize': 1, 'filters': 512, 'size': 1, 'stride': 1, 'pad': 1, 'activation': 'mish'}
+{'_type': 'convolutional', 'batch_normalize': 1, 'size': 3, 'stride': 1, 'pad': 1, 'filters': 1024, 'activation': 'mish'}
+{'_type': 'convolutional', 'size': 1, 'stride': 1, 'pad': 1, 'filters': 255, 'activation': 'linear'}
+{'_type': 'yolo', 'mask': (6, 7, 8), 'anchors': [(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], 'classes': 80, 'num': 9, 'jitter': 0.3, 'ignore_thresh': 0.7, 'truth_thresh': 1, 'random': 1, 'scale_x_y': 1.05, 'iou_thresh': 0.213, 'cls_normalizer': 1.0, 'iou_normalizer': 0.07, 'iou_loss': 'ciou', 'nms_kind': 'greedynms', 'beta_nms': 0.6}
+full net: 
+512 512 3	convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+512 512 32	convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+256 256 32	convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+256 256 64	shortcutCFG(_type='shortcut', w=256, h=256, c=64, _from=(-3,), activation='linear')
+256 256 64	convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-2,))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+128 128 64	shortcutCFG(_type='shortcut', w=128, h=128, c=64, _from=(-3,), activation='linear')
+128 128 64	convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+128 128 128	routeCFG(_type='route', w=128, h=128, c=128, layers=(-1, -10))
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+128 128 128	convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-2,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	shortcutCFG(_type='shortcut', w=64, h=64, c=128, _from=(-3,), activation='linear')
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -28))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-2,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	shortcutCFG(_type='shortcut', w=32, h=32, c=256, _from=(-3,), activation='linear')
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -28))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	shortcutCFG(_type='shortcut', w=16, h=16, c=512, _from=(-3,), activation='linear')
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -16))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-2,))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=5)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=9)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-4,))
+16 16 512	maxpoolCFG(_type='maxpool', w=16, h=16, c=512, stride=1, size=13)
+16 16 2048	routeCFG(_type='route', w=16, h=16, c=2048, layers=(-1, -3, -5, -6))
+16 16 2048	convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -13))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+16 16 256	upsampleCFG(_type='upsample', w=16, h=16, c=256, stride=2)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(79,))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -3))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+32 32 128	upsampleCFG(_type='upsample', w=32, h=32, c=128, stride=2)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(48,))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -3))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-2,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+64 64 256	routeCFG(_type='route', w=64, h=64, c=256, layers=(-1, -6))
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+64 64 256	convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=255)
+64 64 255	yoloCFG(_type='yolo', w=64, h=64, c=255, mask=(0, 1, 2), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+64 64 128	routeCFG(_type='route', w=64, h=64, c=128, layers=(-4,))
+64 64 128	convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -20))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-2,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+32 32 512	routeCFG(_type='route', w=32, h=32, c=512, layers=(-1, -6))
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+32 32 512	convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=255)
+32 32 255	yoloCFG(_type='yolo', w=32, h=32, c=255, mask=(3, 4, 5), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+32 32 256	routeCFG(_type='route', w=32, h=32, c=256, layers=(-4,))
+32 32 256	convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -49))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	routeCFG(_type='route', w=16, h=16, c=512, layers=(-2,))
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+16 16 1024	routeCFG(_type='route', w=16, h=16, c=1024, layers=(-1, -6))
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+16 16 512	convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+16 16 1024	convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=255)
+16 16 255	yoloCFG(_type='yolo', w=16, h=16, c=255, mask=(6, 7, 8), anchors=[(12, 16), (19, 36), (40, 28), (36, 75), (76, 55), (72, 146), (142, 110), (192, 243), (459, 401)], scale_x_y=1)
+bytes_read: 211944840, original_size: 211944840, final_position: 211944840
+ConvBN_0_0 convCFG(_type='convolutional', w=512, h=512, c=3, size=3, stride=1, pad=1, filters=32)
+conv_bn convCFG(_type='convolutional', w=512, h=512, c=32, size=3, stride=2, pad=1, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=256, h=256, c=64, size=1, stride=1, pad=0, filters=32)
+conv_bn_2 convCFG(_type='convolutional', w=256, h=256, c=32, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=256, h=256, c=64, size=3, stride=2, pad=1, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn_2 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=64, size=3, stride=1, pad=1, filters=64)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=64, size=1, stride=1, pad=0, filters=64)
+conv_bn_1 convCFG(_type='convolutional', w=128, h=128, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=128, h=128, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_1 convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=64, h=64, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_2 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_1 convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=32, h=32, c=512, size=3, stride=2, pad=1, filters=1024)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_1 convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=1024)
+private__identity_route
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f19c6475390>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f19c6486850>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f19c6475cd0>
+path conv
+path conv
+path conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f19c6486bd0>
+path conv
+path conv
+path conv
+csp_route_1
+conv_bn_10
+conv_bn_11
+conv_bn_12
+csp_connect_1
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_10
+batch_normalization_10
+conv2d_11
+batch_normalization_11
+conv2d_12
+batch_normalization_12
+conv2d_13
+batch_normalization_13
+conv2d_14
+batch_normalization_14
+concatenate_3
+conv2d_15
+batch_normalization_15
+csp_route
+conv_bn
+conv_bn_1
+spp
+conv_bn_2
+conv_bn_3
+csp_connect
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+batch_normalization
+conv2d_1
+batch_normalization_1
+conv2d_2
+batch_normalization_2
+conv2d_3
+batch_normalization_3
+max_pooling2d
+max_pooling2d_1
+max_pooling2d_2
+conv2d_4
+batch_normalization_4
+conv2d_5
+batch_normalization_5
+concatenate_1
+conv2d_6
+batch_normalization_6
+concatenate_4
+conv_bn_16
+conv_bn_17
+conv_bn_18
+conv2d_16
+batch_normalization_16
+conv2d_17
+batch_normalization_17
+conv2d_18
+batch_normalization_18
+concatenate_2
+conv_bn_7
+conv_bn_8
+conv_bn_9
+conv2d_7
+batch_normalization_7
+conv2d_8
+batch_normalization_8
+conv2d_9
+batch_normalization_9
+19 44
+conv_bn_5 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_6 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_1 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_2 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=2048, size=1, stride=1, pad=0, filters=512)
+conv_bn_3 512.0 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_4 512.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_7 256.0 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_8 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_10 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example:
+  opt = tf.keras.mixed_precision.LossScaleOptimizer(opt)
+WARNING:tensorflow:tf.keras.mixed_precision.experimental.LossScaleOptimizer is deprecated. Please use tf.keras.mixed_precision.LossScaleOptimizer instead. For example:
+  opt = tf.keras.mixed_precision.LossScaleOptimizer(opt)
+2021-07-31 07:21:57.530487: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:176] None of the MLIR Optimization Passes are enabled (registered 2)
+2021-07-31 07:21:57.533154: I tensorflow/core/platform/profile_utils/cpu_utils.cc:114] CPU Frequency: 2199995000 Hz
+2021-07-31 07:21:59.692470: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcudnn.so.8
+2021-07-31 07:22:00.468254: I tensorflow/stream_executor/cuda/cuda_dnn.cc:359] Loaded cuDNN version 8005
+2021-07-31 07:22:03.324954: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcublas.so.11
+2021-07-31 07:22:04.187702: I tensorflow/stream_executor/platform/default/dso_loader.cc:53] Successfully opened dynamic library libcublasLt.so.11
+[3, 3, 3, 32] -0.5792467 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] -0.00274126977 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] 0.105334722 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] -0.224570483 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 1.92837691 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] -0.171341807 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] -0.192418084 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.0501338691 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.18322891 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.0450959876 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.896261334 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.321666241 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.418698758 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 3.64288163 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] 0.411922216 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] -1.55082619 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] 1.32095313 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.38364923 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.358345717 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.486501336 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0351003483 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.167615831 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.152267978 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.446175784 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.303984851 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.317084938 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.50788641 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.804719 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.129204884 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.66553855 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.100924678 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.278970629 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -1.42554736 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] 1.53199518 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 5.53050518 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -0.523793757 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 1.27416897 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] -1.30599165 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.208717123 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.203114837 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.563085079 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.575710058 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.56673265 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.53602016 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -2.40595412 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.0537877828 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.05412269 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.182500422 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.238889605 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.824536324 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.29047251 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.311773807 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 4.23803329 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.106544271 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] 2.2885325 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] -0.908730328 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] 1.68254352 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 1.13893986 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 3.21448708 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -3.74827671 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.62706757 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.561327398 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 2.58340454 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 3.63565683 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.278909981 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 2.78525734 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.28902173 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] 1.96786237 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.974904776 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 1.04225576 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -0.230309814 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] -0.0863747299 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] 0.593944132 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -0.996647239 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 3.89197588 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] 0.734189868 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] -1.41721272 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.388125181 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] 7.31045675 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -3.16576171 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -0.566381037 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] 0.287457824 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.0758360252 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] 0.102527529 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] -0.192651168 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 3.49881577 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] -0.361745536 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] -0.0975869298 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] -0.267358094 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -2.19549465 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.0824893 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -5.81818676 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 1.04482055 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -3.75481653 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -1.61876762 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] -0.160078496 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] -0.688413262 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] -0.566116154 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -2.23539567 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] -0.647471964 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -7.22883654 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] -0.078793034 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 1.72581983 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 2.96607542 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 0.293186814 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] -3.17346478 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -3.93120193 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -27.4605923 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] -0.224686801 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -1.28230977 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] 0.798074126 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -1.5695219 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -3.94567132 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -0.692182541 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -3.98394775 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[9 34 49] 1 0.209817812
+[3, 3, 3, 32] 0.880366 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] -1.08465052 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] 0.19987461 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.363828152 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 1.56295753 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] 0.436230928 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.400550485 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.05575132 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.232004732 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.0344149768 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 1.1744504 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.255266875 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.063839823 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 0.439288855 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.491046637 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.540030181 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.364103496 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.224889055 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 1.05503654 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.26479578 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0896588638 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.544750094 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.292026699 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.598822594 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0160307959 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.62025881 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.555994451 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.07262135 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.27987802 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.198286399 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0576499254 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.951476455 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.633173 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] 0.938509107 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 8.36342 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -1.00437987 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 0.621252477 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] 0.239154592 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.15441668 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.0367191955 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.63487184 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.369302541 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.517074 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.18920365 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.644340694 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.81897378 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.0296700746 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.15502429 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.506092966 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.47533083 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.627707779 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.191225201 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.232343286 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.459800512 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] -1.05840516 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 0.715957105 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] -0.0523072481 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 1.37015319 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] -6.36335373 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 0.0999908745 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.685282469 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 0.937030077 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -2.80736065 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 2.91753435 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.59489989 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 3.71346378 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.043971777 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] -0.652279735 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.72400856 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 1.37478149 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] 1.23323667 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.124721825 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -2.47395968 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.00909948 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 1.77411294 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] 0.493842125 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] 0.896891534 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.556608856 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] -2.33381414 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -4.05814409 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] 0.53055948 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] -0.145511791 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] 0.0776735619 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -0.134668112 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] 0.592583835 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 0.888702035 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 0.966820896 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] 0.53577739 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.229072958 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -0.989918292 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.382326484 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -2.29877377 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 0.388576895 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -0.925278485 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] 2.32249188 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] -0.756239772 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] 1.15834308 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 0.92377162 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] 2.64362788 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] -3.49335957 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] 0.199215591 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] -0.747334421 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 4.2242136 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 0.305267811 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 0.480917156 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] 3.52763391 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -4.30119467 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -18.7784386 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] 0.834666491 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 0.207432777 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -4.7308712 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -2.1892848 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] 1.40713024 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -3.00203705 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -2.97409725 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[71 74 81] 2 0.272194535
+[3, 3, 3, 32] 0.398590744 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.0032736361 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] 0.158081174 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] -0.661838174 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 1.70518947 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] -0.102463394 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] -0.218753338 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.241917223 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.46727398 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.180983558 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.695783913 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.0652053356 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] 0.494660318 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 6.61036921 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.657458425 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] -0.176642925 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.0930627733 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.387718052 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.255534291 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.834167242 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.214516 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 3.09015131 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0235584341 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.3513521 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.216853619 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.0822276 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0110891573 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.40218806 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.254258454 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.639925122 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0390805975 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.06758333 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.304967344 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] -0.160844773 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] -4.93385649 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -0.0632144734 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] -1.07427442 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] -0.285925269 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.757994056 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.24697575 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.293536842 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.297714949 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.604782701 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.0153862238 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.173871696 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.00081491 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.15443897 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.0830585361 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.789303839 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.949602127 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.549031258 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.769670188 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.18911469 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.575282156 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] -0.237454653 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 3.92314792 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] 2.21310353 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] -0.0267867446 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] -1.32614589 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -4.16239 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.41480422 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -1.05090261 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 2.87703419 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 2.16642642 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.182298675 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.277943134 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -2.61415434 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] 0.870344698 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.726987243 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 0.802768588 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -1.07216942 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.45657292 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -1.35652661 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.52687061 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 1.1078589 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] -0.0748184621 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] -7.12777567 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] -1.48061156 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] -1.15728521 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -2.09593916 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -1.64740443 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] -0.0954424515 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] 1.66564608 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] 1.14783597 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] -0.278959215 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 2.40236425 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] -1.34469008 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] -0.494958222 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.315831184 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -2.46712303 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.299222052 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -0.0939908624 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 0.976918101 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -1.46909928 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -0.857214272 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] 0.914889812 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] 3.40765667 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] -0.811716318 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -2.07571745 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 3.67430162 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -3.29522777 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] 1.21786749 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 2.05184174 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 2.49900484 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 2.02424407 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] -0.809986889 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -0.949960113 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -20.1958065 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] 1.84404123 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.718572736 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] 1.38357544 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] 1.31815243 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -2.05648375 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -3.08606124 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -7.30760288 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[92 110 133] 3 0.384968132
+[3, 3, 3, 32] -1.24497581 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.546789885 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] 0.140672445 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] -0.0635179281 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 2.74344444 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] 0.225789964 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] -0.139048904 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] 0.058774665 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.224513978 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.0370974503 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 1.6523459 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.0452824086 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.527296662 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 0.526252329 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -1.62615037 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.311968774 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.0849735811 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.478676975 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.225734845 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.73463464 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.108468443 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -3.03751802 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.810950279 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.699911177 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.041592259 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.195595831 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0875330567 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.550089717 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.174623117 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.035182 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0380345583 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.480816483 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.664289951 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] 2.83239 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] -2.8760457 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] 0.378611416 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 2.03417611 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] 0.908610404 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.31544286 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.260931581 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.9586941 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.414411902 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.08956158 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.0929920673 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.514670908 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.494156599 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.350436032 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.0233302712 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.667443275 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.188258529 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.804999828 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.222549051 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.33978105 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.11500378 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] -0.231614292 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] -1.51502836 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] -0.37428546 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 2.78992987 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 2.12743044 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -2.84958529 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.553690255 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.268302232 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.958313227 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.502618909 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.736517847 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -2.65576935 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.18361485 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] -0.0294624642 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.316368252 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 0.0205980986 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] 1.24376667 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.177067026 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -1.9220351 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.13015139 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 0.637329042 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] -0.553590775 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] 0.401771337 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] -1.66144609 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] -7.535 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] 5.17965937 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -0.575572848 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] 0.0208533071 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.921587408 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -0.178363845 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] 0.291784644 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 2.89637327 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 0.766502619 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] -0.32239747 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.127390474 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -1.72897887 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.074798815 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -2.05826521 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] -0.104905233 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -2.3427763 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -1.51472569 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] 1.08976436 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] -0.386936188 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 0.41014424 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -7.25566101 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 1.35152912 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -8.52304745 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] 1.81997967 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 2.8590951 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 2.56353855 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] -1.01796746 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] 0.196291074 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -5.04437256 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -7.48374748 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] -0.264567703 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.295856506 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -6.74351025 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] 0.896597624 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] 2.33585691 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] 0.536521792 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -5.87478733 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[142 149 164] 4 0.29777956
+[3, 3, 3, 32] 1.79995942 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] -0.249718964 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] -0.23387599 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.377143681 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] -3.94904041 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] -1.68928051 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.308106035 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.000293619931 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -1.20719123 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.153117195 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -2.32386589 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.712854862 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -1.21923935 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] -4.94249249 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -1.9026283 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.730279267 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -1.05319774 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.37464264 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.199414983 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -2.43449116 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.17672652 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.996538877 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0997832343 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 2.36518836 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.179338247 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.04561114 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.463151246 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.27900028 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.235885829 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 2.68917942 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.11568217 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.31484103 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -1.05122364 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] -1.20576119 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] -4.73149109 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -2.70119405 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] -2.41437984 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] -2.33772326 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.13731539 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.458046973 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.977835178 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.04423606 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.437573552 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.94194293 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -2.42416596 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.41867971 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.43464172 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.762272358 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 2.09663105 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.628411651 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.28780818 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.20995855 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -5.01772738 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 2.52735376 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] 5.03188515 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 8.91200924 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] 0.0141028762 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] -5.91318321 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 5.15983391 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 4.45404577 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.81129122 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -2.13747263 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 4.8640213 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -6.01552057 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.0811797082 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -9.41043091 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.886037946 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] 4.12461948 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.78669858 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] -0.314739883 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -3.2135663 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.288494587 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -1.34958386 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.14562106 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 1.07835054 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] -0.728572 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] 22.6989746 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.787684321 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] 4.54887724 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -1.52190971 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -1.56200027 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] 1.09489059 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.840166 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -0.00872701406 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] 0.0730421245 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -1.832461 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 0.709492266 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] 0.845849514 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] -0.401312 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -1.75051928 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.0769421533 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -1.81213737 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 1.69741273 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] 1.81777811 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] 0.202979177 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] 0.0519262701 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] 0.689427912 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] -0.817928076 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -7.66132164 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 7.46125031 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -7.10077047 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] 2.00008559 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 5.16464138 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] -0.426033139 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 2.398561 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] -5.4217968 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -2.94238138 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -35.503006 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] 0.296033204 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 1.83242643 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -5.29389572 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -2.54236937 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -6.01375294 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -7.78477812 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -6.24180603 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[194 208 250] 5 0.532086611
+[3, 3, 3, 32] -0.777265549 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] -0.353138596 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] -0.486558318 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.65222168 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 1.04399753 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] -0.670046806 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] -0.402513504 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] 0.163278058 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.009358868 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.251416564 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 1.70439029 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.00637277961 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.493368298 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 0.0568108261 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.55898273 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.00889695436 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.596818 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.383822232 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.111407675 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.6801033 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.751057863 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.94425833 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.218490228 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 2.14969254 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.757733822 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.66868937 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.257924229 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.162510663 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.406336874 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.321083516 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0718142465 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.0849995762 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 1.27358782 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] -0.24185431 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 1.66240942 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -1.96441591 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 0.299588263 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] 1.73051846 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 2.2229507 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.398484468 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.766530633 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.289778233 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.25290978 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.84556967 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.74383175 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.0554249 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.3095516 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.289161116 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.99330091 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.25534236 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.295030177 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.979929686 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.42855585 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.528890967 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] -3.26725149 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 8.87085819 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] -1.29114091 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] -0.601663351 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.478290051 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -6.98918247 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 3.21492887 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -3.17085671 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.930608094 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -9.14862347 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.87371445 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 0.203606248 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.27773118 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] -4.34126854 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.576783478 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 1.44611311 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -0.192848325 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 1.71657372 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -0.437692136 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.06937218 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 0.635419488 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] 0.679774642 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] -10.3076839 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] -3.6814065 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] 15.8435926 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -20.8155403 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -4.34014082 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] 0.677444816 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -1.60718918 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -0.882035 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] 2.35065651 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 0.431669354 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 1.99547648 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] 1.07681525 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] -0.95377624 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -3.43517828 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.276044458 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -3.44129801 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 1.53571844 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -5.58845854 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -0.125541091 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] -0.314206064 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] -5.06599188 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 2.89146781 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -10.219389 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 1.52778244 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -32.0803909 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] 1.17421603 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 6.57300186 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 0.998425782 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 4.05620193 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] 1.15139127 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -3.78238797 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -61.0008 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] -2.23236132 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 2.64596367 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -13.5969772 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] 12.8896046 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -4.01011658 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -6.53879786 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -5.69993305 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[263 307 312] 6 0.503972113
+[3, 3, 3, 32] -0.721991837 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.241419464 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] -0.294770092 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.432008982 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 2.29682398 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] 0.731366456 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.401249886 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.186747029 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 2.57589293 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.0123298317 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.319630682 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.275210798 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] 0.141783357 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] -1.01265657 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] 0.500767648 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.725087643 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.969465733 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.00537231565 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.101706356 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.94810641 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.274722874 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.598931074 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.226927668 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.243338749 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.856720507 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.780432343 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.204188913 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.531941652 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.143581361 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.2680788 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0177689046 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.329489708 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.8042171 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] -1.38549268 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 0.578628898 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -0.225367084 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] -0.376814783 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] -1.76757479 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.0779603422 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.106743202 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.15025532 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.27186504 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -2.79061413 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.50630546 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.101552285 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.862645566 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.17458916 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.443924844 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.455922961 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.450178713 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.707145751 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.232257754 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.36240137 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.649166 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] 2.65103388 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 23.8835411 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] 1.4755671 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 0.76550281 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.350515217 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.968659282 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 4.0250783 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 1.41309404 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 2.9960742 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -3.16854572 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.0957151502 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -3.96769238 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.289929301 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] 3.04475307 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.0366894715 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 0.468738 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -1.41346824 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] -0.0494656414 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -0.373749137 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.95461977 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] -0.381340921 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] 1.28937793 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] -12.6142063 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] -0.689695 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] -1.3203243 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] 10.4331408 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -1.31987023 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] -0.737166941 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.642093718 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] 0.287774086 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] -0.624120116 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.348631144 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] -0.0710272491 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] 0.186982527 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.272017747 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -0.963301122 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.55814 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] 1.95288587 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 0.812846184 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] 1.02170062 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] 1.61111665 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] 0.777194083 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] -1.11491084 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 0.25388062 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -4.48557568 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 1.78561854 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] 5.03828621 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] -0.7243945 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] -2.35765 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 1.61237514 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 2.29572821 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] 6.67265844 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -1.04109216 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] 9.37034702 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] -0.399531066 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.412154675 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -2.60418367 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -2.09620857 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -1.97980285 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -2.17704916 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -7.33808517 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[322 332 357] 7 0.280998796
+[3, 3, 3, 32] 0.542072415 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.419284046 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] -0.129297882 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] -0.0743182 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] -1.62248278 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] 0.241218954 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.3777107 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] 0.107696846 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.767650247 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.112097204 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -0.534340501 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.0124933794 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.371465594 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] -2.68439245 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.428328961 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.384202242 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.164862424 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.116425455 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.246122032 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.894395709 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.117383227 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.404649615 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.00744708255 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.715656698 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.0560704209 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.264191359 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.179961622 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 2.33509064 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.147735208 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.758021533 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.182173774 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.618387 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.135893017 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] -1.72003043 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 3.13421583 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -1.69286871 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 1.0328548 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] -2.54730868 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.82900381 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.14324236 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.97058272 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.113476604 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.27036202 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.353722215 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.71511889 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.44090569 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.43811882 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.742361426 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -2.06577301 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.01447821 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.14809847 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.367305249 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -4.64820719 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.221164033 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] -2.16942692 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] 8.08345 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] -0.0740662217 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 2.80662727 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] -3.25679398 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 1.67377436 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.16131556 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -2.97901797 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.34918535 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.203271329 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.28459835 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.307887673 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -1.75060105 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] -2.52069354 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.49873197 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 0.911990285 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -2.08428216 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.01623106 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] 3.59821844 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -1.44972062 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 0.242897823 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] -4.44590902 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] 11.5991468 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 3.90182829 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] -10.0470419 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] 18.1656227 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] 0.363283813 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] -0.24535273 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.701006055 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -1.49580109 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] -2.37083387 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 0.294647843 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 0.527701735 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] -0.594254673 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.296505094 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -0.884796858 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] -0.200482965 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -1.9119252 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] -0.194594607 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -2.57293153 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -5.19728661 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] -0.250022411 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] 3.59233713 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] -0.619585812 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -5.90465927 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 0.690610945 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -19.8285828 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] -1.34955347 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 2.23983741 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] -0.304759681 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 0.475442171 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] -2.32158589 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -0.698504686 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -107.393059 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] 0.350046635 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -4.28240347 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -6.73903227 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -2.20707941 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] -2.5838871 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -2.39361811 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -12.3607826 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[368 384 394] 8 0.348065078
+[3, 3, 3, 32] -0.130449712 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.549258947 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] 0.288496375 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.43262583 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] 1.07789516 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] 0.410108656 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.110902011 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.0916280895 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.510453463 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.19562906 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] 0.481514722 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] -0.0601733178 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.142507643 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] -0.668345 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.246773988 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] -1.24576688 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.992075086 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.435165346 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.257549345 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.672072768 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.014685683 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.947394133 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.114901915 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.33484 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0115216672 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.32319665 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.107089162 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.199502975 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.126107812 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.988980591 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.239547402 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.884002447 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.925633192 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] 1.05217505 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 1.96509421 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] -0.152197957 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] 0.206984401 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] 0.255486608 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.51428223 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.513405681 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.73955071 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.162883818 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.434526056 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.188126847 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.56190991 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.409511149 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 2.09279561 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.55026412 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.977414191 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.493096948 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.30519724 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.717590749 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.476621956 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -1.08882499 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] 1.03884232 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] -8.18099689 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] 1.02304125 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] 1.25436449 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 7.30827904 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 4.20191193 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.59339571 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 0.128186882 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.817331791 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 1.44633317 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.9665007 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] 1.59725893 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.8754425 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] 11.9952564 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.237933561 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] 0.36922586 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -1.63123035 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] -0.300235212 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] -2.09274316 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] -0.811068118 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 1.53095353 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] 0.799213052 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] 3.83998656 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 2.30308723 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] 3.43631697 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -8.60948753 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] -0.457177103 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] 0.179839313 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] 0.12017855 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] -0.649149776 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] 1.11159945 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.0433777384 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 0.605088234 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] -0.56865114 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] -0.0389973447 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] -0.503506064 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.048797071 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] -0.0941062421 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 0.0140294395 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] -1.69287539 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] -3.72231126 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] -0.313238412 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] -3.77272081 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 0.189752534 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -4.83235121 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 0.166475296 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -18.0601139 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] -1.56461632 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 4.80065441 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] -2.11918712 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 3.46518421 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] 6.03480625 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -4.77514029 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] -51.7482796 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] -1.38768649 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -1.2960273 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] -7.42720509 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -0.778038502 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] 0.209497094 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -3.26486683 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -4.9423027 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[400 419 436] 9 0.320506126
+[3, 3, 3, 32] -0.586166859 ConvBN_0_0/conv2d/kernel:0
+[3, 3, 32, 64] 0.323263407 DarkRes_1_residual_down/conv_bn/conv2d/kernel:0
+[1, 1, 64, 32] -0.39011997 DarkRes_1_residual_down/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 32, 64] 0.353294075 DarkRes_1_residual_down/conv_bn_2/conv2d_2/kernel:0
+[3, 3, 64, 128] -2.06976271 DarkRes_2_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 128, 64] -0.231113404 DarkRes_2_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 64] 0.129851073 DarkRes_2_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 64, 64] -0.0498759 DarkRes_2_0/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -1.55878627 DarkRes_2_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.00363567099 DarkRes_2_1/conv_bn/conv2d/kernel:0
+[3, 3, 64, 64] -1.90912318 DarkRes_2_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 64, 64] 0.0427138545 DarkRes_2_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 128, 128] -0.0532436967 DarkRes_2_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 128, 256] 2.23482704 DarkRes_3_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 256, 128] -0.386227727 DarkRes_3_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 128] 0.163998947 DarkRes_3_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.774985313 DarkRes_3_0/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.748236537 DarkRes_3_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.324885607 DarkRes_3_1/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.774496555 DarkRes_3_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.241744116 DarkRes_3_2/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 1.01514173 DarkRes_3_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.42353487 DarkRes_3_3/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.294546634 DarkRes_3_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.20820415 DarkRes_3_4/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] 0.0882413685 DarkRes_3_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0522395261 DarkRes_3_5/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.53277743 DarkRes_3_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.16064617 DarkRes_3_6/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -0.865692496 DarkRes_3_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] -0.319088101 DarkRes_3_7/conv_bn/conv2d/kernel:0
+[3, 3, 128, 128] -1.78085923 DarkRes_3_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 128, 128] 0.0419052839 DarkRes_3_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 256, 256] 1.83297706 DarkRes_3_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 256, 512] 1.9968698 DarkRes_4_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 512, 256] 1.35603619 DarkRes_4_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 256] -1.13421857 DarkRes_4_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 256, 256] 0.734326541 DarkRes_4_0/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -1.06202459 DarkRes_4_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 1.15713573 DarkRes_4_1/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.376186579 DarkRes_4_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.361295074 DarkRes_4_2/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.718544841 DarkRes_4_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.599952042 DarkRes_4_3/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -0.270587027 DarkRes_4_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.528765798 DarkRes_4_4/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] -2.09548259 DarkRes_4_4/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.553640246 DarkRes_4_5/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 0.324266613 DarkRes_4_5/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.162967116 DarkRes_4_6/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 1.17046428 DarkRes_4_6/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] -0.327904463 DarkRes_4_7/conv_bn/conv2d/kernel:0
+[3, 3, 256, 256] 2.14465952 DarkRes_4_7/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.191726863 DarkRes_4_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 512, 512] 0.952869833 DarkRes_4_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[3, 3, 512, 1024] -5.4800992 DarkRes_5_csp_down/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 512] -0.797042787 DarkRes_5_csp_down/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 512] -1.5149498 DarkRes_5_csp_down/conv_bn_2/conv2d_2/kernel:0
+[1, 1, 512, 512] 2.84904695 DarkRes_5_0/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -1.62169349 DarkRes_5_0/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.60299885 DarkRes_5_1/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -0.651345909 DarkRes_5_1/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] -0.821637809 DarkRes_5_2/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -4.69489145 DarkRes_5_2/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 0.112250164 DarkRes_5_3/conv_bn/conv2d/kernel:0
+[3, 3, 512, 512] -5.61290359 DarkRes_5_3/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 512, 512] 1.44378519 DarkRes_5_csp_connect/conv_bn/conv2d/kernel:0
+[1, 1, 1024, 1024] -2.8252275 DarkRes_5_csp_connect/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 256, 256] 0.339575022 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_10/kernel:0
+[1, 1, 256, 256] -1.02974677 yolo_fpn/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_11/kernel:0
+[3, 3, 256, 256] -0.0601240247 yolo_fpn/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[1, 1, 256, 256] 0.518567801 yolo_fpn/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[3, 3, 256, 256] 2.3270185 yolo_fpn/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[1, 1, 512, 256] 1.00981283 yolo_fpn/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 1024, 512] 2.36656189 yolo_fpn/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 1024, 512] -0.960189581 yolo_fpn/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 512, 512] -1.63819265 yolo_fpn/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 512, 512] 0.512783 yolo_fpn/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[1, 1, 2048, 512] 3.49910545 yolo_fpn/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[3, 3, 512, 512] -4.45152855 yolo_fpn/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[1, 1, 1024, 512] 0.197425544 yolo_fpn/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 128] -0.204512209 yolo_fpn/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 256, 128] -0.819565 yolo_fpn/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 128] 0.200536132 yolo_fpn/path_aggregation_block_1/conv_bn_18/conv2d_18/kernel:0
+[1, 1, 512, 256] -1.20712042 yolo_fpn/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] -0.31696856 yolo_fpn/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[1, 1, 512, 256] 1.90579319 yolo_fpn/path_aggregation_block/conv_bn_9/conv2d_9/kernel:0
+[1, 1, 128, 128] 0.284360796 yolo_pan/dark_route_process/csp_route/conv_bn_5/conv2d/kernel:0
+[1, 1, 128, 128] 0.477396816 yolo_pan/dark_route_process/csp_route/conv_bn_6/conv2d_1/kernel:0
+[3, 3, 128, 128] 1.00387907 yolo_pan/dark_route_process/conv_bn/conv2d_2/kernel:0
+[1, 1, 128, 128] 0.418338388 yolo_pan/dark_route_process/conv_bn_1/conv2d_3/kernel:0
+[3, 3, 128, 128] 2.95128512 yolo_pan/dark_route_process/conv_bn_2/conv2d_4/kernel:0
+[1, 1, 256, 128] 1.16385865 yolo_pan/dark_route_process/conv_bn_3/conv2d_5/kernel:0
+[3, 3, 128, 256] 2.80849624 yolo_pan/dark_route_process/conv_bn_4/conv2d_6/kernel:0
+[1, 1, 256, 256] 0.619618297 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_14/conv2d_9/kernel:0
+[1, 1, 256, 256] 0.59178412 yolo_pan/dark_route_process_1/csp_route_1/conv_bn_15/conv2d_10/kernel:0
+[3, 3, 256, 256] 0.310372293 yolo_pan/dark_route_process_1/conv_bn_9/conv2d_11/kernel:0
+[1, 1, 256, 256] 0.199863806 yolo_pan/dark_route_process_1/conv_bn_10/conv2d_12/kernel:0
+[3, 3, 256, 256] -4.84771633 yolo_pan/dark_route_process_1/conv_bn_11/conv2d_13/kernel:0
+[1, 1, 512, 256] 1.31783247 yolo_pan/dark_route_process_1/conv_bn_12/conv2d_14/kernel:0
+[3, 3, 256, 512] -6.8195653 yolo_pan/dark_route_process_1/conv_bn_13/conv2d_15/kernel:0
+[1, 1, 512, 512] 0.740728617 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_23/conv2d_18/kernel:0
+[1, 1, 512, 512] 2.13343668 yolo_pan/dark_route_process_2/csp_route_2/conv_bn_24/conv2d_19/kernel:0
+[3, 3, 512, 512] 0.80060339 yolo_pan/dark_route_process_2/conv_bn_18/conv2d_20/kernel:0
+[1, 1, 512, 512] 1.31966448 yolo_pan/dark_route_process_2/conv_bn_19/conv2d_21/kernel:0
+[3, 3, 512, 512] -2.59029317 yolo_pan/dark_route_process_2/conv_bn_20/conv2d_22/kernel:0
+[1, 1, 1024, 512] -0.13761586 yolo_pan/dark_route_process_2/conv_bn_21/conv2d_23/kernel:0
+[3, 3, 512, 1024] 7.59338522 yolo_pan/dark_route_process_2/conv_bn_22/conv2d_24/kernel:0
+[3, 3, 128, 256] 1.55988026 yolo_pan/path_aggregation_block/conv_bn_7/conv2d_7/kernel:0
+[1, 1, 512, 256] 1.25153112 yolo_pan/path_aggregation_block/conv_bn_8/conv2d_8/kernel:0
+[3, 3, 256, 512] 1.19342625 yolo_pan/path_aggregation_block_1/conv_bn_16/conv2d_16/kernel:0
+[1, 1, 1024, 512] -1.45350575 yolo_pan/path_aggregation_block_1/conv_bn_17/conv2d_17/kernel:0
+[1, 1, 256, 255] 1.5953722 yolo_head/conv_bn/conv2d/kernel:0
+[1, 1, 512, 255] -2.54209 yolo_head/conv_bn_1/conv2d_1/kernel:0
+[1, 1, 1024, 255] -1.4043119 yolo_head/conv_bn_2/conv2d_2/kernel:0
+[446 471 486] 10 0.243073031
+
+conv_bn_11 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_12 256.0 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_13 256.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_16 128.0 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_17 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_18 128.0 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+dark_route_process
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f18cc6eff10>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_1
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f19c61c1a10>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+dark_route_process_2
+<yolo.modeling.layers.nn_blocks.DarkRouteProcess object at 0x7f19400e1a90>
+rout conv
+rout conv
+conv
+conv
+conv
+conv
+conv
+path_aggregation_block
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f18cc6ef150>
+path conv
+path conv
+path_aggregation_block_1
+<yolo.modeling.layers.nn_blocks.PathAggregationBlock object at 0x7f19400e6c50>
+path conv
+path conv
+csp_route
+conv_bn
+conv_bn_1
+conv_bn_2
+csp_connect
+conv_bn_3
+conv_bn_4
+conv_bn_5
+conv_bn_6
+conv2d
+batch_normalization
+conv2d_1
+batch_normalization_1
+conv2d_2
+batch_normalization_2
+conv2d_3
+batch_normalization_3
+conv2d_4
+batch_normalization_4
+concatenate
+conv2d_5
+batch_normalization_5
+conv2d_6
+batch_normalization_6
+csp_route_1
+conv_bn_9
+conv_bn_10
+conv_bn_11
+csp_connect_1
+conv_bn_12
+conv_bn_13
+conv_bn_14
+conv_bn_15
+conv2d_9
+batch_normalization_9
+conv2d_10
+batch_normalization_10
+conv2d_11
+batch_normalization_11
+conv2d_12
+batch_normalization_12
+conv2d_13
+batch_normalization_13
+concatenate_2
+conv2d_14
+batch_normalization_14
+conv2d_15
+batch_normalization_15
+csp_route_2
+conv_bn_18
+conv_bn_19
+conv_bn_20
+csp_connect_2
+conv_bn_21
+conv_bn_22
+conv_bn_23
+conv_bn_24
+conv2d_18
+batch_normalization_18
+conv2d_19
+batch_normalization_19
+conv2d_20
+batch_normalization_20
+conv2d_21
+batch_normalization_21
+conv2d_22
+batch_normalization_22
+concatenate_4
+conv2d_23
+batch_normalization_23
+conv2d_24
+batch_normalization_24
+concatenate_1
+conv_bn_7
+conv_bn_8
+conv2d_7
+batch_normalization_7
+conv2d_8
+batch_normalization_8
+concatenate_3
+conv_bn_16
+conv_bn_17
+conv2d_16
+batch_normalization_16
+conv2d_17
+batch_normalization_17
+25 25
+conv_bn_5 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_6 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_1 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=128, size=1, stride=1, pad=0, filters=128)
+conv_bn_2 128 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=128)
+conv_bn_3 128 (1, 1) convCFG(_type='convolutional', w=64, h=64, c=256, size=1, stride=1, pad=0, filters=128)
+conv_bn_4 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=1, pad=1, filters=256)
+conv_bn_7 256 (3, 3) convCFG(_type='convolutional', w=64, h=64, c=128, size=3, stride=2, pad=1, filters=256)
+conv_bn_8 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_14 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_15 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_9 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_10 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=256, size=1, stride=1, pad=0, filters=256)
+conv_bn_11 256 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=256)
+conv_bn_12 256 (1, 1) convCFG(_type='convolutional', w=32, h=32, c=512, size=1, stride=1, pad=0, filters=256)
+conv_bn_13 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=1, pad=1, filters=512)
+conv_bn_16 512 (3, 3) convCFG(_type='convolutional', w=32, h=32, c=256, size=3, stride=2, pad=1, filters=512)
+conv_bn_17 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_23 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_24 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_18 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_19 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=512, size=1, stride=1, pad=0, filters=512)
+conv_bn_20 512 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=512)
+conv_bn_21 512 (1, 1) convCFG(_type='convolutional', w=16, h=16, c=1024, size=1, stride=1, pad=0, filters=512)
+conv_bn_22 1024 (3, 3) convCFG(_type='convolutional', w=16, h=16, c=512, size=3, stride=1, pad=1, filters=1024)
+defaultdict(<class 'list'>, {'3': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '4': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], '5': ['box_loss', 'class_loss', 'conf_loss', 'recall50', 'precision50', 'avg_iou', 'avg_obj'], 'global': ['total_loss', 'total_box', 'total_class', 'total_conf']})
+[[12.0, 16.0], [19.0, 36.0], [40.0, 28.0], [36.0, 75.0], [76.0, 55.0], [72.0, 146.0], [142.0, 110.0], [192.0, 243.0], [459.0, 401.0]]

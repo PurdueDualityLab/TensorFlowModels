@@ -1,0 +1,980 @@
+linear
+linear
+linear
+Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(32, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(64, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(128, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(256, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 255, kernel_size=(1, 1), stride=(1, 1))
+Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+BatchNorm2d(512, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(512, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+BatchNorm2d(1024, eps=0.0001, momentum=0.03, affine=True, track_running_stats=True)
+Conv2d(1024, 255, kernel_size=(1, 1), stride=(1, 1))
+39429
+21
+57
+81
+000000000009 torch.Size([255, 1024, 1, 1]) -4.333474 0.018211432 0.023750879 0.004344891 0.046307202
+0
+0
+33
+000000000034 torch.Size([255, 1024, 1, 1]) -4.105297 0.0032082652 0.0055599986 0.00038546856 0.009153733
+84
+123
+66
+000000000049 torch.Size([255, 1024, 1, 1]) 1.7697115 0.03258294 0.030553129 0.0052459985 0.06838207
+102
+12
+36
+000000000071 torch.Size([255, 1024, 1, 1]) -12.573252 0.04172251 0.025911037 0.010314451 0.077948
+93
+102
+57
+000000000074 torch.Size([255, 1024, 1, 1]) -4.43566 0.027838921 0.025553163 0.0015071812 0.054899264
+30
+87
+60
+000000000081 torch.Size([255, 1024, 1, 1]) 0.632856 0.020934567 0.020871662 0.0043973047 0.04620353
+72
+45
+27
+000000000092 torch.Size([255, 1024, 1, 1]) 3.2721784 0.03125761 0.026930293 0.005811491 0.06399939
+267
+339
+234
+000000000110 torch.Size([255, 1024, 1, 1]) -2.24945 0.030645797 0.103740014 0.016205939 0.15059175
+45
+72
+69
+000000000133 torch.Size([255, 1024, 1, 1]) 6.7527566 0.026973262 0.032171234 0.012620272 0.07176477
+0
+81
+117
+000000000142 torch.Size([255, 1024, 1, 1]) 2.5084755 0.020616734 0.04818522 0.021516807 0.09031876
+153
+33
+33
+000000000149 torch.Size([255, 1024, 1, 1]) -7.1721954 0.028787626 0.022081923 0.0037829482 0.054652493
+279
+147
+75
+000000000164 torch.Size([255, 1024, 1, 1]) 6.3875737 0.041873686 0.044967297 0.010347391 0.097188376
+255
+292
+186
+000000000194 torch.Size([255, 1024, 1, 1]) -5.562041 0.037673853 0.10368358 0.022351429 0.16370887
+78
+126
+111
+000000000208 torch.Size([255, 1024, 1, 1]) -1.7711023 0.024336493 0.040744547 0.019854723 0.08493576
+246
+201
+60
+000000000250 torch.Size([255, 1024, 1, 1]) -1.4381573 0.040903013 0.059327073 0.011574816 0.1118049
+150
+105
+72
+000000000263 torch.Size([255, 1024, 1, 1]) 1.1569586 0.035146963 0.039641708 0.017438743 0.092227414
+57
+132
+117
+000000000307 torch.Size([255, 1024, 1, 1]) 5.1727657 0.020558402 0.044343263 0.009146057 0.07404772
+180
+303
+201
+000000000312 torch.Size([255, 1024, 1, 1]) 2.819499 0.03971987 0.0757375 0.012507014 0.12796438
+48
+69
+78
+000000000322 torch.Size([255, 1024, 1, 1]) 5.2998357 0.02549246 0.027029416 0.017173272 0.069695145
+45
+120
+81
+000000000332 torch.Size([255, 1024, 1, 1]) -3.7532163 0.025242496 0.034012362 0.006414052 0.06566891
+159
+105
+15
+000000000357 torch.Size([255, 1024, 1, 1]) 7.8814363 0.050887305 0.03187696 0.01855862 0.10132289
+93
+117
+60
+000000000368 torch.Size([255, 1024, 1, 1]) -5.0116053 0.027301064 0.026801756 0.0037303455 0.057833165
+123
+138
+99
+000000000384 torch.Size([255, 1024, 1, 1]) -0.56103414 0.031032091 0.0417527 0.016678136 0.08946292
+72
+126
+120
+000000000394 torch.Size([255, 1024, 1, 1]) -3.2318306 0.03844463 0.06328376 0.013081448 0.11480983
+27
+33
+36
+000000000400 torch.Size([255, 1024, 1, 1]) -2.57381 0.048867535 0.016184006 0.017443266 0.08249481
+51
+48
+51
+000000000419 torch.Size([255, 1024, 1, 1]) 0.4719233 0.027420342 0.023034085 0.017088974 0.0675434
+24
+126
+162
+000000000436 torch.Size([255, 1024, 1, 1]) -2.5653057 0.019390583 0.06266235 0.07420884 0.15626177
+75
+90
+69
+000000000446 torch.Size([255, 1024, 1, 1]) -3.9538352 0.042010043 0.035387248 0.011300226 0.088697515
+15
+18
+24
+000000000471 torch.Size([255, 1024, 1, 1]) 7.833317 0.03689272 0.009390074 0.007029174 0.053311966
+87
+105
+66
+000000000486 torch.Size([255, 1024, 1, 1]) -3.6794047 0.02548306 0.033588264 0.003543851 0.06261518
+0
+21
+45
+000000000491 torch.Size([255, 1024, 1, 1]) 4.1320662 0.018252525 0.021534465 0.048721187 0.088508174
+105
+39
+30
+000000000510 torch.Size([255, 1024, 1, 1]) -3.1179638 0.022945106 0.017621312 0.00806257 0.04862899
+150
+102
+57
+000000000529 torch.Size([255, 1024, 1, 1]) -4.4662166 0.03262251 0.031456508 0.019707514 0.08378653
+243
+177
+105
+000000000536 torch.Size([255, 1024, 1, 1]) -2.225111 0.039622065 0.05916144 0.019236872 0.11802038
+129
+153
+63
+000000000544 torch.Size([255, 1024, 1, 1]) -2.862164 0.025713596 0.04810373 0.007931065 0.081748396
+135
+150
+66
+000000000564 torch.Size([255, 1024, 1, 1]) 0.60435873 0.03001969 0.045123313 0.004031579 0.07917458
+60
+105
+93
+000000000575 torch.Size([255, 1024, 1, 1]) -1.8637697 0.027870893 0.039783195 0.025784351 0.09343844
+12
+24
+21
+000000000589 torch.Size([255, 1024, 1, 1]) 14.272769 0.03163318 0.0077189123 0.017091846 0.056443937
+54
+93
+75
+000000000597 torch.Size([255, 1024, 1, 1]) -4.540306 0.016490329 0.022297926 0.0076563563 0.04644461
+57
+99
+105
+000000000612 torch.Size([255, 1024, 1, 1]) 3.5769408 0.03858656 0.05066393 0.025951285 0.11520177
+27
+54
+30
+000000000625 torch.Size([255, 1024, 1, 1]) 13.46149 0.010859211 0.012718862 0.0006034964 0.02418157
+109
+66
+33
+000000000634 torch.Size([255, 1024, 1, 1]) 1.4564353 0.026172385 0.018595153 0.0050137276 0.049781263
+84
+96
+87
+000000000643 torch.Size([255, 1024, 1, 1]) -1.0160369 0.036483474 0.03676842 0.01373532 0.08698721
+189
+225
+90
+000000000659 torch.Size([255, 1024, 1, 1]) 5.1781325 0.034481 0.071226716 0.02564661 0.13135433
+78
+120
+87
+000000000671 torch.Size([255, 1024, 1, 1]) -4.464073 0.018583415 0.029356457 0.009786755 0.05772663
+45
+39
+27
+000000000681 torch.Size([255, 1024, 1, 1]) -1.1881331 0.03564048 0.016484983 0.006428569 0.058554035
+36
+126
+138
+000000000692 torch.Size([255, 1024, 1, 1]) 14.226485 0.03404643 0.044097982 0.024058834 0.10220325
+129
+114
+48
+000000000706 torch.Size([255, 1024, 1, 1]) 1.2809311 0.017858135 0.029159978 0.008072824 0.055090934
+570
+462
+192
+000000000715 torch.Size([255, 1024, 1, 1]) 5.380361 0.039493103 0.15843451 0.01284343 0.21077104
+84
+129
+84
+000000000723 torch.Size([255, 1024, 1, 1]) -1.4972128 0.032557953 0.03520025 0.0056231376 0.07338134
+54
+72
+42
+000000000735 torch.Size([255, 1024, 1, 1]) 5.578349 0.03135371 0.034314416 0.012347239 0.07801536
+96
+180
+123
+000000000757 torch.Size([255, 1024, 1, 1]) 0.8095686 0.028694084 0.053064916 0.009555224 0.09131423
+90
+99
+72
+000000000764 torch.Size([255, 1024, 1, 1]) 2.5833287 0.030472074 0.02910303 0.0048847245 0.06445983
+237
+222
+114
+000000000781 torch.Size([255, 1024, 1, 1]) 1.9676964 0.028237486 0.057783514 0.004252594 0.09027359
+81
+129
+102
+000000000797 torch.Size([255, 1024, 1, 1]) -0.009672845 0.031128738 0.04074878 0.0139060905 0.08578361
+39
+72
+75
+000000000813 torch.Size([255, 1024, 1, 1]) -1.5314536 0.024426306 0.021224957 0.019145722 0.064796984
+24
+33
+30
+000000000827 torch.Size([255, 1024, 1, 1]) -6.8530574 0.022601921 0.010514697 0.003965553 0.03708217
+12
+51
+75
+000000000836 torch.Size([255, 1024, 1, 1]) 1.2953684 0.017993512 0.015276668 0.019403217 0.0526734
+9
+3
+42
+000000000873 torch.Size([255, 1024, 1, 1]) -2.25713 0.023077725 0.014804285 0.014012095 0.051894102
+84
+153
+45
+000000000901 torch.Size([255, 1024, 1, 1]) -0.21153641 0.034369703 0.04347586 0.006331523 0.084177084
+114
+105
+69
+000000000909 torch.Size([255, 1024, 1, 1]) 3.900649 0.033315852 0.02482874 0.0019189871 0.06006358
+99
+141
+78
+000000000925 torch.Size([255, 1024, 1, 1]) -6.1066933 0.03507337 0.030159138 0.0052091316 0.07044164
+27
+75
+63
+000000000939 torch.Size([255, 1024, 1, 1]) -1.2519603 0.026369108 0.019155597 0.007362685 0.05288739
+27
+87
+96
+000000000955 torch.Size([255, 1024, 1, 1]) -5.2112403 0.029163916 0.038177695 0.013751876 0.08109349
+36
+87
+84
+000000000965 torch.Size([255, 1024, 1, 1]) -4.683812 0.022858173 0.033166215 0.008917496 0.06494188
+87
+204
+150
+000000000977 torch.Size([255, 1024, 1, 1]) -0.63474464 0.033578224 0.0741145 0.027200317 0.13489304
+255
+177
+63
+000000000985 torch.Size([255, 1024, 1, 1]) -1.8924404 0.03566472 0.05202513 0.0054926123 0.09318246
+144
+162
+93
+000000000999 torch.Size([255, 1024, 1, 1]) 0.91850466 0.035525016 0.048936654 0.01199246 0.096454136
+30
+51
+45
+000000001014 torch.Size([255, 1024, 1, 1]) 2.290468 0.03246671 0.019374488 0.012952341 0.06479354
+78
+111
+75
+000000001036 torch.Size([255, 1024, 1, 1]) -11.763458 0.02384602 0.024571307 0.013365506 0.061782837
+0
+3
+36
+000000001063 torch.Size([255, 1024, 1, 1]) -1.7387861 0.010070733 0.007753359 0.0096061705 0.027430262
+24
+36
+30
+000000001083 torch.Size([255, 1024, 1, 1]) -10.005869 0.019152882 0.012013875 0.014370264 0.04553702
+3
+24
+54
+000000001089 torch.Size([255, 1024, 1, 1]) 1.3578967 0.013678677 0.009730756 0.0036931871 0.027102621
+93
+63
+21
+000000001099 torch.Size([255, 1024, 1, 1]) 2.1862698 0.036760755 0.021533895 0.0012026001 0.059497252
+15
+45
+45
+000000001107 torch.Size([255, 1024, 1, 1])000000000049 77534495
+000000000061 131614721
+000000000064 110635708
+000000000081 136142135
+000000000086 100620084
+000000000089 81732665
+000000000133 118173720
+000000000136 65266916
+000000000138 112784474
+000000000164 115880908
+000000000165 101986572
+000000000192 104477843
+000000000250 104742067
+000000000257 129518997
+000000000260 32861520
+000000000312 81543409
+000000000315 118485920
+000000000321 121856049
+000000000357 48005190
+000000000359 54552026
+000000000360 103765809
+000000000394 144491928
+000000000395 109169003
+000000000397 91284316
+000000000436 72657534
+000000000438 76911754
+000000000443 85837607
+000000000486 87910998
+000000000488 118433275
+000000000490 43424351
+000000000529 100704036
+000000000531 101340457
+000000000532 105814152
+000000000564 51062366
+000000000569 114238796
+000000000572 54063695
+000000000597 55167762
+000000000599 45910952
+000000000605 108851529
+000000000634 95179578
+000000000636 94593210
+000000000641 112356615
+000000000671 124283220
+000000000673 112885680
+000000000675 80740201
+000000000706 92949826
+000000000711 126802560
+000000000714 58219256
+000000000735 72581653
+000000000753 60619038
+000000000754 82671275
+000000000781 207039844
+000000000790 69554081
+000000000795 30496363
+000000000827 44836984
+000000000828 76103751
+000000000831 74727174
+000000000901 39659367
+000000000902 107104290
+000000000908 150082879
+000000000939 113082760
+000000000941 57754246
+000000000943 73892114
+000000000977 74685841
+000000000982 84580398
+000000000984 90157916
+000000001014 95565093
+000000001025 123032087
+000000001029 126249198
+000000001083 110527149
+000000001084 57543217
+000000001085 84080225
+000000001107 91128123
+000000001108 39670391
+000000001111 131576402
+000000001149 86152049
+000000001153 53389048
+000000001155 86127811
+000000001183 69607224
+000000001200 151871180
+000000001204 95715904
+000000001237 123149714
+000000001238 54945102
+000000001244 149623951
+000000001292 95029621
+000000001295 100760431
+000000001298 65820762
+000000001323 115773805
+000000001330 106385041
+000000001332 143230636
+000000000009 104498951
+000000000025 76225692
+000000000030 103986201
+000000000071 89931272
+000000000072 63536587
+000000000073 127443567
+000000000092 98977761
+000000000094 99441359
+000000000109 97627271
+000000000142 82297902
+000000000143 180879661
+000000000144 108807175
+000000000194 92781078
+000000000196 77004107
+000000000201 148237985
+000000000263 132911004
+000000000283 85789217
+000000000294 45353273
+000000000322 19642427
+000000000326 25273376
+000000000328 127632174
+000000000368 76087007
+000000000370 78439845
+000000000382 141051411
+000000000400 158577779
+000000000404 86917490
+000000000415 67570045
+000000000446 38993758
+000000000450 87555945
+000000000459 78643603
+000000000491 57125904
+000000000502 113650680
+000000000508 139484326
+000000000536 38132256
+000000000540 106933274
+000000000542 162325662
+000000000575 84335704
+000000000581 88104071
+000000000584 94354761
+000000000612 84902327
+000000000620 97465622
+000000000623 55391535
+000000000643 58897939
+000000000650 96190446
+000000000656 82199091
+000000000681 134814217
+000000000684 130684531
+000000000690 112102691
+000000000715 94070925
+000000000716 20457829
+000000000722 119131105
+000000000757 88132738
+000000000761 107687832
+000000000762 95967099
+000000000797 73926504
+000000000801 121050371
+000000000810 88471535
+000000000836 69548686
+000000000839 99567667
+000000000853 77132332
+000000000909 54551331
+000000000913 133223916
+000000000923 95620605
+000000000955 85231225
+000000000960 85617410
+000000000962 121797157
+000000000985 109787751
+000000000987 96595570
+000000000996 96656090
+000000001036 85111743
+000000001053 70147055
+000000001059 91204130
+000000001089 102040326
+000000001090 75114060
+000000001098 106501775
+000000001122 72445973
+000000001138 64749775
+000000001139 64403374
+000000001164 93051916
+000000001166 52732145
+000000001168 62647980
+000000001205 68653465
+000000001213 91745803
+000000001216 77331412
+000000001261 97090763
+000000001264 84935129
+000000001270 126544381
+000000001306 54791837
+000000001307 98432363
+000000001308 90763880
+000000000034 75766521
+000000000036 133723881
+000000000042 111751385
+000000000074 125405313
+000000000077 68548370
+000000000078 169886406
+000000000110 94886497
+000000000113 115887950
+000000000127 81410999
+000000000149 113842422
+000000000151 104020329
+000000000154 66251834
+000000000208 110058742
+000000000241 79136438
+000000000247 96409433
+000000000307 93696305
+000000000308 105096408
+000000000309 78460652
+000000000332 100035812
+000000000338 73259581
+000000000349 111065537
+000000000384 68125988
+000000000387 101106304
+000000000389 67993163
+000000000419 88045135
+000000000428 96270437
+000000000431 53163010
+000000000471 142566060
+000000000472 46430789
+000000000474 54357764
+000000000510 125608447
+000000000514 51622088
+000000000520 110782141
+000000000544 64677664
+000000000560 51473627
+000000000562 87899562
+000000000589 27915329
+000000000590 112661536
+000000000595 122535385
+000000000625 84081025
+000000000626 80112577
+000000000629 113961119
+000000000659 66840037
+000000000661 70032827
+000000000670 78302389
+000000000692 96424612
+000000000693 103489136
+000000000699 70305076
+000000000723 47220315
+000000000730 74678673
+000000000731 117332432
+000000000764 62422398
+000000000772 89355827
+000000000775 56745945
+000000000813 77894466
+000000000821 144959757
+000000000825 89790192
+000000000873 129339455
+000000000882 82480535
+000000000897 114327058
+000000000925 33115967
+000000000927 163776702
+000000000934 110148847
+000000000965 171529697
+000000000969 93916791
+000000000974 36990488
+000000000999 66560022
+000000001006 60167288
+000000001011 111893903
+000000001063 129148263
+000000001064 54061390
+000000001072 95620717
+000000001099 127508090
+000000001102 147885664
+000000001103 142560105
+000000001144 126623394
+000000001145 106540594
+000000001146 111314078
+000000001171 65397963
+000000001176 68731411
+000000001180 101188262
+000000001224 106773022
+000000001228 111700694
+000000001232 111432831
+000000001271 55527800
+000000001282 80208074
+000000001290 121279182
+000000001311 112786963
+000000001315 93770946
+000000001319 104041136
+000000185473 10462062
+here
+000000143068 77924084
+here
+000000096549 35313785
+here
+000000527220 22204884
+here
+000000161044 70552579
+here
+000000490413 76429899
+here
+000000425702 107684445
+here
+000000368038 60865660
+here
+000000047828 27975380
+here
+000000050943 83932949
+here
+000000228942 53561613
+here
+000000334977 109013874
+here
+000000329614 26965939
+here
+000000485480 56397731
+here
+000000509014 115394473
+here
+000000311883 88388734
+here
+000000578500 67843524
+here
+000000242934 25917884
+here
+000000309467 55189274
+here
+000000525600 68228338
+here
+000000416991 46459985
+here
+000000152740 83109263
+here
+000000045090 37820533
+here
+000000401250 76237618
+here
+000000438226 72179806
+here
+000000312278 56379729
+here
+000000194216 45110430
+here
+000000519039 60704233
+here
+000000209972 94967256
+here
+000000118515 72901117
+here
+000000141671 80497758
+here
+000000522751 95696380
+here
+000000378099 62629175
+here
+000000235778 35441342
+here
+000000458223 106354159
+here
+000000429011 74190036
+here
+000000298251 47550242
+here
+000000205333 49016831
+here
+000000449661 42601840
+here
+000000485237 43665694
+here
+000000375469 54768261
+here
+000000460682 43782810
+here
+000000504439 20806346
+here
+000000259597 37035925
+here
+000000565607 65440472
+here
+000000125072 98404651
+here
+000000001490 89124183
+here
+000000224093 66391518
+here
+000000450439 50155691
+here
+000000546556 77193997
+here
+000000438955 95781815
+here
+000000549055 87241970
+here
+000000146825 51604403
+here
+000000347456 66010902
+here
+000000351559 30348182
+here
+000000110211 83667233
+here
+000000260657 53804007
+here
+000000015660 92427886
+here
+000000005477 103573829
+here
+000000006040 61537144
+here
+000000504000 64177227
+here
+000000044590 68753641
+here
+000000554266 62129991
+here
+000000068409 56754001
+here
+000000190676 66370745
+here
+000000493566 50599631
+here
+000000323709 96615878
+here
+000000221502 77017977
+here
+000000423798 27440428
+here
+000000417285 63606518
+here
+000000129945 62839351
+here
+000000290293 56739313
+here
+ 2.1098776 0.025392193 0.021949057 0.008985516 0.056326766
+39
+51
+81
+000000001122 torch.Size([255, 1024, 1, 1]) -2.3993487 0.031172747 0.02177396 0.020287853 0.07323456
+345
+385
+162
+000000001144 torch.Size([255, 1024, 1, 1]) -0.34903464 0.03908767 0.09426519 0.021825101 0.15517797
+183
+234
+147
+000000001149 torch.Size([255, 1024, 1, 1]) -0.19319491 0.03407638 0.06801708 0.017229125 0.11932258
+21
+54
+66
+000000001164 torch.Size([255, 1024, 1, 1]) -4.6425133 0.042823244 0.031096613 0.0452262 0.11914606
+193
+144
+75
+000000001171 torch.Size([255, 1024, 1, 1]) -4.530791 0.032113664 0.04413546 0.0070252134 0.083274335
+126
+141
+54
+000000001183 torch.Size([255, 1024, 1, 1]) 3.6357684 0.025472863 0.028896939 0.0020520976 0.0564219
+15
+39
+36
+000000001205 torch.Size([255, 1024, 1, 1]) 5.0626554 0.01777921 0.011766044 0.0036330891 0.033178344
+24
+48
+78
+000000001224 torch.Size([255, 1024, 1, 1]) -5.78877 0.030841634 0.022878159 0.02035458 0.07407437
+81
+141
+126
