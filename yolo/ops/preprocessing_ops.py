@@ -728,7 +728,7 @@ def resize_and_crop_boxes(boxes,
 def apply_infos(boxes,
                 infos,
                 affine=None,
-                shuffle_boxes=True,
+                shuffle_boxes=False,
                 area_thresh=0.1,
                 seed=None):
   # clip and clean boxes

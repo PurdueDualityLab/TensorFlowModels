@@ -147,16 +147,9 @@ class Yolo(ks.Model):
       name) followed by variables from all submodules recursively (breadth
       first).
     """
-    # def predicate(x):
-    #   return isinstance(x, tf.Variable) and getattr(x, "trainable", False)
-
-    # gen = self._flatten(predicate=predicate)
-    gen = train_vars
-
     bias = []
     weights = []
     other = []
-    zipped = []
     for var, grad in zip(train_vars, gradients):
       if "bias" in var.name:
         bias.append((grad, var))
@@ -166,10 +159,7 @@ class Yolo(ks.Model):
         weights.append((grad, var))
       else:
         other.append((grad, var))
-      zipped.append((grad, var))
 
-    # tf.print(len(bias), len(weights), len(other))
     return {"weights":iter(weights), 
             "bias":iter(bias), 
-            "other":iter(other), 
-            "all":iter(zipped)}, iter(zipped)
+            "other":iter(other)}, zip(train_vars, gradients)

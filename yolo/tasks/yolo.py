@@ -338,18 +338,23 @@ class YoloTask(base_task.Task):
           and isinstance(optimizer, optimization.ExponentialMovingAverage)
             and isinstance(optimizer._optimizer, 
                                 optimization.ScaledYoloSGD.ScaledYoloSGD)): 
+      iteration = optimizer.iterations
       optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
+      optimizer.iterations.assign(iteration)
       optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
+      optimizer.iterations.assign(iteration)
       optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
       optimizer.update_average(optimizer.iterations)
-    elif self.task_config.model.smart_bias:
+    elif self.task_config.model.smart_bias and isinstance(optimizer._optimizer, 
+                                optimization.ScaledYoloSGD.ScaledYoloSGD):
+      iteration = optimizer.iterations
       optimizer.apply_gradients(group_grads["weights"], name = "weights")
+      optimizer.iterations.assign(iteration)
       optimizer.apply_gradients(group_grads["bias"], name = "bias")
+      optimizer.iterations.assign(iteration)
       optimizer.apply_gradients(group_grads["other"], name = "other")
     else:
       optimizer.apply_gradients(gradvar, name = "other")
-
-    # tf.print(optimizer.iterations, loss_metrics['global']['total_loss'])
 
     logs = {self.loss: loss_metrics['global']['total_loss'],
             "iteration": tf.cast(optimizer.iterations, tf.float32)}

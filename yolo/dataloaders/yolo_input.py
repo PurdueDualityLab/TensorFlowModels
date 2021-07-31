@@ -370,6 +370,7 @@ class Parser(parser.Parser):
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, 
         affine=affine, 
+        shuffle_boxes=not self._use_scale_xy, 
         area_thresh=self._area_thresh, 
         seed = self._seed)
     classes = tf.gather(classes, inds)
