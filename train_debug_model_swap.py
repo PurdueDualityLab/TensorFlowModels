@@ -197,8 +197,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
                 if i >= 10:
                     break
-                # a = task.train_step(sample, model, optimizer)
-                strat.run(task.train_step, args=(sample, model, optimizer))
+                a = task.train_step(sample, model, optimizer)
+                # strat.run(task.train_step, args=(sample, model, optimizer))
         
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training
