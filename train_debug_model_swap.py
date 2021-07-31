@@ -130,7 +130,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     #   thickness=2,
     #   classes=91)
 
-    batch_size = 2
+    batch_size = total_batch_size
     loader = get_n(dataloader, parser) 
     loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
                                                                     {'source_id': tf.int64, 
