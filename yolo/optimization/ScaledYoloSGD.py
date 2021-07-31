@@ -140,6 +140,8 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
                     or self._fallback_apply_state(var_device, var_dtype))
 
     if self._momentum:
+      if ("kernel" in var.name):
+        tf.print(grad.shape, tf.reduce_sum(grad), var.name)
       momentum_var = self.get_slot(var, "momentum")
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,
