@@ -40,7 +40,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt 
 import matplotlib
 import numpy as np
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 from yolo.utils.demos import utils, coco
 
 prep_gpu()
