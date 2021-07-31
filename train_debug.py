@@ -298,6 +298,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
 
+            print(imgs.size())
             # # Warmup
             # if ni <= nw:
             #     xi = [0, nw]  # x interp
@@ -327,7 +328,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
             pg = grad[-2].grad.cpu().sum().detach().numpy()
 
-            print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
+            print([path[0].split("/")[-1].split(".")[-2] for path in paths] , grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
             # for g in grad:
             #     print("\t", g.grad.cpu().sum().detach().numpy())
                 
