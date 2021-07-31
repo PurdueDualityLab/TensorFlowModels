@@ -351,7 +351,8 @@ class YoloTask(base_task.Task):
 
     #tf.print(optimizer.iterations, loss_metrics['global']['total_loss'])
 
-    logs = {self.loss: loss_metrics['global']['total_loss']}
+    logs = {self.loss: loss_metrics['global']['total_loss'],
+            "iteration": optimizer.iterations}
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
