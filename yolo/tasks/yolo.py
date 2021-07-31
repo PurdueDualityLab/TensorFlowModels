@@ -235,6 +235,83 @@ class YoloTask(base_task.Task):
     print(dataset)
     return dataset
 
+  def get_parser(self):
+    """Build input dataset."""
+    params = self.task_config.validation_data
+    decoder = self.get_decoder(params)
+    model = self.task_config.model
+    
+
+    masks, path_scales, xy_scales = self._get_masks()
+    anchors = self._get_boxes(gen_boxes=params.is_training)
+
+    rsize = params.parser.mosaic.resize
+    if rsize is None:
+      rsize = params.parser.resize
+
+    rcrop = params.parser.mosaic.jitter
+    if rcrop is None:
+      rcrop = params.parser.jitter
+
+    osize = params.parser.mosaic.output_resolution
+    if osize is None:
+      osize = model.input_size
+
+    sample_fn = mosaic.Mosaic(
+        output_size=osize,
+        max_resolution=params.parser.mosaic.max_resolution,
+        mosaic_frequency=params.parser.mosaic.mosaic_frequency,
+        mixup_frequency=params.parser.mosaic.mixup_frequency,
+        crop_area=params.parser.mosaic.crop_area,
+        crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
+        mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
+        aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
+        random_crop=rcrop,
+        random_pad=params.parser.random_pad,
+        translate=params.parser.aug_rand_translate,
+        resize=rsize,
+        seed=params.seed, 
+        area_thresh=params.parser.area_thresh)
+
+    parser = yolo_input.Parser(
+        output_size=model.input_size,
+        min_level=model.min_level,
+        max_level=model.max_level,
+        masks=masks,
+        anchors=anchors,
+        letter_box=params.parser.letter_box,
+        use_tie_breaker=params.parser.use_tie_breaker,
+        random_flip=params.parser.random_flip,
+        jitter=params.parser.jitter,
+        resize=params.parser.resize,
+        jitter_mosaic=params.parser.jitter_mosaic,
+        resize_mosaic=params.parser.resize_mosaic,
+        sheer=params.parser.sheer,
+        aug_rand_transalate=params.parser.aug_rand_translate,
+        aug_rand_saturation=params.parser.aug_rand_saturation,
+        aug_rand_brightness=params.parser.aug_rand_brightness,
+        aug_scale_min=params.parser.aug_scale_min,
+        aug_scale_max=params.parser.aug_scale_max,
+        mosaic_min=params.parser.mosaic_scale_min,
+        mosaic_max=params.parser.mosaic_scale_max,
+        mosaic_translate=params.parser.mosaic_translate,
+        random_pad=params.parser.random_pad,
+        aug_rand_hue=params.parser.aug_rand_hue,
+        aug_rand_angle=params.parser.aug_rand_angle,
+        max_num_instances=params.parser.max_num_instances,
+        dynamic_conv=model.dynamic_conv,
+        scale_xy=xy_scales,
+        stride=params.parser.stride,
+        area_thresh=params.parser.area_thresh,
+        use_scale_xy=params.parser.use_scale_xy,
+        best_match_only=params.parser.best_match_only,
+        anchor_t=params.parser.anchor_thresh,
+        coco91to80=self.task_config.coco91to80,
+        seed=params.seed, 
+        dtype=params.dtype)
+
+    return parser
+
   def build_losses(self, outputs, labels, aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
@@ -301,7 +378,7 @@ class YoloTask(base_task.Task):
       
     with tf.GradientTape(persistent=False) as tape:
       # compute a prediction
-      y_pred = model(image, training=False)
+      y_pred = model(image, training=True)
 
       # cast to float 32
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
@@ -348,7 +425,7 @@ class YoloTask(base_task.Task):
       optimizer.apply_gradients(group_grads["other"], name = "other")
     else:
       optimizer.apply_gradients(gradvar, name = "other")
-    tf.print(optimizer.iterations, loss_metrics['global']['total_loss'])
+    tf.print(label["source_id"], optimizer.iterations, loss_metrics['global']['total_loss'])
 
     logs = {self.loss: loss_metrics['global']['total_loss'],
             "iteration": tf.cast(optimizer.iterations, tf.float32)}

@@ -141,7 +141,7 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
 
     if self._momentum:
       if ("kernel" in var.name):
-        tf.print(grad.shape, tf.reduce_sum(grad), var.name)
+        tf.print(grad.shape.as_list(), tf.reduce_sum(grad), var.name)
       momentum_var = self.get_slot(var, "momentum")
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,

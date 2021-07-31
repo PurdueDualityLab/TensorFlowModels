@@ -69,7 +69,7 @@ task:
       use_scaled_loss: true
   train_data:
     global_batch_size: 4
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+    tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
     tfds_split: train
@@ -102,7 +102,7 @@ task:
         jitter: 0.4
   validation_data:
     global_batch_size: 2
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
+    tfds_data_dir: ''
     tfds_download: true
     tfds_name: coco
     tfds_split: validation

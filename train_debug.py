@@ -265,7 +265,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     
     
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
-        model.eval()
+        model.train()
 
         # Update image weights (optional)
         if opt.image_weights:
@@ -311,8 +311,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
             # Forward
             with amp.autocast(enabled=cuda):
-                pred = model(imgs)[-1]  # forward
-                # pred = model(imgs)  # forward
+                # pred = model(imgs)[-1]  # forward
+                pred = model(imgs)  # forward
                 loss, loss_items = compute_loss(pred, targets.to(device), model)  # loss scaled by batch_size
                 if rank != -1:
                     loss *= opt.world_size  # gradient averaged between devices in DDP mode
@@ -324,7 +324,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             scaler.update()
             grad = list(model.parameters())
 
-            pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
+            #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
+            pg = grad[-2].grad.cpu().sum().detach().numpy()
 
             print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
             # for g in grad:
