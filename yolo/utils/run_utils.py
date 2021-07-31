@@ -7,6 +7,7 @@ def prep_gpu(distribution=None):
   print(f"\n!--PREPPING GPU--! ")
   if distribution is None:
     gpus = list_physical_devices('GPU')
+    # gpus = list_logical_devices('GPU')
     if gpus:
       try:
         # Currently, memory growth needs to be the same across GPUs
@@ -23,17 +24,21 @@ def prep_gpu(distribution=None):
 
 def expand_gpu(distribution=None):
   import tensorflow as tf
-  physical_devices = tf.config.list_physical_devices('GPU')
   try:
-    tf.config.set_logical_device_configuration(physical_devices[0], [
-        tf.config.LogicalDeviceConfiguration(memory_limit=5000),
-        tf.config.LogicalDeviceConfiguration(memory_limit=5000)
-    ])
+    from tensorflow.config import list_physical_devices, list_logical_devices
+  except ImportError:
+    from tensorflow.config.experimental import list_physical_devices, list_logical_devices
 
-    logical_devices = tf.config.list_logical_devices('GPU')
-    print(logical_devices)
-  except:
-    pass
+  physical_devices = tf.config.list_physical_devices('GPU')
+  tf.config.experimental.set_memory_growth(physical_devices[0], True)
+  # try:
+  tf.config.set_logical_device_configuration(physical_devices[0], [
+      tf.config.LogicalDeviceConfiguration(memory_limit=4000),
+      tf.config.LogicalDeviceConfiguration(memory_limit=4000)
+  ])
+
+  logical_devices = tf.config.list_logical_devices('GPU')
+  print(logical_devices)
   return
 
 
