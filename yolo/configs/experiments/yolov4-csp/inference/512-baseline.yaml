@@ -1,7 +1,7 @@
 runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
+  # loss_scale: "dynamic"
   num_gpus: 1
 task:
   smart_bias_lr: 0.1
@@ -122,10 +122,10 @@ trainer:
   validation_interval: 1000 #00
   checkpoint_interval: 1000
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9999
-    #   trainable_weights_only: false
-    #   dynamic_decay: True
+    ema:
+      average_decay: 0.9999
+      trainable_weights_only: false
+      dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:
