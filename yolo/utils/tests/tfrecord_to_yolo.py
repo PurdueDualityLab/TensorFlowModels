@@ -157,7 +157,7 @@ import os
 
 
 def write_to_folder(
-    path="/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/testing_records/"):
+    path="../data/datasets/COCO_raw/testing_records/"):
   params = DataConfig()
 
   dataset = build_ds(params)

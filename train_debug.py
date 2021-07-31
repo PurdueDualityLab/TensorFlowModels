@@ -256,7 +256,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     maps = np.zeros(nc)  # mAP per class
     results = (0, 0, 0, 0, 0, 0, 0)  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls)
     scheduler.last_epoch = start_epoch - 1  # do not move
-    scaler = amp.GradScaler(enabled=cuda)
+    scaler = amp.GradScaler(enabled=True)
     logger.info('Image sizes %g train, %g test\n'
                 'Using %g dataloader workers\nLogging results to %s\n'
                 'Starting training for %g epochs...' % (imgsz, imgsz_test, dataloader.num_workers, save_dir, epochs))
@@ -297,20 +297,22 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
+            
+            print(imgs.dtype)
 
-            # # Warmup
-            # if ni <= nw:
-            #     xi = [0, nw]  # x interp
-            #     # model.gr = np.interp(ni, xi, [0.0, 1.0])  # iou loss ratio (obj_loss = 1.0 or iou)
-            #     accumulate = max(1, np.interp(ni, xi, [1, nbs / total_batch_size]).round())
-            #     for j, x in enumerate(optimizer.param_groups):
-            #         # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
-            #         x['lr'] = np.interp(ni, xi, [hyp['warmup_bias_lr'] if j == 2 else 0.0, x['initial_lr'] * lf(epoch)])
-            #         if 'momentum' in x:
-            #             x['momentum'] = np.interp(ni, xi, [hyp['warmup_momentum'], hyp['momentum']])
+            # Warmup
+            if ni <= nw:
+                xi = [0, nw]  # x interp
+                # model.gr = np.interp(ni, xi, [0.0, 1.0])  # iou loss ratio (obj_loss = 1.0 or iou)
+                accumulate = max(1, np.interp(ni, xi, [1, nbs / total_batch_size]).round())
+                for j, x in enumerate(optimizer.param_groups):
+                    # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
+                    x['lr'] = np.interp(ni, xi, [hyp['warmup_bias_lr'] if j == 2 else 0.0, x['initial_lr'] * lf(epoch)])
+                    if 'momentum' in x:
+                        x['momentum'] = np.interp(ni, xi, [hyp['warmup_momentum'], hyp['momentum']])
 
             # Forward
-            with amp.autocast(enabled=cuda):
+            with amp.autocast(enabled=True):
                 # pred = model(imgs)[-1]  # forward
                 pred = model(imgs)  # forward
                 loss, loss_items = compute_loss(pred, targets.to(device), model)  # loss scaled by batch_size
@@ -322,15 +324,18 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             
             scaler.step(optimizer)  # optimizer.step
             scaler.update()
-            grad = list(model.parameters())
+            # 
 
-            #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
-            pg = grad[-2].grad.cpu().sum().detach().numpy()
+            
+            with torch.no_grad():
+                grad = list(model.parameters())[-2]
+                #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
+                pg = grad[-2].grad.cpu().sum().detach().numpy()
 
-            print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
-            # for g in grad:
-            #     print("\t", g.grad.cpu().sum().detach().numpy())
-                
+                print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
+                # for g in grad:
+                #     print("\t", g.grad.cpu().sum().detach().numpy())
+                    
             optimizer.zero_grad()
             if ema:
                 ema.update(model)

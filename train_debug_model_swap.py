@@ -110,23 +110,27 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt,
                                             hyp=hyp, augment=False, cache=False, rect=opt.rect)
     
+    # task, model, params = load_model(
+    #   experiment="yolo_custom",
+    #   config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
+    #   model_dir='')
     task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
+      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline-dbg.yaml"],
       model_dir='')
-    
+
     parser = task.get_parser()
     optimizer = task.create_optimizer(params.trainer.optimizer_config,
                                       params.runtime)
 
-    drawer = utils.DrawBoxes(
-      labels=coco.get_coco_names(
-          path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
-      ),
-      thickness=2,
-      classes=91)
+    # drawer = utils.DrawBoxes(
+    #   labels=coco.get_coco_names(
+    #       path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
+    #   ),
+    #   thickness=2,
+    #   classes=91)
 
-    batch_size = 1
+    batch_size = 2
     loader = get_n(dataloader, parser) 
     loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
                                                                     {'source_id': tf.int64, 
