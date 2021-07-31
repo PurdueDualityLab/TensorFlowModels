@@ -411,20 +411,20 @@ class YoloTask(base_task.Task):
 
     group_grads, gradvar = model.get_grouped_train_vars(train_vars, gradients)
 
-    # if (self.task_config.model.smart_bias 
-    #       and isinstance(optimizer, optimization.ExponentialMovingAverage)
-    #         and isinstance(optimizer._optimizer, 
-    #                             optimization.ScaledYoloSGD.ScaledYoloSGD)): 
-    #   optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
-    #   optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
-    #   optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
-    #   optimizer.update_average(optimizer.iterations)
-    # elif self.task_config.model.smart_bias:
-    #   optimizer.apply_gradients(group_grads["weights"], name = "weights")
-    #   optimizer.apply_gradients(group_grads["bias"], name = "bias")
-    #   optimizer.apply_gradients(group_grads["other"], name = "other")
-    # else:
-    optimizer.apply_gradients(gradvar, name = "other")
+    if (self.task_config.model.smart_bias 
+          and isinstance(optimizer, optimization.ExponentialMovingAverage)
+            and isinstance(optimizer._optimizer, 
+                                optimization.ScaledYoloSGD.ScaledYoloSGD)): 
+      optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
+      optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
+      optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
+      optimizer.update_average(optimizer.iterations)
+    elif self.task_config.model.smart_bias:
+      optimizer.apply_gradients(group_grads["weights"], name = "weights")
+      optimizer.apply_gradients(group_grads["bias"], name = "bias")
+      optimizer.apply_gradients(group_grads["other"], name = "other")
+    else:
+      optimizer.apply_gradients(gradvar, name = "other")
     tf.print(label["source_id"], optimizer.iterations, loss_metrics['global']['total_loss'])
 
     logs = {self.loss: loss_metrics['global']['total_loss'],

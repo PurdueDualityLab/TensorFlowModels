@@ -238,8 +238,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
             # ltime = time.time()
 
-            if i >= 10:
-                break
+            # if i >= 10:
+            #     break
             # a = task.train_step(sample, model, optimizer)
             strat.run(task.train_step, args=(sample, model, optimizer))
         
