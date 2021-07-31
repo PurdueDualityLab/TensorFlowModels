@@ -327,14 +327,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             # 
 
             
-            with torch.no_grad():
-                grad = list(model.parameters())[-2]
-                #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
-                pg = grad[-2].grad.cpu().sum().detach().numpy()
 
-                print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
-                # for g in grad:
-                #     print("\t", g.grad.cpu().sum().detach().numpy())
+            grad = list(model.parameters())[-2]
+            #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
+            pg = grad[-2].grad.cpu().sum().detach().numpy()
+
+            print(paths[0].split("/")[-1].split(".")[-2], grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
+            # for g in grad:
+            #     print("\t", g.grad.cpu().sum().detach().numpy())
                     
             optimizer.zero_grad()
             if ema:
