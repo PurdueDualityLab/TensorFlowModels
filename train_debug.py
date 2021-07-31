@@ -99,7 +99,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         model = Darknet(opt.cfg).to(device) # createz
 
     # Optimizer
-    nbs = 1 #64  # nominal batch size
+    nbs = 64  # nominal batch size
     accumulate = max(round(nbs / total_batch_size), 1)  # accumulate loss before optimizing
     hyp['weight_decay'] *= total_batch_size * accumulate / nbs  # scale weight_decay
 
