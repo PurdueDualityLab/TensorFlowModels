@@ -94,7 +94,7 @@ task:
         crop_area: [0.25, 1.0]
         jitter: 0.4
   validation_data:
-    global_batch_size: 4
+    global_batch_size: 1
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow'
     tfds_download: true
     tfds_name: coco
@@ -112,8 +112,8 @@ task:
       stride: 64
   weight_decay: 0.0005
   annotation_file: null
-  # load_darknet_weights: true
-  # darknet_load_decoder: true
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 375625 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 1000

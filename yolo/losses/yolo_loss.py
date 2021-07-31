@@ -660,8 +660,6 @@ class Yolo_Loss(object):
       grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
     else:
       grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
-      # clip the values between zero and one
-      # grid = tf.clip_by_value(grid, 0.0, 1.0)
 
     # stop gradient and return to avoid TPU errors and save compute
     # resources
