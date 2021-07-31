@@ -114,36 +114,37 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     #   experiment="yolo_custom",
     #   config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"],
     #   model_dir='')
-    task, model, params = load_model(
-      experiment="yolo_custom",
-      config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline-dbg.yaml"],
-      model_dir='')
+    strat = tf.distribute.MirroredStrategy()
+    with strat.scope():
+        task, model, params = load_model(
+        experiment="yolo_custom",
+        config_path=["yolo/configs/experiments/yolov4-csp/inference/512-baseline-dbg.yaml"],
+        model_dir='')
 
-    parser = task.get_parser()
-    optimizer = task.create_optimizer(params.trainer.optimizer_config,
-                                      params.runtime)
+        parser = task.get_parser()
+        optimizer = task.create_optimizer(params.trainer.optimizer_config,
+                                        params.runtime)
 
-    # drawer = utils.DrawBoxes(
-    #   labels=coco.get_coco_names(
-    #       path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
-    #   ),
-    #   thickness=2,
-    #   classes=91)
+        # drawer = utils.DrawBoxes(
+        #   labels=coco.get_coco_names(
+        #       path="/home/vbanna/Research/TensorFlowModels/yolo/dataloaders/dataset_specs/coco.names"
+        #   ),
+        #   thickness=2,
+        #   classes=91)
 
-    batch_size = total_batch_size
-    loader = get_n(dataloader, parser) 
-    loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
-                                                                    {'source_id': tf.int64, 
-                                                                    'bbox': tf.float32, 
-                                                                    'classes': tf.float32, 
-                                                                    'area': tf.float32, 
-                                                                    'is_crowd': tf.int32, 
-                                                                    'best_anchors': tf.float32, 
-                                                                    'best_iou_match': tf.float32, 'width': tf.int32, 'height': tf.int32, 'info': tf.float32, 'num_detections': tf.int32, 'upds': {'3': tf.float32, '4': tf.float32, '5': tf.float32},'inds': {'3': tf.int32, '4': tf.int32, '5': tf.int32}, 'true_conf': {'3': tf.float32, '4': tf.float32, '5': tf.float32}, 'groundtruths': {'source_id': tf.int64, 'height': tf.int64, 'width': tf.int64, 'num_detections': tf.int32, 'image_info': tf.float32, 'boxes': tf.float32, 'classes': tf.float32, 'areas': tf.float32, 'is_crowds': tf.int32}}))
-    
+        batch_size = total_batch_size
+        loader = get_n(dataloader, parser) 
+        loader = tf.data.Dataset.from_generator(loader, output_types = (tf.float32, 
+                                                                        {'source_id': tf.int64, 
+                                                                        'bbox': tf.float32, 
+                                                                        'classes': tf.float32, 
+                                                                        'area': tf.float32, 
+                                                                        'is_crowd': tf.int32, 
+                                                                        'best_anchors': tf.float32, 
+                                                                        'best_iou_match': tf.float32, 'width': tf.int32, 'height': tf.int32, 'info': tf.float32, 'num_detections': tf.int32, 'upds': {'3': tf.float32, '4': tf.float32, '5': tf.float32},'inds': {'3': tf.int32, '4': tf.int32, '5': tf.int32}, 'true_conf': {'3': tf.float32, '4': tf.float32, '5': tf.float32}, 'groundtruths': {'source_id': tf.int64, 'height': tf.int64, 'width': tf.int64, 'num_detections': tf.int32, 'image_info': tf.float32, 'boxes': tf.float32, 'classes': tf.float32, 'areas': tf.float32, 'is_crowds': tf.int32}}))
+        
     loader = loader.batch(batch_size)
-
-    # strat = tf.distribute.MirroredStrategy()
+    strat.experimental_distribute_dataset(loader)
 
     
     for epoch in range(0, epochs):  # epoch ------------------------------------------------------------------
@@ -196,7 +197,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
             if i >= 10:
                 break
-            a = task.train_step(sample, model, optimizer)
+            # a = task.train_step(sample, model, optimizer)
+            strat.run(task.train_step, args=(sample, model, optimizer))
         
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training
