@@ -8,8 +8,8 @@ from tensorflow.python.util.tf_export import keras_export
 
 import tensorflow as tf
 
-
 __all__ = ['SGD']
+
 
 # problem is that sub division cannot change between saves
 class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
@@ -77,8 +77,8 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   def __init__(self,
                learning_rate=0.01,
                momentum=0.0,
-               momentum_start =0.0, 
-               warmup_steps = 1000,
+               momentum_start=0.0,
+               warmup_steps=1000,
                nesterov=False,
                name="SGD",
                **kwargs):
@@ -107,13 +107,14 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   def _get_momentum(self, iteration):
     momentum = self._get_hyper("momentum")
     momentum_start = self._get_hyper("momentum_start")
-    momentum_warm_up_steps = tf.cast(self._get_hyper("warmup_steps"), 
-                                      iteration.dtype)
-    value = tf.cond((iteration - momentum_warm_up_steps) < 0, 
-        true_fn=lambda: (momentum_start + 
-                          (tf.cast(iteration, momentum.dtype) * 
-                             (momentum - momentum_start)/tf.cast(
-                               momentum_warm_up_steps, momentum.dtype))), 
+    momentum_warm_up_steps = tf.cast(
+        self._get_hyper("warmup_steps"), iteration.dtype)
+    value = tf.cond(
+        (iteration - momentum_warm_up_steps) < 0,
+        true_fn=lambda: (momentum_start +
+                         (tf.cast(iteration, momentum.dtype) *
+                          (momentum - momentum_start) / tf.cast(
+                              momentum_warm_up_steps, momentum.dtype))),
         false_fn=lambda: momentum)
     return value
 
@@ -123,26 +124,28 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
         self.add_slot(var, "momentum")
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(SGDMomentumWarmup, self)._prepare_local(var_device, 
-                                                  var_dtype, apply_state)
-    
+    super(SGDMomentumWarmup, self)._prepare_local(var_device, var_dtype,
+                                                  apply_state)
+
     if self._momentum:
       momentum = self._get_momentum(self.iterations)
       momentum = tf.cast(momentum, var_dtype)
-      apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(momentum)
+      apply_state[(var_device,
+                   var_dtype)]["momentum"] = array_ops.identity(momentum)
 
     bias_lr = self._get_hyper("bias_learning_rate")
     if isinstance(bias_lr, learning_rate_schedule.LearningRateSchedule):
       bias_lr = bias_lr(self.iterations)
 
     bias_lr = tf.cast(bias_lr, var_dtype)
-    apply_state[(var_device, var_dtype)]["bias_lr"] = array_ops.identity(bias_lr)
+    apply_state[(var_device,
+                 var_dtype)]["bias_lr"] = array_ops.identity(bias_lr)
     return apply_state[(var_device, var_dtype)]
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
@@ -150,10 +153,10 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
       lr = coefficients["lr_t"]
 
       # bias_lr = coefficients["bias_lr"]
-      # lr = tf.cond(tf.logical_and(tf.rank(grad) == 1, 
-        #                           tf.shape(grad)[0] == self._LR_bias_depth),
-        # true_fn=lambda:bias_lr, 
-        # false_fn=lambda:lr)
+      # lr = tf.cond(tf.logical_and(tf.rank(grad) == 1,
+      #                           tf.shape(grad)[0] == self._LR_bias_depth),
+      # true_fn=lambda:bias_lr,
+      # false_fn=lambda:lr)
 
       return gen_training_ops.ResourceApplyKerasMomentum(
           var=var.handle,
@@ -173,12 +176,14 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   def _resource_apply_sparse_duplicate_indices(self, grad, var, indices,
                                                **kwargs):
     if self._momentum:
-      return super(SGDMomentumWarmup, self)._resource_apply_sparse_duplicate_indices(
-          grad, var, indices, **kwargs)
+      return super(SGDMomentumWarmup,
+                   self)._resource_apply_sparse_duplicate_indices(
+                       grad, var, indices, **kwargs)
     else:
       var_device, var_dtype = var.device, var.dtype.base_dtype
-      coefficients = (kwargs.get("apply_state", {}).get((var_device, var_dtype))
-                      or self._fallback_apply_state(var_device, var_dtype))
+      coefficients = (
+          kwargs.get("apply_state", {}).get((var_device, var_dtype)) or
+          self._fallback_apply_state(var_device, var_dtype))
 
       return gen_resource_variable_ops.ResourceScatterAdd(
           resource=var.handle,
@@ -188,8 +193,8 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     momentum_var = self.get_slot(var, "momentum")
     return gen_training_ops.ResourceSparseApplyKerasMomentum(
@@ -215,8 +220,6 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
     return config
 
 
-
-
 # if __name__ == "__main__":
 #   from yolo import run
 #   import os
@@ -229,5 +232,5 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
 
 #   train_data = task.build_inputs(task.task_config.train_data)
 #   validation_data = task.build_inputs(task.task_config.train_data)
-  
+
 #   model.compile(optimizer = optimizer)

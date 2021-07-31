@@ -14,19 +14,22 @@ from official.vision.beta.ops import box_ops, preprocess_ops
 from official.vision.beta.dataloaders import parser, utils
 from yolo.ops import loss_utils as loss_ops
 
+
 def coco91_to_80(classif, box, areas, iscrowds):
   # key vector
-  x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 
-        22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 
-        43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 
-        62, 63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 
-        85, 86, 87, 88, 89, 90]
-  no = tf.expand_dims(tf.convert_to_tensor(x), axis = 0)
+  x = [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+      23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+      44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
+      63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85,
+      86, 87, 88, 89, 90
+  ]
+  no = tf.expand_dims(tf.convert_to_tensor(x), axis=0)
 
-  ce = tf.expand_dims(classif, axis = -1)
+  ce = tf.expand_dims(classif, axis=-1)
   ind = ce == tf.cast(no, ce.dtype)
-  co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis = -1), [-1])
-  ind = tf.where(tf.reduce_any(ind, axis = -1))
+  co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis=-1), [-1])
+  ind = tf.where(tf.reduce_any(ind, axis=-1))
   classif = tf.gather_nd(co, ind)
   box = tf.gather_nd(box, ind)
 
@@ -35,6 +38,7 @@ def coco91_to_80(classif, box, areas, iscrowds):
 
   num_detections = tf.shape(classif)[0]
   return classif, box, areas, iscrowds, num_detections
+
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   shape = tf.shape(value)
@@ -59,42 +63,37 @@ class Parser(parser.Parser):
                min_level=3,
                max_level=5,
                jitter=0.0,
-               jitter_mosaic = 0.0, 
+               jitter_mosaic=0.0,
                resize=1.0,
-               resize_mosaic = 1.0, 
-               sheer=0.0, 
-               
-
-               area_thresh = 0.1, 
+               resize_mosaic=1.0,
+               sheer=0.0,
+               area_thresh=0.1,
                max_num_instances=200,
-
-               aug_rand_angle=0.0, 
+               aug_rand_angle=0.0,
                aug_rand_transalate=0.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
                aug_rand_hue=1.0,
                random_pad=True,
-               
                aug_scale_min=1.0,
                aug_scale_max=1.0,
-               mosaic_min = 1.0, 
-               mosaic_max = 1.0, 
+               mosaic_min=1.0,
+               mosaic_max=1.0,
                mosaic_translate=0.0,
-               
                anchor_t=4.0,
-               dynamic_conv=False, 
-               stride = None, 
+               dynamic_conv=False,
+               stride=None,
                scale_xy=None,
                use_scale_xy=False,
-               best_match_only=False, 
+               best_match_only=False,
                masks=None,
                anchors=None,
                letter_box=False,
                random_flip=True,
                use_tie_breaker=True,
-               dtype='float32', 
-               
-               coco91to80 = False):
+               dtype='float32',
+               coco91to80=False, 
+               seed = None):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
@@ -157,9 +156,8 @@ class Parser(parser.Parser):
     image_h = output_size[0]
     if stride is None:
       self._net_down_scale = 2**max_level
-    else: 
+    else:
       self._net_down_scale = stride
-
 
     # assert that the width and height is viable
     assert image_w % self._net_down_scale == 0
@@ -176,7 +174,6 @@ class Parser(parser.Parser):
     }
     self._use_tie_breaker = use_tie_breaker
     self._max_num_instances = max_num_instances
-
 
     # image scaling params
     self._jitter = 0.0 if jitter is None else jitter
@@ -197,7 +194,6 @@ class Parser(parser.Parser):
     self._letter_box = letter_box
     self._random_pad = random_pad
     self._aug_rand_angle = aug_rand_angle
-    
 
     # color space distortion of the image
     self._aug_rand_saturation = aug_rand_saturation
@@ -217,6 +213,7 @@ class Parser(parser.Parser):
     } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
+    self._seed = seed
     # set the data type based on input string
     if dtype == 'float16':
       self._dtype = tf.float16
@@ -260,8 +257,9 @@ class Parser(parser.Parser):
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
       indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
-          raw_true, self._masks[key], width // 2**int(key), height // 2**int(key), 0,
-          raw_true['bbox'].dtype, scale_xy, scale_up[key], use_tie_breaker)
+          raw_true, self._masks[key], width // 2**int(key),
+          height // 2**int(key), 0, raw_true['bbox'].dtype, scale_xy,
+          scale_up[key], use_tie_breaker)
 
       # set/fix the shape of the indexes
       ishape = indexes.get_shape().as_list()
@@ -289,38 +287,30 @@ class Parser(parser.Parser):
     ])
     return val
 
-  def _jitter_scale(self, 
-                    image, 
-                    shape, 
-                    letter_box,
-                    jitter, 
-                    resize, 
-                    random_pad, 
-                    aug_scale_min, 
-                    aug_scale_max, 
-                    translate, 
-                    angle, 
+  def _jitter_scale(self, image, shape, letter_box, jitter, resize, random_pad,
+                    aug_scale_min, aug_scale_max, translate, angle,
                     perspective):
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
-      crop_only = True 
-      # jitter gives you only one info object, 
+      crop_only = True
+      # jitter gives you only one info object,
       # resize and crop gives you one
-      # max info objects possible is 3, 2 from jitter, 1 from crop  
-      # if crop only then there can be 1 form jitter and 1 from crop 
+      # max info objects possible is 3, 2 from jitter, 1 from crop
+      # if crop only then there can be 1 form jitter and 1 from crop
       reps = 1
     else:
-      crop_only = False 
+      crop_only = False
       reps = 0
     infos = []
     image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
-        image, 
-        shape, 
+        image,
+        shape,
         letter_box=letter_box,
         jitter=jitter,
         resize=resize,
         crop_only=crop_only,
-        random_pad=random_pad,) 
-        # seed=self._seed)
+        random_pad=random_pad,
+        seed = self._seed,
+    )
     infos.extend(info_a)
     stale_a = self._get_identity_info(image)
     for i in range(reps):
@@ -328,26 +318,23 @@ class Parser(parser.Parser):
     image, _, affine = preprocessing_ops.affine_warp_image(
         image,
         shape,
-        scale_min = aug_scale_min, 
-        scale_max = aug_scale_max, 
-        translate = translate,
-        degrees = angle, 
-        perspective = perspective,
-        random_pad = random_pad,)
-        # seed=self._seed)
+        scale_min=aug_scale_min,
+        scale_max=aug_scale_max,
+        translate=translate,
+        degrees=angle,
+        perspective=perspective,
+        random_pad=random_pad,
+        seed = self._seed,
+    )
     return image, infos, affine
 
   def reorg91to80(self, data):
 
     if self._coco91to80:
-      (data['groundtruth_classes'], 
-      data['groundtruth_boxes'], 
-      data['groundtruth_area'], 
-      data['groundtruth_is_crowd'],
-      _) = coco91_to_80(data['groundtruth_classes'], 
-                        data['groundtruth_boxes'], 
-                        data['groundtruth_area'], 
-                        data['groundtruth_is_crowd'])
+      (data['groundtruth_classes'], data['groundtruth_boxes'],
+       data['groundtruth_area'], data['groundtruth_is_crowd'],
+       _) = coco91_to_80(data['groundtruth_classes'], data['groundtruth_boxes'],
+                         data['groundtruth_area'], data['groundtruth_is_crowd'])
     return data
 
   def _parse_train_data(self, data):
@@ -355,50 +342,36 @@ class Parser(parser.Parser):
     data = self.reorg91to80(data)
 
     # initialize the shape constants
-    image = tf.cast(data['image'], self._dtype)
-    image = image / 255
+    image = data['image']
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
     height, width = preprocessing_ops.get_image_shape(image)
-      
+
     if self._random_flip:
       # randomly flip the image horizontally
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, 
+                                                              boxes, 
+                                                              seed = self._seed)
 
     if not data['is_mosaic']:
       image, infos, affine = self._jitter_scale(
-        image, 
-        [self._image_h, self._image_w], 
-        self._letter_box, 
-        self._jitter, 
-        self._resize, 
-        self._random_pad, 
-        self._aug_scale_min, 
-        self._aug_scale_max, 
-        self._aug_rand_translate, 
-        self._aug_rand_angle,
-        0.0
-      )
+          image, [self._image_h, self._image_w], self._letter_box, self._jitter,
+          self._resize, self._random_pad, self._aug_scale_min,
+          self._aug_scale_max, self._aug_rand_translate, self._aug_rand_angle,
+          0.0)
     else:
       image, infos, affine = self._jitter_scale(
-        image, 
-        [self._image_h, self._image_w], 
-        self._letter_box, 
-        self._jitter_mosaic, 
-        self._resize_mosaic, 
-        self._random_pad, 
-        self._mosaic_min, 
-        self._mosaic_max, 
-        self._mosaic_translate,
-        self._aug_rand_angle, 
-        0.0
-      )
+          image, [self._image_h, self._image_w], self._letter_box,
+          self._jitter_mosaic, self._resize_mosaic, self._random_pad,
+          self._mosaic_min, self._mosaic_max, self._mosaic_translate,
+          self._aug_rand_angle, 0.0)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, 
-                                                infos, 
-                                                affine = affine,
-                                                area_thresh = self._area_thresh)
+    boxes, inds = preprocessing_ops.apply_infos(
+        boxes, infos, 
+        affine=affine, 
+        area_thresh=self._area_thresh, 
+        seed = self._seed)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
@@ -423,16 +396,33 @@ class Parser(parser.Parser):
 
     # apply scaling to the hue saturation and brightness of an image
     num_dets = tf.shape(classes)[0]
+    image = tf.cast(image, self._dtype)
+    image = image / 255
     if self._aug_rand_hue > 0.0:
       delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
-                                                    self._aug_rand_hue)
+                                                    self._aug_rand_hue, 
+                                                    seed = self._seed)
+      # hsv = tf.image.rgb_to_hsv(image)
+      # h, s, v = tf.split(hsv, 3, axis = -1)
+      # h *= (1 + delta)
+      # hsv = tf.concat([h, s, v], axis = -1)
+      # image = tf.image.hsv_to_rgb(hsv)
       image = tf.image.adjust_hue(image, delta)
     if self._aug_rand_saturation > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_saturation)
+      # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+      #                                       seed = self._seed)
+      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_saturation,
+                                                        self._aug_rand_saturation, 
+                                                        seed = self._seed)
       image = tf.image.adjust_saturation(image, delta)
     if self._aug_rand_brightness > 0.0:
-      delta = preprocessing_ops.rand_scale(self._aug_rand_brightness)
+      # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+      #                                       seed = self._seed)
+      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_brightness,
+                                                        self._aug_rand_brightness, 
+                                                        seed = self._seed)
       image *= delta
+      
     # clip the values of the image between 0.0 and 1.0
     image = tf.clip_by_value(image, 0.0, 1.0)
 
@@ -440,8 +430,15 @@ class Parser(parser.Parser):
     image = tf.cast(image, self._dtype)
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
-        image, boxes, classes, width, height, info, inds, 
-        data, is_training=True)
+        image,
+        boxes,
+        classes,
+        width,
+        height,
+        info,
+        inds,
+        data,
+        is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -457,34 +454,37 @@ class Parser(parser.Parser):
     if not self._dynamic_conv:
       height, width = self._image_h, self._image_w
     else:
-      fit = lambda x: tf.cast((tf.math.ceil((x / self._net_down_scale) + 0.5) 
-                                          * self._net_down_scale), x.dtype)  
-      height, width = preprocessing_ops.get_image_shape(image)                               
+      fit = lambda x: tf.cast((tf.math.ceil(
+          (x / self._net_down_scale) + 0.5) * self._net_down_scale), x.dtype)
+      height, width = preprocessing_ops.get_image_shape(image)
       height, width = fit(height), fit(width)
 
     image, infos, _ = preprocessing_ops.resize_and_jitter_image(
-          image,
-          [height, width],
-          letter_box=self._letter_box,
-          random_pad=False, 
-          shiftx=0.5,
-          shifty=0.5, 
-          jitter=0.0, 
-          resize=1.0)
+        image, [height, width],
+        letter_box=self._letter_box,
+        random_pad=False,
+        shiftx=0.5,
+        shifty=0.5,
+        jitter=0.0,
+        resize=1.0)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, 
-                                                infos,
-                                                shuffle_boxes = False, 
-                                                area_thresh = self._area_thresh)
+    boxes, inds = preprocessing_ops.apply_infos(
+        boxes, infos, shuffle_boxes=False, area_thresh=self._area_thresh)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-
     # height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
-        image, boxes, classes, width, height, info, inds, 
-        data, is_training=False)
+        image,
+        boxes,
+        classes,
+        width,
+        height,
+        info,
+        inds,
+        data,
+        is_training=False)
     return image, labels
 
   def _parse_passthrough_data(self, data):
@@ -515,7 +515,7 @@ class Parser(parser.Parser):
                    width,
                    height,
                    info,
-                   inds, 
+                   inds,
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
@@ -532,7 +532,7 @@ class Parser(parser.Parser):
         self._anchors,
         width=width,
         height=height,
-        iou_thresh=self._anchor_t, 
+        iou_thresh=self._anchor_t,
         best_match_only=self._best_match_only)
 
     # set/fix the boxes shape
@@ -605,7 +605,6 @@ class Parser(parser.Parser):
     labels['inds'] = inds
     labels['true_conf'] = true_conf
 
-
     # Sets up groundtruth data for evaluation.
     groundtruths = {
         'source_id': data['source_id'],
@@ -620,8 +619,8 @@ class Parser(parser.Parser):
     }
     groundtruths['source_id'] = utils.process_source_id(
         groundtruths['source_id'])
-    groundtruths = utils.pad_groundtruths_to_fixed_size(
-        groundtruths, self._max_num_instances)
+    groundtruths = utils.pad_groundtruths_to_fixed_size(groundtruths,
+                                                        self._max_num_instances)
 
     labels['groundtruths'] = groundtruths
     return image, labels

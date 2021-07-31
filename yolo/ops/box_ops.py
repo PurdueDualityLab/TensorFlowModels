@@ -50,15 +50,14 @@ def yxyx_to_xcycwh(box: tf.Tensor):
 
 #   return box, delta
 
-
 # def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
-#   """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax, 
+#   """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax,
 #   xmax.
-  
+
 #   Args:
-#     box: any `Tensor` whose last dimension is 4 representing the coordinates of 
+#     box: any `Tensor` whose last dimension is 4 representing the coordinates of
 #       boxes in x_center, y_center, width, height.
-  
+
 #   Returns:
 #     box: a `Tensor` whose shape is the same as `box` in new format.
 #   """
@@ -68,6 +67,7 @@ def yxyx_to_xcycwh(box: tf.Tensor):
 #     scale = 2.0
 #   box = _xcycwh_to_yxyx(box, scale)
 #   return box
+
 
 def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
   """Private function called by xcycwh_to_yxyx to allow custom gradients
@@ -81,6 +81,7 @@ def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
     x_max, y_max = tf.split(xy_max, 2, axis=-1)
     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
   return box
+
 
 # IOU
 def intersect_and_union(box1, box2, yxyx=False):
@@ -263,6 +264,7 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
     # diou = tf.clip_by_value(diou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, diou
 
+
 def distance(box1, box2, beta=0.6, yxyx=False):
   """Calculates the distance intersection over union between box1 and box2.
 
@@ -296,7 +298,7 @@ def distance(box1, box2, beta=0.6, yxyx=False):
 
     b1xy, _ = tf.split(box1, 2, axis=-1)
     b2xy, _ = tf.split(box2, 2, axis=-1)
-    _ , bcwh = tf.split(boxc, 2, axis=-1)
+    _, bcwh = tf.split(boxc, 2, axis=-1)
     center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
     c_diag = tf.reduce_sum(bcwh**2, axis=-1)
     regularization = math_ops.divide_no_nan(center_dist, c_diag)

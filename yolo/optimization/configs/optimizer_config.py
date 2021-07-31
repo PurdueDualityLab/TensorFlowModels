@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Dataclasses for optimizer configs."""
 from typing import List, Optional
 
@@ -55,6 +54,7 @@ class SGDAccumConfig(BaseOptimizerConfig):
   momentum: float = 0.0
   accumulation_steps: int = 1
 
+
 @dataclasses.dataclass
 class SGDMomentumWarmupConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
@@ -72,4 +72,23 @@ class SGDMomentumWarmupConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum_start: float = 0.0
   momentum: float = 0.9
+  warmup_steps: int = 1000
+
+@dataclasses.dataclass
+class ScaledYoloSGDConfig(BaseOptimizerConfig):
+  """Configuration for SGD optimizer.
+
+  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+
+  Attributes:
+    name: name of the optimizer.
+    decay: decay rate for SGD optimizer.
+    nesterov: nesterov for SGD optimizer.
+    momentum: momentum for SGD optimizer.
+  """
+  name: str = "SGD"
+  decay: float = 0.0
+  nesterov: bool = False
+  momentum_start: float = 0.0
+  momentum: float = 0.8
   warmup_steps: int = 1000

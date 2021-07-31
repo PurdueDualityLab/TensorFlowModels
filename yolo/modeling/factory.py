@@ -94,7 +94,7 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       nms_type=model_config.filter.nms_type,
       path_scale=path_scales,
       scale_xy=xy_scales,
-      darknet=model_config.filter.darknet, 
+      darknet=model_config.filter.darknet,
       label_smoothing=model_config.filter.label_smoothing,
       pre_nms_points=model_config.filter.pre_nms_points,
       use_scaled_loss=model_config.filter.use_scaled_loss,
@@ -118,7 +118,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       boxes_per_level=model_config.boxes_per_scale,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
-      kernel_regularizer=l2_regularization, 
+      kernel_regularizer=l2_regularization,
       smart_bias=model_config.smart_bias)
   return head
 
@@ -131,8 +131,7 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
 
   # backbone = factory.build_backbone(input_specs, model_config,
   #                                   l2_regularization)
-  backbone = build_darknet(input_specs, model_config,
-                                    l2_regularization)
+  backbone = build_darknet(input_specs, model_config, l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)

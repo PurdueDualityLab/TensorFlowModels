@@ -76,7 +76,7 @@ task:
       use_reduction_sum: false
   train_data:
     global_batch_size: 64
-    dtype: bfloat16
+    dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10000
@@ -106,7 +106,7 @@ task:
         crop_area_mosaic: [0.35, 0.75]
   validation_data:
     global_batch_size: 8
-    dtype: bfloat16
+    dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000

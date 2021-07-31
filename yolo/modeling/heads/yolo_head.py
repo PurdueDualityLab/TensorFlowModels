@@ -18,7 +18,7 @@ class YoloHead(tf.keras.layers.Layer):
                kernel_regularizer=None,
                bias_regularizer=None,
                activation=None,
-               smart_bias = False, 
+               smart_bias=False,
                **kwargs):
     """
     Yolo Prediciton Head initialization function.
@@ -71,28 +71,31 @@ class YoloHead(tf.keras.layers.Layer):
         use_bn=False,
         **self._base_config)
 
-  def bias_init(self, scale, isize = 640, no_per_conf = 8):
-    def bias(shape, dtype):
-      base = tf.zeros(shape, dtype = dtype)
-      base = tf.reshape(base, [self._boxes_per_level, -1])
-      box, conf, classes = tf.split(base, [4, 1, -1], axis = -1)
-      box += 0.01
-      conf += tf.math.log(no_per_conf/((isize / scale) ** 2))
-      classes += tf.math.log(0.6/(self._classes - 0.99))
-      base = tf.concat([box, conf, classes], axis = -1)
+  def bias_init(self, scale, isize=640, no_per_conf=8):
 
-      tf.print(base, summarize = -1)
+    def bias(shape, dtype):
+      base = tf.zeros(shape, dtype=dtype)
+      base = tf.reshape(base, [self._boxes_per_level, -1])
+      box, conf, classes = tf.split(base, [4, 1, -1], axis=-1)
+      box += 0.01
+      conf += tf.math.log(no_per_conf / ((isize / scale)**2))
+      classes += tf.math.log(0.6 / (self._classes - 0.99))
+      base = tf.concat([box, conf, classes], axis=-1)
+
+      tf.print(base, summarize=-1)
       base = tf.reshape(base, [-1])
       return base
+
     return bias
 
   def build(self, input_shape):
     self._head = dict()
     for key in self._key_list:
-      scale = 2 ** int(key)
+      scale = 2**int(key)
       self._head[key] = nn_blocks.ConvBN(
-        bias_initializer=self.bias_init(scale) if self._smart_bias else 'zeros', 
-        **self._conv_config)
+          bias_initializer=self.bias_init(scale)
+          if self._smart_bias else 'zeros',
+          **self._conv_config)
 
   def call(self, inputs):
     outputs = dict()

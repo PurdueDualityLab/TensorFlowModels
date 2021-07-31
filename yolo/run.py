@@ -27,10 +27,8 @@ import os
 from yolo.demos import video_detect_gpu as vgu
 from yolo.demos import video_detect_cpu as vcu
 import tensorflow as tf
-
 '''
 python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 512 --config_file=yolo/configs/experiments/yolov4/inference/512-baseline.yaml --video ../videos/nyc.mp4  --max_batch 5 --model_dir ../checkpoints/250k-512-lr-special-t2/ --process_size 512'''
-
 """
 export GOOGLE_APPLICATION_CREDENTIALS=<key>.json 
 python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4/inference/512-baseline.yaml --video ../videos/nyc.mp4  --max_batch 5 

@@ -1,3 +1,4 @@
+from random import seed
 import tensorflow as tf
 from tensorflow._api.v2 import data
 import tensorflow_addons as tfa
@@ -25,13 +26,14 @@ class Mosaic(object):
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                random_flip=True,
-               random_pad = False, 
-               translate = 0.5, 
+               random_pad=False,
+               translate=0.5,
                crop_area=[0.5, 1.0],
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
                aug_probability=1.0,
-               area_thresh = 0.1, 
+               mixup_frequency=0.0, 
+               area_thresh=0.1,
                seed=None):
 
     self._output_size = output_size
@@ -53,6 +55,7 @@ class Mosaic(object):
 
     self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
+    self._mixup_frequency = mixup_frequency
 
     self._seed = seed
     return
@@ -65,9 +68,9 @@ class Mosaic(object):
       owidth = width
     else:
       if width > height:
-        oheight = height * self._max_resolution//width
+        oheight = height * self._max_resolution // width
       else:
-        owidth = width * self._max_resolution//height
+        owidth = width * self._max_resolution // height
     return oheight, owidth
 
   def _pad_images(self, sample):
@@ -106,25 +109,31 @@ class Mosaic(object):
     return boxes, classes, is_crowd, area
 
   def _mosaic_crop(self, image, crop_area):
-    scale = preprocessing_ops.rand_uniform_strong(tf.math.sqrt(crop_area[0]), 
-                                                  tf.math.sqrt(crop_area[1]))
+    scale = preprocessing_ops.rand_uniform_strong(
+        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
     height, width = preprocessing_ops.get_image_shape(image)
     width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
     height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
     image, info = preprocessing_ops.random_window_crop(
-      image, 
-      height, 
-      width, 
-      translate = 1.0
-    )
+        image, height, width, translate=1.0)
     return image, [info]
 
   def _crop_image(self, image, crop_area):
-    image, info = preprocessing_ops.random_crop_image(
-          image, 
-          aspect_ratio_range=[self._output_size[1]/self._output_size[0], 
-                              self._output_size[1]/self._output_size[0]], 
-          area_range=crop_area)
+    # image, info = preprocessing_ops.random_crop_image(
+    #     image,
+    #     aspect_ratio_range=[
+    #         self._output_size[1] / self._output_size[0],
+    #         self._output_size[1] / self._output_size[0]
+    #     ],
+    #     seed = self._seed, 
+    #     area_range=crop_area)
+    scale = preprocessing_ops.rand_uniform_strong(
+        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
+    height, width = preprocessing_ops.get_image_shape(image)
+    width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
+    height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
+    image, info = preprocessing_ops.random_window_crop(
+        image, height, width, translate=1.0)
     return image, info
 
   def _gen_blank_info(self, image):
@@ -134,7 +143,7 @@ class Mosaic(object):
         tf.cast(shape[:2], tf.float32),
         tf.ones_like(tf.cast(shape[:2], tf.float32)),
         tf.zeros_like(tf.cast(shape[:2], tf.float32)),
-        ])
+    ])
     return info
 
   def _process_image(self,
@@ -144,8 +153,8 @@ class Mosaic(object):
                      is_crowd,
                      area,
                      xs=0.0,
-                     ys=0.0, 
-                     cut = None):
+                     ys=0.0,
+                     cut=None):
     if self._random_flip:
       # randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
@@ -160,63 +169,32 @@ class Mosaic(object):
       info = self._gen_blank_info(image)
       docrop = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32)
       if docrop > 1 - self._random_crop:
-        image, info = self._crop_image(image, self._crop_area)
+        image, info = self._crop_image(image, [0.25, 1.0])
       infos.append(info)
       random_crop = 0.0
+      letter_box = None
 
     image, infos_, crop_points = preprocessing_ops.resize_and_jitter_image(
-        image,
-        [self._output_size[0], self._output_size[1]],
+        image, [self._output_size[0], self._output_size[1]],
         random_pad=False,
         letter_box=letter_box,
         jitter=random_crop,
-        resize = self._resize,
+        resize=self._resize,
         shiftx=xs,
         shifty=ys,
-        cut = cut)
+        cut=cut, 
+        seed = self._seed)
     infos.extend(infos_)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
+    boxes, inds = preprocessing_ops.apply_infos(
+        boxes, infos, area_thresh=self._area_thresh, seed = self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
     return image, boxes, classes, is_crowd, area, crop_points
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
-    # if self._mosaic_crop_mode == "scale":
-    #   image, infos = preprocessing_ops.resize_and_crop_image(
-    #       image, [self._output_size[0], self._output_size[1]],
-    #       [self._output_size[0], self._output_size[1]],
-    #       letter_box=None,
-    #       aug_scale_min=self._crop_area_mosaic[0],
-    #       aug_scale_max=self._crop_area_mosaic[1], 
-    #       random_pad=self._random_pad,
-    #       translate=self._translate,
-    #       seed=self._seed)
-    #   height, width = self._output_size[0], self._output_size[1]
-    #   image = tf.image.resize(image, (height, width))
-    # elif self._mosaic_crop_mode == 'crop_scale':
-    #   image, infos = self._mosaic_crop(image, self._crop_area)
-    #   image, infos_ = preprocessing_ops.resize_and_crop_image(
-    #       image, [self._output_size[0] * 2, self._output_size[1] * 2],
-    #       [self._output_size[0] * 2, self._output_size[1] * 2],
-    #       letter_box=None,
-    #       aug_scale_min=self._crop_area_mosaic[0],
-    #       aug_scale_max=self._crop_area_mosaic[1],
-    #       random_pad=self._random_pad,
-    #       translate=self._translate,
-    #       seed=self._seed)
-    #   infos.extend(infos_)
-    #   height, width = self._output_size[0], self._output_size[1]
-    #   image = tf.image.resize(image, (height, width))
-    # else:
-    #   height, width = self._output_size[0], self._output_size[1]
-    #   image = tf.image.resize(image, (height, width))
-    #   image, infos = self._mosaic_crop(image, self._crop_area)
-
-    # # clip and clean boxes
-    # boxes, inds = preprocessing_ops.apply_infos(boxes, infos, area_thresh = self._area_thresh)
     infos = None
     affine = None
 
@@ -224,25 +202,21 @@ class Mosaic(object):
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._crop_area[0]
       ch = preprocessing_ops.rand_uniform_strong(-center[0], 
-                                                  center[0])
+                                                  center[0], seed = self._seed)
       cw = preprocessing_ops.rand_uniform_strong(-center[1], 
-                                                  center[1])
+                                                  center[1], seed = self._seed)
 
       image = tfa.image.translate(image, [cw, ch])
-      info = tf.convert_to_tensor([
-        shape, 
-        shape, 
-        tf.ones_like(shape), 
-        -tf.cast([ch, cw], tf.float32)
-      ])
+      info = tf.convert_to_tensor(
+          [shape, shape,
+           tf.ones_like(shape), -tf.cast([ch, cw], tf.float32)])
       infos = [info]
-      
+
       image, _, affine = preprocessing_ops.affine_warp_image(
-          image,
-          [self._output_size[0], self._output_size[1]],
-          scale_min = self._crop_area_mosaic[0],
-          scale_max = self._crop_area_mosaic[1], 
-          translate = self._translate,
+          image, [self._output_size[0], self._output_size[1]],
+          scale_min=self._crop_area_mosaic[0],
+          scale_max=self._crop_area_mosaic[1],
+          translate=self._translate,
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
@@ -252,10 +226,9 @@ class Mosaic(object):
       image, infos = self._mosaic_crop(image, self._crop_area)
 
     # clip and clean boxes
-    boxes, inds = preprocessing_ops.apply_infos(boxes, 
-                                                infos, 
-                                                affine = affine,
-                                                area_thresh = self._area_thresh)
+    boxes, inds = preprocessing_ops.apply_infos(
+        boxes, infos, affine=affine, area_thresh=self._area_thresh, 
+        seed = self._seed)
 
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -265,39 +238,34 @@ class Mosaic(object):
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
-    scale = tf.cast(tf.shape(patch)/ishape, boxes.dtype)
-    translate = tf.cast((ishape - tf.shape(patch))/ishape, boxes.dtype)
-    boxes = boxes * tf.cast([scale[0], 
-                             scale[1], 
-                             scale[0], 
-                             scale[1]], boxes.dtype)
-    return preprocessing_ops.translate_boxes(boxes, 
-                                             classes, 
-                                             translate[1] * xs, 
+    scale = tf.cast(tf.shape(patch) / ishape, boxes.dtype)
+    translate = tf.cast((ishape - tf.shape(patch)) / ishape, boxes.dtype)
+    boxes = boxes * tf.cast([scale[0], scale[1], scale[0], scale[1]],
+                            boxes.dtype)
+    return preprocessing_ops.translate_boxes(boxes, classes, translate[1] * xs,
                                              translate[0] * ys)
 
   def _generate_cut(self):
     if self._mosaic_crop_mode == 'crop':
       min_offset = self._crop_area[0]
       cut_x = preprocessing_ops.rand_uniform_strong(
-        self._output_size[1] * min_offset, 
-        self._output_size[1] * (1 - min_offset)
-      )
+          self._output_size[1] * min_offset,
+          self._output_size[1] * (1 - min_offset), 
+          seed = self._seed)
       cut_y = preprocessing_ops.rand_uniform_strong(
-        self._output_size[1] * min_offset, 
-        self._output_size[1] * (1 - min_offset)
-      )
+          self._output_size[1] * min_offset,
+          self._output_size[1] * (1 - min_offset), 
+          seed = self._seed)
       cut = [cut_x, cut_y]
-      ishape = tf.convert_to_tensor([self._output_size[1], 
-                                      self._output_size[0], 3])
+      ishape = tf.convert_to_tensor(
+          [self._output_size[1], self._output_size[0], 3])
     else:
       cut = None
-      ishape = tf.convert_to_tensor([self._output_size[1] * 2, 
-                                      self._output_size[0] * 2, 3])
+      ishape = tf.convert_to_tensor(
+          [self._output_size[1] * 2, self._output_size[0] * 2, 3])
     return cut, ishape
 
-
-  # mosaic partial frequency 
+  # mosaic partial frequency
   def _mapped(self, sample):
     domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if self._mosaic_frequency > 0.0 and domo >= (1 - self._mosaic_frequency):
@@ -313,17 +281,17 @@ class Mosaic(object):
       for i in range(0, 4):
         images[i] = self._unpad_images(images[i], infos[i])
         (box_list[i], class_list[i], is_crowds[i],
-        areas[i]) = self._unpad_gt_comps(box_list[i], class_list[i],
+         areas[i]) = self._unpad_gt_comps(box_list[i], class_list[i],
                                           is_crowds[i], areas[i])
-        (images[i], box_list[i], class_list[i], is_crowds[i],
-        areas[i], _) = self._process_image(images[i], box_list[i], class_list[i],
-                                        is_crowds[i], areas[i], shifts[i][0], 
-                                        shifts[i][1], cut)
-        box_list[i], class_list[i] = self.scale_boxes(
-          images[i], ishape, box_list[i], class_list[i], 
-          1 - shifts[i][0], 1 - shifts[i][1]
-        )
-      
+        (images[i], box_list[i], class_list[i], is_crowds[i], areas[i],
+         _) = self._process_image(images[i], box_list[i], class_list[i],
+                                  is_crowds[i], areas[i], shifts[i][0],
+                                  shifts[i][1], cut)
+        box_list[i], class_list[i] = self.scale_boxes(images[i], ishape,
+                                                      box_list[i],
+                                                      class_list[i],
+                                                      1 - shifts[i][0],
+                                                      1 - shifts[i][1])
 
       patch1 = tf.concat([images[0], images[1]], axis=-2)
       patch2 = tf.concat([images[2], images[3]], axis=-2)
@@ -344,14 +312,20 @@ class Mosaic(object):
       height, width = preprocessing_ops.get_image_shape(image)
       sample['image'] = tf.expand_dims(image, axis=0)
       sample['source_id'] = tf.expand_dims(sample['source_id'][0], axis=0)
-      sample['width'] = tf.expand_dims(tf.cast(width, sample['width'].dtype), axis=0)
-      sample['height'] = tf.expand_dims(tf.cast(height, sample['height'].dtype), axis=0)
+      sample['width'] = tf.expand_dims(
+          tf.cast(width, sample['width'].dtype), axis=0)
+      sample['height'] = tf.expand_dims(
+          tf.cast(height, sample['height'].dtype), axis=0)
       sample['groundtruth_boxes'] = tf.expand_dims(boxes, axis=0)
-      sample['groundtruth_classes'] = tf.expand_dims(tf.cast(classes, sample['groundtruth_classes'].dtype), axis=0)
-      sample['groundtruth_is_crowd'] = tf.expand_dims(tf.cast(is_crowd, tf.bool), axis=0)
+      sample['groundtruth_classes'] = tf.expand_dims(
+          tf.cast(classes, sample['groundtruth_classes'].dtype), axis=0)
+      sample['groundtruth_is_crowd'] = tf.expand_dims(
+          tf.cast(is_crowd, tf.bool), axis=0)
       sample['groundtruth_area'] = tf.expand_dims(area, axis=0)
-      sample['info'] = tf.expand_dims(tf.convert_to_tensor([0, 0, height, width]), axis=0)
-      sample['num_detections'] = tf.expand_dims(tf.shape(sample['groundtruth_boxes'])[1], axis=0)   
+      sample['info'] = tf.expand_dims(
+          tf.convert_to_tensor([0, 0, height, width]), axis=0)
+      sample['num_detections'] = tf.expand_dims(
+          tf.shape(sample['groundtruth_boxes'])[1], axis=0)
       sample['is_mosaic'] = tf.expand_dims(tf.cast(1.0, tf.bool), axis=0)
 
     return sample
@@ -372,19 +346,17 @@ class Mosaic(object):
                                                tf.bool)
     return sample
 
-
   # mosaic full frequency doubles model speed
   def _im_process(self, sample, shiftx, shifty):
-    image = sample['image']
-    boxes = sample['groundtruth_boxes']
-    classes = sample['groundtruth_classes']
-    is_crowd = sample['groundtruth_is_crowd']
-    area = sample['groundtruth_area']
+    (image, boxes, classes, is_crowd, area, crop_points) = self._process_image(
+        sample['image'], sample['groundtruth_boxes'],
+        sample['groundtruth_classes'], sample['groundtruth_is_crowd'],
+        sample['groundtruth_area'], shiftx, shifty, None)
 
-    (image, boxes, classes, 
-    is_crowd, area, crop_points) = self._process_image(image, 
-                                          boxes, classes, is_crowd, area, 
-                                          shiftx, shifty, None)
+    cut, ishape = self._generate_cut()
+
+    (boxes, classes) = self.scale_boxes(image, ishape, boxes, classes,
+                                        1 - shiftx, 1 - shifty)
 
     sample['image'] = image
     sample['groundtruth_boxes'] = boxes
@@ -396,54 +368,30 @@ class Mosaic(object):
     sample['crop_points'] = crop_points
     return sample
 
-  def _map_concat(self, one, two, three, four):
-    cut, ishape = self._generate_cut()
-    for sample in [one, two, three, four]:
-      if cut is not None:
-        sample["image"], info = preprocessing_ops.mosaic_cut(
-          sample["image"], 
-          sample["crop_points"][0], sample["crop_points"][1], 
-          sample["crop_points"][2], sample["crop_points"][3], cut, 
-          sample["crop_points"][4], sample["crop_points"][5], 
-          sample["crop_points"][6], sample["crop_points"][7], 
-          sample["shiftx"], sample["shifty"]
-        ) 
-        sample['groundtruth_boxes'], inds = preprocessing_ops.apply_infos(
-                                                sample['groundtruth_boxes'], 
-                                                [info], 
-                                                area_thresh = self._area_thresh)
-        sample['groundtruth_classes'] = tf.gather(sample['groundtruth_classes'], 
-                                                  inds)
-        sample['groundtruth_is_crowd'] = tf.gather(sample['groundtruth_is_crowd'],
-                                                    inds)
-        sample['groundtruth_area'] = tf.gather(sample['groundtruth_area'], inds)
+  def _patch2(self, one, two):
+    sample = one
+    sample['image'] = tf.concat([one["image"], two["image"]], axis=-2)
 
-      (sample['groundtruth_boxes'], 
-      sample['groundtruth_classes']) = self.scale_boxes(
-        sample["image"], ishape, sample['groundtruth_boxes'], 
-        sample['groundtruth_classes'], 1 - sample["shiftx"], 1 - sample["shifty"]
-      )
+    sample['groundtruth_boxes'] = tf.concat(
+        [one['groundtruth_boxes'], two['groundtruth_boxes']], axis=0)
+    sample['groundtruth_classes'] = tf.concat(
+        [one['groundtruth_classes'], two['groundtruth_classes']], axis=0)
+    sample['groundtruth_is_crowd'] = tf.concat(
+        [one['groundtruth_is_crowd'], two['groundtruth_is_crowd']], axis=0)
+    sample['groundtruth_area'] = tf.concat(
+        [one['groundtruth_area'], two['groundtruth_area']], axis=0)
+    return sample
 
-    patch1 = tf.concat([one["image"], two["image"]], axis=-2)
-    patch2 = tf.concat([three["image"], four["image"]], axis=-2)
-    image = tf.concat([patch1, patch2], axis=-3)
+  def _patch(self, one, two):
+    image = tf.concat([one["image"], two["image"]], axis=-3)
 
-    boxes = tf.concat([one['groundtruth_boxes'], 
-                       two['groundtruth_boxes'], 
-                       three['groundtruth_boxes'], 
-                       four['groundtruth_boxes']] , axis=0)
-    classes = tf.concat([one['groundtruth_classes'] , 
-                        two['groundtruth_classes'] , 
-                        three['groundtruth_classes'] , 
-                        four['groundtruth_classes']] , axis=0)
-    is_crowd = tf.concat([one['groundtruth_is_crowd'], 
-                          two['groundtruth_is_crowd'], 
-                          three['groundtruth_is_crowd'], 
-                          four['groundtruth_is_crowd']], axis=0)
-    area = tf.concat([one['groundtruth_area'], 
-                      two['groundtruth_area'], 
-                      three['groundtruth_area'], 
-                      four['groundtruth_area']], axis=0)
+    boxes = tf.concat([one['groundtruth_boxes'], two['groundtruth_boxes']],
+                      axis=0)
+    classes = tf.concat(
+        [one['groundtruth_classes'], two['groundtruth_classes']], axis=0)
+    is_crowd = tf.concat(
+        [one['groundtruth_is_crowd'], two['groundtruth_is_crowd']], axis=0)
+    area = tf.concat([one['groundtruth_area'], two['groundtruth_area']], axis=0)
 
     if self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop":
       height, width = self._output_size[0], self._output_size[1]
@@ -455,55 +403,46 @@ class Mosaic(object):
     sample = one
     height, width = preprocessing_ops.get_image_shape(image)
     sample['image'] = image
-    sample['source_id'] = sample['source_id']
+    sample['groundtruth_boxes'] = boxes
+    sample['groundtruth_area'] = area
+    sample['groundtruth_classes'] = tf.cast(classes,
+                                            sample['groundtruth_classes'].dtype)
+    sample['groundtruth_is_crowd'] = tf.cast(is_crowd, tf.bool)
+
     sample['width'] = tf.cast(width, sample['width'].dtype)
     sample['height'] = tf.cast(height, sample['height'].dtype)
-    sample['groundtruth_boxes'] = boxes
-    sample['groundtruth_classes'] = tf.cast(classes,sample['groundtruth_classes'].dtype)
-    sample['groundtruth_is_crowd'] = tf.cast(is_crowd, tf.bool)
-    sample['groundtruth_area'] = area
-    sample['info'] = tf.convert_to_tensor([0, 0, height, width])
+
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[1]
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
     return sample
 
   def _full_frequency_apply(self, dataset):
-    one = dataset.shard(num_shards=4, index=0)
-    two = dataset.shard(num_shards=4, index=1)
-    three = dataset.shard(num_shards=4, index=2)
-    four = dataset.shard(num_shards=4, index=3)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    one = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=1)
+    three = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)#.shard(num_shards=4, index=2)
+    four = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True) #.shard(num_shards=4, index=3)
 
     num = tf.data.AUTOTUNE
-    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
-      num_parallel_calls=num)
-    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), 
-      num_parallel_calls=num)
-    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), 
-      num_parallel_calls=num)
-    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
-      num_parallel_calls=num)
+    one = one.map(
+        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num)
+    two = two.map(
+        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num)
+    three = three.map(
+        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num)
+    four = four.map(
+        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num)
 
-    stitched = tf.data.Dataset.zip((one, two, three, four))
-    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
-    return stitched
+    patch1 = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
+    patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
+    patch2 = tf.data.Dataset.zip((three, four))  #.prefetch(tf.data.AUTOTUNE)
+    patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
 
-  def _full_frequency_mixup(self, dataset):
-    one = dataset.shard(num_shards=4, index=0)
-    two = dataset.shard(num_shards=4, index=1)
+    stitched = tf.data.Dataset.zip((patch1, patch2))  #.prefetch(tf.data.AUTOTUNE)
+    stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE)
 
-
-    num = tf.data.AUTOTUNE
-    one = one.map(lambda x: self._im_process(x, 1.0, 1.0), 
-      num_parallel_calls=num)
-    two = two.map(lambda x: self._im_process(x, 0.0, 1.0), 
-      num_parallel_calls=num)
-    three = three.map(lambda x: self._im_process(x, 1.0, 0.0), 
-      num_parallel_calls=num)
-    four = four.map(lambda x: self._im_process(x, 0.0, 0.0), 
-      num_parallel_calls=num)
-
-    stitched = tf.data.Dataset.zip((one, two, three, four))
-    stitched = stitched.map(self._map_concat, num_parallel_calls=tf.data.AUTOTUNE)
+    if self._mixup_frequency > 0:
+      stitched = self._apply_mixup(stitched)
     return stitched
 
   def _apply(self, dataset):
@@ -514,7 +453,42 @@ class Mosaic(object):
     dataset = dataset.unbatch()
     dataset = dataset.map(
         self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE)
+    if self._mixup_frequency > 0:
+      dataset = self._apply_mixup(dataset)
     return dataset
+
+
+  def _mixup(self, one, two):
+    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    if domo > 0.5:
+      sample = one
+    else:
+      sample = two
+
+    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    if domo >= (1 - self._mixup_frequency):
+      otype = one["image"].dtype
+      r = tf.random.uniform([], 0.4, 0.6, tf.float32, seed=self._seed)
+      sample['image'] = (r * tf.cast(one["image"], tf.float32) + 
+                         (1 - r) * tf.cast(two["image"], tf.float32))
+
+      sample['image'] = tf.cast(sample['image'], otype)
+      sample['groundtruth_boxes'] = tf.concat(
+          [one['groundtruth_boxes'], two['groundtruth_boxes']], axis=0)
+      sample['groundtruth_classes'] = tf.concat(
+          [one['groundtruth_classes'], two['groundtruth_classes']], axis=0)
+      sample['groundtruth_is_crowd'] = tf.concat(
+          [one['groundtruth_is_crowd'], two['groundtruth_is_crowd']], axis=0)
+      sample['groundtruth_area'] = tf.concat(
+          [one['groundtruth_area'], two['groundtruth_area']], axis=0)
+    return sample
+
+  def _apply_mixup(self, dataset):
+    one = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=1)
+    mixed = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
+    mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE)
+    return mixed
 
   def _add_param(self, sample):
     sample['is_mosaic'] = tf.cast(0.0, tf.bool)
@@ -526,7 +500,8 @@ class Mosaic(object):
     return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE)
 
   def mosaic_fn(self, is_training=True):
-    if (is_training and self._mosaic_frequency >= 1.0):
+    if (is_training and self._mosaic_frequency >= 1.0 and
+        self._mosaic_crop_mode != "crop"):
       return self._full_frequency_apply
     elif is_training and self._mosaic_frequency > 0.0:
       return self._apply
@@ -542,39 +517,4 @@ class Mosaic(object):
     return steps
 
 
-if __name__ == "__main__":
-  drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=2)
-  decoder = tfds_coco_decoder.MSCOCODecoder()
-  mosaic = Mosaic([640, 640],
-                  random_crop=True,
-                  random_crop_mosaic=True,
-                  crop_area_mosaic=[0.25, 0.75])
 
-  dataset = tfds.load('coco', split='train')
-  dataset = dataset.map(decoder.decode)
-  dataset = dataset.apply(mosaic.mosaic_fn(is_training=True))
-  dataset = dataset.take(30).cache()
-
-  import time
-
-  a = time.time()
-  for image in dataset:
-    im = image['image'] / 255
-    boxes = image['groundtruth_boxes']
-    classes = image['groundtruth_classes']
-    confidence = image['groundtruth_classes']
-
-    draw_dict = {
-        'bbox': boxes,
-        'classes': classes,
-        'confidence': confidence,
-    }
-
-    im = tf.image.draw_bounding_boxes(
-        tf.expand_dims(im, axis=0), tf.expand_dims(boxes, axis=0),
-        [[1.0, 0.0, 1.0]])
-    plt.imshow(im[0])
-    plt.show()
-  b = time.time()
-
-  print(b - a)

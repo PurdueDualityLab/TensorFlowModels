@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Optimization package definition."""
 
 # pylint: disable=wildcard-import
@@ -19,4 +18,8 @@ from official.modeling.optimization.configs.learning_rate_config import *
 from yolo.optimization.configs.optimization_config import *
 from yolo.optimization.configs.optimizer_config import *
 from official.modeling.optimization.ema_optimizer import ExponentialMovingAverage
-from official.modeling.optimization.optimizer_factory import OptimizerFactory
+from yolo.optimization.optimizer_factory import OptimizerFactory
+
+# from yolo.optimization.ema_optimizer import ExponentialMovingAverage as ExponentialMovingAverage
+from yolo.optimization.optimizer_factory import OptimizerFactory as YoloOptimizerFactory
+# from yolo.optimization.ScaledYoloSGD import ScaledYoloSGD

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Dataclasses for optimization configs.
 
 This file define the dataclass for optimization configs (OptimizationConfig).
@@ -44,7 +43,7 @@ class OptimizerConfig(optimization_cfg.OptimizerConfig):
   type: Optional[str] = None
   sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
   sgd_dymo: opt_cfg.SGDMomentumWarmupConfig = opt_cfg.SGDMomentumWarmupConfig()
-
+  scaled_sgd: opt_cfg.ScaledYoloSGDConfig = opt_cfg.ScaledYoloSGDConfig()
 
 
 @dataclasses.dataclass

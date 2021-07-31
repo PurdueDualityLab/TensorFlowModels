@@ -30,7 +30,6 @@ task:
     norm_activation:
       activation: mish
       norm_epsilon: 0.0001
-      # norm_epsilon: 0.001
       norm_momentum: 0.99
       use_sync_bn: true
     filter:
@@ -62,13 +61,8 @@ task:
       use_scaled_loss: false
   train_data:
     global_batch_size: 64
-<<<<<<< HEAD
     dtype: float32
-    input_path: 'gs://tensorflow2/coco_records/train/2017*'
-=======
-    dtype: bfloat16
     input_path: 'gs://cam2-datasets/coco/train*'
->>>>>>> affine_opt
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -83,12 +77,11 @@ task:
       resize: 1.0
       jitter_mosaic: 0.0
       resize_mosaic: 1.0
-      sheer: 0.0
-      aug_scale_min: 0.2
-      aug_scale_max: 1.8
+      aug_scale_min: 0.1
+      aug_scale_max: 1.9
       mosaic_scale_min: 0.2
-      mosaic_scale_max: 1.5
-      aug_rand_translate: -0.01
+      mosaic_scale_max: 1.6
+      aug_rand_translate: 0.0 
       area_thresh: 0.2
       random_pad: True
       use_tie_breaker: True
@@ -103,13 +96,8 @@ task:
         aspect_ratio_mode: 'distort'
   validation_data:
     global_batch_size: 8
-<<<<<<< HEAD
     dtype: float32
-    input_path: 'gs://tensorflow2/coco_records/val/2017*'
-=======
-    dtype: bfloat16
     input_path: 'gs://cam2-datasets/coco/val*'
->>>>>>> affine_opt
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -140,8 +128,8 @@ trainer:
       stepwise:
         boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] 
-        # values: [0.00131, 0.0009825, 0.000655] #best
+        # values: [0.00131, 0.000131, 0.0000131] 
+        values: [0.00131, 0.0009825, 0.000655] #best
     optimizer:
       type: sgd
       sgd:

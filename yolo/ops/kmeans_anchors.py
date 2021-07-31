@@ -27,7 +27,6 @@ def IOU(X, centroids):
   return tf.squeeze(similarity, axis=-1)
 
 
-
 # def kmean_anchors(path='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen=1000, verbose=True):
 #     """ Creates kmeans-evolved anchors from training dataset
 
@@ -188,9 +187,9 @@ class AnchorKMeans:
     # x = tf.reduce_min(tf.minimum(r, 1. / r), axis = 2) # ratio metric
     # tf.print(x)
     # # x = x[0]
-    
+
     x = self.iou(wh, tf.convert_to_tensor(k))  # iou metric
-    return x, tf.reduce_max(x, axis = 1)[0]  # x, best_x
+    return x, tf.reduce_max(x, axis=1)[0]  # x, best_x
 
   def fitness(self, wh, k, thr):  # mutation fitness
     _, best = self.metric(wh, k)
@@ -238,25 +237,26 @@ class AnchorKMeans:
       num_iters += 1
       old_d = dists
       tf.print('k-Means box generation iteration: ', num_iters, end='\r')
-    
+
     f = self.fitness(self._boxes, clusters, 0.213)
     sh = tf.shape(clusters)
     mp = 0.9
-    s = 0.1  
+    s = 0.1
     c = clusters
 
     npr = np.random
-    number_of_generations = 1000 
+    number_of_generations = 1000
     for k in range(number_of_generations):
       v = tf.ones_like(clusters)
       while tf.reduce_all(v == 1):
-        v = ((npr.random(sh) < mp) * npr.random() * npr.randn(*sh) * s + 1).clip(0.3, 3.0)
-        v = tf.convert_to_tensor(v) 
+        v = ((npr.random(sh) < mp) * npr.random() * npr.randn(*sh) * s +
+             1).clip(0.3, 3.0)
+        v = tf.convert_to_tensor(v)
       kg = clusters * tf.cast(v, clusters.dtype)
       fg = self.fitness(self._boxes, kg, 0.213)
       tf.print(fg)
-      if fg > f: 
-        f = fg 
+      if fg > f:
+        f = fg
         clusters = kg
     # tf.print(c * 512, clusters * 512)
     return c, clusters
@@ -283,7 +283,7 @@ class AnchorKMeans:
     self._boxes *= image_width
     c, clusters, _ = self.run_kmeans(max_iter=max_iter)
     clusters = np.floor(clusters)
-    c = np.floor(c )
+    c = np.floor(c)
     return clusters.tolist(), c.tolist()
 
 
