@@ -195,7 +195,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     #                                         hyp=hyp, augment=True, cache=opt.cache_images, rect=opt.rect,
     #                                         rank=rank, world_size=opt.world_size, workers=opt.workers)
 
-    dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt,
+    dataloader, dataset = create_dataloader(train_path, imgsz, 1, gs, opt,
                                             hyp=hyp, augment=False, cache=False, rect=opt.rect)
 
 

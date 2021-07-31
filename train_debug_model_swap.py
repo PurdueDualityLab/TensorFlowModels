@@ -107,7 +107,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     # Image sizes
     gs = 64 #int(max(model.stride))  # grid size (max stride)
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
-    dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt,
+    dataloader, dataset = create_dataloader(train_path, imgsz, 1, gs, opt,
                                             hyp=hyp, augment=False, cache=False, rect=opt.rect)
     
     # task, model, params = load_model(
