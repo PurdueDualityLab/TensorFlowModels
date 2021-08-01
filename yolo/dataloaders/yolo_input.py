@@ -208,8 +208,11 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     self._sheer = sheer
     keys = list(self._masks.keys())
+    # self._scale_up = {
+    #     key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
+    # } if self._use_scale_xy else {key: 1 for key in keys}
     self._scale_up = {
-        key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
+        key: int(self._anchor_t) for i, key in enumerate(keys)
     } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
