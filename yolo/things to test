@@ -9,4 +9,20 @@ things to test:
 - can we verify the gradients on both models ina distributed system?
 	- we know that TF operates on reduction sum verfied 
 	- we need to verify the iterations count 
-	- our model warmup seems to be far less efficient
+
+- our model warmup seems to be far less efficient, why???? wtf????
+
+
+- verified that gradients match under the conditions of
+	- model in train mode 
+	- model in eval mode 
+	- using eval pipeline 
+	- all lr's set to zeros 
+	
+	
+	maximum difference in gradient = +/- 1.0
+	on avg = +/- 0.005
+	
+	
+	
+	
