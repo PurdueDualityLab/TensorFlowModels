@@ -76,7 +76,6 @@ def load_weights_dnBackbone(backbone, encoder, mtype='darknet53'):
   # )
   set_darknet_weights(backbone, weights_encoder)
 
-  backbone.trainable = False
   # print(f"\nsetting backbone.trainable to: {backbone.trainable}\n")
   return
 
@@ -103,7 +102,6 @@ def load_weights_dnHead(head, decoder, v4=True):
   set_darknet_weights(head, weights_decoder, flat_model=flat_main)
   set_darknet_weights_head(flat_head, head_weights)
 
-  head.trainable = False
   # print(f"\nsetting head.trainable to: {head.trainable}\n")
   return
 
