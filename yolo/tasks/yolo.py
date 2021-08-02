@@ -35,9 +35,20 @@ from official.modeling import performance
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
 
+class AssignMetric(tf.keras.metrics.Metric):
+
+  def __init__(self, name, dtype, **kwargs):
+    super().__init__(name=name, dtype=dtype, **kwargs)
+    self.value = self.add_weight('value')
+
+  def update_state(self, value):
+    self.value.assign(value)
+    return 
+
+  def result(self):
+    return self.value
 
 class ListMetrics(object):
-
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
     self.name = name
     self._metric_names = metric_names
@@ -48,7 +59,10 @@ class ListMetrics(object):
     metric_names = self._metric_names
     metrics = []
     for name in metric_names:
-      metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+      if name != "iterations" and name != "bias_LR":
+        metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+      else:
+        metrics.append(AssignMetric(name, dtype=tf.float32))
     return metrics
 
   def update_state(self, loss_metrics):
@@ -340,21 +354,20 @@ class YoloTask(base_task.Task):
                                 optimization.ScaledYoloSGD.ScaledYoloSGD)): 
       optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
       optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
+      loss_metrics['global']["bias_LR"] = optimizer.learning_rate(optimizer.iterations)
       optimizer.apply_gradients(group_grads["other"], name = "other")
-      # optimizer.update_average(optimizer.iterations)
     elif self.task_config.model.smart_bias and isinstance(optimizer, 
                                 optimization.ScaledYoloSGD.ScaledYoloSGD):
-      #iteration = optimizer.iterations
       optimizer.apply_gradients(group_grads["weights"], name = "weights")
-      #optimizer.iterations.assign(iteration)
       optimizer.apply_gradients(group_grads["bias"], name = "bias")
-      #optimizer.iterations.assign(iteration)
+      loss_metrics['global']["bias_LR"] = optimizer.learning_rate(optimizer.iterations)
       optimizer.apply_gradients(group_grads["other"], name = "other")
     else:
       optimizer.apply_gradients(gradvar, name = "other")
 
-    logs = {self.loss: loss_metrics['global']['total_loss'],
-            "iteration": tf.cast(optimizer.iterations, tf.float32)}
+    logs = {self.loss: loss_metrics['global']['total_loss']}
+    loss_metrics['global']["iterations"] = tf.cast(optimizer.iterations, tf.float32)
+
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
@@ -410,6 +423,10 @@ class YoloTask(base_task.Task):
         'source_id': label['groundtruths']['source_id'],
         'image_info': label['groundtruths']['image_info']
     }
+
+    loss_metrics['global']["iterations"] = tf.cast(0.0, tf.float32)
+    if self.task_config.model.smart_bias:
+      loss_metrics['global']["bias_LR"] = 0.0
 
     if metrics:
       logs.update(
@@ -507,6 +524,9 @@ class YoloTask(base_task.Task):
     metric_names['global'].append('total_box')
     metric_names['global'].append('total_class')
     metric_names['global'].append('total_conf')
+    metric_names['global'].append('iterations')
+    if self.task_config.model.smart_bias:
+      metric_names['global'].append('bias_LR')
 
     print(metric_names)
 
