@@ -112,10 +112,6 @@ trainer:
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:
