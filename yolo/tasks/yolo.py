@@ -360,13 +360,15 @@ class YoloTask(base_task.Task):
                                 optimization.ScaledYoloSGD.ScaledYoloSGD):
       optimizer.apply_gradients(group_grads["weights"], name = "weights")
       optimizer.apply_gradients(group_grads["bias"], name = "bias")
-      loss_metrics['global']["bias_LR"] = optimizer.learning_rate(optimizer.iterations) / p
+      loss_metrics['global']["bias_LR"] = optimizer.learning_rate(
+                                                    optimizer.iterations) / p
       optimizer.apply_gradients(group_grads["other"], name = "other")
     else:
       optimizer.apply_gradients(gradvar, name = "other")
 
     logs = {self.loss: loss_metrics['global']['total_loss']}
-    loss_metrics['global']["iterations"] = tf.cast(optimizer.iterations, tf.float32) / p
+    loss_metrics['global']["iterations"] = tf.cast(optimizer.iterations, 
+                                                                tf.float32) / p
 
     if metrics:
       for m in metrics:
