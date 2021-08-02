@@ -150,16 +150,16 @@ class Yolo(ks.Model):
     bias = []
     weights = []
     other = []
+    zipped = []
     for var, grad in zip(train_vars, gradients):
       if "bias" in var.name:
         bias.append((grad, var))
+        weights.append((tf.zeros_like(grad), var))
       elif "beta" in var.name:
         bias.append((grad, var))
-      elif "kernel" in var.name or "weight" in var.name:
-        weights.append((grad, var))
+        weights.append((tf.zeros_like(grad), var))
       else:
-        other.append((grad, var))
+        weights.append((grad, var))
 
     return {"weights":iter(weights), 
-            "bias":iter(bias), 
-            "other":iter(other)}, zip(train_vars, gradients)
+            "bias":iter(bias)}, zip(train_vars, gradients)
