@@ -334,8 +334,6 @@ class YoloTask(base_task.Task):
       self._bias_optimizer.apply_gradients(grouped["bias"])
       optimizer.apply_gradients(grouped["weights"])
 
-      tf.print(optimizer.iterations, self._bias_optimizer.iterations)
-
     logs = {self.loss: loss_metrics['global']['total_loss']}
     if metrics:
       for m in metrics:
