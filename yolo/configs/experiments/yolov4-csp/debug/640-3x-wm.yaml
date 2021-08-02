@@ -109,7 +109,7 @@ trainer:
   validation_steps: 39
   steps_per_loop: 925
   summary_interval: 925
-  validation_interval: 925 #00
+  validation_interval: 925
   checkpoint_interval: 925
   optimizer_config:
     ema:
@@ -130,9 +130,9 @@ trainer:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 2775
+        warmup_steps: 8325
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 2775 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 8325 #learning rate rises from 0 to 0.0013 over 1000 steps

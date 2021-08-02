@@ -108,16 +108,16 @@ task:
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
 trainer:
-  train_steps: 281250 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 39
-  steps_per_loop: 937
-  summary_interval: 937
-  validation_interval: 937 #00
-  checkpoint_interval: 937
+  steps_per_loop: 925
+  summary_interval: 925
+  validation_interval: 925
+  checkpoint_interval: 925
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: True
+      trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
       type: cosine_epoch
@@ -125,7 +125,7 @@ trainer:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 278438
+        decay_steps: 276575
         steps_per_epoch: 937
     optimizer:
       type: scaled_sgd
@@ -133,9 +133,9 @@ trainer:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 2812 
+        warmup_steps: 2775
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 2812 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 2775 #learning rate rises from 0 to 0.0013 over 1000 steps

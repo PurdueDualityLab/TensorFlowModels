@@ -114,16 +114,15 @@ trainer:
   optimizer_config:
     ema:
       average_decay: 0.9999
-      trainable_weights_only: True
+      trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
         initial_learning_rate: 0.01
-        name: Cosine
         alpha: 0.2
         decay_steps: 276575
-        steps_per_epoch: 937
+        name: Cosine
     optimizer:
       type: scaled_sgd
       scaled_sgd:

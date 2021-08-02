@@ -338,13 +338,10 @@ class YoloTask(base_task.Task):
           and isinstance(optimizer, optimization.ExponentialMovingAverage)
             and isinstance(optimizer._optimizer, 
                                 optimization.ScaledYoloSGD.ScaledYoloSGD)): 
-      #iteration = optimizer.iterations
       optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
-      #optimizer.iterations.assign(iteration)
       optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
-      #optimizer.iterations.assign(iteration)
-      optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
-      optimizer.update_average(optimizer.iterations)
+      optimizer.apply_gradients(group_grads["other"], name = "other")
+      # optimizer.update_average(optimizer.iterations)
     elif self.task_config.model.smart_bias and isinstance(optimizer, 
                                 optimization.ScaledYoloSGD.ScaledYoloSGD):
       #iteration = optimizer.iterations
