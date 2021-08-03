@@ -65,9 +65,9 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
     #     var_optimizer_dict[v.ref()] = optimizer
 
     # optimizer_grads_and_vars = collections.defaultdict(list)
-    for g, v in grads_and_vars:
-      if v.ref() in var_optimizer_dict: 
-        continue
+    # for g, v in grads_and_vars:
+    #   if v.ref() in var_optimizer_dict: 
+    #     continue
     #     tf.print(v.handle)
     #     optimizer = var_optimizer_dict[v.ref()]
     #     optimizer_grads_and_vars[optimizer].append((g, v))
