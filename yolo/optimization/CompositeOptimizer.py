@@ -76,9 +76,10 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
     for optimizer, opt_grads_and_vars in optimizer_grads_and_vars.items():
       optimizer.apply_gradients(opt_grads_and_vars, name=name)
 
-  # def get_config(self):
-  #   raise NotImplementedError("CompositeOptimizer cannot be serialized because"
-  #                             " it uses callable to get variables.")
+  def get_config(self):
+    # raise NotImplementedError("CompositeOptimizer cannot be serialized because"
+    #                           " it uses callable to get variables.")
+    return {}
 
   @property
   def iterations(self):
