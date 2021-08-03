@@ -118,7 +118,7 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
     # try:
     #   return super().learning_rate
     # except:
-    return self._optimizer.learning_rate
+    return 0.0 #self._optimizer.learning_rate
 
   @learning_rate.setter
   def learning_rate(self, learning_rate):  # pylint: disable=redefined-outer-name
