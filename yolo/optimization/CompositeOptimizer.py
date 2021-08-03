@@ -56,25 +56,28 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
     """See base class."""
     var_optimizer_dict = {}
 
-    for optimizer, var_callable in self._optimizers_and_vars:
-      for v in var_callable():
-        if v.ref() in var_optimizer_dict:
-          raise ValueError(
-              "The set of variables handled by each optimizer should be \
-                disjoint, but variable is handled both 2 optimizers")
-        var_optimizer_dict[v.ref()] = optimizer
+    # for optimizer, var_callable in self._optimizers_and_vars:
+    #   for v in var_callable():
+    #     if v.ref() in var_optimizer_dict:
+    #       raise ValueError(
+    #           "The set of variables handled by each optimizer should be \
+    #             disjoint, but variable is handled both 2 optimizers")
+    #     var_optimizer_dict[v.ref()] = optimizer
 
-    optimizer_grads_and_vars = collections.defaultdict(list)
+    # optimizer_grads_and_vars = collections.defaultdict(list)
     for g, v in grads_and_vars:
-      if v.ref() in var_optimizer_dict:
-        optimizer = var_optimizer_dict[v.ref()]
-        optimizer_grads_and_vars[optimizer].append((g, v))
-      else:
-        raise ValueError("Variable is not handled by any optimizer. \
-                          This would cause it to be not trained.")
+      if v.ref() in var_optimizer_dict: 
+        continue
+    #     tf.print(v.handle)
+    #     optimizer = var_optimizer_dict[v.ref()]
+    #     optimizer_grads_and_vars[optimizer].append((g, v))
+    #   else:
+    #     raise ValueError("Variable is not handled by any optimizer. \
+    #                       This would cause it to be not trained.")
 
-    for optimizer, opt_grads_and_vars in optimizer_grads_and_vars.items():
-      optimizer.apply_gradients(opt_grads_and_vars, name=name)
+    # for optimizer, opt_grads_and_vars in optimizer_grads_and_vars.items():
+    #   optimizer.apply_gradients(opt_grads_and_vars, name=name)
+    self.optimizers[0].apply_gradients(grads_and_vars, name)
 
   def get_config(self):
     # raise NotImplementedError("CompositeOptimizer cannot be serialized because"
