@@ -410,11 +410,8 @@ class Parser(parser.Parser):
       seed = self._seed
     )
 
-    
-    image = tf.clip_by_value(image, 0.0, 1.0)
-
     # cast the image to the selcted datatype
-    image = tf.cast(image, self._dtype)
+    image = tf.clip_by_value(image, 0.0, 1.0)
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image,
@@ -434,7 +431,6 @@ class Parser(parser.Parser):
     # get the image shape constants
     # cast the image to the selcted datatype
     image = tf.cast(data['image'], self._dtype)
-    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -456,6 +452,7 @@ class Parser(parser.Parser):
         resize=1.0)
 
     # clip and clean boxes
+    image = image / 255
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, shuffle_boxes=False, area_thresh=self._area_thresh)
     classes = tf.gather(classes, inds)

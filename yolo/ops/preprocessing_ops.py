@@ -10,6 +10,7 @@ from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
 import numpy as np
 
+PAD_VALUE = 114
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
   """
@@ -244,26 +245,13 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   return cropped_image, info
 
 
-def mean_pad(image, pady, padx, targety, targetx, color=False):
+def mean_pad(image, pady, padx, targety, targetx, value = 114, color=False):
   shape = tf.shape(image)[:2]
   pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
 
-  if color:
-    r, g, b = tf.split(image, 3, axis=-1)
-    r = tf.pad(
-        r, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=tf.reduce_mean(r))
-    g = tf.pad(
-        g, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=tf.reduce_mean(g))
-    b = tf.pad(
-        b, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=tf.reduce_mean(b))
-    image_ = tf.concat([r, g, b], axis=-1)
-  else:
-    image_ = tf.pad(
-        image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=0.5)
+  image_ = tf.pad(
+      image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
+      constant_values=PAD_VALUE)
 
   pad_info = tf.stack([
       tf.cast(tf.shape(image)[:2], tf.float32),
@@ -499,7 +487,9 @@ def resize_and_jitter_image(image,
           [ow, oh, w, h, ptop, pleft, pbottom, pright], tf.int32)
 
     # pad the image to desired size
-    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]])
+    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
+                                    [pad[1], pad[3]], 
+                                    [0, 0]], constant_values=PAD_VALUE )
     pad_info = tf.stack([
         tf.cast(tf.shape(cropped_image)[:2], tf.float32),
         tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
@@ -633,7 +623,7 @@ def affine_warp_image(image,
   image = tfa.image.transform(
       image,
       M,
-      fill_value=0,
+      fill_value=PAD_VALUE,
       output_shape=desired_size,
       interpolation='bilinear')
   desired_size = tf.cast(desired_size, tf.float32)
