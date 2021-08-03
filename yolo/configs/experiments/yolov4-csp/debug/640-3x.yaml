@@ -57,7 +57,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 64
+    global_batch_size: 128
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true

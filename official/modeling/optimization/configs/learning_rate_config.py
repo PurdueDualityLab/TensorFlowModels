@@ -208,6 +208,28 @@ class LinearWarmupConfig(base_config.Config):
   warmup_learning_rate: float = 0
   warmup_steps: Optional[int] = None
 
+@dataclasses.dataclass
+class LinearIndepWarmupConfig(base_config.Config):
+  """Configuration for linear warmup schedule config.
+
+  This class is a container for the linear warmup schedule configs.
+  Warmup_learning_rate is the initial learning rate, the final learning rate of
+  the warmup period is the learning_rate of the optimizer in use. The learning
+  rate at each step linearly increased according to the following formula:
+    warmup_learning_rate = warmup_learning_rate +
+    step / warmup_steps * (final_learning_rate - warmup_learning_rate).
+  Using warmup overrides the learning rate schedule by the number of warmup
+  steps.
+
+  Attributes:
+    name: The name of warmup schedule. Defaults to linear.
+    warmup_learning_rate: Initial learning rate for the warmup. Defaults to 0.
+    warmup_steps: Warmup steps. Defaults to None.
+  """
+  name: str = 'linear'
+  warmup_learning_rate: float = 0
+  warmup_steps: Optional[int] = None
+  final_lr: float = 0.0
 
 @dataclasses.dataclass
 class PolynomialWarmupConfig(base_config.Config):
