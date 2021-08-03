@@ -124,8 +124,8 @@ trainer:
         alpha: 0.2
         decay_steps: 271025
     optimizer:
-      type: scaled_sgd
-      scaled_sgd:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True

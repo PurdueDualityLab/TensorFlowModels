@@ -125,8 +125,8 @@ trainer:
         decay_steps: 545750
         steps_per_epoch: 1850
     optimizer:
-      type: scaled_sgd
-      scaled_sgd:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True

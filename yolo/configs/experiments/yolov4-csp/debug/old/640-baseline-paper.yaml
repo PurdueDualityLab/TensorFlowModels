@@ -121,8 +121,8 @@ trainer:
         steps_per_epoch: 925
         name: Cosine
     optimizer:
-      type: scaled_sgd
-      scaled_sgd:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.9
         warmup_steps: 2775 
