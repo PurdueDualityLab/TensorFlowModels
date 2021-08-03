@@ -100,8 +100,6 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
 
     def _apply_moving(v_moving, v_normal):
       new = v_moving * decay + v_normal * (1 - decay)
-
-      tf.print(tf.reduce_sum(new))
       v_moving.assign(new)
       return v_moving
 
@@ -115,10 +113,10 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
 
   @property
   def learning_rate(self):
-    # try:
-    #   return super().learning_rate
-    # except:
-    return 0.0 #self._optimizer.learning_rate
+    try:
+      return super().learning_rate
+    except:
+      return self._optimizer.learning_rate
 
   @learning_rate.setter
   def learning_rate(self, learning_rate):  # pylint: disable=redefined-outer-name
