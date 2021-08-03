@@ -350,7 +350,6 @@ class YoloTask(base_task.Task):
                                             self.task_config.gradient_clip_norm)
 
     optimizer.apply_gradients(zip(gradients, train_vars))
-
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     if metrics:
