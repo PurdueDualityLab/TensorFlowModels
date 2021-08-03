@@ -313,7 +313,7 @@ class YoloTask(base_task.Task):
     # get the data point
     image, label = inputs
 
-    p = num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
       
