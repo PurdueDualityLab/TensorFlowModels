@@ -106,6 +106,42 @@ def get_image_shape(image):
   return height, width
 
 
+# def image_rand_hsv(image, rh, rs, rv, seed = None):
+#   if rh > 0.0:
+#     delta = rand_uniform_strong(-rh, rh, seed = seed)
+#     image = tf.image.adjust_hue(image, delta)
+#   if rs > 0.0:
+#     # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+#     #                                       seed = self._seed)
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
+#     image = tf.image.adjust_saturation(image, delta)
+#   if rv > 0.0:
+#     # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+#     #                                       seed = self._seed)
+#     delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
+#     image *= delta
+    
+#   # clip the values of the image between 0.0 and 1.0
+#   return image
+
+def image_rand_hsv(image, rh, rs, rv, seed = None):
+  hsv = tf.image.rgb_to_hsv(image)
+
+  dh = ds = dv = 1.0
+  if rh > 0.0:
+    dh += rand_uniform_strong(-rh, rh, seed = seed)
+  if rs > 0.0:
+    ds += rand_uniform_strong(-rs, rs, seed = seed)
+  if rv > 0.0:
+    dv += rand_uniform_strong(-rv, rv, seed = seed)
+
+  scale = tf.convert_to_tensor([[dh, ds, dv]])
+  image = tf.image.hsv_to_rgb(hsv * scale)
+
+  # clip the values of the image between 0.0 and 1.0
+  return image
+
+
 def translate_boxes(box, classes, translate_x, translate_y):
   """
   Translate the boxes by a fixed number of pixels.

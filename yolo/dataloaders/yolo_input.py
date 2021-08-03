@@ -402,32 +402,15 @@ class Parser(parser.Parser):
     num_dets = tf.shape(classes)[0]
     image = tf.cast(image, self._dtype)
     image = image / 255
-    if self._aug_rand_hue > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
-                                                    self._aug_rand_hue, 
-                                                    seed = self._seed)
-      # hsv = tf.image.rgb_to_hsv(image)
-      # h, s, v = tf.split(hsv, 3, axis = -1)
-      # h *= (1 + delta)
-      # hsv = tf.concat([h, s, v], axis = -1)
-      # image = tf.image.hsv_to_rgb(hsv)
-      image = tf.image.adjust_hue(image, delta)
-    if self._aug_rand_saturation > 0.0:
-      # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
-      #                                       seed = self._seed)
-      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_saturation,
-                                                        self._aug_rand_saturation, 
-                                                        seed = self._seed)
-      image = tf.image.adjust_saturation(image, delta)
-    if self._aug_rand_brightness > 0.0:
-      # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
-      #                                       seed = self._seed)
-      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_brightness,
-                                                        self._aug_rand_brightness, 
-                                                        seed = self._seed)
-      image *= delta
-      
-    # clip the values of the image between 0.0 and 1.0
+    image = preprocessing_ops.image_rand_hsv(
+      image, 
+      self._aug_rand_hue, 
+      self._aug_rand_saturation, 
+      self._aug_rand_brightness, 
+      seed = self._seed
+    )
+
+    
     image = tf.clip_by_value(image, 0.0, 1.0)
 
     # cast the image to the selcted datatype
