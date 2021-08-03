@@ -614,10 +614,11 @@ class YoloTask(base_task.Task):
       A tf.optimizers.Optimizer object.
     """
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
-    optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 
     if (self._task_config.smart_bias_lr > 0.0):
-      optimizer_weights = optimizer
+      ema = opt_factory._use_ema
+      opt_factory._use_ema = False
+      optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
 
@@ -630,5 +631,8 @@ class YoloTask(base_task.Task):
         (optimizer_biases, lambda:bias),
         (optimizer_others, lambda:other)]
       )
-
+      opt_factory._use_ema = ema
+      optimizer = opt_factory.add_ema(optimizer)
+    else:
+      optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
     return optimizer
