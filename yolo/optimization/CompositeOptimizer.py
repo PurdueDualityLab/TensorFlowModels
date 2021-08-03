@@ -49,7 +49,7 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
     self._optimizers_and_vars = optimizers_and_vars
     for i, optimizer_and_var in enumerate(optimizers_and_vars):
       optimizer = optimizer_and_var[0]
-      self._track_trackable(optimizer, name="Optimizer")
+      self._track_trackable(optimizer, name=str(i))
 
   def apply_gradients(self, grads_and_vars: Sequence[Tuple[Tensor, Tensor]],
                       name: Optional[str] = None) -> None:
