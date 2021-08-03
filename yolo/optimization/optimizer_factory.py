@@ -20,7 +20,8 @@ import tensorflow_addons.optimizers as tfa_optimizers
 from official.modeling.optimization import configs
 
 from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup)
-from official.modeling.optimization import optimizer_factory, ema_optimizer
+from yolo.optimization import ema_optimizer
+from official.modeling.optimization import optimizer_factory #, ema_optimizer
 from official.modeling.optimization import lr_schedule
 from yolo.optimization.configs import optimization_config as opt_cfg
 

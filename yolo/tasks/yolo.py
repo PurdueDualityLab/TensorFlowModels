@@ -635,4 +635,6 @@ class YoloTask(base_task.Task):
       optimizer = opt_factory.add_ema(optimizer)
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+
+    print(optimizer)
     return optimizer
