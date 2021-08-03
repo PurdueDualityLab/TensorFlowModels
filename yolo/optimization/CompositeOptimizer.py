@@ -12,13 +12,19 @@ __all__ = ['SGD']
 # problem is that sub division cannot change between saves
 class CompositeOptimizer(co):
 
-  # def __init__(self, 
-  #              optimizers_and_vars,
-  #              name = None) -> None:
-  #   super().__init__(optimizers_and_vars, name=name)
+  def __init__(self, 
+               optimizers_and_vars,
+               name = None) -> None:
+    super().__init__(optimizers_and_vars, name=name)
+
+  # @property
+  # def learning_rate(self):
+  #   optimizers = self.optimizers
+  #   return {optimizer.name: optimizer.learning_rate(
+  #                           self.iterations) for optimizer in optimizers}
 
   @property
   def learning_rate(self):
-    optimizers = self.optimizers
-    return {optimizer.name: optimizer.learning_rate(
-                            self.iterations) for optimizer in optimizers}
+    optimizer = self.optimizers[0]
+    return optimizer.learning_rate(
+                            self.iterations)

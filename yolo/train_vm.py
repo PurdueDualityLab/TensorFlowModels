@@ -111,7 +111,7 @@ def subdivison_adjustment(params):
 
 
 def main(_):
-  tf.config.set_soft_device_placement(True)
+  # tf.config.set_soft_device_placement(True)
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   print(FLAGS.experiment)
   params = train_utils.parse_configuration(FLAGS)

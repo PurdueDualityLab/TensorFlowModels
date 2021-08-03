@@ -129,10 +129,10 @@ trainer:
   validation_interval: 100 #00
   checkpoint_interval: 100
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: false
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: false
+    #   dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:
