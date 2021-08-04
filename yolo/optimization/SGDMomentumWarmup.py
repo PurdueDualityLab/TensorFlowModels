@@ -97,7 +97,6 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
     self._set_hyper("momentum", momentum)
     self._set_hyper("momentum_start", momentum_start)
     self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
-
     self.nesterov = nesterov
 
   def _set_bias_lr(self, lr, bias_key):
