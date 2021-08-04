@@ -272,7 +272,7 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      loss_val += _loss * scale
+      loss_val += _loss
 
       # detach all the below gradients: none of them should make a contribution to the
       # gradient form this point forwards
@@ -288,7 +288,7 @@ class YoloTask(base_task.Task):
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
-    return loss_val, metric_dict
+    return loss_val * scale, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
@@ -389,7 +389,7 @@ class YoloTask(base_task.Task):
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    _, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     boxes = self._reorg_boxes(
@@ -408,13 +408,12 @@ class YoloTask(base_task.Task):
         'image_info': label['groundtruths']['image_info']
     }
 
-    loss_metrics['global']["iterations"] = tf.cast(0.0, tf.float32)
-    if self.task_config.model.smart_bias:
-      loss_metrics['global']["bias_LR"] = 0.0
 
     if metrics:
       logs.update(
           {self.coco_metric.name: (label['groundtruths'], coco_model_outputs)})
+
+      tf.print(loss, loss.device)
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
