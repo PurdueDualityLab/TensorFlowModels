@@ -413,7 +413,6 @@ class YoloTask(base_task.Task):
       logs.update(
           {self.coco_metric.name: (label['groundtruths'], coco_model_outputs)})
 
-      tf.print(loss, loss.device)
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
