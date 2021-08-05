@@ -96,8 +96,6 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
 
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
-      # model.backbone.trainable = False
-      # model.head.trainable = False
 
   def build_losses(self, labels, model_outputs, aux_losses=None):
     """Sparse categorical cross entropy loss.

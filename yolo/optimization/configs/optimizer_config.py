@@ -53,6 +53,7 @@ class SGDAccumConfig(BaseOptimizerConfig):
   nesterov: bool = False
   momentum: float = 0.0
   accumulation_steps: int = 1
+  accumulation_type: str = "mean"
 
 
 @dataclasses.dataclass

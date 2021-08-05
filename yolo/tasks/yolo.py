@@ -1,4 +1,5 @@
 from numpy import blackman
+from tensorflow.keras import optimizers
 from tensorflow.python.keras.backend import int_shape
 from tensorflow.python.ops.clip_ops import clip_by_value
 from tensorflow.python.ops.gen_array_ops import shape
@@ -32,12 +33,26 @@ from official.core import config_definitions
 from yolo import optimization 
 from official.modeling import performance
 
+
+from yolo.optimization.CompositeOptimizer import CompositeOptimizer
+
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
 
+class AssignMetric(tf.keras.metrics.Metric):
+
+  def __init__(self, name, dtype, **kwargs):
+    super().__init__(name=name, dtype=dtype, **kwargs)
+    self.value = self.add_weight('value')
+
+  def update_state(self, value):
+    self.value.assign(value)
+    return 
+
+  def result(self):
+    return self.value
 
 class ListMetrics(object):
-
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
     self.name = name
     self._metric_names = metric_names
@@ -48,7 +63,10 @@ class ListMetrics(object):
     metric_names = self._metric_names
     metrics = []
     for name in metric_names:
+      #if name != "iterations" and name != "bias_LR":
       metrics.append(tf.keras.metrics.Mean(name, dtype=tf.float32))
+      # else:
+      #   metrics.append(AssignMetric(name, dtype=tf.float32))
     return metrics
 
   def update_state(self, loss_metrics):
@@ -86,14 +104,14 @@ class YoloTask(base_task.Task):
     self._num_boxes = None
     self._anchors_built = False
 
+    self._model = None
     self._masks = None
     self._path_scales = None
     self._x_y_scales = None
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
-    self._bias_optimizer = None
-
+    
     # self._test_var = tf.Variable(0, trainable=False)
     # self._var_names = []
     return
@@ -125,8 +143,8 @@ class YoloTask(base_task.Task):
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales)
 
-    # self._var_names = model.train_var_names(model.trainable_variables)
     self._loss_dict = losses
+    self._model = model
     return model
 
   def get_decoder(self, params):
@@ -331,7 +349,7 @@ class YoloTask(base_task.Task):
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
-      loss_val += _loss * scale
+      loss_val += _loss
 
       # detach all the below gradients: none of them should make a contribution to the
       # gradient form this point forwards
@@ -347,7 +365,7 @@ class YoloTask(base_task.Task):
       metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
-    return loss_val, metric_dict
+    return loss_val * scale, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
@@ -391,6 +409,7 @@ class YoloTask(base_task.Task):
       # we want the sum over all batches, so we instead use num replicas equal
       # to 1 in order to aggregate the sum of the gradients
       scaled_loss = loss / num_replicas
+      tf.print(scaled_loss, loss, loss_metrics['global']['total_loss'])
 
       # scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
@@ -408,27 +427,9 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
+    optimizer.apply_gradients(zip(gradients, train_vars))
+    logs = {self.loss: loss_metrics['global']['total_loss']}
 
-    group_grads, gradvar = model.get_grouped_train_vars(train_vars, gradients)
-
-    if (self.task_config.model.smart_bias 
-          and isinstance(optimizer, optimization.ExponentialMovingAverage)
-            and isinstance(optimizer._optimizer, 
-                                optimization.ScaledYoloSGD.ScaledYoloSGD)): 
-      optimizer._optimizer.apply_gradients(group_grads["weights"], name = "weights")
-      optimizer._optimizer.apply_gradients(group_grads["bias"], name = "bias")
-      optimizer._optimizer.apply_gradients(group_grads["other"], name = "other")
-      optimizer.update_average(optimizer.iterations)
-    elif self.task_config.model.smart_bias:
-      optimizer.apply_gradients(group_grads["weights"], name = "weights")
-      optimizer.apply_gradients(group_grads["bias"], name = "bias")
-      optimizer.apply_gradients(group_grads["other"], name = "other")
-    else:
-      optimizer.apply_gradients(gradvar, name = "other")
-    tf.print(label["source_id"], optimizer.iterations, loss_metrics['global']['total_loss'])
-
-    logs = {self.loss: loss_metrics['global']['total_loss'],
-            "iteration": tf.cast(optimizer.iterations, tf.float32)}
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
@@ -466,7 +467,7 @@ class YoloTask(base_task.Task):
 
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    _, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+    loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
     logs = {self.loss: loss_metrics['global']['total_loss']}
 
     boxes = self._reorg_boxes(
@@ -484,6 +485,7 @@ class YoloTask(base_task.Task):
         'source_id': label['groundtruths']['source_id'],
         'image_info': label['groundtruths']['image_info']
     }
+
 
     if metrics:
       logs.update(
@@ -658,6 +660,9 @@ class YoloTask(base_task.Task):
     metric_names['global'].append('total_box')
     metric_names['global'].append('total_class')
     metric_names['global'].append('total_conf')
+    # metric_names['global'].append('iterations')
+    # if self.task_config.model.smart_bias:
+    #   metric_names['global'].append('bias_LR')
 
     print(metric_names)
 
@@ -761,22 +766,27 @@ class YoloTask(base_task.Task):
       A tf.optimizers.Optimizer object.
     """
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
-    optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
-    # Configuring optimizer when loss_scale is set in runtime config. This helps
-    # avoiding overflow/underflow for float16 computations.
-    if runtime_config and runtime_config.loss_scale:
-      optimizer = performance.configure_optimizer(
-          optimizer,
-          use_float16=runtime_config.mixed_precision_dtype == "float16",
-          loss_scale=runtime_config.loss_scale)
-    hold = optimizer
-    if isinstance(optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
-      hold = optimizer.inner_optimizer
-    elif isinstance(optimizer, optimization.ExponentialMovingAverage):
-      hold = optimizer._optimizer
 
-    if (self._task_config.smart_bias_lr > 0.0 
-          and isinstance(hold, optimization.ScaledYoloSGD.ScaledYoloSGD)):
-      hold.set_bias_lr(
-        opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
+    if (self._task_config.smart_bias_lr > 0.0):
+      ema = opt_factory._use_ema
+      opt_factory._use_ema = False
+      optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+      optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+      optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
+
+      optimizer_weights.name = "weights_lr"
+      optimizer_others.name = "others_lr"
+      optimizer_biases.name = "bias_lr"
+      weights, bias, other = self._model.get_weight_groups(self._model.trainable_variables)
+      optimizer = CompositeOptimizer(
+        [(optimizer_weights, lambda:weights),
+        (optimizer_biases, lambda:bias),
+        (optimizer_others, lambda:other)]
+      )
+      opt_factory._use_ema = ema
+      optimizer = opt_factory.add_ema(optimizer)
+    else:
+      optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+
+    print(optimizer)
     return optimizer

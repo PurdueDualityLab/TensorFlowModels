@@ -206,7 +206,9 @@ class Mosaic(object):
       cw = preprocessing_ops.rand_uniform_strong(-center[1], 
                                                   center[1], seed = self._seed)
 
-      image = tfa.image.translate(image, [cw, ch])
+      image = tfa.image.translate(image, 
+                                  [cw, ch], 
+                                  fill_value=preprocessing_ops.PAD_VALUE)
       info = tf.convert_to_tensor(
           [shape, shape,
            tf.ones_like(shape), -tf.cast([ch, cw], tf.float32)])

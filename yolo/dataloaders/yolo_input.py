@@ -208,8 +208,11 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     self._sheer = sheer
     keys = list(self._masks.keys())
+    # self._scale_up = {
+    #     key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
+    # } if self._use_scale_xy else {key: 1 for key in keys}
     self._scale_up = {
-        key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
+        key: int(self._anchor_t) for i, key in enumerate(keys)
     } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
@@ -370,6 +373,7 @@ class Parser(parser.Parser):
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, 
         affine=affine, 
+        shuffle_boxes=not self._use_scale_xy, 
         area_thresh=self._area_thresh, 
         seed = self._seed)
     classes = tf.gather(classes, inds)
@@ -398,36 +402,16 @@ class Parser(parser.Parser):
     num_dets = tf.shape(classes)[0]
     image = tf.cast(image, self._dtype)
     image = image / 255
-    if self._aug_rand_hue > 0.0:
-      delta = preprocessing_ops.rand_uniform_strong(-self._aug_rand_hue,
-                                                    self._aug_rand_hue, 
-                                                    seed = self._seed)
-      # hsv = tf.image.rgb_to_hsv(image)
-      # h, s, v = tf.split(hsv, 3, axis = -1)
-      # h *= (1 + delta)
-      # hsv = tf.concat([h, s, v], axis = -1)
-      # image = tf.image.hsv_to_rgb(hsv)
-      image = tf.image.adjust_hue(image, delta)
-    if self._aug_rand_saturation > 0.0:
-      # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
-      #                                       seed = self._seed)
-      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_saturation,
-                                                        self._aug_rand_saturation, 
-                                                        seed = self._seed)
-      image = tf.image.adjust_saturation(image, delta)
-    if self._aug_rand_brightness > 0.0:
-      # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
-      #                                       seed = self._seed)
-      delta = 1 + preprocessing_ops.rand_uniform_strong(-self._aug_rand_brightness,
-                                                        self._aug_rand_brightness, 
-                                                        seed = self._seed)
-      image *= delta
-      
-    # clip the values of the image between 0.0 and 1.0
-    image = tf.clip_by_value(image, 0.0, 1.0)
+    image = preprocessing_ops.image_rand_hsv(
+      image, 
+      self._aug_rand_hue, 
+      self._aug_rand_saturation, 
+      self._aug_rand_brightness, 
+      seed = self._seed
+    )
 
     # cast the image to the selcted datatype
-    image = tf.cast(image, self._dtype)
+    image = tf.clip_by_value(image, 0.0, 1.0)
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image,
@@ -447,7 +431,6 @@ class Parser(parser.Parser):
     # get the image shape constants
     # cast the image to the selcted datatype
     image = tf.cast(data['image'], self._dtype)
-    image = image / 255
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
@@ -469,6 +452,7 @@ class Parser(parser.Parser):
         resize=1.0)
 
     # clip and clean boxes
+    image = image / 255
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, shuffle_boxes=False, area_thresh=self._area_thresh)
     classes = tf.gather(classes, inds)

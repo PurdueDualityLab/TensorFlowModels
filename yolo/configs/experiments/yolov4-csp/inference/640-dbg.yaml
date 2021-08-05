@@ -18,7 +18,7 @@ task:
       darknet_weights_file: 'cache://yolov4-csp.weights'
       darknet_weights_cfg: 'cache://yolov4-csp.cfg'
     num_classes: 80
-    smart_bias: true
+    smart_bias: false
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -61,8 +61,8 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 128
-    dtype: float32
+    global_batch_size: 1
+    dtype: float16
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
@@ -92,8 +92,8 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 1
-    dtype: float32
+    global_batch_size: 8
+    dtype: float16
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10000
@@ -111,7 +111,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 281250 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 5000
+  validation_steps: 625
   steps_per_loop: 5000
   summary_interval: 5000
   validation_interval: 10000 #00

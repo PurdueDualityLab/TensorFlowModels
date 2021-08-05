@@ -1,0 +1,28 @@
+things to test:
+
+
+- we know that gradient match when using validation pipeline, is this also true for train pipeline?
+
+- is the model batchsize sensitive? 
+	No, slightly but not a 10% difference, to save time run all tests at batch size 128 or 64, 128 may be faster. 
+
+- can we verify the gradients on both models ina distributed system?
+	- we know that TF operates on reduction sum verfied 
+	- we need to verify the iterations count 
+
+- our model warmup seems to be far less efficient, why???? wtf????
+
+
+- verified that gradients match under the conditions of
+	- model in train mode 
+	- model in eval mode 
+	- using eval pipeline 
+	- all lr's set to zeros 
+	
+	
+	maximum difference in gradient = +/- 1.0
+	on avg = +/- 0.005
+	
+	
+	
+	

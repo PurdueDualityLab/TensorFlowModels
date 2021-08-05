@@ -19,15 +19,14 @@ import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 from official.modeling.optimization import configs
 
-from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup, 
-                                ScaledYoloSGD)
-from official.modeling.optimization import optimizer_factory, ema_optimizer
+from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup)
+from yolo.optimization import ema_optimizer
+from official.modeling.optimization import optimizer_factory #, ema_optimizer
 from official.modeling.optimization import lr_schedule
 from yolo.optimization.configs import optimization_config as opt_cfg
 
 optimizer_factory.OPTIMIZERS_CLS.update({
     'sgd_dymo': SGDMomentumWarmup.SGDMomentumWarmup,
-    'scaled_sgd': ScaledYoloSGD.ScaledYoloSGD,
     'sgd_accum': SGDAccumulated.SGDAccumulated
 })
 
@@ -115,4 +114,29 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
         'OptimizerFactory.build_optimizer returning a non-optimizer object: '
         '{}'.format(optimizer))
 
+    return optimizer
+
+
+  @gin.configurable
+  def add_ema(
+      self, optimizer):
+    """Build optimizer.
+
+    Builds optimizer from config. It takes learning rate as input, and builds
+    the optimizer according to the optimizer config. Typically, the learning
+    rate built using self.build_lr() is passed as an argument to this method.
+
+    Args:
+      lr: A floating point value, or a
+        tf.keras.optimizers.schedules.LearningRateSchedule instance.
+      postprocessor: An optional function for postprocessing the optimizer. It
+        takes an optimizer and returns an optimizer.
+
+    Returns:
+      tf.keras.optimizers.Optimizer instance.
+    """
+
+    if self._use_ema:
+      optimizer = ema_optimizer.ExponentialMovingAverage(
+          optimizer, **self._ema_config.as_dict())
     return optimizer

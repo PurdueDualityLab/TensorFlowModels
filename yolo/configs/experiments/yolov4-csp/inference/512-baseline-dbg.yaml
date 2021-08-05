@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 4
+  num_gpus: 1
 task:
   smart_bias_lr: 0.0
   model:
@@ -141,8 +141,8 @@ trainer:
         decay_steps: 556875
         steps_per_epoch: 1875
     optimizer:
-      type: scaled_sgd
-      scaled_sgd:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True

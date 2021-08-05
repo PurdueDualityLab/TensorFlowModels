@@ -331,7 +331,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             #pg = grad[-2].grad.cpu().abs().sum().detach().numpy()
             pg = grad[-2].grad.cpu().sum().detach().numpy()
 
-            print([path.split("/")[-1].split(".")[-2] for path in paths] , grad[-2].grad.size(), pg, *list(loss_items.cpu().detach().numpy()))
+            print([path.split("/")[-1].split(".")[-2] for path in paths] , grad[-2].grad.size(), pg, loss, *list(loss_items.cpu().detach().numpy()))
             # for g in grad:
             #     print("\t", g.grad.cpu().sum().detach().numpy())
                 

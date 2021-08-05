@@ -731,7 +731,7 @@ class Yolo_Loss(object):
 
     #     build a the ground truth detection map
     true_conf = self.build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=False)
+        inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     #     compute the detection map loss, there should be no masks
