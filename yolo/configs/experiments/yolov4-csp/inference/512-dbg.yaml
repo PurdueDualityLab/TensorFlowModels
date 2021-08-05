@@ -71,7 +71,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: null
+      letter_box: True
       random_flip: False
       aug_rand_saturation: 0.0
       aug_rand_brightness: 0.0
