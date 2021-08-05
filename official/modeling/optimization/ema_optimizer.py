@@ -92,7 +92,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
     else:
       self._model_weights = model.variables
     for var in self._model_weights:
-      self.add_slot(var, 'average', initializer='zeros')
+      self.add_slot(var, 'average', initializer=var)
 
     self._average_weights = [
         self.get_slot(var, 'average') for var in self._model_weights
