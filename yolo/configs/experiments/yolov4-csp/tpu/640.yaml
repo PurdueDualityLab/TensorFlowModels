@@ -53,7 +53,7 @@ task:
       max_boxes: 300
       nms_type: iou
       iou_thresh: 0.001
-      nms_thresh: 0.65
+      nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
