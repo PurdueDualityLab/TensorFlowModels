@@ -37,7 +37,7 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.06
+        'all': 0.4
       cls_normalizer: 
         'all': 0.3 #0.5
       obj_normalizer: 
