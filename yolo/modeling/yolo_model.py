@@ -160,3 +160,22 @@ class Yolo(ks.Model):
       else:
         other.append(var)
     return weights, bias, other
+
+  def print(self):
+    """Sequence of trainable variables owned by this module and its submodules.
+    Note: this method uses reflection to find variables on the current instance
+    and submodules. For performance reasons you may wish to cache the result
+    of calling this method if you don't expect the return value to change.
+    Returns:
+      A sequence of variables for the current module (sorted by attribute
+      name) followed by variables from all submodules recursively (breadth
+      first).
+    """
+    modules = self.submodules
+
+    for module in modules: 
+      if isinstance(module, nn_blocks.ConvBN):
+        print(module)
+        if module._use_bn:
+          print(module.bn)
+    return 
