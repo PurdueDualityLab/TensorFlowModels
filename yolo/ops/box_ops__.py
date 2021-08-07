@@ -24,6 +24,51 @@ def yxyx_to_xcycwh(box: tf.Tensor):
   return box
 
 
+# @tf.custom_gradient
+# def _xcycwh_to_yxyx(box: tf.Tensor, scale):
+#   """Private function called by xcycwh_to_yxyx to allow custom gradients
+#   with defaults.
+#   """
+#   with tf.name_scope('xcycwh_to_yxyx'):
+#     xy, wh = tf.split(box, 2, axis=-1)
+#     xy_min = xy - wh / 2
+#     xy_max = xy + wh / 2
+#     x_min, y_min = tf.split(xy_min, 2, axis=-1)
+#     x_max, y_max = tf.split(xy_max, 2, axis=-1)
+#     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)
+
+#     def delta(dbox):
+#       #y_min = top, x_min = left, y_max = bottom, x_max = right
+#       dt, dl, db, dr = tf.split(dbox, 4, axis=-1)
+#       dx = dl + dr
+#       dy = dt + db
+#       dw = (dr - dl) / scale
+#       dh = (db - dt) / scale
+
+#       dbox = tf.concat([dx, dy, dw, dh], axis=-1)
+#       return dbox, 0.0
+
+#   return box, delta
+
+# def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
+#   """Converts boxes from x_center, y_center, width, height to ymin, xmin, ymax,
+#   xmax.
+
+#   Args:
+#     box: any `Tensor` whose last dimension is 4 representing the coordinates of
+#       boxes in x_center, y_center, width, height.
+
+#   Returns:
+#     box: a `Tensor` whose shape is the same as `box` in new format.
+#   """
+#   if darknet:
+#     scale = 1.0
+#   else:
+#     scale = 2.0
+#   box = _xcycwh_to_yxyx(box, scale)
+#   return box
+
+
 def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
   """Private function called by xcycwh_to_yxyx to allow custom gradients
   with defaults.
@@ -106,7 +151,7 @@ def smallest_encompassing_box(box1, box2, yxyx=False, clip = False):
   if clip: 
     bca = tf.reduce_prod(bcma - bcmi, keepdims=True, axis=-1)
     box_c = tf.where(bca <= 0.0, tf.zeros_like(box_c), box_c)
-  return bcmi, bcma, box_c
+  return box_c
 
 
 def compute_iou(box1, box2, yxyx=False):
@@ -149,22 +194,19 @@ def compute_giou(box1, box2, yxyx=False, darknet=False):
   with tf.name_scope('giou'):
     # get IOU
     if not yxyx:
-      xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
-    else:
-      yxyx1, yxyx2 = box1, box2
-      xycc1 = yxyx_to_xcycwh(box1)
-      xycc2 = yxyx_to_xcycwh(box2)
+      box1 = xcycwh_to_yxyx(box1, darknet=darknet)
+      box2 = xcycwh_to_yxyx(box2, darknet=darknet)
+      yxyx = True
 
-    cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
-    intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
+    intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
 
-    b1xy, _ = tf.split(xycc1, 2, axis=-1)
-    b2xy, _ = tf.split(xycc2, 2, axis=-1)
-    bcwh = cma - cmi
-    c = tf.math.reduce_prod(bcwh, axis=-1)
+    # find the smallest box to encompase both box1 and box2
+    boxc = smallest_encompassing_box(box1, box2, yxyx=yxyx)
+    if yxyx:
+      boxc = yxyx_to_xcycwh(boxc)
+    cxcy, cwch = tf.split(boxc, 2, axis=-1)
+    c = tf.math.reduce_prod(cwch, axis=-1)
 
     # compute giou
     regularization = math_ops.divide_no_nan((c - union), c)
@@ -193,21 +235,22 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
   with tf.name_scope('diou'):
     # compute center distance
     if not yxyx:
-      xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
-    else:
-      yxyx1, yxyx2 = box1, box2
-      xycc1 = yxyx_to_xcycwh(box1)
-      xycc2 = yxyx_to_xcycwh(box2)
+      box1 = xcycwh_to_yxyx(box1, darknet=darknet)
+      box2 = xcycwh_to_yxyx(box2, darknet=darknet)
+      yxyx = True
 
-    cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
-    intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
+    intersection, union = intersect_and_union(box1, box2, yxyx=yxyx)
     iou = math_ops.divide_no_nan(intersection, union)
 
-    b1xy, _ = tf.split(xycc1, 2, axis=-1)
-    b2xy, _ = tf.split(xycc2, 2, axis=-1)
-    bcwh = cma - cmi
+    boxc = smallest_encompassing_box(box1, box2, yxyx=yxyx)
+    if yxyx:
+      boxc = yxyx_to_xcycwh(boxc)
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
+
+    b1xy, _ = tf.split(box1, 2, axis=-1)
+    b2xy, _ = tf.split(box2, 2, axis=-1)
+    _, bcwh = tf.split(boxc, 2, axis=-1)
 
     center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
     c_diag = tf.reduce_sum(bcwh**2, axis=-1)
@@ -215,6 +258,46 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
     regularization = math_ops.divide_no_nan(center_dist, c_diag)
     diou = iou - regularization**beta
   return iou, diou
+
+
+def distance(box1, box2, beta=0.6, yxyx=False):
+  """Calculates the distance intersection over union between box1 and box2.
+
+  Args:
+    box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+      boxes.
+    beta: a `float` indicating the amount to scale the distance iou 
+      regularization term. 
+    yxyx: a `bool` indicating whether the input box is of the format x_center
+      y_center, width, height or y_min, x_min, y_max, x_max.
+    darknet: a `bool` indicating whether the calling function is the yolo 
+      darknet loss.
+
+  Returns:
+    diou: a `Tensor` who represents the distance intersection over union.
+  """
+  with tf.name_scope('diou'):
+    # compute center distance
+    if not yxyx:
+      box1 = xcycwh_to_yxyx(box1)
+      box2 = xcycwh_to_yxyx(box2)
+      yxyx = True
+
+    boxc = smallest_encompassing_box(box1, box2, yxyx=yxyx)
+    if yxyx:
+      boxc = yxyx_to_xcycwh(boxc)
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
+
+    b1xy, _ = tf.split(box1, 2, axis=-1)
+    b2xy, _ = tf.split(box2, 2, axis=-1)
+    _, bcwh = tf.split(boxc, 2, axis=-1)
+    center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
+    c_diag = tf.reduce_sum(bcwh**2, axis=-1)
+    regularization = math_ops.divide_no_nan(center_dist, c_diag)
+  return regularization**beta
 
 
 def compute_ciou(box1, box2, yxyx=False, darknet=False):
@@ -234,93 +317,32 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     ciou: a `Tensor` who represents the complete intersection over union.
   """
   with tf.name_scope('ciou'):
-    # compute center distance
-    if not yxyx:
-      xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
-    else:
-      yxyx1, yxyx2 = box1, box2
-      xycc1 = yxyx_to_xcycwh(box1)
-      xycc2 = yxyx_to_xcycwh(box2)
+    # compute DIOU and IOU
+    iou, diou = compute_diou(box1, box2, yxyx=yxyx, darknet=darknet)
 
-    # build the 
-    cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
-    intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
-    iou = math_ops.divide_no_nan(intersection, union)
+    if yxyx:
+      box1 = yxyx_to_xcycwh(box1)
+      box2 = yxyx_to_xcycwh(box2)
 
-    b1xy, b1w, b1h = tf.split(xycc1, [2, 1, 1], axis=-1)
-    b2xy, b2w, b2h = tf.split(xycc2, [2, 1, 1], axis=-1)
-    bcwh = cma - cmi
-
-    # center regularization
-    center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
-    c_diag = tf.reduce_sum(bcwh**2, axis=-1)
-    regularization = math_ops.divide_no_nan(center_dist, c_diag)
+    _, _, b1w, b1h = tf.split(box1, 4, axis=-1)
+    _, _, b2w, b2h = tf.split(box2, 4, axis=-1)
 
     # computer aspect ratio consistency
-    terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32) # gt
-    termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32) # pred
-    arcterm = tf.squeeze(
-      tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis = -1)
-    v = (4 / math.pi ** 2) * arcterm
+    terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
+    termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
+    arcterm = tf.square(tf.math.atan(terma) - tf.math.atan(termb))
+    v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
+    v = tf.cast(v, b1w.dtype)
 
-    # aspect ration weight 
+    # trade off parameter is viewed as a constant
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
 
     # if darknet:
     #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
     #   v *= grad_scale
     
-    ciou = iou - regularization - (v * a)
-    tf.print(ciou)
+    ciou = diou - (v * a)
   return iou, ciou
-
-
-# def compute_ciou(box1, box2, yxyx=False, darknet=False):
-#   """Calculates the complete intersection over union between box1 and box2.
-
-#   Args:
-#     box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
-#       boxes.
-#     box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
-#       boxes.
-#     yxyx: a `bool` indicating whether the input box is of the format x_center
-#       y_center, width, height or y_min, x_min, y_max, x_max.
-#     darknet: a `bool` indicating whether the calling function is the yolo 
-#       darknet loss.
-
-#   Returns:
-#     ciou: a `Tensor` who represents the complete intersection over union.
-#   """
-#   with tf.name_scope('ciou'):
-#     # compute DIOU and IOU
-#     iou, diou = compute_diou(box1, box2, yxyx=yxyx, darknet=darknet)
-
-#     if yxyx:
-#       box1 = yxyx_to_xcycwh(box1)
-#       box2 = yxyx_to_xcycwh(box2)
-
-#     _, _, b1w, b1h = tf.split(box1, 4, axis=-1)
-#     _, _, b2w, b2h = tf.split(box2, 4, axis=-1)
-
-#     # computer aspect ratio consistency
-#     terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
-#     termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
-#     arcterm = tf.square(tf.math.atan(terma) - tf.math.atan(termb))
-    
-#     v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
-#     v = tf.cast(v, b1w.dtype)
-
-#     # trade off parameter is viewed as a constant
-#     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
-
-#     # if darknet:
-#     #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
-#     #   v *= grad_scale
-    
-#     ciou = diou - (v * a)
-#   return iou, ciou
 
 
 # equal to bbox_overlap but far more versitile
