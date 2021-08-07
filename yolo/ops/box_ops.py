@@ -329,8 +329,8 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
       box1 = yxyx_to_xcycwh(box1)
       box2 = yxyx_to_xcycwh(box2)
 
-    b1x, b1y, b1w, b1h = tf.split(box1, 4, axis=-1)
-    b2x, b2y, b2w, b2h = tf.split(box1, 4, axis=-1)
+    _, _, b1w, b1h = tf.split(box1, 4, axis=-1)
+    _, _, b2w, b2h = tf.split(box2, 4, axis=-1)
 
     # computer aspect ratio consistency
     terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
@@ -339,9 +339,11 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
     v = tf.cast(v, b1w.dtype)
 
+    # trade off parameter is viewed as a constant
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
+    # grad_scale = tf.stop_gradient(tf.square())
+    
     ciou = diou - (v * a)
-    # ciou = tf.clip_by_value(ciou, clip_value_min=-1.0, clip_value_max=1.0)
   return iou, ciou
 
 
