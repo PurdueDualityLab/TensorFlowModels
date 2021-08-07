@@ -117,7 +117,7 @@ def intersect_and_union(box1, box2, yxyx=False):
   return intersection, union
 
 
-def smallest_encompassing_box(box1, box2, yxyx=False):
+def smallest_encompassing_box(box1, box2, yxyx=False, clip = False):
   """Calculates the smallest box that encompasses both that encomapasses both
   box1 and box2.
 
@@ -143,14 +143,14 @@ def smallest_encompassing_box(box1, box2, yxyx=False):
 
   bcmi = tf.math.minimum(b1mi, b2mi)
   bcma = tf.math.maximum(b1ma, b2ma)
-
-  bca = tf.reduce_prod(bcma - bcmi, keepdims=True, axis=-1)
   box_c = tf.concat([bcmi, bcma], axis=-1)
 
   if not yxyx:
     box_c = yxyx_to_xcycwh(box_c)
 
-  box_c = tf.where(bca == 0.0, tf.zeros_like(box_c), box_c)
+  if clip: 
+    bca = tf.reduce_prod(bcma - bcmi, keepdims=True, axis=-1)
+    box_c = tf.where(bca <= 0.0, tf.zeros_like(box_c), box_c)
   return box_c
 
 
