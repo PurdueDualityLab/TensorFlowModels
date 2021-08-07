@@ -273,7 +273,6 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     #   v *= grad_scale
     
     ciou = iou - regularization - (v * a)
-    tf.print(ciou)
   return iou, ciou
 
 
