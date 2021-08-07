@@ -341,7 +341,10 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 
     # trade off parameter is viewed as a constant
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
-    # grad_scale = tf.stop_gradient(tf.square())
+
+    # if darknet:
+    #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
+    #   v *= grad_scale
     
     ciou = diou - (v * a)
   return iou, ciou
