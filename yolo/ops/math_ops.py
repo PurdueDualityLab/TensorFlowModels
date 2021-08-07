@@ -44,5 +44,6 @@ def divide_no_nan(a, b):
   Return:
     a `Tensor` representing a divided by b, with all nan values removed. 
   """
-  zero = tf.cast(0.0, b.dtype)
-  return tf.where(b == zero, zero, a / b)
+  # zero = tf.cast(0.0, b.dtype)
+  # return tf.where(b == zero, zero, a / b)
+  return a / (b + 1e-9)
