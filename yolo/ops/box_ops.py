@@ -331,6 +331,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
     termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
     arcterm = tf.square(tf.math.atan(terma) - tf.math.atan(termb))
+    
     v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
     v = tf.cast(v, b1w.dtype)
 
@@ -387,7 +388,7 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
 
 
 
-def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, EIoU=False, ECIoU=False, eps=1e-9):
+def bbox_iou(box1, box2, x1y1x2y2=False, GIoU=False, DIoU=False, CIoU=False, EIoU=False, ECIoU=False, eps=1e-9):
     # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
     # box2 = box2.T
 
