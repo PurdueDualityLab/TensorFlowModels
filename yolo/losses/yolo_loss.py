@@ -449,8 +449,8 @@ class Yolo_Loss(object):
     if self._loss_type == 1:
       iou, liou = box_ops.compute_giou(true_box, pred_box, darknet=darknet)
     elif self._loss_type == 2:
-      iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
-      # iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2 = False, CIoU=True)
+      # iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
+      iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2 = False, CIoU=True)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
       liou = iou
@@ -716,7 +716,7 @@ class Yolo_Loss(object):
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)

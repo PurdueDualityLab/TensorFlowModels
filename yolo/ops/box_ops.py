@@ -251,16 +251,16 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 
     b1xy, b1w, b1h = tf.split(xycc1, [2, 1, 1], axis=-1)
     b2xy, b2w, b2h = tf.split(xycc2, [2, 1, 1], axis=-1)
-    bcwh = cma - cmi
+    bchw = cma - cmi
 
     # center regularization
     center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
-    c_diag = tf.reduce_sum(bcwh**2, axis=-1)
+    c_diag = tf.reduce_sum(bchw**2, axis=-1)
     regularization = math_ops.divide_no_nan(center_dist, c_diag)
 
     # computer aspect ratio consistency
-    terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32) # gt
-    termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32) # pred
+    terma = math_ops.divide_no_nan(b1w, b1h) # gt
+    termb = math_ops.divide_no_nan(b2w, b2h) # pred
     arcterm = tf.squeeze(
       tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis = -1)
     v = (4 / math.pi ** 2) * arcterm
