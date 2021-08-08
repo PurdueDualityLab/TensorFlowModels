@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   model:
     base:
       backbone:
@@ -118,12 +118,10 @@ trainer:
         alpha: 0.2
         decay_steps: 542050
     optimizer:
-      type: sgd_dymo
-      sgd_dymo:
+      type: sgd
+      sgd:
         momentum: 0.937
-        momentum_start: 0.8
         nesterov: True
-        warmup_steps: 5550
         name: SGD
     warmup:
       type: 'linear'
