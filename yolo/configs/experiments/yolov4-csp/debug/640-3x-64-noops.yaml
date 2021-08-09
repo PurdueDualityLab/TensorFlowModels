@@ -121,7 +121,7 @@ trainer:
       type: sgd
       sgd:
         momentum: 0.937
-        nesterov: False
+        nesterov: True
         name: SGD
     warmup:
       type: 'linear'
