@@ -21,10 +21,6 @@ class SGDAccumulated(OptimizerV2):
                momentum=0.0,
                nesterov=False,
                one_offset=False, 
-               adjusted_for_accum = True,
-
-               momentum_start=0.0, 
-               warmup_steps=1000,
                name="SGD",
                **kwargs):
     r"""Construct a new SGD optimizer.
@@ -63,15 +59,7 @@ class SGDAccumulated(OptimizerV2):
       self._momentum = True
     if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
       raise ValueError("`momentum` must be between [0, 1].")
-    
     self._set_hyper("momentum", momentum)
-    self._set_hyper("momentum_start", momentum_start)
-
-    if adjusted_for_accum: 
-      self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
-    else:
-      self._set_hyper("warmup_steps", tf.cast(warmup_steps * accumulation_steps, tf.int32))
-
     self.nesterov = nesterov
 
     self._offset = tf.cast(0, tf.int64)
@@ -79,42 +67,6 @@ class SGDAccumulated(OptimizerV2):
       self._offset = tf.cast(1, tf.int64)
 
     self._accumulation_type = accumulation_type
-
-
-  def _get_momentum(self, iteration):
-    momentum = self._get_hyper("momentum")
-    momentum_start = self._get_hyper("momentum_start")
-    momentum_warm_up_steps = tf.cast(
-        self._get_hyper("warmup_steps"), iteration.dtype)
-
-    wm_momentum = (momentum_start +
-                         (tf.cast(iteration, momentum.dtype) *
-                          (momentum - momentum_start) / tf.cast(
-                              momentum_warm_up_steps, momentum.dtype)))
-    value = tf.cond(
-        (iteration - momentum_warm_up_steps) < 0,
-        true_fn=lambda: wm_momentum,
-        false_fn=lambda: momentum)
-    return value
-
-  def _get_accumulation_steps(self, iteration):
-    ac = tf.cast(self._get_hyper("accumulation_steps"), tf.float64)
-    acs = tf.cast(0, ac.dtype)
-    momentum_warm_up_steps = tf.cast(
-        self._get_hyper("warmup_steps"), iteration.dtype)
-
-    wm_ac = (acs +
-                tf.cast((tf.cast(iteration, ac.dtype) *
-                          (ac - acs) / tf.cast(
-                              momentum_warm_up_steps, ac.dtype)), ac.dtype))
-    base = tf.cast(ac, tf.int64)
-    ac = tf.maximum(base, tf.cast(ac, tf.int64))
-    wm_ac = tf.maximum(base, tf.cast(wm_ac, tf.int64))
-    value = tf.cond(
-        (iteration - momentum_warm_up_steps) < 0,
-        true_fn=lambda: wm_ac,
-        false_fn=lambda: ac)
-    return value
 
   def _create_slots(self, var_list):
     for var in var_list:
@@ -125,7 +77,7 @@ class SGDAccumulated(OptimizerV2):
 
   def momentum_update(self, coefficients, var, grad):
     momentum_var = self.get_slot(var, "momentum")
-    upds =  tf.raw_ops.ResourceApplyKerasMomentum(
+    return tf.raw_ops.ResourceApplyKerasMomentum(
         var=var.handle,
         accum=momentum_var.handle,
         lr=coefficients["lr_t"],
@@ -133,19 +85,14 @@ class SGDAccumulated(OptimizerV2):
         momentum=coefficients["momentum"],
         use_locking=self._use_locking,
         use_nesterov=self.nesterov)
-    g_cont = self.get_slot(var, 'g')
-    var_update = state_ops.assign(g_cont, tf.zeros_like(grad))
-    return control_flow_ops.group(*[upds, var_update])
 
   def no_momentum_update(self, coefficients, var, grad):
-    upds = tf.raw_ops.ResourceApplyGradientDescent(
+    return tf.raw_ops.ResourceApplyGradientDescent(
         var=var.handle,
         alpha=coefficients["lr_t"],
         delta=grad,
         use_locking=self._use_locking)
-    g_cont = self.get_slot(var, 'g')
-    var_update = state_ops.assign(g_cont, tf.zeros_like(grad))
-    return control_flow_ops.group(*[upds, var_update])
+
 
   def raw_update(self, coefficients, var, grad):
     def func():
@@ -160,10 +107,7 @@ class SGDAccumulated(OptimizerV2):
     def func():
       # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
-
-      g_cont = self.get_slot(var, 'g')
-      var_update2 = state_ops.assign(g_cont, g_cont)
-      return control_flow_ops.group(*[var_update, var_update2])
+      return control_flow_ops.group(*[var_update])
     return func
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
@@ -172,29 +116,22 @@ class SGDAccumulated(OptimizerV2):
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
     
-    if self._momentum:
-      momentum = self._get_momentum(self.iterations)
-      momentum = tf.cast(momentum, var_dtype)
-      apply_state[(var_device,
-                   var_dtype)]["momentum"] = array_ops.identity(momentum)
-    
-    accumulation_steps = self._get_accumulation_steps(self.iterations)
-    apply_state[(var_device, var_dtype)]["update"] = tf.cast((self.iterations + self._offset) % tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
+    accumulation_steps = array_ops.identity(
+        self._get_hyper("accumulation_steps", var_dtype))
 
-    accumulation_steps = array_ops.identity(accumulation_steps)
     if self._accumulation_type == "sum":
       accumulation_steps = tf.cast(1, var_dtype)
     
     apply_state[(var_device, var_dtype)]["accumulation_steps"] = accumulation_steps
-    
+    apply_state[(var_device, var_dtype)]["update"] = tf.cast((self.iterations + self._offset) % tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
+
+
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype))
                     or self._fallback_apply_state(var_device, var_dtype))
 
     grad = grad/coefficients["accumulation_steps"]
-
-    # tf.print(coefficients["update"])
     return tf.cond(coefficients["update"] == 1, 
                    self.raw_update(coefficients, var, grad), 
                    self.no_update(coefficients, var, grad))
@@ -243,11 +180,7 @@ class SGDAccumulated(OptimizerV2):
       with tf.init_scope():
         self._create_all_weights(var_list)
 
-    accumulation_steps = self._get_accumulation_steps(self.iterations)
-    momentum = self._get_momentum(self.iterations)
-    #self._get_hyper('accumulation_steps', 'int64')
-
-    tf.print(accumulation_steps, momentum, self.iterations)
+    accumulation_steps = self._get_hyper('accumulation_steps', 'int64')
 
     ng = []
     ag = []
@@ -258,46 +191,19 @@ class SGDAccumulated(OptimizerV2):
       ng.append(tf.zeros_like(grad))
       ag.append(g_a)
 
-    # grad_list = ng
+    grad_list = ng
+    if (self.iterations + self._offset) % accumulation_steps == 0:
+      grad_list = ag
 
-    grad_list = tf.cond((self.iterations + self._offset) % accumulation_steps == 0, 
-            true_fn=lambda:ag, 
-            false_fn=lambda:ng
-              )
-      # grad_list = ag
 
     super().apply_gradients(zip(grad_list,var_list), 
                             name=name, 
                             experimental_aggregate_gradients=experimental_aggregate_gradients)
 
+    if (self.iterations + self._offset) % accumulation_steps == 0:
+      for grad, var in grads_and_vars:
+        g = self.get_slot(var, 'g') # accumulated gradient
+        g_a = state_ops.assign(g, tf.zeros_like(grad))    
 
-
-
-    # if (self.iterations + self._offset) % accumulation_steps == 0:
-    #   for grad, var in grads_and_vars:
-    #     g = self.get_slot(var, 'g') # accumulated gradient
-    #     g_a = state_ops.assign(g, tf.zeros_like(grad))    
-
-    # def no_update(var, grad):
-    #   def func():
-    #     # tf.print("no up")
-    #     g = self.get_slot(var, 'g') 
-    #     var_update = state_ops.assign(g, g)
-    #     return control_flow_ops.group(*[var_update])
-    #   return func
-
-    # def clear(var, grad):
-    #   def func():
-    #     # tf.print("no up")
-    #     g = self.get_slot(var, 'g') 
-    #     var_update = state_ops.assign(grad, tf.zeros_like(grad))
-    #     return control_flow_ops.group(*[var_update])
-    #   return func
-    
-
-  
-    # for grad, var in grads_and_vars: 
-    #   g = self.get_slot(var, 'g') 
-    #   tf.print(tf.reduce_sum(g), summarize = 1)
 
     return

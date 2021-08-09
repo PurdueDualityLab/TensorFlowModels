@@ -161,6 +161,15 @@ class Yolo(ks.Model):
         other.append(var)
     return weights, bias, other
 
+  def get_weight_groups_names(self):
+
+    variables = self.trainable_variables
+
+    name = []
+    for var in variables:
+      name.append(var.ref())
+    return name
+
   def print(self):
     """Sequence of trainable variables owned by this module and its submodules.
     Note: this method uses reflection to find variables on the current instance

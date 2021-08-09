@@ -601,6 +601,16 @@ class YoloTask(base_task.Task):
   # def create_optimizer(cls, optimizer_config: OptimizationConfig,
   #                      runtime_config: Optional[RuntimeConfig] = None):
 
+  def _wrap_optimizer(self, optimizer, runtime_config):
+    if runtime_config and runtime_config.loss_scale:
+      use_float16 = runtime_config.mixed_precision_dtype == "float16"
+      optimizer = performance.configure_optimizer(
+          optimizer,
+          use_graph_rewrite=False,
+          use_float16=use_float16,
+          loss_scale=runtime_config.loss_scale)
+    return optimizer
+
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     """Creates an TF optimizer from configurations.
@@ -613,10 +623,9 @@ class YoloTask(base_task.Task):
       A tf.optimizers.Optimizer object.
     """
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
-
+    ema = opt_factory._use_ema
+    opt_factory._use_ema = False
     if (self._task_config.smart_bias_lr > 0.0):
-      ema = opt_factory._use_ema
-      opt_factory._use_ema = False
       optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
@@ -630,10 +639,12 @@ class YoloTask(base_task.Task):
         (optimizer_biases, lambda:bias),
         (optimizer_others, lambda:other)]
       )
-      opt_factory._use_ema = ema
-      optimizer = opt_factory.add_ema(optimizer)
+
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 
     print(optimizer)
+    # optimizer = self._wrap_optimizer(optimizer, runtime_config)
+    opt_factory._use_ema = ema
+    optimizer = opt_factory.add_ema(optimizer)
     return optimizer

@@ -52,8 +52,12 @@ class SGDAccumConfig(BaseOptimizerConfig):
   decay: float = 0.0
   nesterov: bool = False
   momentum: float = 0.0
-  accumulation_steps: int = 1
+  momentum_start: float = 0.0
   accumulation_type: str = "mean"
+  one_offset: bool = False 
+  accumulation_steps: int = 1
+  adjusted_for_accum: bool = True
+  warmup_steps: int = 1000
 
 
 @dataclasses.dataclass
