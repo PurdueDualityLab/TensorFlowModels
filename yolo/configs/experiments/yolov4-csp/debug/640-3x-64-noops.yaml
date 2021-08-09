@@ -51,8 +51,7 @@ task:
       new_cords:
         'all': True
       objectness_smooth: 
-        # 'all': 1.0
-        'all': 0.0
+        'all': 1.0
       scale_xy:
         'all': 2.0
       max_boxes: 300
