@@ -96,7 +96,7 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.0005
+  weight_decay: 0.0000
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
