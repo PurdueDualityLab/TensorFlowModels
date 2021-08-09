@@ -124,7 +124,7 @@ trainer:
     optimizer:
       type: sgd
       sgd:
-        momentum: 0.937
+        momentum: 0.0 #937
         nesterov: True
         name: SGD
     warmup:
