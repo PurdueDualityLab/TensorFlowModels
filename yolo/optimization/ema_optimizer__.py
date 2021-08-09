@@ -1,3 +1,4 @@
+
 # Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,21 +24,17 @@ from official.modeling.optimization import ema_optimizer
 
 class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
   """Optimizer that computes an exponential moving average of the variables.
-
   Empirically it has been found that using the moving average of the trained
   parameters of a deep network is better than using its trained parameters
   directly. This optimizer allows you to compute this moving average and swap
   the variables at save time so that any code outside of the training loop
   will use by default the average values instead of the original ones.
-
   Example of usage for training:
   ```python
   opt = tf.keras.optimizers.SGD(learning_rate)
   opt = ExponentialMovingAverage(opt)
-
   opt.shadow_copy(model)
   ```
-
   At test time, swap the shadow variables to evaluate on the averaged weights:
   ```python
   opt.swap_weights()
@@ -54,7 +51,6 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
                name: Text = 'ExponentialMovingAverage',
                **kwargs):
     """Construct a new ExponentialMovingAverage optimizer.
-
     Args:
       optimizer: `tf.keras.optimizers.Optimizer` that will be
         used to compute and apply gradients.
@@ -80,15 +76,17 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
                      dynamic_decay = dynamic_decay,
                      name = name,
                      **kwargs)
-    print("YOLO Ema")
 
-  def apply_gradients(self, grads_and_vars, name: Optional[Text] = None):
-    result = self._optimizer.apply_gradients(grads_and_vars, name)
+  def apply_gradients(self, grads_and_vars,
+                      name: Optional[Text] = None):
+    result = self._optimizer.apply_gradients(grads_and_vars, 
+                                             name)
     self.update_average(self.iterations)
     return result
 
   @tf.function
   def update_average(self, step: tf.Tensor):
+
     step = tf.cast(step, tf.float32)
     if step < self._start_step:
       decay = tf.constant(0., tf.float32)
@@ -108,8 +106,41 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
 
     ctx = tf.distribute.get_replica_context()
-    return ctx.merge_call(_update, args=(zip(self._average_weights,
-                                             self._model_weights),))
+    strategy = tf.distribute.get_strategy()
+    if isinstance(strategy, tf.distribute.MirroredStrategy):
+      if tf.distribute.in_cross_replica_context():
+        return strategy.run(_update, args=(zip(self._average_weights, self._model_weights),))
+    else:
+      return ctx.merge_call(_update, args=(zip(self._average_weights,
+                                              self._model_weights),))
+
+  @tf.function
+  def _swap_weights(self):
+    def fn_0(a, b):
+      a.assign_add(b)
+      return a
+    def fn_1(b, a):
+      b.assign(a - b)
+      return b
+    def fn_2(a, b):
+      a.assign_sub(b)
+      return a
+
+    def swap(strategy, a_and_b):
+      """Swap `a` and `b` and mirror to all devices."""
+      for a, b in a_and_b:
+        strategy.extended.update(a, fn_0, args=(b,))  # a = a + b
+        strategy.extended.update(b, fn_1, args=(a,))  # b = a - b
+        strategy.extended.update(a, fn_2, args=(b,))  # a = a - b
+
+    ctx = tf.distribute.get_replica_context()
+    strategy = tf.distribute.get_strategy()
+    if isinstance(strategy, tf.distribute.MirroredStrategy):
+      if tf.distribute.in_cross_replica_context():
+        return strategy.run(swap, args=(zip(self._average_weights, self._model_weights),))
+    else:
+      return ctx.merge_call(
+          swap, args=(zip(self._average_weights, self._model_weights),))
 
   @property
   def learning_rate(self):
