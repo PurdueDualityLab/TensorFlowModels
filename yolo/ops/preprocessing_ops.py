@@ -685,16 +685,12 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 
 
 # ops for box clipping and cleaning
-# def boxes_candidates(clipped_boxes,
-#                      box_history,
-#                      wh_thr=2,
-#                      ar_thr=20,
-#                      area_thr=0.0):
 def boxes_candidates(clipped_boxes,
                      box_history,
-                     wh_thr=0,
-                     ar_thr=np.inf,
+                     wh_thr=2,
+                     ar_thr=20,
                      area_thr=0.0):
+
   # area thesh can be negative if darknet clipping is used
   # area_thresh < 0.0 = darknet clipping
   # area_thresh >= 0.0 = scaled model clipping

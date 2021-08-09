@@ -74,7 +74,9 @@ class YoloHead(tf.keras.layers.Layer):
   def bias_init(self, scale, isize=640, no_per_conf=8):
 
     def bias(shape, dtype):
-      base = tf.zeros(shape, dtype=dtype)
+      init = tf.keras.initializers.GlorotUniform()
+
+      base = init(shape, dtype=dtype)
       base = tf.reshape(base, [self._boxes_per_level, -1])
       box, conf, classes = tf.split(base, [4, 1, -1], axis=-1)
       #box += tf.random.uniform(tf.shape(box), -0.1, 0.1)
@@ -82,7 +84,7 @@ class YoloHead(tf.keras.layers.Layer):
       classes += tf.math.log(0.6 / (self._classes - 0.99))
       base = tf.concat([box, conf, classes], axis=-1)
 
-      tf.print(base, summarize=-1)
+      print(base)
       base = tf.reshape(base, [-1])
       return base
 
