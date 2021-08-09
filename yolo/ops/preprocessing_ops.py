@@ -1104,7 +1104,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
       x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
       y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i] and (xc != x_ or yc != y_):
+      if shifts[i]: # and (xc != x_ or yc != y_):
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
