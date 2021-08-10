@@ -120,7 +120,7 @@ trainer:
         momentum_start: 0.0
         nesterov: False
         one_offset: false
-        warmup_steps: 44400 
+        warmup_steps: 0 
         accumulation_type: sum
         accumulation_steps: 4
         adjusted_for_accum: True
