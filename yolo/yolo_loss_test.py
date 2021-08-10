@@ -39,7 +39,7 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       config_path=[
-          "yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"
+          "yolo/configs/experiments/yolov4-csp/inference/512-baseline-dynamo.yaml"
       ],
       # config_path=["yolo/configs/experiments/yolov4/inference/512-baseline.yaml"],
       model_dir="")

@@ -685,9 +685,8 @@ class Yolo_Loss(object):
     #    and save the true_confdence mask before it get altered
     (true_box, ind_mask, true_class, _, _) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
-    true_conf = tf.squeeze(true_conf, axis=-1)
+    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
-    grid_mask = true_conf
     num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
 
     # 3. split up the predicitons to match the ground truths shapes
