@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   model:
     base:
       backbone:
@@ -30,7 +30,7 @@ task:
     min_level: 3
     norm_activation:
       activation: mish
-      norm_epsilon: 0.0001
+      norm_epsilon: 0.001
       norm_momentum: 0.97
       use_sync_bn: true
     filter:
@@ -67,13 +67,13 @@ task:
       max_num_instances: 300
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 0.7
-      aug_rand_brightness: 0.4
-      aug_rand_hue: 0.015
-      aug_scale_min: 0.1
-      aug_scale_max: 1.9
-      aug_rand_translate: 0.1
-      area_thresh: 0.1
+      aug_rand_saturation: 0.0
+      aug_rand_brightness: 0.0
+      aug_rand_hue: 0.0
+      aug_scale_min: 1.0
+      aug_scale_max: 1.0
+      aug_rand_translate: 0.0
+      area_thresh: 0.0
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
@@ -81,13 +81,7 @@ task:
       best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
-        max_resolution: 720
-        mosaic_frequency: 1.0
-        mixup_frequency: 0.0
-        mosaic_crop_mode: 'scale'
-        aspect_ratio_mode: 'letter'
-        crop_area_mosaic: [0.1, 1.9]
-        crop_area: [0.25]
+        mosaic_frequency: 0.0
   validation_data:
     global_batch_size: 128
     dtype: float32
@@ -97,12 +91,12 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: True
+      letter_box: null
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.0005
+  weight_decay: 0.0000
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -112,10 +106,6 @@ trainer:
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
@@ -124,12 +114,10 @@ trainer:
         alpha: 0.2
         decay_steps: 542050
     optimizer:
-      type: sgd_dymo
-      sgd_dymo:
-        momentum: 0.937
-        momentum_start: 0.8
+      type: sgd
+      sgd:
+        momentum: 0.0
         nesterov: False
-        warmup_steps: 5550
         name: SGD
     warmup:
       type: 'linear'

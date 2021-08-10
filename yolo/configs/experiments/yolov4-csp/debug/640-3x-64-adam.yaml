@@ -128,6 +128,7 @@ trainer:
       adam:
         beta_1: 0.937
         beta_2: 0.999
+        epsilon: 0.00000001
         name: adam
     warmup:
       type: 'linear'

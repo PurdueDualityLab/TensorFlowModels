@@ -704,7 +704,8 @@ class Yolo_Loss(object):
     # at all
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    offset = tf.cast(tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
+    offset = tf.cast(
+      tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
     offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
     true_box = apply_mask(ind_mask, (scale * true_box) - offset)
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
@@ -743,7 +744,6 @@ class Yolo_Loss(object):
     #     applied
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    # bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
     conf_loss = tf.reduce_mean(bce)
 
     # 7.  (class loss) build the one hot encoded true class values
@@ -754,7 +754,6 @@ class Yolo_Loss(object):
         pred_class,
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    # class_loss = sigmoid_BCE(true_class,pred_class,self._label_smoothing)
     class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
     class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
 
