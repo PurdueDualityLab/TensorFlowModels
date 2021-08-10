@@ -127,7 +127,7 @@ trainer:
       type: sgd_accum
       sgd_accum:
         momentum: 0.937
-        momentum_start: 0.937
+        momentum_start: 0.8
         nesterov: True
         one_offset: false
         warmup_steps: 14799 
