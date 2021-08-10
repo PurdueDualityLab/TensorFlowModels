@@ -664,7 +664,8 @@ class Yolo_Loss(object):
 
     # stop gradient and return to avoid TPU errors and save compute
     # resources
-    return tf.stop_gradient(grid)
+    # return tf.stop_gradient(grid)
+    return grid
 
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
