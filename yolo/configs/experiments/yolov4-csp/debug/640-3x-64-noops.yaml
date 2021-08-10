@@ -77,7 +77,7 @@ task:
       aug_scale_min: 1.0
       aug_scale_max: 1.0
       aug_rand_translate: 0.0
-      area_thresh: 0.0
+      area_thresh: -0.01
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
