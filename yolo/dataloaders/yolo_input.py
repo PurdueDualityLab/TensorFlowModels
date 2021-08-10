@@ -379,11 +379,11 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    image = tf.image.resize(
-        image, (self._image_h, self._image_w),
-        preserve_aspect_ratio=False,
-        antialias=False,
-        name=None)
+    # image = tf.image.resize(
+    #     image, (self._image_h, self._image_w),
+    #     preserve_aspect_ratio=False,
+    #     antialias=False,
+    #     name=None)
 
     # apply scaling to the hue saturation and brightness of an image
     image = tf.cast(image, self._dtype)
