@@ -98,7 +98,7 @@ task:
   weight_decay: 0.0005
   annotation_file: null
 trainer:
-  train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 2220000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 312
   steps_per_loop: 7400
   summary_interval: 7400
@@ -123,7 +123,7 @@ trainer:
         momentum_start: 0.937
         nesterov: True
         one_offset: false
-        warmup_steps: 22200 
+        warmup_steps: 2197800 
         accumulation_type: sum
         accumulation_steps: 4
         adjusted_for_accum: True
@@ -131,4 +131,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 5550 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 22200 #learning rate rises from 0 to 0.0013 over 1000 steps
