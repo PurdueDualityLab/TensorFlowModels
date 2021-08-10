@@ -96,7 +96,7 @@ class YoloHead(tf.keras.layers.Layer):
       scale = 2**int(key)
       self._head[key] = nn_blocks.ConvBN(
           bias_initializer=self.bias_init(scale)
-          if self._smart_bias else 'zeros',
+          if self._smart_bias else 'glorot_uniform',
           **self._conv_config)
 
   def call(self, inputs):
