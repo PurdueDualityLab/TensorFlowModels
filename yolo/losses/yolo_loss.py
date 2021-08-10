@@ -68,24 +68,6 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
   return bce, delta
 
-
-# @tf.custom_gradient
-# def apply_mask(mask, x):
-#   # this function is used to apply no nan mask to an input tensor
-#   # as such this will apply a mask and remove NAN for both the
-#   # forward AND backward propagation
-#   mask = tf.cast(mask, tf.bool)
-#   masked = tf.where(mask, x, tf.zeros_like(x))
-
-#   def delta(dy):
-#     # mask the incoming derivative as well.
-#     # masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
-#     masked = tf.where(mask, x, tf.zeros_like(x))
-#     return tf.zeros_like(mask), masked_dy
-
-#   return masked , delta
-
-
 def apply_mask(mask, x):
   mask = tf.cast(mask, tf.bool)
   masked = tf.where(mask, x, tf.zeros_like(x))
