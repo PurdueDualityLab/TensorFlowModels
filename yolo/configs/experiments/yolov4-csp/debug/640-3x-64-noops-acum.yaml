@@ -115,7 +115,7 @@ trainer:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 542050
+        decay_steps: 2197800
     optimizer:
       type: sgd_accum
       sgd_accum:
@@ -123,7 +123,7 @@ trainer:
         momentum_start: 0.937
         nesterov: True
         one_offset: false
-        warmup_steps: 2197800 
+        warmup_steps: 22200 
         accumulation_type: sum
         accumulation_steps: 4
         adjusted_for_accum: True
