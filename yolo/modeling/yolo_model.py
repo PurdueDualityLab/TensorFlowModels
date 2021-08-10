@@ -185,6 +185,7 @@ class Yolo(ks.Model):
     for module in modules: 
       if isinstance(module, nn_blocks.ConvBN):
         print(module)
+        print(module._kernel_regularizer)
         if module._use_bn:
           print(module.bn)
     return 

@@ -69,19 +69,42 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   return bce, delta
 
 
-@tf.custom_gradient
+# @tf.custom_gradient
+# def apply_mask(mask, x):
+#   # this function is used to apply no nan mask to an input tensor
+#   # as such this will apply a mask and remove NAN for both the
+#   # forward AND backward propagation
+#   mask = tf.cast(mask, tf.bool)
+#   masked = tf.where(mask, x, tf.zeros_like(x))
+
+#   def delta(dy):
+#     # mask the incoming derivative as well.
+#     # masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
+#     masked = tf.where(mask, x, tf.zeros_like(x))
+#     return tf.zeros_like(mask), masked_dy
+
+#   return masked , delta
+
+
 def apply_mask(mask, x):
-  # this function is used to apply no nan mask to an input tensor
-  # as such this will apply a mask and remove NAN for both the
-  # forward AND backward propagation
-  masked = tf.where(mask == 0, tf.cast(0, x.dtype), x)
+  mask = tf.cast(mask, tf.bool)
+  masked = tf.where(mask, x, tf.zeros_like(x))
+  return masked
 
-  def delta(dy):
-    # mask the incoming derivative as well.
-    masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
-    return tf.zeros_like(mask), masked_dy
+# @tf.custom_gradient
+# def apply_mask(mask, x):
+#   # this function is used to apply no nan mask to an input tensor
+#   # as such this will apply a mask and remove NAN for both the
+#   # forward AND backward propagation
+#   mask = tf.cast(mask, tf.bool)
+#   masked = tf.where(mask, x, tf.zeros_like(x))
 
-  return masked, delta
+#   def delta(dy):
+#     # mask the incoming derivative as well.
+#     masked_dy = tf.where(mask, dy, tf.zeros_like(dy))
+#     return tf.zeros_like(mask), masked_dy
+
+#   return masked , delta
 
 
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
@@ -114,8 +137,8 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # shift scaled boxes
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -228,8 +251,8 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # shift scaled boxes
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -707,11 +730,11 @@ class Yolo_Loss(object):
     true_box = apply_mask(ind_mask, true_box)
 
     # #    translate ground truth to match predictions
-    # offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
-    # offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
-    # true_box -= tf.cast(offset, true_box.dtype)
-    # true_box = apply_mask(ind_mask, true_box)
-    # pred_box = apply_mask(ind_mask, pred_box)
+    offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
+    offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
+    true_box -= tf.cast(offset, true_box.dtype)
+    true_box = apply_mask(ind_mask, true_box)
+    pred_box = apply_mask(ind_mask, pred_box)
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
