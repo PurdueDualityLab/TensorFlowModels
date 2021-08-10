@@ -717,20 +717,19 @@ class Yolo_Loss(object):
     #     within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
+    box_loss = tf.reduce_sum(box_loss) #, dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the
     #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
+    #     build a the ground truth detection map
     iou = tf.stop_gradient(iou)
     iou = tf.maximum(iou, 0.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
-
-    #     build a the ground truth detection map
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=False)
     true_conf = tf.squeeze(true_conf, axis=-1)
