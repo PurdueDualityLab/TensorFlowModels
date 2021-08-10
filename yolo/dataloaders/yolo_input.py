@@ -385,21 +385,7 @@ class Parser(parser.Parser):
         antialias=False,
         name=None)
 
-    # propagate all the changes to the images to the boxes and classes
-    # mainly image clipping and removing boxes no longer in the image
-    h_, w_ = preprocessing_ops.get_image_shape(image)
-    im_shape = tf.cast([h_, w_], tf.float32)
-    boxes = box_ops.denormalize_boxes(boxes, im_shape)
-    boxes = box_ops.clip_boxes(boxes, im_shape)
-
-    # inds = preprocessing_ops.get_non_empty_box_indices(boxes, im_shape)
-    inds = box_ops.get_non_empty_box_indices(boxes)
-    boxes = tf.gather(boxes, inds)
-    classes = tf.gather(classes, inds)
-    boxes = box_ops.normalize_boxes(boxes, im_shape)
-
     # apply scaling to the hue saturation and brightness of an image
-    num_dets = tf.shape(classes)[0]
     image = tf.cast(image, self._dtype)
     image = image / 255
     image = preprocessing_ops.image_rand_hsv(
