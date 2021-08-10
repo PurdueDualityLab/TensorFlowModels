@@ -632,8 +632,7 @@ class Yolo_Loss(object):
 
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
-    indexes = (indexes + ind_mask) - 1
-
+    
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
@@ -642,6 +641,7 @@ class Yolo_Loss(object):
     # concatnate the batch sizes to the indexes
     indexes = tf.concat([bhep, indexes], axis=-1)
     indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
+    indexes = (indexes + (ind_mask - 1))
 
     # reshape the indexes into the correct shape for the loss,
     # just flatten all indexes but the last
@@ -664,7 +664,6 @@ class Yolo_Loss(object):
 
     # stop gradient and return to avoid TPU errors and save compute
     # resources
-    # return tf.stop_gradient(grid)
     return grid
 
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
@@ -717,7 +716,7 @@ class Yolo_Loss(object):
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
@@ -725,7 +724,8 @@ class Yolo_Loss(object):
     # 6.  (confidence loss) build a selective between the ground truth and the
     #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
-    iou = tf.clip_by_value(iou, 0.0, 1.0)
+    iou = tf.stop_gradient(iou)
+    iou = tf.maximum(iou, 0.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
