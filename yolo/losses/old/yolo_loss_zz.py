@@ -632,7 +632,8 @@ class Yolo_Loss(object):
 
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
-    
+    indexes = (indexes + ind_mask) - 1
+
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
@@ -641,7 +642,6 @@ class Yolo_Loss(object):
     # concatnate the batch sizes to the indexes
     indexes = tf.concat([bhep, indexes], axis=-1)
     indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
-    indexes = (indexes + (ind_mask - 1))
 
     # reshape the indexes into the correct shape for the loss,
     # just flatten all indexes but the last
@@ -664,7 +664,7 @@ class Yolo_Loss(object):
 
     # stop gradient and return to avoid TPU errors and save compute
     # resources
-    return grid
+    return tf.stop_gradient(grid)
 
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
     # 0. generate shape constants using tf.shat to support feature multi scale
@@ -685,8 +685,9 @@ class Yolo_Loss(object):
     #    and save the true_confdence mask before it get altered
     (true_box, ind_mask, true_class, _, _) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
-    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
+    true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
+    grid_mask = true_conf
     num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
 
     # 3. split up the predicitons to match the ground truths shapes
@@ -715,7 +716,7 @@ class Yolo_Loss(object):
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
@@ -723,8 +724,7 @@ class Yolo_Loss(object):
     # 6.  (confidence loss) build a selective between the ground truth and the
     #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
-    iou = tf.stop_gradient(iou)
-    iou = tf.maximum(iou, 0.0)
+    iou = tf.clip_by_value(iou, 0.0, 1.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
@@ -732,7 +732,7 @@ class Yolo_Loss(object):
 
     #     build a the ground truth detection map
     true_conf = self.build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=False)
+        inds, smoothed_iou, pred_conf, ind_mask, update=True)
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     #     compute the detection map loss, there should be no masks
@@ -876,7 +876,6 @@ class Yolo_Loss(object):
     #    index
     true_class = self.build_grid(
         inds, true_classes, pred_class, ind_mask, update=False)
-    true_class = tf.stop_gradient(true_class)
 
     # 10. use the class mask to find the number of objects located in
     #     each predicted grid cell/pixel
