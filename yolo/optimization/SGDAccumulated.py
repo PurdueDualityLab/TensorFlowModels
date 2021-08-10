@@ -107,7 +107,7 @@ class SGDAccumulated(OptimizerV2):
                 tf.cast((tf.cast(iteration, ac.dtype) *
                           (ac - acs) / tf.cast(
                               momentum_warm_up_steps, ac.dtype)), ac.dtype))
-    base = tf.cast(1, tf.int64)
+    base = tf.cast(ac, tf.int64)
     ac = tf.maximum(base, tf.cast(ac, tf.int64))
     wm_ac = tf.maximum(base, tf.cast(wm_ac, tf.int64))
     value = tf.cond(
@@ -125,7 +125,7 @@ class SGDAccumulated(OptimizerV2):
 
   def momentum_update(self, coefficients, var, grad):
     momentum_var = self.get_slot(var, "momentum")
-    return tf.raw_ops.ResourceApplyKerasMomentum(
+    upds =  tf.raw_ops.ResourceApplyKerasMomentum(
         var=var.handle,
         accum=momentum_var.handle,
         lr=coefficients["lr_t"],
@@ -133,14 +133,19 @@ class SGDAccumulated(OptimizerV2):
         momentum=coefficients["momentum"],
         use_locking=self._use_locking,
         use_nesterov=self.nesterov)
+    g_cont = self.get_slot(var, 'g')
+    var_update = state_ops.assign(g_cont, tf.zeros_like(grad))
+    return control_flow_ops.group(*[upds, var_update])
 
   def no_momentum_update(self, coefficients, var, grad):
-    return tf.raw_ops.ResourceApplyGradientDescent(
+    upds = tf.raw_ops.ResourceApplyGradientDescent(
         var=var.handle,
         alpha=coefficients["lr_t"],
         delta=grad,
         use_locking=self._use_locking)
-
+    g_cont = self.get_slot(var, 'g')
+    var_update = state_ops.assign(g_cont, tf.zeros_like(grad))
+    return control_flow_ops.group(*[upds, var_update])
 
   def raw_update(self, coefficients, var, grad):
     def func():
@@ -155,7 +160,10 @@ class SGDAccumulated(OptimizerV2):
     def func():
       # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
-      return control_flow_ops.group(*[var_update])
+
+      g_cont = self.get_slot(var, 'g')
+      var_update2 = state_ops.assign(g_cont, g_cont)
+      return control_flow_ops.group(*[var_update, var_update2])
     return func
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
@@ -171,20 +179,22 @@ class SGDAccumulated(OptimizerV2):
                    var_dtype)]["momentum"] = array_ops.identity(momentum)
     
     accumulation_steps = self._get_accumulation_steps(self.iterations)
+    apply_state[(var_device, var_dtype)]["update"] = tf.cast((self.iterations + self._offset) % tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
+
     accumulation_steps = array_ops.identity(accumulation_steps)
     if self._accumulation_type == "sum":
       accumulation_steps = tf.cast(1, var_dtype)
     
     apply_state[(var_device, var_dtype)]["accumulation_steps"] = accumulation_steps
-    apply_state[(var_device, var_dtype)]["update"] = tf.cast((self.iterations + self._offset) % tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
-
-
+    
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype))
                     or self._fallback_apply_state(var_device, var_dtype))
 
     grad = grad/coefficients["accumulation_steps"]
+
+    # tf.print(coefficients["update"])
     return tf.cond(coefficients["update"] == 1, 
                    self.raw_update(coefficients, var, grad), 
                    self.no_update(coefficients, var, grad))
@@ -237,30 +247,26 @@ class SGDAccumulated(OptimizerV2):
     momentum = self._get_momentum(self.iterations)
     #self._get_hyper('accumulation_steps', 'int64')
 
-    tf.print(accumulation_steps, momentum, self.iterations)
+    # tf.print(accumulation_steps, momentum, self.iterations)
 
     ng = []
     ag = []
     for grad, var in grads_and_vars:
-      tf.print(var.ref())
       g = self.get_slot(var, 'g') # accumulated gradient
       g_a = grad + g
       g_a = state_ops.assign(g, g_a)    
       ng.append(tf.zeros_like(grad))
       ag.append(g_a)
 
-    grad_list = ng
-    if (self.iterations + self._offset) % accumulation_steps == 0:
-      grad_list = ag
+    # grad_list = ng
+
+    grad_list = tf.cond((self.iterations + self._offset) % accumulation_steps == 0, 
+            true_fn=lambda:ag, 
+            false_fn=lambda:ng
+              )
 
     super().apply_gradients(zip(grad_list,var_list), 
                             name=name, 
                             experimental_aggregate_gradients=experimental_aggregate_gradients)
-
-    if (self.iterations + self._offset) % accumulation_steps == 0:
-      for grad, var in grads_and_vars:
-        g = self.get_slot(var, 'g') # accumulated gradient
-        g_a = state_ops.assign(g, tf.zeros_like(grad))    
-
 
     return
