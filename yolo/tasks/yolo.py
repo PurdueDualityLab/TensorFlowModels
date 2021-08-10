@@ -351,6 +351,8 @@ class YoloTask(base_task.Task):
       gradients, _ = tf.clip_by_global_norm(gradients,
                                             self.task_config.gradient_clip_norm)
 
+    tf.print(loss_metrics['global']['total_loss'], tf.reduce_sum(gradients[-1]))
+
     optimizer.apply_gradients(zip(gradients, train_vars))
     logs = {self.loss: loss_metrics['global']['total_loss']}
 

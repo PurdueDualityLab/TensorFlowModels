@@ -68,20 +68,25 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
   return bce, delta
 
-
-@tf.custom_gradient
 def apply_mask(mask, x):
-  # this function is used to apply no nan mask to an input tensor
-  # as such this will apply a mask and remove NAN for both the
-  # forward AND backward propagation
-  masked = tf.where(mask == 0, tf.cast(0, x.dtype), x)
+  mask = tf.cast(mask, tf.bool)
+  masked = tf.where(mask, x, tf.zeros_like(x))
+  return masked
 
-  def delta(dy):
-    # mask the incoming derivative as well.
-    masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
-    return tf.zeros_like(mask), masked_dy
+# @tf.custom_gradient
+# def apply_mask(mask, x):
+#   # this function is used to apply no nan mask to an input tensor
+#   # as such this will apply a mask and remove NAN for both the
+#   # forward AND backward propagation
+#   mask = tf.cast(mask, tf.bool)
+#   masked = tf.where(mask, x, tf.zeros_like(x))
 
-  return masked, delta
+#   def delta(dy):
+#     # mask the incoming derivative as well.
+#     masked_dy = tf.where(mask, dy, tf.zeros_like(dy))
+#     return tf.zeros_like(mask), masked_dy
+
+#   return masked , delta
 
 
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
@@ -706,7 +711,7 @@ class Yolo_Loss(object):
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = apply_mask(ind_mask, true_box)
 
-    #    translate ground truth to match predictions
+    # #    translate ground truth to match predictions
     offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
     offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
     true_box -= tf.cast(offset, true_box.dtype)
@@ -717,20 +722,19 @@ class Yolo_Loss(object):
     #     within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = tf.cast(tf.reduce_sum(box_loss), dtype=y_pred.dtype)
+    box_loss = tf.reduce_sum(box_loss) #, dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the
     #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
+    #     build a the ground truth detection map
     iou = tf.stop_gradient(iou)
     iou = tf.maximum(iou, 0.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
-
-    #     build a the ground truth detection map
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=False)
     true_conf = tf.squeeze(true_conf, axis=-1)
