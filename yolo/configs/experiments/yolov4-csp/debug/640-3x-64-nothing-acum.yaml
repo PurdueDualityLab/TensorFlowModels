@@ -122,7 +122,7 @@ trainer:
         one_offset: false
         warmup_steps: 0 
         accumulation_type: sum
-        accumulation_steps: 4
+        accumulation_steps: 8
         adjusted_for_accum: True
         name: SGD
     warmup:
