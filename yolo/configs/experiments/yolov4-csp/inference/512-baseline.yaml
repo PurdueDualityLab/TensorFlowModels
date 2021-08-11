@@ -93,7 +93,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false

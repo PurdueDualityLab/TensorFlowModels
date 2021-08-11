@@ -68,20 +68,25 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
   return bce, delta
 
-
-@tf.custom_gradient
 def apply_mask(mask, x):
-  # this function is used to apply no nan mask to an input tensor
-  # as such this will apply a mask and remove NAN for both the
-  # forward AND backward propagation
-  masked = tf.where(mask == 0, tf.cast(0, x.dtype), x)
+  mask = tf.cast(mask, tf.bool)
+  masked = tf.where(mask, x, tf.zeros_like(x))
+  return masked
 
-  def delta(dy):
-    # mask the incoming derivative as well.
-    masked_dy = tf.where(mask == 0, tf.cast(0, dy.dtype), dy)
-    return tf.zeros_like(mask), masked_dy
+# @tf.custom_gradient
+# def apply_mask(mask, x):
+#   # this function is used to apply no nan mask to an input tensor
+#   # as such this will apply a mask and remove NAN for both the
+#   # forward AND backward propagation
+#   mask = tf.cast(mask, tf.bool)
+#   masked = tf.where(mask, x, tf.zeros_like(x))
 
-  return masked, delta
+#   def delta(dy):
+#     # mask the incoming derivative as well.
+#     masked_dy = tf.where(mask, dy, tf.zeros_like(dy))
+#     return tf.zeros_like(mask), masked_dy
+
+#   return masked , delta
 
 
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
@@ -114,8 +119,8 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # shift scaled boxes
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -228,8 +233,8 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # shift scaled boxes
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -694,31 +699,32 @@ class Yolo_Loss(object):
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    # 5. (box loss) based on input val new_cords decode the box predicitions
-    #    and because we are using the scaled loss, do not change the gradients
-    #    at all
+    # based on input val new_cords decode the box predicitions
+    # and because we are using the scaled loss, do not change the gradients
+    # at all
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
-    true_box = true_box * scale
-
-    #    gather all the indexes that a loss should be computed at also stop the
-    #    gradient on grount truths to save memory
+    offset = tf.cast(
+      tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
+    offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
+    true_box = apply_mask(ind_mask, (scale * true_box) - offset)
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
-    true_box = apply_mask(ind_mask, true_box)
 
-    # #    translate ground truth to match predictions
-    # offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
-    # offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
-    # true_box -= tf.cast(offset, true_box.dtype)
-    # true_box = apply_mask(ind_mask, true_box)
-    # pred_box = apply_mask(ind_mask, pred_box)
+    # build the class object
+    true_class = tf.one_hot(
+        tf.cast(true_class, tf.int32),
+        depth=tf.shape(pred_class)[-1],
+        dtype=pred_class.dtype)
+    true_class = apply_mask(ind_mask, true_class)
+    pred_class = apply_mask(ind_mask,
+                            tf.gather_nd(pred_class, inds, batch_dims=1))
 
-    #     compute the loss of all the boxes and apply a mask such that
-    #     within the 200 boxes, only the indexes of importance are covered
+
+    # compute the loss of all the boxes and apply a mask such that
+    # within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = tf.reduce_sum(box_loss) #, dtype=y_pred.dtype)
-    box_loss = math_ops.divide_no_nan(box_loss, num_objs)
+    box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the
     #     iou to take only a certain percent of the iou or the ground truth,
@@ -738,17 +744,9 @@ class Yolo_Loss(object):
     #     applied
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    conf_loss = tf.cast(tf.reduce_mean(bce), dtype=y_pred.dtype)
+    conf_loss = tf.reduce_mean(bce)
 
     # 7.  (class loss) build the one hot encoded true class values
-    true_class = tf.one_hot(
-        tf.cast(true_class, tf.int32),
-        depth=tf.shape(pred_class)[-1],
-        dtype=pred_class.dtype)
-    true_class = apply_mask(ind_mask, true_class)
-    pred_class = apply_mask(ind_mask,
-                            tf.gather_nd(pred_class, inds, batch_dims=1))
-
     #     compute the loss on the classes, apply the same inds mask
     #     and the compute the average of all the values
     class_loss = ks.losses.binary_crossentropy(
@@ -757,8 +755,7 @@ class Yolo_Loss(object):
         label_smoothing=self._label_smoothing,
         from_logits=True)
     class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
-    class_loss = tf.reduce_sum(class_loss)
-    class_loss = math_ops.divide_no_nan(class_loss, num_objs)
+    class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
 
     # 8. apply the weights to each loss
     box_loss *= self._iou_normalizer 
@@ -915,6 +912,7 @@ class Yolo_Loss(object):
       cls_norm_mask = true_class
       # we only apply the classes weight to class indexes were one_hot is one
       class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer)
+
     # 15. apply the mask to the class loss and compute the sum over all the
     #     objects
     class_loss = tf.reduce_sum(class_loss, axis=-1)
@@ -922,9 +920,11 @@ class Yolo_Loss(object):
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+
     # 16. use the custom sigmoid BCE to compute the loss at each pixel
     #     in the detection map
     bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
+
     # 17. apply the ignore mask to the detection map to zero out all the
     #     indexes where the loss should not be computed. we use the apply
     #     mask function to control the gradient propagation, and garuntee
@@ -932,23 +932,28 @@ class Yolo_Loss(object):
     conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
         tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+
     # NOTE: there may be a way to find the weights by
     #       using a self supervised nerual net. The
     #       neural net determines its own weights
+
     # 18. apply the fixed weight to each of the losses, the weight is
     #     applied for the box loss in the gradeint for the box decoding
     #     class weights are applied selectively directly after computing
     #     the loss only to locations where a onehot is set to one
     box_loss *= self._iou_normalizer
     conf_loss *= self._obj_normalizer
+
     # 19. take the sum of the losses for each map, then take the mean
     #     across all the smaples in the batch
     loss = box_loss + class_loss + conf_loss
     loss = tf.reduce_mean(loss)
+
     # 20. reduce the mean of the losses to use as metrics
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
+
     # 21. metric compute using the generated values from the loss itself
     #     done here to save time and resources
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
@@ -956,6 +961,7 @@ class Yolo_Loss(object):
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj,
             recall50, precision50)
+
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum == True:
       return self.call_scaled(true_counts, inds, y_true, boxes, classes, y_pred)
