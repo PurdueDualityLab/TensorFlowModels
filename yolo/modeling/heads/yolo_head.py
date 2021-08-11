@@ -13,7 +13,7 @@ class YoloHead(tf.keras.layers.Layer):
                output_extras=0,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="VarianceScaling",
+               kernel_initializer="HeUniform",
                subdivisions=8,
                kernel_regularizer=None,
                bias_regularizer=None,
@@ -74,7 +74,7 @@ class YoloHead(tf.keras.layers.Layer):
   def bias_init(self, scale, isize=640, no_per_conf=8):
 
     def bias(shape, dtype):
-      init = tf.keras.initializers.VarianceScaling()
+      init = tf.keras.initializers.HeUniform()
 
       base = init(shape, dtype=dtype)
       base = tf.reshape(base, [self._boxes_per_level, -1])
@@ -96,7 +96,7 @@ class YoloHead(tf.keras.layers.Layer):
       scale = 2**int(key)
       self._head[key] = nn_blocks.ConvBN(
           bias_initializer=self.bias_init(scale)
-          if self._smart_bias else 'VarianceScaling',
+          if self._smart_bias else 'HeUniform',
           **self._conv_config)
 
   def call(self, inputs):

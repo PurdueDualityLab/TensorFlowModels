@@ -365,7 +365,7 @@ class Darknet(ks.Model):
       norm_epsilon=0.001,
       subdivisions=8,
       dilate=False,
-      kernel_initializer='VarianceScaling',
+      kernel_initializer='HeUniform',
       kernel_regularizer=None,
       bias_regularizer=None,
       **kwargs):
