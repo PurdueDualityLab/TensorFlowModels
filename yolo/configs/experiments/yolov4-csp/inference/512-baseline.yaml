@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -61,7 +61,7 @@ task:
       pre_nms_points: 500
       use_scaled_loss: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -133,8 +133,8 @@ trainer:
     optimizer:
       type: sgd_accum
       sgd_accum:
-        momentum: 0.0
-        momentum_start: 0.0
+        momentum: 0.8
+        momentum_start: 0.937
         nesterov: True
         one_offset: false
         warmup_steps: 88800 
