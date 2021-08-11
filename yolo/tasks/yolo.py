@@ -316,8 +316,8 @@ class YoloTask(base_task.Task):
     image, label = inputs
 
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    # if self._task_config.model.filter.use_scaled_loss:
-    #   num_replicas = 1
+    if self._task_config.model.filter.use_scaled_loss:
+      num_replicas = 1
       
     with tf.GradientTape(persistent=False) as tape:
       # compute a prediction
@@ -343,8 +343,8 @@ class YoloTask(base_task.Task):
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
 
-    if self._task_config.model.filter.use_scaled_loss:
-      gradients = [gradient * num_replicas for gradient in gradients]
+    # if self._task_config.model.filter.use_scaled_loss:
+    #   gradients = [gradient * num_replicas for gradient in gradients]
 
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
