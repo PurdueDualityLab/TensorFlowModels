@@ -131,9 +131,6 @@ trainer:
         nesterov: True
         warmup_steps: 5550
         name: SGD
-    # warmup:
-    #   type: 'linear'
-    #   linear:
     warmup:
       type: 'polynomial_gen'
       polynomial_gen:
