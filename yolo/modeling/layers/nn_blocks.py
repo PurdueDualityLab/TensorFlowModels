@@ -85,7 +85,14 @@ class ConvBN(tf.keras.layers.Layer):
     self._strides = strides
     self._padding = padding
     self._dilation_rate = dilation_rate
-    self._kernel_initializer = kernel_initializer
+
+    if kernel_initializer == "VarianceScaling":
+      # to match pytorch initialization method
+      self._kernel_initializer = tf.keras.initializers.VarianceScaling(
+                        scale=2/6, mode='fan_in', distribution='uniform')
+    else:
+      self._kernel_initializer = kernel_initializer
+
     self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
 
