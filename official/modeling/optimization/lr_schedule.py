@@ -370,3 +370,73 @@ class CosineEpoch(tf.keras.optimizers.schedules.LearningRateSchedule):
         "alpha": self.alpha,
         "name": self.name
     }
+
+
+class PolynomialWarmUpGen(tf.keras.optimizers.schedules.LearningRateSchedule):
+  """Applies polynomial warmup schedule on a given learning rate decay schedule.
+  """
+
+  def __init__(self,
+               after_warmup_lr_sched: Union[
+                   tf.keras.optimizers.schedules.LearningRateSchedule, float],
+               warmup_steps: int,
+               warmup_learning_rate: float,
+               power: float = 1.0,
+               name: str = "PolynomialWarmup"):
+    super(PolynomialWarmUpGen, self).__init__()
+    self._init_warmup_lr = warmup_learning_rate
+    if isinstance(after_warmup_lr_sched,
+                  tf.keras.optimizers.schedules.LearningRateSchedule):
+      self._final_warmup_lr = after_warmup_lr_sched(warmup_steps)
+    else:
+      self._final_warmup_lr = tf.cast(
+          after_warmup_lr_sched, dtype=tf.float32)
+
+    self._warmup_steps = warmup_steps
+    self._power = power
+    self._after_warmup_lr_sched = after_warmup_lr_sched
+    self._name = name
+
+  def __call__(self, step):
+    with tf.name_scope(self._name or "PolynomialWarmUpGen") as name:
+      # Implements polynomial warmup. i.e., if global_step < warmup_steps, the
+      # learning rate will be `global_step/num_warmup_steps * init_lr`.
+      global_step_float = tf.cast(step, tf.float32)
+      warmup_steps_float = tf.cast(self._warmup_steps, tf.float32)
+      warmup_percent_done = global_step_float / warmup_steps_float
+      warmup_sample_step = (warmup_steps_float * tf.math.pow(warmup_percent_done, self._power))
+
+      if isinstance(self._after_warmup_lr_sched,
+                    tf.keras.optimizers.schedules.LearningRateSchedule):
+        after_warmup_lr = self._after_warmup_lr_sched(step)
+      else:
+        after_warmup_lr = tf.cast(self._after_warmup_lr_sched, dtype=tf.float32)
+
+
+      if tf.math.is_nan(warmup_sample_step) or tf.math.is_inf(warmup_sample_step):
+        warmup_sample_step = 0.0
+
+      warmup_learning_rate = (
+        self._init_warmup_lr + warmup_sample_step / self._warmup_steps *
+        (self._final_warmup_lr - self._init_warmup_lr))
+
+      return tf.cond(
+          global_step_float < warmup_steps_float,
+          lambda: warmup_learning_rate,
+          lambda: after_warmup_lr,
+          name=name)
+
+  def get_config(self) -> Mapping[str, Any]:
+    if isinstance(self._after_warmup_lr_sched,
+                  tf.keras.optimizers.schedules.LearningRateSchedule):
+      config = {
+          "after_warmup_lr_sched": self._after_warmup_lr_sched.get_config()}  # pytype: disable=attribute-error
+    else:
+      config = {"after_warmup_lr_sched": self._after_warmup_lr_sched}  # pytype: disable=attribute-error
+
+    config.update({
+        "warmup_steps": self._warmup_steps,
+        "power": self._power,
+        "name": self._name, 
+    })
+    return config

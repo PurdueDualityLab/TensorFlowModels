@@ -33,7 +33,6 @@ from official.core import config_definitions
 from yolo import optimization 
 from official.modeling import performance
 
-
 from yolo.optimization.CompositeOptimizer import CompositeOptimizer
 
 OptimizationConfig = optimization.OptimizationConfig
@@ -642,6 +641,24 @@ class YoloTask(base_task.Task):
         (optimizer_biases, lambda:bias),
         (optimizer_others, lambda:other)]
       )
+
+
+      # import matplotlib.pyplot as plt
+      # import matplotlib
+      # matplotlib.use('TkAgg')
+      # lra = opt_factory.build_learning_rate()
+      # lrb = opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr)
+      # x = []
+      # y1 = []
+      # y2 = []
+      # for i in range(10000):
+      #   x.append(i)
+      #   y1.append(lra(i))
+      #   y2.append(lrb(i))
+      #   print(i)
+      # plt.plot(x, y1)
+      # plt.plot(x, y2)
+      # plt.show()
 
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())

@@ -89,7 +89,7 @@ class WarmupConfig(oneof.OneOfConfig):
   linear: lr_cfg.LinearWarmupConfig = lr_cfg.LinearWarmupConfig()
   polynomial: lr_cfg.PolynomialWarmupConfig = lr_cfg.PolynomialWarmupConfig()
   linear_indep: lr_cfg.LinearIndepWarmupConfig = lr_cfg.LinearIndepWarmupConfig()
-
+  polynomial_gen: lr_cfg.PolynomialGenWarmupConfig = lr_cfg.PolynomialGenWarmupConfig()
 
 @dataclasses.dataclass
 class OptimizationConfig(base_config.Config):

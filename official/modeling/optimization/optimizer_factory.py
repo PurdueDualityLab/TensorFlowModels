@@ -48,6 +48,7 @@ LR_CLS = {
 WARMUP_CLS = {
     'linear': lr_schedule.LinearWarmup,
     'linear_indep': lr_schedule.LinearIndepWarmup,
+    'polynomial_gen': lr_schedule.PolynomialWarmUpGen,
     'polynomial': lr_schedule.PolynomialWarmUp
 }
 
