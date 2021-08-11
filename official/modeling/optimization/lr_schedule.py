@@ -413,8 +413,8 @@ class PolynomialWarmUpGen(tf.keras.optimizers.schedules.LearningRateSchedule):
         after_warmup_lr = tf.cast(self._after_warmup_lr_sched, dtype=tf.float32)
 
 
-      if tf.math.is_nan(warmup_sample_step) or tf.math.is_inf(warmup_sample_step):
-        warmup_sample_step = 0.0
+      # tf.cond(tf.logical_or(tf.math.is_nan(warmup_sample_step), tf.math.is_inf(warmup_sample_step))
+      #   warmup_sample_step = 0.0
 
       warmup_learning_rate = (
         self._init_warmup_lr + warmup_sample_step / self._warmup_steps *
