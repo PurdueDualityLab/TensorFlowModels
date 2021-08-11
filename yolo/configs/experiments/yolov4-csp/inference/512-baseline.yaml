@@ -148,8 +148,12 @@ trainer:
     #     momentum: 0.937
     #     nesterov: True
     #     name: SGD
+    # warmup:
+    #   type: 'polynomial_gen'
+    #   polynomial_gen:
+    #     power: 1.0
+    #     warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps
     warmup:
-      type: 'polynomial_gen'
-      polynomial_gen:
-        power: 1.0
+      type: 'linear'
+      linear:
         warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps

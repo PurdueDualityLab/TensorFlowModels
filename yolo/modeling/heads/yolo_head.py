@@ -81,15 +81,15 @@ class YoloHead(tf.keras.layers.Layer):
 
       # init = tf.keras.initializers.VarianceScaling()
       base = init(shape, dtype=dtype)
-
-      base = tf.reshape(base, [self._boxes_per_level, -1])
-      box, conf, classes = tf.split(base, [4, 1, -1], axis=-1)
-      conf += tf.math.log(no_per_conf / ((isize / scale)**2))
-      classes += tf.math.log(0.6 / (self._classes - 0.99))
-      base = tf.concat([box, conf, classes], axis=-1)
-
+      if self._smart_bias:
+        base = tf.reshape(base, [self._boxes_per_level, -1])
+        box, conf, classes = tf.split(base, [4, 1, -1], axis=-1)
+        conf += tf.math.log(no_per_conf / ((isize / scale)**2))
+        classes += tf.math.log(0.6 / (self._classes - 0.99))
+        base = tf.concat([box, conf, classes], axis=-1)
+        base = tf.reshape(base, [-1])
+        
       print(base)
-      base = tf.reshape(base, [-1])
       return base
 
     return bias
@@ -99,8 +99,7 @@ class YoloHead(tf.keras.layers.Layer):
     for key in self._key_list:
       scale = 2**int(key)
       self._head[key] = nn_blocks.ConvBN(
-          bias_initializer=self.bias_init(scale, input_shape[key][-1])
-          if self._smart_bias else 'Zeros',
+          bias_initializer=self.bias_init(scale, input_shape[key][-1]),
           **self._conv_config)
 
   def call(self, inputs):
