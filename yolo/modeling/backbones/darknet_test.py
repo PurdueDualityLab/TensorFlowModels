@@ -91,7 +91,7 @@ class DarkNetTest(parameterized.TestCase, tf.test.TestCase):
         activation='relu',
         norm_momentum=0.99,
         norm_epsilon=0.001,
-        kernel_initializer='HeNormal',
+        kernel_initializer='HeUniform',
         kernel_regularizer=None,
         bias_regularizer=None,
     )

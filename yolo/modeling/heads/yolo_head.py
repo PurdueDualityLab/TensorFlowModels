@@ -1,4 +1,5 @@
 import tensorflow as tf
+import math
 from yolo.modeling.layers import nn_blocks
 
 
@@ -13,7 +14,7 @@ class YoloHead(tf.keras.layers.Layer):
                output_extras=0,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="HeNormal",
+               kernel_initializer="HeUniform",
                subdivisions=8,
                kernel_regularizer=None,
                bias_regularizer=None,
@@ -71,15 +72,16 @@ class YoloHead(tf.keras.layers.Layer):
         use_bn=False,
         **self._base_config)
 
-  def bias_init(self, scale, isize=640, no_per_conf=8):
+  def bias_init(self, scale, inshape, isize=640, no_per_conf=8):
 
     def bias(shape, dtype):
-      init = tf.keras.initializers.VarianceScaling()
 
+      bound = 1/math.sqrt(inshape)
+      init = tf.keras.initializers.RandomUniform(minval=-bound, maxval=bound)
       base = init(shape, dtype=dtype)
+
       base = tf.reshape(base, [self._boxes_per_level, -1])
       box, conf, classes = tf.split(base, [4, 1, -1], axis=-1)
-      #box += tf.random.uniform(tf.shape(box), -0.1, 0.1)
       conf += tf.math.log(no_per_conf / ((isize / scale)**2))
       classes += tf.math.log(0.6 / (self._classes - 0.99))
       base = tf.concat([box, conf, classes], axis=-1)
@@ -95,8 +97,8 @@ class YoloHead(tf.keras.layers.Layer):
     for key in self._key_list:
       scale = 2**int(key)
       self._head[key] = nn_blocks.ConvBN(
-          bias_initializer=self.bias_init(scale)
-          if self._smart_bias else 'HeNormal',
+          bias_initializer=self.bias_init(scale, input_shape[key][-1])
+          if self._smart_bias else 'Zeros',
           **self._conv_config)
 
   def call(self, inputs):
