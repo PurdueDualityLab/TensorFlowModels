@@ -343,9 +343,6 @@ class YoloTask(base_task.Task):
     train_vars = model.trainable_variables
     gradients = tape.gradient(scaled_loss, train_vars)
 
-    # if self._task_config.model.filter.use_scaled_loss:
-    #   gradients = [gradient * num_replicas for gradient in gradients]
-
     # get unscaled loss if the scaled_loss was used
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)

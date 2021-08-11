@@ -14,7 +14,7 @@ class YoloHead(tf.keras.layers.Layer):
                output_extras=0,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="HeUniform",
+               kernel_initializer="VarianceScaling",
                subdivisions=8,
                kernel_regularizer=None,
                bias_regularizer=None,

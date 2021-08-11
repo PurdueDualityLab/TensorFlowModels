@@ -45,7 +45,7 @@ class YoloFPN(tf.keras.layers.Layer):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='HeUniform',
+               kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
@@ -187,7 +187,7 @@ class YoloPAN(tf.keras.layers.Layer):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='HeUniform',
+               kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_regularizer=None,
                fpn_input=True,
@@ -374,7 +374,7 @@ class YoloDecoder(tf.keras.Model):
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer='HeUniform',
+               kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
