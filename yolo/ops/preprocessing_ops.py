@@ -110,23 +110,23 @@ def get_image_shape(image):
   return height, width
 
 
-# def image_rand_hsv(image, rh, rs, rv, seed = None):
-#   if rh > 0.0:
-#     delta = rand_uniform_strong(-rh, rh, seed = seed)
-#     image = tf.image.adjust_hue(image, delta)
-#   if rs > 0.0:
-#     # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
-#     #                                       seed = self._seed)
-#     delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
-#     image = tf.image.adjust_saturation(image, delta)
-#   if rv > 0.0:
-#     # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
-#     #                                       seed = self._seed)
-#     delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
-#     image *= delta
+def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
+  if rh > 0.0:
+    delta = rand_uniform_strong(-rh, rh, seed = seed)
+    image = tf.image.adjust_hue(image, delta)
+  if rs > 0.0:
+    delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+                                          seed = self._seed)
+    # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
+    image = tf.image.adjust_saturation(image, delta)
+  if rv > 0.0:
+    delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+                                          seed = self._seed)
+    # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
+    image *= delta
     
-#   # clip the values of the image between 0.0 and 1.0
-#   return image
+  # clip the values of the image between 0.0 and 1.0
+  return image
 
 # def image_rand_hsv(image, rh, rs, rv, seed = None):
 #   hsv = tf.image.rgb_to_hsv(image)
@@ -168,9 +168,12 @@ def _augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
   return img
 
 def image_rand_hsv(image, rh, rs, rv, seed = None):
-  ishape = image.get_shape().as_list()
-  image = tf.py_function(_augment_hsv, (image, rh, rs, rv), Tout=tf.float32)
-  image.set_shape(ishape)
+  if rh > 1.0 or rs > 1.0 or rv > 1.0:
+    image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
+  else:
+    ishape = image.get_shape().as_list()
+    image = tf.py_function(_augment_hsv, (image, rh, rs, rv), Tout=tf.float32)
+    image.set_shape(ishape)
   return image
 
 def translate_boxes(box, classes, translate_x, translate_y):
@@ -727,7 +730,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 # ops for box clipping and cleaning
 def boxes_candidates(clipped_boxes,
                      box_history,
-                     wh_thr=0, #2,
+                     wh_thr= 0, #2,
                      ar_thr=20,
                      area_thr=0.0):
 

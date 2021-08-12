@@ -49,8 +49,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
-  config.validation_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1 #64
+  config.validation_data.global_batch_size = 1 #64
 
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
