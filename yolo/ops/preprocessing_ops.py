@@ -625,7 +625,7 @@ def build_transform(image,
 
   M = T @ S @ R @ C @ P
   Mb = Pb @ Cb @ Rb @ Sb @ Tb
-  return M, Mb
+  return M, Mb, s
 
 
 def affine_warp_image(image,
@@ -638,7 +638,7 @@ def affine_warp_image(image,
                       random_pad=False,
                       seed=None):
   image_size = tf.cast(get_image_shape(image), tf.float32)
-  M_, Mb = build_transform(
+  M_, Mb, s = build_transform(
       image,
       perspective=perspective,
       degrees=degrees,
@@ -650,12 +650,22 @@ def affine_warp_image(image,
       seed=seed)
   M = tf.reshape(M_, [-1])
   M = tf.cast(M[:-1], tf.float32)
-  image = tfa.image.transform(
+
+  if s > 1: 
+    image = tfa.image.transform(
       image,
       M,
       fill_value=PAD_VALUE,
       output_shape=desired_size,
       interpolation='bilinear')
+  else:
+    image = tfa.image.transform(
+      image,
+      M,
+      fill_value=PAD_VALUE,
+      output_shape=desired_size,
+      interpolation='nearest')
+
   desired_size = tf.cast(desired_size, tf.float32)
   return image, M_, [image_size, desired_size, Mb]
 
