@@ -69,7 +69,7 @@ task:
       random_flip: True
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.4
-      aug_rand_hue: 0.1 # 0.015
+      aug_rand_hue: 0.015
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
