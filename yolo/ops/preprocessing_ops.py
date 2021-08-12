@@ -148,9 +148,9 @@ def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
 
 def image_rand_hsv(image, rh, rs, rv, seed = None):
   # if rh > 1.0 or rs > 1.0 or rv > 1.0:
-  image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
+  # image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
   # else:
-  #   image = _augment_hsv_torch(image, rh, rs, rv, seed = seed)
+  image = _augment_hsv_torch(image, rh, rs, rv, seed = seed)
   return image
 
 def translate_boxes(box, classes, translate_x, translate_y):
