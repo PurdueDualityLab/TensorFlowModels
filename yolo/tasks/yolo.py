@@ -651,13 +651,13 @@ class YoloTask(base_task.Task):
       # x = []
       # y1 = []
       # y2 = []
-      # for i in range(10000):
+      # for i in range(0, 555000, 2):
       #   x.append(i)
       #   y1.append(lra(i))
-      #   y2.append(lrb(i))
+      #   # y2.append(lrb(i))
       #   print(i)
       # plt.plot(x, y1)
-      # plt.plot(x, y2)
+      # # plt.plot(x, y2)
       # plt.show()
 
     else:
