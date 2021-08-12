@@ -115,102 +115,19 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
     delta = rand_uniform_strong(-rh, rh, seed = seed)
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
-    delta = rand_scale(self._aug_rand_saturation, 
-                                          seed = self._seed)
-    # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
+    # delta = rand_scale(self._aug_rand_saturation, 
+    #                                       seed = self._seed)
+    delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
-    delta = rand_scale(self._aug_rand_brightness, 
-                                          seed = self._seed)
-    # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
+    # delta = rand_scale(self._aug_rand_brightness, 
+    #                                       seed = self._seed)
+    delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
     image *= delta
     
   # clip the values of the image between 0.0 and 1.0
+  image = tf.clip_by_value(image, 0.0, 1.0)
   return image
-
-# def image_rand_hsv(image, rh, rs, rv, seed = None):
-#   hsv = tf.image.rgb_to_hsv(image)
-
-#   dh = ds = dv = 1.0
-#   if rh > 0.0:
-#     dh += rand_uniform_strong(-rh, rh, seed = seed)
-#   if rs > 0.0:
-#     ds += rand_uniform_strong(-rs, rs, seed = seed)
-#   if rv > 0.0:
-#     dv += rand_uniform_strong(-rv, rv, seed = seed)
-
-#   scale = tf.convert_to_tensor([[dh, ds, dv]])
-#   image = tf.image.hsv_to_rgb(hsv * scale)
-
-#   # clip the values of the image between 0.0 and 1.0
-#   return image
-
-# def _augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
-#   img = img.numpy()
-#   if img.dtype != np.uint8:
-#     img *= 255 
-#     img = img.astype(np.uint8)
-
-#   r = np.random.uniform(-1, 1, 3) * [hgain, sgain, vgain] + 1  # random gains
-#   hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
-#   dtype = img.dtype  # uint8
-
-#   x = np.arange(0, 256, dtype=np.int16)
-#   lut_hue = ((x * r[0]) % 180).astype(dtype)
-#   lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
-#   lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
-
-#   img_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val))).astype(dtype)
-#   cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img)  # no return needed
-#   img = tf.convert_to_tensor(img)
-#   img = tf.cast(img, tf.float32)/255.0
-#   return img
-
-# def _augment_hsv_torch(image, rh, rs, rv, seed = None):
-#   image = tf.image.rgb_to_hsv(image)
-#   scale = tf.cast(tf.convert_to_tensor([180.0, 255.0, 255.0]), image.dtype)
-#   gen_range = tf.cast([rh, rs, rv], scale.dtype)
-
-#   image *= scale
-#   image = tf.cast(image, tf.uint8)
-
-#   r = tf.random.uniform([3], -1, 1, dtype = scale.dtype) * gen_range + 1  # random gains
-
-#   image = tf.cast(image, tf.uint8)
-#   x = tf.range(0, 256, dtype=scale.dtype)
-#   x = tf.reshape(x, [1, 1, -1, 1])
-#   lut_hue = tf.cast(tf.cast(x * r[0], tf.int32) % 180, image.dtype)
-#   lut_sat = tf.cast(tf.clip_by_value(x * r[1], 0, 255), image.dtype)
-#   lut_val = tf.cast(tf.clip_by_value(x * r[2], 0, 255), image.dtype)
-#   lut = tf.concat([lut_hue, lut_sat, lut_val], axis = -1)
-#   x = tf.cast(x, image.dtype)
-  
-#   image = tf.expand_dims(image, axis = -2)
-#   image = tf.reduce_max(tf.cast(image == x, image.dtype) * lut, axis = -2)
-#   image = tf.cast(image, scale.dtype)/scale
-#   image = tf.image.hsv_to_rgb(image)
-#   return image
-
-# def _augment_hsv_torch(image, rh, rs, rv, seed = None):
-#   image = tf.image.rgb_to_hsv(image)
-#   scale = tf.cast(tf.convert_to_tensor([180.0, 255.0, 255.0]), image.dtype)
-#   gen_range = tf.cast([rh, rs, rv], scale.dtype)
-
-#   image *= scale
-#   image = tf.cast(image, tf.uint8)
-
-#   r = tf.random.uniform([3], -1, 1, dtype = scale.dtype) * gen_range + 1  # random gains
-
-#   image = tf.cast(image, r.dtype)
-#   h, s, v = tf.split(image, 3, axis = -1)
-#   h = tf.cast(tf.cast(h * r[0], tf.int32) % 180, tf.uint8)
-#   s = tf.cast(tf.clip_by_value(s * r[1], 0, 255), tf.uint8)
-#   v = tf.cast(tf.clip_by_value(v * r[2], 0, 255), tf.uint8)
-
-#   # image = tf.concat([h, s, v], axis = -1)
-#   # image = tf.cast(image, scale.dtype)/scale
-#   image = tf.image.hsv_to_rgb(image)
-#   return image
 
 def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
   image = tf.image.rgb_to_hsv(image_)
@@ -230,10 +147,10 @@ def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
 
 
 def image_rand_hsv(image, rh, rs, rv, seed = None):
-  if rh > 1.0 or rs > 1.0 or rv > 1.0:
-    image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
-  else:
-    image = _augment_hsv_torch(image, rh, rs, rv, seed = seed)
+  # if rh > 1.0 or rs > 1.0 or rv > 1.0:
+  image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
+  # else:
+  #   image = _augment_hsv_torch(image, rh, rs, rv, seed = seed)
   return image
 
 def translate_boxes(box, classes, translate_x, translate_y):
