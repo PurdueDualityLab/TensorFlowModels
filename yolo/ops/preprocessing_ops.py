@@ -125,6 +125,7 @@ def image_rand_hsv(image, rh, rs, rv, seed = None):
   # clip the values of the image between 0.0 and 1.0
   return image
 
+# git pull && ~/experiment_start node-2 yolo train_and_eval yolo_custom yolov4-csp/debug/640-3x-64-adam wi-e2
 # def image_rand_hsv(image, rh, rs, rv, seed = None):
 #   hsv = tf.image.rgb_to_hsv(image)
 
