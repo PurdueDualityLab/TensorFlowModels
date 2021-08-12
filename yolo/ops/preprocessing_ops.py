@@ -8,6 +8,9 @@ import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
+
+import numpy as np
+import cv2
 import numpy as np
 
 PAD_VALUE = 114
@@ -107,23 +110,23 @@ def get_image_shape(image):
   return height, width
 
 
-def image_rand_hsv(image, rh, rs, rv, seed = None):
-  if rh > 0.0:
-    delta = rand_uniform_strong(-rh, rh, seed = seed)
-    image = tf.image.adjust_hue(image, delta)
-  if rs > 0.0:
-    # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
-    #                                       seed = self._seed)
-    delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
-    image = tf.image.adjust_saturation(image, delta)
-  if rv > 0.0:
-    # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
-    #                                       seed = self._seed)
-    delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
-    image *= delta
+# def image_rand_hsv(image, rh, rs, rv, seed = None):
+#   if rh > 0.0:
+#     delta = rand_uniform_strong(-rh, rh, seed = seed)
+#     image = tf.image.adjust_hue(image, delta)
+#   if rs > 0.0:
+#     # delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+#     #                                       seed = self._seed)
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
+#     image = tf.image.adjust_saturation(image, delta)
+#   if rv > 0.0:
+#     # delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+#     #                                       seed = self._seed)
+#     delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
+#     image *= delta
     
-  # clip the values of the image between 0.0 and 1.0
-  return image
+#   # clip the values of the image between 0.0 and 1.0
+#   return image
 
 # def image_rand_hsv(image, rh, rs, rv, seed = None):
 #   hsv = tf.image.rgb_to_hsv(image)
@@ -142,6 +145,33 @@ def image_rand_hsv(image, rh, rs, rv, seed = None):
 #   # clip the values of the image between 0.0 and 1.0
 #   return image
 
+def _augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
+  img = img.numpy()
+  if img.dtype != np.uint8:
+    img *= 255 
+    img = img.astype(np.uint8)
+
+  r = np.random.uniform(-1, 1, 3) * [hgain, sgain, vgain] + 1  # random gains
+  hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
+  dtype = img.dtype  # uint8
+
+  x = np.arange(0, 256, dtype=np.int16)
+  lut_hue = ((x * r[0]) % 180).astype(dtype)
+  lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
+  lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
+
+  img_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val))).astype(dtype)
+  cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img)  # no return needed
+  img = tf.convert_to_tensor(img)
+  img = tf.cast(img, tf.float32)/255.0
+
+  return img
+
+def image_rand_hsv(image, rh, rs, rv, seed = None):
+  ishape = image.get_shape().as_list()
+  image = tf.py_function(_augment_hsv, (image, rh, rs, rv), Tout=tf.float32)
+  image.set_shape(ishape)
+  return image
 
 def translate_boxes(box, classes, translate_x, translate_y):
   """
