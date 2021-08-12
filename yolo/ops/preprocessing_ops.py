@@ -115,12 +115,12 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
     delta = rand_uniform_strong(-rh, rh, seed = seed)
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
-    delta = preprocessing_ops.rand_scale(self._aug_rand_saturation, 
+    delta = rand_scale(self._aug_rand_saturation, 
                                           seed = self._seed)
     # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
-    delta = preprocessing_ops.rand_scale(self._aug_rand_brightness, 
+    delta = rand_scale(self._aug_rand_brightness, 
                                           seed = self._seed)
     # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
     image *= delta
@@ -164,7 +164,6 @@ def _augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
   cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img)  # no return needed
   img = tf.convert_to_tensor(img)
   img = tf.cast(img, tf.float32)/255.0
-
   return img
 
 def image_rand_hsv(image, rh, rs, rv, seed = None):
