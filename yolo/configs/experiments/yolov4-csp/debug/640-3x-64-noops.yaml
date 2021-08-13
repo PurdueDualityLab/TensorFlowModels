@@ -106,13 +106,13 @@ trainer:
   checkpoint_interval: 1850
   optimizer_config:
     ema:
-      average_decay: 0.97 #?
-      trainable_weights_only: True
+      average_decay: 0.9999
+      trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.015
+        initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
         decay_steps: 542050
