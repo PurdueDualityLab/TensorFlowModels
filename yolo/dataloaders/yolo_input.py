@@ -217,6 +217,7 @@ class Parser(parser.Parser):
     self._area_thresh = area_thresh
 
     self._seed = seed
+
     # set the data type based on input string
     if dtype == 'float16':
       self._dtype = tf.float16

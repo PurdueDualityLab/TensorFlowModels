@@ -13,6 +13,11 @@ import numpy as np
 import cv2
 import numpy as np
 
+try:
+  from tensorflow.lookup.experimental import DenseHashTable
+except:
+  from tensorflow.lookup import DenseHashTable
+
 PAD_VALUE = 114
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
@@ -115,36 +120,51 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
     delta = rand_uniform_strong(-rh, rh, seed = seed)
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
-    # delta = rand_scale(self._aug_rand_saturation, 
-    #                                       seed = self._seed)
-    delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
+    delta = rand_scale(rs, seed = seed)
+    # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
-    # delta = rand_scale(self._aug_rand_brightness, 
-    #                                       seed = self._seed)
-    delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
+    delta = rand_scale(rv, seed = seed)
+    # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
     image *= delta
     
   # clip the values of the image between 0.0 and 1.0
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image
 
-def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
-  image = tf.image.rgb_to_hsv(image_)
-  scale = tf.cast(tf.convert_to_tensor([180.0, 255.0, 255.0]), image.dtype)
-  gen_range = tf.cast([rh, rs, rv], scale.dtype)
-  r = tf.random.uniform([3], -1, 1, dtype = scale.dtype) * gen_range + 1  # random gains
+# def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
+#   image = tf.image.rgb_to_hsv(image_)
+#   scale = tf.cast(tf.convert_to_tensor([180.0, 255.0, 255.0]), image.dtype)
+#   gen_range = tf.cast([rh, rs, rv], scale.dtype)
+#   r = tf.random.uniform([3], -1, 1, dtype = scale.dtype) * gen_range + 1  # random gains
+#   r = (r * scale)
 
-  image = tf.cast(image, r.dtype) * (r * scale)
+#   image = tf.cast(image, r.dtype) * r
+#   h, s, v = tf.split(image, 3, axis = -1)
+#   h = tf.cast(tf.cast(h, tf.int32) % 180, tf.uint8)
+#   s = tf.cast(tf.clip_by_value(s, 0, 255), tf.uint8)
+#   v = tf.cast(tf.clip_by_value(v, 0, 255), tf.uint8)
+
+#   image = tf.cast(tf.concat([h, s, v], axis = -1), scale.dtype)
+#   image = tf.image.hsv_to_rgb(image/scale)
+#   return image
+
+def _augment_hsv_torch(image, rh, rs, rv, seed = None):
+  dtype = image.dtype
+  image = tf.cast(image, tf.float32)
+  image = tf.image.rgb_to_hsv(image)
+  gen_range = tf.cast([rh, rs, rv], image.dtype)
+  r = tf.random.uniform([3], -1, 1, dtype = image.dtype) * gen_range + 1  # random gains
+
+  image = tf.cast(image, r.dtype) * r
   h, s, v = tf.split(image, 3, axis = -1)
-  h = tf.cast(tf.cast(h, tf.int32) % 180, tf.uint8)
-  s = tf.cast(tf.clip_by_value(s, 0, 255), tf.uint8)
-  v = tf.cast(tf.clip_by_value(v, 0, 255), tf.uint8)
+  h = h % 1.0
+  s = tf.clip_by_value(s, 0.0, 1.0)
+  v = tf.clip_by_value(v, 0.0, 1.0)
 
-  image = tf.cast(tf.concat([h, s, v], axis = -1), scale.dtype)
-  image = tf.image.hsv_to_rgb(image/scale)
-  return image
-
+  image = tf.concat([h, s, v], axis = -1)
+  image = tf.image.hsv_to_rgb(image)
+  return tf.cast(image, dtype)
 
 def image_rand_hsv(image, rh, rs, rv, seed = None):
   # if rh > 1.0 or rs > 1.0 or rv > 1.0:
