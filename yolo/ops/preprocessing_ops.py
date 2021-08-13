@@ -537,7 +537,7 @@ def resize_and_jitter_image(image,
       image_ = tf.image.resize(image_, 
                                (desired_size[0], desired_size[1]), 
                                method=tf.image.ResizeMethod.AREA)
-                               
+
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, ptop, pleft,

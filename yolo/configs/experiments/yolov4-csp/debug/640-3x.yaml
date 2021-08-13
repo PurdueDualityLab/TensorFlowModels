@@ -73,7 +73,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
-      area_thresh: 0.1
+      area_thresh: 0.0
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
@@ -102,15 +102,23 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.001
+  weight_decay: 0.0005
   annotation_file: null
 trainer:
   train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 39
+  
+  # 1 epoch
   steps_per_loop: 925
   summary_interval: 925
   validation_interval: 925
   checkpoint_interval: 925
+
+  # 10 epochs
+  # steps_per_loop: 9250
+  # summary_interval: 9250
+  # validation_interval: 9250
+  # checkpoint_interval: 9250
   optimizer_config:
     ema:
       average_decay: 0.9999
