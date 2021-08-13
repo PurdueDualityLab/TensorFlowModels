@@ -154,7 +154,7 @@ def _augment_hsv_torch(image, rh, rs, rv, seed = None):
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
-  r = tf.random.uniform([3], -1, 1, dtype = image.dtype) * gen_range + 1  # random gains
+  r = tf.random.uniform([3], -1, 1, dtype = image.dtype) * gen_range + 1 
 
   image = tf.cast(image, r.dtype) * r
   h, s, v = tf.split(image, 3, axis = -1)
@@ -528,7 +528,16 @@ def resize_and_jitter_image(image,
     ])
     infos.append(pad_info)
 
-    image_ = tf.image.resize(image_, (desired_size[0], desired_size[1]))
+    temp = tf.shape(image)[:2]
+    if tf.reduce_any(temp > tf.cast(desired_size, temp.dtype)):
+      image_ = tf.image.resize(image_, 
+                               (desired_size[0], desired_size[1]), 
+                               method=tf.image.ResizeMethod.BILINEAR)
+    else:
+      image_ = tf.image.resize(image_, 
+                               (desired_size[0], desired_size[1]), 
+                               method=tf.image.ResizeMethod.AREA)
+                               
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
       image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, ptop, pleft,
