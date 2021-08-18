@@ -688,10 +688,11 @@ class YoloTask(base_task.Task):
 
       wd_rep1 = hasattr(opt_factory._optimizer_config, "weight_decay")
       wd_rep2 = hasattr(opt_factory._optimizer_config, "weight_decay_rate")
+      wd = 0.0
       if wd_rep1:
         wd = getattr(opt_factory._optimizer_config, "weight_decay", 0.0)
         setattr(opt_factory._optimizer_config, "weight_decay", 0.0)
-      else:
+      elif wd_rep2:
         wd = getattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
         setattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
                   
