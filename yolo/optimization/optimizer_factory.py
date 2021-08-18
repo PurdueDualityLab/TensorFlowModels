@@ -19,7 +19,7 @@ import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 from official.modeling.optimization import configs
 
-from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup, ScaledYoloSGD)
+from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup, SGDMomentumWarmupW, ScaledYoloSGD)
 from yolo.optimization import ema_optimizer
 from official.modeling.optimization import optimizer_factory #, ema_optimizer
 from official.modeling.optimization import lr_schedule
@@ -27,6 +27,7 @@ from yolo.optimization.configs import optimization_config as opt_cfg
 
 optimizer_factory.OPTIMIZERS_CLS.update({
     'sgd_dymo': SGDMomentumWarmup.SGDMomentumWarmup,
+    'sgd_dymow': SGDMomentumWarmupW.SGDMomentumWarmupW,
     'sgd_accum': SGDAccumulated.SGDAccumulated,
     'scaled_sgd':ScaledYoloSGD.ScaledYoloSGD
 })

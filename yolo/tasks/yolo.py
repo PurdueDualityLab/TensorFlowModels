@@ -613,6 +613,62 @@ class YoloTask(base_task.Task):
           loss_scale=runtime_config.loss_scale)
     return optimizer
 
+  # def create_optimizer(self, optimizer_config: OptimizationConfig,
+  #                      runtime_config: Optional[RuntimeConfig] = None):
+  #   """Creates an TF optimizer from configurations.
+
+  #   Args:
+  #     optimizer_config: the parameters of the Optimization settings.
+  #     runtime_config: the parameters of the runtime.
+
+  #   Returns:
+  #     A tf.optimizers.Optimizer object.
+  #   """
+  #   opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
+  #   ema = opt_factory._use_ema
+  #   opt_factory._use_ema = False
+  #   if (self._task_config.smart_bias_lr > 0.0):
+  #     optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+  #     optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+  #     optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
+
+  #     optimizer_weights.name = "weights_lr"
+  #     optimizer_others.name = "others_lr"
+  #     optimizer_biases.name = "bias_lr"
+  #     weights, bias, other = self._model.get_weight_groups(self._model.trainable_variables)
+  #     optimizer = CompositeOptimizer(
+  #       [(optimizer_weights, lambda:weights),
+  #       (optimizer_biases, lambda:bias),
+  #       (optimizer_others, lambda:other)]
+  #     )
+
+
+  #     # import matplotlib.pyplot as plt
+  #     # import matplotlib
+  #     # matplotlib.use('TkAgg')
+  #     # lra = opt_factory.build_learning_rate()
+  #     # lrb = opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr)
+  #     # x = []
+  #     # y1 = []
+  #     # y2 = []
+  #     # for i in range(0, 555000, 2):
+  #     #   x.append(i)
+  #     #   y1.append(lra(i))
+  #     #   # y2.append(lrb(i))
+  #     #   print(i)
+  #     # plt.plot(x, y1)
+  #     # # plt.plot(x, y2)
+  #     # plt.show()
+
+  #   else:
+  #     optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+
+  #   print(optimizer)
+  #   # optimizer = self._wrap_optimizer(optimizer, runtime_config)
+  #   opt_factory._use_ema = ema
+  #   optimizer = opt_factory.add_ema(optimizer)
+  #   return optimizer
+
   def create_optimizer(self, optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     """Creates an TF optimizer from configurations.
@@ -629,8 +685,25 @@ class YoloTask(base_task.Task):
     opt_factory._use_ema = False
     if (self._task_config.smart_bias_lr > 0.0):
       optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+
+      wd_rep1 = hasattr(opt_factory._optimizer_config, "weight_decay")
+      wd_rep2 = hasattr(opt_factory._optimizer_config, "weight_decay_rate")
+      if wd_rep1:
+        wd = getattr(opt_factory._optimizer_config, "weight_decay", 0.0)
+        setattr(opt_factory._optimizer_config, "weight_decay", 0.0)
+      else:
+        wd = getattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
+        setattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
+                  
       optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
+
+      if wd_rep1:
+        setattr(opt_factory._optimizer_config, "weight_decay", wd)
+      elif wd_rep2:
+        setattr(opt_factory._optimizer_config, "weight_decay_rate", wd)
+
+      print(wd)
 
       optimizer_weights.name = "weights_lr"
       optimizer_others.name = "others_lr"
@@ -641,25 +714,6 @@ class YoloTask(base_task.Task):
         (optimizer_biases, lambda:bias),
         (optimizer_others, lambda:other)]
       )
-
-
-      # import matplotlib.pyplot as plt
-      # import matplotlib
-      # matplotlib.use('TkAgg')
-      # lra = opt_factory.build_learning_rate()
-      # lrb = opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr)
-      # x = []
-      # y1 = []
-      # y2 = []
-      # for i in range(0, 555000, 2):
-      #   x.append(i)
-      #   y1.append(lra(i))
-      #   # y2.append(lrb(i))
-      #   print(i)
-      # plt.plot(x, y1)
-      # # plt.plot(x, y2)
-      # plt.show()
-
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 
