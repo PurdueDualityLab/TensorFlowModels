@@ -132,7 +132,7 @@ trainer:
         nesterov: True
         warmup_steps: 5550
         weight_decay: 0.0005
-        torch_sim: true
+        sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
