@@ -76,7 +76,8 @@ class YoloHead(tf.keras.layers.Layer):
 
     def bias(shape, dtype):
 
-      bound = 1/math.sqrt(inshape)
+      bound = 1/math.sqrt(self._output_conv)
+      # bound = 1/math.sqrt(inshape)
       init = tf.keras.initializers.RandomUniform(minval=-bound, maxval=bound)
 
       # init = tf.keras.initializers.VarianceScaling()
