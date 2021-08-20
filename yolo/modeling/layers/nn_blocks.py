@@ -1,6 +1,7 @@
 """Contains common building blocks for yolo neural networks."""
 from typing import Callable
 import tensorflow as tf
+import math
 from yolo.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
@@ -90,6 +91,10 @@ class ConvBN(tf.keras.layers.Layer):
       # to match pytorch initialization method
       self._kernel_initializer = tf.keras.initializers.VarianceScaling(
                         scale=2/6, mode='fan_in', distribution='uniform')
+      # self._kernel_initializer = tf.keras.initializers.VarianceScaling(
+      #                   scale=3/6, mode='fan_in', distribution='uniform')
+      # self._kernel_initializer = tf.keras.initializers.VarianceScaling(
+      #      scale=(1/math.sqrt(5)), mode='fan_in', distribution='uniform')
     else:
       self._kernel_initializer = kernel_initializer
 
