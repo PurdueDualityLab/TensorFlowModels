@@ -412,6 +412,7 @@ class YoloTask(base_task.Task):
         'image_info': label['groundtruths']['image_info']
     }
 
+    tf.print(loss)
 
     if metrics:
       logs.update(

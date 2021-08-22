@@ -34,10 +34,10 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-extra-boxes.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-cstm.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-cstm.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-rcrop.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/512-baseline.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/640-3x-64-adamw.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
@@ -49,8 +49,8 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
-  config.validation_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1
+  config.validation_data.global_batch_size = 1
 
   config.train_data.dtype = 'float32'
   config.validation_data.dtype = 'float32'
@@ -285,8 +285,8 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
-  # test_yolo_pipeline(is_training=False, num=11)
+  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po
   # dataset, dsp = test_yolo_input_task()
