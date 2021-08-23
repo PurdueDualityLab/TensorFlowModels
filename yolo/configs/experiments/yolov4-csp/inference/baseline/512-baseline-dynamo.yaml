@@ -126,23 +126,6 @@ trainer:
         name: Cosine
         alpha: 0.2
         decay_steps: 370000
-    # optimizer:
-    #   type: sgd_dymow
-    #   sgd_dymow:
-    #     momentum: 0.937
-    #     momentum_start: 0.8
-    #     nesterov: True
-    #     warmup_steps: 5625 
-    #     weight_decay: 0.0005
-    #     name: SGD
-    # optimizer:
-    #   type: adamw
-    #   adamw:
-    #     beta_1: 0.937
-    #     beta_2: 0.999
-    #     weight_decay_rate: 0.0005
-    #     gradient_clip_norm: 0.0
-    #     name: adamw
     optimizer:
       type: sgd_dymo
       sgd_dymo:
@@ -150,10 +133,6 @@ trainer:
         momentum_start: 0.8
         nesterov: True
         name: SGD
-    # warmup:
-    #   type: 'linear'
-    #   linear:
-    #     warmup_steps: 5625 #learning rate rises from 0 to 0.0013 over 1000 steps
     warmup:
       type: 'polynomial_gen'
       polynomial_gen:
