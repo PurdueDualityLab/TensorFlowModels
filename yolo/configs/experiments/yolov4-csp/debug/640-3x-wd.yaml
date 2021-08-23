@@ -106,10 +106,10 @@ task:
   annotation_file: null
 trainer:
   train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 78
+  validation_steps: 39
   steps_per_loop: 925
   summary_interval: 925
-  validation_interval: 925
+  validation_interval: 4625
   checkpoint_interval: 925
   optimizer_config:
     ema:
