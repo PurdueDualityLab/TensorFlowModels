@@ -12,6 +12,7 @@ import tensorflow as tf
 
 __all__ = ['SGD']
 
+
 @keras_export("keras.optimizers.SGD")
 class ScaledYoloSGD(optimizer_v2.OptimizerV2):
   r"""Gradient descent (with momentum) optimizer.
@@ -130,14 +131,15 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
     return momentum_t
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(ScaledYoloSGD, self)._prepare_local(var_device, var_dtype, apply_state)
+    super(ScaledYoloSGD, self)._prepare_local(var_device, var_dtype,
+                                              apply_state)
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._momentum_t(var_dtype))
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
@@ -159,8 +161,8 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
     momentum_var = self.get_slot(var, "momentum")
     return gen_training_ops.ResourceSparseApplyKerasMomentum(
@@ -183,14 +185,20 @@ class ScaledYoloSGD(optimizer_v2.OptimizerV2):
     })
     return config
 
-  def apply_gradients(self, grads_and_vars, name = None, experimental_aggregate_gradients=True):
+  def apply_gradients(self,
+                      grads_and_vars,
+                      name=None,
+                      experimental_aggregate_gradients=True):
     # if name != "bias":
     #   self._set_hyper("learning_rate", self._get_hyper("default_learning_rate"))
     # else:
     #   self._set_hyper("learning_rate", self._get_hyper("bias_learning_rate"))
 
-    results = super().apply_gradients(grads_and_vars, experimental_aggregate_gradients = experimental_aggregate_gradients, name = name)
-    
+    results = super().apply_gradients(
+        grads_and_vars,
+        experimental_aggregate_gradients=experimental_aggregate_gradients,
+        name=name)
+
     # if name == "weights" or name == "bias":
     #   self.iterations.assign_add(-1)
 

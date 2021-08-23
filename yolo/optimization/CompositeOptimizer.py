@@ -43,9 +43,10 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
       optimizer = optimizer_and_var[0]
       self._track_trackable(optimizer, name=f"Optimizer{i}")
 
-  def apply_gradients(self, grads_and_vars: Sequence[Tuple[Tensor, Tensor]],
-                      name: Optional[str] = None, 
-                      experimental_aggregate_gradients = True) -> None:
+  def apply_gradients(self,
+                      grads_and_vars: Sequence[Tuple[Tensor, Tensor]],
+                      name: Optional[str] = None,
+                      experimental_aggregate_gradients=True) -> None:
     """See base class."""
     var_optimizer_dict = {}
 
@@ -108,8 +109,10 @@ class CompositeOptimizer(tf.keras.optimizers.Optimizer):
   @property
   def learning_rate(self):
     optimizers = self.optimizers
-    return {optimizer.name: optimizer.learning_rate(
-                            self.iterations) for optimizer in optimizers}
+    return {
+        optimizer.name: optimizer.learning_rate(self.iterations)
+        for optimizer in optimizers
+    }
 
   # @property
   # def learning_rate(self):

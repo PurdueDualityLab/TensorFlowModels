@@ -30,13 +30,14 @@ from collections import defaultdict
 
 from typing import Optional
 from official.core import config_definitions
-from yolo import optimization 
+from yolo import optimization
 from official.modeling import performance
 
 from yolo.optimization.CompositeOptimizer import CompositeOptimizer
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
+
 
 class AssignMetric(tf.keras.metrics.Metric):
 
@@ -46,12 +47,14 @@ class AssignMetric(tf.keras.metrics.Metric):
 
   def update_state(self, value):
     self.value.assign(value)
-    return 
+    return
 
   def result(self):
     return self.value
 
+
 class ListMetrics(object):
+
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
     self.name = name
     self._metric_names = metric_names
@@ -110,7 +113,7 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
-    
+
     # self._test_var = tf.Variable(0, trainable=False)
     # self._var_names = []
     return
@@ -203,7 +206,7 @@ class YoloTask(base_task.Task):
         random_pad=params.parser.random_pad,
         translate=params.parser.aug_rand_translate,
         resize=rsize,
-        seed=params.seed, 
+        seed=params.seed,
         area_thresh=params.parser.area_thresh)
 
     parser = yolo_input.Parser(
@@ -240,7 +243,7 @@ class YoloTask(base_task.Task):
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
-        seed=params.seed, 
+        seed=params.seed,
         dtype=params.dtype)
 
     reader = input_reader.InputReader(
@@ -317,7 +320,7 @@ class YoloTask(base_task.Task):
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
-      
+
     with tf.GradientTape(persistent=False) as tape:
       # compute a prediction
       y_pred = model(image, training=True)
@@ -355,13 +358,11 @@ class YoloTask(base_task.Task):
     optimizer.apply_gradients(zip(gradients, train_vars))
     logs = {self.loss: loss}
 
-
     if metrics:
       for m in metrics:
         m.update_state(loss_metrics[m.name])
         logs.update({m.name: m.result()})
     return logs
-
 
   ## evaluation ##
   def _reorg_boxes(self, boxes, num_detections, info):
@@ -641,7 +642,6 @@ class YoloTask(base_task.Task):
   #       (optimizer_others, lambda:other)]
   #     )
 
-
   #     # import matplotlib.pyplot as plt
   #     # import matplotlib
   #     # matplotlib.use('TkAgg')
@@ -668,7 +668,8 @@ class YoloTask(base_task.Task):
   #   optimizer = opt_factory.add_ema(optimizer)
   #   return optimizer
 
-  def create_optimizer(self, optimizer_config: OptimizationConfig,
+  def create_optimizer(self,
+                       optimizer_config: OptimizationConfig,
                        runtime_config: Optional[RuntimeConfig] = None):
     """Creates an TF optimizer from configurations.
 
@@ -683,7 +684,8 @@ class YoloTask(base_task.Task):
     ema = opt_factory._use_ema
     opt_factory._use_ema = False
     if (self._task_config.smart_bias_lr > 0.0):
-      optimizer_weights = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+      optimizer_weights = opt_factory.build_optimizer(
+          opt_factory.build_learning_rate())
 
       wd_rep1 = hasattr(opt_factory._optimizer_config, "weight_decay")
       wd_rep2 = hasattr(opt_factory._optimizer_config, "weight_decay_rate")
@@ -694,9 +696,11 @@ class YoloTask(base_task.Task):
       elif wd_rep2:
         wd = getattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
         setattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
-                  
-      optimizer_others = opt_factory.build_optimizer(opt_factory.build_learning_rate())
-      optimizer_biases = opt_factory.build_optimizer(opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
+
+      optimizer_others = opt_factory.build_optimizer(
+          opt_factory.build_learning_rate())
+      optimizer_biases = opt_factory.build_optimizer(
+          opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
 
       if wd_rep1:
         setattr(opt_factory._optimizer_config, "weight_decay", wd)
@@ -708,12 +712,11 @@ class YoloTask(base_task.Task):
       optimizer_weights.name = "weights_lr"
       optimizer_others.name = "others_lr"
       optimizer_biases.name = "bias_lr"
-      weights, bias, other = self._model.get_weight_groups(self._model.trainable_variables)
-      optimizer = CompositeOptimizer(
-        [(optimizer_weights, lambda:weights),
-        (optimizer_biases, lambda:bias),
-        (optimizer_others, lambda:other)]
-      )
+      weights, bias, other = self._model.get_weight_groups(
+          self._model.trainable_variables)
+      optimizer = CompositeOptimizer([(optimizer_weights, lambda: weights),
+                                      (optimizer_biases, lambda: bias),
+                                      (optimizer_others, lambda: other)])
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 

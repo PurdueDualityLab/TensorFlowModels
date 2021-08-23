@@ -92,8 +92,8 @@ class Parser(parser.Parser):
                random_flip=True,
                use_tie_breaker=True,
                dtype='float32',
-               coco91to80=False, 
-               seed = None):
+               coco91to80=False,
+               seed=None):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
@@ -211,9 +211,8 @@ class Parser(parser.Parser):
     # self._scale_up = {
     #     key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
     # } if self._use_scale_xy else {key: 1 for key in keys}
-    self._scale_up = {
-        key: int(self._anchor_t) for i, key in enumerate(keys)
-    } if self._use_scale_xy else {key: 1 for key in keys}
+    self._scale_up = {key: int(self._anchor_t) for i, key in enumerate(keys)
+                     } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
     self._seed = seed
@@ -313,7 +312,7 @@ class Parser(parser.Parser):
         resize=resize,
         crop_only=crop_only,
         random_pad=random_pad,
-        seed = self._seed,
+        seed=self._seed,
     )
     infos.extend(info_a)
     stale_a = self._get_identity_info(image)
@@ -328,7 +327,7 @@ class Parser(parser.Parser):
         degrees=angle,
         perspective=perspective,
         random_pad=random_pad,
-        seed = self._seed,
+        seed=self._seed,
     )
     return image, infos, affine
 
@@ -353,9 +352,8 @@ class Parser(parser.Parser):
 
     if self._random_flip:
       # randomly flip the image horizontally
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, 
-                                                              boxes, 
-                                                              seed = self._seed)
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(
+          image, boxes, seed=self._seed)
 
     if not data['is_mosaic']:
       image, infos, affine = self._jitter_scale(
@@ -372,11 +370,12 @@ class Parser(parser.Parser):
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, 
-        affine=affine, 
-        shuffle_boxes=True, #not self._use_scale_xy, 
-        area_thresh=self._area_thresh, 
-        seed = self._seed)
+        boxes,
+        infos,
+        affine=affine,
+        shuffle_boxes=True,  #not self._use_scale_xy, 
+        area_thresh=self._area_thresh,
+        seed=self._seed)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
@@ -390,12 +389,11 @@ class Parser(parser.Parser):
     image = tf.cast(image, self._dtype)
     image = image / 255
     image = preprocessing_ops.image_rand_hsv(
-      image, 
-      self._aug_rand_hue, 
-      self._aug_rand_saturation, 
-      self._aug_rand_brightness, 
-      seed = self._seed
-    )
+        image,
+        self._aug_rand_hue,
+        self._aug_rand_saturation,
+        self._aug_rand_brightness,
+        seed=self._seed)
 
     # cast the image to the selcted datatype
     image = tf.clip_by_value(image, 0.0, 1.0)

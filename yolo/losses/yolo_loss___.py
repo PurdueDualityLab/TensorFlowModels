@@ -632,7 +632,7 @@ class Yolo_Loss(object):
 
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
-    
+
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
@@ -717,7 +717,7 @@ class Yolo_Loss(object):
     #     within the 200 boxes, only the indexes of importance are covered
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = tf.reduce_sum(box_loss) #, dtype=y_pred.dtype)
+    box_loss = tf.reduce_sum(box_loss)  #, dtype=y_pred.dtype)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
 
     # 6.  (confidence loss) build a selective between the ground truth and the
@@ -761,9 +761,9 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer 
-    class_loss *= self._cls_normalizer 
-    conf_loss *= self._obj_normalizer 
+    box_loss *= self._iou_normalizer
+    class_loss *= self._cls_normalizer
+    conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss
@@ -956,6 +956,7 @@ class Yolo_Loss(object):
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, loss, avg_iou, avg_obj,
             recall50, precision50)
+
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     if self._use_reduction_sum == True:
       return self.call_scaled(true_counts, inds, y_true, boxes, classes, y_pred)

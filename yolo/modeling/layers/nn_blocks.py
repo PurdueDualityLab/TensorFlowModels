@@ -90,7 +90,7 @@ class ConvBN(tf.keras.layers.Layer):
     if kernel_initializer == "VarianceScaling":
       # to match pytorch initialization method
       self._kernel_initializer = tf.keras.initializers.VarianceScaling(
-                        scale=2/6, mode='fan_in', distribution='uniform')
+          scale=2 / 6, mode='fan_in', distribution='uniform')
       # self._kernel_initializer = tf.keras.initializers.VarianceScaling(
       #                   scale=3/6, mode='fan_in', distribution='uniform')
       # self._kernel_initializer = tf.keras.initializers.VarianceScaling(

@@ -95,7 +95,7 @@ class DataConfig(cfg.DataConfig):
   global_batch_size: int = 1
   input_path: str = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
   tfds_data_dir: str = "/media/vbanna/DATA_SHARE/CV/datasets/tensorflow"
-  tfds_name: str = "" #"coco"
+  tfds_name: str = ""  #"coco"
   tfds_split: str = "validation"
   is_training: bool = False
   dtype: str = 'float16'

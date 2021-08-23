@@ -20,10 +20,9 @@ class SGDAccumulated(OptimizerV2):
                learning_rate=0.01,
                momentum=0.0,
                nesterov=False,
-               one_offset=False, 
-               adjusted_for_accum = True,
-
-               momentum_start=0.0, 
+               one_offset=False,
+               adjusted_for_accum=True,
+               momentum_start=0.0,
                warmup_steps=1000,
                name="SGD",
                **kwargs):
@@ -63,14 +62,15 @@ class SGDAccumulated(OptimizerV2):
       self._momentum = True
     if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
       raise ValueError("`momentum` must be between [0, 1].")
-    
+
     self._set_hyper("momentum", momentum)
     self._set_hyper("momentum_start", momentum_start)
 
-    if adjusted_for_accum: 
+    if adjusted_for_accum:
       self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
     else:
-      self._set_hyper("warmup_steps", tf.cast(warmup_steps * accumulation_steps, tf.int32))
+      self._set_hyper("warmup_steps",
+                      tf.cast(warmup_steps * accumulation_steps, tf.int32))
 
     self.nesterov = nesterov
 
@@ -80,17 +80,16 @@ class SGDAccumulated(OptimizerV2):
 
     self._accumulation_type = accumulation_type
 
-
   def _get_momentum(self, iteration):
     momentum = self._get_hyper("momentum")
     momentum_start = self._get_hyper("momentum_start")
     momentum_warm_up_steps = tf.cast(
         self._get_hyper("warmup_steps"), iteration.dtype)
 
-    wm_momentum = (momentum_start +
-                         (tf.cast(iteration, momentum.dtype) *
-                          (momentum - momentum_start) / tf.cast(
-                              momentum_warm_up_steps, momentum.dtype)))
+    wm_momentum = (
+        momentum_start +
+        (tf.cast(iteration, momentum.dtype) * (momentum - momentum_start) /
+         tf.cast(momentum_warm_up_steps, momentum.dtype)))
     value = tf.cond(
         (iteration - momentum_warm_up_steps) < 0,
         true_fn=lambda: wm_momentum,
@@ -103,10 +102,10 @@ class SGDAccumulated(OptimizerV2):
     momentum_warm_up_steps = tf.cast(
         self._get_hyper("warmup_steps"), iteration.dtype)
 
-    wm_ac = (acs +
-                tf.cast((tf.cast(iteration, ac.dtype) *
-                          (ac - acs) / tf.cast(
-                              momentum_warm_up_steps, ac.dtype)), ac.dtype))
+    wm_ac = (
+        acs + tf.cast(
+            (tf.cast(iteration, ac.dtype) *
+             (ac - acs) / tf.cast(momentum_warm_up_steps, ac.dtype)), ac.dtype))
     base = tf.cast(ac, tf.int64)
     ac = tf.maximum(base, tf.cast(ac, tf.int64))
     wm_ac = tf.maximum(base, tf.cast(wm_ac, tf.int64))
@@ -125,7 +124,7 @@ class SGDAccumulated(OptimizerV2):
 
   def momentum_update(self, coefficients, var, grad):
     momentum_var = self.get_slot(var, "momentum")
-    upds =  tf.raw_ops.ResourceApplyKerasMomentum(
+    upds = tf.raw_ops.ResourceApplyKerasMomentum(
         var=var.handle,
         accum=momentum_var.handle,
         lr=coefficients["lr_t"],
@@ -148,15 +147,18 @@ class SGDAccumulated(OptimizerV2):
     return control_flow_ops.group(*[upds, var_update])
 
   def raw_update(self, coefficients, var, grad):
+
     def func():
       # tf.print("up")
       if self._momentum:
         return self.momentum_update(coefficients, var, grad)
       else:
         return self.no_momentum_update(coefficients, var, grad)
+
     return func
 
   def no_update(self, coefficients, var, grad):
+
     def func():
       # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
@@ -164,6 +166,7 @@ class SGDAccumulated(OptimizerV2):
       g_cont = self.get_slot(var, 'g')
       var_update2 = state_ops.assign(g_cont, g_cont)
       return control_flow_ops.group(*[var_update, var_update2])
+
     return func
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
@@ -171,41 +174,44 @@ class SGDAccumulated(OptimizerV2):
                                                apply_state)
     apply_state[(var_device, var_dtype)]["momentum"] = array_ops.identity(
         self._get_hyper("momentum", var_dtype))
-    
+
     if self._momentum:
       momentum = self._get_momentum(self.iterations)
       momentum = tf.cast(momentum, var_dtype)
       apply_state[(var_device,
                    var_dtype)]["momentum"] = array_ops.identity(momentum)
-    
+
     accumulation_steps = self._get_accumulation_steps(self.iterations)
-    apply_state[(var_device, var_dtype)]["update"] = tf.cast((self.iterations + self._offset) % tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
+    apply_state[(var_device, var_dtype)]["update"] = tf.cast(
+        (self.iterations + self._offset) %
+        tf.cast(accumulation_steps, self.iterations.dtype) == 0, var_dtype)
 
     accumulation_steps = array_ops.identity(accumulation_steps)
     if self._accumulation_type == "sum":
       accumulation_steps = tf.cast(1, var_dtype)
-    
-    apply_state[(var_device, var_dtype)]["accumulation_steps"] = accumulation_steps
-    
+
+    apply_state[(var_device,
+                 var_dtype)]["accumulation_steps"] = accumulation_steps
+
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
-    grad = grad/coefficients["accumulation_steps"]
+    grad = grad / coefficients["accumulation_steps"]
 
     # tf.print(coefficients["update"])
-    return tf.cond(coefficients["update"] == 1, 
-                   self.raw_update(coefficients, var, grad), 
+    return tf.cond(coefficients["update"] == 1,
+                   self.raw_update(coefficients, var, grad),
                    self.no_update(coefficients, var, grad))
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
+                    self._fallback_apply_state(var_device, var_dtype))
 
-    grad = grad/coefficients["accumulation_steps"]
+    grad = grad / coefficients["accumulation_steps"]
     momentum_var = self.get_slot(var, "momentum")
     return tf.raw_ops.ResourceSparseApplyKerasMomentum(
         var=var.handle,
@@ -231,8 +237,8 @@ class SGDAccumulated(OptimizerV2):
     })
     return config
 
-
-  def apply_gradients(self, grads_and_vars, 
+  def apply_gradients(self,
+                      grads_and_vars,
                       name=None,
                       experimental_aggregate_gradients=True):
     grads_and_vars = optimizer_utils.filter_empty_gradients(grads_and_vars)
@@ -252,21 +258,22 @@ class SGDAccumulated(OptimizerV2):
     ng = []
     ag = []
     for grad, var in grads_and_vars:
-      g = self.get_slot(var, 'g') # accumulated gradient
+      g = self.get_slot(var, 'g')  # accumulated gradient
       g_a = grad + g
-      g_a = state_ops.assign(g, g_a)    
+      g_a = state_ops.assign(g, g_a)
       ng.append(tf.zeros_like(grad))
       ag.append(g_a)
 
     # grad_list = ng
 
-    grad_list = tf.cond((self.iterations + self._offset) % accumulation_steps == 0, 
-            true_fn=lambda:ag, 
-            false_fn=lambda:ng
-              )
+    grad_list = tf.cond(
+        (self.iterations + self._offset) % accumulation_steps == 0,
+        true_fn=lambda: ag,
+        false_fn=lambda: ng)
 
-    super().apply_gradients(zip(grad_list,var_list), 
-                            name=name, 
-                            experimental_aggregate_gradients=experimental_aggregate_gradients)
+    super().apply_gradients(
+        zip(grad_list, var_list),
+        name=name,
+        experimental_aggregate_gradients=experimental_aggregate_gradients)
 
     return

@@ -32,7 +32,7 @@ class Mosaic(object):
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
                aug_probability=1.0,
-               mixup_frequency=0.0, 
+               mixup_frequency=0.0,
                area_thresh=0.1,
                seed=None):
 
@@ -125,7 +125,7 @@ class Mosaic(object):
     #         self._output_size[1] / self._output_size[0],
     #         self._output_size[1] / self._output_size[0]
     #     ],
-    #     seed = self._seed, 
+    #     seed = self._seed,
     #     area_range=crop_area)
     scale = preprocessing_ops.rand_uniform_strong(
         tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
@@ -182,13 +182,13 @@ class Mosaic(object):
         resize=self._resize,
         shiftx=xs,
         shifty=ys,
-        cut=cut, 
-        seed = self._seed)
+        cut=cut,
+        seed=self._seed)
     infos.extend(infos_)
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, area_thresh=self._area_thresh, seed = self._seed)
+        boxes, infos, area_thresh=self._area_thresh, seed=self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
@@ -201,14 +201,13 @@ class Mosaic(object):
     if self._mosaic_crop_mode == "scale":
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._crop_area[0]
-      ch = preprocessing_ops.rand_uniform_strong(-center[0], 
-                                                  center[0], seed = self._seed)
-      cw = preprocessing_ops.rand_uniform_strong(-center[1], 
-                                                  center[1], seed = self._seed)
+      ch = preprocessing_ops.rand_uniform_strong(
+          -center[0], center[0], seed=self._seed)
+      cw = preprocessing_ops.rand_uniform_strong(
+          -center[1], center[1], seed=self._seed)
 
-      image = tfa.image.translate(image, 
-                                  [cw, ch], 
-                                  fill_value=preprocessing_ops.PAD_VALUE)
+      image = tfa.image.translate(
+          image, [cw, ch], fill_value=preprocessing_ops.PAD_VALUE)
       info = tf.convert_to_tensor(
           [shape, shape,
            tf.ones_like(shape), -tf.cast([ch, cw], tf.float32)])
@@ -229,8 +228,11 @@ class Mosaic(object):
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, affine=affine, area_thresh=self._area_thresh, 
-        seed = self._seed)
+        boxes,
+        infos,
+        affine=affine,
+        area_thresh=self._area_thresh,
+        seed=self._seed)
 
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -252,12 +254,12 @@ class Mosaic(object):
       min_offset = self._crop_area[0]
       cut_x = preprocessing_ops.rand_uniform_strong(
           self._output_size[1] * min_offset,
-          self._output_size[1] * (1 - min_offset), 
-          seed = self._seed)
+          self._output_size[1] * (1 - min_offset),
+          seed=self._seed)
       cut_y = preprocessing_ops.rand_uniform_strong(
           self._output_size[1] * min_offset,
-          self._output_size[1] * (1 - min_offset), 
-          seed = self._seed)
+          self._output_size[1] * (1 - min_offset),
+          seed=self._seed)
       cut = [cut_x, cut_y]
       ishape = tf.convert_to_tensor(
           [self._output_size[1], self._output_size[0], 3])
@@ -420,10 +422,10 @@ class Mosaic(object):
 
   def _full_frequency_apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    one = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=0)
-    two = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=1)
-    three = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)#.shard(num_shards=4, index=2)
-    four = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True) #.shard(num_shards=4, index=3)
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=1)
+    three = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=2)
+    four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=3)
 
     num = tf.data.AUTOTUNE
     one = one.map(
@@ -459,7 +461,6 @@ class Mosaic(object):
       dataset = self._apply_mixup(dataset)
     return dataset
 
-
   def _mixup(self, one, two):
     domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if domo > 0.5:
@@ -471,8 +472,9 @@ class Mosaic(object):
     if domo >= (1 - self._mixup_frequency):
       otype = one["image"].dtype
       r = tf.random.uniform([], 0.4, 0.6, tf.float32, seed=self._seed)
-      sample['image'] = (r * tf.cast(one["image"], tf.float32) + 
-                         (1 - r) * tf.cast(two["image"], tf.float32))
+      sample['image'] = (
+          r * tf.cast(one["image"], tf.float32) +
+          (1 - r) * tf.cast(two["image"], tf.float32))
 
       sample['image'] = tf.cast(sample['image'], otype)
       sample['groundtruth_boxes'] = tf.concat(
@@ -486,8 +488,8 @@ class Mosaic(object):
     return sample
 
   def _apply_mixup(self, dataset):
-    one = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=0)
-    two = dataset.shuffle(10, seed = self._seed, reshuffle_each_iteration = True)  #.shard(num_shards=4, index=1)
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=0)
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=1)
     mixed = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
     mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE)
     return mixed
@@ -517,6 +519,3 @@ class Mosaic(object):
              4) * (mosaic_frequency) + steps_per_epoch * (1 - mosaic_frequency)
     steps = tf.math.ceil(steps)
     return steps
-
-
-

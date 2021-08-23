@@ -72,7 +72,7 @@ def intersect_and_union(box1, box2, yxyx=False):
   return intersection, union
 
 
-def smallest_encompassing_box(box1, box2, yxyx=False, clip = False):
+def smallest_encompassing_box(box1, box2, yxyx=False, clip=False):
   """Calculates the smallest box that encompasses both that encomapasses both
   box1 and box2.
 
@@ -103,7 +103,7 @@ def smallest_encompassing_box(box1, box2, yxyx=False, clip = False):
   if not yxyx:
     box_c = yxyx_to_xcycwh(box_c)
 
-  if clip: 
+  if clip:
     bca = tf.reduce_prod(bcma - bcmi, keepdims=True, axis=-1)
     box_c = tf.where(bca <= 0.0, tf.zeros_like(box_c), box_c)
   return bcmi, bcma, box_c
@@ -244,7 +244,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
       xycc1 = yxyx_to_xcycwh(box1)
       xycc2 = yxyx_to_xcycwh(box2)
 
-    # build the 
+    # build the
     cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
     intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
     iou = math_ops.divide_no_nan(intersection, union)
@@ -259,19 +259,19 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     regularization = math_ops.divide_no_nan(center_dist, c_diag)
 
     # computer aspect ratio consistency
-    terma = math_ops.divide_no_nan(b1w, b1h) # gt
-    termb = math_ops.divide_no_nan(b2w, b2h) # pred
+    terma = math_ops.divide_no_nan(b1w, b1h)  # gt
+    termb = math_ops.divide_no_nan(b2w, b2h)  # pred
     arcterm = tf.squeeze(
-      tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis = -1)
-    v = (4 / math.pi ** 2) * arcterm
+        tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis=-1)
+    v = (4 / math.pi**2) * arcterm
 
-    # aspect ration weight 
+    # aspect ration weight
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
 
     # if darknet:
     #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
     #   v *= grad_scale
-    
+
     ciou = iou - regularization - (v * a)
   return iou, ciou
 
@@ -280,13 +280,13 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 #   """Calculates the complete intersection over union between box1 and box2.
 
 #   Args:
-#     box1: any `Tensor` whose last dimension is 4 representing the coordinates of 
+#     box1: any `Tensor` whose last dimension is 4 representing the coordinates of
 #       boxes.
-#     box2: any `Tensor` whose last dimension is 4 representing the coordinates of 
+#     box2: any `Tensor` whose last dimension is 4 representing the coordinates of
 #       boxes.
 #     yxyx: a `bool` indicating whether the input box is of the format x_center
 #       y_center, width, height or y_min, x_min, y_max, x_max.
-#     darknet: a `bool` indicating whether the calling function is the yolo 
+#     darknet: a `bool` indicating whether the calling function is the yolo
 #       darknet loss.
 
 #   Returns:
@@ -307,7 +307,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 #     terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
 #     termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
 #     arcterm = tf.square(tf.math.atan(terma) - tf.math.atan(termb))
-    
+
 #     v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
 #     v = tf.cast(v, b1w.dtype)
 
@@ -317,7 +317,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 #     # if darknet:
 #     #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
 #     #   v *= grad_scale
-    
+
 #     ciou = diou - (v * a)
 #   return iou, ciou
 
@@ -363,60 +363,78 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
   return iou
 
 
+def bbox_iou(box1,
+             box2,
+             x1y1x2y2=False,
+             GIoU=False,
+             DIoU=False,
+             CIoU=False,
+             EIoU=False,
+             ECIoU=False,
+             eps=1e-9):
+  # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
+  # box2 = box2.T
 
-def bbox_iou(box1, box2, x1y1x2y2=False, GIoU=False, DIoU=False, CIoU=False, EIoU=False, ECIoU=False, eps=1e-9):
-    # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
-    # box2 = box2.T
+  # Get the coordinates of bounding boxes
+  if x1y1x2y2:  # x1, y1, x2, y2 = box1
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[..., 0], box1[..., 1], box1[...,
+                                                                  2], box1[...,
+                                                                           3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[..., 0], box2[..., 1], box2[...,
+                                                                  2], box2[...,
+                                                                           3]
+  else:  # transform from xywh to xyxy
+    b1_x1, b1_x2 = box1[..., 0] - box1[..., 2] / 2, box1[...,
+                                                         0] + box1[..., 2] / 2
+    b1_y1, b1_y2 = box1[..., 1] - box1[..., 3] / 2, box1[...,
+                                                         1] + box1[..., 3] / 2
+    b2_x1, b2_x2 = box2[..., 0] - box2[..., 2] / 2, box2[...,
+                                                         0] + box2[..., 2] / 2
+    b2_y1, b2_y2 = box2[..., 1] - box2[..., 3] / 2, box2[...,
+                                                         1] + box2[..., 3] / 2
 
-    # Get the coordinates of bounding boxes
-    if x1y1x2y2:  # x1, y1, x2, y2 = box1
-        b1_x1, b1_y1, b1_x2, b1_y2 = box1[..., 0], box1[..., 1], box1[..., 2], box1[..., 3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = box2[..., 0], box2[..., 1], box2[..., 2], box2[..., 3]
-    else:  # transform from xywh to xyxy
-        b1_x1, b1_x2 = box1[..., 0] - box1[..., 2] / 2, box1[..., 0] + box1[..., 2] / 2
-        b1_y1, b1_y2 = box1[..., 1] - box1[..., 3] / 2, box1[..., 1] + box1[..., 3] / 2
-        b2_x1, b2_x2 = box2[..., 0] - box2[..., 2] / 2, box2[..., 0] + box2[..., 2] / 2
-        b2_y1, b2_y2 = box2[..., 1] - box2[..., 3] / 2, box2[..., 1] + box2[..., 3] / 2
+  # Intersection area
+  inter = tf.maximum((tf.minimum(b1_x2, b2_x2) - tf.maximum(b1_x1, b2_x1)), 0) * \
+          tf.maximum((tf.minimum(b1_y2, b2_y2) - tf.maximum(b1_y1, b2_y1)), 0)
 
-    # Intersection area
-    inter = tf.maximum((tf.minimum(b1_x2, b2_x2) - tf.maximum(b1_x1, b2_x1)), 0) * \
-            tf.maximum((tf.minimum(b1_y2, b2_y2) - tf.maximum(b1_y1, b2_y1)), 0)
+  # Union Area
+  w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
+  w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
+  union = w1 * h1 + w2 * h2 - inter + eps
 
-    # Union Area
-    w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
-    w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
-    union = w1 * h1 + w2 * h2 - inter + eps
-
-    iou = inter / union
-    if GIoU or DIoU or CIoU or EIoU or ECIoU:
-        cw = tf.maximum(b1_x2, b2_x2) - tf.minimum(b1_x1, b2_x1)  # convex (smallest enclosing box) width
-        ch = tf.maximum(b1_y2, b2_y2) - tf.minimum(b1_y1, b2_y1)  # convex height
-        if CIoU or DIoU or EIoU or ECIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
-            c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
-                    (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
-            if DIoU:
-                return iou - rho2 / c2  # DIoU
-            elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-                v = (4 / math.pi ** 2) * tf.math.pow(tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
-                alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))  
-                return iou - (rho2 / c2 + v * alpha)  # CIoU
-            elif EIoU: # Efficient IoU https://arxiv.org/abs/2101.08158
-                rho3 = (w1-w2) **2
-                c3 = cw ** 2 + eps
-                rho4 = (h1-h2) **2
-                c4 = ch ** 2 + eps
-                return iou - rho2 / c2 - rho3 / c3 - rho4 / c4  # EIoU
-            elif ECIoU:
-                v = (4 / math.pi ** 2) * tf.math.pow(tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
-                alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))
-                rho3 = (w1-w2) **2
-                c3 = cw ** 2 + eps
-                rho4 = (h1-h2) **2
-                c4 = ch ** 2 + eps
-                return iou - v * alpha - rho2 / c2 - rho3 / c3 - rho4 / c4  # ECIoU
-        else:  # GIoU https://arxiv.org/pdf/1902.09630.pdf
-            c_area = cw * ch + eps  # convex area
-            return iou - (c_area - union) / c_area  # GIoU
-    else:
-        return iou  # IoU
+  iou = inter / union
+  if GIoU or DIoU or CIoU or EIoU or ECIoU:
+    cw = tf.maximum(b1_x2, b2_x2) - tf.minimum(
+        b1_x1, b2_x1)  # convex (smallest enclosing box) width
+    ch = tf.maximum(b1_y2, b2_y2) - tf.minimum(b1_y1, b2_y1)  # convex height
+    if CIoU or DIoU or EIoU or ECIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
+      c2 = cw**2 + ch**2 + eps  # convex diagonal squared
+      rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2)**2 +
+              (b2_y1 + b2_y2 - b1_y1 - b1_y2)**2) / 4  # center distance squared
+      if DIoU:
+        return iou - rho2 / c2  # DIoU
+      elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
+        v = (4 / math.pi**2) * tf.math.pow(
+            tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
+        alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))
+        return iou - (rho2 / c2 + v * alpha)  # CIoU
+      elif EIoU:  # Efficient IoU https://arxiv.org/abs/2101.08158
+        rho3 = (w1 - w2)**2
+        c3 = cw**2 + eps
+        rho4 = (h1 - h2)**2
+        c4 = ch**2 + eps
+        return iou - rho2 / c2 - rho3 / c3 - rho4 / c4  # EIoU
+      elif ECIoU:
+        v = (4 / math.pi**2) * tf.math.pow(
+            tf.math.atan(w2 / h2) - tf.math.atan(w1 / h1), 2)
+        alpha = tf.stop_gradient(v / ((1 + eps) - iou + v))
+        rho3 = (w1 - w2)**2
+        c3 = cw**2 + eps
+        rho4 = (h1 - h2)**2
+        c4 = ch**2 + eps
+        return iou - v * alpha - rho2 / c2 - rho3 / c3 - rho4 / c4  # ECIoU
+    else:  # GIoU https://arxiv.org/pdf/1902.09630.pdf
+      c_area = cw * ch + eps  # convex area
+      return iou - (c_area - union) / c_area  # GIoU
+  else:
+    return iou  # IoU

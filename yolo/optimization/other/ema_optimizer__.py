@@ -1,4 +1,3 @@
-
 # Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +41,7 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
   opt.swap_weights()
   ```
   """
+
   def __init__(self,
                optimizer: tf.keras.optimizers.Optimizer,
                trainable_weights_only: bool = True,
@@ -69,18 +69,17 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
       **kwargs: keyword arguments. Allowed to be {`clipnorm`,
         `clipvalue`, `lr`, `decay`}.
     """
-    super().__init__(optimizer = optimizer,
-                     trainable_weights_only = trainable_weights_only,
-                     average_decay = average_decay,
-                     start_step = start_step,
-                     dynamic_decay = dynamic_decay,
-                     name = name,
-                     **kwargs)
+    super().__init__(
+        optimizer=optimizer,
+        trainable_weights_only=trainable_weights_only,
+        average_decay=average_decay,
+        start_step=start_step,
+        dynamic_decay=dynamic_decay,
+        name=name,
+        **kwargs)
 
-  def apply_gradients(self, grads_and_vars,
-                      name: Optional[Text] = None):
-    result = self._optimizer.apply_gradients(grads_and_vars, 
-                                             name)
+  def apply_gradients(self, grads_and_vars, name: Optional[Text] = None):
+    result = self._optimizer.apply_gradients(grads_and_vars, name)
     self.update_average(self.iterations)
     return result
 
@@ -109,19 +108,23 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
     strategy = tf.distribute.get_strategy()
     if isinstance(strategy, tf.distribute.MirroredStrategy):
       if tf.distribute.in_cross_replica_context():
-        return strategy.run(_update, args=(zip(self._average_weights, self._model_weights),))
+        return strategy.run(
+            _update, args=(zip(self._average_weights, self._model_weights),))
     else:
-      return ctx.merge_call(_update, args=(zip(self._average_weights,
-                                              self._model_weights),))
+      return ctx.merge_call(
+          _update, args=(zip(self._average_weights, self._model_weights),))
 
   @tf.function
   def _swap_weights(self):
+
     def fn_0(a, b):
       a.assign_add(b)
       return a
+
     def fn_1(b, a):
       b.assign(a - b)
       return b
+
     def fn_2(a, b):
       a.assign_sub(b)
       return a
@@ -137,7 +140,8 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
     strategy = tf.distribute.get_strategy()
     if isinstance(strategy, tf.distribute.MirroredStrategy):
       if tf.distribute.in_cross_replica_context():
-        return strategy.run(swap, args=(zip(self._average_weights, self._model_weights),))
+        return strategy.run(
+            swap, args=(zip(self._average_weights, self._model_weights),))
     else:
       return ctx.merge_call(
           swap, args=(zip(self._average_weights, self._model_weights),))

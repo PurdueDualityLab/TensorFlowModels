@@ -632,7 +632,7 @@ class Yolo_Loss(object):
 
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
-    
+
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
@@ -762,9 +762,9 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer 
-    class_loss *= self._cls_normalizer 
-    conf_loss *= self._obj_normalizer 
+    box_loss *= self._iou_normalizer
+    class_loss *= self._cls_normalizer
+    conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss

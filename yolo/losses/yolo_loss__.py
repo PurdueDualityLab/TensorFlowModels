@@ -68,10 +68,12 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
 
   return bce, delta
 
+
 def apply_mask(mask, x):
   mask = tf.cast(mask, tf.bool)
   masked = tf.where(mask, x, tf.zeros_like(x))
   return masked
+
 
 # @tf.custom_gradient
 # def apply_mask(mask, x):
@@ -637,7 +639,7 @@ class Yolo_Loss(object):
 
     # is there a way to verify that we are not on the CPU?
     ind_mask = tf.cast(ind_mask, indexes.dtype)
-    
+
     # find all the batch indexes using the cumulated sum of a ones tensor
     # cumsum(ones) - 1 yeild the zero indexed batches
     bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
@@ -705,7 +707,7 @@ class Yolo_Loss(object):
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
     offset = tf.cast(
-      tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
+        tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
     offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
     true_box = apply_mask(ind_mask, (scale * true_box) - offset)
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
@@ -718,7 +720,6 @@ class Yolo_Loss(object):
     true_class = apply_mask(ind_mask, true_class)
     pred_class = apply_mask(ind_mask,
                             tf.gather_nd(pred_class, inds, batch_dims=1))
-
 
     # compute the loss of all the boxes and apply a mask such that
     # within the 200 boxes, only the indexes of importance are covered
@@ -758,9 +759,9 @@ class Yolo_Loss(object):
     class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
 
     # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer 
-    class_loss *= self._cls_normalizer 
-    conf_loss *= self._obj_normalizer 
+    box_loss *= self._iou_normalizer
+    class_loss *= self._cls_normalizer
+    conf_loss *= self._obj_normalizer
 
     # 9. add all the losses together then take the sum over the batches
     mean_loss = box_loss + class_loss + conf_loss
@@ -825,7 +826,6 @@ class Yolo_Loss(object):
   #   pred_class = apply_mask(ind_mask,
   #                           tf.gather_nd(pred_class, inds, batch_dims=1))
 
-
   #   # compute the loss of all the boxes and apply a mask such that
   #   # within the 200 boxes, only the indexes of importance are covered
   #   _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
@@ -864,9 +864,9 @@ class Yolo_Loss(object):
   #   class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss, axis = (1)), num_objs)
 
   #   # 8. apply the weights to each loss
-  #   box_loss *= self._iou_normalizer 
-  #   class_loss *= self._cls_normalizer 
-  #   conf_loss *= self._obj_normalizer 
+  #   box_loss *= self._iou_normalizer
+  #   class_loss *= self._cls_normalizer
+  #   conf_loss *= self._obj_normalizer
 
   #   # 9. add all the losses together then take the sum over the batches
   #   loss = box_loss + class_loss + conf_loss

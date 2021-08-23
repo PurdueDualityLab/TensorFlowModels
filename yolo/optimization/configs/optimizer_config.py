@@ -54,7 +54,7 @@ class SGDAccumConfig(BaseOptimizerConfig):
   momentum: float = 0.0
   momentum_start: float = 0.0
   accumulation_type: str = "mean"
-  one_offset: bool = False 
+  one_offset: bool = False
   accumulation_steps: int = 1
   adjusted_for_accum: bool = True
   warmup_steps: int = 1000
@@ -79,6 +79,7 @@ class SGDMomentumWarmupConfig(BaseOptimizerConfig):
   momentum: float = 0.9
   warmup_steps: int = 1000
 
+
 @dataclasses.dataclass
 class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
@@ -99,6 +100,7 @@ class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   warmup_steps: int = 1000
   weight_decay: float = 0.0
   sim_torch: bool = False
+
 
 @dataclasses.dataclass
 class ScaledYoloSGDConfig(BaseOptimizerConfig):

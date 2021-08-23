@@ -45,6 +45,7 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
   opt.swap_weights()
   ```
   """
+
   def __init__(self,
                optimizer: tf.keras.optimizers.Optimizer,
                trainable_weights_only: bool = True,
@@ -73,13 +74,14 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
       **kwargs: keyword arguments. Allowed to be {`clipnorm`,
         `clipvalue`, `lr`, `decay`}.
     """
-    super().__init__(optimizer = optimizer,
-                     trainable_weights_only = trainable_weights_only,
-                     average_decay = average_decay,
-                     start_step = start_step,
-                     dynamic_decay = dynamic_decay,
-                     name = name,
-                     **kwargs)
+    super().__init__(
+        optimizer=optimizer,
+        trainable_weights_only=trainable_weights_only,
+        average_decay=average_decay,
+        start_step=start_step,
+        dynamic_decay=dynamic_decay,
+        name=name,
+        **kwargs)
     print("YOLO Ema")
 
   def shadow_copy(self, model: tf.keras.Model):
@@ -122,8 +124,8 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
 
     ctx = tf.distribute.get_replica_context()
-    return ctx.merge_call(_update, args=(zip(self._average_weights,
-                                             self._model_weights),))
+    return ctx.merge_call(
+        _update, args=(zip(self._average_weights, self._model_weights),))
 
   @property
   def learning_rate(self):

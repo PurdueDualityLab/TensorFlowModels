@@ -19,9 +19,10 @@ import tensorflow as tf
 import tensorflow_addons.optimizers as tfa_optimizers
 from official.modeling.optimization import configs
 
-from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup, SGDMomentumWarmupW, ScaledYoloSGD)
+from yolo.optimization import (SGDAccumulated, SGDMomentumWarmup,
+                               SGDMomentumWarmupW, ScaledYoloSGD)
 from yolo.optimization import ema_optimizer
-from official.modeling.optimization import optimizer_factory #, ema_optimizer
+from official.modeling.optimization import optimizer_factory  #, ema_optimizer
 from official.modeling.optimization import lr_schedule
 from yolo.optimization.configs import optimization_config as opt_cfg
 
@@ -29,7 +30,7 @@ optimizer_factory.OPTIMIZERS_CLS.update({
     'sgd_dymo': SGDMomentumWarmup.SGDMomentumWarmup,
     'sgd_dymow': SGDMomentumWarmupW.SGDMomentumWarmupW,
     'sgd_accum': SGDAccumulated.SGDAccumulated,
-    'scaled_sgd':ScaledYoloSGD.ScaledYoloSGD
+    'scaled_sgd': ScaledYoloSGD.ScaledYoloSGD
 })
 
 OPTIMIZERS_CLS = optimizer_factory.OPTIMIZERS_CLS
@@ -69,12 +70,13 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
   lr = opt_factory.build_learning_rate()
   optimizer = opt_factory.build_optimizer(lr)
   """
+
   def get_bias_lr_schedule(self, bias_lr):
     print(self._warmup_config)
-    temp = self._warmup_config.warmup_learning_rate 
-    self._warmup_config.warmup_learning_rate=bias_lr
+    temp = self._warmup_config.warmup_learning_rate
+    self._warmup_config.warmup_learning_rate = bias_lr
     lr = self.build_learning_rate()
-    self._warmup_config.warmup_learning_rate=temp
+    self._warmup_config.warmup_learning_rate = temp
     return lr
 
   @gin.configurable
@@ -121,10 +123,8 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
 
     return optimizer
 
-
   @gin.configurable
-  def add_ema(
-      self, optimizer):
+  def add_ema(self, optimizer):
     """Build optimizer.
 
     Builds optimizer from config. It takes learning rate as input, and builds

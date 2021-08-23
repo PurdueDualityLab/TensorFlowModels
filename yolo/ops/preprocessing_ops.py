@@ -20,6 +20,7 @@ except:
 
 PAD_VALUE = 114
 
+
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
@@ -115,22 +116,23 @@ def get_image_shape(image):
   return height, width
 
 
-def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
+def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   if rh > 0.0:
-    delta = rand_uniform_strong(-rh, rh, seed = seed)
+    delta = rand_uniform_strong(-rh, rh, seed=seed)
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
-    delta = rand_scale(rs, seed = seed)
+    delta = rand_scale(rs, seed=seed)
     # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
-    delta = rand_scale(rv, seed = seed)
+    delta = rand_scale(rv, seed=seed)
     # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
     image *= delta
-    
+
   # clip the values of the image between 0.0 and 1.0
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image
+
 
 # def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
 #   image = tf.image.rgb_to_hsv(image_)
@@ -149,29 +151,32 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed = None):
 #   image = tf.image.hsv_to_rgb(image/scale)
 #   return image
 
-def _augment_hsv_torch(image, rh, rs, rv, seed = None):
+
+def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   dtype = image.dtype
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
-  r = tf.random.uniform([3], -1, 1, dtype = image.dtype) * gen_range + 1 
+  r = tf.random.uniform([3], -1, 1, dtype=image.dtype) * gen_range + 1
 
   image = tf.cast(image, r.dtype) * r
-  h, s, v = tf.split(image, 3, axis = -1)
+  h, s, v = tf.split(image, 3, axis=-1)
   h = h % 1.0
   s = tf.clip_by_value(s, 0.0, 1.0)
   v = tf.clip_by_value(v, 0.0, 1.0)
 
-  image = tf.concat([h, s, v], axis = -1)
+  image = tf.concat([h, s, v], axis=-1)
   image = tf.image.hsv_to_rgb(image)
   return tf.cast(image, dtype)
 
-def image_rand_hsv(image, rh, rs, rv, seed = None):
+
+def image_rand_hsv(image, rh, rs, rv, seed=None):
   # if rh > 1.0 or rs > 1.0 or rv > 1.0:
   # image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
   # else:
-  image = _augment_hsv_torch(image, rh, rs, rv, seed = seed)
+  image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
+
 
 def translate_boxes(box, classes, translate_x, translate_y):
   """
@@ -275,7 +280,7 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   return cropped_image, info
 
 
-def mean_pad(image, pady, padx, targety, targetx, value = 114, color=False):
+def mean_pad(image, pady, padx, targety, targetx, value=114, color=False):
   shape = tf.shape(image)[:2]
   pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
 
@@ -517,9 +522,9 @@ def resize_and_jitter_image(image,
           [ow, oh, w, h, ptop, pleft, pbottom, pright], tf.int32)
 
     # pad the image to desired size
-    image_ = tf.pad(cropped_image, [[pad[0], pad[2]], 
-                                    [pad[1], pad[3]], 
-                                    [0, 0]], constant_values=PAD_VALUE )
+    image_ = tf.pad(
+        cropped_image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
+        constant_values=PAD_VALUE)
     pad_info = tf.stack([
         tf.cast(tf.shape(cropped_image)[:2], tf.float32),
         tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
@@ -530,13 +535,13 @@ def resize_and_jitter_image(image,
 
     temp = tf.shape(image)[:2]
     if tf.reduce_any(temp > tf.cast(desired_size, temp.dtype)):
-      image_ = tf.image.resize(image_, 
-                               (desired_size[0], desired_size[1]), 
-                               method=tf.image.ResizeMethod.BILINEAR)
+      image_ = tf.image.resize(
+          image_, (desired_size[0], desired_size[1]),
+          method=tf.image.ResizeMethod.BILINEAR)
     else:
-      image_ = tf.image.resize(image_, 
-                               (desired_size[0], desired_size[1]), 
-                               method=tf.image.ResizeMethod.AREA)
+      image_ = tf.image.resize(
+          image_, (desired_size[0], desired_size[1]),
+          method=tf.image.ResizeMethod.AREA)
 
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
@@ -660,20 +665,20 @@ def affine_warp_image(image,
   M = tf.reshape(M_, [-1])
   M = tf.cast(M[:-1], tf.float32)
 
-  if s > 1: 
+  if s > 1:
     image = tfa.image.transform(
-      image,
-      M,
-      fill_value=PAD_VALUE,
-      output_shape=desired_size,
-      interpolation='bilinear')
+        image,
+        M,
+        fill_value=PAD_VALUE,
+        output_shape=desired_size,
+        interpolation='bilinear')
   else:
     image = tfa.image.transform(
-      image,
-      M,
-      fill_value=PAD_VALUE,
-      output_shape=desired_size,
-      interpolation='nearest')
+        image,
+        M,
+        fill_value=PAD_VALUE,
+        output_shape=desired_size,
+        interpolation='nearest')
 
   desired_size = tf.cast(desired_size, tf.float32)
   return image, M_, [image_size, desired_size, Mb]
@@ -1153,7 +1158,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
       x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
       y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i]: # and (xc != x_ or yc != y_):
+      if shifts[i]:  # and (xc != x_ or yc != y_):
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
@@ -1166,6 +1171,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     ind_sample = ind_sample.write(num_written, sample)
     num_written += 1
   return ind_val, ind_sample, num_written
+
 
 def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):

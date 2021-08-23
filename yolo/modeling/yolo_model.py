@@ -182,11 +182,11 @@ class Yolo(ks.Model):
     """
     modules = self.submodules
 
-    for module in modules: 
+    for module in modules:
       if isinstance(module, nn_blocks.ConvBN):
         print(module)
         print(module._kernel_regularizer)
         print(module._kernel_initializer)
         if module._use_bn:
           print(module.bn)
-    return 
+    return
