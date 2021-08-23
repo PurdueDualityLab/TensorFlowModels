@@ -24,7 +24,7 @@ task:
             '[142.0, 110.0]', 
             '[192.0, 243.0]', 
             '[459.0, 401.0]']
-    input_size: [640, 640, 3]
+    input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
     min_level: 3
@@ -80,7 +80,7 @@ task:
       anchor_thresh: 4.0
       best_match_only: True
       mosaic: 
-        output_resolution: [640, 640]
+        output_resolution: [512, 512]
         max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
@@ -102,7 +102,7 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.000
+  weight_decay: 0.0005
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -125,14 +125,12 @@ trainer:
         decay_steps: 549450
         steps_per_epoch: 1850
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0005
-        sim_torch: true
         name: SGD
     warmup:
       type: 'linear'

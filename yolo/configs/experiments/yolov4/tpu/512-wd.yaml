@@ -1,10 +1,9 @@
 runtime:
-  distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
+  smart_bias_lr: 0.01
   model:
     base:
       backbone:
@@ -15,9 +14,8 @@ task:
         version: v4
         type: regular
         activation: leaky
-      darknet_weights_file: 'cache://yolov4.weights'
-      darknet_weights_cfg: 'cache://yolov4.cfg'
     num_classes: 80
+    smart_bias: true
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -64,7 +62,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: false
   train_data:
-    global_batch_size: 1
+    global_batch_size: 64
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
@@ -99,7 +97,7 @@ task:
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 8
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
@@ -111,7 +109,7 @@ task:
       use_tie_breaker: True
       use_scale_xy: False
       anchor_thresh: 0.213
-  weight_decay: 0.0005
+  weight_decay: 0.000
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
@@ -132,13 +130,16 @@ trainer:
       stepwise:
         boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000131, 0.0000131] 
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
-      type: sgd
-      sgd:
+      type: sgd_dymow
+      sgd_dymow:
         momentum: 0.949
+        momentum_start: 0.949
         nesterov: True
+        warmup_steps: 1000
+        weight_decay: 0.0005
+        sim_torch: true
         name: SGD
     warmup:
       type: 'polynomial'

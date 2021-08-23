@@ -1,8 +1,6 @@
 runtime:
-  distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
   model:
@@ -10,13 +8,10 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'cspdarknet53'
+          model_id: 'cspdarknettiny'
       decoder:
         version: v4
-        type: regular
-        activation: leaky
-      darknet_weights_file: 'cache://yolov4.weights'
-      darknet_weights_cfg: 'cache://yolov4.cfg'
+        type: tiny
     num_classes: 80
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
@@ -30,9 +25,9 @@ task:
     input_size: [512, 512, 3]
     boxes_per_scale: 3
     max_level: 5
-    min_level: 3
+    min_level: 4
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
@@ -56,7 +51,7 @@ task:
       scale_xy:
         '5': 1.05
         '4': 1.1
-        '3': 1.2
+        # '3': 1.2
       max_boxes: 200
       nms_type: iou
       iou_thresh: 0.001
@@ -64,7 +59,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: false
   train_data:
-    global_batch_size: 1
+    global_batch_size: 64
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
@@ -99,7 +94,7 @@ task:
         mosaic_crop_mode: 'crop'
         aspect_ratio_mode: 'distort'
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 8
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
@@ -132,8 +127,8 @@ trainer:
       stepwise:
         boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000131, 0.0000131] 
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00131, 0.000131, 0.0000131] 
+        # values: [0.00131, 0.0009825, 0.000655] #best
     optimizer:
       type: sgd
       sgd:

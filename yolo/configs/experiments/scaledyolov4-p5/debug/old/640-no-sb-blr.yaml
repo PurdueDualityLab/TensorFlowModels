@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   model:
     base:
       backbone:
@@ -14,7 +14,7 @@ task:
         version: v4
         type: csp
     num_classes: 80
-    smart_bias: true
+    smart_bias: false
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -39,11 +39,11 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.3
+        'all': 0.3 #0.5
       obj_normalizer: 
-        '5': 0.28
-        '4': 0.70
-        '3': 2.80
+        '5': 0.28 #0.4
+        '4': 0.70 #1.0
+        '3': 2.80 #4.0
       new_cords:
         'all': True
       objectness_smooth: 
@@ -102,7 +102,7 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.000
+  weight_decay: 0.0005
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -119,20 +119,18 @@ trainer:
     learning_rate:
       type: cosine_epoch
       cosine_epoch:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.03
         name: Cosine
         alpha: 0.2
-        decay_steps: 549450
+        decay_steps: 542050
         steps_per_epoch: 1850
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0005
-        sim_torch: true
         name: SGD
     warmup:
       type: 'linear'

@@ -12,9 +12,8 @@ task:
         darknet:
           model_id: 'cspdarknet53'
       decoder:
-        version: v4
+        version: v3
         type: regular
-        activation: leaky
       darknet_weights_file: 'cache://yolov4.weights'
       darknet_weights_cfg: 'cache://yolov4.cfg'
     num_classes: 80
@@ -32,7 +31,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: mish
+      activation: leaky
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
@@ -132,8 +131,8 @@ trainer:
       stepwise:
         boundaries: [240000, 270000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000131, 0.0000131] 
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00131, 0.000131, 0.0000131] 
+        # values: [0.00131, 0.0009825, 0.000655] #best
     optimizer:
       type: sgd
       sgd:

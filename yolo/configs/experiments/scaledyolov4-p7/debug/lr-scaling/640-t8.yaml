@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.8
   model:
     base:
       backbone:
@@ -31,7 +31,7 @@ task:
     norm_activation:
       activation: mish
       norm_epsilon: 0.0001
-      norm_momentum: 0.97
+      norm_momentum: 0.97 # set the momentum to zero while ema is on
       use_sync_bn: true
     filter:
       loss_type:  
@@ -39,11 +39,11 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.3
+        'all': 0.3 #0.5
       obj_normalizer: 
-        '5': 0.28
-        '4': 0.70
-        '3': 2.80
+        '5': 0.28 #0.4
+        '4': 0.70 #1.0
+        '3': 2.80 #4.0
       new_cords:
         'all': True
       objectness_smooth: 
@@ -102,39 +102,36 @@ task:
       use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
-  weight_decay: 0.000
+  weight_decay: 0.0005
   annotation_file: null
 trainer:
-  train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 78
-  steps_per_loop: 1850
-  summary_interval: 1850
-  validation_interval: 1850
-  checkpoint_interval: 1850
+  train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 39
+  steps_per_loop: 925
+  summary_interval: 925
+  validation_interval: 925
+  checkpoint_interval: 925
   optimizer_config:
     ema:
       average_decay: 0.9999
       trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
-      type: cosine_epoch
-      cosine_epoch:
-        initial_learning_rate: 0.01
+      type: cosine
+      cosine:
+        initial_learning_rate: 0.08
         name: Cosine
         alpha: 0.2
-        decay_steps: 549450
-        steps_per_epoch: 1850
+        decay_steps: 274725
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_dymo
+      sgd_dymo:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 5550
-        weight_decay: 0.0005
-        sim_torch: true
+        warmup_steps: 2775
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 5550 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 2775 #learning rate rises from 0 to 0.0013 over 1000 steps

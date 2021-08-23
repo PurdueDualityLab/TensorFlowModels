@@ -234,7 +234,7 @@ def _build_path_scales(min_level, max_level):
 @dataclasses.dataclass
 class YoloLossLayer(hyperparams.Config):
   min_level: int = 3
-  max_level: int = 5
+  max_level: int = 7
   ignore_thresh: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 0.0))
   truth_thresh: Dict = dataclasses.field(
