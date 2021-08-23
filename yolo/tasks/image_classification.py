@@ -22,7 +22,6 @@ from yolo.dataloaders.decoders import classification_tfds_decoder as cli
 from yolo.dataloaders import classification_input
 from yolo.dataloaders import classification_vision
 from official.vision.beta.tasks import image_classification
-from yolo.losses import cross_entropy_loss
 from official.modeling import tf_utils
 import logging
 
