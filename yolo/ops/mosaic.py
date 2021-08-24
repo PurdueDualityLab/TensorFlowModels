@@ -231,6 +231,31 @@ class Mosaic(object):
     area = tf.gather(area, inds)
     return image, boxes, classes, is_crowd, area, area
 
+
+  def translate_boxes(self, box, classes, translate_x, translate_y):
+    """
+    Translate the boxes by a fixed number of pixels.
+    
+    Args:
+      box: An tensor representing the bounding boxes in the (x, y, w, h) format
+        whose last dimension is of size 4.
+      classes: A tensor representing the classes of each bounding box. The shape
+        of `classes` lacks the final dimension of the shape `box` which is of size
+        4.
+    
+    Returns:
+      A tuple with two elements: a tensor representing the translated boxes with
+      the same dimensions as `box` and the `classes` tensor.
+    """
+    with tf.name_scope('translate_boxes'):
+      box = bbox_ops.yxyx_to_xcycwh(box)
+      x, y, w, h = tf.split(box, 4, axis=-1)
+      x = x + translate_x
+      y = y + translate_y
+      box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
+      box = bbox_ops.xcycwh_to_yxyx(box)
+    return box, classes
+
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
@@ -238,7 +263,7 @@ class Mosaic(object):
     translate = tf.cast((ishape - tf.shape(patch)) / ishape, boxes.dtype)
     boxes = boxes * tf.cast([scale[0], scale[1], scale[0], scale[1]],
                             boxes.dtype)
-    return preprocessing_ops.translate_boxes(boxes, classes, translate[1] * xs,
+    return self.translate_boxes(boxes, classes, translate[1] * xs,
                                              translate[0] * ys)
 
   def _generate_cut(self):

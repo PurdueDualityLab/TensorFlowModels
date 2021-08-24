@@ -196,23 +196,21 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
     image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
 
-def mean_pad(image, pady, padx, targety, targetx, value=114, color=False):
-  shape = tf.shape(image)[:2]
-  pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
-
-  image_ = tf.pad(
-      image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-      constant_values=PAD_VALUE)
-
-  pad_info = tf.stack([
-      tf.cast(tf.shape(image)[:2], tf.float32),
-      tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
-      tf.ones_like(tf.shape(image)[:2], dtype=tf.float32),
-      -tf.cast(pad[:2], tf.float32)
-  ])
-  return image_, pad_info
-
 def random_window_crop(image, target_height, target_width, translate=0.0):
+  """Takes a random crop of the image to the target height and width
+  
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    target_height: `int` indicating the espected output height of the image.
+    target_width: `int` indicating the espected output width of the image.
+    translate: `float` indicating the maximum delta at which you can take a 
+      random crop relative to the center of the image. 
+  
+  Returns:
+    image: The cropped image in the same datatype as the input image.
+    info: `float` tensor that is applied to the boxes in order to select the 
+      boxes still contained within the image.
+  """
   ishape = tf.shape(image)
   th = target_height if target_height < ishape[0] else ishape[0]
   tw = target_width if target_width < ishape[1] else ishape[1]
@@ -227,7 +225,6 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   ])
   crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, shift.dtype),
                                       crop_offset.dtype)
-  #tf.print(crop_offset, shift, ishape, crop_size)
   cropped_image = tf.slice(image, crop_offset, crop_size)
 
   scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
@@ -243,20 +240,48 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
 
 def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright, 
                shiftx, shifty):
+  """Given a center location, cut the input image into a slice that will be 
+  concatnated with other slices with the same center in order to construct 
+  a final mosaiced image. 
+
+  
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    ow: `float` value indicating the orignal width of the image.
+    oh: `float` value indicating the orignal height of the image.
+    w: `float` value indicating the final width image.
+    h: `float` value indicating the final height image.
+    center: `float` value indicating the desired center of the final patched 
+      image.
+    ptop: `float` value indicating the top of the image without padding.
+    pleft: `float` value indicating the left of the image without padding. 
+    pbottom: `float` value indicating the bottom of the image without padding. 
+    pright: `float` value indicating the right of the image without padding. 
+    shiftx: `float` 0.0 or 1.0 value indicating if the image is in the 
+      left or right.
+    shifty: `float` 0.0 or 1.0 value indicating if the image is in the 
+      top or bottom.
+  
+  Returns:
+    image: The cropped image in the same datatype as the input image.
+    crop_info: `float` tensor that is applied to the boxes in order to select 
+      the boxes still contained within the image.
+  """
   with tf.name_scope('mosaic_cut'):
     center = tf.cast(center, w.dtype)
     cut_x, cut_y = center[1], center[0]
 
+    # Select the crop of the image to use
     left_shift = tf.minimum(
         tf.minimum(cut_x, tf.maximum(0.0, -pleft * w / ow)), w - cut_x)
     top_shift = tf.minimum(
         tf.minimum(cut_y, tf.maximum(0.0, -ptop * h / oh)), h - cut_y)
-
     right_shift = tf.minimum(
         tf.minimum(w - cut_x, tf.maximum(0.0, -pright * w / ow)), cut_x)
     bot_shift = tf.minimum(
         tf.minimum(h - cut_y, tf.maximum(0.0, -pbottom * h / oh)), cut_y)
 
+    # Build a crop offset and a crop size tensor to use for slicing. 
     if shiftx == 0.0 and shifty == 0.0:
       crop_offset = [top_shift, left_shift, 0]
       crop_size = [cut_y, cut_x, -1]
@@ -273,6 +298,7 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
       crop_offset = [0, 0, 0]
       crop_size = [-1, -1, -1]
 
+    # Contain and crop the image.
     ishape = tf.cast(tf.shape(image)[:2], crop_size[0].dtype)
     crop_size[0] = tf.minimum(crop_size[0], ishape[0])
     crop_size[1] = tf.minimum(crop_size[1], ishape[1])
@@ -349,15 +375,15 @@ def resize_and_jitter_image(image,
     raise Exception("maximum change in aspect ratio must be between 0 and 0.5")
 
   with tf.name_scope('resize_and_jitter_image'):
-    # cast all parameters to a usable float data type
+    # Cast all parameters to a usable float data type.
     jitter = tf.cast(jitter, tf.float32)
     original_dtype, original_dims = image.dtype, tf.shape(image)[:2]
     ow, oh, w, h = cast(
         [original_dims[1], original_dims[0], desired_size[1], desired_size[0]],
         tf.float32)
 
-    # compute the random delta width and height etc. and randomize the
-    # location of the corner points
+    # Compute the random delta width and height etc. and randomize the
+    # location of the corner points.
     dw = ow * jitter
     dh = oh * jitter
     pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed)
@@ -365,7 +391,7 @@ def resize_and_jitter_image(image,
     ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
     pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
 
-    # bounded resizing of the images
+    # Bounded resizing of the images.
     if resize != 1:
       max_rdw, max_rdh = 0.0, 0.0
       if resize > 1.0:
@@ -381,7 +407,7 @@ def resize_and_jitter_image(image,
       ptop += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
       pbottom += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
 
-    # letter box the image
+    # Letter box the image.
     if letter_box == True or letter_box is None:
       image_aspect_ratio, input_aspect_ratio = ow / oh, w / h
       distorted_aspect = image_aspect_ratio / input_aspect_ratio
@@ -405,14 +431,14 @@ def resize_and_jitter_image(image,
       pright = pright - delta_w - pullin_w
       pleft = pleft - delta_w - pullin_w
 
-    # compute the width and height to crop or pad too, and clip all crops to
-    # to be contained within the image
+    # Compute the width and height to crop or pad too, and clip all crops to
+    # to be contained within the image.
     swidth = ow - pleft - pright
     sheight = oh - ptop - pbottom
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft],
                             [0, 0, oh, ow])
 
-    # random padding used for mosaic
+    # Random padding used for mosaic.
     h_ = src_crop[2] - src_crop[0]
     w_ = src_crop[3] - src_crop[1]
     if random_pad:
@@ -422,10 +448,10 @@ def resize_and_jitter_image(image,
       rmw = (swidth - w_) * shiftx
       rmh = (sheight - h_) * shifty
 
-    # cast cropping params to usable dtype
+    # Cast cropping params to usable dtype.
     src_crop = tf.cast(src_crop, tf.int32)
 
-    # compute padding parmeters
+    # Compute padding parmeters.
     dst_shape = [rmh, rmw, rmh + h_, rmw + w_]
     ptop, pleft, pbottom, pright = dst_shape
     pad = dst_shape * tf.cast([1, 1, -1, -1], ptop.dtype)
@@ -434,7 +460,7 @@ def resize_and_jitter_image(image,
 
     infos = []
 
-    # crop the image to desired size
+    # Crop the image to desired size.
     cropped_image = tf.slice(
         image, [src_crop[0], src_crop[1], 0],
         [src_crop[2] - src_crop[0], src_crop[3] - src_crop[1], -1])
@@ -456,7 +482,7 @@ def resize_and_jitter_image(image,
       return cropped_image, infos, cast(
           [ow, oh, w, h, ptop, pleft, pbottom, pright], tf.int32)
 
-    # pad the image to desired size
+    # Pad the image to desired size.
     image_ = tf.pad(
         cropped_image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
         constant_values=PAD_VALUE)
@@ -468,15 +494,20 @@ def resize_and_jitter_image(image,
     ])
     infos.append(pad_info)
 
-    temp = tf.shape(image)[:2]
-    if tf.reduce_any(temp > tf.cast(desired_size, temp.dtype)):
+    temp = tf.shape(image_)[:2]
+    cond = temp > tf.cast(desired_size, temp.dtype) 
+    if tf.reduce_any(cond):
+      size = tf.cast(desired_size, temp.dtype)
+      size = tf.where(cond, size, temp)
       image_ = tf.image.resize(
-          image_, (desired_size[0], desired_size[1]),
-          method=tf.image.ResizeMethod.BILINEAR)
-    else:
-      image_ = tf.image.resize(
-          image_, (desired_size[0], desired_size[1]),
+          image_, (size[0], size[1]),
           method=tf.image.ResizeMethod.AREA)
+      image_ = tf.cast(image_, original_dtype)
+
+    image_ = tf.image.resize(
+          image_, (desired_size[0], desired_size[1]),
+          method=tf.image.ResizeMethod.BILINEAR, 
+          antialias=True)
 
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
@@ -501,16 +532,17 @@ def build_transform(image,
   cw = width = tf.cast(width, tf.float32)
   deg_to_rad = lambda x: tf.cast(x, tf.float32) * np.pi / 180.0
 
-
   if desired_size is not None:
     desired_size = tf.cast(desired_size, tf.float32)
     ch = desired_size[0]
     cw = desired_size[1]
 
+  # Compute the center of the image in the output resulution.
   C = tf.eye(3, dtype=tf.float32)
   C = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [-cw / 2, -ch / 2])
   Cb = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [cw / 2, ch / 2])
 
+  # Compute a random rotation to apply. 
   R = tf.eye(3, dtype=tf.float32)
   a = deg_to_rad(tf.random.uniform([], -degrees, degrees, seed=seed))
   cos = tf.math.cos(a)
@@ -520,40 +552,54 @@ def build_transform(image,
   Rb = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]],
                                    [cos, sin, -sin, cos])
 
+  # Compute a random prespective change to apply. 
   P = tf.eye(3)
   Px = tf.random.uniform([], -perspective, perspective, seed=seed)
   Py = tf.random.uniform([], -perspective, perspective, seed=seed)
   P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
   Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
 
+  # Compute a random scaling to apply. 
   S = tf.eye(3, dtype=tf.float32)
   s = tf.random.uniform([], scale_min, scale_max, seed=seed)
   S = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [1 / s, 1 / s])
   Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
 
+  # Compute a random Translation to apply.
   T = tf.eye(3)
   if ((random_pad and s <= 1.0) or
       (random_pad and s > 1.0 and translate < 0.0)):
+    # The image is contained within the image and arbitrarily translated to 
+    # locations with in the image.
     C = Cb = tf.eye(3, dtype=tf.float32)
     Tx = tf.random.uniform([], -1, 0, seed=seed) * (cw / s - width)
     Ty = tf.random.uniform([], -1, 0, seed=seed) * (ch / s - height)
   else:
+    # The image can be translated outside of the output resolution window
+    # but the image is translated relative to the output resolution not the 
+    # input image resolution. 
     Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
     Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
 
-    # center and scale the image such that the window of translation is
-    # the desired size
+    # Center and Scale the image such that the window of translation is 
+    # contained to the output resolution. 
     dx, dy = (width - cw / s) / width, (height - ch / s) / height
     sx, sy = 1 - dx, 1 - dy
     bx, by = dx / 2, dy / 2
     Tx, Ty = bx + (sx * Tx), by + (sy * Ty)
 
+    # Scale the translation to width and height of the image.
     Tx *= width
     Ty *= height
 
   T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
   Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
 
+  # Use repeated matric multiplications to combine all the image transforamtions 
+  # into a single unified augmentation operation M is applied to the image
+  # Mb is to apply to the boxes. The order of matrix multiplication is 
+  # important. First, Translate, then Scale, then Rotate, then Center, then 
+  # finally alter the Prepsective. 
   M = T @ S @ R @ C @ P
   Mb = Pb @ Cb @ Rb @ Sb @ Tb
   return M, Mb, s
@@ -568,8 +614,10 @@ def affine_warp_image(image,
                       translate=0.0,
                       random_pad=False,
                       seed=None):
+  
+  # Build an image transformation matrix.
   image_size = tf.cast(get_image_shape(image), tf.float32)
-  M_, Mb, s = build_transform(
+  M_, Mb, _ = build_transform(
       image,
       perspective=perspective,
       degrees=degrees,
@@ -582,82 +630,58 @@ def affine_warp_image(image,
   M = tf.reshape(M_, [-1])
   M = tf.cast(M[:-1], tf.float32)
 
-  if s > 1:
-    image = tfa.image.transform(
-        image,
-        M,
-        fill_value=PAD_VALUE,
-        output_shape=desired_size,
-        interpolation='bilinear')
-  else:
-    image = tfa.image.transform(
-        image,
-        M,
-        fill_value=PAD_VALUE,
-        output_shape=desired_size,
-        interpolation='nearest')
+  # Apply the transformation to image.
+  image = tfa.image.transform(
+      image,
+      M,
+      fill_value=PAD_VALUE,
+      output_shape=desired_size,
+      interpolation='bilinear')
 
   desired_size = tf.cast(desired_size, tf.float32)
   return image, M_, [image_size, desired_size, Mb]
 
-def _get_corners(boxes):
-  """
-  Get the coordinates of the 4 courners of a set of bounding boxes.
-  
-  Args:
-    boxes: A tensor whose last axis has a length of 4 and is in the format
-      (ymin, xmin, ymax, xmax)
-  
-  Returns:
-    A tensor whose dimensions are the same as `boxes` but has an additional axis
-    of size 2 representing the 4 courners of the bounding boxes in the order
-    (tl, bl, tr, br).
-  """
-
-  ymi, xmi, yma, xma = tf.split(boxes, 4, axis=-1)
-
-  tl = tf.concat([xmi, ymi], axis=-1)
-  bl = tf.concat([xmi, yma], axis=-1)
-  tr = tf.concat([xma, ymi], axis=-1)
-  br = tf.concat([xma, yma], axis=-1)
-
-  corners = tf.concat([tl, bl, tr, br], axis=-1)
-  return corners
-
-def _corners_to_boxes(corners):
-  corners_ = tf.reshape(corners, [-1, 4, 2])
-
-  y = corners_[..., 1]
-  x = corners_[..., 0]
-
-  y_min = tf.reduce_min(y, axis=-1)
-  x_min = tf.reduce_min(x, axis=-1)
-  y_max = tf.reduce_max(y, axis=-1)
-  x_max = tf.reduce_max(x, axis=-1)
-
-  boxes = tf.stack([y_min, x_min, y_max, x_max], axis=-1)
-  return boxes
-
-def _aug_boxes(Mb, boxes):
-  M = Mb
-  corners = _get_corners(boxes)
-  corners = tf.reshape(corners, [-1, 4, 2])
-  z = tf.expand_dims(tf.ones_like(corners[..., 1]), axis=-1)
-  corners = tf.concat([corners, z], axis=-1)
-
-  corners = tf.transpose(
-      tf.matmul(M, corners, transpose_b=True), perm=(0, 2, 1))
-
-  corners, p = tf.split(corners, [2, 1], axis=-1)
-  corners /= p
-  corners = tf.reshape(corners, [-1, 8])
-  boxes = _corners_to_boxes(corners)
-  return boxes
-
-
+# ops for box clipping and cleaning
 def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
-  boxes = _aug_boxes(Mb, boxes)
+  def _get_corners(box):
+    """Get the corner of each box as a tuple of (x, y) coordinates"""
+    ymi, xmi, yma, xma = tf.split(box, 4, axis=-1)
+    tl = tf.concat([xmi, ymi], axis=-1)
+    bl = tf.concat([xmi, yma], axis=-1)
+    tr = tf.concat([xma, ymi], axis=-1)
+    br = tf.concat([xma, yma], axis=-1)
+    return tf.concat([tl, bl, tr, br], axis=-1)
 
+  def _corners_to_boxes(corner):
+    """Convert (x, y) corner tuples back into boxes in the format
+    [ymin, xmin, ymax, xmax]"""
+    corner = tf.reshape(corner, [-1, 4, 2])
+    y = corner[..., 1]
+    x = corner[..., 0]
+    y_min = tf.reduce_min(y, axis=-1)
+    x_min = tf.reduce_min(x, axis=-1)
+    y_max = tf.reduce_max(y, axis=-1)
+    x_max = tf.reduce_max(x, axis=-1)
+    return tf.stack([y_min, x_min, y_max, x_max], axis=-1)
+
+  def _aug_boxes(M, box):
+    """Apply an affine transformation matrix M to the boxes to get the 
+    randomly augmented boxes"""
+    corners = _get_corners(box)
+    corners = tf.reshape(corners, [-1, 4, 2])
+    z = tf.expand_dims(tf.ones_like(corners[..., 1]), axis=-1)
+    corners = tf.concat([corners, z], axis=-1)
+
+    corners = tf.transpose(
+        tf.matmul(M, corners, transpose_b=True), perm=(0, 2, 1))
+
+    corners, p = tf.split(corners, [2, 1], axis=-1)
+    corners /= p
+    corners = tf.reshape(corners, [-1, 8])
+    box = _corners_to_boxes(corners)
+    return box
+
+  boxes = _aug_boxes(Mb, boxes)
   if box_history is not None:
     box_history = _aug_boxes(Mb, box_history)
   else:
@@ -666,65 +690,39 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, boxes, box_history
 
-
-# ops for box clipping and cleaning
-def translate_boxes(box, classes, translate_x, translate_y):
-  """
-  Translate the boxes by a fixed number of pixels.
-  
-  Args:
-    box: An tensor representing the bounding boxes in the (x, y, w, h) format
-      whose last dimension is of size 4.
-    classes: A tensor representing the classes of each bounding box. The shape
-      of `classes` lacks the final dimension of the shape `box` which is of size
-      4.
-  
-  Returns:
-    A tuple with two elements: a tensor representing the translated boxes with
-    the same dimensions as `box` and the `classes` tensor.
-  """
-  with tf.name_scope('translate_boxes'):
-    box = box_ops.yxyx_to_xcycwh(box)
-    x, y, w, h = tf.split(box, 4, axis=-1)
-    x = x + translate_x
-    y = y + translate_y
-    box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
-    box = box_ops.xcycwh_to_yxyx(box)
-  return box, classes
-
 def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
                      ar_thr=20,
                      area_thr=0.0):
 
-  # area thesh can be negative if darknet clipping is used
-  # area_thresh < 0.0 = darknet clipping
-  # area_thresh >= 0.0 = scaled model clipping
+  # Area thesh can be negative if darknet clipping is used.
+  # Area_thresh < 0.0 = darknet clipping.
+  # Area_thresh >= 0.0 = scaled model clipping.
   area_thr = tf.math.abs(area_thr)
 
-  # get the scaled and shifted heights of the original
-  # unclipped boxes
+  # Get the scaled and shifted heights of the original
+  # unclipped boxes.
   og_height = box_history[:, 2] - box_history[:, 0]
   og_width = box_history[:, 3] - box_history[:, 1]
 
-  # get the scaled and shifted heights of the clipped boxes
+  # Get the scaled and shifted heights of the clipped boxes.
   clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
   clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
 
-  # determine the aspect ratio of the clipped boxes
+  # Determine the aspect ratio of the clipped boxes.
   ar = tf.maximum(clipped_width / (clipped_height + 1e-16),
                   clipped_height / (clipped_width + 1e-16))
 
-  # ensure the clipped width adn height are larger than a preset threshold
+  # Ensure the clipped width adn height are larger than a preset threshold.
   conda = clipped_width > wh_thr
   condb = clipped_height > wh_thr
 
-  # ensure the area of the clipped box is larger than the area threshold
+  # Ensure the area of the clipped box is larger than the area threshold.
   condc = ((clipped_height * clipped_width) /
            (og_width * og_height + 1e-16)) > area_thr
 
-  # ensure the aspect ratio is not too extreme
+  # Ensure the aspect ratio is not too extreme.
   condd = ar < ar_thr
 
   cond = tf.expand_dims(
@@ -732,7 +730,7 @@ def boxes_candidates(clipped_boxes,
           tf.logical_and(conda, condb), tf.logical_and(condc, condd)),
       axis=-1)
 
-  # set all the boxes that fail the test to be equal to zero
+  # Set all the boxes that fail the test to be equal to zero.
   boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
   return boxes
 
@@ -742,18 +740,18 @@ def resize_and_crop_boxes(boxes,
                           output_size,
                           offset,
                           box_history=None):
-  # shift and scale the input boxes
+  # Shift and scale the input boxes.
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
 
-  # check the hitory of the boxes
+  # Check the hitory of the boxes.
   if box_history is None:
     box_history = boxes
   else:
     box_history *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
     box_history -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
 
-  # clip the shifted and scaled boxes
+  # Clip the shifted and scaled boxes.
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, boxes, box_history
 
@@ -764,24 +762,24 @@ def apply_infos(boxes,
                 shuffle_boxes=False,
                 area_thresh=0.1,
                 seed=None):
-  # clip and clean boxes
+  # Clip and clean boxes.
   def get_valid_boxes(boxes, unclipped_boxes=None):
     """Get indices for non-empty boxes."""
-    # convert the boxes to center width height formatting
+    # Convert the boxes to center width height formatting.
     boxes = box_ops.yxyx_to_xcycwh(boxes)
     (_, _, width, height) = (boxes[..., 0], boxes[..., 1], boxes[...,
                                                                  2], boxes[...,
                                                                            3])
 
-    # if the width or height is less than zero the box is removed
+    # If the width or height is less than zero the box is removed.
     base = tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
 
     if area_thresh < 0.0 and unclipped_boxes is not None:
-      # if the area theshold is lower than 0.0 we clip boxes
+      # If the area theshold is lower than 0.0 we clip boxes
       # using the original darknet method. if the center of the
       # box is not in the frame, it gets removed. this filtering
       # must be done on boxes prior to box clipping. Clipping the
-      # box enusres that it is in the frame by moving the center
+      # box enusres that it is in the frame by moving the center.
       unclipped_boxes = box_ops.yxyx_to_xcycwh(unclipped_boxes)
       x = unclipped_boxes[..., 0]
       y = unclipped_boxes[..., 1]
@@ -797,78 +795,79 @@ def apply_infos(boxes,
   if infos is None:
     infos = []
 
-  # this is no history to start
+  # Initialize history to None to indicate no operation have been applied to 
+  # the boxes yet.
   box_history = None
 
-  # make sure all boxes are valid to start, clip to [0, 1]
-  # then check all boxes meet the conditions
+  # Make sure all boxes are valid to start, clip to [0, 1] and get only the 
+  # valid boxes.
   boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
   cond = get_valid_boxes(boxes)
 
   for info in infos:
-    # rescale the boxes
+    # Denormalize the boxes.
     boxes = bbox_ops.denormalize_boxes(boxes, info[0])
     if box_history is not None:
       box_history = bbox_ops.denormalize_boxes(box_history, info[0])
 
-    # shift and scale all boxes, and keep track of box history with no
-    # box clipping, history is used for clipping boxes that becom too small
-    # or exit the image
-    (
-        boxes,  # clipped final boxes 
-        unclipped_boxes,  # unclipped final boxes 
-        box_history) = resize_and_crop_boxes(
+    # Shift and scale all boxes, and keep track of box history with no
+    # box clipping, history is used for removing boxes that have become 
+    # too small or exit the image area.
+    (boxes,  # Clipped final boxes. 
+     unclipped_boxes,  # Unclipped final boxes. 
+     box_history) = resize_and_crop_boxes(
             boxes, info[2, :], info[1, :], info[3, :], box_history=box_history)
 
-    # normalize the boxes to [0, 1]
+    # Normalize the boxes to [0, 1].
     boxes = bbox_ops.normalize_boxes(boxes, info[1])
     unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, info[1])
     box_history = bbox_ops.normalize_boxes(box_history, info[1])
 
-    # get all the boxes that still remain in the image and store
-    # in a bit vector for later use
+    # Get all the boxes that still remain in the image and store
+    # in a bit vector for later use.
     cond = tf.logical_and(
         get_valid_boxes(boxes, unclipped_boxes=unclipped_boxes), cond)
 
-    # delete the unclipped boxes, they do not need to be tracked
+    # Delete the unclipped boxes, they do not need to be tracked.
     del unclipped_boxes
     output_size = info[1]
 
   if affine is not None:
+    # Denormalize the boxes.
     boxes = bbox_ops.denormalize_boxes(boxes, affine[0])
     if box_history is not None:
+      # Denormalize the box history.
       box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
 
-    (
-        boxes,  # clipped final boxes 
-        unclipped_boxes,  # unclipped final boxes 
-        box_history) = affine_warp_boxes(
+      (boxes,  # Clipped final boxes. 
+      unclipped_boxes,  # Unclipped final boxes. 
+      box_history) = affine_warp_boxes(
             affine[2], boxes, affine[1], box_history=box_history)
 
-    # normalize the boxes to [0, 1]
+    # Normalize the boxes to [0, 1].
     boxes = bbox_ops.normalize_boxes(boxes, affine[1])
     unclipped_boxes = bbox_ops.normalize_boxes(unclipped_boxes, affine[1])
     box_history = bbox_ops.normalize_boxes(box_history, affine[1])
 
-    # get all the boxes that still remain in the image and store
-    # in a bit vector for later use
+    # Get all the boxes that still remain in the image and store
+    # in a bit vector for later use.
     cond = tf.logical_and(
         get_valid_boxes(boxes, unclipped_boxes=unclipped_boxes), cond)
 
-    # delete the unclipped boxes, they do not need to be tracked
+    # Delete the unclipped boxes, they do not need to be tracked.
     del unclipped_boxes
     output_size = affine[1]
 
-  # remove the bad boxes
+  # Remove the bad boxes.
   boxes *= tf.cast(tf.expand_dims(cond, axis=-1), boxes.dtype)
 
-  # threshold the existing boxes
+  # Threshold the existing boxes.
   boxes = bbox_ops.denormalize_boxes(boxes, output_size)
   box_history = bbox_ops.denormalize_boxes(box_history, output_size)
   boxes = boxes_candidates(boxes, box_history, area_thr=area_thresh)
   boxes = bbox_ops.normalize_boxes(boxes, output_size)
 
-  # select and gather the good boxes
+  # Select and gather the good boxes.
   inds = bbox_ops.get_non_empty_box_indices(boxes)
   if shuffle_boxes:
     inds = tf.random.shuffle(inds, seed=seed)
