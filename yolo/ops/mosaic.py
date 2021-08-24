@@ -12,8 +12,6 @@ from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.utils.demos import utils, coco
 import matplotlib.pyplot as plt
 
-
-# TODO: revert back to old mosaic?
 class Mosaic(object):
 
   def __init__(self,
@@ -22,40 +20,49 @@ class Mosaic(object):
                mosaic_frequency=1.0,
                random_crop=0.0,
                resize=1.0,
-               aspect_ratio_mode='distort',
-               aug_scale_min=1.0,
-               aug_scale_max=1.0,
+               aspect_ratio_mode='letter',
                random_flip=True,
                random_pad=False,
                translate=0.5,
-               crop_area=[0.5, 1.0],
+               crop_area=[0.2],
                crop_area_mosaic=[0.5, 1.0],
                mosaic_crop_mode=None,
-               aug_probability=1.0,
                mixup_frequency=0.0,
                area_thresh=0.1,
                seed=None):
 
+    # Establish the expected output size and the maximum resolution to use for 
+    # padding and batching throughout the mosaic process.
     self._output_size = output_size
     self._max_resolution = max_resolution
 
+    # Establish the mosaic frequency and mix up frequency.
     self._mosaic_frequency = mosaic_frequency
+    self._mixup_frequency = mixup_frequency
+
+    # Establish how the image to treat images prior to cropping
+    # letter boxing preserves aspect ratio, cropping will take random crops 
+    # of the input samples prior to patching, distortion will allow for 
+    # arbitraty changes to aspect ratio and crops.  
     self._aspect_ratio_mode = aspect_ratio_mode
+
+    self._random_flip = random_flip
     self._random_crop = random_crop
     self._resize = resize
-    self._aug_scale_max = aug_scale_max
-    self._aug_scale_min = aug_scale_min
-    self._random_flip = random_flip
-    self._aug_probability = aug_probability
     self._random_pad = random_pad
     self._translate = translate
 
+    # Center location for constructed mosaic.
     self._crop_area = crop_area
+    # Minimum area of boxes for optimization.
     self._area_thresh = area_thresh
 
+    # How to treat final output images, None indicates that nothing will occur,
+    # if the mode is crop then the mosaic will be generate by cropping and 
+    # slicing. If scale is selected the images are concatnated together and
+    # and scaled.  
     self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
-    self._mixup_frequency = mixup_frequency
 
     self._seed = seed
     return
@@ -108,16 +115,6 @@ class Mosaic(object):
     area = tf.gather(area, indices)
     return boxes, classes, is_crowd, area
 
-  def _mosaic_crop(self, image, crop_area):
-    scale = preprocessing_ops.rand_uniform_strong(
-        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
-    height, width = preprocessing_ops.get_image_shape(image)
-    width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
-    height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
-    image, info = preprocessing_ops.random_window_crop(
-        image, height, width, translate=1.0)
-    return image, [info]
-
   def _crop_image(self, image, crop_area):
     scale = preprocessing_ops.rand_uniform_strong(
         tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
@@ -147,8 +144,8 @@ class Mosaic(object):
                      xs=0.0,
                      ys=0.0,
                      cut=None):
+    # Randomly flip the image horizontally
     if self._random_flip:
-      # Randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
     infos = []
@@ -214,7 +211,8 @@ class Mosaic(object):
     else:
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))
-      image, infos = self._mosaic_crop(image, self._crop_area)
+      image, info = self._crop_image(image, self._crop_area)
+      infos = [info]
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
@@ -228,7 +226,6 @@ class Mosaic(object):
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
     return image, boxes, classes, is_crowd, area, area
-
 
   def translate_boxes(self, box, classes, translate_x, translate_y):
     """
@@ -437,10 +434,10 @@ class Mosaic(object):
 
   def _full_frequency_apply(self, dataset):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=0)
-    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=1)
-    three = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=2)
-    four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=3)
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    three = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
 
     num = tf.data.AUTOTUNE
     one = one.map(
@@ -452,12 +449,12 @@ class Mosaic(object):
     four = four.map(
         lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num)
 
-    patch1 = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
+    patch1 = tf.data.Dataset.zip((one, two)) 
     patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
-    patch2 = tf.data.Dataset.zip((three, four))  #.prefetch(tf.data.AUTOTUNE)
+    patch2 = tf.data.Dataset.zip((three, four))
     patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
 
-    stitched = tf.data.Dataset.zip((patch1, patch2))  #.prefetch(tf.data.AUTOTUNE)
+    stitched = tf.data.Dataset.zip((patch1, patch2))
     stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE)
 
     if self._mixup_frequency > 0:
@@ -526,11 +523,3 @@ class Mosaic(object):
       return self._apply
     else:
       return self._no_apply
-
-  @staticmethod
-  def steps_per_epoch(steps_per_epoch, mosaic_frequency):
-    # 0.667 = 50 % of the images
-    steps = (steps_per_epoch /
-             4) * (mosaic_frequency) + steps_per_epoch * (1 - mosaic_frequency)
-    steps = tf.math.ceil(steps)
-    return steps

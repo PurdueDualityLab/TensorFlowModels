@@ -144,10 +144,12 @@ class YoloTask(base_task.Task):
         max_resolution=params.parser.mosaic.max_resolution,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         mixup_frequency=params.parser.mosaic.mixup_frequency,
+
         crop_area=params.parser.mosaic.crop_area,
         crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
+        
         random_crop=rcrop,
         random_pad=params.parser.random_pad,
         translate=params.parser.aug_rand_translate,

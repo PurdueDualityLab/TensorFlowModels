@@ -2,23 +2,17 @@
 Parse image and ground truths in a dataset to training targets and package them
 into (image, labels) tuple for RetinaNet.
 """
-
-# Import libraries
-from yolo.utils.tests.tfrecord_to_yolo import coco80_to_coco91_class
 import tensorflow as tf
-import tensorflow_addons as tfa
-
 from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
-from official.vision.beta.ops import box_ops, preprocess_ops
+from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.dataloaders import parser, utils
-from yolo.ops import loss_utils as loss_ops
 
 
 def _coco91_to_80(classif, box, areas, iscrowds):
   """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
   foramt to the 2014 format"""
-  # Vector where index i coralates to the class at index[i]
+  # Vector where index i coralates to the class at index[i].
   x = [
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
       23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
@@ -28,23 +22,23 @@ def _coco91_to_80(classif, box, areas, iscrowds):
   ]
   no = tf.expand_dims(tf.convert_to_tensor(x), axis=0)
   
-  # Resahpe the classes to in order to build a class mask
+  # Resahpe the classes to in order to build a class mask.
   ce = tf.expand_dims(classif, axis=-1)
 
-  # One hot the classificiations to match the 80 class format
+  # One hot the classificiations to match the 80 class format.
   ind = ce == tf.cast(no, ce.dtype)
 
-  # Select the max values 
+  # Select the max values. 
   co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis=-1), [-1])
   ind = tf.where(tf.reduce_any(ind, axis=-1))
 
-  # Gather the valuable instances
+  # Gather the valuable instances.
   classif = tf.gather_nd(co, ind)
   box = tf.gather_nd(box, ind)
   areas = tf.gather_nd(areas, ind)
   iscrowds = tf.gather_nd(iscrowds, ind)
 
-  # Restate the number of viable detections, ideally it should be the same
+  # Restate the number of viable detections, ideally it should be the same.
   num_detections = tf.shape(classif)[0]
   return classif, box, areas, iscrowds, num_detections
 
@@ -378,18 +372,18 @@ class Parser(parser.Parser):
           self._mosaic_min, self._mosaic_max, self._mosaic_translate,
           self._aug_rand_angle, 0.0)
 
-    # Clip and clean boxes
+    # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
         boxes,
         infos,
         affine=affine,
-        shuffle_boxes=False,  #not self._use_scale_xy, 
+        shuffle_boxes=False,
         area_thresh=self._area_thresh,
         seed=self._seed)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    # Apply scaling to the hue saturation and brightness of an image
+    # Apply scaling to the hue saturation and brightness of an image.
     image = tf.cast(image, self._dtype)
     image = image / 255
     image = preprocessing_ops.image_rand_hsv(
@@ -400,7 +394,7 @@ class Parser(parser.Parser):
         seed=self._seed, 
         darknet=not self._use_scale_xy)
 
-    # Cast the image to the selcted datatype
+    # Cast the image to the selcted datatype.
     image = tf.clip_by_value(image, 0.0, 1.0)
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
