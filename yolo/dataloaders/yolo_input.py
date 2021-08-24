@@ -381,7 +381,7 @@ class Parser(parser.Parser):
         boxes,
         infos,
         affine=affine,
-        shuffle_boxes=True,  #not self._use_scale_xy, 
+        shuffle_boxes=False,  #not self._use_scale_xy, 
         area_thresh=self._area_thresh,
         seed=self._seed)
     classes = tf.gather(classes, inds)
