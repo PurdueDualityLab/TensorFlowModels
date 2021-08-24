@@ -54,7 +54,7 @@ task:
       nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
-      pre_nms_points: 500
+      pre_nms_points: 300
       use_scaled_loss: true
   train_data:
     global_batch_size: 64
@@ -107,10 +107,10 @@ task:
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
-  steps_per_loop: 9250
-  summary_interval: 9250
-  validation_interval: 9250
-  checkpoint_interval: 9250
+  steps_per_loop: 1850
+  summary_interval: 1850
+  validation_interval: 1850
+  checkpoint_interval: 1850
   optimizer_config:
     ema:
       average_decay: 0.9999
