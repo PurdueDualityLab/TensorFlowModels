@@ -148,8 +148,8 @@ class SGDMomentumWarmup(optimizer_v2.OptimizerV2):
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
-      momentum = coefficients["momentum"]
-      lr = coefficients["lr_t"]
+      # momentum = coefficients["momentum"]
+      # lr = coefficients["lr_t"]
 
       # bias_lr = coefficients["bias_lr"]
       # lr = tf.cond(tf.logical_and(tf.rank(grad) == 1,
