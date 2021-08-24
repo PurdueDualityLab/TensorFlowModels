@@ -148,23 +148,21 @@ class Mosaic(object):
                      ys=0.0,
                      cut=None):
     if self._random_flip:
-      # randomly flip the image horizontally
+      # Randomly flip the image horizontally
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
-    # resize the image irrespective of the aspect ratio
     infos = []
     random_crop = self._random_crop
     letter_box = True
     if self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
+      letter_box = None
       info = self._gen_blank_info(image)
-      docrop = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32)
-      if docrop > 1 - self._random_crop:
+      if tf.random.uniform([], 0.0, 1.0, dtype=tf.float32) > 0.5:
         image, info = self._crop_image(image, [0.25, 1.0])
       infos.append(info)
-      random_crop = 0.0
-      letter_box = None
+      
 
     image, infos_, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],
