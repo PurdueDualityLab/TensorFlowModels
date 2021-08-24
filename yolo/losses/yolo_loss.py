@@ -454,7 +454,7 @@ class Yolo_Loss(object):
     # based on the type of loss, compute the iou loss for a box
     # compute_<name> indicated the type of iou to use
     if self._loss_type == 1:
-      iou, liou = box_ops.compute_giou(true_box, pred_box, darknet=darknet)
+      iou, liou = box_ops.compute_giou(true_box, pred_box)
     elif self._loss_type == 2:
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
       # iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2 = False, CIoU=True)

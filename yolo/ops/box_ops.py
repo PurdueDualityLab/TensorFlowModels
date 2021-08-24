@@ -24,7 +24,7 @@ def yxyx_to_xcycwh(box: tf.Tensor):
   return box
 
 
-def xcycwh_to_yxyx(box: tf.Tensor, darknet=False):
+def xcycwh_to_yxyx(box: tf.Tensor):
   """Private function called by xcycwh_to_yxyx to allow custom gradients
   with defaults.
   """
@@ -130,7 +130,7 @@ def compute_iou(box1, box2, yxyx=False):
   return iou
 
 
-def compute_giou(box1, box2, yxyx=False, darknet=False):
+def compute_giou(box1, box2, yxyx=False):
   """Calculates the General intersection over union between box1 and box2.
 
   Args:
@@ -150,8 +150,8 @@ def compute_giou(box1, box2, yxyx=False, darknet=False):
     # get IOU
     if not yxyx:
       xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
+      yxyx1 = xcycwh_to_yxyx(box1)
+      yxyx2 = xcycwh_to_yxyx(box2)
     else:
       yxyx1, yxyx2 = box1, box2
       xycc1 = yxyx_to_xcycwh(box1)
@@ -161,8 +161,8 @@ def compute_giou(box1, box2, yxyx=False, darknet=False):
     intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
     iou = math_ops.divide_no_nan(intersection, union)
 
-    b1xy, _ = tf.split(xycc1, 2, axis=-1)
-    b2xy, _ = tf.split(xycc2, 2, axis=-1)
+    # b1xy, _ = tf.split(xycc1, 2, axis=-1)
+    # b2xy, _ = tf.split(xycc2, 2, axis=-1)
     bcwh = cma - cmi
     c = tf.math.reduce_prod(bcwh, axis=-1)
 
@@ -194,8 +194,8 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
     # compute center distance
     if not yxyx:
       xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
+      yxyx1 = xcycwh_to_yxyx(box1)
+      yxyx2 = xcycwh_to_yxyx(box2)
     else:
       yxyx1, yxyx2 = box1, box2
       xycc1 = yxyx_to_xcycwh(box1)
@@ -237,8 +237,8 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     # compute center distance
     if not yxyx:
       xycc1, xycc2 = box1, box2
-      yxyx1 = xcycwh_to_yxyx(box1, darknet=darknet)
-      yxyx2 = xcycwh_to_yxyx(box2, darknet=darknet)
+      yxyx1 = xcycwh_to_yxyx(box1)
+      yxyx2 = xcycwh_to_yxyx(box2)
     else:
       yxyx1, yxyx2 = box1, box2
       xycc1 = yxyx_to_xcycwh(box1)
@@ -268,58 +268,12 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     # aspect ration weight
     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
 
-    # if darknet:
-    #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
-    #   v *= grad_scale
+    if darknet:
+      grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
+      v *= grad_scale
 
     ciou = iou - regularization - (v * a)
   return iou, ciou
-
-
-# def compute_ciou(box1, box2, yxyx=False, darknet=False):
-#   """Calculates the complete intersection over union between box1 and box2.
-
-#   Args:
-#     box1: any `Tensor` whose last dimension is 4 representing the coordinates of
-#       boxes.
-#     box2: any `Tensor` whose last dimension is 4 representing the coordinates of
-#       boxes.
-#     yxyx: a `bool` indicating whether the input box is of the format x_center
-#       y_center, width, height or y_min, x_min, y_max, x_max.
-#     darknet: a `bool` indicating whether the calling function is the yolo
-#       darknet loss.
-
-#   Returns:
-#     ciou: a `Tensor` who represents the complete intersection over union.
-#   """
-#   with tf.name_scope('ciou'):
-#     # compute DIOU and IOU
-#     iou, diou = compute_diou(box1, box2, yxyx=yxyx, darknet=darknet)
-
-#     if yxyx:
-#       box1 = yxyx_to_xcycwh(box1)
-#       box2 = yxyx_to_xcycwh(box2)
-
-#     _, _, b1w, b1h = tf.split(box1, 4, axis=-1)
-#     _, _, b2w, b2h = tf.split(box2, 4, axis=-1)
-
-#     # computer aspect ratio consistency
-#     terma = tf.cast(math_ops.divide_no_nan(b1w, b1h), tf.float32)
-#     termb = tf.cast(math_ops.divide_no_nan(b2w, b2h), tf.float32)
-#     arcterm = tf.square(tf.math.atan(terma) - tf.math.atan(termb))
-
-#     v = tf.squeeze(4 * arcterm / (math.pi**2), axis=-1)
-#     v = tf.cast(v, b1w.dtype)
-
-#     # trade off parameter is viewed as a constant
-#     a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
-
-#     # if darknet:
-#     #   grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
-#     #   v *= grad_scale
-
-#     ciou = diou - (v * a)
-#   return iou, ciou
 
 
 # equal to bbox_overlap but far more versitile
@@ -356,8 +310,6 @@ def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
     _, iou = compute_giou(boxes1, boxes2, yxyx=True)
   elif iou_type == 2 or iou_type == "ciou":  #ciou
     _, iou = compute_ciou(boxes1, boxes2, yxyx=True)
-  elif iou_type == 4 or iou_type == "distance":  #ciou
-    iou = distance(boxes1, boxes2, yxyx=True)
   else:
     iou = compute_iou(boxes1, boxes2, yxyx=True)
   return iou
@@ -373,7 +325,6 @@ def bbox_iou(box1,
              ECIoU=False,
              eps=1e-9):
   # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
-  # box2 = box2.T
 
   # Get the coordinates of bounding boxes
   if x1y1x2y2:  # x1, y1, x2, y2 = box1
