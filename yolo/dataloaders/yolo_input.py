@@ -15,8 +15,10 @@ from official.vision.beta.dataloaders import parser, utils
 from yolo.ops import loss_utils as loss_ops
 
 
-def coco91_to_80(classif, box, areas, iscrowds):
-  # key vector
+def _coco91_to_80(classif, box, areas, iscrowds):
+  """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
+  foramt to the 2014 format"""
+  # Vector where index i coralates to the class at index[i]
   x = [
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
       23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
@@ -25,17 +27,24 @@ def coco91_to_80(classif, box, areas, iscrowds):
       86, 87, 88, 89, 90
   ]
   no = tf.expand_dims(tf.convert_to_tensor(x), axis=0)
-
+  
+  # Resahpe the classes to in order to build a class mask
   ce = tf.expand_dims(classif, axis=-1)
+
+  # One hot the classificiations to match the 80 class format
   ind = ce == tf.cast(no, ce.dtype)
+
+  # Select the max values 
   co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis=-1), [-1])
   ind = tf.where(tf.reduce_any(ind, axis=-1))
+
+  # Gather the valuable instances
   classif = tf.gather_nd(co, ind)
   box = tf.gather_nd(box, ind)
-
   areas = tf.gather_nd(areas, ind)
   iscrowds = tf.gather_nd(iscrowds, ind)
 
+  # Restate the number of viable detections, ideally it should be the same
   num_detections = tf.shape(classif)[0]
   return classif, box, areas, iscrowds, num_detections
 
@@ -54,15 +63,17 @@ class Parser(parser.Parser):
                area_thresh=0.1,
                max_num_instances=200,
                aug_rand_angle=0.0,
-               aug_rand_transalate=0.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
                aug_rand_hue=1.0,
                random_pad=True,
+
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                mosaic_min=1.0,
                mosaic_max=1.0,
+
+               aug_rand_transalate=0.0,
                mosaic_translate=0.0,
                anchor_t=4.0,
                dynamic_conv=False,
@@ -86,39 +97,56 @@ class Parser(parser.Parser):
       max_level: `int` number of maximum level of the output feature pyramid.
       jitter: `float` for the maximum change in aspect ratio expected in 
         each preprocessing step.
+      jitter_mosaic: `float` for the maximum change in aspect ratio expected in 
+        each preprocessing step to be applied to mosaiced images.
+      resize: `float` for the maximum change in image size.
+      resize_mosaic: `float` for the maximum change in image size to be applied 
+        to mosaiced images.
+      area_thresh: `float` for the minimum area of a box to allow to pass 
+        through for optimization.
       max_num_instances: `int` for the number of boxes to compute loss on.
-      aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
-        amount to randomly translate an image.
+      aug_rand_angle: `float` indicating the maximum angle value for 
+        angle. angle will be changes between 0 and value.
       aug_rand_saturation: `float` indicating the maximum scaling value for 
         saturation. saturation will be scaled between 1/value and value.
       aug_rand_brightness: `float` indicating the maximum scaling value for 
         brightness. brightness will be scaled between 1/value and value.
       aug_rand_hue: `float` indicating the maximum scaling value for 
         hue. saturation will be scaled between 1 - value and 1 + value.
-      aug_scale_aspect: `float` indicating the maximum scaling value for 
-        aspect. aspect will be scaled between 1 - value and 1 + value
-      aug_rand_angle: `float` indicating the maximum angle value for 
-        angle. angle will be changes between 0 and value.
       aug_scale_min: `float` indicating the minimum scaling value for image 
         scale jitter. 
       aug_scale_max: `float` indicating the maximum scaling value for image 
         scale jitter.
+      mosaic_min: `float` indicating the minimum scaling value for image 
+        scale jitter for mosaiced images. 
+      mosaic_max: `float` indicating the maximum scaling value for image 
+        scale jitter for mosaiced images.
       random_pad: `bool` indiccating wether to use padding to apply random 
-        translation true for darknet yolo false for scaled yolo
+        translation true for darknet yolo false for scaled yolo.
+      aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
+        amount to randomly translate an image.
+      mosaic_translate: `float` ranging from 0 to 1 indicating the maximum 
+        amount to randomly translate an image for mosaiced images.
       anchor_t: `float` indicating the threshold over which an anchor will be 
         considered for prediction, at zero, all the anchors will be used and at
         1.0 only the best will be used. for anchor thresholds larger than 1.0 
         we stop using the IOU for anchor comparison and resort directly to 
-        comparing the width and height, this is used for the scaled models   
+        comparing the width and height, this is used for the scaled models.  
+      dynamic_conv: `bool` for whether to use a padding in evaluation on the 
+        GPUs.
+      stride: `int` for how much the model scales down the images at the largest
+        level.
       scale_xy: dictionary `float` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
         predict values for a center at. the center can range from 0 - value/2 
         to 1 + value/2, this value is set in the yolo filter, and resused here. 
         there should be one value for scale_xy for each level from min_level to 
-        max_level  
+        max_level.
       use_scale_xy: `boolean` indicating weather the scale_xy values shoudl be 
         used or ignored. used if set to True. 
+      best_match_only: `boolean` indicating how boxes are selected for 
+        optimization.
       masks: dictionary of lists of `int` values indicating the indexes in the 
         list of anchor boxes to use an each prediction level between min_level 
         and max_level. each level must have a list of indexes.  
@@ -127,11 +155,14 @@ class Parser(parser.Parser):
         regardless of the preprocessing ops that are used, the aspect ratio of 
         the images should be preserved.  
       random_flip: `boolean` indicating whether or not to randomly flip the 
-        image horizontally 
+        image horizontally. 
       use_tie_breaker: `boolean` indicating whether to use the anchor threshold 
-        value
+        value.
       dtype: `str` indicating the output datatype of the datapipeline selecting 
-        from {"float32", "float16", "bfloat16"}
+        from {"float32", "float16", "bfloat16"}.
+      coco91to80: `bool` for wether to convert coco91 to coco80 to minimize 
+        model parameters.
+      seed: `int` the seed for random number generation. 
     """
     self._coco91to80 = coco91to80
 
@@ -313,7 +344,7 @@ class Parser(parser.Parser):
     if self._coco91to80:
       (data['groundtruth_classes'], data['groundtruth_boxes'],
        data['groundtruth_area'], data['groundtruth_is_crowd'],
-       _) = coco91_to_80(data['groundtruth_classes'], data['groundtruth_boxes'],
+       _) = _coco91_to_80(data['groundtruth_classes'], data['groundtruth_boxes'],
                          data['groundtruth_area'], data['groundtruth_is_crowd'])
     return data
 
