@@ -270,7 +270,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 
     if darknet:
       grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
-      v *= grad_scale
+      v *= tf.squeeze(grad_scale, axis = -1)
 
     ciou = iou - regularization - (v * a)
   return iou, ciou
