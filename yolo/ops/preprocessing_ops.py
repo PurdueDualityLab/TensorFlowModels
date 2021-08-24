@@ -57,7 +57,8 @@ def rand_scale(val, dtype=tf.float32, seed=None):
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   """
   Pad a dimension of the tensor to have a maximum number of instances filling
-  additional entries with the `pad_value`.
+  additional entries with the `pad_value`. Allows for selection of the padding 
+  axis
    
   Args:
     value: An input tensor.
@@ -88,7 +89,7 @@ def get_image_shape(image):
   (batch_size, x, y, c) format or the (x, y, c) format.
   
   Args:
-    image: A int tensor who has either 3 or 4 dimensions.
+    image: A tensor who has either 3 or 4 dimensions.
   
   Returns:
     A tuple representing the (height, width) of the image.
@@ -104,6 +105,21 @@ def get_image_shape(image):
 
 
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
+  """
+  Randomly alter the hue, saturation, and brightness of an image. 
+
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    rh: `float32` used to indicate the maximum delta that can be added to hue.
+    rs: `float32` used to indicate the maximum delta that can be multiplied to 
+      saturation.
+    rv: `float32` used to indicate the maximum delta that can be multiplied to 
+      brightness.
+    seed: `Optional[int]` for the seed to use in random number generation.
+  
+  Returns:
+    The HSV altered image in the same datatype as the input image
+  """
   if rh > 0.0:
     delta = rand_uniform_strong(-rh, rh, seed=seed)
     image = tf.image.adjust_hue(image, delta)
@@ -120,6 +136,22 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
 
 
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
+  """
+  Randomly alter the hue, saturation, and brightness of an image. 
+
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+      hue.
+    rs: `float32` used to indicate the maximum delta that can be multiplied to 
+      saturation.
+    rv: `float32` used to indicate the maximum delta that can be multiplied to 
+      brightness.
+    seed: `Optional[int]` for the seed to use in random number generation.
+  
+  Returns:
+    The HSV altered image in the same datatype as the input image
+  """
   dtype = image.dtype
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
@@ -139,87 +171,48 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   return tf.cast(image, dtype)
 
 
-def image_rand_hsv(image, rh, rs, rv, seed=None, darknet = False):
+def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
+  """
+  Randomly alter the hue, saturation, and brightness of an image. 
+
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+      hue.
+    rs: `float32` used to indicate the maximum delta that can be multiplied to 
+      saturation.
+    rv: `float32` used to indicate the maximum delta that can be multiplied to 
+      brightness.
+    seed: `Optional[int]` for the seed to use in random number generation.
+    darknet: `bool` indicating wether the model was orignally built in the 
+      darknet or the pytorch library.
+  
+  Returns:
+    The HSV altered image in the same datatype as the input image
+  """
   if darknet:
     image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
   else:
     image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
 
+def mean_pad(image, pady, padx, targety, targetx, value=114, color=False):
+  shape = tf.shape(image)[:2]
+  pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
 
-def translate_boxes(box, classes, translate_x, translate_y):
-  """
-  Translate the boxes by a fixed number of pixels.
-  
-  Args:
-    box: An tensor representing the bounding boxes in the (x, y, w, h) format
-      whose last dimension is of size 4.
-    classes: A tensor representing the classes of each bounding box. The shape
-      of `classes` lacks the final dimension of the shape `box` which is of size
-      4.
-  
-  Returns:
-    A tuple with two elements: a tensor representing the translated boxes with
-    the same dimensions as `box` and the `classes` tensor.
-  """
-  with tf.name_scope('translate_boxes'):
-    box = box_ops.yxyx_to_xcycwh(box)
-    x, y, w, h = tf.split(box, 4, axis=-1)
-    x = x + translate_x
-    y = y + translate_y
-    box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
-    box = box_ops.xcycwh_to_yxyx(box)
-  return box, classes
+  image_ = tf.pad(
+      image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
+      constant_values=PAD_VALUE)
 
-
-def random_crop_image(image,
-                      aspect_ratio_range=(3. / 4., 4. / 3.),
-                      area_range=(0.08, 1.0),
-                      max_attempts=10,
-                      seed=1):
-  """Randomly crop an arbitrary shaped slice from the input image.
-  
-  Args:
-    image: a Tensor of shape [height, width, 3] representing the input image.
-    aspect_ratio_range: a list of floats. The cropped area of the image must
-      have an aspect ratio = width / height within this range.
-    area_range: a list of floats. The cropped reas of the image must contain
-      a fraction of the input image within this range.
-    max_attempts: the number of attempts at generating a cropped region of the
-      image of the specified constraints. After max_attempts failures, return
-      the entire image.
-    seed: the seed of the random generator.
-  
-  Returns:
-    cropped_image: a Tensor representing the random cropped image. Can be the
-      original image if max_attempts is exhausted.
-  """
-
-  with tf.name_scope('random_crop_image'):
-    ishape = tf.shape(image)
-    crop_offset, crop_size, _ = tf.image.sample_distorted_bounding_box(
-        ishape,
-        tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4]),
-        seed=seed,
-        min_object_covered=area_range[0],
-        aspect_ratio_range=aspect_ratio_range,
-        area_range=area_range,
-        max_attempts=max_attempts)
-
-    cropped_image = tf.slice(image, crop_offset, crop_size)
-    scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
-    offset = tf.cast(crop_offset[:2], tf.float32)
-
-    info = tf.stack([
-        tf.cast(ishape[:2], tf.float32),
-        tf.cast(crop_size[:2], tf.float32), scale, offset
-    ],
-                    axis=0)
-    return cropped_image, info
-
+  pad_info = tf.stack([
+      tf.cast(tf.shape(image)[:2], tf.float32),
+      tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
+      tf.ones_like(tf.shape(image)[:2], dtype=tf.float32),
+      -tf.cast(pad[:2], tf.float32)
+  ])
+  return image_, pad_info
 
 def random_window_crop(image, target_height, target_width, translate=0.0):
-
   ishape = tf.shape(image)
   th = target_height if target_height < ishape[0] else ishape[0]
   tw = target_width if target_width < ishape[1] else ishape[1]
@@ -245,40 +238,14 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
       tf.cast(crop_size[:2], tf.float32), scale, offset
   ],
                   axis=0)
-
   return cropped_image, info
 
 
-def mean_pad(image, pady, padx, targety, targetx, value=114, color=False):
-  shape = tf.shape(image)[:2]
-  pad = [pady, padx, targety - shape[0] - pady, targetx - shape[1] - padx]
-
-  image_ = tf.pad(
-      image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-      constant_values=PAD_VALUE)
-
-  pad_info = tf.stack([
-      tf.cast(tf.shape(image)[:2], tf.float32),
-      tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
-      tf.ones_like(tf.shape(image)[:2], dtype=tf.float32),
-      -tf.cast(pad[:2], tf.float32)
-  ])
-  return image_, pad_info
-
-
-def intersection(a, b):
-  minx = tf.maximum(a[0], b[0])
-  miny = tf.maximum(a[1], b[1])
-  maxx = tf.minimum(a[2], b[2])
-  maxy = tf.minimum(a[3], b[3])
-  return tf.convert_to_tensor([minx, miny, maxx, maxy])
-
-
-def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx,
-               shifty):
+def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright, 
+               shiftx, shifty):
   with tf.name_scope('mosaic_cut'):
-    cut = tf.cast(cut, w.dtype)
-    cut_x, cut_y = cut[1], cut[0]
+    center = tf.cast(center, w.dtype)
+    cut_x, cut_y = center[1], center[0]
 
     left_shift = tf.minimum(
         tf.minimum(cut_x, tf.maximum(0.0, -pleft * w / ow)), w - cut_x)
@@ -368,6 +335,12 @@ def resize_and_jitter_image(image,
       the scaling factor, which is the ratio of
       scaled dimension / original dimension.
   """
+  def intersection(a, b):
+    minx = tf.maximum(a[0], b[0])
+    miny = tf.maximum(a[1], b[1])
+    maxx = tf.minimum(a[2], b[2])
+    maxy = tf.minimum(a[3], b[3])
+    return tf.convert_to_tensor([minx, miny, maxx, maxy])
 
   def cast(values, dtype):
     return [tf.cast(value, dtype) for value in values]
@@ -695,6 +668,30 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 
 
 # ops for box clipping and cleaning
+def translate_boxes(box, classes, translate_x, translate_y):
+  """
+  Translate the boxes by a fixed number of pixels.
+  
+  Args:
+    box: An tensor representing the bounding boxes in the (x, y, w, h) format
+      whose last dimension is of size 4.
+    classes: A tensor representing the classes of each bounding box. The shape
+      of `classes` lacks the final dimension of the shape `box` which is of size
+      4.
+  
+  Returns:
+    A tuple with two elements: a tensor representing the translated boxes with
+    the same dimensions as `box` and the `classes` tensor.
+  """
+  with tf.name_scope('translate_boxes'):
+    box = box_ops.yxyx_to_xcycwh(box)
+    x, y, w, h = tf.split(box, 4, axis=-1)
+    x = x + translate_x
+    y = y + translate_y
+    box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
+    box = box_ops.xcycwh_to_yxyx(box)
+  return box, classes
+
 def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,

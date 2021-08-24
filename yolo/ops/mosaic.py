@@ -119,14 +119,6 @@ class Mosaic(object):
     return image, [info]
 
   def _crop_image(self, image, crop_area):
-    # image, info = preprocessing_ops.random_crop_image(
-    #     image,
-    #     aspect_ratio_range=[
-    #         self._output_size[1] / self._output_size[0],
-    #         self._output_size[1] / self._output_size[0]
-    #     ],
-    #     seed = self._seed,
-    #     area_range=crop_area)
     scale = preprocessing_ops.rand_uniform_strong(
         tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
     height, width = preprocessing_ops.get_image_shape(image)
