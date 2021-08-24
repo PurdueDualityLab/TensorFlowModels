@@ -12,6 +12,8 @@ from yolo.dataloaders.decoders import tfds_coco_decoder
 from yolo.utils.demos import utils, coco
 import matplotlib.pyplot as plt
 
+
+# gen a random number for each sample a subset of the dataset to mosaic?
 class Mosaic(object):
 
   def __init__(self,
@@ -68,6 +70,7 @@ class Mosaic(object):
     return
 
   def _estimate_shape(self, image):
+    """Estimates a padded shape to use when batching images."""
     height, width = preprocessing_ops.get_image_shape(image)
     oheight, owidth = self._max_resolution, self._max_resolution
     if height < oheight and width < owidth:
@@ -80,7 +83,31 @@ class Mosaic(object):
         owidth = width * self._max_resolution // height
     return oheight, owidth
 
+  def _generate_cut(self):
+    """Using the provided maximum delat for center location generate a 
+    random delta from the center of the image to use for image patching 
+    and slicing."""
+    if self._mosaic_crop_mode == 'crop':
+      min_offset = self._crop_area[0]
+      cut_x = preprocessing_ops.rand_uniform_strong(
+          self._output_size[1] * min_offset,
+          self._output_size[1] * (1 - min_offset),
+          seed=self._seed)
+      cut_y = preprocessing_ops.rand_uniform_strong(
+          self._output_size[1] * min_offset,
+          self._output_size[1] * (1 - min_offset),
+          seed=self._seed)
+      cut = [cut_x, cut_y]
+      ishape = tf.convert_to_tensor(
+          [self._output_size[1], self._output_size[0], 3])
+    else:
+      cut = None
+      ishape = tf.convert_to_tensor(
+          [self._output_size[1] * 2, self._output_size[0] * 2, 3])
+    return cut, ishape
+
   def _pad_images(self, sample):
+    """Pad images in order to batch them and stitch together images."""
     image = sample['image']
     height, width = self._estimate_shape(image)
     hclipper, wclipper = self._max_resolution, self._max_resolution
@@ -95,6 +122,7 @@ class Mosaic(object):
     return sample
 
   def _unpad_images(self, image, info, squeeze=True):
+    """Unpad images after patching is applied."""
     if squeeze:
       image = tf.squeeze(image, axis=0)
       info = tf.squeeze(info, axis=0)
@@ -102,6 +130,7 @@ class Mosaic(object):
     return image
 
   def _unpad_gt_comps(self, boxes, classes, is_crowd, area, squeeze=True):
+    """Unpad labels after patching is applied."""
     if squeeze:
       boxes = tf.squeeze(boxes, axis=0)
       classes = tf.squeeze(classes, axis=0)
@@ -115,7 +144,26 @@ class Mosaic(object):
     area = tf.gather(area, indices)
     return boxes, classes, is_crowd, area
 
+  def resample_unpad(self, sample):
+    """Unpad images that are not mosaiced."""
+    if not sample["is_mosaic"]:
+      sample['image'] = self._unpad_images(
+          sample['image'], sample['info'], squeeze=False)
+      (sample['groundtruth_boxes'], sample['groundtruth_classes'],
+       sample['groundtruth_is_crowd'],
+       sample['groundtruth_area']) = self._unpad_gt_comps(
+           sample['groundtruth_boxes'],
+           sample['groundtruth_classes'],
+           sample['groundtruth_is_crowd'],
+           sample['groundtruth_area'],
+           squeeze=False)
+      sample['groundtruth_is_crowd'] = tf.cast(sample['groundtruth_is_crowd'],
+                                               tf.bool)
+    return sample
+
   def _crop_image(self, image, crop_area):
+    """A function to apply a random crop with in the crop area to a given 
+    image."""
     scale = preprocessing_ops.rand_uniform_strong(
         tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
     height, width = preprocessing_ops.get_image_shape(image)
@@ -126,6 +174,9 @@ class Mosaic(object):
     return image, info
 
   def _gen_blank_info(self, image):
+    """Get an identity image op to pad all info vectors, this is used because 
+    graph compilation if there are a variable number of info objects in a list.
+    """
     shape = tf.shape(image)
     info = tf.stack([
         tf.cast(shape[:2], tf.float32),
@@ -144,7 +195,8 @@ class Mosaic(object):
                      xs=0.0,
                      ys=0.0,
                      cut=None):
-    # Randomly flip the image horizontally
+    """Process a single image prior to the application of patching."""
+    # Randomly flip the image horizontally.
     if self._random_flip:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
 
@@ -173,7 +225,7 @@ class Mosaic(object):
         seed=self._seed)
     infos.extend(infos_)
 
-    # clip and clean boxes
+    # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, area_thresh=self._area_thresh, seed=self._seed)
     classes = tf.gather(classes, inds)
@@ -182,6 +234,7 @@ class Mosaic(object):
     return image, boxes, classes, is_crowd, area, crop_points
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
+    """Process a patched image in preperation for final output."""
     infos = None
     affine = None
 
@@ -214,7 +267,7 @@ class Mosaic(object):
       image, info = self._crop_image(image, self._crop_area)
       infos = [info]
 
-    # clip and clean boxes
+    # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
         boxes,
         infos,
@@ -252,6 +305,8 @@ class Mosaic(object):
     return box, classes
 
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
+    """Scale and translate the boxes for each image after patching has been 
+    completed"""
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
     scale = tf.cast(tf.shape(patch) / ishape, boxes.dtype)
@@ -261,28 +316,16 @@ class Mosaic(object):
     return self.translate_boxes(boxes, classes, translate[1] * xs,
                                              translate[0] * ys)
 
-  def _generate_cut(self):
-    if self._mosaic_crop_mode == 'crop':
-      min_offset = self._crop_area[0]
-      cut_x = preprocessing_ops.rand_uniform_strong(
-          self._output_size[1] * min_offset,
-          self._output_size[1] * (1 - min_offset),
-          seed=self._seed)
-      cut_y = preprocessing_ops.rand_uniform_strong(
-          self._output_size[1] * min_offset,
-          self._output_size[1] * (1 - min_offset),
-          seed=self._seed)
-      cut = [cut_x, cut_y]
-      ishape = tf.convert_to_tensor(
-          [self._output_size[1], self._output_size[0], 3])
-    else:
-      cut = None
-      ishape = tf.convert_to_tensor(
-          [self._output_size[1] * 2, self._output_size[0] * 2, 3])
-    return cut, ishape
-
   # mosaic partial frequency
   def _mapped(self, sample):
+    """This image patches batches of 4 images together when the input mosaic
+    Frequency is lower than 1.0. This allows for speed optimization when the 
+    user chooses to use a mixed dataset of both Mosaiced and Regular input 
+    samples. For typical frequencies less than about 85% this method can 
+    output patched images at about 2.5-4 Samples per second. When set to 100% 
+    this rate drops to about 0.9 to 1.0 Samples per second. A non mapped mosiac 
+    is there for implemented to optimize for the 100% case."""
+
     domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if self._mosaic_frequency > 0.0 and domo >= (1 - self._mosaic_frequency):
       images = tf.split(sample['image'], 4, axis=0)
@@ -346,24 +389,9 @@ class Mosaic(object):
 
     return sample
 
-  def resample_unpad(self, sample):
-    if not sample["is_mosaic"]:
-      sample['image'] = self._unpad_images(
-          sample['image'], sample['info'], squeeze=False)
-      (sample['groundtruth_boxes'], sample['groundtruth_classes'],
-       sample['groundtruth_is_crowd'],
-       sample['groundtruth_area']) = self._unpad_gt_comps(
-           sample['groundtruth_boxes'],
-           sample['groundtruth_classes'],
-           sample['groundtruth_is_crowd'],
-           sample['groundtruth_area'],
-           squeeze=False)
-      sample['groundtruth_is_crowd'] = tf.cast(sample['groundtruth_is_crowd'],
-                                               tf.bool)
-    return sample
-
   # mosaic full frequency doubles model speed
   def _im_process(self, sample, shiftx, shifty):
+    """Distributed processing of each image"""
     (image, boxes, classes, is_crowd, area, crop_points) = self._process_image(
         sample['image'], sample['groundtruth_boxes'],
         sample['groundtruth_classes'], sample['groundtruth_is_crowd'],
@@ -433,6 +461,14 @@ class Mosaic(object):
     return sample
 
   def _full_frequency_apply(self, dataset):
+    """This image patches batches of 4 images together when the input mosaic
+    Frequency is 1.0 or 100%. This allows for speed optimization when the 
+    user chooses to use only Mosaiced input samples. When set to 100% 
+    this rate is about 2.0 to 2.5 Samples per second. Mapped and full frequency 
+    apply are implemented seperately in order to preserve the integrety of the 
+    dataset and to ensure that samples are not skipped or repeated more than 
+    expected during training."""
+
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
     one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
     two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)

@@ -335,7 +335,8 @@ class Parser(parser.Parser):
     return image, infos, affine
 
   def reorg91to80(self, data):
-
+    """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
+    foramt to the 2014 format"""
     if self._coco91to80:
       (data['groundtruth_classes'], data['groundtruth_boxes'],
        data['groundtruth_area'], data['groundtruth_is_crowd'],
