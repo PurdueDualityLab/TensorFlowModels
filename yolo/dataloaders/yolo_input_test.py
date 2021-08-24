@@ -38,7 +38,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-rcrop.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
   config_path = [
-      "yolo/configs/experiments/yolov4-csp/inference/640-3x-64-adamw.yaml"
+      "yolo/configs/experiments/yolov4-csp/debug/640-3x-64-adamw.yaml"
   ]
 
   config = train_utils.ParseConfigOptions(
@@ -287,7 +287,7 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  # test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=True, num = 30)
   test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po

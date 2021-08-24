@@ -1,22 +1,9 @@
-from random import random
-from numpy import float32
-from numpy.core.fromnumeric import resize
 import tensorflow as tf
-from tensorflow.python.ops.gen_image_ops import random_crop
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
-from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
-
 import numpy as np
-import cv2
-import numpy as np
-
-try:
-  from tensorflow.lookup.experimental import DenseHashTable
-except:
-  from tensorflow.lookup import DenseHashTable
 
 PAD_VALUE = 114
 
@@ -67,7 +54,7 @@ def rand_scale(val, dtype=tf.float32, seed=None):
   return 1.0 / scale
 
 
-def _pad_max_instances(value, instances, pad_value=0, pad_axis=0):
+def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   """
   Pad a dimension of the tensor to have a maximum number of instances filling
   additional entries with the `pad_value`.
@@ -122,11 +109,9 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
     delta = rand_scale(rs, seed=seed)
-    # delta = 1 + rand_uniform_strong(-rs, rs, seed = seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
     delta = rand_scale(rv, seed=seed)
-    # delta = 1 + rand_uniform_strong(-rv, rv, seed = seed)
     image *= delta
 
   # clip the values of the image between 0.0 and 1.0
@@ -134,30 +119,14 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   return image
 
 
-# def _augment_hsv_torch(image_, rh, rs, rv, seed = None):
-#   image = tf.image.rgb_to_hsv(image_)
-#   scale = tf.cast(tf.convert_to_tensor([180.0, 255.0, 255.0]), image.dtype)
-#   gen_range = tf.cast([rh, rs, rv], scale.dtype)
-#   r = tf.random.uniform([3], -1, 1, dtype = scale.dtype) * gen_range + 1  # random gains
-#   r = (r * scale)
-
-#   image = tf.cast(image, r.dtype) * r
-#   h, s, v = tf.split(image, 3, axis = -1)
-#   h = tf.cast(tf.cast(h, tf.int32) % 180, tf.uint8)
-#   s = tf.cast(tf.clip_by_value(s, 0, 255), tf.uint8)
-#   v = tf.cast(tf.clip_by_value(v, 0, 255), tf.uint8)
-
-#   image = tf.cast(tf.concat([h, s, v], axis = -1), scale.dtype)
-#   image = tf.image.hsv_to_rgb(image/scale)
-#   return image
-
-
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   dtype = image.dtype
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
-  r = tf.random.uniform([3], -1, 1, dtype=image.dtype) * gen_range + 1
+  r = tf.random.uniform([3], -1, 1, 
+                        dtype=image.dtype, 
+                        seed = seed) * gen_range + 1
 
   image = tf.cast(image, r.dtype) * r
   h, s, v = tf.split(image, 3, axis=-1)
@@ -170,11 +139,11 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   return tf.cast(image, dtype)
 
 
-def image_rand_hsv(image, rh, rs, rv, seed=None):
-  # if rh > 1.0 or rs > 1.0 or rv > 1.0:
-  # image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
-  # else:
-  image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
+def image_rand_hsv(image, rh, rs, rv, seed=None, darknet = False):
+  if darknet:
+    image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
+  else:
+    image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
 
 
@@ -307,13 +276,6 @@ def intersection(a, b):
 
 def mosaic_cut(image, ow, oh, w, h, cut, ptop, pleft, pbottom, pright, shiftx,
                shifty):
-  # ow = tf.cast(ow, tf.int32)
-  # oh = tf.cast(oh, tf.int32)
-  # w = tf.cast(w, tf.int32)
-  # h = tf.cast(h, tf.int32)
-  # cut_x = tf.cast(cut[1], tf.int32)
-  # cut_y = tf.cast(cut[0], tf.int32)
-
   with tf.name_scope('mosaic_cut'):
     cut = tf.cast(cut, w.dtype)
     cut_x, cut_y = cut[1], cut[0]
@@ -551,26 +513,6 @@ def resize_and_jitter_image(image,
     return image_, infos, cast([ow, oh, w, h, ptop, pleft, pbottom, pright],
                                tf.int32)
 
-
-def corners_to_boxes(corners):
-  corners_ = tf.reshape(corners, [-1, 4, 2])
-
-  y = corners_[..., 1]
-  x = corners_[..., 0]
-
-  y_min = tf.reduce_min(y, axis=-1)
-  x_min = tf.reduce_min(x, axis=-1)
-  y_max = tf.reduce_max(y, axis=-1)
-  x_max = tf.reduce_max(x, axis=-1)
-
-  boxes = tf.stack([y_min, x_min, y_max, x_max], axis=-1)
-  return boxes
-
-
-def deg_to_rad(angle):
-  return tf.cast(angle, tf.float32) * np.pi / 180.0
-
-
 def build_transform(image,
                     perspective=0.00,
                     degrees=0.0,
@@ -584,6 +526,8 @@ def build_transform(image,
   height, width = get_image_shape(image)
   ch = height = tf.cast(height, tf.float32)
   cw = width = tf.cast(width, tf.float32)
+  deg_to_rad = lambda x: tf.cast(x, tf.float32) * np.pi / 180.0
+
 
   if desired_size is not None:
     desired_size = tf.cast(desired_size, tf.float32)
@@ -683,8 +627,7 @@ def affine_warp_image(image,
   desired_size = tf.cast(desired_size, tf.float32)
   return image, M_, [image_size, desired_size, Mb]
 
-
-def get_corners(boxes):
+def _get_corners(boxes):
   """
   Get the coordinates of the 4 courners of a set of bounding boxes.
   
@@ -708,10 +651,23 @@ def get_corners(boxes):
   corners = tf.concat([tl, bl, tr, br], axis=-1)
   return corners
 
+def _corners_to_boxes(corners):
+  corners_ = tf.reshape(corners, [-1, 4, 2])
+
+  y = corners_[..., 1]
+  x = corners_[..., 0]
+
+  y_min = tf.reduce_min(y, axis=-1)
+  x_min = tf.reduce_min(x, axis=-1)
+  y_max = tf.reduce_max(y, axis=-1)
+  x_max = tf.reduce_max(x, axis=-1)
+
+  boxes = tf.stack([y_min, x_min, y_max, x_max], axis=-1)
+  return boxes
 
 def _aug_boxes(Mb, boxes):
   M = Mb
-  corners = get_corners(boxes)
+  corners = _get_corners(boxes)
   corners = tf.reshape(corners, [-1, 4, 2])
   z = tf.expand_dims(tf.ones_like(corners[..., 1]), axis=-1)
   corners = tf.concat([corners, z], axis=-1)
@@ -722,7 +678,7 @@ def _aug_boxes(Mb, boxes):
   corners, p = tf.split(corners, [2, 1], axis=-1)
   corners /= p
   corners = tf.reshape(corners, [-1, 8])
-  boxes = corners_to_boxes(corners)
+  boxes = _corners_to_boxes(corners)
   return boxes
 
 
@@ -1102,8 +1058,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   if num_written >= num_instances:
     tf.print("clipped")
 
-  indexs = _pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
-  samples = _pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
+  indexs = pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
+  samples = pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
   return indexs, samples, full
 
 

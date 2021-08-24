@@ -40,21 +40,6 @@ def coco91_to_80(classif, box, areas, iscrowds):
   return classif, box, areas, iscrowds, num_detections
 
 
-def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
-  shape = tf.shape(value)
-  if pad_axis < 0:
-    pad_axis = tf.shape(shape)[0] + pad_axis
-  dim1 = shape[pad_axis]
-  take = tf.math.reduce_min([instances, dim1])
-  value, _ = tf.split(
-      value, [take, -1], axis=pad_axis)  # value[:instances, ...]
-  pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
-  nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
-  pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
-  value = tf.concat([value, pad_tensor], axis=pad_axis)
-  return value
-
-
 class Parser(parser.Parser):
   """Parser to parse an image and its annotations into a dictionary of tensors."""
 
@@ -66,7 +51,6 @@ class Parser(parser.Parser):
                jitter_mosaic=0.0,
                resize=1.0,
                resize_mosaic=1.0,
-               sheer=0.0,
                area_thresh=0.1,
                max_num_instances=200,
                aug_rand_angle=0.0,
@@ -206,12 +190,9 @@ class Parser(parser.Parser):
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._use_scale_xy = use_scale_xy
-    self._sheer = sheer
     keys = list(self._masks.keys())
-    # self._scale_up = {
-    #     key: int(self._anchor_t + len(keys) - i) for i, key in enumerate(keys)
-    # } if self._use_scale_xy else {key: 1 for key in keys}
-    self._scale_up = {key: int(self._anchor_t) for i, key in enumerate(keys)
+
+    self._scale_up = {key: 3 for i, key in enumerate(keys)
                      } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
@@ -244,11 +225,7 @@ class Parser(parser.Parser):
 
     # based on if training or not determine how to scale up the number of
     # boxes that may result for final loss computation
-    # if is_training:
-    #   scale_up = self._scale_up
-    # else:
     scale_up = self._scale_up
-    # scale_up = {key: 1 for key in self._masks.keys()}
 
     # for each prediction path generate a properly scaled output prediction map
     for key in self._masks.keys():
@@ -316,7 +293,7 @@ class Parser(parser.Parser):
     )
     infos.extend(info_a)
     stale_a = self._get_identity_info(image)
-    for i in range(reps):
+    for _ in range(reps):
       infos.append(stale_a)
     image, _, affine = preprocessing_ops.affine_warp_image(
         image,
@@ -379,12 +356,6 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    # image = tf.image.resize(
-    #     image, (self._image_h, self._image_w),
-    #     preserve_aspect_ratio=False,
-    #     antialias=False,
-    #     name=None)
-
     # apply scaling to the hue saturation and brightness of an image
     image = tf.cast(image, self._dtype)
     image = image / 255
@@ -393,7 +364,8 @@ class Parser(parser.Parser):
         self._aug_rand_hue,
         self._aug_rand_saturation,
         self._aug_rand_brightness,
-        seed=self._seed)
+        seed=self._seed, 
+        darknet=not self._use_scale_xy)
 
     # cast the image to the selcted datatype
     image = tf.clip_by_value(image, 0.0, 1.0)
@@ -443,7 +415,6 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    # height, width = preprocessing_ops.get_image_shape(image)
     image, labels = self._build_label(
         image,
         boxes,
@@ -485,25 +456,25 @@ class Parser(parser.Parser):
 
     # set/fix the boxes shape
     bshape = boxes.get_shape().as_list()
-    boxes = pad_max_instances(boxes, self._max_num_instances, 0)
+    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
     bshape[0] = self._max_num_instances
     boxes.set_shape(bshape)
 
     # set/fix the classes shape
     cshape = classes.get_shape().as_list()
-    classes = pad_max_instances(classes, self._max_num_instances, -1)
+    classes = preprocessing_ops.pad_max_instances(classes, self._max_num_instances, -1)
     cshape[0] = self._max_num_instances
     classes.set_shape(cshape)
 
     # set/fix the best anchor shape
     bashape = best_anchors.get_shape().as_list()
-    best_anchors = pad_max_instances(best_anchors, self._max_num_instances, -1)
+    best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, -1)
     bashape[0] = self._max_num_instances
     best_anchors.set_shape(bashape)
 
     # set/fix the ious shape
     ishape = ious.get_shape().as_list()
-    ious = pad_max_instances(ious, self._max_num_instances, 0)
+    ious = preprocessing_ops.pad_max_instances(ious, self._max_num_instances, 0)
     ishape[0] = self._max_num_instances
     ious.set_shape(ishape)
 
@@ -511,7 +482,7 @@ class Parser(parser.Parser):
     area = data['groundtruth_area']
     area = tf.gather(area, inds)
     ashape = area.get_shape().as_list()
-    area = pad_max_instances(area, self._max_num_instances, 0)
+    area = preprocessing_ops.pad_max_instances(area, self._max_num_instances, 0)
     ashape[0] = self._max_num_instances
     area.set_shape(ashape)
 
@@ -519,7 +490,7 @@ class Parser(parser.Parser):
     is_crowd = data['groundtruth_is_crowd']
     is_crowd = tf.gather(is_crowd, inds)
     ishape = is_crowd.get_shape().as_list()
-    is_crowd = pad_max_instances(
+    is_crowd = preprocessing_ops.pad_max_instances(
         tf.cast(is_crowd, tf.int32), self._max_num_instances, 0)
     ishape[0] = self._max_num_instances
     is_crowd.set_shape(ishape)

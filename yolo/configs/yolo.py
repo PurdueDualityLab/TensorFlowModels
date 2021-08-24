@@ -148,7 +148,6 @@ class Parser(hyperparams.Config):
   resize: float = 1.0
   jitter_mosaic: float = 0.0
   resize_mosaic: float = 1.0
-  sheer: float = 0.0
   aug_rand_angle: float = 0.0
   aug_rand_saturation: float = 0.0
   aug_rand_brightness: float = 0.0
