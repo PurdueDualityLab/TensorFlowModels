@@ -37,7 +37,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-cstm.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-rcrop.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-adamw.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
