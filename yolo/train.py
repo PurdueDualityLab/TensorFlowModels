@@ -38,6 +38,8 @@ from official.core import train_lib
 from official.modeling import performance
 import pprint
 
+import tensorflow as tf
+
 FLAGS = flags.FLAGS
 """
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64
@@ -67,16 +69,16 @@ nohup python3.8 -m yolo.train --mode=train_and_eval --experiment=yolo_custom --m
 
 
 def subdivison_adjustment(params):
-  # sys.exit()
+  if params.task.model.filter.nms_type == "greedy":
+    tf.config.set_soft_device_placement(True)
   return params
 
 
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
-  print(FLAGS.experiment)
   params = train_utils.parse_configuration(FLAGS)
-
   params = subdivison_adjustment(params)
+
   model_dir = FLAGS.model_dir
   if 'train' in FLAGS.mode and model_dir != None:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
