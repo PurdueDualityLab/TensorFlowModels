@@ -536,7 +536,7 @@ def resize_and_jitter_image(image,
     image_ = tf.image.resize(
           image_, (desired_size[0], desired_size[1]),
           method=tf.image.ResizeMethod.BILINEAR, 
-          antialias=True)
+          antialias=False)
 
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
