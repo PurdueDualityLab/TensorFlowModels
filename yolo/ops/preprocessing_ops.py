@@ -1139,7 +1139,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     pc = tf.cast(1.0, ps[0].dtype)
 
     shifts = [ps[0], ps[1], ns[0], ns[1]]
-    offset = tf.cast([[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
+    offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
 
     for i in range(4):
       x_ = x - offset[i, 0]
