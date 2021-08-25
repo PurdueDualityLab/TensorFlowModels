@@ -905,7 +905,7 @@ def apply_infos(boxes,
 
 
 # write the boxes to the anchor grid
-def _get_num_reps(anchors, mask, box_mask):
+def _get_num_reps(anchors, mask, box_mask, dual = True):
   """
   Calculate the number of anchor boxes that an object is repeated in.
   
@@ -932,22 +932,26 @@ def _get_num_reps(anchors, mask, box_mask):
   fillin = tf.zeros_like(anchors_primary) - 1
   anchors_alternate = tf.concat([fillin, anchors_alternate], axis=-2)
 
-  viable_primary = tf.squeeze(
-      tf.logical_and(box_mask, anchors_primary == mask), axis=0)
-  viable_alternate = tf.squeeze(
-      tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
-  viable_total = tf.squeeze(
-      tf.logical_and(box_mask, anchors == mask), axis=0)
-
-  viable_primary = tf.where(viable_primary)
-  viable_alternate = tf.where(viable_alternate)
-  viable_total = tf.where(viable_total)
+  if dual: 
+    viable_primary = tf.squeeze(
+        tf.logical_and(box_mask, anchors_primary == mask), axis=0)
+    viable_alternate = tf.squeeze(
+        tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
+    viable_primary = tf.where(viable_primary)
+    viable_alternate = tf.where(viable_alternate)
+  else:
+    viable_total = tf.squeeze(
+        tf.logical_and(box_mask, anchors == mask), axis=0)
+    viable_total = tf.where(viable_total)
 
   viable = anchors == mask
   acheck = tf.reduce_any(viable, axis=-1)
   reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
-  return reps, viable_primary, viable_alternate, viable_total
 
+  if dual:
+    return reps, viable_primary, viable_alternate
+  else:
+    return reps, viable_total
 
 def _gen_utility(boxes):
   """
@@ -1031,12 +1035,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   # y + 0.5
   # y - 0.5
 
-  # rescale the x and y centers to the size of the grid [size, size]
-  mask = tf.cast(mask, dtype=dtype)
-  box_mask = _gen_utility(boxes)
-  num_reps, viable_primary, viable_alternate, viable = _get_num_reps(
-      anchors, mask, box_mask)
-
   num_written = 0
   ind_val = tf.TensorArray(
       tf.int32, size=0, dynamic_size=True, element_shape=[
@@ -1047,13 +1045,22 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
           8,
       ])
 
+  # rescale the x and y centers to the size of the grid [size, size]
+  mask = tf.cast(mask, dtype=dtype)
+  box_mask = _gen_utility(boxes)
+
+
   if pull_in > 0.0:
+    num_reps, viable = _get_num_reps(
+      anchors, mask, box_mask, dual = False)
     viable = tf.cast(viable, tf.int32)
     (ind_val, ind_sample,
      num_written) = write_grid(viable, num_reps, boxes, classes, ious,
                                ind_val, ind_sample, height, width, num_written,
                                num_instances, pull_in)
   else:
+    num_reps, viable_primary, viable_alternate = _get_num_reps(
+      anchors, mask, box_mask, dual = True)
     viable_primary = tf.cast(viable_primary, tf.int32)
     viable_alternate = tf.cast(viable_alternate, tf.int32)
     (ind_val, ind_sample,
