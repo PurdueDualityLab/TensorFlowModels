@@ -23,17 +23,21 @@ import tensorflow as tf
 
 class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
   """Optimizer that computes an exponential moving average of the variables.
+
   Empirically it has been found that using the moving average of the trained
   parameters of a deep network is better than using its trained parameters
   directly. This optimizer allows you to compute this moving average and swap
   the variables at save time so that any code outside of the training loop
   will use by default the average values instead of the original ones.
+
   Example of usage for training:
   ```python
   opt = tf.keras.optimizers.SGD(learning_rate)
   opt = ExponentialMovingAverage(opt)
+
   opt.shadow_copy(model)
   ```
+
   At test time, swap the shadow variables to evaluate on the averaged weights:
   ```python
   opt.swap_weights()
@@ -51,6 +55,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
                name: Text = 'ExponentialMovingAverage',
                **kwargs):
     """Construct a new ExponentialMovingAverage optimizer.
+
     Args:
       optimizer: `tf.keras.optimizers.Optimizer` that will be
         used to compute and apply gradients.
@@ -108,6 +113,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
 
   @tf.function
   def update_average(self, step: tf.Tensor):
+    
     step = tf.cast(step, tf.float32)
     if step < self._start_step:
       decay = tf.constant(0., tf.float32)
@@ -132,6 +138,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
 
   def swap_weights(self):
     """Swap the average and moving weights.
+
     This is a convenience method to allow one to evaluate the averaged weights
     at test time. Loads the weights stored in `self._average` into the model,
     keeping a copy of the original model weights. Swapping twice will return
@@ -169,6 +176,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
 
   def assign_average_vars(self, var_list: List[tf.Variable]):
     """Assign variables in var_list with their respective averages.
+
     Args:
       var_list: List of model variables to be assigned to their average.
     Returns:
