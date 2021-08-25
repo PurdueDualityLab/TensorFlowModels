@@ -132,7 +132,6 @@ class ConvBN(tf.keras.layers.Layer):
         left_shift = padding // 2
         self._paddings = tf.constant([[0, 0], [left_shift, left_shift],
                                       [left_shift, left_shift], [0, 0]])
-        # self._zeropad = tf.keras.layers.ZeroPadding2D()
       else:
         self._paddings = tf.constant([[0, 0], [0, 0], [0, 0], [0, 0]])
 
@@ -334,12 +333,6 @@ class DarkResidual(tf.keras.layers.Layer):
         padding='same',
         **_dark_conv_args)
 
-    # if self._stochastic_depth_drop_rate:
-    #   self._stochastic_depth = nn_layers.StochasticDepth(
-    #       self._stochastic_depth_drop_rate)
-    # else:
-    #   self._stochastic_depth = None
-
     self._shortcut = tf.keras.layers.Add()
     if self._sc_activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
@@ -348,7 +341,7 @@ class DarkResidual(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(
           self._sc_activation
-      )  # tf.keras.layers.Activation(self._sc_activation)
+      )  
     super().build(input_shape)
 
   def call(self, inputs, training=None):
@@ -356,10 +349,6 @@ class DarkResidual(tf.keras.layers.Layer):
       inputs = self._dconv(inputs)
     x = self._conv1(inputs)
     x = self._conv2(x)
-
-    # if self._stochastic_depth:
-    #   x = self._stochastic_depth(x, training=training)
-
     x = self._shortcut([x, inputs])
     return self._activation_fn(x)
 
