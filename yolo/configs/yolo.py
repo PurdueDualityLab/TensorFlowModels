@@ -314,6 +314,7 @@ class YoloTask(cfg.TaskConfig):
   init_checkpoint_modules: str = None  #'backbone'
   smart_bias_lr: float = 0.0
   coco91to80: bool = False
+  reduced_logs: bool = True
 
 
 @dataclasses.dataclass

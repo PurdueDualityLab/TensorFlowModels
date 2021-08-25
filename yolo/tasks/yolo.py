@@ -59,6 +59,8 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
     self._metric_names = []
     self._metrics = []
+
+    self._use_reduced_logs = self.task_config.reduced_logs
     return
 
   @property
@@ -205,10 +207,10 @@ class YoloTask(base_task.Task):
   def build_losses(self, outputs, labels, aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
-    metric_dict['global']['total_loss'] = 0
-    metric_dict['global']['total_box'] = 0
-    metric_dict['global']['total_class'] = 0
-    metric_dict['global']['total_conf'] = 0
+    metric_dict['net']['loss'] = 0
+    metric_dict['net']['box'] = 0
+    metric_dict['net']['class'] = 0
+    metric_dict['net']['conf'] = 0
 
     grid = labels['true_conf']
     inds = labels['inds']
@@ -225,17 +227,21 @@ class YoloTask(base_task.Task):
 
       # detach all the below gradients: none of them should make a 
       # contribution to the gradient form this point forwards
-      metric_dict['global']['total_loss'] += tf.stop_gradient(_mean_loss)
-      metric_dict['global']['total_box'] += tf.stop_gradient(_loss_box)
-      metric_dict['global']['total_class'] += tf.stop_gradient(_loss_class)
-      metric_dict['global']['total_conf'] += tf.stop_gradient(_loss_conf)
-      metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
-      metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
-      metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
+      metric_dict['net']['loss'] += tf.stop_gradient(_mean_loss)
+      metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
+      metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
-      metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
-      metric_dict[key]["avg_iou"] = tf.stop_gradient(_avg_iou)
-      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
+
+      metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
+      metric_dict['net']['class'] += tf.stop_gradient(_loss_class)
+      metric_dict['net']['conf'] += tf.stop_gradient(_loss_conf)
+
+      if not self._use_reduced_logs:
+        metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
+        metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
+        metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
+        metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
+        metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
     return loss_val * scale, metric_dict
 
@@ -346,7 +352,7 @@ class YoloTask(base_task.Task):
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
     _, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-    logs = {self.loss: loss_metrics['global']['total_loss']}
+    logs = {self.loss: loss_metrics['net']['loss']}
 
     # Reorganize and rescale the boxes
     boxes = self._reorg_boxes(
@@ -384,7 +390,16 @@ class YoloTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
-    return self.coco_metric.result()
+    res = self.coco_metric.result()
+    ret_dict = dict()
+    if self._use_reduced_logs:
+      ret_dict["AP"] = res["AP"]
+      ret_dict["AP50"] = res["AP50"]
+      ret_dict["AP75"] = res["AP75"]
+      ret_dict = {"AP": ret_dict} 
+    else:
+      ret_dict.update(res)
+    return ret_dict 
 
   def _get_boxes(self, gen_boxes=True):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
@@ -432,18 +447,21 @@ class YoloTask(base_task.Task):
 
     metric_names = defaultdict(list)
     for key in self._masks.keys():
-      metric_names[key].append('box_loss')
-      metric_names[key].append('class_loss')
-      metric_names[key].append('conf_loss')
-      metric_names[key].append("recall50")
-      metric_names[key].append("precision50")
+      metric_names[key].append('loss')
       metric_names[key].append("avg_iou")
-      metric_names[key].append("avg_obj")
+      metric_names[key].append("recall50")
 
-    metric_names['global'].append('total_loss')
-    metric_names['global'].append('total_box')
-    metric_names['global'].append('total_class')
-    metric_names['global'].append('total_conf')
+      if not self._use_reduced_logs:
+        metric_names[key].append('box_loss')
+        metric_names[key].append('class_loss')
+        metric_names[key].append('conf_loss')
+        metric_names[key].append("precision50")
+        metric_names[key].append("avg_obj")
+
+    metric_names['net'].append('loss')
+    metric_names['net'].append('box')
+    metric_names['net'].append('class')
+    metric_names['net'].append('conf')
 
     self._metric_names = metric_names
     return self._masks, self._path_scales, self._x_y_scales

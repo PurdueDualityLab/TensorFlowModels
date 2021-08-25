@@ -84,24 +84,24 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         **kwargs)
     print("YOLO Ema")
 
-  def shadow_copy(self, model: tf.keras.Model):
-    """Creates shadow variables for the given model weights."""
+  # def shadow_copy(self, model: tf.keras.Model):
+  #   """Creates shadow variables for the given model weights."""
 
-    if self._trainable_weights_only:
-      self._model_weights = model.trainable_variables
-    else:
-      self._model_weights = model.variables
-    for var in self._model_weights:
-      self.add_slot(var, 'average', initializer=var)
+  #   if self._trainable_weights_only:
+  #     self._model_weights = model.trainable_variables
+  #   else:
+  #     self._model_weights = model.variables
+  #   for var in self._model_weights:
+  #     self.add_slot(var, 'average', initializer=var)
 
-    self._average_weights = [
-        self.get_slot(var, 'average') for var in self._model_weights
-    ]
+  #   self._average_weights = [
+  #       self.get_slot(var, 'average') for var in self._model_weights
+  #   ]
 
-  def apply_gradients(self, grads_and_vars, name: Optional[Text] = None):
-    result = self._optimizer.apply_gradients(grads_and_vars, name)
-    self.update_average(self.iterations)
-    return result
+  # def apply_gradients(self, grads_and_vars, name: Optional[Text] = None):
+  #   result = self._optimizer.apply_gradients(grads_and_vars, name)
+  #   self.update_average(self.iterations)
+  #   return result
 
   # @tf.function
   # def update_average(self, step: tf.Tensor):

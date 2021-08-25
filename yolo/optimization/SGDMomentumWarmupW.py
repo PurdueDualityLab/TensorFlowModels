@@ -116,7 +116,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
     momentum_warm_up_steps = tf.cast(
         self._get_hyper("warmup_steps"), iteration.dtype)
     value = tf.cond(
-        (iteration - momentum_warm_up_steps) < 0,
+        (iteration - momentum_warm_up_steps) <= 0,
         true_fn=lambda: (momentum_start +
                          (tf.cast(iteration, momentum.dtype) *
                           (momentum - momentum_start) / tf.cast(

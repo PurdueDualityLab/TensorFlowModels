@@ -4,6 +4,7 @@ runtime:
 task:
   coco91to80: True
   smart_bias_lr: 0.1
+  reduced_logs: True
   model:
     base:
       backbone:
