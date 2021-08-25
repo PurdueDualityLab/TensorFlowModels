@@ -135,48 +135,14 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   return image
 
 
-# def _augment_hsv_torch(image, rh, rs, rv, seed=None):
-#   """
-#   Randomly alter the hue, saturation, and brightness of an image. 
-
-#   Args: 
-#     image: Tensor of shape [None, None, 3] that needs to be altered.
-#     rh: `float32` used to indicate the maximum delta that can be  multiplied to 
-#       hue.
-#     rs: `float32` used to indicate the maximum delta that can be multiplied to 
-#       saturation.
-#     rv: `float32` used to indicate the maximum delta that can be multiplied to 
-#       brightness.
-#     seed: `Optional[int]` for the seed to use in random number generation.
-  
-#   Returns:
-#     The HSV altered image in the same datatype as the input image
-#   """
-#   dtype = image.dtype
-#   image = tf.cast(image, tf.float32)
-#   image = tf.image.rgb_to_hsv(image)
-#   gen_range = tf.cast([rh, rs, rv], image.dtype)
-#   r = tf.random.uniform([3], -1, 1, 
-#                         dtype=image.dtype, 
-#                         seed = seed) * gen_range + 1
-
-#   image = tf.cast(image, r.dtype) * r
-#   h, s, v = tf.split(image, 3, axis=-1)
-#   h = h % 1.0
-#   s = tf.clip_by_value(s, 0.0, 1.0)
-#   v = tf.clip_by_value(v, 0.0, 1.0)
-
-#   image = tf.concat([h, s, v], axis=-1)
-#   image = tf.image.hsv_to_rgb(image)
-#   return tf.cast(image, dtype)
-
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   """
   Randomly alter the hue, saturation, and brightness of an image. 
 
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be added to hue.
+    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+      hue.
     rs: `float32` used to indicate the maximum delta that can be multiplied to 
       saturation.
     rv: `float32` used to indicate the maximum delta that can be multiplied to 
@@ -186,19 +152,53 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   Returns:
     The HSV altered image in the same datatype as the input image
   """
-  if rh > 0.0:
-    delta = rand_uniform_strong(-rh, rh, seed=seed)
-    image = tf.image.adjust_hue(image, delta)
-  if rs > 0.0:
-    delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
-    image = tf.image.adjust_saturation(image, delta)
-  if rv > 0.0:
-    delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
-    image *= delta
+  dtype = image.dtype
+  image = tf.cast(image, tf.float32)
+  image = tf.image.rgb_to_hsv(image)
+  gen_range = tf.cast([rh, rs, rv], image.dtype)
+  r = tf.random.uniform([3], -1, 1, 
+                        dtype=image.dtype, 
+                        seed = seed) * gen_range + 1
 
-  # clip the values of the image between 0.0 and 1.0
-  image = tf.clip_by_value(image, 0.0, 1.0)
-  return image
+  image = tf.cast(image, r.dtype) * r
+  h, s, v = tf.split(image, 3, axis=-1)
+  h = h % 1.0
+  s = tf.clip_by_value(s, 0.0, 1.0)
+  v = tf.clip_by_value(v, 0.0, 1.0)
+
+  image = tf.concat([h, s, v], axis=-1)
+  image = tf.image.hsv_to_rgb(image)
+  return tf.cast(image, dtype)
+
+# def _augment_hsv_torch(image, rh, rs, rv, seed=None):
+#   """
+#   Randomly alter the hue, saturation, and brightness of an image. 
+
+#   Args: 
+#     image: Tensor of shape [None, None, 3] that needs to be altered.
+#     rh: `float32` used to indicate the maximum delta that can be added to hue.
+#     rs: `float32` used to indicate the maximum delta that can be multiplied to 
+#       saturation.
+#     rv: `float32` used to indicate the maximum delta that can be multiplied to 
+#       brightness.
+#     seed: `Optional[int]` for the seed to use in random number generation.
+  
+#   Returns:
+#     The HSV altered image in the same datatype as the input image
+#   """
+#   if rh > 0.0:
+#     delta = rand_uniform_strong(-rh, rh, seed=seed)
+#     image = tf.image.adjust_hue(image, delta)
+#   if rs > 0.0:
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
+#     image = tf.image.adjust_saturation(image, delta)
+#   if rv > 0.0:
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
+#     image *= delta
+
+#   # clip the values of the image between 0.0 and 1.0
+#   image = tf.clip_by_value(image, 0.0, 1.0)
+#   return image
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
