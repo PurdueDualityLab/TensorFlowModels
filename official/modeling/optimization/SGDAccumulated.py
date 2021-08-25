@@ -112,7 +112,6 @@ class SGDAccumulated(OptimizerV2):
   
   def raw_update(self, coefficients, var, grad, update_cond):
     def func():
-      # tf.print("up")
       if self._momentum:
         return self.momentum_update(coefficients, var, grad, update_cond)
       else:
@@ -121,13 +120,11 @@ class SGDAccumulated(OptimizerV2):
 
   def no_update(self, var):
     def func():
-      # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
       return control_flow_ops.group(*[var_update])
     return func
 
   def _resource_apply_dense(self, grad, var, apply_state = None):
-    # tf.print('opt', self.iterations)
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype))
                   or self._fallback_apply_state(var_device, var_dtype))

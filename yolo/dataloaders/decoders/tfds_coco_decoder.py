@@ -97,5 +97,4 @@ class MSCOCODecoder(decoder.Decoder):
         'groundtruth_area': areas,
         'groundtruth_boxes': boxes,
     }
-    # tf.print(decoded_tensors)
     return decoded_tensors

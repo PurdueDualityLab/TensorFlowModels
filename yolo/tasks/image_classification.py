@@ -180,7 +180,6 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     with tf.GradientTape() as tape:
       outputs = model(features, training=True)
-      #tf.print(tf.argmax(outputs, axis = -1), tf.argmax(labels, axis = -1))
       # Casting output layer as float32 is necessary when mixed_precision is
       # mixed_float16 or mixed_bfloat16 to ensure output is casted as float32.
       outputs = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), outputs)
@@ -220,8 +219,5 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
 
-    # tf.print(logs, end='\r')
-
     # ret = '\033[F' * (len(logs.keys()))
-    # tf.print(ret, end='\n')
     return logs

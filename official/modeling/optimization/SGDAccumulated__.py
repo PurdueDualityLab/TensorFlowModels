@@ -56,19 +56,16 @@ class SGDAccumulated(tf.keras.optimizers.Optimizer):
 
   def raw_sparse_update(self, grad, var, apply_state = None):
     def func():
-      # tf.print("up")
       return self._optimizer._resource_apply_sparse(grad, var, apply_state = apply_state)
     return func
 
   def raw_dense_update(self, grad, var, apply_state = None):
     def func():
-      # tf.print("up")
       return self._optimizer._resource_apply_dense(grad, var, apply_state = apply_state)
     return func
 
   def no_update(self, var):
     def func():
-      # tf.print("no up")
       var_update = state_ops.assign(var, var, use_locking=self._use_locking)
       return control_flow_ops.group(*[var_update])
     return func

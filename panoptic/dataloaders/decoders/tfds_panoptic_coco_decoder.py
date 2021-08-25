@@ -130,5 +130,4 @@ class MSCOCODecoder(decoder.Decoder):
           'groundtruth_pantopic_mask_png': parsed_tensors["panoptic_image/filename"],
           'groundtruth_pantopic_mask': parsed_tensors["panoptic_image"],
       })
-    # tf.print(decoded_tensors)
     return decoded_tensors

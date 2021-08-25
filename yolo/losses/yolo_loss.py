@@ -417,11 +417,6 @@ class Yolo_Loss(object):
     else:
       self._decode_boxes = partial(get_predicted_box_newcords, **box_kwargs)
 
-  def print_error(self, pred, key):
-    # a catch all to indicate an error may have occured in training
-    if tf.stop_gradient(tf.reduce_any(tf.math.is_nan(pred))):
-      tf.print("\nerror: stop training ", key)
-
   def APAR(self, pred_conf, true_conf, pct=0.5):
     # capture all predictions of high confidence
     dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)

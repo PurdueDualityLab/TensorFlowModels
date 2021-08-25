@@ -167,7 +167,6 @@ def test_yolo_pipeline(is_training=True, num=30):
       # ind_xy = tf.cast(j['inds']['5'][shind][..., 0:2], true_xy.dtype)
       # x, y = tf.split(ind_xy, 2, axis=-1)
       # ind_xy = tf.concat([y, x], axis=-1)
-      # tf.print(true_xy - ind_xy, summarize=-1)
       axe[0].imshow(image)
       axe[1].imshow(obj3[shind].numpy())
       axe[2].imshow(obj4[shind].numpy())
@@ -201,7 +200,6 @@ def time_pipeline():
     #   test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
     #   test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
     #   test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
-    # tf.print(test)
 
     times.append(ftime - ltime)
     ltime = time.time()

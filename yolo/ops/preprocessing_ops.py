@@ -135,48 +135,14 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   return image
 
 
-# def _augment_hsv_torch(image, rh, rs, rv, seed=None):
-#   """
-#   Randomly alter the hue, saturation, and brightness of an image. 
-
-#   Args: 
-#     image: Tensor of shape [None, None, 3] that needs to be altered.
-#     rh: `float32` used to indicate the maximum delta that can be  multiplied to 
-#       hue.
-#     rs: `float32` used to indicate the maximum delta that can be multiplied to 
-#       saturation.
-#     rv: `float32` used to indicate the maximum delta that can be multiplied to 
-#       brightness.
-#     seed: `Optional[int]` for the seed to use in random number generation.
-  
-#   Returns:
-#     The HSV altered image in the same datatype as the input image
-#   """
-#   dtype = image.dtype
-#   image = tf.cast(image, tf.float32)
-#   image = tf.image.rgb_to_hsv(image)
-#   gen_range = tf.cast([rh, rs, rv], image.dtype)
-#   r = tf.random.uniform([3], -1, 1, 
-#                         dtype=image.dtype, 
-#                         seed = seed) * gen_range + 1
-
-#   image = tf.cast(image, r.dtype) * r
-#   h, s, v = tf.split(image, 3, axis=-1)
-#   h = h % 1.0
-#   s = tf.clip_by_value(s, 0.0, 1.0)
-#   v = tf.clip_by_value(v, 0.0, 1.0)
-
-#   image = tf.concat([h, s, v], axis=-1)
-#   image = tf.image.hsv_to_rgb(image)
-#   return tf.cast(image, dtype)
-
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   """
   Randomly alter the hue, saturation, and brightness of an image. 
 
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be added to hue.
+    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+      hue.
     rs: `float32` used to indicate the maximum delta that can be multiplied to 
       saturation.
     rv: `float32` used to indicate the maximum delta that can be multiplied to 
@@ -186,19 +152,53 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   Returns:
     The HSV altered image in the same datatype as the input image
   """
-  if rh > 0.0:
-    delta = rand_uniform_strong(-rh, rh, seed=seed)
-    image = tf.image.adjust_hue(image, delta)
-  if rs > 0.0:
-    delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
-    image = tf.image.adjust_saturation(image, delta)
-  if rv > 0.0:
-    delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
-    image *= delta
+  dtype = image.dtype
+  image = tf.cast(image, tf.float32)
+  image = tf.image.rgb_to_hsv(image)
+  gen_range = tf.cast([rh, rs, rv], image.dtype)
+  r = tf.random.uniform([3], -1, 1, 
+                        dtype=image.dtype, 
+                        seed = seed) * gen_range + 1
 
-  # clip the values of the image between 0.0 and 1.0
-  image = tf.clip_by_value(image, 0.0, 1.0)
-  return image
+  image = tf.cast(image, r.dtype) * r
+  h, s, v = tf.split(image, 3, axis=-1)
+  h = h % 1.0
+  s = tf.clip_by_value(s, 0.0, 1.0)
+  v = tf.clip_by_value(v, 0.0, 1.0)
+
+  image = tf.concat([h, s, v], axis=-1)
+  image = tf.image.hsv_to_rgb(image)
+  return tf.cast(image, dtype)
+
+# def _augment_hsv_torch(image, rh, rs, rv, seed=None):
+#   """
+#   Randomly alter the hue, saturation, and brightness of an image. 
+
+#   Args: 
+#     image: Tensor of shape [None, None, 3] that needs to be altered.
+#     rh: `float32` used to indicate the maximum delta that can be added to hue.
+#     rs: `float32` used to indicate the maximum delta that can be multiplied to 
+#       saturation.
+#     rv: `float32` used to indicate the maximum delta that can be multiplied to 
+#       brightness.
+#     seed: `Optional[int]` for the seed to use in random number generation.
+  
+#   Returns:
+#     The HSV altered image in the same datatype as the input image
+#   """
+#   if rh > 0.0:
+#     delta = rand_uniform_strong(-rh, rh, seed=seed)
+#     image = tf.image.adjust_hue(image, delta)
+#   if rs > 0.0:
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
+#     image = tf.image.adjust_saturation(image, delta)
+#   if rv > 0.0:
+#     delta = 1 + rand_uniform_strong(-rs, rs, seed=seed)
+#     image *= delta
+
+#   # clip the values of the image between 0.0 and 1.0
+#   image = tf.clip_by_value(image, 0.0, 1.0)
+#   return image
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
@@ -1002,7 +1002,7 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
       loss function.
     scale_num_inst: A `float` to represent the scale at which to multiply the
       number of predicted boxes by to get the number of instances to write
-      to the grid.tf.print(self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop") the tie breaker.
+      to the grid.
   Return:
     tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
   """
@@ -1046,18 +1046,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
           8,
       ])
 
-  (ind_val, ind_sample,
-   num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-                             ind_val, ind_sample, height, width, num_written,
-                             num_instances, 0.0)
-
-  if use_tie_breaker:
-    # tf.print("alternate")
-    (ind_val, ind_sample,
-     num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
-                               ind_val, ind_sample, height, width, num_written,
-                               num_instances, 0.0)
-
   if pull_in > 0.0:
     (ind_val, ind_sample,
      num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
@@ -1065,11 +1053,21 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
                                num_instances, pull_in)
 
     if use_tie_breaker:
-      # tf.print("alternate")
       (ind_val, ind_sample,
        num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
                                  ious, ind_val, ind_sample, height, width,
                                  num_written, num_instances, pull_in)
+  else:
+    (ind_val, ind_sample,
+    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                              ind_val, ind_sample, height, width, num_written,
+                              num_instances, 0.0)
+
+    if use_tie_breaker:
+      (ind_val, ind_sample,
+      num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
+                                ind_val, ind_sample, height, width, num_written,
+                                num_instances, 0.0)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
@@ -1079,9 +1077,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
 
   full = tf.zeros([sizeh, sizew, len_masks, 1], dtype=dtype)
   full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
-
-  if num_written >= num_instances:
-    tf.print("clipped")
 
   indexs = pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
   samples = pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
@@ -1127,19 +1122,19 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     gxyi = gxy - tf.floor(gxy)
     ps = ((gxyi < g) & (gxy > 1.))
     ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
+    pc = tf.cast(1.0, ps[0].dtype)
 
-    shifts = [ps[0], ps[1], ns[0], ns[1]]
-    offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
+    shifts = [pc, ps[0], ps[1], ns[0], ns[1]]
+    offset = tf.cast([[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
 
-    xc = clamp(tf.convert_to_tensor([tf.cast(x, tf.int32)]), width - 1)
-    yc = clamp(tf.convert_to_tensor([tf.cast(y, tf.int32)]), height - 1)
-    for i in range(4):
+    for i in range(5):
       x_ = x - offset[i, 0]
       y_ = y - offset[i, 1]
 
       x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
       y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i]:  # and (xc != x_ or yc != y_):
+
+      if shifts[i]:
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
@@ -1239,8 +1234,6 @@ def get_best_anchor(y_true,
     true_wh = tf.cast(y_true[..., 2:4], dtype=tf.float32) * scaler
     anchors = tf.cast(anchors, dtype=tf.float32)
     k = tf.shape(anchors)[0]
-
-    # tf.print(true_wh, summarize = -1)
 
     anchors = tf.expand_dims(
         tf.concat([tf.zeros_like(anchors), anchors], axis=-1), axis=0)
