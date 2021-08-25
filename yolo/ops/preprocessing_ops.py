@@ -224,7 +224,7 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   else:
     image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
-
+  
 def random_window_crop(image, target_height, target_width, translate=0.0):
   """Takes a random crop of the image to the target height and width
   
@@ -1120,6 +1120,13 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
   # idk if this is right!!! just testing it now
   if offset > 0:
+    y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+    x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+    grid_idx = tf.concat([y_, x_, a_], axis=-1)
+    ind_val = ind_val.write(num_written, grid_idx)
+    ind_sample = ind_sample.write(num_written, sample)
+    num_written += 1
+
     g = tf.cast(offset, x.dtype)
     gain = tf.cast(tf.convert_to_tensor([width, height]), x.dtype)
     gxy = tf.cast(tf.convert_to_tensor([x, y]), x.dtype)
@@ -1131,10 +1138,10 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
     pc = tf.cast(1.0, ps[0].dtype)
 
-    shifts = [pc, ps[0], ps[1], ns[0], ns[1]]
+    shifts = [ps[0], ps[1], ns[0], ns[1]]
     offset = tf.cast([[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
 
-    for i in range(5):
+    for i in range(4):
       x_ = x - offset[i, 0]
       y_ = y - offset[i, 1]
 
