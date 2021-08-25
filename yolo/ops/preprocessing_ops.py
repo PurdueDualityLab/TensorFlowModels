@@ -936,14 +936,17 @@ def _get_num_reps(anchors, mask, box_mask):
       tf.logical_and(box_mask, anchors_primary == mask), axis=0)
   viable_alternate = tf.squeeze(
       tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
+  viable_total = tf.squeeze(
+      tf.logical_and(box_mask, anchors == mask), axis=0)
 
   viable_primary = tf.where(viable_primary)
   viable_alternate = tf.where(viable_alternate)
+  viable_total = tf.where(viable_total)
 
   viable = anchors == mask
   acheck = tf.reduce_any(viable, axis=-1)
   reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
-  return reps, viable_primary, viable_alternate
+  return reps, viable_primary, viable_alternate, viable_total
 
 
 def _gen_utility(boxes):
@@ -1031,10 +1034,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   # rescale the x and y centers to the size of the grid [size, size]
   mask = tf.cast(mask, dtype=dtype)
   box_mask = _gen_utility(boxes)
-  num_reps, viable_primary, viable_alternate = _get_num_reps(
+  num_reps, viable_primary, viable_alternate, viable = _get_num_reps(
       anchors, mask, box_mask)
-  viable_primary = tf.cast(viable_primary, tf.int32)
-  viable_alternate = tf.cast(viable_alternate, tf.int32)
 
   num_written = 0
   ind_val = tf.TensorArray(
@@ -1047,22 +1048,18 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
       ])
 
   if pull_in > 0.0:
+    viable = tf.cast(viable, tf.int32)
     (ind_val, ind_sample,
-     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+     num_written) = write_grid(viable, num_reps, boxes, classes, ious,
                                ind_val, ind_sample, height, width, num_written,
                                num_instances, pull_in)
-
-    if use_tie_breaker:
-      (ind_val, ind_sample,
-       num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
-                                 ious, ind_val, ind_sample, height, width,
-                                 num_written, num_instances, pull_in)
   else:
+    viable_primary = tf.cast(viable_primary, tf.int32)
+    viable_alternate = tf.cast(viable_alternate, tf.int32)
     (ind_val, ind_sample,
     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
                               ind_val, ind_sample, height, width, num_written,
                               num_instances, 0.0)
-
     if use_tie_breaker:
       (ind_val, ind_sample,
       num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,

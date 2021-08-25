@@ -31,8 +31,8 @@ prep_gpu()
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
