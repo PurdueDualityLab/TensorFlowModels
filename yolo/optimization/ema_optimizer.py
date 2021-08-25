@@ -90,7 +90,6 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
     if step < self._start_step:
       decay = tf.constant(0., tf.float32)
     elif self._dynamic_decay:
-      # comp_step = step - self._start_step
       decay = self._average_decay * (1 - tf.math.exp(-step / 2000))
     else:
       decay = self._average_decay
