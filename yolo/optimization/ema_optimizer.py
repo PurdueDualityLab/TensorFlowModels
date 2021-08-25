@@ -84,48 +84,29 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         **kwargs)
     print("YOLO Ema")
 
-  # def shadow_copy(self, model: tf.keras.Model):
-  #   """Creates shadow variables for the given model weights."""
+  @tf.function
+  def update_average(self, step: tf.Tensor):
+    step = tf.cast(step, tf.float32)
+    if step < self._start_step:
+      decay = tf.constant(0., tf.float32)
+    elif self._dynamic_decay:
+      # comp_step = step - self._start_step
+      decay = self._average_decay * (1 - tf.math.exp(-step / 2000))
+    else:
+      decay = self._average_decay
 
-  #   if self._trainable_weights_only:
-  #     self._model_weights = model.trainable_variables
-  #   else:
-  #     self._model_weights = model.variables
-  #   for var in self._model_weights:
-  #     self.add_slot(var, 'average', initializer=var)
+    def _apply_moving(v_moving, v_normal):
+      new = v_moving * decay + v_normal * (1 - decay)
+      v_moving.assign(new)
+      return v_moving
 
-  #   self._average_weights = [
-  #       self.get_slot(var, 'average') for var in self._model_weights
-  #   ]
+    def _update(strategy, v_moving_and_v_normal):
+      for v_moving, v_normal in v_moving_and_v_normal:
+        strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
 
-  # def apply_gradients(self, grads_and_vars, name: Optional[Text] = None):
-  #   result = self._optimizer.apply_gradients(grads_and_vars, name)
-  #   self.update_average(self.iterations)
-  #   return result
-
-  # @tf.function
-  # def update_average(self, step: tf.Tensor):
-  #   step = tf.cast(step, tf.float32)
-  #   if step < self._start_step:
-  #     decay = tf.constant(0., tf.float32)
-  #   elif self._dynamic_decay:
-  #     # comp_step = step - self._start_step
-  #     decay = self._average_decay * (1 - tf.math.exp(-step / 2000))
-  #   else:
-  #     decay = self._average_decay
-
-  #   def _apply_moving(v_moving, v_normal):
-  #     new = v_moving * decay + v_normal * (1 - decay)
-  #     v_moving.assign(new)
-  #     return v_moving
-
-  #   def _update(strategy, v_moving_and_v_normal):
-  #     for v_moving, v_normal in v_moving_and_v_normal:
-  #       strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
-
-  #   ctx = tf.distribute.get_replica_context()
-  #   return ctx.merge_call(
-  #       _update, args=(zip(self._average_weights, self._model_weights),))
+    ctx = tf.distribute.get_replica_context()
+    return ctx.merge_call(
+        _update, args=(zip(self._average_weights, self._model_weights),))
 
   @property
   def learning_rate(self):
