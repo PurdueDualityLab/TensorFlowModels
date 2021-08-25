@@ -393,7 +393,7 @@ class Parser(parser.Parser):
         self._aug_rand_saturation,
         self._aug_rand_brightness,
         seed=self._seed, 
-        darknet=True) # not self._use_scale_xy)
+        darknet= not self._use_scale_xy)
 
     # Cast the image to the selcted datatype.
     image = tf.clip_by_value(image, 0.0, 1.0)
