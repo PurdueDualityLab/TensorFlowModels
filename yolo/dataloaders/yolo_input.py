@@ -216,7 +216,7 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     keys = list(self._masks.keys())
 
-    self._scale_up = {key: 3 for i, key in enumerate(keys)
+    self._scale_up = {key: 4 for i, key in enumerate(keys)
                      } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
 
