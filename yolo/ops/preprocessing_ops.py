@@ -1002,7 +1002,7 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
       loss function.
     scale_num_inst: A `float` to represent the scale at which to multiply the
       number of predicted boxes by to get the number of instances to write
-      to the grid.tf.print(self._mosaic_crop_mode is None or self._mosaic_crop_mode == "crop") the tie breaker.
+      to the grid.
   Return:
     tf.Tensor[] of shape [batch, size, size, #of_anchors, 4, 1, num_classes]
   """
@@ -1052,7 +1052,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
                              num_instances, 0.0)
 
   if use_tie_breaker:
-    # tf.print("alternate")
     (ind_val, ind_sample,
      num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
                                ind_val, ind_sample, height, width, num_written,
@@ -1065,7 +1064,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
                                num_instances, pull_in)
 
     if use_tie_breaker:
-      # tf.print("alternate")
       (ind_val, ind_sample,
        num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
                                  ious, ind_val, ind_sample, height, width,

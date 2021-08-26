@@ -207,7 +207,7 @@ class YoloTask(base_task.Task):
   def build_losses(self, outputs, labels, aux_losses=None):
     metric_dict = defaultdict(dict)
     loss_val = 0
-    metric_dict['net']['loss'] = 0
+    metric_loss = 0
     metric_dict['net']['box'] = 0
     metric_dict['net']['class'] = 0
     metric_dict['net']['conf'] = 0
@@ -227,7 +227,7 @@ class YoloTask(base_task.Task):
 
       # detach all the below gradients: none of them should make a 
       # contribution to the gradient form this point forwards
-      metric_dict['net']['loss'] += tf.stop_gradient(_mean_loss)
+      metric_loss += tf.stop_gradient(_mean_loss)
       metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
       metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
@@ -243,7 +243,7 @@ class YoloTask(base_task.Task):
         metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
         metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
-    return loss_val * scale, metric_dict
+    return loss_val * scale, metric_loss, metric_dict
 
   def build_metrics(self, training=True):
     metrics = []
@@ -283,7 +283,9 @@ class YoloTask(base_task.Task):
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
 
       # Get the total loss
-      loss, loss_metrics = self.build_losses(y_pred['raw_output'], label)
+      (loss, 
+       metric_loss, 
+       loss_metrics) = self.build_losses(y_pred['raw_output'], label)
 
       # Account for model distribution across devices
       scaled_loss = loss / num_replicas
@@ -307,7 +309,7 @@ class YoloTask(base_task.Task):
 
     # Apply gradients to the model
     optimizer.apply_gradients(zip(gradients, train_vars))
-    logs = {self.loss: loss}
+    logs = {self.loss: metric_loss}
 
     # Compute all metrics
     if metrics:
@@ -351,8 +353,9 @@ class YoloTask(base_task.Task):
     # Step the model once
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    _, loss_metrics = self.build_losses(y_pred['raw_output'], label)
-    logs = {self.loss: loss_metrics['net']['loss']}
+    (_, metric_loss, 
+    loss_metrics) = self.build_losses(y_pred['raw_output'], label)
+    logs = {self.loss: metric_loss}
 
     # Reorganize and rescale the boxes
     boxes = self._reorg_boxes(
@@ -396,6 +399,9 @@ class YoloTask(base_task.Task):
       ret_dict["AP"] = res["AP"]
       ret_dict["AP50"] = res["AP50"]
       ret_dict["AP75"] = res["AP75"]
+      ret_dict["APs"] = res["APs"]
+      ret_dict["APm"] = res["APm"]
+      ret_dict["APl"] = res["APl"]
       ret_dict = {"AP": ret_dict} 
     else:
       ret_dict.update(res)
@@ -458,7 +464,7 @@ class YoloTask(base_task.Task):
         metric_names[key].append("precision50")
         metric_names[key].append("avg_obj")
 
-    metric_names['net'].append('loss')
+    # metric_names['net'].append('loss')
     metric_names['net'].append('box')
     metric_names['net'].append('class')
     metric_names['net'].append('conf')
