@@ -586,9 +586,9 @@ class YoloTask(base_task.Task):
 
     print(optimizer)
     optimizer = self._wrap_optimizer(optimizer, runtime_config)
-    print(optimizer)
     opt_factory._use_ema = ema
     optimizer = opt_factory.add_ema(optimizer)
+    print(optimizer)
     return optimizer
 
 class ListMetrics(object):
