@@ -470,10 +470,10 @@ class Mosaic(object):
     expected during training."""
 
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    one = dataset.shuffle(10, seed=self._seed)
-    two = dataset.shuffle(10, seed=self._seed)
-    three = dataset.shuffle(10, seed=self._seed)
-    four = dataset.shuffle(10, seed=self._seed)
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    three = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
 
     num = tf.data.AUTOTUNE
     one = one.map(
