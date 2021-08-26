@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -34,7 +34,7 @@ task:
       activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
-      use_sync_bn: true
+      use_sync_bn: false
     filter:
       loss_type:  
         'all': ciou
@@ -53,15 +53,15 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 2
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -91,9 +91,9 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -114,10 +114,10 @@ trainer:
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:

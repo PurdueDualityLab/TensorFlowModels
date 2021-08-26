@@ -17,7 +17,7 @@ task:
         version: v4
         type: tiny
     num_classes: 80
-    smart_bias: true
+    smart_bias: false
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
             '[40.0, 28.0]',
@@ -35,7 +35,7 @@ task:
       activation: leaky
       norm_epsilon: 0.0001
       norm_momentum: 0.97
-      use_sync_bn: true
+      use_sync_bn: false
     filter:
       loss_type:  
         'all': ciou
@@ -60,7 +60,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 8
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -92,7 +92,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 8
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -109,10 +109,10 @@ task:
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 1
-  steps_per_loop: 1
-  summary_interval: 1
-  validation_interval: 1
+  validation_steps: 1850
+  steps_per_loop: 1850
+  summary_interval: 1850
+  validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
     # ema:

@@ -35,51 +35,6 @@ class BaseOptimizerConfig(base_config.Config):
   clipvalue: Optional[float] = None
   global_clipnorm: Optional[float] = None
 
-
-@dataclasses.dataclass
-class SGDAccumConfig(BaseOptimizerConfig):
-  """Configuration for SGD optimizer.
-
-  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
-
-  Attributes:
-    name: name of the optimizer.
-    decay: decay rate for SGD optimizer.
-    nesterov: nesterov for SGD optimizer.
-    momentum: momentum for SGD optimizer.
-  """
-  name: str = "SGD"
-  decay: float = 0.0
-  nesterov: bool = False
-  momentum: float = 0.0
-  momentum_start: float = 0.0
-  accumulation_type: str = "mean"
-  one_offset: bool = False
-  accumulation_steps: int = 1
-  adjusted_for_accum: bool = True
-  warmup_steps: int = 1000
-
-
-@dataclasses.dataclass
-class SGDMomentumWarmupConfig(BaseOptimizerConfig):
-  """Configuration for SGD optimizer.
-
-  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
-
-  Attributes:
-    name: name of the optimizer.
-    decay: decay rate for SGD optimizer.
-    nesterov: nesterov for SGD optimizer.
-    momentum: momentum for SGD optimizer.
-  """
-  name: str = "SGD"
-  decay: float = 0.0
-  nesterov: bool = False
-  momentum_start: float = 0.0
-  momentum: float = 0.9
-  warmup_steps: int = 1000
-
-
 @dataclasses.dataclass
 class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
@@ -100,23 +55,7 @@ class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   warmup_steps: int = 1000
   weight_decay: float = 0.0
   sim_torch: bool = False
-
-
-@dataclasses.dataclass
-class ScaledYoloSGDConfig(BaseOptimizerConfig):
-  """Configuration for SGD optimizer.
-
-  The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
-
-  Attributes:
-    name: name of the optimizer.
-    decay: decay rate for SGD optimizer.
-    nesterov: nesterov for SGD optimizer.
-    momentum: momentum for SGD optimizer.
-  """
-  name: str = "SGD"
-  decay: float = 0.0
-  nesterov: bool = False
-  momentum_start: float = 0.0
-  momentum: float = 0.8
-  warmup_steps: int = 1000
+  weight_keys: List[str] = dataclasses.field(
+    default_factory=lambda:["kernel"]) 
+  bias_keys: List[str] = dataclasses.field(
+    default_factory=lambda:["bias", "beta"]) 

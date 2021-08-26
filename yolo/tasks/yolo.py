@@ -578,44 +578,15 @@ class YoloTask(base_task.Task):
     ema = opt_factory._use_ema
     opt_factory._use_ema = False
     if (self._task_config.smart_bias_lr > 0.0):
-      optimizer_weights = opt_factory.build_optimizer(
-          opt_factory.build_learning_rate())
-
-      wd_rep1 = hasattr(opt_factory._optimizer_config, "weight_decay")
-      wd_rep2 = hasattr(opt_factory._optimizer_config, "weight_decay_rate")
-      wd = 0.0
-      if wd_rep1:
-        wd = getattr(opt_factory._optimizer_config, "weight_decay", 0.0)
-        setattr(opt_factory._optimizer_config, "weight_decay", 0.0)
-      elif wd_rep2:
-        wd = getattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
-        setattr(opt_factory._optimizer_config, "weight_decay_rate", 0.0)
-
-      optimizer_others = opt_factory.build_optimizer(
-          opt_factory.build_learning_rate())
-      optimizer_biases = opt_factory.build_optimizer(
-          opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
-
-      if wd_rep1:
-        setattr(opt_factory._optimizer_config, "weight_decay", wd)
-      elif wd_rep2:
-        setattr(opt_factory._optimizer_config, "weight_decay_rate", wd)
-
-      print(wd)
-
-      optimizer_weights.name = "weights_lr"
-      optimizer_others.name = "others_lr"
-      optimizer_biases.name = "bias_lr"
-      weights, bias, other = self._model.get_weight_groups(
-          self._model.trainable_variables)
-      optimizer = CompositeOptimizer([(optimizer_weights, lambda: weights),
-                                      (optimizer_biases, lambda: bias),
-                                      (optimizer_others, lambda: other)])
+      optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
+      optimizer.set_bias_lr(opt_factory.get_bias_lr_schedule(
+        self._task_config.smart_bias_lr))
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 
     print(optimizer)
-    # optimizer = self._wrap_optimizer(optimizer, runtime_config)
+    optimizer = self._wrap_optimizer(optimizer, runtime_config)
+    print(optimizer)
     opt_factory._use_ema = ema
     optimizer = opt_factory.add_ema(optimizer)
     return optimizer

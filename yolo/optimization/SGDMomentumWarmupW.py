@@ -8,6 +8,7 @@ from tensorflow.python.util.tf_export import keras_export
 from tensorflow_addons.optimizers import DecoupledWeightDecayExtension
 
 import tensorflow as tf
+import re
 
 __all__ = ['SGD']
 
@@ -83,32 +84,52 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
                warmup_steps=1000,
                nesterov=False,
                sim_torch=False,
+               weight_keys = ["kernel"], 
+               bias_keys = ["bias", "beta"], 
                name="SGD",
                **kwargs):
     super(SGDMomentumWarmupW, self).__init__(name, **kwargs)
+    self._weight_keys = weight_keys
+    self._bias_keys = bias_keys 
+
+    # Create Hyper Params for each group of the LR 
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
     self._set_hyper("bias_learning_rate", kwargs.get("lr", learning_rate))
+    self._set_hyper("other_learning_rate", kwargs.get("lr", learning_rate))
 
+    # SGD decay param
     self._set_hyper("decay", self._initial_decay)
-    self._set_hyper("weight_decay", weight_decay)
-    print(weight_decay)
+    
+    # Weight decay param
     self._weight_decay = weight_decay != 0.0
+    self._set_hyper("weight_decay", weight_decay)
 
+    # Enable Momentum 
     self._momentum = False
     if isinstance(momentum, ops.Tensor) or callable(momentum) or momentum > 0:
       self._momentum = True
     if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
       raise ValueError("`momentum` must be between [0, 1].")
-
     self._set_hyper("momentum", momentum)
     self._set_hyper("momentum_start", momentum_start)
     self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
+
+    # Enable Nesterov Momentum 
     self.nesterov = nesterov
+
+    # Simulate Pytorch Optimizer
     self.sim_torch = sim_torch
 
-  def _set_bias_lr(self, lr, bias_key):
-    self._LR_bias_depth = bias_key
+  def set_bias_lr(self, lr):
     self._set_hyper("bias_learning_rate", lr)
+
+  def set_other_lr(self, lr):
+    self._set_hyper("other_learning_rate", lr)
+
+  def _create_slots(self, var_list):
+    if self._momentum:
+      for var in var_list:
+        self.add_slot(var, "momentum")
 
   def _get_momentum(self, iteration):
     momentum = self._get_hyper("momentum")
@@ -123,11 +144,6 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
                               momentum_warm_up_steps, momentum.dtype))),
         false_fn=lambda: momentum)
     return value
-
-  def _create_slots(self, var_list):
-    if self._momentum:
-      for var in var_list:
-        self.add_slot(var, "momentum")
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
     super(SGDMomentumWarmupW, self)._prepare_local(var_device, var_dtype,
@@ -145,23 +161,51 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
     bias_lr = self._get_hyper("bias_learning_rate")
     if isinstance(bias_lr, learning_rate_schedule.LearningRateSchedule):
       bias_lr = bias_lr(self.iterations)
-
     bias_lr = tf.cast(bias_lr, var_dtype)
     apply_state[(var_device,
-                 var_dtype)]["bias_lr"] = array_ops.identity(bias_lr)
+                 var_dtype)]["bias_lr_t"] = array_ops.identity(bias_lr)
+
+    other_lr = self._get_hyper("other_learning_rate")
+    if isinstance(other_lr, learning_rate_schedule.LearningRateSchedule):
+      other_lr = other_lr(self.iterations)
+    other_lr = tf.cast(other_lr, var_dtype)
+    apply_state[(var_device,
+                 var_dtype)]["other_lr_t"] = array_ops.identity(other_lr)
     return apply_state[(var_device, var_dtype)]
 
-  def _apply(self, grad, var, coefficients):
+  def _apply_tf(self, grad, var, weight_decay, momentum, lr):
+    def decay_op(var, learning_rate, wd):
+      if self._weight_decay:
+        return var.assign_sub(
+            learning_rate * var * wd,
+            use_locking=self._use_locking)
+      return tf.no_op()
+
+    decay = decay_op(var, lr, weight_decay)
+    with tf.control_dependencies([decay]):
+      if self._momentum:
+        momentum_var = self.get_slot(var, "momentum")
+        return gen_training_ops.ResourceApplyKerasMomentum(
+            var=var.handle,
+            accum=momentum_var.handle,
+            lr=lr,
+            grad=grad,
+            momentum=momentum,
+            use_locking=self._use_locking,
+            use_nesterov=self.nesterov)
+      else:
+        return gen_training_ops.ResourceApplyGradientDescent(
+            var=var.handle, alpha=lr, delta=grad, use_locking=self._use_locking)
+
+  def _apply(self, grad, var, weight_decay, momentum, lr):
     dparams = grad
     groups = []
 
     if self._weight_decay:
-      weight_decay = coefficients["weight_decay"]
       dparams += (weight_decay * var)
 
     if self._momentum:
       momentum_var = self.get_slot(var, "momentum")
-      momentum = coefficients["momentum"]
       momentum_update = momentum_var.assign(
           momentum * momentum_var + dparams, use_locking=self._use_locking)
       groups.append(momentum_update)
@@ -171,72 +215,54 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
       else:
         dparams = momentum_update
 
-    lr = coefficients["lr_t"]
     weight_update = var.assign_add(-lr * dparams, use_locking=self._use_locking)
     groups.append(weight_update)
     return tf.group(*groups)
 
-  def _apply_tf(self, grad, var, coefficients):
-    lr = coefficients["lr_t"]
+  def _get_vartype(self, var_name):
+    for key in self._weight_keys:
+      if re.search(key, var_name) is not None:
+        return True, False
+    
+    for key in self._bias_keys:
+      if re.search(key, var_name) is not None:
+        return False, True 
+    return False, False
 
-    def decay_op(var, learning_rate, apply_state):
-      if self._weight_decay:
-        return var.assign_sub(
-            learning_rate * var * apply_state['weight_decay'],
-            use_locking=self._use_locking)
-      return tf.no_op()
-
-    decay = decay_op(var, lr, coefficients)
-    with tf.control_dependencies([decay]):
-      if self._momentum:
-        momentum_var = self.get_slot(var, "momentum")
-        return gen_training_ops.ResourceApplyKerasMomentum(
-            var=var.handle,
-            accum=momentum_var.handle,
-            lr=lr,
-            grad=grad,
-            momentum=coefficients["momentum"],
-            use_locking=self._use_locking,
-            use_nesterov=self.nesterov)
-      else:
-        return gen_training_ops.ResourceApplyGradientDescent(
-            var=var.handle, alpha=lr, delta=grad, use_locking=self._use_locking)
-
-  def _resource_apply_dense(self, grad, var, apply_state=None):
+  def _run_sgd(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
                     self._fallback_apply_state(var_device, var_dtype))
+
+    weights, bias = self._get_vartype(var.name)
+    weight_decay = tf.zeros_like(coefficients["weight_decay"])
+    lr = coefficients["lr_t"]
+    if weights:
+      weight_decay = coefficients["weight_decay"]
+      lr = coefficients["lr_t"]
+    elif bias: 
+      weight_decay = tf.zeros_like(coefficients["weight_decay"])
+      lr = coefficients["bias_lr_t"]
+    else: 
+      weight_decay = tf.zeros_like(coefficients["weight_decay"])
+      lr = coefficients["other_lr_t"]
+    momentum = coefficients["momentum"]
+
     if self.sim_torch:
-      return self._apply(grad, var, coefficients)
+      return self._apply(grad, var, weight_decay, momentum, lr)
     else:
-      return self._apply_tf(grad, var, coefficients)
+      return self._apply_tf(grad, var, weight_decay, momentum, lr)
 
-  def _resource_apply_sparse_duplicate_indices(self, grad, var, indices,
-                                               **kwargs):
-    if self._momentum:
-      return super(SGDMomentumWarmupW,
-                   self)._resource_apply_sparse_duplicate_indices(
-                       grad, var, indices, **kwargs)
-    else:
-      var_device, var_dtype = var.device, var.dtype.base_dtype
-      coefficients = (
-          kwargs.get("apply_state", {}).get((var_device, var_dtype)) or
-          self._fallback_apply_state(var_device, var_dtype))
-
-      if self.sim_torch:
-        return self._apply(grad, var, coefficients)
-      else:
-        return self._apply_tf(grad, var, coefficients)
+  def _resource_apply_dense(self, grad, var, apply_state=None):
+    return self._run_sgd(grad, var, apply_state=apply_state)
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
-    var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
-                    self._fallback_apply_state(var_device, var_dtype))
-    if self.sim_torch:
-      return self._apply(grad, var, coefficients)
-    else:
-      return self._apply_tf(grad, var, coefficients)
+    return self._run_sgd(grad, var, apply_state=apply_state)
+
+  def _resource_apply_sparse_duplicate_indices(self, grad, var, indices,
+                                               **kwargs):
+    return self._run_sgd(grad, var)
 
   def get_config(self):
     config = super(SGDMomentumWarmupW, self).get_config()
@@ -249,3 +275,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
         "nesterov": self.nesterov,
     })
     return config
+
+  @property
+  def learning_rate(self):
+    return self._optimizer._get_hyper('learning_rate')
