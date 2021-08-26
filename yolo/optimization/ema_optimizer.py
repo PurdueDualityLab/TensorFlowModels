@@ -106,17 +106,3 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
     ctx = tf.distribute.get_replica_context()
     return ctx.merge_call(
         _update, args=(zip(self._average_weights, self._model_weights),))
-
-  @property
-  def learning_rate(self):
-    try:
-      return super().learning_rate
-    except:
-      return self._optimizer.learning_rate
-
-  @learning_rate.setter
-  def learning_rate(self, learning_rate):  # pylint: disable=redefined-outer-name
-    try:
-      self._optimizer._set_hyper('learning_rate', learning_rate)
-    except:
-      pass

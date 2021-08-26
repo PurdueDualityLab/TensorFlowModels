@@ -175,7 +175,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
 
   def _apply_tf(self, grad, var, weight_decay, momentum, lr):
     def decay_op(var, learning_rate, wd):
-      if self._weight_decay:
+      if self._weight_decay and wd > 0:
         return var.assign_sub(
             learning_rate * var * wd,
             use_locking=self._use_locking)
