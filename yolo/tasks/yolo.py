@@ -336,7 +336,8 @@ class YoloTask(base_task.Task):
     # Denormalize the boxes by the shape of the image
     boxes = box_ops.denormalize_boxes(boxes, inshape)
 
-    if self.task_config.model.dynamic_conv:
+    if self.task_config.model.filter.use_scaled_loss:
+      # if self.task_config.model.dynamic_conv:
       # Clip the boxes to remove all padding
       boxes /= tf.tile(scale, [1, 1, 2])
       boxes += tf.tile(offset, [1, 1, 2])
