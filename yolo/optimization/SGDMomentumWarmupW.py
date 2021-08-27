@@ -12,8 +12,26 @@ import re
 
 __all__ = ['SGD']
 
+def _var_key(var):
+  """Key for representing a primary variable, for looking up slots.
+  In graph mode the name is derived from the var shared name.
+  In eager mode the name is derived from the var unique id.
+  If distribution strategy exists, get the primary variable first.
+  Args:
+    var: the variable.
+  Returns:
+    the unique name of the variable.
+  """
 
-# problem is that sub division cannot change between saves
+  # pylint: disable=protected-access
+  # Get the distributed variable if it exists.
+  if hasattr(var, "_distributed_container"):
+    var = var._distributed_container()
+  if var._in_graph_mode:
+    return var._shared_name
+  return var._unique_id
+
+
 class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
   r"""Gradient descent (with momentum) optimizer.
   Update rule for parameter `w` with gradient `g` when `momentum` is 0:
@@ -119,12 +137,26 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
 
     # Simulate Pytorch Optimizer
     self.sim_torch = sim_torch
+    
+    # weights, biases, other
+    self._wset = set() 
+    self._bset = set()
+    self._oset = set()
 
   def set_bias_lr(self, lr):
     self._set_hyper("bias_learning_rate", lr)
 
   def set_other_lr(self, lr):
     self._set_hyper("other_learning_rate", lr)
+
+  def set_params(self, weights, biases, others):
+    self._wset = set([_var_key(w) for w in weights])
+    self._bset = set([_var_key(b) for b in biases])
+    self._oset = set([_var_key(o) for o in others])
+    print(" weights: ", len(weights), 
+          " biases: ", len(biases), 
+          " others: ", len(others))
+    return 
 
   def _create_slots(self, var_list):
     if self._momentum:
@@ -171,6 +203,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
     other_lr = tf.cast(other_lr, var_dtype)
     apply_state[(var_device,
                  var_dtype)]["other_lr_t"] = array_ops.identity(other_lr)
+
     return apply_state[(var_device, var_dtype)]
 
   def _apply_tf(self, grad, var, weight_decay, momentum, lr):
@@ -219,22 +252,19 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
     groups.append(weight_update)
     return tf.group(*groups)
 
-  def _get_vartype(self, var_name):
-    for key in self._weight_keys:
-      if re.search(key, var_name) is not None:
-        return True, False
-    
-    for key in self._bias_keys:
-      if re.search(key, var_name) is not None:
-        return False, True 
-    return False, False
+  def _get_vartype(self, var, coefficients):
+    if (_var_key(var) in self._wset):
+      return True, False, False
+    elif (_var_key(var) in self._bset):
+      return False, True, False
+    return False, False, True
 
   def _run_sgd(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
                     self._fallback_apply_state(var_device, var_dtype))
 
-    weights, bias = self._get_vartype(var.name)
+    weights, bias, others = self._get_vartype(var, coefficients)
     weight_decay = tf.zeros_like(coefficients["weight_decay"])
     lr = coefficients["lr_t"]
     if weights:
@@ -243,7 +273,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
     elif bias: 
       weight_decay = tf.zeros_like(coefficients["weight_decay"])
       lr = coefficients["bias_lr_t"]
-    else: 
+    elif others: 
       weight_decay = tf.zeros_like(coefficients["weight_decay"])
       lr = coefficients["other_lr_t"]
     momentum = coefficients["momentum"]

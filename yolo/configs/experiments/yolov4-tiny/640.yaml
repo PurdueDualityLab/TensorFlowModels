@@ -1,8 +1,8 @@
 runtime:
   distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float32'
+  mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   coco91to80: True
   reduced_logs: True
@@ -92,7 +92,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -109,16 +109,16 @@ task:
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 1850
+  validation_steps: 1
   steps_per_loop: 1850
   summary_interval: 1850
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: cosine_epoch
       cosine_epoch:

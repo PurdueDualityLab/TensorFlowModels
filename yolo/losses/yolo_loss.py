@@ -738,7 +738,7 @@ class Yolo_Loss(object):
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
     true_conf = self.build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=True)
+        inds, smoothed_iou, pred_conf, ind_mask, update=False)
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     #     compute the detection map loss, there should be no masks
