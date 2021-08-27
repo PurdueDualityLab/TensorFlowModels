@@ -33,8 +33,6 @@ from official.core import config_definitions
 from yolo import optimization
 from official.modeling import performance
 
-from yolo.optimization.CompositeOptimizer import CompositeOptimizer
-
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
 
