@@ -74,23 +74,6 @@ def apply_mask(mask, x):
   masked = tf.where(mask, x, tf.zeros_like(x))
   return masked
 
-
-# @tf.custom_gradient
-# def apply_mask(mask, x):
-#   # this function is used to apply no nan mask to an input tensor
-#   # as such this will apply a mask and remove NAN for both the
-#   # forward AND backward propagation
-#   mask = tf.cast(mask, tf.bool)
-#   masked = tf.where(mask, x, tf.zeros_like(x))
-
-#   def delta(dy):
-#     # mask the incoming derivative as well.
-#     masked_dy = tf.where(mask, dy, tf.zeros_like(dy))
-#     return tf.zeros_like(mask), masked_dy
-
-#   return masked , delta
-
-
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
