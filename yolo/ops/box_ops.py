@@ -234,7 +234,6 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     ciou: a `Tensor` who represents the complete intersection over union.
   """
   with tf.name_scope('ciou'):
-    # compute center distance
     if not yxyx:
       xycc1, xycc2 = box1, box2
       yxyx1 = xcycwh_to_yxyx(box1)
@@ -262,7 +261,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     terma = math_ops.divide_no_nan(b1w, b1h)  # gt
     termb = math_ops.divide_no_nan(b2w, b2h)  # pred
     arcterm = tf.squeeze(
-        tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis=-1)
+        tf.math.pow(tf.math.atan(termb) - tf.math.atan(terma), 2), axis=-1)
     v = (4 / math.pi**2) * arcterm
 
     # Compute the aspect ratio weight, should be treated as a constant
