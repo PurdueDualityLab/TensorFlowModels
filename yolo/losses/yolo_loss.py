@@ -238,7 +238,33 @@ def get_predicted_box(width,
                       darknet=True,
                       max_delta=5.0,
                       normalizer=1.0):
+  """Decodes the predicted boxes from the model format to a usable 
+  [x, y, w, h] format for use in the loss function as well as for use 
+  with in the detection generator.   
 
+  Args: 
+    width: `float` scalar indicating the width of the prediction layer.
+    height: `float` scalar indicating the height of the prediction layer
+    unscaled_box: Tensor of shape [..., height, width, 4] holding encoded boxes.
+    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding box width and height.  
+    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+      boxes for decoding the box centers.
+    scale_xy: `float` scaler used to indicating the range for each center 
+      outside of its given [..., i, j, 4] index, where i and j are indexing 
+      pixels along width and height in the predicited output map. 
+    darknet: `bool` used to select between custom gradient and default autograd.  
+    max_delta: `float` scaler used for gradient clipping in back propagation. 
+  
+  Returns: 
+    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
+      Truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+      boxes.
+    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
+      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+  """
+  
   pred_xy = unscaled_box[..., 0:2]
   pred_wh = unscaled_box[..., 2:4]
 
@@ -260,6 +286,34 @@ def get_predicted_box(width,
 
 def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
+  """Decodes the predicted boxes as per the Scaled papers logic from the model 
+  format to a usable [x, y, w, h] format for use in the loss function as well as 
+  for use with in the detection generator.   
+
+  Args: 
+    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
+      center coordinates. 
+    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
+      values. 
+    width: `float` scalar indicating the width of the prediction layer.
+    height: `float` scalar indicating the height of the prediction layer
+    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding box width and height.  
+    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+      boxes for decoding the box centers.
+    max_delta: `float` scaler used for gradient clipping in back propagation. 
+    scale_xy: `float` scaler used to indicating the range for each center 
+      outside of its given [..., i, j, 4] index, where i and j are indexing 
+      pixels along width and height in the predicited output map.  
+  
+  Returns: 
+    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
+      Truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+      boxes.
+    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
+      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+  """
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
 
@@ -297,6 +351,36 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
 @tf.custom_gradient
 def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
                             grid_points, max_delta, scale_xy, normalizer):
+  """Decodes the predicted boxes as per the Scaled papers logic from the model 
+  format to a usable [x, y, w, h] format for use in the loss function as well as 
+  for use with in the detection generator. This function wrap the decoding function 
+  above in order to allow for a custom gradient matching the Darknet paper 
+  implementation of this model.  
+
+  Args: 
+    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
+      center coordinates. 
+    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
+      values. 
+    width: `float` scalar indicating the width of the prediction layer.
+    height: `float` scalar indicating the height of the prediction layer
+    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding box width and height.  
+    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+      boxes for decoding the box centers.
+    max_delta: `float` scaler used for gradient clipping in back propagation. 
+    scale_xy: `float` scaler used to indicating the range for each center 
+      outside of its given [..., i, j, 4] index, where i and j are indexing 
+      pixels along width and height in the predicited output map.  
+  
+  Returns: 
+    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
+      Truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+      boxes.
+    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
+      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+  """
   (scaler, scaled_box,
    pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height,
                                      anchor_grid, grid_points, max_delta,
@@ -340,6 +424,33 @@ def get_predicted_box_newcords(width,
                                darknet=False,
                                max_delta=5.0,
                                normalizer=1.0):
+  """Decodes the predicted boxes from the model format to a usable 
+  [x, y, w, h] format for use in the loss function as well as for use 
+  with in the detection generator.   
+
+  Args: 
+    width: `float` scalar indicating the width of the prediction layer.
+    height: `float` scalar indicating the height of the prediction layer
+    unscaled_box: Tensor of shape [..., height, width, 4] holding encoded boxes.
+    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding box width and height.  
+    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+      boxes for decoding the box centers.
+    scale_xy: `float` scaler used to indicating the range for each center 
+      outside of its given [..., i, j, 4] index, where i and j are indexing 
+      pixels along width and height in the predicited output map. 
+    darknet: `bool` used to select between custom gradient and default autograd.  
+    max_delta: `float` scaler used for gradient clipping in back propagation. 
+  
+  Returns: 
+    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
+      Truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+      boxes.
+    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
+      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+  """
+
   pred_xy = unscaled_box[..., 0:2]
   pred_wh = unscaled_box[..., 2:4]
 
@@ -382,52 +493,60 @@ class Yolo_Loss(object):
                scale_x_y=1.0,
                max_delta=10,
                **kwargs):
-    """
-    parameters for the loss functions used at each detection head output
+    """Parameters for the YOLO loss functions used at each detection head 
+    output. This method builds the loss to be used in both the Scaled YOLO 
+    papers and the standard YOLO papers. The Scaled loss is most optimal on 
+    images with a high resolution and models that are very large. The standard
+    Loss function will perform better on images that are smaller, have more 
+    sparse labels, and or on very small models. 
+
     Args:
       classes: `int` for the number of classes 
       mask: `List[int]` for the output level that this specific model output 
         level
       anchors: `List[List[int]]` for the anchor boxes that are used in the model 
-        at all levels
+        at all levels. For anchor free prediction set the anchor list to be the 
+        same as the image resolution. 
       scale_anchors: `int` for how much to scale this level to get the orginal 
-        input shape
+        input shape.
       ignore_thresh: `float` for the IOU value over which the loss is not 
-        propagated, and a detection is assumed to have been made 
+        propagated, and a detection is assumed to have been made.
       truth_thresh: `float` for the IOU value over which the loss is propagated 
-        despite a detection being made 
+        despite a detection being made.
       loss_type: `str` for the typeof iou loss to use with in {ciou, diou, 
-        giou, iou}
+        giou, iou}.
       iou_normalizer: `float` for how much to scale the loss on the IOU or the 
-        boxes
-      cls_normalizer: `float` for how much to scale the loss on the classes
-      obj_normalizer: `float` for how much to scale loss on the detection map
+        boxes.
+      cls_normalizer: `float` for how much to scale the loss on the classes.
+      obj_normalizer: `float` for how much to scale loss on the detection map.
       objectness_smooth: `float` for how much to smooth the loss on the 
-        detection map 
+        detection map.
       use_reduction_sum: `bool` for whether to use the scaled loss 
-        or the traditional loss
+        or the traditional loss.
+      update_on_repeat: `bool` for whether to replace with the newest or the
+        best value when an index is consumed by multiple objects. 
       label_smoothing: `float` for how much to smooth the loss on the classes
-      new_cords: `bool` for which scaling type to use 
+      new_cords: `bool` for which scaling type to use. 
       scale_xy: dictionary `float` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
         predict values for a center at. the center can range from 0 - value/2 
         to 1 + value/2, this value is set in the yolo filter, and resused here. 
         there should be one value for scale_xy for each level from min_level to 
-        max_level
-      max_delta: gradient clipping to apply to the box loss 
+        max_level.
+      max_delta: gradient clipping to apply to the box loss. 
 
     Return:
-      loss: `float` for the actual loss
-      box_loss: `float` loss on the boxes used for metrics
-      conf_loss: `float` loss on the confidence used for metrics
-      class_loss: `float` loss on the classes used for metrics
+      loss: `float` for the actual loss.
+      box_loss: `float` loss on the boxes used for metrics.
+      conf_loss: `float` loss on the confidence used for metrics.
+      class_loss: `float` loss on the classes used for metrics.
       avg_iou: `float` metric for the average iou between predictions 
-        and ground truth
+        and ground truth.
       avg_obj: `float` metric for the average confidence of the model 
-        for predictions
-      recall50: `float` metric for how accurate the model is
-      precision50: `float` metric for how precise the model is
+        for predictions.
+      recall50: `float` metric for how accurate the model is.
+      precision50: `float` metric for how precise the model is.
     """
 
     if loss_type == "giou":
