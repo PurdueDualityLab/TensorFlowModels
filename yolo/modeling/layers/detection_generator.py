@@ -28,6 +28,7 @@ class YoloLayer(ks.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_scaled_loss=False,
+               update_on_repeat=False, 
                darknet=None,
                pre_nms_points=5000,
                label_smoothing=0.0,
@@ -110,6 +111,7 @@ class YoloLayer(ks.Model):
 
     self._use_scaled_loss = use_scaled_loss
     self._darknet = darknet
+    self._update_on_repeat = update_on_repeat
 
     self._pre_nms_points = pre_nms_points
     self._label_smoothing = label_smoothing
@@ -326,6 +328,7 @@ class YoloLayer(ks.Model):
           new_cords=self._new_cords[key],
           objectness_smooth=self._objectness_smooth[key],
           use_scaled_loss=self._use_scaled_loss,
+          update_on_repeat=self._update_on_repeat,
           label_smoothing=self._label_smoothing,
           mask=self._masks[key],
           max_delta=self._max_delta[key],
