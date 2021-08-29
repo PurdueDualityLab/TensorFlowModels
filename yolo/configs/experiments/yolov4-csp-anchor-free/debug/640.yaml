@@ -53,7 +53,7 @@ task:
   train_data:
     global_batch_size: 64
     dtype: float32
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -85,7 +85,7 @@ task:
   validation_data:
     global_batch_size: 64
     dtype: float32
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
