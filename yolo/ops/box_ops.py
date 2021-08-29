@@ -244,7 +244,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
       xycc1 = yxyx_to_xcycwh(box1)
       xycc2 = yxyx_to_xcycwh(box2)
 
-    # build the
+    # Build the smallest encomapssing box. 
     cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
     intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
     iou = math_ops.divide_no_nan(intersection, union)
@@ -253,20 +253,20 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
     b2xy, b2w, b2h = tf.split(xycc2, [2, 1, 1], axis=-1)
     bchw = cma - cmi
 
-    # center regularization
+    # Center regularization
     center_dist = tf.reduce_sum((b1xy - b2xy)**2, axis=-1)
     c_diag = tf.reduce_sum(bchw**2, axis=-1)
     regularization = math_ops.divide_no_nan(center_dist, c_diag)
 
-    # computer aspect ratio consistency
+    # Computer aspect ratio consistency
     terma = math_ops.divide_no_nan(b1w, b1h)  # gt
     termb = math_ops.divide_no_nan(b2w, b2h)  # pred
     arcterm = tf.squeeze(
         tf.math.pow(tf.math.atan(terma) - tf.math.atan(termb), 2), axis=-1)
     v = (4 / math.pi**2) * arcterm
 
-    # aspect ration weight
-    a = tf.stop_gradient(math_ops.divide_no_nan(v, ((1 - iou) + v)))
+    # Compute the aspect ratio weight, should be treated as a constant
+    a = tf.stop_gradient(math_ops.divide_no_nan(v, 1 - iou + v))
 
     if darknet:
       grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
