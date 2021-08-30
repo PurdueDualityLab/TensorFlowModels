@@ -64,8 +64,7 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   """
   eps = 1e-9
   x = tf.math.sigmoid(x_prime)
-  if label_smoothing != 0.0:
-    y = y * (1 - label_smoothing) + 0.5 * label_smoothing
+  y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
   bce = -y * tf.math.log(x + eps) -(1 - y) * tf.math.log(1 - x + eps) 
 
   def delta(dpass):
@@ -899,7 +898,7 @@ class Yolo_Loss(object):
 
     # compute the loss of all the boxes and apply a mask such that
     # within the 200 boxes, only the indexes of importance are covered
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    liou, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
