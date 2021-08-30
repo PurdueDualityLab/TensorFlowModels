@@ -753,7 +753,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
-                     ar_thr=20,
+                     ar_thr=100,
                      area_thr=0.0):
 
   # Area thesh can be negative if darknet clipping is used.
