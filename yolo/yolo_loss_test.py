@@ -67,8 +67,8 @@ if __name__ == "__main__":
     i, k = image
     id = k['source_id'][0]
     # plt.imshow(tf.cast(i[0], tf.float32).numpy())
-    a = task.validation_step(image, model)
-    # a = task.train_step(image, model, optimizer)
+    # a = task.validation_step(image, model)
+    a = task.train_step(image, model, optimizer)
 
     # pred = model(image)
     # image = tf.image.draw_bounding_boxes(tf.cast(image, tf.flaot32),

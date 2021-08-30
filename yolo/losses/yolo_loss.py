@@ -62,14 +62,15 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
     bce: Tensor of the bce applied loss values.
     delta: callable function indicating the custom gradient for this operation.  
   """
+  eps = 1e-9
   x = tf.math.sigmoid(x_prime)
-  y = y * (1 - label_smoothing) + 0.5 * label_smoothing
-  bce = ks.losses.binary_crossentropy(
-      y, x_prime, label_smoothing=0.0, from_logits=True)
+  if label_smoothing != 0.0:
+    y = y * (1 - label_smoothing) + 0.5 * label_smoothing
+  bce = -y * tf.math.log(x + eps) -(1 - y) * tf.math.log(1 - x + eps) 
 
-  def delta(dy):
-    dloss = (-y + x)
-    dx = dloss * tf.expand_dims(dy, axis=-1)
+  def delta(dpass):
+    x = tf.math.sigmoid(x_prime)
+    dx = (-y + x) * dpass
     dy = tf.zeros_like(y)
     return dy, dx, 0.0
   return bce, delta
@@ -898,7 +899,7 @@ class Yolo_Loss(object):
 
     # compute the loss of all the boxes and apply a mask such that
     # within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
@@ -906,8 +907,7 @@ class Yolo_Loss(object):
     #     iou to take only a certain percent of the iou or the ground truth,
     #     i.e smooth the detection map
     #     build a the ground truth detection map
-    iou = tf.stop_gradient(iou)
-    iou = tf.maximum(iou, 0.0)
+    iou = tf.maximum(tf.stop_gradient(iou), 0.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
@@ -918,8 +918,9 @@ class Yolo_Loss(object):
 
     #     compute the detection map loss, there should be no masks
     #     applied
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    # bce = ks.losses.binary_crossentropy(
+    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
     conf_loss = tf.reduce_mean(bce)
 
     # 7.  (class loss) build the one hot encoded true class values
