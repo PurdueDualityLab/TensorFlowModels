@@ -15,8 +15,8 @@ task:
       decoder:
         version: v4
         type: tiny
-      darknet_weights_file: 'cache://yolov4-tiny.weights'
-      darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
+      # darknet_weights_file: 'cache://yolov4-tiny.weights'
+      # darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
     num_classes: 80
     smart_bias: true
     boxes: ['[12.0, 16.0]',
@@ -42,6 +42,8 @@ task:
         'all': ciou
       iou_normalizer: 
         'all': 0.05
+      ignore_thresh:
+        'all': 0.7
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -61,7 +63,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 16
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -108,8 +110,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
-  load_darknet_weights: true
-  darknet_load_decoder: true
+  # load_darknet_weights: true
+  # darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78

@@ -935,10 +935,10 @@ class Yolo_Loss(object):
 
     #     compute the detection map loss, there should be no masks
     #     applied
-    # bce = ks.losses.binary_crossentropy(
-    #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    bce = tf.reduce_mean(
-      sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
+    bce = ks.losses.binary_crossentropy(
+        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    # bce = tf.reduce_mean(
+    #   sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
     if self._ignore_thresh != 0.0:
       conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.reduce_mean(bce)
@@ -946,13 +946,13 @@ class Yolo_Loss(object):
     # 7.  (class loss) build the one hot encoded true class values
     #     compute the loss on the classes, apply the same inds mask
     #     and the compute the average of all the values
-    # class_loss = ks.losses.binary_crossentropy(
-    #     true_class,
-    #     pred_class,
-    #     label_smoothing=self._label_smoothing,
-    #     from_logits=True)
-    class_loss = tf.reduce_mean(
-      sigmoid_BCE(true_class, pred_class, self._label_smoothing), axis = -1)
+    class_loss = ks.losses.binary_crossentropy(
+        true_class,
+        pred_class,
+        label_smoothing=self._label_smoothing,
+        from_logits=True)
+    # class_loss = tf.reduce_mean(
+    #   sigmoid_BCE(true_class, pred_class, self._label_smoothing), axis = -1)
     class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
     class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
 
