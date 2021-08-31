@@ -877,12 +877,28 @@ class Yolo_Loss(object):
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
+    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
+    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+
+    scale, pred_box, _ = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+
+    if self._ignore_thresh != 0.0:
+      (_, _, _, _, _, obj_mask) = self._tiled_global_box_search(
+          pred_box,
+          sigmoid_class,
+          sigmoid_conf,
+          boxes,
+          classes,
+          true_conf,
+          fwidth,
+          fheight,
+          smoothed=False,
+          scale=scale)
 
     # based on input val new_cords decode the box predicitions
     # and because we are using the scaled loss, do not change the gradients
     # at all
-    scale, pred_box, _ = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
     offset = tf.cast(
         tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
     offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
@@ -921,7 +937,10 @@ class Yolo_Loss(object):
     #     applied
     # bce = ks.losses.binary_crossentropy(
     #     K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
+    bce = tf.reduce_mean(
+      sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
+    if self._ignore_thresh != 0.0:
+      conf_loss = apply_mask(obj_mask, bce)
     conf_loss = tf.reduce_mean(bce)
 
     # 7.  (class loss) build the one hot encoded true class values
@@ -948,7 +967,7 @@ class Yolo_Loss(object):
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    # sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
     # 10. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
