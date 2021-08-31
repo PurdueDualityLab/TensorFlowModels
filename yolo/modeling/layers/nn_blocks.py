@@ -175,6 +175,8 @@ class ConvBN(tf.keras.layers.Layer):
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
     elif self._activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
+    elif self._activation == 'silu':
+      self._activation_fn = lambda x: x * tf.math.sigmoid(x)
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
 
