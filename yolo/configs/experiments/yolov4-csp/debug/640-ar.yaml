@@ -75,7 +75,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
-      area_thresh: 0.15
+      area_thresh: 0.2
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
@@ -124,7 +124,7 @@ trainer:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 549450
+        decay_steps: 555000
     optimizer:
       type: sgd_dymow
       sgd_dymow:

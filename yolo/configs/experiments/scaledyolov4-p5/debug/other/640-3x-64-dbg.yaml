@@ -122,7 +122,7 @@ trainer:
         initial_learning_rate: 0.001
         name: Cosine
         alpha: 0.2
-        decay_steps: 549450
+        decay_steps: 555000
         steps_per_epoch: 1850
     optimizer:
       type: adam
