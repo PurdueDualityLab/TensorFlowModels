@@ -31,7 +31,7 @@ task:
     min_level: 3
     norm_activation:
       activation: mish
-      norm_epsilon: 0.001
+      norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
     filter:
@@ -75,7 +75,7 @@ task:
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
-      area_thresh: 0.0
+      area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True

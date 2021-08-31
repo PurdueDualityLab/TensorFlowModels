@@ -31,9 +31,9 @@ task:
     min_level: 3
     norm_activation:
       activation: mish
-      norm_epsilon: 0.001
-      norm_momentum: 0.99
-      use_sync_bn: true
+      norm_epsilon: 0.0001
+      norm_momentum: 0.97
+      use_sync_bn: false
     filter:
       loss_type:  
         'all': ciou
@@ -57,7 +57,7 @@ task:
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
-      update_on_repeat: false
+      update_on_repeat: true
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -74,7 +74,7 @@ task:
       aug_rand_hue: 0.015
       aug_scale_min: 0.1
       aug_scale_max: 1.9
-      aug_rand_translate: 0.1
+      aug_rand_translate: 0.15
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
