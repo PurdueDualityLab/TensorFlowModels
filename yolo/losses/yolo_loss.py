@@ -967,7 +967,8 @@ class Yolo_Loss(object):
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
-    # sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    box_loss = box_loss * 0.05 / self._iou_normalizer
 
     # 10. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
