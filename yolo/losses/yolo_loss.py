@@ -74,7 +74,7 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
     return dy, dx, 0.0
   return bce, delta
 
-def apply_mask(mask, x):
+def apply_mask(mask, x, value = 0):
   """This function is used for gradient masking. The YOLO loss function makes 
   extensive use of dynamically shaped tensors. To allow this use case on the 
   TPU while preserving the gradient correctly for back propagation we use this 
@@ -90,7 +90,7 @@ def apply_mask(mask, x):
     x: A masked `Tensor` with the same shape as x.
   """
   mask = tf.cast(mask, tf.bool)
-  masked = tf.where(mask, x, tf.zeros_like(x))
+  masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
 
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
@@ -337,7 +337,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
 
   # decode the widht and height of the boxes and correlate them
   # to the anchor boxes
-  box_wh = tf.square(2 * pred_wh) * anchor_grid
+  box_wh = (2 * pred_wh)**2 * anchor_grid
 
   # build the final boxes
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
@@ -862,6 +862,8 @@ class Yolo_Loss(object):
     true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
+    grid_points = tf.stop_gradient(grid_points)
+    anchor_grid = tf.stop_gradient(anchor_grid)
 
     # 2. split the y_true grid into the usable items, set the shapes correctly
     #    and save the true_confdence mask before it get altered
