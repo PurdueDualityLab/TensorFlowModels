@@ -10,10 +10,10 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'altered_cspdarknet53'
+          model_id: 'cspdarknettiny'
       decoder:
         version: v4
-        type: csp
+        type: tiny
     num_classes: 80
     smart_bias: true
     boxes: ['[64.0, 64.0]',

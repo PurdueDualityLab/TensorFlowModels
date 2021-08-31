@@ -81,6 +81,7 @@ class Parser(parser.Parser):
                use_tie_breaker=True,
                dtype='float32',
                coco91to80=False,
+               anchor_free_limits=None, 
                seed=None):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
@@ -219,6 +220,7 @@ class Parser(parser.Parser):
     self._scale_up = {key: 3 for i, key in enumerate(keys)
                      } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
+    self._anchor_free_limits = anchor_free_limits
 
     self._seed = seed
 
@@ -480,6 +482,7 @@ class Parser(parser.Parser):
         width=width,
         height=height,
         iou_thresh=self._anchor_t,
+        anchor_free_limits = self._anchor_free_limits, 
         best_match_only=self._best_match_only)
 
     # Set/fix the boxes shape.

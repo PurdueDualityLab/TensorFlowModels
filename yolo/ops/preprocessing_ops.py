@@ -1330,7 +1330,7 @@ def get_best_anchor(y_true,
                     width=1,
                     height=1,
                     iou_thresh=0.25,
-                    anchor_free=False, 
+                    anchor_free_limits=None, 
                     best_match_only=False):
   """
   get the correct anchor that is assoiciated with each box using IOU
@@ -1370,9 +1370,10 @@ def get_best_anchor(y_true,
         tf.concat([tf.zeros_like(anchors), anchors], axis=-1), axis=0)
     truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis=-1)
 
-    if anchor_free:
-      minim = tf.convert_to_tensor([0.0   , 2.0**6, 2.0**7, 2.0**8, 2.0**9  ])
-      maxim = tf.convert_to_tensor([2.0**6, 2.0**7, 2.0**8, 2.0**9, 100000.0])
+    if anchor_free_limits is not None:
+      minim = tf.convert_to_tensor([0.0] + anchor_free_limits)
+      maxim = tf.convert_to_tensor(anchor_free_limits + [100000.0])
+
       maxim = tf.tensor_scatter_nd_update(maxim, [[k - 1]], [100000.0])
       minim = tf.reshape(minim[:k], [1, k, 1])
       maxim = tf.reshape(maxim[:k], [1, k, 1])

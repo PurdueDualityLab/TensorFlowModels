@@ -296,6 +296,7 @@ class Yolo(ModelConfig):
       norm_momentum=0.99,
       norm_epsilon=0.001)
   boxes: Optional[List[str]] = None
+  anchor_free_limits: Optional[int] = None
   smart_bias: bool = False
 
 

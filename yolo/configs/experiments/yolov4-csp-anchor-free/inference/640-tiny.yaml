@@ -1,6 +1,8 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
+  num_gpus: 2
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -10,10 +12,10 @@ task:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'altered_cspdarknet53'
+          model_id: 'cspdarknettiny'
       decoder:
         version: v4
-        type: csp
+        type: tiny
     num_classes: 80
     smart_bias: true
     boxes: ['[64.0, 64.0]',
@@ -58,7 +60,7 @@ task:
   train_data:
     global_batch_size: 64
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -90,7 +92,7 @@ task:
   validation_data:
     global_batch_size: 128
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true

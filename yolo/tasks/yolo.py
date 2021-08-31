@@ -74,7 +74,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    anchors = self._get_boxes(gen_boxes=params.is_training)
+    anchors, _ = self._get_boxes(gen_boxes=params.is_training)
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -90,8 +90,6 @@ class YoloTask(base_task.Task):
 
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales)
-
-    # model.print()
 
     self._loss_dict = losses
     self._model = model
@@ -125,7 +123,7 @@ class YoloTask(base_task.Task):
     model = self.task_config.model
 
     masks, _, xy_scales = self._get_masks()
-    anchors = self._get_boxes(gen_boxes=params.is_training)
+    anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
     rsize = params.parser.mosaic.resize
     if rsize is None:
@@ -190,6 +188,7 @@ class YoloTask(base_task.Task):
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
+        anchor_free_limits=anchor_free_limits,
         seed=params.seed,
         dtype=params.dtype)
 
@@ -426,7 +425,8 @@ class YoloTask(base_task.Task):
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
-    return self.task_config.model._boxes
+    return (self.task_config.model._boxes, 
+              self.task_config.model.anchor_free_limits)
 
   def _get_masks(self):
 
