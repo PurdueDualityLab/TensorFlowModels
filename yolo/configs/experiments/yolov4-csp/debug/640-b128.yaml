@@ -134,7 +134,7 @@ trainer:
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 2775
-        weight_decay: 0.0005
+        weight_decay: 0.001
         sim_torch: true
         name: SGD
     warmup:
