@@ -969,12 +969,13 @@ class Yolo_Loss(object):
     #    and selective gradient clipping
     sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
     bm_loss = tf.stop_gradient(box_loss * 0.05 / self._iou_normalizer)
+    m_loss = tf.stop_gradient(bm_loss + class_loss + conf_loss)
 
     # 10. compute all the values for the metrics
     recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
     avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, bm_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj,
+    return (loss, bm_loss, conf_loss, class_loss, m_loss, avg_iou, avg_obj,
             recall50, precision50)
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):

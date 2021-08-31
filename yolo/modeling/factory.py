@@ -76,12 +76,10 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
                       xy_scales, path_scales):
 
   def _build(values):
-    print(values)
     if "all" in values and values["all"] is not None:
       for key in values:
         if key != 'all':
           values[key] = values["all"]
-    print(values)
     return values
 
   model = YoloLayer(
