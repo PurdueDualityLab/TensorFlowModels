@@ -74,7 +74,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    anchors, _ = self._get_boxes(gen_boxes=params.is_training)
+    anchors, anchor_free = self._get_boxes(gen_boxes=params.is_training)
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -90,6 +90,11 @@ class YoloTask(base_task.Task):
 
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales)
+
+    model.summary()
+    if anchor_free is not None:
+      print("INFO: The model is operating under anchor free conditions")
+
 
     self._loss_dict = losses
     self._model = model

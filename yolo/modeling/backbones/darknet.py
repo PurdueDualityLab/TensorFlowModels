@@ -666,7 +666,6 @@ def build_darknet(
       norm_momentum=norm_activation_config.norm_momentum,
       norm_epsilon=norm_activation_config.norm_epsilon,
       kernel_regularizer=l2_regularizer)
-  model.summary()
   return model
 
 
