@@ -916,7 +916,7 @@ class Yolo_Loss(object):
 
     # compute the loss of all the boxes and apply a mask such that
     # within the 200 boxes, only the indexes of importance are covered
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    liou, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
