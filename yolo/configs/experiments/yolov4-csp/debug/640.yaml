@@ -69,7 +69,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: True
+      letter_box: null
       random_flip: True
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.4
@@ -89,7 +89,7 @@ task:
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
-        aspect_ratio_mode: 'letter'
+        aspect_ratio_mode: 'fixed'
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
@@ -101,7 +101,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: True
+      letter_box: null
       use_tie_breaker: True
       use_scale_xy: True
       anchor_thresh: 4.0

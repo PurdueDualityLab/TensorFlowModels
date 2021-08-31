@@ -203,7 +203,9 @@ class Mosaic(object):
     infos = []
     random_crop = self._random_crop
     letter_box = True
-    if self._aspect_ratio_mode == 'distort':
+    if self._aspect_ratio_mode == 'fixed':
+      letter_box = None
+    elif self._aspect_ratio_mode == 'distort':
       letter_box = False
     elif self._aspect_ratio_mode == 'crop':
       letter_box = None
@@ -307,14 +309,20 @@ class Mosaic(object):
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
     """Scale and translate the boxes for each image after patching has been 
     completed"""
+    dtype = boxes.dtype
+    under_flow = tf.cast(640, tf.float32)
+    boxes = tf.cast(boxes, tf.float32) * under_flow
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
     scale = tf.cast(tf.shape(patch) / ishape, boxes.dtype)
-    translate = tf.cast((ishape - tf.shape(patch)) / ishape, boxes.dtype)
+    translate = tf.cast((ishape - tf.shape(patch)) / ishape,
+                                                   boxes.dtype) * under_flow
     boxes = boxes * tf.cast([scale[0], scale[1], scale[0], scale[1]],
                             boxes.dtype)
-    return self.translate_boxes(boxes, classes, translate[1] * xs,
+    boxes, classes = self.translate_boxes(boxes, classes, translate[1] * xs,
                                              translate[0] * ys)
+    boxes = tf.cast(boxes, tf.float32) / under_flow
+    return tf.cast(boxes, dtype), classes 
 
   # mosaic partial frequency
   def _mapped(self, sample):
