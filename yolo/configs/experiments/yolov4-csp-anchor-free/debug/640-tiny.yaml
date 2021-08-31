@@ -84,7 +84,7 @@ task:
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
-        aspect_ratio_mode: 'fixed'
+        aspect_ratio_mode: 'true'
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
@@ -128,11 +128,11 @@ trainer:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 5550
+        warmup_steps: 9250
         weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 5550 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
