@@ -630,15 +630,15 @@ class Yolo_Loss(object):
     # compute_<name> indicated the type of iou to use
     if self._loss_type == 1:
       iou, liou = box_ops.compute_giou(true_box, pred_box)
+      loss_box = 1 - liou
     elif self._loss_type == 2:
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
       # iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2 = False, CIoU=True)
+      loss_box = 1 - liou
     else:
-      iou = box_ops.compute_iou(true_box, pred_box)
+      iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
+      loss_box = 1 - liou
       liou = iou
-    # compute the inverse of iou or the value you plan to
-    # minimize as 1 - iou_type
-    loss_box = 1 - liou
     return iou, liou, loss_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf,
@@ -916,7 +916,7 @@ class Yolo_Loss(object):
 
     # compute the loss of all the boxes and apply a mask such that
     # within the 200 boxes, only the indexes of importance are covered
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 

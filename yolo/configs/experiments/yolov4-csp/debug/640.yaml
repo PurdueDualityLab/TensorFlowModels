@@ -69,7 +69,7 @@ task:
     drop_remainder: true
     parser:
       max_num_instances: 300
-      letter_box: null
+      letter_box: True
       random_flip: True
       aug_rand_saturation: 0.7
       aug_rand_brightness: 0.4
@@ -113,7 +113,7 @@ trainer:
   validation_steps: 39
   steps_per_loop: 1850
   summary_interval: 1850
-  validation_interval: 5550
+  validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
     ema:
