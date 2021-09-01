@@ -932,14 +932,17 @@ def _get_num_reps(anchors, mask, box_mask):
       tf.logical_and(box_mask, anchors_primary == mask), axis=0)
   viable_alternate = tf.squeeze(
       tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
+  viable_full = tf.squeeze(
+      tf.logical_and(box_mask, anchors == mask), axis=0)
 
   viable_primary = tf.where(viable_primary)
   viable_alternate = tf.where(viable_alternate)
+  viable_full = tf.where(viable_full)
 
   viable = anchors == mask
   acheck = tf.reduce_any(viable, axis=-1)
   reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
-  return reps, viable_primary, viable_alternate
+  return reps, viable_primary, viable_alternate, viable_full
 
 
 def _gen_utility(boxes):
@@ -1027,10 +1030,11 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   # rescale the x and y centers to the size of the grid [size, size]
   mask = tf.cast(mask, dtype=dtype)
   box_mask = _gen_utility(boxes)
-  num_reps, viable_primary, viable_alternate = _get_num_reps(
+  num_reps, viable_primary, viable_alternate, viable = _get_num_reps(
       anchors, mask, box_mask)
   viable_primary = tf.cast(viable_primary, tf.int32)
   viable_alternate = tf.cast(viable_alternate, tf.int32)
+  viable = tf.cast(viable, tf.int32)
 
   num_written = 0
   ind_val = tf.TensorArray(
@@ -1042,28 +1046,24 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
           8,
       ])
 
-  (ind_val, ind_sample,
-   num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-                             ind_val, ind_sample, height, width, num_written,
-                             num_instances, 0.0)
-
-  if use_tie_breaker:
-    (ind_val, ind_sample,
-     num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
-                               ind_val, ind_sample, height, width, num_written,
-                               num_instances, 0.0)
-
   if pull_in > 0.0:
     (ind_val, ind_sample,
-     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-                               ind_val, ind_sample, height, width, num_written,
-                               num_instances, pull_in)
+      num_written) = write_grid(viable, num_reps, boxes, classes,
+                                ious, ind_val, ind_sample, height, width,
+                                num_written, num_instances, pull_in)
+  else:
+    (ind_val, ind_sample,
+    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                              ind_val, ind_sample, height, width, num_written,
+                              num_instances, 0.0)
 
     if use_tie_breaker:
       (ind_val, ind_sample,
-       num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
-                                 ious, ind_val, ind_sample, height, width,
-                                 num_written, num_instances, pull_in)
+      num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
+                                ind_val, ind_sample, height, width, num_written,
+                                num_instances, 0.0)
+
+
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
@@ -1110,6 +1110,13 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   y = box[1] * height
   x = box[0] * width
 
+  y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+  x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+  grid_idx = tf.concat([y_, x_, a_], axis=-1)
+  ind_val = ind_val.write(num_written, grid_idx)
+  ind_sample = ind_sample.write(num_written, sample)
+  num_written += 1
+
   # idk if this is right!!! just testing it now
   if offset > 0:
     g = tf.cast(offset, x.dtype)
@@ -1138,13 +1145,13 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
         num_written += 1
-  else:
-    y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-    x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-    grid_idx = tf.concat([y_, x_, a_], axis=-1)
-    ind_val = ind_val.write(num_written, grid_idx)
-    ind_sample = ind_sample.write(num_written, sample)
-    num_written += 1
+  # else:
+  #   y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+  #   x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+  #   grid_idx = tf.concat([y_, x_, a_], axis=-1)
+  #   ind_val = ind_val.write(num_written, grid_idx)
+  #   ind_sample = ind_sample.write(num_written, sample)
+  #   num_written += 1
   return ind_val, ind_sample, num_written
 
 

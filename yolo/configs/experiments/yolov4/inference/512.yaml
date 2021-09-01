@@ -66,7 +66,7 @@ task:
   train_data:
     global_batch_size: 1
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -101,7 +101,7 @@ task:
   validation_data:
     global_batch_size: 1
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -112,9 +112,11 @@ task:
       use_scale_xy: False
       anchor_thresh: 0.213
   weight_decay: 0.0005
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
+  # init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  # init_checkpoint_modules: 'backbone'
   annotation_file: null
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
@@ -123,10 +125,10 @@ trainer:
   validation_interval: 20000 #00
   checkpoint_interval: 10000
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: stepwise
       stepwise:

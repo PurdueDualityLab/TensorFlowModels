@@ -1101,9 +1101,9 @@ class Yolo_Loss(object):
 
     # 13. compute the sigmoid binary cross entropy, same as bce with logits but
     #     it is far safer with no holes. gradient reduces to y_pred - y_true.
-    class_loss = sigmoid_BCE(
+    class_loss = tf.reduce_mean(sigmoid_BCE(
         K.expand_dims(true_class, axis=-1), K.expand_dims(pred_class, axis=-1),
-        self._label_smoothing)
+        self._label_smoothing), axis = -1)
 
     # 14. apply the weight from the configs to the predictions classes
     if self._cls_normalizer < 1.0:
@@ -1122,7 +1122,8 @@ class Yolo_Loss(object):
 
     # 16. use the custom sigmoid BCE to compute the loss at each pixel
     #     in the detection map
-    bce = sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0)
+    bce = tf.reduce_mean(
+      sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
 
     # 17. apply the ignore mask to the detection map to zero out all the
     #     indexes where the loss should not be computed. we use the apply
