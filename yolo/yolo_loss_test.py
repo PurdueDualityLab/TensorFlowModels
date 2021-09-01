@@ -65,6 +65,8 @@ if __name__ == "__main__":
     if p >= lim:
       break
     i, k = image
+
+    plt.imshow(i[0])
     id = k['source_id'][0]
     # plt.imshow(tf.cast(i[0], tf.float32).numpy())
     a = task.validation_step(image, model)

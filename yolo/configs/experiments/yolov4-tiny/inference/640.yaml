@@ -15,23 +15,15 @@ task:
       decoder:
         version: v4
         type: tiny
-      # darknet_weights_file: 'cache://yolov4-tiny.weights'
-      # darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
+      darknet_weights_file: 'cache://yolov4-tiny.weights'
+      darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
     num_classes: 80
     smart_bias: true
-    boxes: ['[12.0, 16.0]',
-            '[19.0, 36.0]',
-            '[40.0, 28.0]',
-            '[36.0, 75.0]', 
-            '[76.0, 55.0]', 
-            '[72.0, 146.0]', 
-            '[142.0, 110.0]', 
-            '[192.0, 243.0]', 
-            '[459.0, 401.0]']
+    boxes: ['(10, 14)', '(23, 27)', '(37, 58)', '(81, 82)', '(135, 169)', '(344, 319)']
     input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
-    min_level: 3
+    min_level: 4
     norm_activation:
       activation: leaky
       norm_epsilon: 0.0001
@@ -42,8 +34,8 @@ task:
         'all': ciou
       iou_normalizer: 
         'all': 0.05
-      # ignore_thresh:
-      #   'all': 0.7
+      ignore_thresh:
+        'all': 0.0
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -61,9 +53,9 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
-      use_scaled_loss: true
+      use_scaled_loss: false
   train_data:
-    global_batch_size: 16
+    global_batch_size: 4
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -82,7 +74,7 @@ task:
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
-      use_scale_xy: True
+      use_scale_xy: false
       anchor_thresh: 4.0
       best_match_only: True
       mosaic: 
@@ -110,8 +102,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
-  # load_darknet_weights: true
-  # darknet_load_decoder: true
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
