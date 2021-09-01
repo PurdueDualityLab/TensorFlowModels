@@ -1110,13 +1110,6 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   y = box[1] * height
   x = box[0] * width
 
-  y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-  x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-  grid_idx = tf.concat([y_, x_, a_], axis=-1)
-  ind_val = ind_val.write(num_written, grid_idx)
-  ind_sample = ind_sample.write(num_written, sample)
-  num_written += 1
-
   # idk if this is right!!! just testing it now
   if offset > 0:
     g = tf.cast(offset, x.dtype)
@@ -1152,6 +1145,12 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   #   ind_val = ind_val.write(num_written, grid_idx)
   #   ind_sample = ind_sample.write(num_written, sample)
   #   num_written += 1
+  y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+  x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+  grid_idx = tf.concat([y_, x_, a_], axis=-1)
+  ind_val = ind_val.write(num_written, grid_idx)
+  ind_sample = ind_sample.write(num_written, sample)
+  num_written += 1
   return ind_val, ind_sample, num_written
 
 
