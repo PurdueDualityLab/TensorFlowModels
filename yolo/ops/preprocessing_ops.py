@@ -1087,6 +1087,7 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   (true_box, _, true_class, _, _) = tf.split(
       samples, [4, 1, 1, 1, 1], axis=-1)
   true_class = tf.squeeze(true_class, axis = -1)
+  true_box = box_ops.xcycwh_to_yxyx(true_box)
 
   if use_tie_breaker:
     (ind_val, ind_sample,
