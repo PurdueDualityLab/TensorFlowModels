@@ -366,7 +366,7 @@ class Yolo_Loss(object):
     # axe[1].imshow(true_conf[0, ...].numpy())
     # axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
     # plt.show()
-    tf.print(mean_loss)
+    # tf.print(mean_loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
