@@ -42,8 +42,8 @@ task:
         'all': ciou
       iou_normalizer: 
         'all': 0.05
-      ignore_thresh:
-        'all': 0.0
+      ignore_thresh: 
+        'all': 0.1
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 

@@ -1,3 +1,4 @@
+from os import pread
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.python.ops.custom_gradient import custom_gradient
@@ -231,12 +232,12 @@ class PairWiseSearch(object):
             max_iou      , idx + 1)
   
   def visualize(self, pred_boxes, max_iou, running_boxes, running_classes):
-    if VISUALIZE:
-      iou = self.box_iou(pred_boxes, running_boxes)
-      fig, axe = plt.subplots(1, 2)
-      axe[0].imshow(max_iou[0, ..., 0].numpy())
-      axe[1].imshow(iou[0, ...].numpy())
-      plt.show()
+    #if VISUALIZE:
+    iou = self.box_iou(pred_boxes, running_boxes)
+    fig, axe = plt.subplots(1, 2)
+    axe[0].imshow(max_iou[0, ...].numpy())
+    axe[1].imshow(iou[0, ...].numpy())
+    plt.show()
     return 
 
   def __call__(self, 
@@ -290,6 +291,8 @@ class PairWiseSearch(object):
     max_iou *= mask 
     max_iou = tf.squeeze(max_iou, axis = -1)
     mask = tf.squeeze(mask, axis = -1)
+
+    #self.visualize(pred_boxes, max_iou, running_boxes, running_classes)
 
     return (tf.stop_gradient(running_boxes), 
             tf.stop_gradient(running_classes), 
