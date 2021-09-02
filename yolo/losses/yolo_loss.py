@@ -127,8 +127,13 @@ class Yolo_Loss(object):
     self._anchor_generator = GridGenerator(
         masks=mask, anchors=anchors, scale_anchors=scale_anchors)
 
-    if ignore_thresh > 0.0 or self._use_reduction_sum == None:
-      self._pairs = PairWiseSearch(any = 0.25)
+    # if ignore_thresh > 0.0:
+    if not self._use_reduction_sum:
+      self._box_pairing = PairWiseSearch(any = 0.25)
+    else:
+      self._box_pairing = PairWiseSearch(any = 0.25, 
+                                         track_boxes=True, 
+                                         track_classes=True)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -218,9 +223,15 @@ class Yolo_Loss(object):
     scale, pred_box, unscaled_box = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
     true_box = scale * true_box
+    true_box = apply_mask(ind_mask, true_box)
+    pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
 
-    
-
+    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
+    rb, rc, max_iou = self._box_pairing(unscaled_box, 
+                                        sigmoid_class, 
+                                        boxes, 
+                                        classes, 
+                                        clip_thresh = self._ignore_thresh)
 
     # build the class object
     true_class = tf.one_hot(
@@ -247,8 +258,14 @@ class Yolo_Loss(object):
                     self._objectness_smooth * tf.expand_dims(iou, axis=-1))
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
     true_conf = build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
+        inds, smoothed_iou, 
+        pred_conf, ind_mask, 
+        update=self._update_on_repeat, 
+        grid = tf.expand_dims(max_iou, axis = -1))
     true_conf = tf.stop_gradient(tf.squeeze(true_conf, axis=-1))
+
+    plt.imshow(true_conf[0, ...])
+    plt.show()
 
     #     compute the detection map loss, there should be no masks
     #     applied
@@ -473,7 +490,7 @@ class Yolo_Loss(object):
     #    a box. For this indexes, the detection map loss will be ignored.
     #    obj_mask dictates the locations where the loss is ignored.
     if self._ignore_thresh > 0.0:
-      rb, rc, max_iou = self._pairs(pred_box, sigmoid_class, boxes, classes)
+      rb, rc, max_iou = self._box_pairing(pred_box, sigmoid_class, boxes, classes)
       max_iou = tf.cast(max_iou < self._ignore_thresh, dtype = true_conf.dtype)
       obj_mask = true_conf + (1 - true_conf) * max_iou
     else:
@@ -582,9 +599,9 @@ class Yolo_Loss(object):
             recall50, precision50)
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
-    if self._use_reduction_sum == None:
+    if self._use_reduction_sum == True:
       return self.call_free(true_counts, inds, y_true, boxes, classes, y_pred)
-    elif self._use_reduction_sum == True:
-      return self.call_scaled(true_counts, inds, y_true, boxes, classes, y_pred)
+    # elif self._use_reduction_sum == True:
+    #   return self.call_scaled(true_counts, inds, y_true, boxes, classes, y_pred)
     else:
       return self.call_darknet(true_counts, inds, y_true, boxes, classes, y_pred)

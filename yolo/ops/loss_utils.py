@@ -86,7 +86,7 @@ def apply_mask(mask, x, value = 0):
   masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
 
-def build_grid(indexes, truths, preds, ind_mask, update=False):
+def build_grid(indexes, truths, preds, ind_mask, update = False, grid = None):
   # this function is used to broadcast all the indexes to the correct
   # into the correct ground truth mask, used for iou detection map
   # in the scaled loss and the classification mask in the darknet loss
@@ -113,7 +113,8 @@ def build_grid(indexes, truths, preds, ind_mask, update=False):
   truths = tf.reshape(truths, [-1, num_flatten])
 
   # build a zero grid in the samve shape as the predicitons
-  grid = tf.zeros_like(preds)
+  if grid == None:
+    grid = tf.zeros_like(preds)
   # remove invalid values from the truths that may have
   # come up from computation, invalid = nan and inf
   truths = math_ops.rm_nan_inf(truths)
@@ -238,7 +239,13 @@ class PairWiseSearch(object):
       plt.show()
     return 
 
-  def __call__(self, pred_boxes, pred_classes, boxes, classes, yxyx = True):
+  def __call__(self, 
+               pred_boxes, 
+               pred_classes, 
+               boxes, 
+               classes, 
+               yxyx = True, 
+               clip_thresh = 0.0):
     num_boxes = tf.shape(boxes)[-2]
     num_tiles = num_boxes // TILE_SIZE
 
@@ -277,7 +284,7 @@ class PairWiseSearch(object):
            running_boxes, running_classes, 
            max_iou      , tf.constant(0)])
 
-    mask = tf.cast(max_iou > 0.0, running_boxes.dtype)
+    mask = tf.cast(max_iou > clip_thresh, running_boxes.dtype)
     running_boxes *= mask
     running_classes *= tf.squeeze(mask, axis = -1)
     max_iou = tf.squeeze(max_iou, axis = -1)
@@ -327,8 +334,8 @@ def _decode_boxes_yolo(pred_xy, pred_wh, width, height, anchor_grid, grid_points
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # shift scaled boxes
-  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # # shift scaled boxes
+  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -455,8 +462,8 @@ def _decode_boxes_scaledyolo(pred_xy, pred_wh, width, height, anchor_grid,
   scaled_box = K.concatenate([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
 
-  # shift scaled boxes
-  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  # # shift scaled boxes
+  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 

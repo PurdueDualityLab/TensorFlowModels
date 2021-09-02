@@ -35,7 +35,7 @@ task:
       iou_normalizer: 
         'all': 0.05
       ignore_thresh:
-        'all': 0.7
+        'all': 0.2
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -43,7 +43,7 @@ task:
         '4': 0.70
         '3': 2.80
       new_cords:
-        'all': True
+        'all': False
       objectness_smooth: 
         'all': 1.0
       scale_xy:
@@ -53,7 +53,7 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
-      use_scaled_loss: false
+      use_scaled_loss: true
   train_data:
     global_batch_size: 4
     dtype: float32
