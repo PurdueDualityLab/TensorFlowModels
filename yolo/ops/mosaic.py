@@ -310,7 +310,7 @@ class Mosaic(object):
     """Scale and translate the boxes for each image after patching has been 
     completed"""
     dtype = boxes.dtype
-    under_flow = tf.cast(640, tf.float32)
+    under_flow = tf.cast(1.0, tf.float32)
     boxes = tf.cast(boxes, tf.float32) * under_flow
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
