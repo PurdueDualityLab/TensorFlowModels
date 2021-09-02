@@ -279,22 +279,22 @@ class Yolo_Loss(object):
                                           clip_thresh = self._ignore_thresh)
       true_conf = true_conf + max_iou * (1 - grid_mask)
 
-      mask = (1 - grid_mask) * mask
-      num_objs = tf.reduce_sum(mask) + num_objs
+      # mask = (1 - grid_mask) * mask
+      # num_objs = tf.reduce_sum(mask) + num_objs
 
-      # box extra loss
-      _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
-      box_loss_g = apply_mask(mask, box_loss_g)
-      box_loss = tf.reduce_sum(box_loss_g) + box_loss
+      # # box extra loss
+      # _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
+      # box_loss_g = apply_mask(mask, box_loss_g)
+      # box_loss = tf.reduce_sum(box_loss_g) + box_loss
 
-      # class extra loss
-      rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
-          dtype=pred_class.dtype)
-      class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
-          label_smoothing=self._label_smoothing,
-          from_logits=True)
-      class_loss_g = apply_mask(mask, class_loss_g)
-      class_loss = tf.reduce_sum(class_loss_g) + class_loss
+      # # class extra loss
+      # rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
+      #     dtype=pred_class.dtype)
+      # class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
+      #     label_smoothing=self._label_smoothing,
+      #     from_logits=True)
+      # class_loss_g = apply_mask(mask, class_loss_g)
+      # class_loss = tf.reduce_sum(class_loss_g) + class_loss
 
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
