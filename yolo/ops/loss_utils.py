@@ -287,11 +287,14 @@ class PairWiseSearch(object):
     mask = tf.cast(max_iou > clip_thresh, running_boxes.dtype)
     running_boxes *= mask
     running_classes *= tf.squeeze(mask, axis = -1)
+    max_iou *= mask 
     max_iou = tf.squeeze(max_iou, axis = -1)
+    mask = tf.squeeze(mask, axis = -1)
 
     return (tf.stop_gradient(running_boxes), 
             tf.stop_gradient(running_classes), 
-            tf.stop_gradient(max_iou))
+            tf.stop_gradient(max_iou), 
+            tf.stop_gradient(mask))
 
 
 def clip_by_value(vala, valb, max_delta):
