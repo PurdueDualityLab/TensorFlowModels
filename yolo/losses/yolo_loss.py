@@ -296,10 +296,10 @@ class Yolo_Loss(object):
       #   box_loss = tf.reduce_sum(box_loss_g) + box_loss
       #   class_loss = tf.reduce_sum(class_loss_g) + class_loss
     
-    fig, axe = plt.subplots(1, 2)
-    axe[0].imshow(true_conf[0, ...].numpy())
-    axe[1].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
-    plt.show()
+    # fig, axe = plt.subplots(1, 2)
+    # axe[0].imshow(true_conf[0, ...].numpy())
+    # axe[1].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
+    # plt.show()
 
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
