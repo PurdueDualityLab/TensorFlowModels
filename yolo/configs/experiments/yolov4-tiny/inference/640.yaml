@@ -45,7 +45,7 @@ task:
       ignore_thresh:
         'all': 0.7
       truth_thresh:
-        'all': 0.7
+        'all': 1.0
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
