@@ -43,7 +43,7 @@ task:
       iou_normalizer: 
         'all': 0.05
       ignore_thresh:
-        'all': 0.3
+        'all': 0.0
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -114,7 +114,7 @@ task:
   # darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 78
+  validation_steps: 5000
   steps_per_loop: 50
   summary_interval: 50
   validation_interval: 1850
