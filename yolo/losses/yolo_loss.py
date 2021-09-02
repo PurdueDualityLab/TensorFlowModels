@@ -280,7 +280,7 @@ class Yolo_Loss(object):
         pred_conf, ind_mask, 
         update=self._update_on_repeat)
     true_conf = tf.squeeze(true_conf, axis=-1)
-    tfg = true_conf
+    # tfg = true_conf
 
     if self._ignore_thresh > 0.0:
       # pair wise search
@@ -330,11 +330,11 @@ class Yolo_Loss(object):
     mean_loss = box_loss + class_loss + conf_loss
     loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
 
-    fig, axe = plt.subplots(1, 3)
-    axe[0].imshow(tfg[0, ...].numpy())
-    axe[1].imshow(true_conf[0, ...].numpy())
-    axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
-    plt.show()
+    # fig, axe = plt.subplots(1, 3)
+    # axe[0].imshow(tfg[0, ...].numpy())
+    # axe[1].imshow(true_conf[0, ...].numpy())
+    # axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
+    # plt.show()
     # tf.print(mean_loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
