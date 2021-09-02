@@ -130,8 +130,10 @@ class Yolo_Loss(object):
     if ignore_thresh > 0.0 and not self._use_reduction_sum:
       self._box_pairing = PairWiseSearch(any = True, min_conf= 0.25)
     elif ignore_thresh > 0.0 and self._use_reduction_sum:
-      self._box_pairing = PairWiseSearch(any = False, min_conf= 0.25, 
-                                         track_boxes=False, track_classes=False)
+      self._box_pairing = PairWiseSearch(any = self._truth_thresh < 1.0, 
+                                         min_conf= 0.25, 
+                                         track_boxes=self._truth_thresh < 1.0, 
+                                         track_classes=self._truth_thresh < 1.0)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -266,6 +268,7 @@ class Yolo_Loss(object):
         pred_conf, ind_mask, 
         update=self._update_on_repeat)
     true_conf = tf.squeeze(true_conf, axis=-1)
+    tfg = true_conf
 
     if self._ignore_thresh > 0.0:
       # pair wise search
@@ -277,29 +280,26 @@ class Yolo_Loss(object):
                                           clip_thresh = self._ignore_thresh)
       true_conf = true_conf + max_iou * (1 - grid_mask)
 
-      # if self._truth_thresh < 1.0:
-      #   mask = (1 - grid_mask) * tf.cast((true_conf > self._truth_thresh), mask.dtype)
-      #   num_objs = tf.reduce_sum(mask) + num_objs
+      if self._truth_thresh < 1.0:
+        mask = (1 - grid_mask) * tf.cast(
+          (true_conf > self._truth_thresh), mask.dtype)
+        num_objs = tf.reduce_sum(mask) + num_objs
 
-      #   # box extra loss
-      #   _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
-      #   box_loss_g = apply_mask(mask, box_loss_g) * true_conf
+        # box extra loss
+        _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
+        box_loss_g = apply_mask(mask, box_loss_g) * true_conf
         
-      #   # class extra loss
-      #   rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
-      #       dtype=pred_class.dtype)
-      #   class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
-      #       label_smoothing=self._label_smoothing,
-      #       from_logits=True)
-      #   class_loss_g = apply_mask(mask, class_loss_g) * true_conf
+        # class extra loss
+        rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
+            dtype=pred_class.dtype)
+        class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
+            label_smoothing=self._label_smoothing,
+            from_logits=True)
+        class_loss_g = apply_mask(mask, class_loss_g) * true_conf
 
-      #   box_loss = tf.reduce_sum(box_loss_g) + box_loss
-      #   class_loss = tf.reduce_sum(class_loss_g) + class_loss
+        box_loss = tf.reduce_sum(box_loss_g) + box_loss
+        class_loss = tf.reduce_sum(class_loss_g) + class_loss
     
-    # fig, axe = plt.subplots(1, 2)
-    # axe[0].imshow(true_conf[0, ...].numpy())
-    # axe[1].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
-    # plt.show()
 
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
@@ -316,6 +316,11 @@ class Yolo_Loss(object):
     mean_loss = box_loss + class_loss + conf_loss
     loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
 
+    # fig, axe = plt.subplots(1, 3)
+    # axe[0].imshow(tfg[0, ...].numpy())
+    # axe[1].imshow(true_conf[0, ...].numpy())
+    # axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
+    # plt.show()
     # tf.print(mean_loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
