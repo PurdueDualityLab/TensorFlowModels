@@ -131,9 +131,10 @@ class Yolo_Loss(object):
       self._box_pairing = PairWiseSearch(any = 0.25)
     elif ignore_thresh > 0.0 and self._use_reduction_sum:
       self._box_pairing = PairWiseSearch(iou_type=loss_type,
-                                         any = 0.25, 
-                                         track_boxes=True, 
-                                         track_classes=True)
+                                         any = 0.25)
+                                        #  , 
+                                        #  track_boxes=True, 
+                                        #  track_classes=True)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
