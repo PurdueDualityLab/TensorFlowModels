@@ -193,12 +193,12 @@ class YoloLayer(ks.Model):
     # configurable to use the new coordinates in scaled Yolo v4 or not
     if not self._new_cords[key]:
       # coordinates from scaled yolov4
-      _, _, boxes = yolo_loss.get_predicted_box(
+      _, _, boxes = loss_utils.get_predicted_box(
           tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
           anchors, centers, scale_xy)
     else:
       # coordinates from regular yolov3 - v4
-      _, _, boxes = yolo_loss.get_predicted_box_newcords(
+      _, _, boxes = loss_utils.get_predicted_box_newcords(
           tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
           anchors, centers, scale_xy)
 
