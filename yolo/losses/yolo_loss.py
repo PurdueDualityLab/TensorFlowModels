@@ -137,7 +137,7 @@ class Yolo_Loss(object):
       self._box_pairing = PairWiseSearch(any = False, #self._truth_thresh < 1.0, 
                                          min_conf= 0.25, 
                                          track_boxes=self._truth_thresh < 1.0, 
-                                         track_classes=self._truth_thresh < 1.0)
+                                         track_classes=False)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -193,6 +193,15 @@ class Yolo_Loss(object):
       loss_box = 1 - liou
       liou = iou
     return iou, liou, loss_box
+
+  def anchor_lookup(self, boxes, anchors):
+    xy, wh = tf.split(boxes, 2, axis=-1)
+
+    b2 = tf.concat([xy, anchors * tf.ones_like(wh)], axis = -1)
+    iou = box_ops.compute_iou(b2, boxes)
+
+    resp_mask = tf.cast(iou > 0.2, boxes.dtype)
+    return resp_mask
 
   def call_free(self, 
                true_counts, 
@@ -282,40 +291,63 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
     # tfg = true_conf
 
-    if self._ignore_thresh > 0.0:
+    if self._ignore_thresh > 0.0 or self._truth_thresh < 1.0:
       # pair wise search
       sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class_g))
-      sb = global_boxes if self._anchor_free else boxes 
-      sc = global_classes if self._anchor_free else classes 
-      rb, rc, max_iou, mask = self._box_pairing(pred_box_g, 
+      sb = global_boxes #if self._anchor_free else boxes 
+      sc = global_classes #if self._anchor_free else classes 
+      rb, _, max_iou, mask = self._box_pairing(pred_box_g, 
                                           sigmoid_class, 
-                                          sb * scale, 
-                                          sc,
-                                          clip_thresh = self._ignore_thresh)
-      true_conf = true_conf + max_iou * (1 - grid_mask)
+                                          sb * scale, sc)
+      ignore_mask = tf.ones_like(mask)
 
-      if self._truth_thresh < 1.0:
-        mask = (1 - grid_mask) * tf.cast(
-          (true_conf > self._truth_thresh), mask.dtype)
-        num_objs = tf.reduce_sum(mask) + num_objs
+    if self._ignore_thresh > 0.0: 
+      # if the iou is larger than the threshold then we do not penalize the 
+      # confidence loss
+      ignore_mask = tf.cast(max_iou > self._ignore_thresh, grid_mask.dtype)
+      ignore_mask = grid_mask + (1 - grid_mask) * ignore_mask
+      ignore_mask = tf.clip_by_value(mask + ignore_mask, 0.0, 1.0)
 
-        # box extra loss
-        _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
-        box_loss_g = apply_mask(mask, box_loss_g) #* true_conf
-        
-        # class extra loss
-        rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
-            dtype=pred_class.dtype)
-        class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
-            label_smoothing=self._label_smoothing,
-            from_logits=True)
-        class_loss_g = apply_mask(mask, class_loss_g) #* true_conf
+    if self._truth_thresh < 1.0:
+      # if the iou is larger than the threshold then we do not penalize the loss
+      # for all the components conf, class, and box
 
-        box_loss = tf.reduce_sum(box_loss_g) + box_loss
-        class_loss = tf.reduce_sum(class_loss_g) + class_loss
+      # look up this box vs the anchors is the grid resposible for it 
+      responsible_mask = self.anchor_lookup(rb, anchor_grid)
+
+      # remove pre assigned boxes to prevent 2x loss at given locals 
+      # only select the locals where max_iou > thresh 
+      # only select the girds that this FPN lvl is responsible for
+      mask = (1 - grid_mask) * tf.cast(max_iou > self._truth_thresh, mask.dtype)
+      mask *= responsible_mask
+
+      # update the ignore mask
+      ignore_mask = tf.clip_by_value(mask + ignore_mask, 0.0, 1.0)
+      num_objs = tf.reduce_sum(mask) + num_objs
+
+      # construct the fill confidence map
+      true_conf = true_conf + max_iou * mask 
+
+      # box extra loss
+      _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
+      box_loss_g = apply_mask(mask, box_loss_g) 
+      
+      # class extra loss
+      rc = build_grid(inds, true_class, pred_class_g, ind_mask, update=False)
+      class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
+          label_smoothing=self._label_smoothing,
+          from_logits=True)
+      class_loss_g = apply_mask(mask, class_loss_g) 
+
+      box_loss = tf.reduce_sum(box_loss_g) + box_loss
+      class_loss = tf.reduce_sum(class_loss_g) + class_loss
 
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    if self._ignore_thresh > 0.0 or self._truth_thresh < 1.0:
+      bce = apply_mask(ignore_mask, bce)
+
+    # take the mean across all the objects
     conf_loss = tf.reduce_mean(bce)
     box_loss = math_ops.divide_no_nan(box_loss, num_objs)
     class_loss = math_ops.divide_no_nan(class_loss, num_objs)
@@ -334,7 +366,7 @@ class Yolo_Loss(object):
     # axe[1].imshow(true_conf[0, ...].numpy())
     # axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
     # plt.show()
-    # tf.print(mean_loss)
+    tf.print(mean_loss)
 
     # 4. apply sigmoid to items and use the gradient trap to contol the backprop
     #    and selective gradient clipping
@@ -347,128 +379,160 @@ class Yolo_Loss(object):
     return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj,
             recall50, precision50)
 
+  # def call_free(self, 
+  #              true_counts, 
+  #              inds, 
+  #              y_true, 
+  #              global_boxes, 
+  #              global_classes, 
+  #              boxes, 
+  #              classes, 
+  #              y_pred):
+  #   # 0. generate shape constants using tf.shat to support feature multi scale
+  #   # training
+  #   shape = tf.shape(true_counts)
+  #   batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
+  #   fwidth = tf.cast(width, tf.float32)
+  #   fheight = tf.cast(height, tf.float32)
+
+  #   # 1. cast all input compontnts to float32 and stop gradient to save memory
+  #   y_true = tf.cast(y_true, tf.float32)
+  #   true_counts = tf.cast(true_counts, tf.float32)
+  #   true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
+  #   grid_points, anchor_grid = self._anchor_generator(
+  #       width, height, batch_size, dtype=tf.float32)
+  #   grid_points = tf.stop_gradient(grid_points)
+  #   anchor_grid = tf.stop_gradient(anchor_grid)
+
+  #   # 2. split the y_true grid into the usable items, set the shapes correctly
+  #   #    and save the true_confdence mask before it get altered
+  #   (true_box, ind_mask, true_class_l, _, _) = tf.split(
+  #       y_true, [4, 1, 1, 1, 1], axis=-1)
+  #   grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
+  #   true_class_l = tf.squeeze(true_class_l, axis=-1)
+  #   num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
+
+  #   # 3. split up the predicitons to match the ground truths shapes
+  #   y_pred = tf.cast(
+  #       tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+  #   pred_box, pred_conf, pred_class_g = tf.split(y_pred, [4, 1, -1], axis=-1)
+
+  #   scale, pred_box_g, unscaled_box = self._decode_boxes(
+  #       fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+  #   true_box = scale * true_box
+  #   true_box = apply_mask(ind_mask, true_box)
+  #   pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box_g, inds, batch_dims=1))
+
+  #   # build the class object
+  #   true_class = tf.one_hot(
+  #       tf.cast(true_class_l, tf.int32),
+  #       depth=tf.shape(pred_class_g)[-1],
+  #       dtype=pred_class_g.dtype)
+  #   true_class = apply_mask(ind_mask, true_class)
+  #   pred_class = apply_mask(ind_mask,
+  #                           tf.gather_nd(pred_class_g, inds, batch_dims=1))
+
+  #   # compute the loss of all the boxes and apply a mask such that
+  #   # within the 200 boxes, only the indexes of importance are covered
+  #   _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+  #   box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+  #   box_loss = tf.reduce_sum(box_loss)
 
 
-  def call_scaled(self, 
-               true_counts, 
-               inds, 
-               y_true, 
-               global_boxes, 
-               global_classes, 
-               boxes, 
-               classes, 
-               y_pred):
-    # 0. generate shape constants using tf.shat to support feature multi scale
-    # training
-    shape = tf.shape(true_counts)
-    batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
-    fwidth = tf.cast(width, tf.float32)
-    fheight = tf.cast(height, tf.float32)
+  #   # 7.  (class loss) build the one hot encoded true class values
+  #   #     compute the loss on the classes, apply the same inds mask
+  #   #     and the compute the average of all the values
+  #   class_loss = ks.losses.binary_crossentropy(
+  #       true_class,
+  #       pred_class,
+  #       label_smoothing=self._label_smoothing,
+  #       from_logits=True)
+  #   class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
+  #   class_loss = tf.reduce_sum(class_loss)
 
-    # 1. cast all input compontnts to float32 and stop gradient to save memory
-    y_true = tf.cast(y_true, tf.float32)
-    true_counts = tf.cast(true_counts, tf.float32)
-    true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
-    grid_points, anchor_grid = self._anchor_generator(
-        width, height, batch_size, dtype=tf.float32)
-    grid_points = tf.stop_gradient(grid_points)
-    anchor_grid = tf.stop_gradient(anchor_grid)
 
-    # 2. split the y_true grid into the usable items, set the shapes correctly
-    #    and save the true_confdence mask before it get altered
-    (true_box, ind_mask, true_class, _, _) = tf.split(
-        y_true, [4, 1, 1, 1, 1], axis=-1)
-    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
-    true_class = tf.squeeze(true_class, axis=-1)
-    num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
+  #   # 6.  (confidence loss) build a selective between the ground truth and the
+  #   #     iou to take only a certain percent of the iou or the ground truth,
+  #   #     i.e smooth the detection map
+  #   #     build a the ground truth detection map
+  #   iou = tf.maximum(tf.stop_gradient(iou), 0.0)
+  #   smoothed_iou = ((
+  #       (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
+  #                   self._objectness_smooth * tf.expand_dims(iou, axis=-1))
+  #   smoothed_iou = apply_mask(ind_mask, smoothed_iou)
+  #   true_conf = build_grid(
+  #       inds, smoothed_iou, 
+  #       pred_conf, ind_mask, 
+  #       update=self._update_on_repeat)
+  #   true_conf = tf.squeeze(true_conf, axis=-1)
+  #   # tfg = true_conf
 
-    # 3. split up the predicitons to match the ground truths shapes
-    y_pred = tf.cast(
-        tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
-    pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
-    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+  #   if self._ignore_thresh > 0.0:
+  #     # pair wise search
+  #     sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class_g))
+  #     sb = global_boxes if self._anchor_free else boxes 
+  #     sc = global_classes if self._anchor_free else classes 
+  #     rb, rc, max_iou, mask = self._box_pairing(pred_box_g, 
+  #                                         sigmoid_class, 
+  #                                         sb * scale, 
+  #                                         sc,
+  #                                         clip_thresh = self._ignore_thresh)
+  #     true_conf = true_conf + max_iou * (1 - grid_mask)
 
-    scale, pred_box, _ = self._decode_boxes(
-        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+  #     if self._truth_thresh < 1.0:
+  #       mask = (1 - grid_mask) * tf.cast(
+  #         (true_conf > self._truth_thresh), mask.dtype)
+  #       num_objs = tf.reduce_sum(mask) + num_objs
 
-    # based on input val new_cords decode the box predicitions
-    # and because we are using the scaled loss, do not change the gradients
-    # at all
-    offset = tf.cast(
-        tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
-    offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
-    true_box = apply_mask(ind_mask, (scale * true_box) - offset)
-    pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
+  #       # box extra loss
+  #       _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
+  #       box_loss_g = apply_mask(mask, box_loss_g) 
+        
+  #       # class extra loss
+  #       rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
+  #           dtype=pred_class.dtype)
+  #       class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
+  #           label_smoothing=self._label_smoothing,
+  #           from_logits=True)
+  #       class_loss_g = apply_mask(mask, class_loss_g) 
 
-    # build the class object
-    true_class = tf.one_hot(
-        tf.cast(true_class, tf.int32),
-        depth=tf.shape(pred_class)[-1],
-        dtype=pred_class.dtype)
-    true_class = apply_mask(ind_mask, true_class)
-    pred_class = apply_mask(ind_mask,
-                            tf.gather_nd(pred_class, inds, batch_dims=1))
+  #       box_loss = tf.reduce_sum(box_loss_g) + box_loss
+  #       class_loss = tf.reduce_sum(class_loss_g) + class_loss
 
-    # compute the loss of all the boxes and apply a mask such that
-    # within the 200 boxes, only the indexes of importance are covered
-    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
-    box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
-    box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
+  #   bce = ks.losses.binary_crossentropy(
+  #       K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+  #   conf_loss = tf.reduce_mean(bce)
+  #   box_loss = math_ops.divide_no_nan(box_loss, num_objs)
+  #   class_loss = math_ops.divide_no_nan(class_loss, num_objs)
 
-    # 6.  (confidence loss) build a selective between the ground truth and the
-    #     iou to take only a certain percent of the iou or the ground truth,
-    #     i.e smooth the detection map
-    #     build a the ground truth detection map
-    iou = tf.maximum(tf.stop_gradient(iou), 0.0)
-    smoothed_iou = ((
-        (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
-                    self._objectness_smooth * tf.expand_dims(iou, axis=-1))
-    smoothed_iou = apply_mask(ind_mask, smoothed_iou)
-    true_conf = build_grid(
-        inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
-    true_conf = tf.stop_gradient(tf.squeeze(true_conf, axis=-1))
+  #   # 8. apply the weights to each loss
+  #   box_loss *= self._iou_normalizer
+  #   class_loss *= self._cls_normalizer
+  #   conf_loss *= self._obj_normalizer
 
-    #     compute the detection map loss, there should be no masks
-    #     applied
-    bce = ks.losses.binary_crossentropy(
-        K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
-    # bce = tf.reduce_mean(
-    #   sigmoid_BCE(K.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
-    conf_loss = tf.reduce_mean(bce)
+  #   # 9. add all the losses together then take the sum over the batches
+  #   mean_loss = box_loss + class_loss + conf_loss
+  #   loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
 
-    # 7.  (class loss) build the one hot encoded true class values
-    #     compute the loss on the classes, apply the same inds mask
-    #     and the compute the average of all the values
-    class_loss = ks.losses.binary_crossentropy(
-        true_class,
-        pred_class,
-        label_smoothing=self._label_smoothing,
-        from_logits=True)
-    # class_loss = tf.reduce_mean(
-    #   sigmoid_BCE(true_class, pred_class, self._label_smoothing), axis = -1)
-    class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
-    class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
+  #   # fig, axe = plt.subplots(1, 3)
+  #   # axe[0].imshow(tfg[0, ...].numpy())
+  #   # axe[1].imshow(true_conf[0, ...].numpy())
+  #   # axe[2].imshow(tf.sigmoid(pred_conf)[0, ..., 0].numpy())
+  #   # plt.show()
+  #   # tf.print(mean_loss)
 
-    # 8. apply the weights to each loss
-    box_loss *= self._iou_normalizer
-    class_loss *= self._cls_normalizer
-    conf_loss *= self._obj_normalizer
+  #   # 4. apply sigmoid to items and use the gradient trap to contol the backprop
+  #   #    and selective gradient clipping
+  #   sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
-    # 9. add all the losses together then take the sum over the batches
-    mean_loss = box_loss + class_loss + conf_loss
-    loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
+  #   # 10. compute all the values for the metrics
+  #   recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
+  #   avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
+  #   avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
+  #   return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj,
+  #           recall50, precision50)
 
-    # 4. apply sigmoid to items and use the gradient trap to contol the backprop
-    #    and selective gradient clipping
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
-    # 10. compute all the values for the metrics
-    recall50, precision50 = self.APAR(sigmoid_conf, grid_mask, pct=0.5)
-    avg_iou = self.avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
-    avg_obj = self.avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
-    return (loss, box_loss, conf_loss, class_loss, mean_loss, avg_iou, avg_obj,
-            recall50, precision50)
 
   def call_darknet(self, 
                   true_counts, 
