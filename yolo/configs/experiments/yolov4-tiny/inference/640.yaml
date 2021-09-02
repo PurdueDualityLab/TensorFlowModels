@@ -45,7 +45,7 @@ task:
       ignore_thresh:
         'all': 0.7
       truth_thresh:
-        'all': 0.7
+        'all': 0.9
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -64,6 +64,7 @@ task:
       nms_thresh: 0.60
       pre_nms_points: 500
       use_scaled_loss: true
+      update_on_repeat: true
   train_data:
     global_batch_size: 16
     dtype: float32

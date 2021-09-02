@@ -313,7 +313,6 @@ class Yolo_Loss(object):
 
         box_loss = tf.reduce_sum(box_loss_g) + box_loss
         class_loss = tf.reduce_sum(class_loss_g) + class_loss
-    
 
     bce = ks.losses.binary_crossentropy(
         K.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
