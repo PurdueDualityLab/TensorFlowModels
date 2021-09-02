@@ -38,13 +38,15 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-rcrop.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-ciou.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-no-hsv.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/debug/640.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
   config = params.task
+
+  
 
   # anchor gen testing
   # config.model.boxes = None
@@ -61,6 +63,7 @@ def test_yolo_input_task():
   config.train_data.shuffle_buffer_size = 1
 
   # if config.train_data.input_path == '':
+  config.coco91to80 = False
   config.train_data.tfds_name = 'coco'
   config.validation_data.tfds_name = 'coco'
   config.train_data.tfds_split = 'train'
