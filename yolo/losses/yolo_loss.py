@@ -130,7 +130,8 @@ class Yolo_Loss(object):
     if ignore_thresh > 0.0 and not self._use_reduction_sum:
       self._box_pairing = PairWiseSearch(any = 0.25)
     elif ignore_thresh > 0.0 and self._use_reduction_sum:
-      self._box_pairing = PairWiseSearch(any = 0.25, 
+      self._box_pairing = PairWiseSearch(iou_type=loss_type,
+                                         any = 0.25, 
                                          track_boxes=True, 
                                          track_classes=True)
 
@@ -269,6 +270,7 @@ class Yolo_Loss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     if self._ignore_thresh > 0.0:
+      # pair wise search
       sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
       rb, rc, max_iou, mask = self._box_pairing(pred_box_g, 
                                           sigmoid_class, 
