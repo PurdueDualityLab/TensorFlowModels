@@ -134,7 +134,7 @@ class Yolo_Loss(object):
     if ignore_thresh > 0.0 and not self._use_reduction_sum:
       self._box_pairing = PairWiseSearch(any = True, min_conf= 0.25)
     elif ignore_thresh > 0.0 and self._use_reduction_sum:
-      self._box_pairing = PairWiseSearch(any = True, #self._truth_thresh < 1.0, 
+      self._box_pairing = PairWiseSearch(any = False, #self._truth_thresh < 1.0, 
                                          min_conf= 0.25, 
                                          track_boxes=self._truth_thresh < 1.0, 
                                          track_classes=self._truth_thresh < 1.0)
@@ -301,7 +301,7 @@ class Yolo_Loss(object):
 
         # box extra loss
         _, _, box_loss_g = self.box_loss(rb, pred_box_g, darknet=False)
-        box_loss_g = apply_mask(mask, box_loss_g) * true_conf
+        box_loss_g = apply_mask(mask, box_loss_g) #* true_conf
         
         # class extra loss
         rc = tf.one_hot(tf.cast(rc, tf.int32), depth=tf.shape(pred_class)[-1],
@@ -309,7 +309,7 @@ class Yolo_Loss(object):
         class_loss_g = ks.losses.binary_crossentropy(rc, pred_class_g,
             label_smoothing=self._label_smoothing,
             from_logits=True)
-        class_loss_g = apply_mask(mask, class_loss_g) * true_conf
+        class_loss_g = apply_mask(mask, class_loss_g) #* true_conf
 
         box_loss = tf.reduce_sum(box_loss_g) + box_loss
         class_loss = tf.reduce_sum(class_loss_g) + class_loss
