@@ -217,6 +217,8 @@ class YoloTask(base_task.Task):
     grid = labels['true_conf']
     inds = labels['inds']
     upds = labels['upds']
+    true_box_path = labels['tbpath']
+    true_class_path = labels['tcpath']
 
     scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
@@ -224,6 +226,8 @@ class YoloTask(base_task.Task):
        _avg_obj, _recall50,
        _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
+                                            true_box_path[key], 
+                                            true_class_path[key],
                                             outputs[key])
       loss_val += _loss
 

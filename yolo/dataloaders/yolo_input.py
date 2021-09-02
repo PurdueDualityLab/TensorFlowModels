@@ -253,6 +253,9 @@ class Parser(parser.Parser):
     upds = {}
     true_conf = {}
 
+    true_box_path = {}
+    true_class_path = {}
+
     # based on if training or not determine how to scale up the number of
     # boxes that may result for final loss computation
     scale_up = self._scale_up
@@ -266,7 +269,8 @@ class Parser(parser.Parser):
 
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
-      indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
+      (indexes, updates, 
+      true_grid, true_box, true_class) = preprocessing_ops.build_grided_gt_ind(
           raw_true, self._masks[key], width // 2**int(key),
           height // 2**int(key), 0, raw_true['bbox'].dtype, scale_xy,
           scale_up[key], use_tie_breaker)
@@ -281,11 +285,23 @@ class Parser(parser.Parser):
       ishape[-2] = self._max_num_instances * scale_up[key]
       updates.set_shape(ishape)
 
+      # set/fix the shape of the indexes
+      ishape = true_box.get_shape().as_list()
+      ishape[-2] = self._max_num_instances 
+      true_box.set_shape(ishape)
+
+      # set/fix the shape of the updates
+      ishape = true_class.get_shape().as_list()
+      ishape[-1] = self._max_num_instances
+      true_class.set_shape(ishape)
+
       # add all the values to the final dictionary
       inds[key] = indexes
       upds[key] = tf.cast(updates, self._dtype)
       true_conf[key] = true_grid
-    return mask, inds, upds, true_conf
+      true_box_path[key] = true_box
+      true_class_path[key] = true_class
+    return mask, inds, upds, true_conf, true_box_path, true_class_path
 
   def _get_identity_info(self, image):
     """Get an identity image op to pad all info vectors, this is used because 
@@ -545,7 +561,8 @@ class Parser(parser.Parser):
     }
 
     # Build the grid formatted for loss computation in model output format.
-    grid, inds, upds, true_conf = self._build_grid(
+    (_, inds, upds, true_conf, 
+    true_box_path, true_class_path) = self._build_grid(
         labels,
         width,
         height,
@@ -556,6 +573,8 @@ class Parser(parser.Parser):
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
     labels['upds'] = upds
     labels['inds'] = inds
+    labels['tbpath'] = true_box_path
+    labels['tcpath'] = true_class_path
     labels['true_conf'] = true_conf
 
     # Sets up groundtruth data for evaluation.

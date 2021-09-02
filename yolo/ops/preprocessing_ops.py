@@ -107,7 +107,6 @@ def get_image_shape(image):
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   """
   Randomly alter the hue, saturation, and brightness of an image. 
-
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
     rh: `float32` used to indicate the maximum delta that can be added to hue.
@@ -137,7 +136,6 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
 # def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #   """
 #   Randomly alter the hue, saturation, and brightness of an image. 
-
 #   Args: 
 #     image: Tensor of shape [None, None, 3] that needs to be altered.
 #     rh: `float32` used to indicate the maximum delta that can be  multiplied to 
@@ -234,7 +232,6 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
   Randomly alter the hue, saturation, and brightness of an image. 
-
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
     rh: `float32` used to indicate the maximum delta that can be  multiplied to 
@@ -303,7 +300,6 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
   """Given a center location, cut the input image into a slice that will be 
   concatnated with other slices with the same center in order to construct 
   a final mosaiced image. 
-
   
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -1081,29 +1077,39 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
           8,
       ])
 
-  if pull_in > 0.0:
+  (ind_val, ind_sample,
+  num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                            ind_val, ind_sample, height, width, num_written,
+                            num_instances, 0.0)
+  
+  # samples on path
+  samples = ind_sample.stack()
+  (true_box, _, true_class, _, _) = tf.split(
+      samples, [4, 1, 1, 1, 1], axis=-1)
+  true_class = tf.squeeze(true_class, axis = -1)
+
+  if use_tie_breaker:
     (ind_val, ind_sample,
-      num_written) = write_grid(viable, num_reps, boxes, classes,
-                                ious, ind_val, ind_sample, height, width,
-                                num_written, num_instances, pull_in)
-  else:
+    num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
+                              ind_val, ind_sample, height, width, num_written,
+                              num_instances, 0.0)
+
+  if pull_in > 0.0:
     (ind_val, ind_sample,
     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
                               ind_val, ind_sample, height, width, num_written,
-                              num_instances, 0.0)
+                              num_instances, pull_in)
 
     if use_tie_breaker:
       (ind_val, ind_sample,
       num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
                                 ind_val, ind_sample, height, width, num_written,
-                                num_instances, 0.0)
-
-
+                                num_instances, pull_in)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
 
-  (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
+  (_, ind_mask, _, _, _) = tf.split(
       samples, [4, 1, 1, 1, 1], axis=-1)
 
   full = tf.zeros([sizeh, sizew, len_masks, 1], dtype=dtype)
@@ -1114,7 +1120,9 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
 
   indexs = pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
   samples = pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
-  return indexs, samples, full
+  true_box = pad_max_instances(true_box, num_boxes, pad_value=0, pad_axis=0)
+  true_class = pad_max_instances(true_class, num_boxes, pad_value=0, pad_axis=0)
+  return indexs, samples, full, true_box, true_class
 
 
 def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
@@ -1145,12 +1153,12 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   y = box[1] * height
   x = box[0] * width
 
-  y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-  x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-  grid_idx = tf.concat([y_, x_, a_], axis=-1)
-  ind_val = ind_val.write(num_written, grid_idx)
-  ind_sample = ind_sample.write(num_written, sample)
-  num_written += 1
+  # y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+  # x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+  # grid_idx = tf.concat([y_, x_, a_], axis=-1)
+  # ind_val = ind_val.write(num_written, grid_idx)
+  # ind_sample = ind_sample.write(num_written, sample)
+  # num_written += 1
 
   # idk if this is right!!! just testing it now
   if offset > 0:
@@ -1180,13 +1188,13 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
         num_written += 1
-  # else:
-  #   y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-  #   x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-  #   grid_idx = tf.concat([y_, x_, a_], axis=-1)
-  #   ind_val = ind_val.write(num_written, grid_idx)
-  #   ind_sample = ind_sample.write(num_written, sample)
-  #   num_written += 1
+  else:
+    y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+    x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+    grid_idx = tf.concat([y_, x_, a_], axis=-1)
+    ind_val = ind_val.write(num_written, grid_idx)
+    ind_sample = ind_sample.write(num_written, sample)
+    num_written += 1
   return ind_val, ind_sample, num_written
 
 

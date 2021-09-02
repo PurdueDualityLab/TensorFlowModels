@@ -38,6 +38,8 @@ class YoloLayer(ks.Model):
                scale_xy=None,
                nms_type='greedy',
                objectness_smooth=False,
+               anchor_free = False, 
+               fpn_sizes = None, 
                **kwargs):
     """
     parameters for the loss functions used at each detection head output
@@ -112,6 +114,8 @@ class YoloLayer(ks.Model):
     self._use_scaled_loss = use_scaled_loss
     self._darknet = darknet
     self._update_on_repeat = update_on_repeat
+    self._anchor_free = anchor_free
+    self._fpn_sizes = fpn_sizes
 
     self._pre_nms_points = pre_nms_points
     self._label_smoothing = label_smoothing
@@ -319,6 +323,8 @@ class YoloLayer(ks.Model):
           classes=self._classes,
           anchors=self._anchors,
           darknet=self._darknet,
+          anchor_free = self._anchor_free,  
+          fpn_sizes = self._fpn_sizes,
           truth_thresh=self._truth_thresh[key],
           ignore_thresh=self._ignore_thresh[key],
           loss_type=self._loss_type[key],
