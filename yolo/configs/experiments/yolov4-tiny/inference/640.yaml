@@ -82,7 +82,7 @@ task:
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
-      use_scale_xy: false
+      use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
       mosaic: 
@@ -115,8 +115,8 @@ task:
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 5000
-  steps_per_loop: 50
-  summary_interval: 50
+  steps_per_loop: 1850
+  summary_interval: 1850
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
@@ -139,7 +139,7 @@ trainer:
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0005
+        weight_decay: 0.0001
         sim_torch: true
         name: SGD
     warmup:
