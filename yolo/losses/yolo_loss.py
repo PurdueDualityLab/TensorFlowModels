@@ -130,7 +130,7 @@ class Yolo_Loss(object):
     if ignore_thresh > 0.0 and not self._use_reduction_sum:
       self._box_pairing = PairWiseSearch(any = True, min_conf= 0.25)
     elif ignore_thresh > 0.0 and self._use_reduction_sum:
-      self._box_pairing = PairWiseSearch(any = True, min_conf= 0.25, 
+      self._box_pairing = PairWiseSearch(any = False, min_conf= 0.25, 
                                          track_boxes=False, track_classes=False)
 
     box_kwargs = dict(
