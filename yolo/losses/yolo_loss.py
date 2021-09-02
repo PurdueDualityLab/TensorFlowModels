@@ -862,8 +862,6 @@ class Yolo_Loss(object):
     true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
-    grid_points = tf.stop_gradient(grid_points)
-    anchor_grid = tf.stop_gradient(anchor_grid)
 
     # 2. split the y_true grid into the usable items, set the shapes correctly
     #    and save the true_confdence mask before it get altered
@@ -877,13 +875,13 @@ class Yolo_Loss(object):
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
-    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
 
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
     if self._ignore_thresh != 0.0:
+      sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
+      sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
       (_, _, _, _, _, obj_mask) = self._tiled_global_box_search(
           pred_box,
           sigmoid_class,
@@ -931,7 +929,6 @@ class Yolo_Loss(object):
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
-    true_conf = tf.stop_gradient(tf.squeeze(true_conf, axis=-1))
 
     #     compute the detection map loss, there should be no masks
     #     applied

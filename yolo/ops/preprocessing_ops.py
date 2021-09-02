@@ -134,41 +134,6 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image
 
-def _augment_hsv_torch(image, rh, rs, rv, seed=None):
-  """
-  Randomly alter the hue, saturation, and brightness of an image. 
-
-  Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
-      hue.
-    rs: `float32` used to indicate the maximum delta that can be multiplied to 
-      saturation.
-    rv: `float32` used to indicate the maximum delta that can be multiplied to 
-      brightness.
-    seed: `Optional[int]` for the seed to use in random number generation.
-  
-  Returns:
-    The HSV altered image in the same datatype as the input image
-  """
-  dtype = image.dtype
-  image = tf.cast(image, tf.float32)
-  image = tf.image.rgb_to_hsv(image)
-  gen_range = tf.cast([rh, rs, rv], image.dtype)
-  r = tf.random.uniform([3], -1, 1, 
-                        dtype=image.dtype, 
-                        seed = seed) * gen_range + 1
-
-  image = tf.cast(image, r.dtype) * r
-  h, s, v = tf.split(image, 3, axis=-1)
-  h = h % 1.0
-  s = tf.clip_by_value(s, 0.0, 1.0)
-  v = tf.clip_by_value(v, 0.0, 1.0)
-
-  image = tf.concat([h, s, v], axis=-1)
-  image = tf.image.hsv_to_rgb(image)
-  return tf.cast(image, dtype)
-
 # def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #   """
 #   Randomly alter the hue, saturation, and brightness of an image. 
@@ -186,50 +151,85 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #   Returns:
 #     The HSV altered image in the same datatype as the input image
 #   """
-#   if image.shape.rank is not None and image.shape.rank < 3:
-#       raise ValueError("input must be at least 3-D.")
-#   if image.shape[-1] is not None and image.shape[-1] != 3:
-#       raise ValueError(
-#           "input must have 3 channels but instead has {}.".format(image.shape[-1])
-#       )
-
+#   dtype = image.dtype
+#   image = tf.cast(image, tf.float32)
+#   image = tf.image.rgb_to_hsv(image)
 #   gen_range = tf.cast([rh, rs, rv], image.dtype)
 #   r = tf.random.uniform([3], -1, 1, 
 #                         dtype=image.dtype, 
-#                         seed = seed) * gen_range
+#                         seed = seed) * gen_range + 1
 
-#   # Construct hsv linear transformation matrix in YIQ space.
-#   # https://beesbuzz.biz/code/hsv_color_transforms.php
-#   yiq = tf.constant(
-#       [[0.299, 0.596, 0.211], 
-#        [0.587, -0.274, -0.523], 
-#        [0.114, -0.322, 0.312]],
-#       dtype=image.dtype,
-#   )
-#   yiq_inverse = tf.constant(
-#       [
-#           [1.0, 1.0, 1.0],
-#           [0.95617069, -0.2726886, -1.103744],
-#           [0.62143257, -0.64681324, 1.70062309],
-#       ],
-#       dtype=image.dtype,
-#   )
+#   image = tf.cast(image, r.dtype) * r
+#   h, s, v = tf.split(image, 3, axis=-1)
+#   h = h % 1.0
+#   s = tf.clip_by_value(s, 0.0, 1.0)
+#   v = tf.clip_by_value(v, 0.0, 1.0)
 
-#   delta_hue = r[0]
-#   scale_saturation = r[1] + 1
-#   scale_value = r[2] + 1
+#   image = tf.concat([h, s, v], axis=-1)
+#   image = tf.image.hsv_to_rgb(image)
+#   return tf.cast(image, dtype)
 
-#   vsu = scale_value * scale_saturation * tf.math.cos(delta_hue)
-#   vsw = scale_value * scale_saturation * tf.math.sin(delta_hue)
-#   hsv_transform = tf.convert_to_tensor(
-#       [[scale_value, 0, 0], 
-#        [0, vsu, vsw], 
-#        [0, -vsw, vsu]], dtype=image.dtype
-#   )
-#   transform_matrix = yiq @ hsv_transform @ yiq_inverse
+def _augment_hsv_torch(image, rh, rs, rv, seed=None):
+  """
+  Randomly alter the hue, saturation, and brightness of an image. 
 
-#   image = image @ transform_matrix
-#   return image
+  Args: 
+    image: Tensor of shape [None, None, 3] that needs to be altered.
+    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+      hue.
+    rs: `float32` used to indicate the maximum delta that can be multiplied to 
+      saturation.
+    rv: `float32` used to indicate the maximum delta that can be multiplied to 
+      brightness.
+    seed: `Optional[int]` for the seed to use in random number generation.
+  
+  Returns:
+    The HSV altered image in the same datatype as the input image
+  """
+  if image.shape.rank is not None and image.shape.rank < 3:
+      raise ValueError("input must be at least 3-D.")
+  if image.shape[-1] is not None and image.shape[-1] != 3:
+      raise ValueError(
+          "input must have 3 channels but instead has {}.".format(image.shape[-1])
+      )
+
+  gen_range = tf.cast([rh, rs, rv], image.dtype)
+  r = tf.random.uniform([3], -1, 1, 
+                        dtype=image.dtype, 
+                        seed = seed) * gen_range
+
+  # Construct hsv linear transformation matrix in YIQ space.
+  # https://beesbuzz.biz/code/hsv_color_transforms.php
+  yiq = tf.constant(
+      [[0.299, 0.596, 0.211], 
+       [0.587, -0.274, -0.523], 
+       [0.114, -0.322, 0.312]],
+      dtype=image.dtype,
+  )
+  yiq_inverse = tf.constant(
+      [
+          [1.0, 1.0, 1.0],
+          [0.95617069, -0.2726886, -1.103744],
+          [0.62143257, -0.64681324, 1.70062309],
+      ],
+      dtype=image.dtype,
+  )
+
+  delta_hue = r[0]
+  scale_saturation = r[1] + 1
+  scale_value = r[2] + 1
+
+  vsu = scale_value * scale_saturation * tf.math.cos(delta_hue)
+  vsw = scale_value * scale_saturation * tf.math.sin(delta_hue)
+  hsv_transform = tf.convert_to_tensor(
+      [[scale_value, 0, 0], 
+       [0, vsu, vsw], 
+       [0, -vsw, vsu]], dtype=image.dtype
+  )
+  transform_matrix = yiq @ hsv_transform @ yiq_inverse
+
+  image = image @ transform_matrix
+  return image
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
@@ -1082,10 +1082,20 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
       ])
 
   if pull_in > 0.0:
+    # (ind_val, ind_sample,
+    #   num_written) = write_grid(viable, num_reps, boxes, classes,
+    #                             ious, ind_val, ind_sample, height, width,
+    #                             num_written, num_instances, pull_in)
     (ind_val, ind_sample,
-      num_written) = write_grid(viable, num_reps, boxes, classes,
-                                ious, ind_val, ind_sample, height, width,
-                                num_written, num_instances, pull_in)
+    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                              ind_val, ind_sample, height, width, num_written,
+                              num_instances, pull_in)
+
+    if use_tie_breaker:
+      (ind_val, ind_sample,
+      num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
+                                ind_val, ind_sample, height, width, num_written,
+                                num_instances, pull_in)
   else:
     (ind_val, ind_sample,
     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
