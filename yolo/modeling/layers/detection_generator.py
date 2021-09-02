@@ -198,7 +198,7 @@ class YoloLayer(ks.Model):
           anchors, centers, scale_xy)
     else:
       # coordinates from regular yolov3 - v4
-      _, _, boxes = loss_utils.get_predicted_box_newcords(
+      _, _, boxes = loss_utils.get_predicted_box_scaledyolo(
           tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
           anchors, centers, scale_xy)
 

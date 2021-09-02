@@ -260,7 +260,7 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
   return (scaler, scaled_box, pred_box), delta
 
 
-def get_predicted_box_newcords(width,
+def get_predicted_box_scaledyolo(width,
                                height,
                                unscaled_box,
                                anchor_grid,

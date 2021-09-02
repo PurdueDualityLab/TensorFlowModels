@@ -287,36 +287,18 @@ class PairWiseSearch(object):
             tf.stop_gradient(max_iou))
 
 
-def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
-                max_delta, scale_xy):
-  """Decodes the predicted boxes from the model format to a usable 
-  [x, y, w, h] format for use in the loss function as well as for use 
-  with in the detection generator.   
+def clip_by_value(vala, valb, max_delta):
+  valb = math_ops.rm_nan_inf(valb)
+  vala = math_ops.rm_nan_inf(vala)
 
-  Args: 
-    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
-      center coordinates. 
-    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
-      values. 
-    width: `float` scalar indicating the width of the prediction layer.
-    height: `float` scalar indicating the height of the prediction layer
-    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
-      organized for box decoding box width and height.  
-    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
-      boxes for decoding the box centers.
-    max_delta: `float` scaler used for gradient clipping in back propagation. 
-    scale_xy: `float` scaler used to indicating the range for each center 
-      outside of its given [..., i, j, 4] index, where i and j are indexing 
-      pixels along width and height in the predicited output map.  
-  
-  Returns: 
-    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
-      Truth boxes to be of the same magnitude as the decoded predicted boxes.
-    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
-      boxes.
-    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
-      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
-  """
+  delta = tf.cast(max_delta, valb.dtype)
+  vala = tf.clip_by_value(vala, -delta, delta)
+  valb = tf.clip_by_value(valb, -delta, delta)
+  return vala, valb
+
+
+def _decode_boxes_yolo(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
+                max_delta, scale_xy):
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
 
@@ -351,39 +333,9 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
 
 
 @tf.custom_gradient
-def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
+def _darknet_boxes_yolo(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                   max_delta, scale_xy, normalizer):
-  """Decodes the predicted boxes from the model format to a usable 
-  [x, y, w, h] format for use in the loss function as well as for use 
-  with in the detection generator. This function wrap the decoding function 
-  above in order to allow for a custom gradient matching the Darknet paper 
-  implementation of this model. 
-
-  Args: 
-    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
-      center coordinates. 
-    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
-      values. 
-    width: `float` scalar indicating the width of the prediction layer.
-    height: `float` scalar indicating the height of the prediction layer
-    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
-      organized for box decoding box width and height.  
-    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
-      boxes for decoding the box centers.
-    max_delta: `float` scaler used for gradient clipping in back propagation. 
-    scale_xy: `float` scaler used to indicating the range for each center 
-      outside of its given [..., i, j, 4] index, where i and j are indexing 
-      pixels along width and height in the predicited output map.  
-  
-  Returns: 
-    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
-      Truth boxes to be of the same magnitude as the decoded predicted boxes.
-    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
-      boxes.
-    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
-      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
-  """
-  (scaler, scaled_box, pred_box) = scale_boxes(pred_xy, pred_wh, width, height,
+  (scaler, scaled_box, pred_box) = _decode_boxes_yolo(pred_xy, pred_wh, width, height,
                                                anchor_grid, grid_points,
                                                max_delta, scale_xy)
 
@@ -409,14 +361,7 @@ def darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
     dy_wh *= tf.math.exp(pred_wh)
 
     # apply the gradient clipping to xy and wh
-    dy_wh = math_ops.rm_nan_inf(dy_wh)
-    delta = tf.cast(max_delta, dy_wh.dtype)
-    dy_wh = tf.clip_by_value(dy_wh, -delta, delta)
-
-    dy_xy = math_ops.rm_nan_inf(dy_xy)
-    delta = tf.cast(max_delta, dy_xy.dtype)
-    dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
-
+    dy_xy, dy_wh = clip_by_value(dy_xy, dy_wh, max_delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
         grid_points), 0.0, 0.0, 0.0
 
@@ -466,48 +411,21 @@ def get_predicted_box(width,
     # if we are using the darknet loss we shoud nto propagate the
     # decoding of the box
     (scaler, scaled_box,
-     pred_box) = darknet_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+     pred_box) = _darknet_boxes_yolo(pred_xy, pred_wh, width, height, anchor_grid,
                                grid_points, max_delta, scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
     (scaler, scaled_box,
-     pred_box) = scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+     pred_box) = _decode_boxes_yolo(pred_xy, pred_wh, width, height, anchor_grid,
                              grid_points, max_delta, scale_xy)
 
   return (scaler, scaled_box, pred_box)
 
 
-def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+def _decode_boxes_scaledyolo(pred_xy, pred_wh, width, height, anchor_grid,
                           grid_points, max_delta, scale_xy):
-  """Decodes the predicted boxes as per the Scaled papers logic from the model 
-  format to a usable [x, y, w, h] format for use in the loss function as well as 
-  for use with in the detection generator.   
 
-  Args: 
-    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
-      center coordinates. 
-    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
-      values. 
-    width: `float` scalar indicating the width of the prediction layer.
-    height: `float` scalar indicating the height of the prediction layer
-    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
-      organized for box decoding box width and height.  
-    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
-      boxes for decoding the box centers.
-    max_delta: `float` scaler used for gradient clipping in back propagation. 
-    scale_xy: `float` scaler used to indicating the range for each center 
-      outside of its given [..., i, j, 4] index, where i and j are indexing 
-      pixels along width and height in the predicited output map.  
-  
-  Returns: 
-    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
-      Truth boxes to be of the same magnitude as the decoded predicted boxes.
-    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
-      boxes.
-    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
-      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
-  """
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
 
@@ -543,40 +461,11 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
 
 
 @tf.custom_gradient
-def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
+def _darknet_boxes_scaledyolo(pred_xy, pred_wh, width, height, anchor_grid,
                             grid_points, max_delta, scale_xy, normalizer):
-  """Decodes the predicted boxes as per the Scaled papers logic from the model 
-  format to a usable [x, y, w, h] format for use in the loss function as well as 
-  for use with in the detection generator. This function wrap the decoding function 
-  above in order to allow for a custom gradient matching the Darknet paper 
-  implementation of this model.  
 
-  Args: 
-    pred_xy: Tensor of shape [..., height, width, 2] holding encoded x and y 
-      center coordinates. 
-    pred_wh: Tensor of shape [..., height, width, 2] holding encoded w and h 
-      values. 
-    width: `float` scalar indicating the width of the prediction layer.
-    height: `float` scalar indicating the height of the prediction layer
-    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
-      organized for box decoding box width and height.  
-    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
-      boxes for decoding the box centers.
-    max_delta: `float` scaler used for gradient clipping in back propagation. 
-    scale_xy: `float` scaler used to indicating the range for each center 
-      outside of its given [..., i, j, 4] index, where i and j are indexing 
-      pixels along width and height in the predicited output map.  
-  
-  Returns: 
-    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
-      Truth boxes to be of the same magnitude as the decoded predicted boxes.
-    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
-      boxes.
-    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
-      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
-  """
   (scaler, scaled_box,
-   pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height,
+   pred_box) = _decode_boxes_scaledyolo(pred_xy, pred_wh, width, height,
                                      anchor_grid, grid_points, max_delta,
                                      scale_xy)
 
@@ -590,21 +479,16 @@ def darknet_new_coord_boxes(pred_xy, pred_wh, width, height, anchor_grid,
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
-    # apply the gradient clipping to xy and wh
-    dy_wh = math_ops.rm_nan_inf(dy_wh)
-    delta = tf.cast(max_delta, dy_wh.dtype)
-    dy_wh = tf.clip_by_value(dy_wh, -delta, delta)
+    tf.print("here")
 
-    dy_xy = math_ops.rm_nan_inf(dy_xy)
-    delta = tf.cast(max_delta, dy_xy.dtype)
-    dy_xy = tf.clip_by_value(dy_xy, -delta, delta)
+    # apply the gradient clipping to xy and wh
+    dy_xy, dy_wh = clip_by_value(dy_xy, dy_wh, max_delta)
     return dy_xy, dy_wh, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
         grid_points), 0.0, 0.0, 0.0
 
   return (scaler, scaled_box, pred_box), delta
 
-
-def get_predicted_box_newcords(width,
+def get_predicted_box_scaledyolo(width,
                                height,
                                unscaled_box,
                                anchor_grid,
@@ -647,17 +531,65 @@ def get_predicted_box_newcords(width,
     # if we are using the darknet loss we shoud nto propagate the decoding
     # of the box
     (scaler, scaled_box,
-     pred_box) = darknet_new_coord_boxes(pred_xy, pred_wh, width, height,
+     pred_box) = _darknet_boxes_scaledyolo(pred_xy, pred_wh, width, height,
                                          anchor_grid, grid_points, max_delta,
                                          scale_xy, normalizer)
   else:
     # if we are using the scaled loss we should propagate the decoding of the
     # boxes
     (scaler, scaled_box,
-     pred_box) = new_coord_scale_boxes(pred_xy, pred_wh, width, height,
+     pred_box) = _decode_boxes_scaledyolo(pred_xy, pred_wh, width, height,
                                        anchor_grid, grid_points, max_delta,
                                        scale_xy)
   return (scaler, scaled_box, pred_box)
+
+def get_predicted_box_anchorfree(width,
+                                 height,
+                                 unscaled_box,
+                                 stride,
+                                 grid_points,
+                                 scale_xy,
+                                 darknet=False,
+                                 max_delta=5.0,
+                                 normalizer=1.0):
+  """Decodes the predicted boxes from the model format to a usable 
+  [x, y, w, h] format for use in the loss function as well as for use 
+  with in the detection generator.   
+
+  Args: 
+    width: `float` scalar indicating the width of the prediction layer.
+    height: `float` scalar indicating the height of the prediction layer
+    unscaled_box: Tensor of shape [..., height, width, 4] holding encoded boxes.
+    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding box width and height.  
+    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+      boxes for decoding the box centers.
+    scale_xy: `float` scaler used to indicating the range for each center 
+      outside of its given [..., i, j, 4] index, where i and j are indexing 
+      pixels along width and height in the predicited output map. 
+    darknet: `bool` used to select between custom gradient and default autograd.  
+    max_delta: `float` scaler used for gradient clipping in back propagation. 
+  
+  Returns: 
+    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
+      Truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+      boxes.
+    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
+      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+  """
+
+  pred_xy = unscaled_box[..., 0:2]
+  pred_wh = unscaled_box[..., 2:4]
+
+  one_grid = tf.ones_like(grid_points)
+  (_, _, pred_box) = _decode_boxes_yolo(pred_xy, pred_wh, width, height, 
+                                       one_grid, grid_points, max_delta, 
+                                       scale_xy)
+  scaled_box = pred_box * stride
+  scaler = stride
+  return (scaler, scaled_box, pred_box)
+
 
 
 @tf.custom_gradient
