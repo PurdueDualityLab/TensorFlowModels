@@ -218,7 +218,9 @@ class Parser(parser.Parser):
     keys = list(self._masks.keys())
 
     scale = max(max(self._image_w, self._image_h)/640, 1)
-    self._scale_up = {key: max(round(2 * scale - 0.5 * i), 1) for i, key in enumerate(keys)
+    # self._scale_up = {key: max(round(2 * scale - 0.5 * i), 1) for i, key in enumerate(keys)
+    #                  } if self._use_scale_xy else {key: 1 for key in keys}
+    self._scale_up = {key: 3 for i, key in enumerate(keys)
                      } if self._use_scale_xy else {key: 1 for key in keys}
     self._area_thresh = area_thresh
     self._anchor_free_limits = anchor_free_limits
