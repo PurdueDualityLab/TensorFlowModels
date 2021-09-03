@@ -5,7 +5,7 @@ from yolo.ops import box_ops
 from official.vision.beta.ops import box_ops as bbox_ops
 import numpy as np
 
-PAD_VALUE = 114
+PAD_VALUE = 0
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
