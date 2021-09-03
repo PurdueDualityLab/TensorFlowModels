@@ -79,7 +79,7 @@ def test_yolo_input_task():
   with tf.device('/CPU:0'):
     train_data = task.build_inputs(config.train_data)
     test_data = task.build_inputs(config.validation_data)
-  return train_data, test_data
+  return train_data, test_data, config
 
 
 def test_retinanet_input_task():
@@ -125,17 +125,24 @@ import time
 
 
 def test_yolo_pipeline(is_training=True, num=30):
-  dataset, dsp = test_yolo_input_task()
+  dataset, dsp, config = test_yolo_input_task()
   print(dataset, dsp)
   # shind = 3
   dip = 0
-  drawer = utils.DrawBoxes(
-      labels=coco.get_coco_names(
-          path="yolo/dataloaders/dataset_specs/coco.names"
-      ),
-      thickness=2,
-      classes=91)
-  # dfilter = detection_generator.YoloFilter()
+  if config.coco91to80:
+    drawer = utils.DrawBoxes(
+        labels=coco.get_coco_names(
+            path="yolo/dataloaders/dataset_specs/coco.names"
+        ),
+        thickness=2,
+        classes=91)
+  else:
+    drawer = utils.DrawBoxes(
+        labels=coco.get_coco_names(
+            path="yolo/dataloaders/dataset_specs/coco-91.names"
+        ),
+        thickness=2,
+        classes=91)
   ltime = time.time()
 
   data = dataset if is_training else dsp
@@ -191,7 +198,7 @@ def test_yolo_pipeline(is_training=True, num=30):
 
 
 def time_pipeline():
-  dataset, dsp = test_yolo_input_task()
+  dataset, dsp, config = test_yolo_input_task()
   # dataset = dataset.take(100000)
   # print(dataset, dataset.cardinality())
   times = []

@@ -200,7 +200,9 @@ class Mosaic(object):
     """Process a single image prior to the application of patching."""
     # Randomly flip the image horizontally.
     if self._random_flip:
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, boxes)
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, 
+                                                              boxes, 
+                                                              seed = self._seed)
 
     infos = []
     random_crop = self._random_crop
@@ -509,13 +511,15 @@ class Mosaic(object):
     return stitched
 
   def _apply(self, dataset):
+    determ = self._deterministic
+
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     dataset = dataset.padded_batch(4)
-    dataset = dataset.map(self._mapped, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(self._mapped, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     dataset = dataset.unbatch()
     dataset = dataset.map(
-        self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE)
+        self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     if self._mixup_frequency > 0:
       dataset = self._apply_mixup(dataset)
     return dataset
@@ -547,10 +551,11 @@ class Mosaic(object):
     return sample
 
   def _apply_mixup(self, dataset):
+    determ = self._deterministic
     one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=0)
     two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=1)
     mixed = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
-    mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE)
+    mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     return mixed
 
   def _add_param(self, sample):
@@ -560,7 +565,8 @@ class Mosaic(object):
 
   # mosaic skip
   def _no_apply(self, dataset):
-    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE)
+    determ = self._deterministic
+    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
   def mosaic_fn(self, is_training=True):
     if (is_training and self._mosaic_frequency >= 1.0 and
@@ -570,7 +576,3 @@ class Mosaic(object):
       return self._apply
     else:
       return self._no_apply
-    # if is_training and self._mosaic_frequency > 0.0:
-    #   return self._apply
-    # else:
-    #   return self._no_apply
