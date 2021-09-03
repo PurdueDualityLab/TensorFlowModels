@@ -31,6 +31,7 @@ class Mosaic(object):
                mosaic_crop_mode=None,
                mixup_frequency=0.0,
                area_thresh=0.1,
+               deterministic=True, 
                seed=None):
 
     # Establish the expected output size and the maximum resolution to use for 
@@ -67,6 +68,7 @@ class Mosaic(object):
     self._crop_area_mosaic = crop_area_mosaic
 
     self._seed = seed
+    self._deterministic = deterministic
     return
 
   def _estimate_shape(self, image):
@@ -484,22 +486,23 @@ class Mosaic(object):
     four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
 
     num = tf.data.AUTOTUNE
+    determ = self._deterministic
     one = one.map(
-        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num, deterministic = determ)
     two = two.map(
-        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num, deterministic = determ)
     three = three.map(
-        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num, deterministic = determ)
     four = four.map(
-        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num, deterministic = determ)
 
     patch1 = tf.data.Dataset.zip((one, two)) 
-    patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
+    patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     patch2 = tf.data.Dataset.zip((three, four))
-    patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
+    patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
     stitched = tf.data.Dataset.zip((patch1, patch2))
-    stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE)
+    stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
     if self._mixup_frequency > 0:
       stitched = self._apply_mixup(stitched)

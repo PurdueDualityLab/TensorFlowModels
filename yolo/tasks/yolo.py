@@ -158,6 +158,7 @@ class YoloTask(base_task.Task):
         translate=params.parser.aug_rand_translate,
         resize=rsize,
         seed=params.seed,
+        deterministic=params.seed != None,
         area_thresh=params.parser.area_thresh)
 
     parser = yolo_input.Parser(
