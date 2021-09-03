@@ -37,12 +37,14 @@ task:
     filter:
       loss_type:  
         'all': ciou
+      ignore_thresh: 
+        'all': 0.7
+      truth_thresh: 
+        'all': 0.7
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
         'all': 0.3
-      ignore_thresh:
-        'all': 0.0
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
@@ -57,9 +59,9 @@ task:
       nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
-      pre_nms_points: 5000
+      pre_nms_points: 1000
       use_scaled_loss: true
-      update_on_repeat: false
+      update_on_repeat: true
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -67,12 +69,11 @@ task:
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
-    seed: 0
     parser:
       max_num_instances: 300
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 0.0
+      aug_rand_saturation: 0.7
       aug_rand_brightness: 0.4
       aug_rand_hue: 0.015
       aug_scale_min: 0.1

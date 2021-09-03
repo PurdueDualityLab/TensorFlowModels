@@ -392,17 +392,15 @@ class Parser(parser.Parser):
     # Apply scaling to the hue saturation and brightness of an image.
     image = tf.cast(image, self._dtype)
     image = image / 255
-    if self._aug_rand_hue != 0 and self._aug_rand_saturation != 0 and self._aug_rand_brightness != 0: 
-      image = preprocessing_ops.image_rand_hsv(
-          image,
-          self._aug_rand_hue,
-          self._aug_rand_saturation,
-          self._aug_rand_brightness,
-          seed=self._seed, 
-          darknet= not self._use_scale_xy)
+    image = preprocessing_ops.image_rand_hsv(
+        image,
+        self._aug_rand_hue,
+        self._aug_rand_saturation,
+        self._aug_rand_brightness,
+        seed=self._seed, 
+        darknet= not self._use_scale_xy)
 
-      # Cast the image to the selcted datatype.
-      image = tf.clip_by_value(image, 0.0, 1.0)
+    # Cast the image to the selcted datatype.
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image,

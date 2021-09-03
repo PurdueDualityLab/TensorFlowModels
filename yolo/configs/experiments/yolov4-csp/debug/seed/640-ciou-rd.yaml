@@ -30,7 +30,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: swish
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
@@ -57,9 +57,9 @@ task:
       nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
-      pre_nms_points: 1000
+      pre_nms_points: 5000
       use_scaled_loss: true
-      update_on_repeat: false
+      update_on_repeat: true
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -67,6 +67,7 @@ task:
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
+    seed: null
     parser:
       max_num_instances: 300
       letter_box: True

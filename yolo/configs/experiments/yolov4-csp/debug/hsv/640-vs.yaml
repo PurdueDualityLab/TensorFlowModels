@@ -59,7 +59,7 @@ task:
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
-      update_on_repeat: false
+      update_on_repeat: true
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -72,9 +72,9 @@ task:
       max_num_instances: 300
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 0.0
-      aug_rand_brightness: 0.0
-      aug_rand_hue: 0.015
+      aug_rand_saturation: 0.7
+      aug_rand_brightness: 0.4
+      aug_rand_hue: 0.0
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
