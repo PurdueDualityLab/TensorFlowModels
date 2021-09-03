@@ -485,13 +485,13 @@ class Mosaic(object):
 
     num = tf.data.AUTOTUNE
     one = one.map(
-        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num, deterministic=True)
     two = two.map(
-        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num, deterministic=True)
     three = three.map(
-        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num, deterministic=True)
     four = four.map(
-        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num)
+        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num, deterministic=True)
 
     patch1 = tf.data.Dataset.zip((one, two)) 
     patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
@@ -567,3 +567,7 @@ class Mosaic(object):
       return self._apply
     else:
       return self._no_apply
+    # if is_training and self._mosaic_frequency > 0.0:
+    #   return self._apply
+    # else:
+    #   return self._no_apply
