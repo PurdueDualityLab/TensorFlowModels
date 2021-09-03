@@ -160,7 +160,9 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
                         dtype=image.dtype, 
                         seed = seed) * gen_range + 1
 
-  image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32) 
+  # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32) 
+  image = tf.math.floor(tf.cast(image, scale.dtype) * scale)
+  image = tf.math.floor(tf.cast(image, r.dtype) * r)
   h, s, v = tf.split(image, 3, axis=-1)
   h = h % 180
   s = tf.clip_by_value(s, 0, 255)
