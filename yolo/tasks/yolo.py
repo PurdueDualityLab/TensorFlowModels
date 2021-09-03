@@ -4,6 +4,7 @@ from tensorflow.python.keras.backend import int_shape
 from tensorflow.python.ops.clip_ops import clip_by_value
 from tensorflow.python.ops.gen_array_ops import shape
 from tensorflow.python.training import optimizer
+from yolo.ops import preprocessing_ops
 from yolo.ops.preprocessing_ops import apply_infos
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -322,7 +323,7 @@ class YoloTask(base_task.Task):
     return logs
 
   ## evaluation ##
-  def _reorg_boxes(self, boxes, num_detections, info):
+  def _reorg_boxes(self, boxes, num_detections, info, image):
     """This function is used to reorganize and clip the predicitions to remove
     all padding and only take predicitions within the image"""
 
@@ -330,20 +331,22 @@ class YoloTask(base_task.Task):
     mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
     mask = tf.cast(tf.expand_dims(mask, axis=-1), boxes.dtype)
 
-    # Split all infos
-    inshape = tf.expand_dims(info[:, 1, :], axis=1)
-    ogshape = tf.expand_dims(info[:, 0, :], axis=1)
-    scale = tf.expand_dims(info[:, 2, :], axis=1)
-    offset = tf.expand_dims(info[:, 3, :], axis=1)
-
     # Denormalize the boxes by the shape of the image
-    boxes = box_ops.denormalize_boxes(boxes, inshape)
-
     if self.task_config.model.dynamic_conv:
+      # Split all infos
+      inshape = tf.expand_dims(info[:, 1, :], axis=1)
+      ogshape = tf.expand_dims(info[:, 0, :], axis=1)
+      scale = tf.expand_dims(info[:, 2, :], axis=1)
+      offset = tf.expand_dims(info[:, 3, :], axis=1)
+
       # Clip the boxes to remove all padding
+      boxes = box_ops.denormalize_boxes(boxes, inshape)
       boxes /= tf.tile(scale, [1, 1, 2])
       boxes += tf.tile(offset, [1, 1, 2])
       boxes = box_ops.clip_boxes(boxes, ogshape)
+    else:
+      inshape = tf.cast(preprocessing_ops.get_image_shape(image), boxes.dtype)
+      boxes = box_ops.denormalize_boxes(boxes, inshape)
 
     # Mask the boxes for usage
     boxes *= mask
@@ -363,10 +366,10 @@ class YoloTask(base_task.Task):
     # Reorganize and rescale the boxes
     boxes = self._reorg_boxes(
         y_pred['bbox'], y_pred['num_detections'],
-        tf.cast(label['groundtruths']['image_info'], tf.float32))
+        tf.cast(label['groundtruths']['image_info'], tf.float32), image)
     label['groundtruths']["boxes"] = self._reorg_boxes(
         label['groundtruths']["boxes"], label['groundtruths']["num_detections"],
-        tf.cast(label['groundtruths']['image_info'], tf.float32))
+        tf.cast(label['groundtruths']['image_info'], tf.float32), image)
 
     # Build the input for the coc evaluation metric
     coco_model_outputs = {
