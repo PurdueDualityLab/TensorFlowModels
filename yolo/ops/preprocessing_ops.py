@@ -155,17 +155,19 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
+  scale = tf.cast([180, 255, 255], image.dtype)
   r = tf.random.uniform([3], -1, 1, 
                         dtype=image.dtype, 
                         seed = seed) * gen_range + 1
 
-  image = tf.cast(image, r.dtype) * r
+  image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32) 
   h, s, v = tf.split(image, 3, axis=-1)
-  h = h % 1.0
-  s = tf.clip_by_value(s, 0.0, 1.0)
-  v = tf.clip_by_value(v, 0.0, 1.0)
+  h = h % 180
+  s = tf.clip_by_value(s, 0, 255)
+  v = tf.clip_by_value(v, 0, 255)
 
   image = tf.concat([h, s, v], axis=-1)
+  image = tf.cast(image, scale.dtype)/scale
   image = tf.image.hsv_to_rgb(image)
   return tf.cast(image, dtype)
 
