@@ -401,8 +401,8 @@ class Parser(parser.Parser):
           seed=self._seed, 
           darknet= not self._use_scale_xy)
 
-    # Cast the image to the selcted datatype.
-    image = tf.clip_by_value(image, 0.0, 1.0)
+      # Cast the image to the selcted datatype.
+      image = tf.clip_by_value(image, 0.0, 1.0)
     height, width = self._image_h, self._image_w
     image, labels = self._build_label(
         image,

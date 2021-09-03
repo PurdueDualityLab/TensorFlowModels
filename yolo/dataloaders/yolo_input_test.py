@@ -38,7 +38,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-baseline-ema-rcrop.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-no-hsv.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-sat.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/debug/640.yaml"]
 
   config = train_utils.ParseConfigOptions(
@@ -62,19 +62,19 @@ def test_yolo_input_task():
   config.validation_data.shuffle_buffer_size = 1
   config.train_data.shuffle_buffer_size = 1
 
-  # if config.train_data.input_path == '':
-  config.coco91to80 = False
-  config.train_data.tfds_name = 'coco'
-  config.validation_data.tfds_name = 'coco'
-  config.train_data.tfds_split = 'train'
-  config.validation_data.tfds_split = 'validation'
-  config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.train_data.input_path = ''
-  config.validation_data.input_path = ''
-  # else:
-  #   config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-  #   config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  if config.train_data.input_path == '':
+    config.coco91to80 = False
+    config.train_data.tfds_name = 'coco'
+    config.validation_data.tfds_name = 'coco'
+    config.train_data.tfds_split = 'train'
+    config.validation_data.tfds_split = 'validation'
+    config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+    config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+    config.train_data.input_path = ''
+    config.validation_data.input_path = ''
+  else:
+    config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 
   with tf.device('/CPU:0'):
     train_data = task.build_inputs(config.train_data)
