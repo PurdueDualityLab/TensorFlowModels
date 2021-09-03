@@ -485,13 +485,13 @@ class Mosaic(object):
 
     num = tf.data.AUTOTUNE
     one = one.map(
-        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num, deterministic=True)
+        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num)
     two = two.map(
-        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num, deterministic=True)
+        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num)
     three = three.map(
-        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num, deterministic=True)
+        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num)
     four = four.map(
-        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num, deterministic=True)
+        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num)
 
     patch1 = tf.data.Dataset.zip((one, two)) 
     patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE)
