@@ -758,7 +758,7 @@ def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
                      ar_thr=20,
-                     area_thr=0.0):
+                     area_thr=0.1):
   # Area thesh can be negative if darknet clipping is used.
   # Area_thresh < 0.0 = darknet clipping.
   # Area_thresh >= 0.0 = scaled model clipping.
