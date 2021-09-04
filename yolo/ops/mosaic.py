@@ -273,7 +273,6 @@ class Mosaic(object):
       image = tf.image.resize(image, (height, width))
       image, info = self._crop_image(image, self._crop_area)
       infos = [info]
-    at = at/2
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(

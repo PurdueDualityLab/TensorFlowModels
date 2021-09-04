@@ -632,9 +632,10 @@ class Yolo_Loss(object):
       # iou = liou = box_ops.bbox_iou(true_box, pred_box, x1y1x2y2 = False, CIoU=True)
       loss_box = 1 - liou
     else:
-      iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
-      loss_box = 1 - liou
+      iou = box_ops.compute_iou(true_box, pred_box, darknet=darknet)
       liou = iou
+      loss_box = 1 - liou
+      
     return iou, liou, loss_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf,
