@@ -152,7 +152,7 @@ def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
   pred_box = scaled_box / scaler
 
   # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -344,7 +344,7 @@ def new_coord_scale_boxes(pred_xy, pred_wh, width, height, anchor_grid,
   pred_box = scaled_box / scaler
 
   # shift scaled boxes
-  # scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
+  scaled_box = K.concatenate([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -884,6 +884,13 @@ class Yolo_Loss(object):
     #    gradient on grount truths to save memory
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
     true_box = apply_mask(ind_mask, true_box)
+
+    #    translate ground truth to match predictions
+    offset = apply_mask(ind_mask, tf.gather_nd(grid_points, inds, batch_dims=1))
+    offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
+    true_box -= tf.cast(offset, true_box.dtype)
+    true_box = apply_mask(ind_mask, true_box)
+    pred_box = apply_mask(ind_mask, pred_box)
 
     #     compute the loss of all the boxes and apply a mask such that
     #     within the 200 boxes, only the indexes of importance are covered
