@@ -757,8 +757,9 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
-                     ar_thr=20,
-                     area_thr=0.1):
+                     ar_thr=100,
+                     area_thr=0.0):
+
   # Area thesh can be negative if darknet clipping is used.
   # Area_thresh < 0.0 = darknet clipping.
   # Area_thresh >= 0.0 = scaled model clipping.
@@ -824,9 +825,7 @@ def apply_infos(boxes,
                 affine=None,
                 shuffle_boxes=False,
                 area_thresh=0.1,
-                seed=None, 
-                wh_thr=2,
-                ar_thr=20):
+                seed=None):
   # Clip and clean boxes.
   def get_valid_boxes(boxes, unclipped_boxes=None):
     """Get indices for non-empty boxes."""
@@ -929,11 +928,7 @@ def apply_infos(boxes,
   # Threshold the existing boxes.
   boxes = bbox_ops.denormalize_boxes(boxes, output_size)
   box_history = bbox_ops.denormalize_boxes(box_history, output_size)
-  boxes = boxes_candidates(boxes, 
-                           box_history, 
-                           area_thr=area_thresh, 
-                           wh_thr=wh_thr, 
-                           ar_thr=ar_thr)
+  boxes = boxes_candidates(boxes, box_history, area_thr=area_thresh)
   boxes = bbox_ops.normalize_boxes(boxes, output_size)
 
   # Select and gather the good boxes.
