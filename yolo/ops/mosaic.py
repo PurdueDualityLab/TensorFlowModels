@@ -244,6 +244,7 @@ class Mosaic(object):
     infos = None
     affine = None
 
+    at = self._area_thresh
     if self._mosaic_crop_mode == "scale":
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._crop_area[0]
@@ -272,13 +273,14 @@ class Mosaic(object):
       image = tf.image.resize(image, (height, width))
       image, info = self._crop_image(image, self._crop_area)
       infos = [info]
+    at = at/2
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
         boxes,
         infos,
         affine=affine,
-        area_thresh=self._area_thresh,
+        area_thresh=at,
         seed=self._seed)
 
     classes = tf.gather(classes, inds)
