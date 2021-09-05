@@ -320,7 +320,6 @@ class Mosaic(object):
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
     scale = tf.cast(tf.shape(patch) / ishape, boxes.dtype)
-    tf.print(scale)
     translate = tf.cast((ishape - tf.shape(patch)) / ishape,
                                                    boxes.dtype) * under_flow
     boxes = boxes * tf.cast([scale[0], scale[1], scale[0], scale[1]],
