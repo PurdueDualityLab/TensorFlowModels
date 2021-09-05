@@ -1,6 +1,6 @@
 from random import seed
 import tensorflow as tf
-from tensorflow._api.v2 import data
+#from tensorflow.api.v2 import data
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops as bbox_ops

@@ -41,12 +41,16 @@ class InputUtilsTest(parameterized.TestCase, tf.test.TestCase):
                         translated_image_shape.numpy())
 
   @parameterized.parameters(([1, 2], 20, 0), ([13, 2, 4], 15, 0))
-  def testPadMaxInstances(self, input_shape, instances, pad_axis):
+  def testPadMaxInstances(self,
+                          input_shape,
+                          instances,
+                          pad_axis):
     expected_output_shape = input_shape
     expected_output_shape[pad_axis] = instances
     output = preprocessing_ops.pad_max_instances(
         np.ones(input_shape), instances, pad_axis=pad_axis)
-    self.assertAllEqual(expected_output_shape, tf.shape(output).numpy())
+    self.assertAllEqual(expected_output_shape,
+                        tf.shape(output).numpy())
 
 
 if __name__ == '__main__':
