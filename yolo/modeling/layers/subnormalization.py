@@ -226,7 +226,7 @@ class SubDivBatchNormalization(normalization.BatchNormalizationBase):
     self.built = True
 
   def _assign_subdiv_moving_average(self, variable, value, momentum,
-                                    subdivsions, count):
+                                    subdivisions, count):
     with K.name_scope('AssignSubDivMovingAvg') as scope:
       with ops.colocate_with(variable):
         decay = ops.convert_to_tensor_v2_with_dispatch(

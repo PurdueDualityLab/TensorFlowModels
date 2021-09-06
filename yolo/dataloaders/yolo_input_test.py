@@ -39,7 +39,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-large-base-fntn.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/hsv/640-hsv.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e1.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e6.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/debug/640.yaml"]
 
   config = train_utils.ParseConfigOptions(
