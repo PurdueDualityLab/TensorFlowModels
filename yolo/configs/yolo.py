@@ -129,6 +129,7 @@ class Mosaic(hyperparams.Config):
   crop_area_mosaic: List[int] = dataclasses.field(
       default_factory=lambda: [1.0, 1.0])
   aspect_ratio_mode: str = 'crop'
+  random_pad: bool = False
   mosaic_crop_mode: Optional[str] = 'crop_scale'
   aug_scale_min: Optional[float] = None
   aug_scale_max: Optional[float] = None

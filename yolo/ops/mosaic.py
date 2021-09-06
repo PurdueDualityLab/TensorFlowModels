@@ -1,4 +1,4 @@
-from random import seed
+from random import random, seed
 import tensorflow as tf
 from tensorflow._api.v2 import data
 import tensorflow_addons as tfa
@@ -265,6 +265,7 @@ class Mosaic(object):
           scale_min=self._crop_area_mosaic[0],
           scale_max=self._crop_area_mosaic[1],
           translate=self._translate,
+          random_pad = self._random_pad , 
           seed=self._seed)
       height, width = self._output_size[0], self._output_size[1]
       image = tf.image.resize(image, (height, width))

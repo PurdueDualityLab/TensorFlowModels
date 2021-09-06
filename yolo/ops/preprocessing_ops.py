@@ -631,8 +631,9 @@ def build_transform(image,
 
   # Compute a random Translation to apply.
   T = tf.eye(3)
-  if ((random_pad and s <= 1.0) or
-      (random_pad and s > 1.0 and translate < 0.0)):
+  # if ((random_pad and s <= 1.0) or
+  #     (random_pad and s > 1.0 and translate < 0.0)):
+  if (random_pad and height * s < ch and width * s < cw):
     # The image is contained within the image and arbitrarily translated to 
     # locations with in the image.
     C = Cb = tf.eye(3, dtype=tf.float32)
