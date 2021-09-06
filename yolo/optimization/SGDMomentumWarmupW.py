@@ -1,11 +1,8 @@
 from tensorflow.python.framework import ops
-from tensorflow.python.keras.optimizer_v2 import optimizer_v2
 from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_resource_variable_ops
-from tensorflow.python.keras.optimizer_v2 import learning_rate_schedule
+from tensorflow.keras.optimizers.schedules import LearningRateSchedule
 from tensorflow.python.training import gen_training_ops
-from tensorflow.python.util.tf_export import keras_export
-from tensorflow_addons.optimizers import DecoupledWeightDecayExtension
+
 
 import tensorflow as tf
 import re
@@ -32,7 +29,7 @@ def _var_key(var):
   return var._unique_id
 
 
-class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
+class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
   r"""Gradient descent (with momentum) optimizer.
   Update rule for parameter `w` with gradient `g` when `momentum` is 0:
   ```python
@@ -191,14 +188,14 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
                    var_dtype)]["momentum"] = array_ops.identity(momentum)
 
     bias_lr = self._get_hyper("bias_learning_rate")
-    if isinstance(bias_lr, learning_rate_schedule.LearningRateSchedule):
+    if isinstance(bias_lr, LearningRateSchedule):
       bias_lr = bias_lr(self.iterations)
     bias_lr = tf.cast(bias_lr, var_dtype)
     apply_state[(var_device,
                  var_dtype)]["bias_lr_t"] = array_ops.identity(bias_lr)
 
     other_lr = self._get_hyper("other_learning_rate")
-    if isinstance(other_lr, learning_rate_schedule.LearningRateSchedule):
+    if isinstance(other_lr, LearningRateSchedule):
       other_lr = other_lr(self.iterations)
     other_lr = tf.cast(other_lr, var_dtype)
     apply_state[(var_device,
@@ -278,6 +275,7 @@ class SGDMomentumWarmupW(optimizer_v2.OptimizerV2):
       lr = coefficients["other_lr_t"]
     momentum = coefficients["momentum"]
 
+    # tf.print(weight_decay, lr, momentum)
     if self.sim_torch:
       return self._apply(grad, var, weight_decay, momentum, lr)
     else:

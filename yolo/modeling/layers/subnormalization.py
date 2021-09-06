@@ -25,7 +25,7 @@ from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.distribute import reduce_util
-from tensorflow.python.keras.layers import normalization
+from tensorflow.python.keras.layers.normalization import batch_normalization as normalization
 
 import tensorflow as tf
 
