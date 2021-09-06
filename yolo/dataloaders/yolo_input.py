@@ -371,6 +371,7 @@ class Parser(parser.Parser):
           self._resize, self._random_pad, self._aug_scale_min,
           self._aug_scale_max, self._aug_rand_translate, self._aug_rand_angle,
           0.0)
+
     else:
       image, infos, affine = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box,

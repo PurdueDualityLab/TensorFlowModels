@@ -287,47 +287,21 @@ class Mosaic(object):
     area = tf.gather(area, inds)
     return image, boxes, classes, is_crowd, area, area
 
-  def translate_boxes(self, box, classes, translate_x, translate_y):
-    """
-    Translate the boxes by a fixed number of pixels.
-    
-    Args:
-      box: An tensor representing the bounding boxes in the (x, y, w, h) format
-        whose last dimension is of size 4.
-      classes: A tensor representing the classes of each bounding box. The shape
-        of `classes` lacks the final dimension of the shape `box` which is of size
-        4.
-    
-    Returns:
-      A tuple with two elements: a tensor representing the translated boxes with
-      the same dimensions as `box` and the `classes` tensor.
-    """
-    with tf.name_scope('translate_boxes'):
-      box = bbox_ops.yxyx_to_xcycwh(box)
-      x, y, w, h = tf.split(box, 4, axis=-1)
-      x = x + translate_x
-      y = y + translate_y
-      box = tf.cast(tf.concat([x, y, w, h], axis=-1), box.dtype)
-      box = bbox_ops.xcycwh_to_yxyx(box)
-    return box, classes
-
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
     """Scale and translate the boxes for each image after patching has been 
     completed"""
-    dtype = boxes.dtype
-    under_flow = tf.cast(1.0, tf.float32)
-    boxes = tf.cast(boxes, tf.float32) * under_flow
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
-    scale = tf.cast(tf.shape(patch) / ishape, boxes.dtype)
-    translate = tf.cast((ishape - tf.shape(patch)) / ishape,
-                                                   boxes.dtype) * under_flow
-    boxes = boxes * tf.cast([scale[0], scale[1], scale[0], scale[1]],
+    pshape = tf.cast(tf.shape(patch), boxes.dtype)
+    ishape = tf.cast(ishape, boxes.dtype)
+    translate = tf.cast((ishape - pshape), boxes.dtype)
+
+    boxes = box_ops.denormalize_boxes(boxes, pshape[:2])
+    boxes = boxes + tf.cast([translate[0] * ys, translate[1] * xs, 
+                             translate[0] * ys, translate[1] * xs],
                             boxes.dtype)
-    boxes, classes = self.translate_boxes(boxes, classes, translate[1] * xs,
-                                             translate[0] * ys)
-    boxes = tf.cast(boxes, tf.float32) / under_flow
-    return tf.cast(boxes, dtype), classes 
+    boxes = box_ops.normalize_boxes(boxes, ishape[:2])
+    return boxes, classes 
 
   # mosaic partial frequency
   def _mapped(self, sample):
@@ -553,9 +527,9 @@ class Mosaic(object):
 
   def _apply_mixup(self, dataset):
     determ = self._deterministic
-    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=0)
-    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  #.shard(num_shards=4, index=1)
-    mixed = tf.data.Dataset.zip((one, two))  #.prefetch(tf.data.AUTOTUNE)
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True) 
+    mixed = tf.data.Dataset.zip((one, two))
     mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     return mixed
 
