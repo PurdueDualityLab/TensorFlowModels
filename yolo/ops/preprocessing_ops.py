@@ -757,7 +757,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 
 def boxes_candidates(clipped_boxes,
                      box_history,
-                     wh_thr=1,
+                     wh_thr=2,
                      ar_thr=20,
                      area_thr=0.1):
 
@@ -778,6 +778,8 @@ def boxes_candidates(clipped_boxes,
   # Determine the aspect ratio of the clipped boxes.
   ar = tf.maximum(clipped_width / (clipped_height + 1e-16),
                   clipped_height / (clipped_width + 1e-16))
+
+  tf.print(ar)
 
   # Ensure the clipped width adn height are larger than a preset threshold.
   conda = clipped_width > wh_thr
