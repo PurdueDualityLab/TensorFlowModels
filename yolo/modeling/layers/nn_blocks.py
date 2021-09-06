@@ -2,7 +2,6 @@
 from typing import Callable
 import tensorflow as tf
 import math
-from yolo.modeling.layers import subnormalization
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
 
@@ -1232,9 +1231,9 @@ class CAM(tf.keras.layers.Layer):
 
     # use_pooling
     if use_sync_bn:
-      self._bn = subnormalization.SubDivSyncBatchNormalization
+      self._bn = tf.keras.layers.experimental.SyncBatchNormalization
     else:
-      self._bn = subnormalization.SubDivBatchNormalization
+      self._bn = tf.keras.layers.experimental.BatchNormalization
 
     if not use_bn:
       self._bn = Identity
