@@ -779,8 +779,6 @@ def boxes_candidates(clipped_boxes,
   ar = tf.maximum(clipped_width / (clipped_height + 1e-16),
                   clipped_height / (clipped_width + 1e-16))
 
-  tf.print(ar)
-
   # Ensure the clipped width adn height are larger than a preset threshold.
   conda = clipped_width > wh_thr
   condb = clipped_height > wh_thr
