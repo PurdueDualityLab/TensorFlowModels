@@ -248,17 +248,17 @@ class Mosaic(object):
     if self._mosaic_crop_mode == "scale":
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._crop_area[0]
-      ch = tf.math.floor(preprocessing_ops.rand_uniform_strong(
-          -center[0], center[0], seed=self._seed))
-      cw = tf.math.floor(preprocessing_ops.rand_uniform_strong(
-          -center[1], center[1], seed=self._seed))
 
+      ch = tf.math.round(preprocessing_ops.rand_uniform_strong(
+          -center[0], center[0], seed=self._seed))
+      cw = tf.math.round(preprocessing_ops.rand_uniform_strong(
+          -center[1], center[1], seed=self._seed))
+          
       image = tfa.image.translate(
           image, [cw, ch], fill_value=preprocessing_ops.PAD_VALUE)
       boxes = box_ops.denormalize_boxes(boxes, shape[:2])
       boxes = boxes + tf.cast([ch, cw, ch, cw], boxes.dtype)
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
-      infos = [self._gen_blank_info(image)]
 
       image, _, affine = preprocessing_ops.affine_warp_image(
           image, [self._output_size[0], self._output_size[1]],

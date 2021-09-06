@@ -855,7 +855,7 @@ def apply_infos(boxes,
       base = tf.logical_and(base, tf.logical_and(condx, condy))
     return base
 
-  output_size = tf.cast([512, 512], tf.float32)
+  output_size = tf.cast([640, 640], tf.float32)
   if infos is None:
     infos = []
 
@@ -903,10 +903,10 @@ def apply_infos(boxes,
       # Denormalize the box history.
       box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
 
-      (boxes,  # Clipped final boxes. 
-      unclipped_boxes,  # Unclipped final boxes. 
-      box_history) = affine_warp_boxes(
-            affine[2], boxes, affine[1], box_history=box_history)
+    (boxes,  # Clipped final boxes. 
+    unclipped_boxes,  # Unclipped final boxes. 
+    box_history) = affine_warp_boxes(
+          affine[2], boxes, affine[1], box_history=box_history)
 
     # Normalize the boxes to [0, 1].
     boxes = bbox_ops.normalize_boxes(boxes, affine[1])
