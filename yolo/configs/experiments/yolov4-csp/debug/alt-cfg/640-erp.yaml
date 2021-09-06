@@ -86,7 +86,6 @@ task:
       best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
-        max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
