@@ -757,9 +757,9 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 
 def boxes_candidates(clipped_boxes,
                      box_history,
-                     wh_thr=2,
-                     ar_thr=100,
-                     area_thr=0.0):
+                     wh_thr=1,
+                     ar_thr=20,
+                     area_thr=0.1):
 
   # Area thesh can be negative if darknet clipping is used.
   # Area_thresh < 0.0 = darknet clipping.
@@ -768,12 +768,12 @@ def boxes_candidates(clipped_boxes,
 
   # Get the scaled and shifted heights of the original
   # unclipped boxes.
-  og_height = box_history[:, 2] - box_history[:, 0]
-  og_width = box_history[:, 3] - box_history[:, 1]
+  og_height = tf.maximum(box_history[:, 2] - box_history[:, 0], 0.0)
+  og_width = tf.maximum(box_history[:, 3] - box_history[:, 1], 0.0)
 
   # Get the scaled and shifted heights of the clipped boxes.
-  clipped_height = clipped_boxes[:, 2] - clipped_boxes[:, 0]
-  clipped_width = clipped_boxes[:, 3] - clipped_boxes[:, 1]
+  clipped_height = tf.maximum(clipped_boxes[:, 2] - clipped_boxes[:, 0], 0.0)
+  clipped_width = tf.maximum(clipped_boxes[:, 3] - clipped_boxes[:, 1], 0.0)
 
   # Determine the aspect ratio of the clipped boxes.
   ar = tf.maximum(clipped_width / (clipped_height + 1e-16),
@@ -784,8 +784,8 @@ def boxes_candidates(clipped_boxes,
   condb = clipped_height > wh_thr
 
   # Ensure the area of the clipped box is larger than the area threshold.
-  condc = ((clipped_height * clipped_width) /
-           (og_width * og_height + 1e-16)) > area_thr
+  area = (clipped_height * clipped_width) / (og_width * og_height + 1e-16)
+  condc = area > area_thr
 
   # Ensure the aspect ratio is not too extreme.
   condd = ar < ar_thr
