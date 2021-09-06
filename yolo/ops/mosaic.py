@@ -562,15 +562,6 @@ class Mosaic(object):
     determ = self._deterministic
     return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
-  # def mosaic_fn(self, is_training=True):
-  #   if (is_training and self._mosaic_frequency >= 1.0 and
-  #       self._mosaic_crop_mode != "crop"):
-  #     return self._full_frequency_apply
-  #   elif is_training and self._mosaic_frequency > 0.0:
-  #     return self._apply
-  #   else:
-  #     return self._no_apply
-
   def mosaic_fn(self, is_training=True):
     if (is_training and self._mosaic_crop_mode != "crop"):
       return self._full_frequency_apply

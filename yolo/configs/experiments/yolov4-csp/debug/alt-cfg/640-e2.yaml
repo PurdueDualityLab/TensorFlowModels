@@ -44,9 +44,9 @@ task:
       ignore_thresh:
         'all': 0.0
       obj_normalizer: 
-        '5': 0.28
-        '4': 0.70
-        '3': 2.80
+        '5': 0.4
+        '4': 1.0
+        '3': 4.0
       new_cords:
         'all': True
       objectness_smooth: 
