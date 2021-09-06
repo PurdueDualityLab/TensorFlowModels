@@ -394,7 +394,6 @@ class Mosaic(object):
     sample['groundtruth_classes'] = classes
     sample['groundtruth_is_crowd'] = is_crowd
     sample['groundtruth_area'] = area
-    # sample['cut'] = cut
     sample['shiftx'] = shiftx
     sample['shifty'] = shifty
     sample['crop_points'] = crop_points
@@ -434,7 +433,7 @@ class Mosaic(object):
 
     sample = one
     height, width = preprocessing_ops.get_image_shape(image)
-    sample['image'] = tf.cast(image, tf.uint8)
+    sample['image'] = image
     sample['groundtruth_boxes'] = boxes
     sample['groundtruth_area'] = area
     sample['groundtruth_classes'] = tf.cast(classes,
@@ -446,11 +445,6 @@ class Mosaic(object):
 
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[1]
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
-
-    del sample['shiftx']
-    del sample['shifty']
-    del sample['crop_points']
-
     return sample
 
   def _full_frequency_apply(self, dataset):
@@ -489,10 +483,6 @@ class Mosaic(object):
 
     if self._mixup_frequency > 0:
       stitched = self._apply_mixup(stitched)
-
-
-    #dataset = dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
-    
     return stitched
 
   def _apply(self, dataset):
@@ -553,17 +543,9 @@ class Mosaic(object):
     determ = self._deterministic
     return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
-  # def mosaic_fn(self, is_training=True):
-  #   if (is_training and self._mosaic_frequency >= 1.0 and
-  #       self._mosaic_crop_mode != "crop"):
-  #     return self._full_frequency_apply
-  #   elif is_training and self._mosaic_frequency > 0.0:
-  #     return self._apply
-  #   else:
-  #     return self._no_apply
-
   def mosaic_fn(self, is_training=True):
-    if (is_training and self._mosaic_crop_mode != "crop"):
+    if (is_training and self._mosaic_frequency >= 1.0 and
+        self._mosaic_crop_mode != "crop"):
       return self._full_frequency_apply
     elif is_training and self._mosaic_frequency > 0.0:
       return self._apply
