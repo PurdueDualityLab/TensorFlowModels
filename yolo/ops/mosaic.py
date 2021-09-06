@@ -453,6 +453,13 @@ class Mosaic(object):
 
     return sample
 
+  def select(self, a, b):
+    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    if domo >= (1 - self._mosaic_frequency):
+      return b
+    else:
+      return a
+
   def _full_frequency_apply(self, dataset):
     """This image patches batches of 4 images together when the input mosaic
     Frequency is 1.0 or 100%. This allows for speed optimization when the 
@@ -487,11 +494,13 @@ class Mosaic(object):
     stitched = tf.data.Dataset.zip((patch1, patch2))
     stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
 
+    if self._mosaic_frequency < 1.0:
+      dataset = dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+      stitched = tf.data.Dataset.zip((dataset, stitched))
+      stitched = stitched.map(self.select, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    
     if self._mixup_frequency > 0:
       stitched = self._apply_mixup(stitched)
-
-
-    #dataset = dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
     
     return stitched
 

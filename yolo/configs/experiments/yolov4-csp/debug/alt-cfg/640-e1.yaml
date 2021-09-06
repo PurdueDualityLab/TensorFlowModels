@@ -90,7 +90,7 @@ task:
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
-        mosaic_frequency: 1.0
+        mosaic_frequency: 0.5
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
