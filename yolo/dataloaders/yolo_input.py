@@ -21,14 +21,14 @@ def _coco91_to_80(classif, box, areas, iscrowds):
       86, 87, 88, 89, 90
   ]
   no = tf.expand_dims(tf.convert_to_tensor(x), axis=0)
-  
+
   # Resahpe the classes to in order to build a class mask.
   ce = tf.expand_dims(classif, axis=-1)
 
   # One hot the classificiations to match the 80 class format.
   ind = ce == tf.cast(no, ce.dtype)
 
-  # Select the max values. 
+  # Select the max values.
   co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis=-1), [-1])
   ind = tf.where(tf.reduce_any(ind, axis=-1))
 
@@ -81,7 +81,7 @@ class Parser(parser.Parser):
                use_tie_breaker=True,
                dtype='float32',
                coco91to80=False,
-               anchor_free_limits=None, 
+               anchor_free_limits=None,
                seed=None):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
@@ -217,7 +217,7 @@ class Parser(parser.Parser):
     self._use_scale_xy = use_scale_xy
     keys = list(self._masks.keys())
 
-    scale = max(max(self._image_w, self._image_h)/640, 1)
+    scale = max(max(self._image_w, self._image_h) / 640, 1)
     # self._scale_up = {key: max(round(2 * scale - 0.5 * i), 1) for i, key in enumerate(keys)
     #                  } if self._use_scale_xy else {key: 1 for key in keys}
     self._scale_up = {key: 4 for i, key in enumerate(keys)
@@ -235,10 +235,8 @@ class Parser(parser.Parser):
     elif dtype == 'float32':
       self._dtype = tf.float32
     else:
-      raise Exception(
-          'Unsupported datatype used in parser\
-          only {float16, bfloat16, or float32}.'
-      )
+      raise Exception('Unsupported datatype used in parser\
+          only {float16, bfloat16, or float32}.')
 
   def _build_grid(self,
                   raw_true,
@@ -345,8 +343,9 @@ class Parser(parser.Parser):
     if self._coco91to80:
       (data['groundtruth_classes'], data['groundtruth_boxes'],
        data['groundtruth_area'], data['groundtruth_is_crowd'],
-       _) = _coco91_to_80(data['groundtruth_classes'], data['groundtruth_boxes'],
-                         data['groundtruth_area'], data['groundtruth_is_crowd'])
+       _) = _coco91_to_80(data['groundtruth_classes'],
+                          data['groundtruth_boxes'], data['groundtruth_area'],
+                          data['groundtruth_is_crowd'])
     return data
 
   def _parse_train_data(self, data):
@@ -398,8 +397,8 @@ class Parser(parser.Parser):
         self._aug_rand_hue,
         self._aug_rand_saturation,
         self._aug_rand_brightness,
-        seed=self._seed, 
-        darknet= not self._use_scale_xy)
+        seed=self._seed,
+        darknet=not self._use_scale_xy)
 
     # Cast the image to the selcted datatype.
     height, width = self._image_h, self._image_w
@@ -485,24 +484,28 @@ class Parser(parser.Parser):
         width=width,
         height=height,
         iou_thresh=self._anchor_t,
-        anchor_free_limits = self._anchor_free_limits, 
+        anchor_free_limits=self._anchor_free_limits,
         best_match_only=self._best_match_only)
 
     # Set/fix the boxes shape.
     bshape = boxes.get_shape().as_list()
-    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances, 0)
+    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,
+                                                0)
     bshape[0] = self._max_num_instances
     boxes.set_shape(bshape)
 
     # Set/fix the classes shape.
     cshape = classes.get_shape().as_list()
-    classes = preprocessing_ops.pad_max_instances(classes, self._max_num_instances, -1)
+    classes = preprocessing_ops.pad_max_instances(classes,
+                                                  self._max_num_instances, -1)
     cshape[0] = self._max_num_instances
     classes.set_shape(cshape)
 
     # Set/fix the best anchor shape.
     bashape = best_anchors.get_shape().as_list()
-    best_anchors = preprocessing_ops.pad_max_instances(best_anchors, self._max_num_instances, -1)
+    best_anchors = preprocessing_ops.pad_max_instances(best_anchors,
+                                                       self._max_num_instances,
+                                                       -1)
     bashape[0] = self._max_num_instances
     best_anchors.set_shape(bashape)
 

@@ -3,6 +3,7 @@ from tensorflow.keras import backend as K
 from yolo.ops import box_ops
 from yolo.ops import math_ops
 
+
 def _build_grid_points(lwidth, lheight, anchors, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
   with tf.name_scope('center_grid'):
@@ -64,14 +65,16 @@ class GridGenerator(object):
 
 
 TILE_SIZE = 50
+
+
 class PairWiseSearch(object):
 
-  def __init__(self, 
-               iou_type = "iou", 
-               any = True, 
-               min_conf = 0.0, 
-               track_boxes = False, 
-               track_classes = False):
+  def __init__(self,
+               iou_type="iou",
+               any=True,
+               min_conf=0.0,
+               track_boxes=False,
+               track_classes=False):
     """
     This method applies a pair wise serach between the ground truth 
     and the labels. The goal is to indicate the locations where the 
@@ -89,7 +92,7 @@ class PairWiseSearch(object):
     self._min_conf = min_conf
     self._track_boxes = track_boxes
     self._track_classes = track_classes
-    return 
+    return
 
   def box_iou(self, true_box, pred_box):
     # based on the type of loss, compute the iou loss for a box
@@ -102,16 +105,14 @@ class PairWiseSearch(object):
       iou = box_ops.compute_iou(true_box, pred_box)
     return iou
 
-  def _search_body(self, pred_box     , pred_class     , 
-                         boxes        , classes        , 
-                         running_boxes, running_classes, 
-                         max_iou      , idx):
+  def _search_body(self, pred_box, pred_class, boxes, classes, running_boxes,
+                   running_classes, max_iou, idx):
     # capture the batch size to be used, and gather a slice of
     # boxes from the ground truth. currently TILE_SIZE = 50, to
     # save memory
     batch_size = tf.shape(boxes)[0]
     box_slice = tf.slice(boxes, [0, idx * TILE_SIZE, 0],
-                                [batch_size, TILE_SIZE, 4])
+                         [batch_size, TILE_SIZE, 4])
 
     # match the dimentions of the slice to the model predictions
     # shape: [batch_size, 1, 1, num, TILE_SIZE, 4]
@@ -123,47 +124,45 @@ class PairWiseSearch(object):
 
     # capture the classes
     class_slice = tf.slice(classes, [0, idx * TILE_SIZE],
-                            [batch_size, TILE_SIZE])
+                           [batch_size, TILE_SIZE])
     class_slice = tf.expand_dims(class_slice, axis=1)
     class_slice = tf.expand_dims(class_slice, axis=1)
     class_slice = tf.expand_dims(class_slice, axis=1)
 
-    iou = self.box_iou(box_slice, box_grid) 
+    iou = self.box_iou(box_slice, box_grid)
 
     if self._min_conf > 0.0:
       if not self._any:
         class_grid = tf.expand_dims(pred_class, axis=-2)
         class_mask = tf.one_hot(
-          tf.cast(class_slice, tf.int32),
-          depth=tf.shape(pred_class)[-1],
-          dtype=pred_class.dtype)
-        class_mask = tf.reduce_any(tf.equal(class_mask, class_grid), axis = -1)
+            tf.cast(class_slice, tf.int32),
+            depth=tf.shape(pred_class)[-1],
+            dtype=pred_class.dtype)
+        class_mask = tf.reduce_any(tf.equal(class_mask, class_grid), axis=-1)
       else:
-        class_mask = tf.reduce_max(pred_class, axis = -1, keepdims=True)
+        class_mask = tf.reduce_max(pred_class, axis=-1, keepdims=True)
       class_mask = tf.cast(class_mask, iou.dtype)
       iou *= class_mask
 
-    max_iou_ = tf.concat([max_iou, iou], axis = -1)
-    max_iou = tf.reduce_max(max_iou_, axis = -1, keepdims = True)
-    ind = tf.expand_dims(tf.argmax(max_iou_, axis = -1), axis = -1) 
+    max_iou_ = tf.concat([max_iou, iou], axis=-1)
+    max_iou = tf.reduce_max(max_iou_, axis=-1, keepdims=True)
+    ind = tf.expand_dims(tf.argmax(max_iou_, axis=-1), axis=-1)
 
     if self._track_boxes:
-      running_boxes = tf.expand_dims(running_boxes, axis = -2)
+      running_boxes = tf.expand_dims(running_boxes, axis=-2)
       box_slice = tf.zeros_like(running_boxes) + box_slice
-      box_slice = tf.concat([running_boxes, box_slice], axis = -2)
-      running_boxes = tf.gather_nd(box_slice, ind, batch_dims = 4)
+      box_slice = tf.concat([running_boxes, box_slice], axis=-2)
+      running_boxes = tf.gather_nd(box_slice, ind, batch_dims=4)
 
     if self._track_classes:
-      running_classes = tf.expand_dims(running_classes, axis = -1)
+      running_classes = tf.expand_dims(running_classes, axis=-1)
       class_slice = tf.zeros_like(running_classes) + class_slice
-      class_slice = tf.concat([running_classes, class_slice], axis = -1)
-      running_classes = tf.gather_nd(class_slice, ind, batch_dims = 4)
+      class_slice = tf.concat([running_classes, class_slice], axis=-1)
+      running_classes = tf.gather_nd(class_slice, ind, batch_dims=4)
 
-    return (pred_box     , pred_class     , 
-            boxes        , classes        , 
-            running_boxes, running_classes, 
-            max_iou      , idx + 1)
-  
+    return (pred_box, pred_class, boxes, classes, running_boxes,
+            running_classes, max_iou, idx + 1)
+
   def visualize(self, pred_boxes, max_iou, running_boxes, running_classes):
     #if VISUALIZE:
     iou = self.box_iou(pred_boxes, running_boxes)
@@ -171,20 +170,20 @@ class PairWiseSearch(object):
     axe[0].imshow(max_iou[0, ...].numpy())
     axe[1].imshow(iou[0, ...].numpy())
     plt.show()
-    return 
+    return
 
-  def __call__(self, 
-               pred_boxes, 
-               pred_classes, 
-               boxes, 
-               classes, 
-               scale = None,
-               yxyx = True, 
-               clip_thresh = 0.0):
+  def __call__(self,
+               pred_boxes,
+               pred_classes,
+               boxes,
+               classes,
+               scale=None,
+               yxyx=True,
+               clip_thresh=0.0):
     num_boxes = tf.shape(boxes)[-2]
     num_tiles = num_boxes // TILE_SIZE
 
-    if yxyx: 
+    if yxyx:
       boxes = box_ops.yxyx_to_xcycwh(boxes)
 
     if scale is not None:
@@ -193,10 +192,8 @@ class PairWiseSearch(object):
     if self._min_conf > 0.0:
       pred_classes = tf.cast(pred_classes > self._min_conf, pred_classes.dtype)
 
-    def _loop_cond(pred_box     , pred_class     , 
-                   boxes        , classes        , 
-                   running_boxes, running_classes, 
-                   max_iou      , idx):
+    def _loop_cond(pred_box, pred_class, boxes, classes, running_boxes,
+                   running_classes, max_iou, idx):
 
       # check that the slice has boxes that all zeros
       batch_size = tf.shape(boxes)[0]
@@ -207,35 +204,28 @@ class PairWiseSearch(object):
                             tf.math.greater(tf.reduce_sum(box_slice), 0))
 
     running_boxes = tf.zeros_like(pred_boxes)
-    running_classes = tf.zeros_like(tf.reduce_sum(running_boxes, axis = -1))
-    max_iou = tf.zeros_like(tf.reduce_sum(running_boxes, axis = -1))
-    max_iou = tf.expand_dims(max_iou, axis = -1)
+    running_classes = tf.zeros_like(tf.reduce_sum(running_boxes, axis=-1))
+    max_iou = tf.zeros_like(tf.reduce_sum(running_boxes, axis=-1))
+    max_iou = tf.expand_dims(max_iou, axis=-1)
 
-    (pred_boxes   , pred_classes   , 
-     boxes        , classes        , 
-     running_boxes, running_classes, 
-     max_iou      , idx) = tf.while_loop(
-          _loop_cond,
-          self._search_body, 
-          [pred_boxes   , pred_classes   , 
-           boxes        , classes        , 
-           running_boxes, running_classes, 
-           max_iou      , tf.constant(0)])
+    (pred_boxes, pred_classes, boxes, classes, running_boxes, running_classes,
+     max_iou, idx) = tf.while_loop(_loop_cond, self._search_body, [
+         pred_boxes, pred_classes, boxes, classes, running_boxes,
+         running_classes, max_iou,
+         tf.constant(0)
+     ])
 
     mask = tf.cast(max_iou > clip_thresh, running_boxes.dtype)
     running_boxes *= mask
-    running_classes *= tf.squeeze(mask, axis = -1)
-    max_iou *= mask 
-    max_iou = tf.squeeze(max_iou, axis = -1)
-    mask = tf.squeeze(mask, axis = -1)
+    running_classes *= tf.squeeze(mask, axis=-1)
+    max_iou *= mask
+    max_iou = tf.squeeze(max_iou, axis=-1)
+    mask = tf.squeeze(mask, axis=-1)
 
     #self.visualize(pred_boxes, max_iou, running_boxes, running_classes)
 
-    return (tf.stop_gradient(running_boxes), 
-            tf.stop_gradient(running_classes), 
-            tf.stop_gradient(max_iou), 
-            tf.stop_gradient(mask))
-
+    return (tf.stop_gradient(running_boxes), tf.stop_gradient(running_classes),
+            tf.stop_gradient(max_iou), tf.stop_gradient(mask))
 
 
 def build_grid(indexes, truths, preds, ind_mask, update=False):
@@ -280,7 +270,8 @@ def build_grid(indexes, truths, preds, ind_mask, update=False):
   # resources
   return grid
 
-def apply_mask(mask, x, value = 0):
+
+def apply_mask(mask, x, value=0):
   """This function is used for gradient masking. The YOLO loss function makes 
   extensive use of dynamically shaped tensors. To allow this use case on the 
   TPU while preserving the gradient correctly for back propagation we use this 
@@ -299,6 +290,7 @@ def apply_mask(mask, x, value = 0):
   masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
 
+
 def APAR(pred_conf, true_conf, pct=0.5):
   # capture all predictions of high confidence
   dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
@@ -316,13 +308,14 @@ def APAR(pred_conf, true_conf, pct=0.5):
   precision = tf.reduce_mean(math_ops.divide_no_nan(true_pos, all_pos))
   return tf.stop_gradient(recall), tf.stop_gradient(precision)
 
+
 def avgiou(iou):
   # compute the average realtive to non zero locations, so the
   # average is not biased in sparse tensors
   iou_sum = tf.reduce_sum(iou, axis=tf.range(1, tf.shape(tf.shape(iou))[0]))
   counts = tf.cast(
-      tf.math.count_nonzero(
-          iou, axis=tf.range(1,
-                              tf.shape(tf.shape(iou))[0])), iou.dtype)
+      tf.math.count_nonzero(iou, axis=tf.range(1,
+                                               tf.shape(tf.shape(iou))[0])),
+      iou.dtype)
   avg_iou = tf.reduce_mean(math_ops.divide_no_nan(iou_sum, counts))
   return tf.stop_gradient(avg_iou)

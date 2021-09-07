@@ -91,11 +91,12 @@ class YoloHead(tf.keras.layers.Layer):
         base = tf.concat([box, conf, classes], axis=-1)
         base = tf.reshape(base, [-1])
       return base
+
     return bias
 
   def decoupled_head(self):
 
-    return 
+    return
 
   def build(self, input_shape):
     self._head = dict()

@@ -1,4 +1,3 @@
-
 import tensorflow as tf
 from typing import Optional
 from collections import defaultdict
@@ -26,6 +25,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
+
 
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
@@ -137,12 +137,10 @@ class YoloTask(base_task.Task):
         max_resolution=params.parser.mosaic.max_resolution,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         mixup_frequency=params.parser.mosaic.mixup_frequency,
-
         crop_area=params.parser.mosaic.crop_area,
         crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
-        
         random_crop=rcrop,
         random_pad=params.parser.mosaic.random_pad,
         translate=params.parser.aug_rand_translate,
@@ -213,11 +211,11 @@ class YoloTask(base_task.Task):
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou,
        _avg_obj) = self._loss_dict[key](grid[key], inds[key], upds[key],
-                                            labels['bbox'], labels['classes'],
-                                            outputs[key])
+                                        labels['bbox'], labels['classes'],
+                                        outputs[key])
       loss_val += _loss
 
-      # detach all the below gradients: none of them should make a 
+      # detach all the below gradients: none of them should make a
       # contribution to the gradient form this point forwards
       metric_loss += tf.stop_gradient(_mean_loss)
       metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
@@ -257,10 +255,10 @@ class YoloTask(base_task.Task):
   def train_step(self, inputs, model, optimizer, metrics=None):
     image, label = inputs
 
-    # Get the number of replicas that the model is running on. Num_replicas 
+    # Get the number of replicas that the model is running on. Num_replicas
     # paramter is used to take the mean of the loss across devices. If using
-    # scaled loss the num replicas are set to 1 in order to use the sum across 
-    # replicas.   
+    # scaled loss the num replicas are set to 1 in order to use the sum across
+    # replicas.
     num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
     if self._task_config.model.filter.use_scaled_loss:
       num_replicas = 1
@@ -273,8 +271,7 @@ class YoloTask(base_task.Task):
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
 
       # Get the total loss
-      (loss, 
-       metric_loss, 
+      (loss, metric_loss,
        loss_metrics) = self.build_losses(y_pred['raw_output'], label)
 
       # Account for model distribution across devices
@@ -345,8 +342,8 @@ class YoloTask(base_task.Task):
     # Step the model once
     y_pred = model(image, training=False)
     y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
-    (_, metric_loss, 
-    loss_metrics) = self.build_losses(y_pred['raw_output'], label)
+    (_, metric_loss, loss_metrics) = self.build_losses(y_pred['raw_output'],
+                                                       label)
     logs = {self.loss: metric_loss}
 
     # Reorganize and rescale the boxes
@@ -394,10 +391,10 @@ class YoloTask(base_task.Task):
       ret_dict["APs"] = res["APs"]
       ret_dict["APm"] = res["APm"]
       ret_dict["APl"] = res["APl"]
-      ret_dict = {"AP": ret_dict} 
+      ret_dict = {"AP": ret_dict}
     else:
       ret_dict.update(res)
-    return ret_dict 
+    return ret_dict
 
   def _get_boxes(self, gen_boxes=True):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
@@ -419,8 +416,8 @@ class YoloTask(base_task.Task):
       self.task_config.model.set_boxes(anchors)
       self._anchors_built = True
       del reader
-    return (self.task_config.model._boxes, 
-              self.task_config.model.anchor_free_limits)
+    return (self.task_config.model._boxes,
+            self.task_config.model.anchor_free_limits)
 
   def _get_masks(self):
 
@@ -541,7 +538,6 @@ class YoloTask(base_task.Task):
       logging.info('Finished loading pretrained checkpoint from %s',
                    ckpt_dir_or_file)
 
-
   def _wrap_optimizer(self, optimizer, runtime_config):
     if runtime_config and runtime_config.loss_scale:
       use_float16 = runtime_config.mixed_precision_dtype == "float16"
@@ -569,23 +565,25 @@ class YoloTask(base_task.Task):
     opt_factory._use_ema = False
     if (self._task_config.smart_bias_lr > 0.0):
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
-      optimizer.set_bias_lr(opt_factory.get_bias_lr_schedule(
-        self._task_config.smart_bias_lr))
+      optimizer.set_bias_lr(
+          opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
 
-      weights, biases, others = self._model.get_weight_groups( 
-                                    self._model.trainable_variables)
+      weights, biases, others = self._model.get_weight_groups(
+          self._model.trainable_variables)
       optimizer.set_params(weights, biases, others)
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
 
     print(optimizer)
-    
+
     opt_factory._use_ema = ema
     optimizer = opt_factory.add_ema(optimizer)
     optimizer = self._wrap_optimizer(optimizer, runtime_config)
     return optimizer
 
+
 class ListMetrics(object):
+
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
     self.name = name
     self._metric_names = metric_names

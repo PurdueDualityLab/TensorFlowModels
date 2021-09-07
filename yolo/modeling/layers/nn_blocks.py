@@ -340,9 +340,7 @@ class DarkResidual(tf.keras.layers.Layer):
     elif self._sc_activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(
-          self._sc_activation
-      )  
+      self._activation_fn = tf_utils.get_activation(self._sc_activation)
     super().build(input_shape)
 
   def call(self, inputs, training=None):

@@ -27,7 +27,7 @@ class YoloLayer(tf.keras.Model):
                cls_normalizer=1.0,
                obj_normalizer=1.0,
                use_scaled_loss=False,
-               update_on_repeat=False, 
+               update_on_repeat=False,
                darknet=None,
                pre_nms_points=5000,
                label_smoothing=0.0,

@@ -64,16 +64,18 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   eps = 1e-9
   x = tf.math.sigmoid(x_prime)
   y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
-  bce = -y * tf.math.log(x + eps) -(1 - y) * tf.math.log(1 - x + eps) 
+  bce = -y * tf.math.log(x + eps) - (1 - y) * tf.math.log(1 - x + eps)
 
   def delta(dpass):
     x = tf.math.sigmoid(x_prime)
     dx = (-y + x) * dpass
     dy = tf.zeros_like(y)
     return dy, dx, 0.0
+
   return bce, delta
 
-def apply_mask(mask, x, value = 0):
+
+def apply_mask(mask, x, value=0):
   """This function is used for gradient masking. The YOLO loss function makes 
   extensive use of dynamically shaped tensors. To allow this use case on the 
   TPU while preserving the gradient correctly for back propagation we use this 
@@ -91,6 +93,7 @@ def apply_mask(mask, x, value = 0):
   mask = tf.cast(mask, tf.bool)
   masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
+
 
 def scale_boxes(pred_xy, pred_wh, width, height, anchor_grid, grid_points,
                 max_delta, scale_xy):
@@ -263,7 +266,7 @@ def get_predicted_box(width,
     pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
       devided by the scaler parameter used to put all boxes in the [0, 1] range. 
   """
-  
+
   pred_xy = unscaled_box[..., 0:2]
   pred_wh = unscaled_box[..., 2:4]
 
@@ -485,7 +488,7 @@ class Yolo_Loss(object):
                obj_normalizer=1.0,
                objectness_smooth=True,
                use_scaled_loss=False,
-               update_on_repeat=False, 
+               update_on_repeat=False,
                darknet=None,
                label_smoothing=0.0,
                new_cords=False,
@@ -591,7 +594,6 @@ class Yolo_Loss(object):
     else:
       self._decode_boxes = partial(get_predicted_box_newcords, **box_kwargs)
 
-
   def APAR(self, pred_conf, true_conf, pct=0.5):
     # capture all predictions of high confidence
     dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
@@ -634,7 +636,7 @@ class Yolo_Loss(object):
       iou = box_ops.compute_iou(true_box, pred_box, darknet=darknet)
       liou = iou
       loss_box = 1 - liou
-      
+
     return iou, liou, loss_box
 
   def _build_mask_body(self, pred_boxes_, pred_classes_, pred_conf,
@@ -925,7 +927,7 @@ class Yolo_Loss(object):
     smoothed_iou = apply_mask(ind_mask, smoothed_iou)
     true_conf = self.build_grid(
         inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
-    true_conf = tf.squeeze(true_conf, axis = -1)
+    true_conf = tf.squeeze(true_conf, axis=-1)
 
     #     compute the detection map loss, there should be no masks
     #     applied
@@ -1093,9 +1095,11 @@ class Yolo_Loss(object):
 
     # 13. compute the sigmoid binary cross entropy, same as bce with logits but
     #     it is far safer with no holes. gradient reduces to y_pred - y_true.
-    class_loss = tf.reduce_mean(sigmoid_BCE(
-      tf.expand_dims(true_class, axis=-1), tf.expand_dims(pred_class, axis=-1),
-      self._label_smoothing), axis = -1)
+    class_loss = tf.reduce_mean(
+        sigmoid_BCE(
+            tf.expand_dims(true_class, axis=-1),
+            tf.expand_dims(pred_class, axis=-1), self._label_smoothing),
+        axis=-1)
 
     # 14. apply the weight from the configs to the predictions classes
     if self._cls_normalizer < 1.0:
@@ -1115,7 +1119,8 @@ class Yolo_Loss(object):
     # 16. use the custom sigmoid BCE to compute the loss at each pixel
     #     in the detection map
     bce = tf.reduce_mean(
-      sigmoid_BCE(tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0),axis = -1)
+        sigmoid_BCE(tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0),
+        axis=-1)
 
     # 17. apply the ignore mask to the detection map to zero out all the
     #     indexes where the loss should not be computed. we use the apply

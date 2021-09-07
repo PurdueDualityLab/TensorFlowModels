@@ -3,11 +3,11 @@ from tensorflow.python.ops import array_ops
 from tensorflow.keras.optimizers.schedules import LearningRateSchedule
 from tensorflow.python.training import gen_training_ops
 
-
 import tensorflow as tf
 import re
 
 __all__ = ['SGD']
+
 
 def _var_key(var):
   """Key for representing a primary variable, for looking up slots.
@@ -99,27 +99,27 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
                warmup_steps=1000,
                nesterov=False,
                sim_torch=False,
-               weight_keys = ["kernel"], 
-               bias_keys = ["bias", "beta"], 
+               weight_keys=["kernel"],
+               bias_keys=["bias", "beta"],
                name="SGD",
                **kwargs):
     super(SGDMomentumWarmupW, self).__init__(name, **kwargs)
     self._weight_keys = weight_keys
-    self._bias_keys = bias_keys 
+    self._bias_keys = bias_keys
 
-    # Create Hyper Params for each group of the LR 
+    # Create Hyper Params for each group of the LR
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
     self._set_hyper("bias_learning_rate", kwargs.get("lr", learning_rate))
     self._set_hyper("other_learning_rate", kwargs.get("lr", learning_rate))
 
     # SGD decay param
     self._set_hyper("decay", self._initial_decay)
-    
+
     # Weight decay param
     self._weight_decay = weight_decay != 0.0
     self._set_hyper("weight_decay", weight_decay)
 
-    # Enable Momentum 
+    # Enable Momentum
     self._momentum = False
     if isinstance(momentum, ops.Tensor) or callable(momentum) or momentum > 0:
       self._momentum = True
@@ -129,14 +129,14 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     self._set_hyper("momentum_start", momentum_start)
     self._set_hyper("warmup_steps", tf.cast(warmup_steps, tf.int32))
 
-    # Enable Nesterov Momentum 
+    # Enable Nesterov Momentum
     self.nesterov = nesterov
 
     # Simulate Pytorch Optimizer
     self.sim_torch = sim_torch
-    
+
     # weights, biases, other
-    self._wset = set() 
+    self._wset = set()
     self._bset = set()
     self._oset = set()
 
@@ -150,10 +150,9 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     self._wset = set([_var_key(w) for w in weights])
     self._bset = set([_var_key(b) for b in biases])
     self._oset = set([_var_key(o) for o in others])
-    print(" weights: ", len(weights), 
-          " biases: ", len(biases), 
-          " others: ", len(others))
-    return 
+    print(" weights: ", len(weights), " biases: ", len(biases), " others: ",
+          len(others))
+    return
 
   def _create_slots(self, var_list):
     if self._momentum:
@@ -204,11 +203,11 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     return apply_state[(var_device, var_dtype)]
 
   def _apply_tf(self, grad, var, weight_decay, momentum, lr):
+
     def decay_op(var, learning_rate, wd):
       if self._weight_decay and wd > 0:
         return var.assign_sub(
-            learning_rate * var * wd,
-            use_locking=self._use_locking)
+            learning_rate * var * wd, use_locking=self._use_locking)
       return tf.no_op()
 
     decay = decay_op(var, lr, weight_decay)
@@ -267,10 +266,10 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     if weights:
       weight_decay = coefficients["weight_decay"]
       lr = coefficients["lr_t"]
-    elif bias: 
+    elif bias:
       weight_decay = tf.zeros_like(coefficients["weight_decay"])
       lr = coefficients["bias_lr_t"]
-    elif others: 
+    elif others:
       weight_decay = tf.zeros_like(coefficients["weight_decay"])
       lr = coefficients["other_lr_t"]
     momentum = coefficients["momentum"]

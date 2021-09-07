@@ -134,6 +134,7 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image
 
+
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   """
   Randomly alter the hue, saturation, and brightness of an image. 
@@ -156,11 +157,10 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
   scale = tf.cast([180, 255, 255], image.dtype)
-  r = tf.random.uniform([3], -1, 1, 
-                        dtype=image.dtype, 
-                        seed = seed) * gen_range + 1
+  r = tf.random.uniform([3], -1, 1, dtype=image.dtype,
+                        seed=seed) * gen_range + 1
 
-  # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32) 
+  # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32)
   image = tf.math.floor(tf.cast(image, scale.dtype) * scale)
   image = tf.math.floor(tf.cast(image, r.dtype) * r)
   h, s, v = tf.split(image, 3, axis=-1)
@@ -169,24 +169,25 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   v = tf.clip_by_value(v, 0, 255)
 
   image = tf.concat([h, s, v], axis=-1)
-  image = tf.cast(image, scale.dtype)/scale
+  image = tf.cast(image, scale.dtype) / scale
   image = tf.image.hsv_to_rgb(image)
   return tf.cast(image, dtype)
 
+
 # def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #   """
-#   Randomly alter the hue, saturation, and brightness of an image. 
+#   Randomly alter the hue, saturation, and brightness of an image.
 
-#   Args: 
+#   Args:
 #     image: Tensor of shape [None, None, 3] that needs to be altered.
-#     rh: `float32` used to indicate the maximum delta that can be  multiplied to 
+#     rh: `float32` used to indicate the maximum delta that can be  multiplied to
 #       hue.
-#     rs: `float32` used to indicate the maximum delta that can be multiplied to 
+#     rs: `float32` used to indicate the maximum delta that can be multiplied to
 #       saturation.
-#     rv: `float32` used to indicate the maximum delta that can be multiplied to 
+#     rv: `float32` used to indicate the maximum delta that can be multiplied to
 #       brightness.
 #     seed: `Optional[int]` for the seed to use in random number generation.
-  
+
 #   Returns:
 #     The HSV altered image in the same datatype as the input image
 #   """
@@ -198,15 +199,15 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #       )
 
 #   gen_range = tf.cast([rh, rs, rv], image.dtype)
-#   r = tf.random.uniform([3], -1, 1, 
-#                         dtype=image.dtype, 
+#   r = tf.random.uniform([3], -1, 1,
+#                         dtype=image.dtype,
 #                         seed = seed) * gen_range
 
 #   # Construct hsv linear transformation matrix in YIQ space.
 #   # https://beesbuzz.biz/code/hsv_color_transforms.php
 #   yiq = tf.constant(
-#       [[0.299, 0.596, 0.211], 
-#        [0.587, -0.274, -0.523], 
+#       [[0.299, 0.596, 0.211],
+#        [0.587, -0.274, -0.523],
 #        [0.114, -0.322, 0.312]],
 #       dtype=image.dtype,
 #   )
@@ -226,14 +227,15 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 #   vsu = scale_value * scale_saturation * tf.math.cos(delta_hue)
 #   vsw = scale_value * scale_saturation * tf.math.sin(delta_hue)
 #   hsv_transform = tf.convert_to_tensor(
-#       [[scale_value, 0, 0], 
-#        [0, vsu, vsw], 
+#       [[scale_value, 0, 0],
+#        [0, vsu, vsw],
 #        [0, -vsw, vsu]], dtype=image.dtype
 #   )
 #   transform_matrix = yiq @ hsv_transform @ yiq_inverse
 
 #   image = image @ transform_matrix
 #   return image
+
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
@@ -255,10 +257,11 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
     The HSV altered image in the same datatype as the input image
   """
   if darknet:
-    image = _augment_hsv_darknet(image, rh, rs, rv, seed = seed)
+    image = _augment_hsv_darknet(image, rh, rs, rv, seed=seed)
   else:
     image = _augment_hsv_torch(image, rh, rs, rv, seed=seed)
   return image
+
 
 def random_window_crop(image, target_height, target_width, translate=0.0):
   """Takes a random crop of the image to the target height and width
@@ -302,7 +305,7 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   return cropped_image, info
 
 
-def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright, 
+def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
                shiftx, shifty):
   """Given a center location, cut the input image into a slice that will be 
   concatnated with other slices with the same center in order to construct 
@@ -345,7 +348,7 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
     bot_shift = tf.minimum(
         tf.minimum(h - cut_y, tf.maximum(0.0, -pbottom * h / oh)), cut_y)
 
-    # Build a crop offset and a crop size tensor to use for slicing. 
+    # Build a crop offset and a crop size tensor to use for slicing.
     if shiftx == 0.0 and shifty == 0.0:
       crop_offset = [top_shift, left_shift, 0]
       crop_size = [cut_y, cut_x, -1]
@@ -425,6 +428,7 @@ def resize_and_jitter_image(image,
       the scaling factor, which is the ratio of
       scaled dimension / original dimension.
   """
+
   def intersection(a, b):
     minx = tf.maximum(a[0], b[0])
     miny = tf.maximum(a[1], b[1])
@@ -559,19 +563,18 @@ def resize_and_jitter_image(image,
     infos.append(pad_info)
 
     temp = tf.shape(image_)[:2]
-    cond = temp > tf.cast(desired_size, temp.dtype) 
+    cond = temp > tf.cast(desired_size, temp.dtype)
     if tf.reduce_any(cond):
       size = tf.cast(desired_size, temp.dtype)
       size = tf.where(cond, size, temp)
       image_ = tf.image.resize(
-          image_, (size[0], size[1]),
-          method=tf.image.ResizeMethod.AREA)
+          image_, (size[0], size[1]), method=tf.image.ResizeMethod.AREA)
       image_ = tf.cast(image_, original_dtype)
 
     image_ = tf.image.resize(
-          image_, (desired_size[0], desired_size[1]),
-          method=tf.image.ResizeMethod.BILINEAR, 
-          antialias=False)
+        image_, (desired_size[0], desired_size[1]),
+        method=tf.image.ResizeMethod.BILINEAR,
+        antialias=False)
 
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
@@ -580,6 +583,7 @@ def resize_and_jitter_image(image,
       infos.append(crop_info)
     return image_, infos, cast([ow, oh, w, h, ptop, pleft, pbottom, pright],
                                tf.int32)
+
 
 def build_transform(image,
                     perspective=0.00,
@@ -606,7 +610,7 @@ def build_transform(image,
   C = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [-cw / 2, -ch / 2])
   Cb = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [cw / 2, ch / 2])
 
-  # Compute a random rotation to apply. 
+  # Compute a random rotation to apply.
   R = tf.eye(3, dtype=tf.float32)
   a = deg_to_rad(tf.random.uniform([], -degrees, degrees, seed=seed))
   cos = tf.math.cos(a)
@@ -616,14 +620,14 @@ def build_transform(image,
   Rb = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]],
                                    [cos, sin, -sin, cos])
 
-  # Compute a random prespective change to apply. 
+  # Compute a random prespective change to apply.
   P = tf.eye(3)
   Px = tf.random.uniform([], -perspective, perspective, seed=seed)
   Py = tf.random.uniform([], -perspective, perspective, seed=seed)
   P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
   Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
 
-  # Compute a random scaling to apply. 
+  # Compute a random scaling to apply.
   S = tf.eye(3, dtype=tf.float32)
   s = tf.random.uniform([], scale_min, scale_max, seed=seed)
   S = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [1 / s, 1 / s])
@@ -634,20 +638,20 @@ def build_transform(image,
   # if ((random_pad and s <= 1.0) or
   #     (random_pad and s > 1.0 and translate < 0.0)):
   if (random_pad and height * s < ch and width * s < cw):
-    # The image is contained within the image and arbitrarily translated to 
+    # The image is contained within the image and arbitrarily translated to
     # locations with in the image.
     C = Cb = tf.eye(3, dtype=tf.float32)
     Tx = tf.random.uniform([], -1, 0, seed=seed) * (cw / s - width)
     Ty = tf.random.uniform([], -1, 0, seed=seed) * (ch / s - height)
   else:
     # The image can be translated outside of the output resolution window
-    # but the image is translated relative to the output resolution not the 
-    # input image resolution. 
+    # but the image is translated relative to the output resolution not the
+    # input image resolution.
     Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
     Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
 
-    # Center and Scale the image such that the window of translation is 
-    # contained to the output resolution. 
+    # Center and Scale the image such that the window of translation is
+    # contained to the output resolution.
     dx, dy = (width - cw / s) / width, (height - ch / s) / height
     sx, sy = 1 - dx, 1 - dy
     bx, by = dx / 2, dy / 2
@@ -660,11 +664,11 @@ def build_transform(image,
   T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
   Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
 
-  # Use repeated matric multiplications to combine all the image transforamtions 
+  # Use repeated matric multiplications to combine all the image transforamtions
   # into a single unified augmentation operation M is applied to the image
-  # Mb is to apply to the boxes. The order of matrix multiplication is 
-  # important. First, Translate, then Scale, then Rotate, then Center, then 
-  # finally alter the Prepsective. 
+  # Mb is to apply to the boxes. The order of matrix multiplication is
+  # important. First, Translate, then Scale, then Rotate, then Center, then
+  # finally alter the Prepsective.
   M = T @ S @ R @ C @ P
   Mb = Pb @ Cb @ Rb @ Sb @ Tb
   return M, Mb, s
@@ -679,7 +683,7 @@ def affine_warp_image(image,
                       translate=0.0,
                       random_pad=False,
                       seed=None):
-  
+
   # Build an image transformation matrix.
   image_size = tf.cast(get_image_shape(image), tf.float32)
   M_, Mb, _ = build_transform(
@@ -706,8 +710,10 @@ def affine_warp_image(image,
   desired_size = tf.cast(desired_size, tf.float32)
   return image, M_, [image_size, desired_size, Mb]
 
+
 # ops for box clipping and cleaning
 def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
+
   def _get_corners(box):
     """Get the corner of each box as a tuple of (x, y) coordinates"""
     ymi, xmi, yma, xma = tf.split(box, 4, axis=-1)
@@ -754,6 +760,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history=None):
 
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, boxes, box_history
+
 
 def boxes_candidates(clipped_boxes,
                      box_history,
@@ -860,11 +867,11 @@ def apply_infos(boxes,
   if infos is None:
     infos = []
 
-  # Initialize history to None to indicate no operation have been applied to 
+  # Initialize history to None to indicate no operation have been applied to
   # the boxes yet.
   box_history = None
 
-  # Make sure all boxes are valid to start, clip to [0, 1] and get only the 
+  # Make sure all boxes are valid to start, clip to [0, 1] and get only the
   # valid boxes.
   boxes = tf.math.maximum(tf.math.minimum(boxes, 1.0), 0.0)
   cond = get_valid_boxes(boxes)
@@ -876,11 +883,12 @@ def apply_infos(boxes,
       box_history = bbox_ops.denormalize_boxes(box_history, info[0])
 
     # Shift and scale all boxes, and keep track of box history with no
-    # box clipping, history is used for removing boxes that have become 
+    # box clipping, history is used for removing boxes that have become
     # too small or exit the image area.
-    (boxes,  # Clipped final boxes. 
-     unclipped_boxes,  # Unclipped final boxes. 
-     box_history) = resize_and_crop_boxes(
+    (
+        boxes,  # Clipped final boxes. 
+        unclipped_boxes,  # Unclipped final boxes. 
+        box_history) = resize_and_crop_boxes(
             boxes, info[2, :], info[1, :], info[3, :], box_history=box_history)
 
     # Normalize the boxes to [0, 1].
@@ -904,10 +912,11 @@ def apply_infos(boxes,
       # Denormalize the box history.
       box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
 
-    (boxes,  # Clipped final boxes. 
-    unclipped_boxes,  # Unclipped final boxes. 
-    box_history) = affine_warp_boxes(
-          affine[2], boxes, affine[1], box_history=box_history)
+    (
+        boxes,  # Clipped final boxes. 
+        unclipped_boxes,  # Unclipped final boxes. 
+        box_history) = affine_warp_boxes(
+            affine[2], boxes, affine[1], box_history=box_history)
 
     # Normalize the boxes to [0, 1].
     boxes = bbox_ops.normalize_boxes(boxes, affine[1])
@@ -972,8 +981,7 @@ def _get_num_reps(anchors, mask, box_mask):
       tf.logical_and(box_mask, anchors_primary == mask), axis=0)
   viable_alternate = tf.squeeze(
       tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
-  viable_full = tf.squeeze(
-      tf.logical_and(box_mask, anchors == mask), axis=0)
+  viable_full = tf.squeeze(tf.logical_and(box_mask, anchors == mask), axis=0)
 
   viable_primary = tf.where(viable_primary)
   viable_alternate = tf.where(viable_alternate)
@@ -1088,9 +1096,9 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
 
   if pull_in > 0.0:
     (ind_val, ind_sample,
-      num_written) = write_grid(viable, num_reps, boxes, classes,
-                                ious, ind_val, ind_sample, height, width,
-                                num_written, num_instances, pull_in)
+     num_written) = write_grid(viable, num_reps, boxes, classes, ious, ind_val,
+                               ind_sample, height, width, num_written,
+                               num_instances, pull_in)
 
     # (ind_val, ind_sample,
     # num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
@@ -1115,17 +1123,15 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
     #                             num_instances, pull_in)
   else:
     (ind_val, ind_sample,
-    num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-                              ind_val, ind_sample, height, width, num_written,
-                              num_instances, 0.0)
+     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+                               ind_val, ind_sample, height, width, num_written,
+                               num_instances, 0.0)
 
     if use_tie_breaker:
       (ind_val, ind_sample,
-      num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
-                                ind_val, ind_sample, height, width, num_written,
-                                num_instances, 0.0)
-
-
+       num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
+                                 ious, ind_val, ind_sample, height, width,
+                                 num_written, num_instances, 0.0)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
@@ -1202,7 +1208,7 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
       x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
       y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i]: # and (xc != x_ or yc != y_):
+      if shifts[i]:  # and (xc != x_ or yc != y_):
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
@@ -1268,7 +1274,7 @@ def get_best_anchor(y_true,
                     width=1,
                     height=1,
                     iou_thresh=0.25,
-                    anchor_free_limits=None, 
+                    anchor_free_limits=None,
                     best_match_only=False):
   """
   get the correct anchor that is assoiciated with each box using IOU
@@ -1316,15 +1322,14 @@ def get_best_anchor(y_true,
       minim = tf.reshape(minim[:k], [1, k, 1])
       maxim = tf.reshape(maxim[:k], [1, k, 1])
 
-      bmax = tf.reduce_max(truth_comp, axis = -1)
+      bmax = tf.reduce_max(truth_comp, axis=-1)
       bmask = tf.logical_and(bmax >= minim, bmax <= maxim)
 
       bmask = tf.transpose(bmask, perm=[0, 2, 1])
       ind_mask = tf.cast(bmask, dtype=bmax.dtype)
 
-      values, indexes = tf.math.top_k(ind_mask, 
-          k=tf.cast(k, dtype=tf.int32),
-          sorted=True)
+      values, indexes = tf.math.top_k(
+          ind_mask, k=tf.cast(k, dtype=tf.int32), sorted=True)
       ind_mask = tf.cast(values, dtype=indexes.dtype)
     elif iou_thresh >= 1.0:
       anchors = tf.expand_dims(anchors, axis=-2)

@@ -35,6 +35,7 @@ class BaseOptimizerConfig(base_config.Config):
   clipvalue: Optional[float] = None
   global_clipnorm: Optional[float] = None
 
+
 @dataclasses.dataclass
 class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
@@ -55,7 +56,6 @@ class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   warmup_steps: int = 1000
   weight_decay: float = 0.0
   sim_torch: bool = False
-  weight_keys: List[str] = dataclasses.field(
-    default_factory=lambda:["kernel"]) 
+  weight_keys: List[str] = dataclasses.field(default_factory=lambda: ["kernel"])
   bias_keys: List[str] = dataclasses.field(
-    default_factory=lambda:["bias", "beta"]) 
+      default_factory=lambda: ["bias", "beta"])

@@ -243,7 +243,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
       xycc1 = yxyx_to_xcycwh(box1)
       xycc2 = yxyx_to_xcycwh(box2)
 
-    # Build the smallest encomapssing box. 
+    # Build the smallest encomapssing box.
     cmi, cma, _ = smallest_encompassing_box(yxyx1, yxyx2, yxyx=True)
     intersection, union = intersect_and_union(yxyx1, yxyx2, yxyx=True)
     iou = math_ops.divide_no_nan(intersection, union)
@@ -269,7 +269,7 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
 
     if darknet:
       grad_scale = tf.stop_gradient(tf.square(b2w) + tf.square(b2h))
-      v *= tf.squeeze(grad_scale, axis = -1)
+      v *= tf.squeeze(grad_scale, axis=-1)
 
     ciou = iou - regularization - (v * a)
   return iou, ciou

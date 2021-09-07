@@ -31,10 +31,10 @@ class Mosaic(object):
                mosaic_crop_mode=None,
                mixup_frequency=0.0,
                area_thresh=0.1,
-               deterministic=True, 
+               deterministic=True,
                seed=None):
 
-    # Establish the expected output size and the maximum resolution to use for 
+    # Establish the expected output size and the maximum resolution to use for
     # padding and batching throughout the mosaic process.
     self._output_size = output_size
     self._max_resolution = max_resolution
@@ -44,9 +44,9 @@ class Mosaic(object):
     self._mixup_frequency = mixup_frequency
 
     # Establish how the image to treat images prior to cropping
-    # letter boxing preserves aspect ratio, cropping will take random crops 
-    # of the input samples prior to patching, distortion will allow for 
-    # arbitraty changes to aspect ratio and crops.  
+    # letter boxing preserves aspect ratio, cropping will take random crops
+    # of the input samples prior to patching, distortion will allow for
+    # arbitraty changes to aspect ratio and crops.
     self._aspect_ratio_mode = aspect_ratio_mode
 
     self._random_flip = random_flip
@@ -61,9 +61,9 @@ class Mosaic(object):
     self._area_thresh = area_thresh
 
     # How to treat final output images, None indicates that nothing will occur,
-    # if the mode is crop then the mosaic will be generate by cropping and 
+    # if the mode is crop then the mosaic will be generate by cropping and
     # slicing. If scale is selected the images are concatnated together and
-    # and scaled.  
+    # and scaled.
     self._mosaic_crop_mode = mosaic_crop_mode
     self._crop_area_mosaic = crop_area_mosaic
 
@@ -200,9 +200,8 @@ class Mosaic(object):
     """Process a single image prior to the application of patching."""
     # Randomly flip the image horizontally.
     if self._random_flip:
-      image, boxes, _ = preprocess_ops.random_horizontal_flip(image, 
-                                                              boxes, 
-                                                              seed = self._seed)
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(
+          image, boxes, seed=self._seed)
 
     infos = []
     random_crop = self._random_crop
@@ -217,7 +216,6 @@ class Mosaic(object):
       if tf.random.uniform([], 0.0, 1.0, dtype=tf.float32) > 0.5:
         image, info = self._crop_image(image, [0.25, 1.0])
       infos.append(info)
-      
 
     image, infos_, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],
@@ -276,11 +274,7 @@ class Mosaic(object):
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes,
-        infos,
-        affine=affine,
-        area_thresh=at,
-        seed=self._seed)
+        boxes, infos, affine=affine, area_thresh=at, seed=self._seed)
 
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -297,11 +291,12 @@ class Mosaic(object):
     translate = tf.cast((ishape - pshape), boxes.dtype)
 
     boxes = box_ops.denormalize_boxes(boxes, pshape[:2])
-    boxes = boxes + tf.cast([translate[0] * ys, translate[1] * xs, 
-                             translate[0] * ys, translate[1] * xs],
-                            boxes.dtype)
+    boxes = boxes + tf.cast([
+        translate[0] * ys, translate[1] * xs, translate[0] * ys,
+        translate[1] * xs
+    ], boxes.dtype)
     boxes = box_ops.normalize_boxes(boxes, ishape[:2])
-    return boxes, classes 
+    return boxes, classes
 
   # mosaic partial frequency
   def _mapped(self, sample):
@@ -465,21 +460,32 @@ class Mosaic(object):
     num = tf.data.AUTOTUNE
     determ = self._deterministic
     one = one.map(
-        lambda x: self._im_process(x, 1.0, 1.0), num_parallel_calls=num, deterministic = determ)
+        lambda x: self._im_process(x, 1.0, 1.0),
+        num_parallel_calls=num,
+        deterministic=determ)
     two = two.map(
-        lambda x: self._im_process(x, 0.0, 1.0), num_parallel_calls=num, deterministic = determ)
+        lambda x: self._im_process(x, 0.0, 1.0),
+        num_parallel_calls=num,
+        deterministic=determ)
     three = three.map(
-        lambda x: self._im_process(x, 1.0, 0.0), num_parallel_calls=num, deterministic = determ)
+        lambda x: self._im_process(x, 1.0, 0.0),
+        num_parallel_calls=num,
+        deterministic=determ)
     four = four.map(
-        lambda x: self._im_process(x, 0.0, 0.0), num_parallel_calls=num, deterministic = determ)
+        lambda x: self._im_process(x, 0.0, 0.0),
+        num_parallel_calls=num,
+        deterministic=determ)
 
-    patch1 = tf.data.Dataset.zip((one, two)) 
-    patch1 = patch1.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    patch1 = tf.data.Dataset.zip((one, two))
+    patch1 = patch1.map(
+        self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
     patch2 = tf.data.Dataset.zip((three, four))
-    patch2 = patch2.map(self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    patch2 = patch2.map(
+        self._patch2, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
 
     stitched = tf.data.Dataset.zip((patch1, patch2))
-    stitched = stitched.map(self._patch, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    stitched = stitched.map(
+        self._patch, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
 
     if self._mixup_frequency > 0:
       stitched = self._apply_mixup(stitched)
@@ -489,12 +495,18 @@ class Mosaic(object):
     determ = self._deterministic
 
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    dataset = dataset.map(self._pad_images, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    dataset = dataset.map(
+        self._pad_images,
+        num_parallel_calls=tf.data.AUTOTUNE,
+        deterministic=determ)
     dataset = dataset.padded_batch(4)
-    dataset = dataset.map(self._mapped, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    dataset = dataset.map(
+        self._mapped, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
     dataset = dataset.unbatch()
     dataset = dataset.map(
-        self.resample_unpad, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+        self.resample_unpad,
+        num_parallel_calls=tf.data.AUTOTUNE,
+        deterministic=determ)
     if self._mixup_frequency > 0:
       dataset = self._apply_mixup(dataset)
     return dataset
@@ -527,10 +539,11 @@ class Mosaic(object):
 
   def _apply_mixup(self, dataset):
     determ = self._deterministic
-    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)  
-    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True) 
+    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
+    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
     mixed = tf.data.Dataset.zip((one, two))
-    mixed = mixed.map(self._mixup, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    mixed = mixed.map(
+        self._mixup, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
     return mixed
 
   def _add_param(self, sample):
@@ -541,7 +554,10 @@ class Mosaic(object):
   # mosaic skip
   def _no_apply(self, dataset):
     determ = self._deterministic
-    return dataset.map(self._add_param, num_parallel_calls=tf.data.AUTOTUNE, deterministic = determ)
+    return dataset.map(
+        self._add_param,
+        num_parallel_calls=tf.data.AUTOTUNE,
+        deterministic=determ)
 
   def mosaic_fn(self, is_training=True):
     if (is_training and self._mosaic_frequency >= 1.0 and

@@ -40,15 +40,15 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/640-3x-64-wd.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/hsv/640-hsv.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e1.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e6.yaml"]
+  config_path = [
+      "yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e6.yaml"
+  ]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/debug/640.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
   params = train_utils.parse_configuration(config)
   config = params.task
-
-  
 
   # anchor gen testing
   # config.model.boxes = None
@@ -134,15 +134,13 @@ def test_yolo_pipeline(is_training=True, num=30):
   if config.coco91to80:
     drawer = utils.DrawBoxes(
         labels=coco.get_coco_names(
-            path="yolo/dataloaders/dataset_specs/coco.names"
-        ),
+            path="yolo/dataloaders/dataset_specs/coco.names"),
         thickness=2,
         classes=91)
   else:
     drawer = utils.DrawBoxes(
         labels=coco.get_coco_names(
-            path="yolo/dataloaders/dataset_specs/coco-91.names"
-        ),
+            path="yolo/dataloaders/dataset_specs/coco-91.names"),
         thickness=2,
         classes=91)
   ltime = time.time()
@@ -301,7 +299,7 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  test_yolo_pipeline(is_training=True, num = 30)
+  test_yolo_pipeline(is_training=True, num=30)
   test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po

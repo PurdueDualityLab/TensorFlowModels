@@ -45,7 +45,6 @@ class OptimizerConfig(optimization_cfg.OptimizerConfig):
   )
 
 
-
 @dataclasses.dataclass
 class OptimizationConfig(optimization_cfg.OptimizationConfig):
   """Configuration for optimizer and learning rate schedule.
