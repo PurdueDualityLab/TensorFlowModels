@@ -56,6 +56,8 @@ def intersect_and_union(box1, box2, yxyx=False):
   """
 
   if not yxyx:
+    box1_area = tf.reduce_prod(tf.split(box1, 2, axis=-1)[-1], axis=-1)
+    box2_area = tf.reduce_prod(tf.split(box2, 2, axis=-1)[-1], axis=-1)
     box1 = xcycwh_to_yxyx(box1)
     box2 = xcycwh_to_yxyx(box2)
 
@@ -66,8 +68,9 @@ def intersect_and_union(box1, box2, yxyx=False):
   intersect_wh = tf.math.maximum(intersect_maxes - intersect_mins, 0.0)
   intersection = tf.reduce_prod(intersect_wh, axis=-1)
 
-  box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
-  box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
+  if yxyx:
+    box1_area = tf.reduce_prod(b1ma - b1mi, axis=-1)
+    box2_area = tf.reduce_prod(b2ma - b2mi, axis=-1)
   union = box1_area + box2_area - intersection
   return intersection, union
 
