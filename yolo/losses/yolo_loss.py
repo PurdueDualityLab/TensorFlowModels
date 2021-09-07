@@ -761,6 +761,9 @@ class Yolo_Loss(object):
        ind_mask, grid_mask) = self.call_darknet(true_counts, inds, y_true,
                                                 boxes, classes, y_pred)
 
+    # Temporary metrics
+    box_loss = 0.05 * box_loss/self._iou_normalizer
+
     # Metric compute using done here to save time and resources.
     sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
     iou = tf.stop_gradient(iou)
