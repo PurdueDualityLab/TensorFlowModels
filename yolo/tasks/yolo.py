@@ -1,11 +1,4 @@
-from numpy import blackman
-from tensorflow.keras import optimizers
-from tensorflow.python.keras.backend import int_shape
-from tensorflow.python.ops.clip_ops import clip_by_value
-from tensorflow.python.ops.gen_array_ops import shape
-from tensorflow.python.training import optimizer
 from yolo.ops import preprocessing_ops
-from yolo.ops.preprocessing_ops import apply_infos
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
@@ -23,10 +16,7 @@ from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from yolo.dataloaders import yolo_input
 from yolo.ops import mosaic
 from yolo.ops.kmeans_anchors import BoxGenInputReader
-from yolo.ops.box_ops import xcycwh_to_yxyx
 
-from official.vision.beta.ops import box_ops, preprocess_ops
-from yolo.modeling.layers import detection_generator
 from collections import defaultdict
 
 from typing import Optional
