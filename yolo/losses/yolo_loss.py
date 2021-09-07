@@ -444,7 +444,9 @@ class Yolo_Loss(object):
         masks=mask, anchors=anchors, scale_anchors=scale_anchors)
 
     if ignore_thresh > 0.0:
-      self._search_pairs = PairWiseSearch(iou_type="iou", min_conf=0.25)
+      self._search_pairs = PairWiseSearch(iou_type="iou", 
+                                          any = not self._use_reduction_sum, 
+                                          min_conf=0.25)
 
     box_kwargs = dict(
         scale_xy=self._scale_x_y,
@@ -680,7 +682,6 @@ class Yolo_Loss(object):
           fwidth,
           fheight,
           smoothed=self._objectness_smooth > 0)
-      tf.print(tf.reduce_sum(1 - obj_mask))
 
     # Build the one hot class list that are used for class loss.
     true_class = tf.one_hot(

@@ -38,13 +38,15 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.06
+        '3': 0.050
+        '4': 0.055
+        '5': 0.060
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
         'all': 0.0
       obj_normalizer: 
-        '5': 0.28
+        '5': 0.28 
         '4': 0.70
         '3': 2.80
       new_cords:
