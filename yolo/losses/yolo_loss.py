@@ -518,43 +518,43 @@ class Yolo_Loss(object):
     return true_conf, obj_mask
 
   def call_scaled(self, true_counts, inds, y_true, boxes, classes, y_pred):
-    # 0. generate shape constants using tf.shat to support feature multi scale
-    # training
+    # Generate shape constants.
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
 
-    # 1. cast all input compontnts to float32 and stop gradient to save memory
+    # Cast all input compontnts to float32 and stop gradient to save memory.
     y_true = tf.cast(y_true, tf.float32)
     true_counts = tf.cast(true_counts, tf.float32)
     true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
 
-    # 2. split the y_true grid into the usable items, set the shapes correctly
-    #    and save the true_confdence mask before it get altered
+    # Split the y_true list. 
     (true_box, ind_mask, true_class, _, _) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
     grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)
 
-    # 3. split up the predicitons to match the ground truths shapes
+    # Split up the predicitons.
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
+    # Decode the boxes for loss compute.
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
+    # If the ignore threshold is enabled, search all boxes ignore all 
+    # IOU valeus larger than the ignore threshold that are not in the 
+    # noted ground truth list.  
     if self._ignore_thresh != 0.0:
-      sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
-      sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
       (_, obj_mask) = self._tiled_global_box_search(
           pred_box,
-          sigmoid_class,
-          sigmoid_conf,
+          tf.stop_gradient(tf.sigmoid(pred_class)),
+          tf.stop_gradient(tf.sigmoid(pred_conf)),
           boxes,
           classes,
           true_conf,
@@ -563,16 +563,15 @@ class Yolo_Loss(object):
           smoothed=False,
           scale=scale)
 
-    # based on input val new_cords decode the box predicitions
-    # and because we are using the scaled loss, do not change the gradients
-    # at all
+    # Scale and shift and select the ground truth boxes 
+    # and predictions to the prediciton domain. 
     offset = tf.cast(
         tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
     offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
     true_box = apply_mask(ind_mask, (scale * true_box) - offset)
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
 
-    # build the class object
+    # Select the correct/used prediction classes.
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
@@ -581,16 +580,12 @@ class Yolo_Loss(object):
     pred_class = apply_mask(ind_mask,
                             tf.gather_nd(pred_class, inds, batch_dims=1))
 
-    # compute the loss of all the boxes and apply a mask such that
-    # within the 200 boxes, only the indexes of importance are covered
+    # Compute the box loss. 
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
-    # 6.  (confidence loss) build a selective between the ground truth and the
-    #     iou to take only a certain percent of the iou or the ground truth,
-    #     i.e smooth the detection map
-    #     build a the ground truth detection map
+    # Use the box IOU to build the map for confidence loss computation. 
     iou = tf.maximum(tf.stop_gradient(iou), 0.0)
     smoothed_iou = ((
         (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
@@ -600,19 +595,16 @@ class Yolo_Loss(object):
         inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
     true_conf = tf.squeeze(true_conf, axis = -1)
 
-    #     compute the detection map loss, there should be no masks
-    #     applied
+    # Compute the cross entropy loss for the confidence map.
     bce = tf.keras.losses.binary_crossentropy(
         tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     # bce = tf.reduce_mean(
     #   sigmoid_BCE(tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
     if self._ignore_thresh != 0.0:
-      conf_loss = apply_mask(obj_mask, bce)
+      bce = apply_mask(obj_mask, bce)
     conf_loss = tf.reduce_mean(bce)
 
-    # 7.  (class loss) build the one hot encoded true class values
-    #     compute the loss on the classes, apply the same inds mask
-    #     and the compute the average of all the values
+    # Compute the cross entropy loss for the class maps.
     class_loss = tf.keras.losses.binary_crossentropy(
         true_class,
         pred_class,
@@ -623,12 +615,12 @@ class Yolo_Loss(object):
     class_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), class_loss)
     class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
 
-    # 8. apply the weights to each loss
+    # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
     conf_loss *= self._obj_normalizer
 
-    # 9. add all the losses together then take the sum over the batches
+    # Add all the losses together then take the sum over the batches.
     mean_loss = box_loss + class_loss + conf_loss
     loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
 
@@ -636,15 +628,12 @@ class Yolo_Loss(object):
              iou, pred_conf, ind_mask, grid_mask)
 
   def call_darknet(self, true_counts, inds, y_true, boxes, classes, y_pred):
-    # 0. if smoothign is used, they prop the gradient of the sigmoid first
-    #    but the sigmoid, if it is not enabled, they do not use the gradient of
-    #    the sigmoid
     if self._new_cords:
-      # if smoothing is enabled they for some reason
-      # take the sigmoid many times
+      # Darknet Model Propagates a sigmoid once in back prop so we replicate
+      # that behaviour
       y_pred = grad_sigmoid(y_pred)
 
-    # 1. generate and store constants and format output
+    # Generate and store constants and format output.
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
@@ -652,7 +641,7 @@ class Yolo_Loss(object):
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
 
-    # 2. cast all input compontnts to float32 and stop gradient to save memory
+    # Cast all input compontnts to float32 and stop gradient to save memory.
     boxes = tf.stop_gradient(tf.cast(boxes, tf.float32))
     classes = tf.stop_gradient(tf.cast(classes, tf.float32))
     y_true = tf.stop_gradient(tf.cast(y_true, tf.float32))
@@ -661,150 +650,103 @@ class Yolo_Loss(object):
     grid_points = tf.stop_gradient(grid_points)
     anchor_grid = tf.stop_gradient(anchor_grid)
 
-    # 3. split all the ground truths to use as seperate items in loss computation
+    # Split all the ground truths to use as seperate items in loss computation.
     (true_box, ind_mask, true_class, _, _) = tf.split(
         y_true, [4, 1, 1, 1, 1], axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
 
-    # 4. splits all predictions to seperate and compute the loss for each map
-    #    individually
+    # Splits all predictions.
     y_pred = tf.cast(
         tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
-    # 5. compute the sigmoid of the classes and pass the unsigmoided items
-    #    through a gradient trap to allow better control over the back
-    #    propagation step. the sigmoided class is used for metrics only
-    sigmoid_class = tf.stop_gradient(tf.sigmoid(pred_class))
-    sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    # Decode the boxes to be used for loss compute.
+    _, _, pred_box = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
 
-    # 6. decode the boxes to be used for optimization/loss compute
-    if self._darknet is None:
-      _, _, pred_box = self._decode_boxes(
-          fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=True)
-      scale = None
-    else:
-      scale, pred_box, _ = self._decode_boxes(
-          fwidth,
-          fheight,
-          pred_box,
-          anchor_grid,
-          grid_points,
-          darknet=self._darknet)
-      true_box = tf.stop_gradient(true_box * scale)
-
-    # 7. compare all the predictions to all the valid or non zero boxes
-    #    in the ground truth, based on any/all we will will also compare
-    #    classes. This is done to locate pixels where a valid box and class
-    #    may have been predicted, but the ground truth may not have placed
-    #    a box. For this indexes, the detection map loss will be ignored.
-    #    obj_mask dictates the locations where the loss is ignored.
+    # If the ignore threshold is enabled, search all boxes ignore all 
+    # IOU valeus larger than the ignore threshold that are not in the 
+    # noted ground truth list.  
     if self._ignore_thresh != 0.0:
       (true_conf, obj_mask) = self._tiled_global_box_search(
           pred_box,
-          sigmoid_class,
-          sigmoid_conf,
+          tf.stop_gradient(tf.sigmoid(pred_class)),
+          tf.stop_gradient(tf.sigmoid(pred_conf)),
           boxes,
           classes,
           true_conf,
           fwidth,
           fheight,
-          smoothed=self._objectness_smooth > 0,
-          scale=scale)
-    else:
-      obj_mask = tf.ones_like(true_conf)
+          smoothed=self._objectness_smooth > 0)
+      tf.print(tf.reduce_sum(1 - obj_mask))
 
-    # 8. compute the one hot class maps that are used for prediction
-    #    done in the loss function side to save memory and improve
-    #    data pipeline speed
+    # Build the one hot class list that are used for class loss.
     true_class = tf.one_hot(
         tf.cast(true_class, tf.int32),
         depth=tf.shape(pred_class)[-1],
         dtype=pred_class.dtype)
     true_classes = tf.stop_gradient(apply_mask(ind_mask, true_class))
 
-    # 9. use the update list to build the binary cross entropy label
-    #    map. done to allow optimization of many labels to one grid
-    #    index
+    # Reorganize the one hot class list as a grid. 
     true_class = build_grid(
         inds, true_classes, pred_class, ind_mask, update=False)
     true_class = tf.stop_gradient(true_class)
 
-    # 10. use the class mask to find the number of objects located in
-    #     each predicted grid cell/pixel
+    # Use the class mask to find the number of objects located in
+    # each predicted grid cell/pixel.
     counts = true_class
     counts = tf.reduce_sum(counts, axis=-1, keepdims=True)
     reps = tf.gather_nd(counts, inds, batch_dims=1)
     reps = tf.squeeze(reps, axis=-1)
     reps = tf.stop_gradient(tf.where(reps == 0.0, tf.ones_like(reps), reps))
 
-    # 11. gather the boxes of use from the prediction map to compute the
-    #     loss on. If the box is gathered then loss is computed, all the other
-    #     indexes will get ignored. Use the value reps to compute the average
-    #     loss for each pixel. If we have a class mask of [1, 1, 0, 0] with 4
-    #     classes at a given pixel (N, M). reps(N, M) = 2, and the box loss at
-    #     (N, M), will be the sum of the iou loss of object 1 and object 2
-    #     reps(N, M), making it the average loss at each pixel. Take te sum
-    #     over all the objects.
+    # Compute the loss for only the cells in which the boxes are located. 
     pred_box = apply_mask(ind_mask, tf.gather_nd(pred_box, inds, batch_dims=1))
-    iou, liou, box_loss = self.box_loss(true_box, pred_box, darknet=True)
+    iou, _, box_loss = self.box_loss(true_box, pred_box, darknet=True)
     box_loss = apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = math_ops.divide_no_nan(box_loss, reps)
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
-    # 12. stop the gradient on the loss components to be used as metrics
-    iou = tf.stop_gradient(iou)
-    liou = tf.stop_gradient(liou)
-
-    # 13. compute the sigmoid binary cross entropy, same as bce with logits but
-    #     it is far safer with no holes. gradient reduces to y_pred - y_true.
+    # Compute the sigmoid binary cross entropy for the class maps.
     class_loss = tf.reduce_mean(sigmoid_BCE(
       tf.expand_dims(true_class, axis=-1), tf.expand_dims(pred_class, axis=-1),
       self._label_smoothing), axis = -1)
 
-    # 14. apply the weight from the configs to the predictions classes
+    # Apply normalization to the class losses.
     if self._cls_normalizer < 1.0:
-      # we build a mask based on the true class locations
+      # Build a mask based on the true class locations.
       cls_norm_mask = true_class
-      # we only apply the classes weight to class indexes were one_hot is one
+      # Apply the classes weight to class indexes were one_hot is one.
       class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer)
 
-    # 15. apply the mask to the class loss and compute the sum over all the
-    #     objects
+    # Mask to the class loss and compute the sum over all the objects.
     class_loss = tf.reduce_sum(class_loss, axis=-1)
     class_loss = apply_mask(grid_mask, class_loss)
     class_loss = math_ops.rm_nan_inf(class_loss, val=0.0)
     class_loss = tf.cast(
         tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    # 16. use the custom sigmoid BCE to compute the loss at each pixel
-    #     in the detection map
+    # Compute the sigmoid binary cross entropy for the confidence maps.
     bce = tf.reduce_mean(
       sigmoid_BCE(tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0),axis = -1)
 
-    # 17. apply the ignore mask to the detection map to zero out all the
-    #     indexes where the loss should not be computed. we use the apply
-    #     mask function to control the gradient propagation, and garuntee
-    #     safe masking with no NANs.
-    conf_loss = apply_mask(obj_mask, bce)
+    # Mask the confidence loss and take the sum across all the grid cells.
+    if self._ignore_thresh != 0.0:
+      bce = apply_mask(obj_mask, bce)
     conf_loss = tf.cast(
-        tf.reduce_sum(conf_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
+        tf.reduce_sum(bce, axis=(1, 2, 3)), dtype=y_pred.dtype)
 
-    # 18. apply the fixed weight to each of the losses, the weight is
-    #     applied for the box loss in the gradeint for the box decoding
-    #     class weights are applied selectively directly after computing
-    #     the loss only to locations where a onehot is set to one
+    # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
     conf_loss *= self._obj_normalizer
 
-    # 19. take the sum of the losses for each map, then take the mean
-    #     across all the smaples in the batch
+    # Add all the losses together then take the mean over the batches.
     loss = box_loss + class_loss + conf_loss
     loss = tf.reduce_mean(loss)
 
-    # 20. reduce the mean of the losses to use as metrics
+    # Reduce the mean of the losses to use as a metric.
     box_loss = tf.reduce_mean(box_loss)
     conf_loss = tf.reduce_mean(conf_loss)
     class_loss = tf.reduce_mean(class_loss)
@@ -828,9 +770,9 @@ class Yolo_Loss(object):
        grid_mask) = self.call_darknet(true_counts, inds, y_true, 
                                       boxes, classes, y_pred)
 
-    # 21. metric compute using the generated values from the loss itself
-    #     done here to save time and resources
+    # Metric compute using done here to save time and resources.
     sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
+    iou = tf.stop_gradient(iou)
     avg_iou = avgiou(apply_mask(tf.squeeze(ind_mask, axis=-1), iou))
     avg_obj = avgiou(tf.squeeze(sigmoid_conf, axis=-1) * grid_mask)
     return (loss, box_loss, conf_loss, class_loss, mean_loss, 
