@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow.keras as ks
 import numpy as np
 from absl.testing import parameterized
 
@@ -11,7 +10,7 @@ class CSPConnectTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("same", 224, 224, 64, 1),
                                   ("downsample", 224, 224, 64, 2))
   def test_pass_through(self, width, height, filters, mod):
-    x = ks.Input(shape=(width, height, filters))
+    x = tf.keras.Input(shape=(width, height, filters))
     test_layer = nn_blocks.CSPRoute(filters=filters, filter_scale=mod)
     test_layer2 = nn_blocks.CSPConnect(filters=filters, filter_scale=mod)
     outx, px = test_layer(x)
@@ -26,8 +25,8 @@ class CSPConnectTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("same", 224, 224, 64, 1),
                                   ("downsample", 224, 224, 128, 2))
   def test_gradient_pass_though(self, filters, width, height, mod):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.CSPRoute(filters, filter_scale=mod)
     path_layer = nn_blocks.CSPConnect(filters, filter_scale=mod)
 
@@ -55,7 +54,7 @@ class CSPRouteTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("same", 224, 224, 64, 1),
                                   ("downsample", 224, 224, 64, 2))
   def test_pass_through(self, width, height, filters, mod):
-    x = ks.Input(shape=(width, height, filters))
+    x = tf.keras.Input(shape=(width, height, filters))
     test_layer = nn_blocks.CSPRoute(filters=filters, filter_scale=mod)
     outx, px = test_layer(x)
     print(outx)
@@ -68,8 +67,8 @@ class CSPRouteTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("same", 224, 224, 64, 1),
                                   ("downsample", 224, 224, 128, 2))
   def test_gradient_pass_though(self, filters, width, height, mod):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.CSPRoute(filters, filter_scale=mod)
     path_layer = nn_blocks.CSPConnect(filters, filter_scale=mod)
 
@@ -126,7 +125,7 @@ class CSPStackTest(tf.test.TestCase, parameterized.TestCase):
       ("callable_no_scale", 224, 224, 64, 1, "residual", "model", 5, False))
   def test_pass_through(self, width, height, filters, mod, layer_type,
                         stack_type, count, downsample):
-    x = ks.Input(shape=(width, height, filters))
+    x = tf.keras.Input(shape=(width, height, filters))
     test_layer = self.build_layer(layer_type, filters, mod, count, stack_type,
                                   downsample)
     outx = test_layer(x)
@@ -145,8 +144,8 @@ class CSPStackTest(tf.test.TestCase, parameterized.TestCase):
       ("callable_no_scale", 224, 224, 64, 1, "residual", "model", 5, False))
   def test_gradient_pass_though(self, width, height, filters, mod, layer_type,
                                 stack_type, count, downsample):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
 
     init = tf.random_normal_initializer()
     x = tf.Variable(
@@ -182,7 +181,7 @@ class ConvBNTest(tf.test.TestCase, parameterized.TestCase):
       pad_const = 1
     else:
       pad_const = 0
-    x = ks.Input(shape=(224, 224, 3))
+    x = tf.keras.Input(shape=(224, 224, 3))
     test_layer = nn_blocks.ConvBN(
         filters=64,
         kernel_size=kernel_size,
@@ -201,8 +200,8 @@ class ConvBNTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(("filters", 3))
   def test_gradient_pass_though(self, filters):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     with tf.device("/CPU:0"):
       test_layer = nn_blocks.ConvBN(filters, kernel_size=(3, 3), padding="same")
 
@@ -229,7 +228,7 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
     mod = 1
     if downsample:
       mod = 2
-    x = ks.Input(shape=(width, height, filters))
+    x = tf.keras.Input(shape=(width, height, filters))
     test_layer = nn_blocks.DarkResidual(filters=filters, downsample=downsample)
     outx = test_layer(x)
     print(outx)
@@ -243,8 +242,8 @@ class DarkResidualTest(tf.test.TestCase, parameterized.TestCase):
                                   ("downsample", 32, 223, 223, True),
                                   ("oddball", 32, 223, 223, False))
   def test_gradient_pass_though(self, filters, width, height, downsample):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.DarkResidual(filters, downsample=downsample)
 
     if downsample:
@@ -276,7 +275,7 @@ class DarkSppTest(tf.test.TestCase, parameterized.TestCase):
                                   ("test1", 300, 300, 10, [2, 3, 4, 5]),
                                   ("test2", 256, 256, 5, [10]))
   def test_pass_through(self, width, height, channels, sizes):
-    x = ks.Input(shape=(width, height, channels))
+    x = tf.keras.Input(shape=(width, height, channels))
     test_layer = nn_blocks.SPP(sizes=sizes)
     outx = test_layer(x)
     self.assertAllEqual(outx.shape.as_list(),
@@ -287,8 +286,8 @@ class DarkSppTest(tf.test.TestCase, parameterized.TestCase):
                                   ("test1", 300, 300, 10, [2, 3, 4, 5]),
                                   ("test2", 256, 256, 5, [10]))
   def test_gradient_pass_though(self, width, height, channels, sizes):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.SPP(sizes=sizes)
 
     init = tf.random_normal_initializer()
@@ -316,8 +315,8 @@ class DarkUpsampleRouteTest(tf.test.TestCase, parameterized.TestCase):
                                   ("test2", 223, 223, 32, (2, 2)),
                                   ("test3", 255, 255, 16, (4, 4)))
   def test_pass_through(self, width, height, filters, upsampling_size):
-    x_conv = ks.Input(shape=(width, height, filters))
-    x_route = ks.Input(
+    x_conv = tf.keras.Input(shape=(width, height, filters))
+    x_route = tf.keras.Input(
         shape=(width * upsampling_size[0], height * upsampling_size[1],
                filters))
     test_layer = nn_blocks.RouteMerge(
@@ -332,8 +331,8 @@ class DarkUpsampleRouteTest(tf.test.TestCase, parameterized.TestCase):
                                   ("test2", 223, 223, 32, (2, 2)),
                                   ("test3", 255, 255, 16, (4, 4)))
   def test_gradient_pass_though(self, width, height, filters, upsampling_size):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.RouteMerge(
         filters=filters, upsample=True, upsample_size=upsampling_size)
 
@@ -367,7 +366,7 @@ class DarkRouteProcessTest(tf.test.TestCase, parameterized.TestCase):
       ("test1", 224, 224, 64, 7, False), ("test2", 223, 223, 32, 3, False),
       ("tiny", 223, 223, 16, 1, False), ("spp", 224, 224, 64, 7, False))
   def test_pass_through(self, width, height, filters, repetitions, spp):
-    x = ks.Input(shape=(width, height, filters))
+    x = tf.keras.Input(shape=(width, height, filters))
     test_layer = nn_blocks.DarkRouteProcess(
         filters=filters, repetitions=repetitions, insert_spp=spp)
     outx = test_layer(x)
@@ -383,8 +382,8 @@ class DarkRouteProcessTest(tf.test.TestCase, parameterized.TestCase):
       ("test1", 224, 224, 64, 7, False), ("test2", 223, 223, 32, 3, False),
       ("tiny", 223, 223, 16, 1, False), ("spp", 224, 224, 64, 7, False))
   def test_gradient_pass_though(self, width, height, filters, repetitions, spp):
-    loss = ks.losses.MeanSquaredError()
-    optimizer = ks.optimizers.SGD()
+    loss = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.SGD()
     test_layer = nn_blocks.DarkRouteProcess(
         filters=filters, repetitions=repetitions, insert_spp=spp)
 

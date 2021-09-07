@@ -15,7 +15,6 @@ DarkNets Are used mainly for Object detection in:
 
 import collections
 import tensorflow as tf
-import tensorflow.keras as ks
 
 from official.modeling import hyperparams
 from official.vision.beta.modeling.backbones import factory
@@ -347,8 +346,8 @@ BACKBONES = {
 }
 
 
-@ks.utils.register_keras_serializable(package='yolo')
-class Darknet(ks.Model):
+@tf.keras.utils.register_keras_serializable(package='yolo')
+class Darknet(tf.keras.Model):
 
   def __init__(
       self,
@@ -408,7 +407,7 @@ class Darknet(ks.Model):
         'name': None
     }
 
-    inputs = ks.layers.Input(shape=self._input_shape.shape[1:])
+    inputs = tf.keras.layers.Input(shape=self._input_shape.shape[1:])
     output = self._build_struct(layer_specs, inputs)
     super().__init__(inputs=inputs, outputs=output, name=self._model_name)
 

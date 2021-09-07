@@ -144,10 +144,10 @@ def download(name: str, trust: bool = False) -> str:
         OSError:        There was a problem saving the file when it was being
                         downloaded.
         HTTPException:  The file was not able to be downloaded.
-        Exception:      Any other undocumented error that ks.utils.get_file may
+        Exception:      Any other undocumented error that tf.keras.utils.get_file may
                         have thrown to indicate that the file was inaccessible.
     """
-  import tensorflow.keras as ks
+  import tensorflow as tf
   from http.client import HTTPException
 
   url, type, hash = urls[name]
@@ -159,10 +159,10 @@ def download(name: str, trust: bool = False) -> str:
 
   try:
     if hash is None:
-      return ks.utils.get_file(
+      return tf.keras.utils.get_file(
           name, url, cache_dir=cache_dir, cache_subdir=type)
     else:
-      return ks.utils.get_file(
+      return tf.keras.utils.get_file(
           name,
           url,
           cache_dir=cache_dir,

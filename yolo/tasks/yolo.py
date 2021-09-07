@@ -223,8 +223,7 @@ class YoloTask(base_task.Task):
     scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou,
-       _avg_obj, _recall50,
-       _precision50) = self._loss_dict[key](grid[key], inds[key], upds[key],
+       _avg_obj) = self._loss_dict[key](grid[key], inds[key], upds[key],
                                             labels['bbox'], labels['classes'],
                                             outputs[key])
       loss_val += _loss
@@ -234,7 +233,7 @@ class YoloTask(base_task.Task):
       metric_loss += tf.stop_gradient(_mean_loss)
       metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
       metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
-      metric_dict[key]["recall50"] = tf.stop_gradient(_recall50)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
       metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
       metric_dict['net']['class'] += tf.stop_gradient(_loss_class)
@@ -244,8 +243,6 @@ class YoloTask(base_task.Task):
         metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
         metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
         metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
-        metric_dict[key]["precision50"] = tf.stop_gradient(_precision50)
-        metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
 
     return loss_val * scale, metric_loss, metric_dict
 
@@ -462,16 +459,13 @@ class YoloTask(base_task.Task):
     for key in self._masks.keys():
       metric_names[key].append('loss')
       metric_names[key].append("avg_iou")
-      metric_names[key].append("recall50")
+      metric_names[key].append("avg_obj")
 
       if not self._use_reduced_logs:
         metric_names[key].append('box_loss')
         metric_names[key].append('class_loss')
         metric_names[key].append('conf_loss')
-        metric_names[key].append("precision50")
-        metric_names[key].append("avg_obj")
 
-    # metric_names['net'].append('loss')
     metric_names['net'].append('box')
     metric_names['net'].append('class')
     metric_names['net'].append('conf')

@@ -162,7 +162,7 @@ def download(name: str, trust: bool = False) -> str:
       return ks.utils.get_file(
           name, url, cache_dir=cache_dir, cache_subdir=type)
     else:
-      return ks.utils.get_file(
+      return tf.keras.utils.get_file(
           name,
           url,
           cache_dir=cache_dir,

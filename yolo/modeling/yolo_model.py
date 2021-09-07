@@ -1,6 +1,5 @@
 from official.core import registry
 import tensorflow as tf
-import tensorflow.keras as ks
 from typing import *
 
 from yolo.configs import yolo
@@ -69,7 +68,7 @@ YOLO_MODELS = {
 }
 
 
-class Yolo(ks.Model):
+class Yolo(tf.keras.Model):
   """The YOLO model class."""
 
   def __init__(self,

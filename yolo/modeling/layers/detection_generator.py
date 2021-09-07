@@ -1,6 +1,5 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
-import tensorflow.keras as ks
 import tensorflow.keras.backend as K
 
 from yolo.ops import loss_utils
@@ -10,8 +9,8 @@ from yolo.losses import yolo_loss
 from yolo.ops import nms_ops
 
 
-@ks.utils.register_keras_serializable(package='yolo')
-class YoloLayer(ks.Model):
+@tf.keras.utils.register_keras_serializable(package='yolo')
+class YoloLayer(tf.keras.Model):
 
   def __init__(self,
                masks,
