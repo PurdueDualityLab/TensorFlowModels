@@ -290,7 +290,6 @@ def apply_mask(mask, x, value=0):
   masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
 
-
 def APAR(pred_conf, true_conf, pct=0.5):
   # capture all predictions of high confidence
   dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
@@ -307,7 +306,6 @@ def APAR(pred_conf, true_conf, pct=0.5):
   # compute total precision = true_predicitons/total_predictions
   precision = tf.reduce_mean(math_ops.divide_no_nan(true_pos, all_pos))
   return tf.stop_gradient(recall), tf.stop_gradient(precision)
-
 
 def avgiou(iou):
   # compute the average realtive to non zero locations, so the

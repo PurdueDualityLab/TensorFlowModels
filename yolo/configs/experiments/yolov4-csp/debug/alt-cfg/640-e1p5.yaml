@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  coco91to80: false
+  coco91to80: True
   smart_bias_lr: 0.1
   reduced_logs: True
   model:
@@ -14,7 +14,7 @@ task:
       decoder:
         version: v4
         type: csp
-    num_classes: 91
+    num_classes: 80
     smart_bias: true
     boxes: ['[12.0, 16.0]',
             '[19.0, 36.0]',
@@ -40,7 +40,7 @@ task:
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
-        'all': 0.34125
+        'all': 0.3
       ignore_thresh:
         'all': 0.0
       obj_normalizer: 
@@ -67,7 +67,7 @@ task:
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
-    seed: 1
+    seed: null
     parser:
       max_num_instances: 300
       letter_box: True
@@ -86,13 +86,13 @@ task:
       best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
-        max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
+        random_pad: False
   validation_data:
     global_batch_size: 64
     dtype: float32
@@ -124,9 +124,9 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.00833333333
         name: Cosine
-        alpha: 0.2
+        alpha: 0.24
         decay_steps: 555000
     optimizer:
       type: sgd_dymow

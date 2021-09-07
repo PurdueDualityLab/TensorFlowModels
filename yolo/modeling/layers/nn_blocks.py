@@ -179,7 +179,7 @@ class ConvBN(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
 
-  def call(self, x):
+  def call(self, x, training=None):
     if not TPU_BASE:
       x = tf.pad(x, self._paddings, mode='CONSTANT', constant_values=0)
     x = self.conv(x)
