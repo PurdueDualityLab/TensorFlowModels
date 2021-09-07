@@ -1,28 +1,28 @@
-from yolo.ops import preprocessing_ops
+
 import tensorflow as tf
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
+from typing import Optional
+from collections import defaultdict
 
 from absl import logging
 from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
-from yolo.configs import yolo as exp_cfg
-
+from official.core import config_definitions
+from official.modeling import performance
+from official.vision.beta.ops import box_ops
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
+from yolo.configs import yolo as exp_cfg
 
-from yolo.dataloaders import yolo_input
 from yolo.ops import mosaic
 from yolo.ops.kmeans_anchors import BoxGenInputReader
-
-from collections import defaultdict
-
-from typing import Optional
-from official.core import config_definitions
+from yolo.dataloaders import yolo_input
 from yolo import optimization
-from official.modeling import performance
+from yolo.ops import preprocessing_ops
+
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
@@ -65,7 +65,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    anchors, anchor_free = self._get_boxes(gen_boxes=params.is_training)
+    _, anchor_free = self._get_boxes(gen_boxes=params.is_training)
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -85,7 +85,6 @@ class YoloTask(base_task.Task):
     model.summary()
     if anchor_free is not None:
       print("INFO: The model is operating under anchor free conditions")
-
 
     self._loss_dict = losses
     self._model = model
@@ -583,8 +582,6 @@ class YoloTask(base_task.Task):
     
     opt_factory._use_ema = ema
     optimizer = opt_factory.add_ema(optimizer)
-    print(optimizer)
-
     optimizer = self._wrap_optimizer(optimizer, runtime_config)
     return optimizer
 
