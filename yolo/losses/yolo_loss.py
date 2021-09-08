@@ -2,7 +2,7 @@ import tensorflow as tf
 from functools import partial
 from yolo.ops import (loss_utils, box_ops, math_ops)
 
-class Yolo_Loss(object):
+class YoloLoss(object):
 
   def __init__(self,
                classes,
@@ -124,8 +124,6 @@ class Yolo_Loss(object):
 
 
   def box_loss(self, true_box, pred_box, darknet=False):
-    # based on the type of loss, compute the iou loss for a box
-    # compute_<name> indicated the type of iou to use
     if self._loss_type == 1:
       iou, liou = box_ops.compute_giou(true_box, pred_box)
       loss_box = 1 - liou
@@ -151,30 +149,28 @@ class Yolo_Loss(object):
                                smoothed,
                                scale=None):
 
+    # Search all predictions against ground truths to find mathcing boxes for 
+    # each pixel.
     _, _, iou_max, _ = self._search_pairs(
         pred_boxes, pred_classes, boxes, classes, scale=scale, yxyx=True)
 
+    # Find the exact indexes to ignore and keep.
     ignore_mask = tf.cast(iou_max < self._ignore_thresh, pred_boxes.dtype)
     iou_mask = iou_max > self._ignore_thresh
 
-    # depending on smoothed vs not smoothed the build the mask and ground truth
-    # map to use
     if not smoothed:
-      # higher map lower iou with ground truth
+      # Ignore all pixels where a box was not supposed to be predicted but a 
+      # high confidence box was predicted.
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
-      # lower map, very high iou with ground truth
+      # Replace pixels in the tre confidence map with the max iou predicted 
+      # with in that cell.
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
       iou_ = tf.where(iou_max > 0, iou_, tf.zeros_like(iou_))
-
-      # update the true conffidence mask with the best matching iou
       true_conf = tf.where(iou_mask, iou_, true_conf)
-      # true_conf = iou_
 
-    # stop gradient on all components to save resources, we don't
-    # need to track the gradient though the while loop as they are
-    # not used
+    # Stop gradient so while loop is not tracked.
     obj_mask = tf.stop_gradient(obj_mask)
     true_conf = tf.stop_gradient(true_conf)
     return true_conf, obj_mask

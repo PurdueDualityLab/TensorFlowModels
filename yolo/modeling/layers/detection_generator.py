@@ -4,8 +4,7 @@ import tensorflow.keras.backend as K
 
 from yolo.ops import loss_utils
 from yolo.ops import box_ops as box_utils
-from yolo.losses.yolo_loss import Yolo_Loss
-from yolo.losses import yolo_loss
+from yolo.losses.yolo_loss import YoloLoss
 from yolo.ops import nms_ops
 
 
@@ -304,7 +303,7 @@ class YoloLayer(tf.keras.Model):
     """
     loss_dict = {}
     for key in self._keys:
-      loss_dict[key] = Yolo_Loss(
+      loss_dict[key] = YoloLoss(
           classes=self._classes,
           anchors=self._anchors,
           darknet=self._darknet,

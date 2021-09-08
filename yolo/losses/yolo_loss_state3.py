@@ -329,7 +329,7 @@ def get_predicted_box_newcords(width,
   return (scaler, scaled_box, pred_box)
 
 
-class Yolo_Loss(object):
+class YoloLoss(object):
 
   def __init__(self,
                classes,
