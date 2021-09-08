@@ -765,9 +765,6 @@ def boxes_candidates(clipped_boxes,
                      ar_thr=20,
                      area_thr=0.0):
 
-  # Area thesh can be negative if darknet clipping is used.
-  # Area_thresh < 0.0 = darknet clipping.
-  # Area_thresh >= 0.0 = scaled model clipping.
   area_thr = tf.math.abs(area_thr)
 
   # Get the scaled and shifted heights of the original
@@ -800,9 +797,6 @@ def boxes_candidates(clipped_boxes,
       axis=-1)
 
   # Set all the boxes that fail the test to be equal to zero.
-  # boxes = tf.where(cond, clipped_boxes, tf.zeros_like(clipped_boxes))
-  # return boxes
-
   indices = tf.where(cond)
   return indices[:, 0]
 
