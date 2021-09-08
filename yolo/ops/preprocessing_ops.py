@@ -1099,28 +1099,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
      num_written) = write_grid(viable, num_reps, boxes, classes, ious, ind_val,
                                ind_sample, height, width, num_written,
                                num_instances, pull_in)
-
-    # (ind_val, ind_sample,
-    # num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-    #                           ind_val, ind_sample, height, width, num_written,
-    #                           num_instances, 0.0)
-
-    # if use_tie_breaker:
-    #   (ind_val, ind_sample,
-    #   num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
-    #                             ind_val, ind_sample, height, width, num_written,
-    #                             num_instances, 0.0)
-
-    # (ind_val, ind_sample,
-    # num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
-    #                           ind_val, ind_sample, height, width, num_written,
-    #                           num_instances, pull_in)
-
-    # if use_tie_breaker:
-    #   (ind_val, ind_sample,
-    #   num_written) = write_grid(viable_alternate, num_reps, boxes, classes, ious,
-    #                             ind_val, ind_sample, height, width, num_written,
-    #                             num_instances, pull_in)
   else:
     (ind_val, ind_sample,
      num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
