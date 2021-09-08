@@ -456,7 +456,7 @@ class Parser(parser.Parser):
         boxes, infos, 
         shuffle_boxes=False, 
         area_thresh=self._area_thresh, 
-        augment=True)
+        augment=False)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
