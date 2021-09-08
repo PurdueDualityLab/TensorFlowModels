@@ -183,20 +183,13 @@ class YoloLayer(tf.keras.Model):
         data, [4, 1, self._classes], axis=-1)
 
     # determine the number of classes
-    classes = class_scores.get_shape().as_list()[
-        -1]  #tf.shape(class_scores)[-1]
+    classes = class_scores.get_shape().as_list()[-1]  
 
     # configurable to use the new coordinates in scaled Yolo v4 or not
-    if not self._new_cords[key]:
-      # coordinates from scaled yolov4
-      _, _, boxes = yolo_loss.get_predicted_box(
-          tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
-          anchors, centers, scale_xy)
-    else:
-      # coordinates from regular yolov3 - v4
-      _, _, boxes = yolo_loss.get_predicted_box_newcords(
-          tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
-          anchors, centers, scale_xy)
+    _, _, boxes = loss_utils.get_predicted_box(
+      tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
+      anchors, centers, scale_xy, 
+      darknet = False, newcoords = self._new_cords[key])
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_utils.xcycwh_to_yxyx(boxes)
