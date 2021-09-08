@@ -127,31 +127,6 @@ def build_grid(indexes, truths, preds, ind_mask, update = False, grid = None):
   # resources
   return grid
 
-def _build_grid_points(lwidth, lheight, anchors, dtype):
-  """ generate a grid that is used to detemine the relative centers of the bounding boxs """
-  with tf.name_scope('center_grid'):
-    y = tf.range(0, lheight)
-    x = tf.range(0, lwidth)
-    num = tf.shape(anchors)[0]
-    x_left = tf.tile(
-        tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
-    y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
-    x_y = K.stack([x_left, y_left], axis=-1)
-    x_y = tf.cast(x_y, dtype=dtype)
-    x_y = tf.expand_dims(
-        tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
-  return x_y
-
-
-def _build_anchor_grid(anchors, dtype):
-  """ get the transformed anchor boxes for each dimention """
-  with tf.name_scope('anchor_grid'):
-    num = tf.shape(anchors)[0]
-    anchors = tf.cast(anchors, dtype=dtype)
-    anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
-  return anchors
-
-
 class GridGenerator(object):
   def __init__(self, anchors, masks=None, scale_anchors=None):
     self.dtype = tf.keras.backend.floatx()
@@ -167,6 +142,29 @@ class GridGenerator(object):
     self._anchors = tf.convert_to_tensor(anchors)
     return
 
+  def _build_grid_points(self, lwidth, lheight, anchors, dtype):
+    """ generate a grid that is used to detemine the relative centers of the bounding boxs """
+    with tf.name_scope('center_grid'):
+      y = tf.range(0, lheight)
+      x = tf.range(0, lwidth)
+      num = tf.shape(anchors)[0]
+      x_left = tf.tile(
+          tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
+      y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
+      x_y = K.stack([x_left, y_left], axis=-1)
+      x_y = tf.cast(x_y, dtype=dtype)
+      x_y = tf.expand_dims(
+          tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
+    return x_y
+
+  def _build_anchor_grid(self, anchors, dtype):
+    """ get the transformed anchor boxes for each dimention """
+    with tf.name_scope('anchor_grid'):
+      num = tf.shape(anchors)[0]
+      anchors = tf.cast(anchors, dtype=dtype)
+      anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
+    return anchors
+
   def _extend_batch(self, grid, batch_size):
     return tf.tile(grid, [batch_size, 1, 1, 1, 1])
 
@@ -175,8 +173,8 @@ class GridGenerator(object):
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype
-    grid_points = _build_grid_points(width, height, self._anchors, self.dtype)
-    anchor_grid = _build_anchor_grid(
+    grid_points = self._build_grid_points(width, height, self._anchors, self.dtype)
+    anchor_grid = self._build_anchor_grid(
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype), self.dtype)
 
