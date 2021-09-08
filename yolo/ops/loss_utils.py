@@ -4,6 +4,128 @@ from yolo.ops import box_ops
 from yolo.ops import math_ops
 import numpy as np
 
+@tf.custom_gradient
+def grad_sigmoid(values):
+  # This is an identity operation that will
+  # allow us to add some steps to the back propagation.
+  def delta(dy):
+    # Darknet only propagtes sigmoids for the boxes
+    # under some conditions, so we need this to selectively
+    # add the sigmoid to the chain rule
+    t = tf.math.sigmoid(values)
+    return dy * t * (1 - t)
+
+  return values, delta
+
+
+@tf.custom_gradient
+def sigmoid_BCE(y, x_prime, label_smoothing):
+  """Applies the Sigmoid Cross Entropy Loss Using the same deriviative as that 
+  found in the Darknet C library. The derivative of this method is not the same 
+  as the standard binary cross entropy with logits function.
+
+  The BCE with logits function equasion is as follows: 
+    x = 1 / (1 + exp(-x_prime))
+    bce = -ylog(x) - (1 - y)log(1 - x) 
+
+  The standard BCE with logits function derivative is as follows: 
+    dloss = -y/x + (1-y)/(1-x)
+    dsigmoid = x * (1 - x)
+    dx = dloss * dsigmoid
+  
+  This derivative can be reduced simply to: 
+    dx = (-y + x)
+  
+  This simplification is used by the darknet library in order to improve 
+  training stability. The gradient is almost the same 
+  as tf.keras.losses.binary_crossentropy but varies slightly and actually yeilds
+  different performance
+
+  Args: 
+    y: Tensor holding the ground truth data. 
+    x_prime: Tensor holding the predictions prior to application of the sigmoid 
+      operation.
+    label_smoothing: float value between 0.0 and 1.0 indicating the amount of 
+      smoothing to apply to the data.
+
+  Returns: 
+    bce: Tensor of the bce applied loss values.
+    delta: callable function indicating the custom gradient for this operation.  
+  """
+  eps = 1e-9
+  x = tf.math.sigmoid(x_prime)
+  y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
+  bce = -y * tf.math.log(x + eps) - (1 - y) * tf.math.log(1 - x + eps)
+
+  def delta(dpass):
+    x = tf.math.sigmoid(x_prime)
+    dx = (-y + x) * dpass
+    dy = tf.zeros_like(y)
+    return dy, dx, 0.0
+
+  return bce, delta
+
+def apply_mask(mask, x, value=0):
+  """This function is used for gradient masking. The YOLO loss function makes 
+  extensive use of dynamically shaped tensors. To allow this use case on the 
+  TPU while preserving the gradient correctly for back propagation we use this 
+  masking function to use a tf.where operation to hard set masked location to 
+  have a gradient and a value of zero. 
+
+  Args: 
+    mask: A `Tensor` with the same shape as x used to select values of 
+      importance.
+    x: A `Tensor` with the same shape as mask that will be getting masked.
+  
+  Returns: 
+    x: A masked `Tensor` with the same shape as x.
+  """
+  mask = tf.cast(mask, tf.bool)
+  masked = tf.where(mask, x, tf.zeros_like(x) + value)
+  return masked
+
+def build_grid(indexes, truths, preds, ind_mask, update = False, grid = None):
+  # this function is used to broadcast all the indexes to the correct
+  # into the correct ground truth mask, used for iou detection map
+  # in the scaled loss and the classification mask in the darknet loss
+  num_flatten = tf.shape(preds)[-1]
+
+  # is there a way to verify that we are not on the CPU?
+  ind_mask = tf.cast(ind_mask, indexes.dtype)
+
+  # find all the batch indexes using the cumulated sum of a ones tensor
+  # cumsum(ones) - 1 yeild the zero indexed batches
+  bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
+  bhep = tf.math.cumsum(bhep, axis=0) - 1
+
+  # concatnate the batch sizes to the indexes
+  indexes = tf.concat([bhep, indexes], axis=-1)
+  indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
+  indexes = (indexes + (ind_mask - 1))
+
+  # reshape the indexes into the correct shape for the loss,
+  # just flatten all indexes but the last
+  indexes = tf.reshape(indexes, [-1, 4])
+
+  # also flatten the ground truth value on all axis but the last
+  truths = tf.reshape(truths, [-1, num_flatten])
+
+  # build a zero grid in the samve shape as the predicitons
+  if grid is None:
+    grid = tf.zeros_like(preds)
+  # remove invalid values from the truths that may have
+  # come up from computation, invalid = nan and inf
+  truths = math_ops.rm_nan_inf(truths)
+
+  # scatter update the zero grid
+  if update:
+    grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
+  else:
+    grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
+
+  # stop gradient and return to avoid TPU errors and save compute
+  # resources
+  return grid
 
 def _build_grid_points(lwidth, lheight, anchors, dtype):
   """ generate a grid that is used to detemine the relative centers of the bounding boxs """
@@ -222,67 +344,9 @@ class PairWiseSearch(object):
             tf.stop_gradient(max_iou), tf.stop_gradient(mask))
 
 
-def build_grid(indexes, truths, preds, ind_mask, update=False):
-  # this function is used to broadcast all the indexes to the correct
-  # into the correct ground truth mask, used for iou detection map
-  # in the scaled loss and the classification mask in the darknet loss
-  num_flatten = tf.shape(preds)[-1]
-
-  # is there a way to verify that we are not on the CPU?
-  ind_mask = tf.cast(ind_mask, indexes.dtype)
-
-  # find all the batch indexes using the cumulated sum of a ones tensor
-  # cumsum(ones) - 1 yeild the zero indexed batches
-  bhep = tf.reduce_max(tf.ones_like(indexes), axis=-1, keepdims=True)
-  bhep = tf.math.cumsum(bhep, axis=0) - 1
-
-  # concatnate the batch sizes to the indexes
-  indexes = tf.concat([bhep, indexes], axis=-1)
-  indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
-  indexes = (indexes + (ind_mask - 1))
-
-  # reshape the indexes into the correct shape for the loss,
-  # just flatten all indexes but the last
-  indexes = tf.reshape(indexes, [-1, 4])
-
-  # also flatten the ground truth value on all axis but the last
-  truths = tf.reshape(truths, [-1, num_flatten])
-
-  # build a zero grid in the samve shape as the predicitons
-  grid = tf.zeros_like(preds)
-  # remove invalid values from the truths that may have
-  # come up from computation, invalid = nan and inf
-  truths = math_ops.rm_nan_inf(truths)
-
-  # scatter update the zero grid
-  if update:
-    grid = tf.tensor_scatter_nd_update(grid, indexes, truths)
-  else:
-    grid = tf.tensor_scatter_nd_max(grid, indexes, truths)
-
-  # stop gradient and return to avoid TPU errors and save compute
-  # resources
-  return grid
 
 
-def apply_mask(mask, x, value=0):
-  """This function is used for gradient masking. The YOLO loss function makes 
-  extensive use of dynamically shaped tensors. To allow this use case on the 
-  TPU while preserving the gradient correctly for back propagation we use this 
-  masking function to use a tf.where operation to hard set masked location to 
-  have a gradient and a value of zero. 
 
-  Args: 
-    mask: A `Tensor` with the same shape as x used to select values of 
-      importance.
-    x: A `Tensor` with the same shape as mask that will be getting masked.
-  
-  Returns: 
-    x: A masked `Tensor` with the same shape as x.
-  """
-  mask = tf.cast(mask, tf.bool)
-  masked = tf.where(mask, x, tf.zeros_like(x) + value)
-  return masked
 
 def APAR(pred_conf, true_conf, pct=0.5):
   # capture all predictions of high confidence
@@ -501,64 +565,4 @@ def get_predicted_box(width,
   return (scaler, scaled_box, pred_box)
 
 
-@tf.custom_gradient
-def grad_sigmoid(values):
-  # This is an identity operation that will
-  # allow us to add some steps to the back propagation.
-  def delta(dy):
-    # Darknet only propagtes sigmoids for the boxes
-    # under some conditions, so we need this to selectively
-    # add the sigmoid to the chain rule
-    t = tf.math.sigmoid(values)
-    return dy * t * (1 - t)
-
-  return values, delta
-
-
-@tf.custom_gradient
-def sigmoid_BCE(y, x_prime, label_smoothing):
-  """Applies the Sigmoid Cross Entropy Loss Using the same deriviative as that 
-  found in the Darknet C library. The derivative of this method is not the same 
-  as the standard binary cross entropy with logits function.
-
-  The BCE with logits function equasion is as follows: 
-    x = 1 / (1 + exp(-x_prime))
-    bce = -ylog(x) - (1 - y)log(1 - x) 
-
-  The standard BCE with logits function derivative is as follows: 
-    dloss = -y/x + (1-y)/(1-x)
-    dsigmoid = x * (1 - x)
-    dx = dloss * dsigmoid
-  
-  This derivative can be reduced simply to: 
-    dx = (-y + x)
-  
-  This simplification is used by the darknet library in order to improve 
-  training stability. The gradient is almost the same 
-  as tf.keras.losses.binary_crossentropy but varies slightly and actually yeilds
-  different performance
-
-  Args: 
-    y: Tensor holding the ground truth data. 
-    x_prime: Tensor holding the predictions prior to application of the sigmoid 
-      operation.
-    label_smoothing: float value between 0.0 and 1.0 indicating the amount of 
-      smoothing to apply to the data.
-
-  Returns: 
-    bce: Tensor of the bce applied loss values.
-    delta: callable function indicating the custom gradient for this operation.  
-  """
-  eps = 1e-9
-  x = tf.math.sigmoid(x_prime)
-  y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
-  bce = -y * tf.math.log(x + eps) - (1 - y) * tf.math.log(1 - x + eps)
-
-  def delta(dpass):
-    x = tf.math.sigmoid(x_prime)
-    dx = (-y + x) * dpass
-    dy = tf.zeros_like(y)
-    return dy, dx, 0.0
-
-  return bce, delta
 
