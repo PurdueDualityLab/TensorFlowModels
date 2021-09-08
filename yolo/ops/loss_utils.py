@@ -354,7 +354,6 @@ def scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_xy
 @tf.custom_gradient
 def darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
                   max_delta, scale_xy):
-  pred_wh = encoded_boxes[..., 2:4]
   (scaler, scaled_box, pred_box) = scale_boxes(encoded_boxes, width, height,
                                             anchor_grid, grid_points, scale_xy)
 
@@ -370,8 +369,8 @@ def darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
     # propagate the exponential applied to the width and height in
     # order to ensure the gradient propagated is of the correct
     # magnitude
+    pred_wh = encoded_boxes[..., 2:4]
     dy_wh *= tf.math.exp(pred_wh)
-    tf.print(tf.reduce_sum(dy_wh))
 
     dbox = tf.concat([dy_xy, dy_wh], axis = -1)
 
