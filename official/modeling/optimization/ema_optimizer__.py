@@ -80,7 +80,7 @@ class ExponentialMovingAverage(tf.keras.optimizers.Optimizer):
     self._start_step = tf.constant(start_step, tf.float32)
     self._dynamic_decay = dynamic_decay
     self._optimizer = optimizer
-    self._track_trackable(self._optimizer, 'base_optimizer')
+    self._track_trackable(self._optimizer, 'base_optimizer2')
     self._average_weights = None
     self._model_weights = None
 
