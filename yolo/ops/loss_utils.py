@@ -378,8 +378,7 @@ def darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
     dbox = math_ops.rm_nan_inf(dbox)
     delta = tf.cast(max_delta, dbox.dtype)
     dbox = tf.clip_by_value(dbox, -delta, delta)
-    return dbox, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
-        grid_points), 0.0, 0.0
+    return dbox, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   return (scaler, scaled_box, pred_box), delta
 
@@ -441,8 +440,7 @@ def darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
     dbox = math_ops.rm_nan_inf(dbox)
     delta = tf.cast(max_delta, dbox.dtype)
     dbox = tf.clip_by_value(dbox, -delta, delta)
-    return dbox, 0.0, 0.0, tf.zeros_like(anchor_grid), tf.zeros_like(
-        grid_points), 0.0, 0.0
+    return dbox, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
   return (scaler, scaled_box, pred_box), delta
 
