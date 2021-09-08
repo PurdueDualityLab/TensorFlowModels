@@ -63,7 +63,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 2
+    global_batch_size: 1
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -95,7 +95,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 2
+    global_batch_size: 1
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false

@@ -229,9 +229,15 @@ class Mosaic(object):
         seed=self._seed)
     infos.extend(infos_)
 
+    augment = not (letter_box == True and random_crop == 0.0 and 
+                                    self._resize == 1.0 and cut is None)
+
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, area_thresh=self._area_thresh, seed=self._seed)
+        boxes, infos, 
+        area_thresh=self._area_thresh, 
+        augment = augment,
+        seed=self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
     area = tf.gather(area, inds)
@@ -258,6 +264,7 @@ class Mosaic(object):
           image, [cw, ch], fill_value=preprocessing_ops.PAD_VALUE)
       boxes = box_ops.denormalize_boxes(boxes, shape[:2])
       boxes = boxes + tf.cast([ch, cw, ch, cw], boxes.dtype)
+      boxes = box_ops.clip_boxes(boxes, shape[:2])
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
 
       image, _, affine = preprocessing_ops.affine_warp_image(
