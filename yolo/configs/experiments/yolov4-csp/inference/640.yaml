@@ -51,7 +51,7 @@ task:
         '4': 0.70
         '3': 2.80
       new_cords:
-        'all': True
+        'all': False
       objectness_smooth: 
         'all': 1.0
       scale_xy:
@@ -61,7 +61,7 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
-      use_scaled_loss: true
+      use_scaled_loss: false
   train_data:
     global_batch_size: 1
     dtype: float32
@@ -127,7 +127,7 @@ trainer:
     learning_rate:
       type: cosine_epoch
       cosine_epoch:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.00
         name: Cosine
         alpha: 0.2
         decay_steps: 555000

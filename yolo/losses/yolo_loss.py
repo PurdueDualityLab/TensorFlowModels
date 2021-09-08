@@ -219,7 +219,7 @@ class Yolo_Loss(object):
         pred_boxes, pred_classes, boxes, classes, scale=scale, yxyx=True)
 
     ignore_mask = tf.cast(iou_max < self._ignore_thresh, pred_boxes.dtype)
-    iou_mask = tf.cast(iou_max > self._ignore_thresh, pred_boxes.dtype)
+    iou_mask = iou_max > self._ignore_thresh
 
     # depending on smoothed vs not smoothed the build the mask and ground truth
     # map to use
