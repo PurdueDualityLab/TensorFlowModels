@@ -21,9 +21,9 @@ def _build_grid_points(lwidth, lheight, anchors, dtype):
   return x_y
 
 
-def _build_anchor_grid(width, height, anchors, dtype):  #, num, dtype):
+def _build_anchor_grid(width, height, anchors, dtype):
+  """ get the transformed anchor boxes for each dimention """
   with tf.name_scope('anchor_grid'):
-    """ get the transformed anchor boxes for each dimention """
     num = tf.shape(anchors)[0]
     anchors = tf.cast(anchors, dtype=dtype)
     anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
@@ -59,14 +59,12 @@ class GridGenerator(object):
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype), self.dtype)
 
-    grid_points = self._extend_batch(grid_points, batch_size)
-    anchor_grid = self._extend_batch(anchor_grid, batch_size)
+    # grid_points = self._extend_batch(grid_points, batch_size)
+    # anchor_grid = self._extend_batch(anchor_grid, batch_size)
     return grid_points, anchor_grid
 
 
 TILE_SIZE = 50
-
-
 class PairWiseSearch(object):
 
   def __init__(self,
@@ -318,7 +316,7 @@ def avgiou(iou):
   avg_iou = tf.reduce_mean(math_ops.divide_no_nan(iou_sum, counts))
   return tf.stop_gradient(avg_iou)
 
-def scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_xy):
+def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_xy):
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -352,9 +350,9 @@ def scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_xy
 
 
 @tf.custom_gradient
-def darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
+def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
                   max_delta, scale_xy):
-  (scaler, scaled_box, pred_box) = scale_boxes(encoded_boxes, width, height,
+  (scaler, scaled_box, pred_box) = _scale_boxes(encoded_boxes, width, height,
                                             anchor_grid, grid_points, scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
@@ -383,7 +381,7 @@ def darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
   return (scaler, scaled_box, pred_box), delta
 
 
-def new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
+def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
                           grid_points, scale_xy):
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
@@ -419,10 +417,10 @@ def new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
 
 
 @tf.custom_gradient
-def darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
+def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
                             grid_points, max_delta, scale_xy):
   (scaler, scaled_box,
-   pred_box) = new_coord_scale_boxes(encoded_boxes, width, height,
+   pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
                                      anchor_grid, grid_points, scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
@@ -485,23 +483,23 @@ def get_predicted_box(width,
     # decoding of the box
     if newcoords:
       (scaler, scaled_box,
-      pred_box) = darknet_new_coord_boxes(encoded_boxes, width, height,
+      pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,
                                           anchor_grid, grid_points, max_delta,
                                           scale_xy)
     else:
       (scaler, scaled_box,
-      pred_box) = darknet_boxes(encoded_boxes, width, height, anchor_grid,
+      pred_box) = _darknet_boxes(encoded_boxes, width, height, anchor_grid,
                                 grid_points, max_delta, scale_xy)
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
     if newcoords:
       (scaler, scaled_box,
-      pred_box) = new_coord_scale_boxes(encoded_boxes, width, height,
+      pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
                                         anchor_grid, grid_points, scale_xy)
     else:
       (scaler, scaled_box,
-      pred_box) = scale_boxes(encoded_boxes, width, height, anchor_grid,
+      pred_box) = _scale_boxes(encoded_boxes, width, height, anchor_grid,
                               grid_points, scale_xy)
 
   return (scaler, scaled_box, pred_box)
