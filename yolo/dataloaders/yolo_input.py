@@ -193,7 +193,7 @@ class Parser(parser.Parser):
 
     # Mosaic scaling params
     self._jitter_mosaic = 0.0 if jitter_mosaic is None else jitter_mosaic
-    self._resize_mosaic = 0.0 if resize_mosaic is None else resize_mosaic
+    self._resize_mosaic = 1.0 if resize_mosaic is None else resize_mosaic
     self._mosaic_min = mosaic_min
     self._mosaic_max = mosaic_max
     self._mosaic_translate = mosaic_translate
@@ -335,7 +335,16 @@ class Parser(parser.Parser):
         random_pad=random_pad,
         seed=self._seed,
     )
-    return image, infos, affine
+    augment = not (letter_box and 
+                   jitter == 0.0 and 
+                   resize == 1.0 and
+                   aug_scale_min == 1.0 and
+                   aug_scale_max == 1.0 and
+                   angle == 0.0 and
+                   perspective == 0.0 and
+                   random_pad == False and 
+                   translate == 0.0)
+    return image, infos, affine, augment
 
   def reorg91to80(self, data):
     """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
@@ -365,14 +374,14 @@ class Parser(parser.Parser):
           image, boxes, seed=self._seed)
 
     if not data['is_mosaic']:
-      image, infos, affine = self._jitter_scale(
+      image, infos, affine, augment = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box, self._jitter,
           self._resize, self._random_pad, self._aug_scale_min,
           self._aug_scale_max, self._aug_rand_translate, self._aug_rand_angle,
           0.0)
 
     else:
-      image, infos, affine = self._jitter_scale(
+      image, infos, affine, augment = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box,
           self._jitter_mosaic, self._resize_mosaic, self._random_pad,
           self._mosaic_min, self._mosaic_max, self._mosaic_translate,
@@ -385,6 +394,7 @@ class Parser(parser.Parser):
         affine=affine,
         shuffle_boxes=False,
         area_thresh=self._area_thresh,
+        augment=augment,
         seed=self._seed)
     classes = tf.gather(classes, inds)
     info = infos[-1]
