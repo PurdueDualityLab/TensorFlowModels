@@ -1,8 +1,12 @@
 """Contains common building blocks for yolo neural networks."""
 from typing import Callable
 import tensorflow as tf
+import math
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
+
+TPU_BASE = True
+
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
@@ -119,17 +123,42 @@ class ConvBN(tf.keras.layers.Layer):
   def build(self, input_shape):
     use_bias = not self._use_bn
 
-    self.conv = tf.keras.layers.Conv2D(
-        filters=self._filters,
-        kernel_size=self._kernel_size,
-        strides=self._strides,
-        padding=self._padding,  # 'valid',
-        dilation_rate=self._dilation_rate,
-        use_bias=use_bias,
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer)
+    if not TPU_BASE:
+      kernel_size = self._kernel_size if isinstance(
+          self._kernel_size, int) else self._kernel_size[0]
+      dilation_rate = self._dilation_rate if isinstance(
+          self._dilation_rate, int) else self._dilation_rate[0]
+      if self._padding == 'same' and kernel_size != 1:
+        padding = (dilation_rate * (kernel_size - 1))
+        left_shift = padding // 2
+        self._paddings = tf.constant([[0, 0], [left_shift, left_shift],
+                                      [left_shift, left_shift], [0, 0]])
+      else:
+        self._paddings = tf.constant([[0, 0], [0, 0], [0, 0], [0, 0]])
+
+      self.conv = tf.keras.layers.Conv2D(
+          filters=self._filters,
+          kernel_size=self._kernel_size,
+          strides=self._strides,
+          padding='valid',
+          dilation_rate=self._dilation_rate,
+          use_bias=use_bias,
+          kernel_initializer=self._kernel_initializer,
+          bias_initializer=self._bias_initializer,
+          kernel_regularizer=self._kernel_regularizer,
+          bias_regularizer=self._bias_regularizer)
+    else:
+      self.conv = tf.keras.layers.Conv2D(
+          filters=self._filters,
+          kernel_size=self._kernel_size,
+          strides=self._strides,
+          padding=self._padding,  # 'valid',
+          dilation_rate=self._dilation_rate,
+          use_bias=use_bias,
+          kernel_initializer=self._kernel_initializer,
+          bias_initializer=self._bias_initializer,
+          kernel_regularizer=self._kernel_regularizer,
+          bias_regularizer=self._bias_regularizer)
 
     if self._use_bn:
       if self._use_sync_bn:
@@ -153,6 +182,8 @@ class ConvBN(tf.keras.layers.Layer):
       self._activation_fn = tf_utils.get_activation(self._activation)
 
   def call(self, x, training=None):
+    if not TPU_BASE:
+      x = tf.pad(x, self._paddings, mode='CONSTANT', constant_values=0)
     x = self.conv(x)
     if self._use_bn:
       x = self.bn(x)
