@@ -507,4 +507,64 @@ def get_predicted_box(width,
   return (scaler, scaled_box, pred_box)
 
 
+@tf.custom_gradient
+def grad_sigmoid(values):
+  # This is an identity operation that will
+  # allow us to add some steps to the back propagation.
+  def delta(dy):
+    # Darknet only propagtes sigmoids for the boxes
+    # under some conditions, so we need this to selectively
+    # add the sigmoid to the chain rule
+    t = tf.math.sigmoid(values)
+    return dy * t * (1 - t)
+
+  return values, delta
+
+
+@tf.custom_gradient
+def sigmoid_BCE(y, x_prime, label_smoothing):
+  """Applies the Sigmoid Cross Entropy Loss Using the same deriviative as that 
+  found in the Darknet C library. The derivative of this method is not the same 
+  as the standard binary cross entropy with logits function.
+
+  The BCE with logits function equasion is as follows: 
+    x = 1 / (1 + exp(-x_prime))
+    bce = -ylog(x) - (1 - y)log(1 - x) 
+
+  The standard BCE with logits function derivative is as follows: 
+    dloss = -y/x + (1-y)/(1-x)
+    dsigmoid = x * (1 - x)
+    dx = dloss * dsigmoid
+  
+  This derivative can be reduced simply to: 
+    dx = (-y + x)
+  
+  This simplification is used by the darknet library in order to improve 
+  training stability. The gradient is almost the same 
+  as tf.keras.losses.binary_crossentropy but varies slightly and actually yeilds
+  different performance
+
+  Args: 
+    y: Tensor holding the ground truth data. 
+    x_prime: Tensor holding the predictions prior to application of the sigmoid 
+      operation.
+    label_smoothing: float value between 0.0 and 1.0 indicating the amount of 
+      smoothing to apply to the data.
+
+  Returns: 
+    bce: Tensor of the bce applied loss values.
+    delta: callable function indicating the custom gradient for this operation.  
+  """
+  eps = 1e-9
+  x = tf.math.sigmoid(x_prime)
+  y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
+  bce = -y * tf.math.log(x + eps) - (1 - y) * tf.math.log(1 - x + eps)
+
+  def delta(dpass):
+    x = tf.math.sigmoid(x_prime)
+    dx = (-y + x) * dpass
+    dy = tf.zeros_like(y)
+    return dy, dx, 0.0
+
+  return bce, delta
 
