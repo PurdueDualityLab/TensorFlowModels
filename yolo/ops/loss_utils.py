@@ -179,6 +179,9 @@ class GridGenerator(object):
     anchor_grid = _build_anchor_grid(
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype), self.dtype)
+
+    grid_points = self._extend_batch(grid_points, batch_size)
+    anchor_grid = self._extend_batch(anchor_grid, batch_size)
     return grid_points, anchor_grid
 
 
@@ -342,11 +345,6 @@ class PairWiseSearch(object):
 
     return (tf.stop_gradient(running_boxes), tf.stop_gradient(running_classes),
             tf.stop_gradient(max_iou), tf.stop_gradient(mask))
-
-
-
-
-
 
 def APAR(pred_conf, true_conf, pct=0.5):
   # capture all predictions of high confidence
