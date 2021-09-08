@@ -229,14 +229,14 @@ class Mosaic(object):
         seed=self._seed)
     infos.extend(infos_)
 
-    augment = not (letter_box == True and random_crop == 0.0 and 
-                                    self._resize == 1.0 and cut is None)
+    augment = not (letter_box == True and random_crop == 0.0 and self._resize == 1.0 and cut is None)
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, 
         area_thresh=self._area_thresh, 
         augment = augment,
+        shuffle_boxes = False,
         seed=self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)

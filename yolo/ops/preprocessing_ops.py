@@ -763,7 +763,7 @@ def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
                      ar_thr=20,
-                     area_thr=0.0):
+                     area_thr=0.1):
 
   area_thr = tf.math.abs(area_thr)
 
@@ -898,7 +898,7 @@ def apply_infos(boxes,
     if shuffle_boxes:
       inds = tf.random.shuffle(inds, seed=seed)
   else:
-    boxes = box_history
+    boxes = box_history * tf.cast(tf.expand_dims(cond, axis=-1), boxes.dtype)
     boxes_ = bbox_ops.denormalize_boxes(boxes, output_size)
     inds = bbox_ops.get_non_empty_box_indices(boxes_)
   boxes = tf.gather(boxes, inds)
