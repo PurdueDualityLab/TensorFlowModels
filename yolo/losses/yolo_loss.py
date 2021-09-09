@@ -77,8 +77,6 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
         and ground truth.
       avg_obj: `float` metric for the average confidence of the model 
         for predictions.
-      recall50: `float` metric for how accurate the model is.
-      precision50: `float` metric for how precise the model is.
     """
     self._loss_type = loss_type
     self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
@@ -316,7 +314,7 @@ class DarknetLoss(YoloLossBase):
 
     # Add all the losses together then take the mean over the batches.
     loss = box_loss + class_loss + conf_loss
-    # loss = tf.reduce_mean(loss)
+    loss = tf.reduce_mean(loss)
 
     # Reduce the mean of the losses to use as a metric.
     box_loss = tf.reduce_mean(box_loss)
@@ -520,9 +518,7 @@ class YoloLoss(object):
     metric_dict['net']['class'] = 0
     metric_dict['net']['conf'] = 0
 
-    loss_val = 0
-    metric_loss = 0
-
+    loss_val, metric_loss = 0, 0
     num_replicas_in_sync = tf.distribute.get_strategy().num_replicas_in_sync
 
     for key in predictions.keys():
@@ -561,12 +557,4 @@ class YoloLoss(object):
       metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
       metric_dict['net']['class'] += tf.stop_gradient(_loss_class)
       metric_dict['net']['conf'] += tf.stop_gradient(_loss_conf)
-
-    tf.print(loss_val)
-    # loss_val = self._loss_dict[key].post_path_aggregation(loss_val, 
-    #                                                       ground_truth, 
-    #                                                       predictions)
-    # loss_val = self._loss_dict[key].cross_replica_aggregation(loss_val, 
-    #                                                    num_replicas_in_sync)
-
     return loss_val, metric_loss, metric_dict

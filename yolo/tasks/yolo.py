@@ -247,51 +247,9 @@ class YoloTask(base_task.Task):
     return metrics
 
   def build_losses(self, outputs, labels, aux_losses=None):
-    # metric_dict = defaultdict(dict)
-    # metric_dict['net']['box'] = 0
-    # metric_dict['net']['class'] = 0
-    # metric_dict['net']['conf'] = 0
-    # loss_val = 0
-    # metric_loss = 0
-
-    # for key in outputs.keys():
-    #   (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou,
-    #    _avg_obj) = self._loss_dict[key](labels['true_conf'][key], 
-    #                                     labels['inds'][key], 
-    #                                     labels['upds'][key],
-    #                                     labels['bbox'], 
-    #                                     labels['classes'],
-    #                                     outputs[key])
-    #   loss_val += _loss
-
-    #   # detach all the below gradients: none of them should make a
-    #   # contribution to the gradient form this point forwards
-    #   metric_loss += tf.stop_gradient(_mean_loss)
-    #   metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
-    #   metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
-    #   metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
-
-    #   metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
-    #   metric_dict['net']['class'] += tf.stop_gradient(_loss_class)
-    #   metric_dict['net']['conf'] += tf.stop_gradient(_loss_conf)
-
-    #   if not self._use_reduced_logs:
-    #     metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
-    #     metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
-    #     metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
-
-    # # Account for model distribution across devices
-    # num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    # scale = 1
-    # if self._task_config.model.filter.use_scaled_loss:
-    #   num_replicas = 1
-    #   scale = 3 / len(list(outputs.keys()))
-
-    # scale = tf.cast(scale, tf.float32)
-    # loss_val = loss_val * scale/num_replicas
-    # metric_loss = metric_loss * scale
-
-    return self._loss_dict(labels, outputs, use_reduced_logs = self._use_reduced_logs)
+    return self._loss_dict(labels, 
+                           outputs, 
+                           use_reduced_logs = self._use_reduced_logs)
 
   ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):
