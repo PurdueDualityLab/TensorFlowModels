@@ -96,7 +96,6 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
     self._label_smoothing = tf.cast(label_smoothing, tf.float32)
     self._objectness_smooth = float(objectness_smooth)
-    self._use_reduction_sum = use_scaled_loss
     self._update_on_repeat = update_on_repeat
     self._new_cords = new_cords
     self._path_stride = path_stride
@@ -535,9 +534,13 @@ class YoloLoss(object):
                                         ground_truth['classes'],
                                         predictions[key])
       
+      # after computing the loss, scale loss as needed for aggregation 
+      # across FPN levels 
       _loss = self._loss_dict[key].post_path_aggregation(_loss, 
                                                           ground_truth, 
                                                           predictions)
+      # after completing the scaling of the loss on each replica, handle 
+      # scaling the loss for mergeing the loss across replicas
       _loss = self._loss_dict[key].cross_replica_aggregation(_loss, 
                                                         num_replicas_in_sync)
       loss_val += _loss
