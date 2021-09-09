@@ -492,14 +492,42 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
 
   return (scaler, scaled_box, pred_box), delta
 
+
+def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points, scale_xy):
+  # split the boxes
+  pred_xy = encoded_boxes[..., 0:2]
+  pred_wh = encoded_boxes[..., 2:4]
+
+  # build a scaling tensor to get the offset of th ebox relative to the image
+  scaler = tf.convert_to_tensor([height, width, height, width])
+  scale_xy = tf.cast(scale_xy, encoded_boxes.dtype)
+
+  # scale the centers and find the offset of each box relative to
+  # their center pixel
+  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+
+  # scale the offsets and add them to the grid points or a tensor that is
+  # the realtive location of each pixel
+  box_xy = (grid_points + pred_xy) * stride
+
+  # scale the width and height of the predictions and corlate them
+  # to anchor boxes
+  box_wh = tf.math.exp(pred_wh) * stride
+
+  # build the final predicted box
+  scaled_box = tf.concat([box_xy, box_wh], axis=-1)
+  pred_box = scaled_box / scaler
+  return (scaler, scaled_box, pred_box)
+
 def get_predicted_box(width,
                       height,
                       encoded_boxes,
                       anchor_grid,
                       grid_points,
                       scale_xy,
+                      stride, 
                       darknet=False,
-                      newcoords=False,
+                      box_type="original",
                       max_delta=np.inf):
   """Decodes the predicted boxes from the model format to a usable 
   [x, y, w, h] format for use in the loss function as well as for use 
@@ -527,11 +555,14 @@ def get_predicted_box(width,
     pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
       devided by the scaler parameter used to put all boxes in the [0, 1] range. 
   """
-
-  if darknet:
+  if box_type == "anchor_free":
+    (scaler, scaled_box,
+      pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, 
+                                           stride, grid_points, scale_xy)
+  elif darknet:
     # if we are using the darknet loss we shoud nto propagate the
     # decoding of the box
-    if newcoords:
+    if box_type == "scaled":
       (scaler, scaled_box,
       pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,
                                           anchor_grid, grid_points, max_delta,
@@ -543,7 +574,7 @@ def get_predicted_box(width,
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
-    if newcoords:
+    if box_type == "scaled":
       (scaler, scaled_box,
       pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
                                         anchor_grid, grid_points, scale_xy)
@@ -552,6 +583,7 @@ def get_predicted_box(width,
       pred_box) = _scale_boxes(encoded_boxes, width, height, anchor_grid,
                               grid_points, scale_xy)
 
+  
   return (scaler, scaled_box, pred_box)
 
 

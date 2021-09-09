@@ -249,8 +249,8 @@ class YoloLossLayer(hyperparams.Config):
       default_factory=_build_dict(min_level, max_level, 1.0))
   max_delta: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, np.inf))
-  new_cords: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, False))
+  box_type: Dict = dataclasses.field(
+      default_factory=_build_dict(min_level, max_level, "original")) # original, scaled, anchor_free
   scale_xy: Dict = dataclasses.field(
       default_factory=_build_dict(min_level, max_level, 1.0))
   path_scales: Dict = dataclasses.field(

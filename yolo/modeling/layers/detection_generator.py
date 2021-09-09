@@ -30,7 +30,7 @@ class YoloLayer(tf.keras.Model):
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
-               new_cords=False,
+               box_type=False,
                path_scale=None,
                scale_xy=None,
                nms_type='greedy',
@@ -62,7 +62,7 @@ class YoloLayer(tf.keras.Model):
       use_scaled_loss: `bool` for whether to use the scaled loss 
         or the traditional loss
       label_smoothing: `float` for how much to smooth the loss on the classes
-      new_cords: `bool` for which scaling type to use 
+      box_type: `bool` for which scaling type to use 
       scale_xy: dictionary `float` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
@@ -112,7 +112,7 @@ class YoloLayer(tf.keras.Model):
     self._label_smoothing = label_smoothing
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
-    self._new_cords = new_cords
+    self._box_type = box_type
     self._path_scale = path_scale or {
         key: 2**int(key) for key, _ in masks.items()
     }
@@ -187,8 +187,8 @@ class YoloLayer(tf.keras.Model):
     # configurable to use the new coordinates in scaled Yolo v4 or not
     _, _, boxes = loss_utils.get_predicted_box(
       tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
-      anchors, centers, scale_xy, 
-      darknet = False, newcoords = self._new_cords[key])
+      anchors, centers, scale_xy, stride = self._path_scale[key], 
+      darknet = False, box_type = self._box_type[key])
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_utils.xcycwh_to_yxyx(boxes)
@@ -294,39 +294,6 @@ class YoloLayer(tf.keras.Model):
         'num_detections': num_detections,
     }
 
-  # @property
-  # def losses(self):
-  #   """ Generates a dictionary of losses to apply to each path 
-    
-  #   Done in the detection generator because all parameters are the same 
-  #   across both loss and detection generator
-  #   """
-  #   loss_dict = {}
-  #   for key in self._keys:
-  #     loss_dict[key] = YoloLoss(
-  #         classes=self._classes,
-  #         mask=self._masks[key],
-  #         anchors=self._anchors,
-
-  #         truth_thresh=self._truth_thresh[key],
-  #         ignore_thresh=self._ignore_thresh[key],
-  #         loss_type=self._loss_type[key],
-  #         iou_normalizer=self._iou_normalizer[key],
-  #         cls_normalizer=self._cls_normalizer[key],
-  #         obj_normalizer=self._obj_normalizer[key],
-  #         new_cords=self._new_cords[key],
-  #         objectness_smooth=self._objectness_smooth[key],
-
-          
-  #         max_delta=self._max_delta[key],
-  #         path_strides=self._path_scale[key],
-  #         scale_x_y=self._scale_xy[key], 
-          
-  #         use_scaled_loss=self._use_scaled_loss,
-  #         update_on_repeat=self._update_on_repeat,
-  #         label_smoothing=self._label_smoothing)
-  #   return loss_dict
-
   @property
   def losses(self):
     """ Generates a dictionary of losses to apply to each path 
@@ -350,7 +317,7 @@ class YoloLayer(tf.keras.Model):
           obj_normalizers = self._obj_normalizer,
           objectness_smooths = self._objectness_smooth,
 
-          box_types = self._new_cords,
+          box_types = self._box_type,
           max_deltas = self._max_delta,
           scale_xys = self._scale_xy, 
           

@@ -60,7 +60,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    _, anchor_free = self._get_boxes(gen_boxes=params.is_training)
+    _, anchor_free = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -385,30 +385,10 @@ class YoloTask(base_task.Task):
       ret_dict.update(res)
     return ret_dict
 
-  def _get_boxes(self, gen_boxes=True):
+  def _get_boxes(self, gen_boxes=False):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
-    if gen_boxes and self.task_config.model._boxes is None and not self._anchors_built:
-      params = self.task_config.train_data
-      decoder = self.get_decoder(params)
-      model_base_cfg = self.task_config.model
-      self._num_boxes = (model_base_cfg.max_level - model_base_cfg.min_level +
-                         1) * model_base_cfg.boxes_per_scale
-      reader = BoxGenInputReader(
-          params,
-          decoder_fn=decoder.decode,
-          transform_and_batch_fn=lambda x, y: x,
-          parser_fn=None)
-      anchors = reader.read(
-          k=self._num_boxes,
-          image_width=self._task_config.model.input_size[0],
-          input_context=None)
-      self.task_config.model.set_boxes(anchors)
-      self._anchors_built = True
-      del reader
     return (self.task_config.model._boxes,
             self.task_config.model.anchor_free_limits)
-
-
 
   def initialize(self, model: tf.keras.Model):
     """initialize the weights of the model"""
