@@ -151,9 +151,6 @@ class YoloTask(base_task.Task):
     osize = params.parser.mosaic.output_resolution
     if osize is None:
       osize = model.input_size
-    
-    # if params.is_training:
-    #   preprocessing_ops.set_random_seeds(seed = params.seed)
 
     sample_fn = mosaic.Mosaic(
         output_size=osize,
