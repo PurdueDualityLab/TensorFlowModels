@@ -46,15 +46,10 @@ class YoloTask(base_task.Task):
     self._path_scales = None
     self._x_y_scales = None
     self.coco_metric = None
-    self._metric_names = []
-    self._metrics = []
 
+    self._metrics = []
     self._use_reduced_logs = self.task_config.reduced_logs
     return
-
-  @property
-  def anchors(self):
-    return self.task_config.model.boxes
 
   def build_model(self):
     """get an instance of Yolo v3 or v4"""
@@ -73,8 +68,7 @@ class YoloTask(base_task.Task):
              require significantly more memory. Validation will only work at \
              a batchsize of 1. The model will be trained at the input \
              resolution and evaluated at a dynamic resolution")
-      input_size[0] = None
-      input_size[1] = None
+      input_size[0], input_size[1] = None, None
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
@@ -110,6 +104,30 @@ class YoloTask(base_task.Task):
         raise ValueError('Unknown decoder type: {}!'.format(
             params.decoder.type))
     return decoder
+
+  def _get_masks(self):
+
+    def _build(values):
+      if "all" in values and values["all"] is not None:
+        for key in values:
+          if key != 'all':
+            values[key] = values["all"]
+      return values
+
+    start = 0
+    masks = {}
+    params = self.task_config.model
+
+    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
+      for i in range(params.min_level, params.max_level + 1):
+        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
+        start += params.boxes_per_scale
+
+      self._masks = masks
+      self._path_scales = _build(params.filter.path_scales.as_dict())
+      self._x_y_scales = _build(params.filter.scale_xy.as_dict())
+
+    return self._masks, self._path_scales, self._x_y_scales
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
@@ -195,23 +213,54 @@ class YoloTask(base_task.Task):
     dataset = reader.read(input_context=input_context)
     return dataset
 
+  def build_metrics(self, training=True):
+    metrics = []
+
+    self._get_masks()
+    metric_names = defaultdict(list)
+    for key in self._masks.keys():
+      metric_names[key].append('loss')
+      metric_names[key].append("avg_iou")
+      metric_names[key].append("avg_obj")
+
+      if not self._use_reduced_logs:
+        metric_names[key].append('box_loss')
+        metric_names[key].append('class_loss')
+        metric_names[key].append('conf_loss')
+
+    metric_names['net'].append('box')
+    metric_names['net'].append('class')
+    metric_names['net'].append('conf')
+
+    for i, key in enumerate(metric_names.keys()):
+      metrics.append(ListMetrics(metric_names[key], name=key))
+
+    self._metrics = metrics
+
+    if not training:
+      self.coco_metric = coco_evaluator.COCOEvaluator(
+          annotation_file=self.task_config.annotation_file,
+          include_mask=False,
+          need_rescale_bboxes=False,
+          per_category_metrics=self._task_config.per_category_metrics)
+
+    return metrics
+
   def build_losses(self, outputs, labels, aux_losses=None):
     metric_dict = defaultdict(dict)
-    loss_val = 0
-    metric_loss = 0
     metric_dict['net']['box'] = 0
     metric_dict['net']['class'] = 0
     metric_dict['net']['conf'] = 0
+    loss_val = 0
+    metric_loss = 0
 
-    grid = labels['true_conf']
-    inds = labels['inds']
-    upds = labels['upds']
-
-    scale = tf.cast(3 / len(list(outputs.keys())), tf.float32)
     for key in outputs.keys():
       (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou,
-       _avg_obj) = self._loss_dict[key](grid[key], inds[key], upds[key],
-                                        labels['bbox'], labels['classes'],
+       _avg_obj) = self._loss_dict[key](labels['true_conf'][key], 
+                                        labels['inds'][key], 
+                                        labels['upds'][key],
+                                        labels['bbox'], 
+                                        labels['classes'],
                                         outputs[key])
       loss_val += _loss
 
@@ -231,37 +280,20 @@ class YoloTask(base_task.Task):
         metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
         metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
 
-    return loss_val * scale, metric_loss, metric_dict
+    # Account for model distribution across devices
+    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
+    scale = 1
+    if self._task_config.model.filter.use_scaled_loss:
+      num_replicas = 1
+      scale = 3 / len(list(outputs.keys()))
 
-  def build_metrics(self, training=True):
-    metrics = []
-    metric_names = self._metric_names
-
-    for i, key in enumerate(metric_names.keys()):
-      metrics.append(ListMetrics(metric_names[key], name=key))
-
-    self._metrics = metrics
-
-    if not training:
-      self.coco_metric = coco_evaluator.COCOEvaluator(
-          annotation_file=self.task_config.annotation_file,
-          include_mask=False,
-          need_rescale_bboxes=False,
-          per_category_metrics=self._task_config.per_category_metrics)
-
-    return metrics
+    scale = tf.cast(scale, tf.float32)
+    loss_val = loss_val * scale/num_replicas
+    return loss_val, metric_loss, metric_dict
 
   ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):
     image, label = inputs
-
-    # Get the number of replicas that the model is running on. Num_replicas
-    # paramter is used to take the mean of the loss across devices. If using
-    # scaled loss the num replicas are set to 1 in order to use the sum across
-    # replicas.
-    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-    if self._task_config.model.filter.use_scaled_loss:
-      num_replicas = 1
 
     with tf.GradientTape(persistent=False) as tape:
       # Compute a prediction
@@ -271,11 +303,8 @@ class YoloTask(base_task.Task):
       y_pred = tf.nest.map_structure(lambda x: tf.cast(x, tf.float32), y_pred)
 
       # Get the total loss
-      (loss, metric_loss,
+      (scaled_loss, metric_loss,
        loss_metrics) = self.build_losses(y_pred['raw_output'], label)
-
-      # Account for model distribution across devices
-      scaled_loss = loss / num_replicas
 
       # Scale the loss for numerical stability
       if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
@@ -419,45 +448,7 @@ class YoloTask(base_task.Task):
     return (self.task_config.model._boxes,
             self.task_config.model.anchor_free_limits)
 
-  def _get_masks(self):
 
-    def _build(values):
-      if "all" in values and values["all"] is not None:
-        for key in values:
-          if key != 'all':
-            values[key] = values["all"]
-      return values
-
-    start = 0
-    boxes = {}
-    params = self.task_config.model
-
-    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
-      for i in range(params.min_level, params.max_level + 1):
-        boxes[str(i)] = list(range(start, params.boxes_per_scale + start))
-        start += params.boxes_per_scale
-
-      self._masks = boxes
-      self._path_scales = _build(params.filter.path_scales.as_dict())
-      self._x_y_scales = _build(params.filter.scale_xy.as_dict())
-
-    metric_names = defaultdict(list)
-    for key in self._masks.keys():
-      metric_names[key].append('loss')
-      metric_names[key].append("avg_iou")
-      metric_names[key].append("avg_obj")
-
-      if not self._use_reduced_logs:
-        metric_names[key].append('box_loss')
-        metric_names[key].append('class_loss')
-        metric_names[key].append('conf_loss')
-
-    metric_names['net'].append('box')
-    metric_names['net'].append('class')
-    metric_names['net'].append('conf')
-
-    self._metric_names = metric_names
-    return self._masks, self._path_scales, self._x_y_scales
 
   def initialize(self, model: tf.keras.Model):
     """initialize the weights of the model"""
