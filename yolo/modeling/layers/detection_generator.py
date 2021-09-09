@@ -294,6 +294,39 @@ class YoloLayer(tf.keras.Model):
         'num_detections': num_detections,
     }
 
+  # @property
+  # def losses(self):
+  #   """ Generates a dictionary of losses to apply to each path 
+    
+  #   Done in the detection generator because all parameters are the same 
+  #   across both loss and detection generator
+  #   """
+  #   loss_dict = {}
+  #   for key in self._keys:
+  #     loss_dict[key] = YoloLoss(
+  #         classes=self._classes,
+  #         mask=self._masks[key],
+  #         anchors=self._anchors,
+
+  #         truth_thresh=self._truth_thresh[key],
+  #         ignore_thresh=self._ignore_thresh[key],
+  #         loss_type=self._loss_type[key],
+  #         iou_normalizer=self._iou_normalizer[key],
+  #         cls_normalizer=self._cls_normalizer[key],
+  #         obj_normalizer=self._obj_normalizer[key],
+  #         new_cords=self._new_cords[key],
+  #         objectness_smooth=self._objectness_smooth[key],
+
+          
+  #         max_delta=self._max_delta[key],
+  #         path_strides=self._path_scale[key],
+  #         scale_x_y=self._scale_xy[key], 
+          
+  #         use_scaled_loss=self._use_scaled_loss,
+  #         update_on_repeat=self._update_on_repeat,
+  #         label_smoothing=self._label_smoothing)
+  #   return loss_dict
+
   @property
   def losses(self):
     """ Generates a dictionary of losses to apply to each path 
@@ -301,28 +334,31 @@ class YoloLayer(tf.keras.Model):
     Done in the detection generator because all parameters are the same 
     across both loss and detection generator
     """
-    loss_dict = {}
-    for key in self._keys:
-      loss_dict[key] = YoloLoss(
-          classes=self._classes,
-          anchors=self._anchors,
-          darknet=self._darknet,
-          truth_thresh=self._truth_thresh[key],
-          ignore_thresh=self._ignore_thresh[key],
-          loss_type=self._loss_type[key],
-          iou_normalizer=self._iou_normalizer[key],
-          cls_normalizer=self._cls_normalizer[key],
-          obj_normalizer=self._obj_normalizer[key],
-          new_cords=self._new_cords[key],
-          objectness_smooth=self._objectness_smooth[key],
+    loss = YoloLoss(
+          keys = self._keys, 
+          classes = self._classes,
+          anchors = self._anchors,
+
+          masks=self._masks,
+          path_strides=self._path_scale,
+
+          truth_thresholds = self._truth_thresh,
+          ignore_thresholds = self._ignore_thresh,
+          loss_types = self._loss_type,
+          iou_normalizers = self._iou_normalizer,
+          cls_normalizers = self._cls_normalizer,
+          obj_normalizers = self._obj_normalizer,
+          objectness_smooths = self._objectness_smooth,
+
+          box_types = self._new_cords,
+          max_deltas = self._max_delta,
+          scale_xys = self._scale_xy, 
+          
           use_scaled_loss=self._use_scaled_loss,
           update_on_repeat=self._update_on_repeat,
-          label_smoothing=self._label_smoothing,
-          mask=self._masks[key],
-          max_delta=self._max_delta[key],
-          scale_anchors=self._path_scale[key],
-          scale_x_y=self._scale_xy[key])
-    return loss_dict
+          label_smoothing=self._label_smoothing)
+    return loss
+
 
   def get_config(self):
     return {
