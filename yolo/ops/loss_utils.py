@@ -198,13 +198,7 @@ class PairWiseSearch(object):
     predictions over lap with the groud truth for dynamic ground 
     truth constructions.   
     """
-    if iou_type == "giou":
-      self.iou_type = 1
-    elif iou_type == "ciou":
-      self.iou_type = 2
-    else:
-      self.iou_type = 0
-
+    self.iou_type = iou_type
     self._any = any
     self._min_conf = min_conf
     self._track_boxes = track_boxes
@@ -214,9 +208,9 @@ class PairWiseSearch(object):
   def box_iou(self, true_box, pred_box):
     # based on the type of loss, compute the iou loss for a box
     # compute_<name> indicated the type of iou to use
-    if self.iou_type == 1:
+    if self.iou_type == "giou":
       _, iou = box_ops.compute_giou(true_box, pred_box)
-    elif self.iou_type == 2:
+    elif self.iou_type == "ciou":
       _, iou = box_ops.compute_ciou(true_box, pred_box)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)

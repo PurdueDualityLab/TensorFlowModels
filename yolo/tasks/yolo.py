@@ -289,7 +289,8 @@ class YoloTask(base_task.Task):
 
     scale = tf.cast(scale, tf.float32)
     loss_val = loss_val * scale/num_replicas
-    return loss_val, metric_loss, metric_dict
+    metric_loss = metric_loss * scale
+    return loss_val , metric_loss, metric_dict
 
   ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):

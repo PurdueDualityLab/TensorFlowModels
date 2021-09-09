@@ -79,14 +79,7 @@ class YoloLoss(object):
       recall50: `float` metric for how accurate the model is.
       precision50: `float` metric for how precise the model is.
     """
-
-    if loss_type == "giou":
-      self._loss_type = 1
-    elif loss_type == "ciou":
-      self._loss_type = 2
-    else:
-      self._loss_type = 0
-
+    self._loss_type = loss_type
     self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
     self._num = tf.cast(len(mask), dtype=tf.int32)
     self._truth_thresh = truth_thresh
@@ -124,17 +117,13 @@ class YoloLoss(object):
 
 
   def box_loss(self, true_box, pred_box, darknet=False):
-    if self._loss_type == 1:
+    if self._loss_type == "giou":
       iou, liou = box_ops.compute_giou(true_box, pred_box)
-      loss_box = 1 - liou
-    elif self._loss_type == 2:
+    elif self._loss_type == "ciou":
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
-      loss_box = 1 - liou
     else:
-      iou = box_ops.compute_iou(true_box, pred_box, darknet=darknet)
-      liou = iou
-      loss_box = 1 - liou
-
+      liou = iou = box_ops.compute_iou(true_box, pred_box)
+    loss_box = 1 - liou
     return iou, liou, loss_box
 
   def _tiled_global_box_search(self,
