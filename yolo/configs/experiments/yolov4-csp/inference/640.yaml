@@ -2,7 +2,7 @@ runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
   loss_scale: "dynamic"
-  num_gpus: 1
+  num_gpus: 2
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -61,9 +61,9 @@ task:
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
-      use_scaled_loss: true
+      use_scaled_loss: false
   train_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -96,7 +96,7 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -112,10 +112,10 @@ task:
   weight_decay: 0.000
   annotation_file: null
   load_darknet_weights: true
-  darknet_load_decoder: true
+  darknet_load_decoder: false
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 625 #312
   steps_per_loop: 1850
   summary_interval: 1850
   validation_interval: 1850
