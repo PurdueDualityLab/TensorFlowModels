@@ -129,12 +129,9 @@ class YoloLoss(object):
   def _tiled_global_box_search(self,
                                pred_boxes,
                                pred_classes,
-                               pred_conf,
                                boxes,
                                classes,
                                true_conf,
-                               fwidth,
-                               fheight,
                                smoothed,
                                scale=None):
 
@@ -201,12 +198,9 @@ class YoloLoss(object):
       (_, obj_mask) = self._tiled_global_box_search(
           pred_box,
           tf.stop_gradient(tf.sigmoid(pred_class)),
-          tf.stop_gradient(tf.sigmoid(pred_conf)),
           boxes,
           classes,
           true_conf,
-          fwidth,
-          fheight,
           smoothed=False,
           scale=scale)
 
@@ -244,8 +238,6 @@ class YoloLoss(object):
     true_conf = tf.squeeze(true_conf, axis=-1)
 
     # Compute the cross entropy loss for the confidence map.
-    # bce = tf.reduce_mean(
-    #   sigmoid_BCE(tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0), axis = -1)
     bce = tf.keras.losses.binary_crossentropy(
         tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     if self._ignore_thresh != 0.0:
@@ -253,8 +245,6 @@ class YoloLoss(object):
     conf_loss = tf.reduce_mean(bce)
 
     # Compute the cross entropy loss for the class maps.
-    # class_loss = tf.reduce_mean(
-    #   sigmoid_BCE(true_class, pred_class, self._label_smoothing), axis = -1)
     class_loss = tf.keras.losses.binary_crossentropy(
         true_class,
         pred_class,
@@ -322,12 +312,9 @@ class YoloLoss(object):
       (true_conf, obj_mask) = self._tiled_global_box_search(
           pred_box,
           tf.stop_gradient(tf.sigmoid(pred_class)),
-          tf.stop_gradient(tf.sigmoid(pred_conf)),
           boxes,
           classes,
           true_conf,
-          fwidth,
-          fheight,
           smoothed=self._objectness_smooth > 0)
 
     # Build the one hot class list that are used for class loss.
