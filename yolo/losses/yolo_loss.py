@@ -336,7 +336,7 @@ class ScaledLoss(YoloLossBase):
 
     if self._ignore_thresh > 0.0:
       self._search_pairs = loss_utils.PairWiseSearch(
-          iou_type="iou", any=False, min_conf=0.25)
+          iou_type=self._loss_type, any=False, min_conf=0.25)
     return
 
   def call(self, true_counts, inds, y_true, boxes, classes, y_pred):
