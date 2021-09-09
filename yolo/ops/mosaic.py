@@ -236,6 +236,7 @@ class Mosaic(object):
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, 
         area_thresh=self._area_thresh, 
+        shuffle_boxes=False,
         augment = augment,
         seed=self._seed)
     classes = tf.gather(classes, inds)
