@@ -167,12 +167,12 @@ class Mosaic(object):
     """A function to apply a random crop with in the crop area to a given 
     image."""
     scale = preprocessing_ops.rand_uniform_strong(
-        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
+        tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]), seed = self._seed)
     height, width = preprocessing_ops.get_image_shape(image)
     width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
     height = tf.cast(tf.cast(height, scale.dtype) * scale, tf.int32)
     image, info = preprocessing_ops.random_window_crop(
-        image, height, width, translate=1.0)
+        image, height, width, translate=1.0, seed = self._seed)
     return image, info
 
   def _gen_blank_info(self, image):
@@ -213,7 +213,7 @@ class Mosaic(object):
     elif self._aspect_ratio_mode == 'crop':
       letter_box = None
       info = self._gen_blank_info(image)
-      if tf.random.uniform([], 0.0, 1.0, dtype=tf.float32) > 0.5:
+      if preprocessing_ops.rand_uniform_strong(0.0, 1.0, dtype=tf.float32, seed = self._seed) > 0.5:
         image, info = self._crop_image(image, [0.25, 1.0])
       infos.append(info)
 
@@ -319,7 +319,7 @@ class Mosaic(object):
     this rate drops to about 0.9 to 1.0 Samples per second. A non mapped mosiac 
     is there for implemented to optimize for the 100% case."""
 
-    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    domo = preprocessing_ops.rand_uniform_strong(0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if self._mosaic_frequency > 0.0 and domo >= (1 - self._mosaic_frequency):
       images = tf.split(sample['image'], 4, axis=0)
       box_list = tf.split(sample['groundtruth_boxes'], 4, axis=0)
@@ -460,7 +460,7 @@ class Mosaic(object):
     return sample
 
   def select(self, a, b):
-    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    domo = preprocessing_ops.rand_uniform_strong(0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if domo >= (1 - self._mosaic_frequency):
       return b
     else:
@@ -548,16 +548,16 @@ class Mosaic(object):
     return dataset
 
   def _mixup(self, one, two):
-    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    domo = preprocessing_ops.rand_uniform_strong(0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if domo > 0.5:
       sample = one
     else:
       sample = two
 
-    domo = tf.random.uniform([], 0.0, 1.0, dtype=tf.float32, seed=self._seed)
+    domo = preprocessing_ops.rand_uniform_strong(0.0, 1.0, dtype=tf.float32, seed=self._seed)
     if domo >= (1 - self._mixup_frequency):
       otype = one["image"].dtype
-      r = tf.random.uniform([], 0.4, 0.6, tf.float32, seed=self._seed)
+      r = preprocessing_ops.rand_uniform_strong(0.4, 0.6, tf.float32, seed=self._seed)
       sample['image'] = (
           r * tf.cast(one["image"], tf.float32) +
           (1 - r) * tf.cast(two["image"], tf.float32))

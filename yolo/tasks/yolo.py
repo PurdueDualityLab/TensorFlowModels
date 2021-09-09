@@ -49,6 +49,8 @@ class YoloTask(base_task.Task):
 
     self._metrics = []
     self._use_reduced_logs = self.task_config.reduced_logs
+
+    preprocessing_ops.set_random_seeds(seed = params.train_data.seed)
     return
 
   def build_model(self):
@@ -149,6 +151,9 @@ class YoloTask(base_task.Task):
     osize = params.parser.mosaic.output_resolution
     if osize is None:
       osize = model.input_size
+    
+    # if params.is_training:
+    #   preprocessing_ops.set_random_seeds(seed = params.seed)
 
     sample_fn = mosaic.Mosaic(
         output_size=osize,
@@ -211,6 +216,8 @@ class YoloTask(base_task.Task):
         sample_fn=sample_fn.mosaic_fn(is_training=params.is_training),
         parser_fn=parser.parse_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
+
+    
     return dataset
 
   def build_metrics(self, training=True):

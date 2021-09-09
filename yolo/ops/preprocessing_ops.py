@@ -1,14 +1,24 @@
 import tensorflow as tf
+import numpy as np
+import random 
+import os
+
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from official.vision.beta.ops import box_ops as bbox_ops
-import numpy as np
 
 PAD_VALUE = 114
 
+def set_random_seeds(seed = 0):
+  print(seed)
+  if seed is not None:
+    os.environ['PYTHONHASHSEED']=str(seed)
+    random.seed(seed)
+  tf.random.set_seed(seed)
+  np.random.seed(seed)
 
-def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
+def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape = []):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -25,7 +35,7 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
   if minval > maxval:
     minval, maxval = maxval, minval
 
-  return tf.random.uniform([],
+  return tf.random.uniform(shape=shape,
                            minval=minval,
                            maxval=maxval,
                            seed=seed,
@@ -47,8 +57,8 @@ def rand_scale(val, dtype=tf.float32, seed=None):
   Returns:
     The random scale.
   """
-  scale = rand_uniform_strong(1.0, val, dtype=dtype)
-  do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32, seed=seed)
+  scale = rand_uniform_strong(1.0, val, dtype=dtype, seed = seed)
+  do_ret = rand_uniform_strong(minval=0, maxval=2, dtype=tf.int32, seed=seed)
   if (do_ret == 1):
     return scale
   return 1.0 / scale
@@ -157,7 +167,7 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
   scale = tf.cast([180, 255, 255], image.dtype)
-  r = tf.random.uniform([3], -1, 1, dtype=image.dtype,
+  r = rand_uniform_strong(-1, 1, shape = [3], dtype=image.dtype,
                         seed=seed) * gen_range + 1
 
   # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32)
@@ -263,7 +273,7 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   return image
 
 
-def random_window_crop(image, target_height, target_width, translate=0.0):
+def random_window_crop(image, target_height, target_width, translate=0.0, seed = None):
   """Takes a random crop of the image to the target height and width
   
   Args: 
@@ -287,8 +297,8 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   crop_offset = tf.convert_to_tensor(
       [crop_offset[0] // 2, crop_offset[1] // 2, 0])
   shift = tf.convert_to_tensor([
-      rand_uniform_strong(-translate, translate),
-      rand_uniform_strong(-translate, translate), 0
+      rand_uniform_strong(-translate, translate, seed = seed),
+      rand_uniform_strong(-translate, translate, seed = seed), 0
   ])
   crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, shift.dtype),
                                       crop_offset.dtype)
@@ -612,7 +622,7 @@ def build_transform(image,
 
   # Compute a random rotation to apply.
   R = tf.eye(3, dtype=tf.float32)
-  a = deg_to_rad(tf.random.uniform([], -degrees, degrees, seed=seed))
+  a = deg_to_rad(rand_uniform_strong(-degrees, degrees, seed=seed))
   cos = tf.math.cos(a)
   sin = tf.math.sin(a)
   R = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]],
@@ -622,14 +632,14 @@ def build_transform(image,
 
   # Compute a random prespective change to apply.
   P = tf.eye(3)
-  Px = tf.random.uniform([], -perspective, perspective, seed=seed)
-  Py = tf.random.uniform([], -perspective, perspective, seed=seed)
+  Px = rand_uniform_strong(-perspective, perspective, seed=seed)
+  Py = rand_uniform_strong(-perspective, perspective, seed=seed)
   P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
   Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
 
   # Compute a random scaling to apply.
   S = tf.eye(3, dtype=tf.float32)
-  s = tf.random.uniform([], scale_min, scale_max, seed=seed)
+  s = rand_uniform_strong(scale_min, scale_max, seed=seed)
   S = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [1 / s, 1 / s])
   Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
 
@@ -641,14 +651,14 @@ def build_transform(image,
     # The image is contained within the image and arbitrarily translated to
     # locations with in the image.
     C = Cb = tf.eye(3, dtype=tf.float32)
-    Tx = tf.random.uniform([], -1, 0, seed=seed) * (cw / s - width)
-    Ty = tf.random.uniform([], -1, 0, seed=seed) * (ch / s - height)
+    Tx = rand_uniform_strong(-1, 0, seed=seed) * (cw / s - width)
+    Ty = rand_uniform_strong(-1, 0, seed=seed) * (ch / s - height)
   else:
     # The image can be translated outside of the output resolution window
     # but the image is translated relative to the output resolution not the
     # input image resolution.
-    Tx = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
-    Ty = tf.random.uniform([], 0.5 - translate, 0.5 + translate, seed=seed)
+    Tx = rand_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
+    Ty = rand_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
 
     # Center and Scale the image such that the window of translation is
     # contained to the output resolution.
@@ -763,7 +773,7 @@ def boxes_candidates(clipped_boxes,
                      box_history,
                      wh_thr=2,
                      ar_thr=20,
-                     area_thr=0.0):
+                     area_thr=0.1):
 
   area_thr = tf.math.abs(area_thr)
 
