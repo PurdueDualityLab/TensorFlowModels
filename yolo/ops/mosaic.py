@@ -529,8 +529,6 @@ class Mosaic(object):
 
   def _apply(self, dataset):
     determ = self._deterministic
-
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     dataset = dataset.map(
         self._pad_images,
         num_parallel_calls=tf.data.AUTOTUNE,
@@ -602,3 +600,7 @@ class Mosaic(object):
       return self._apply
     else:
       return self._no_apply
+    # if is_training and self._mosaic_frequency > 0.0:
+    #   return self._apply
+    # else:
+    #   return self._no_apply
