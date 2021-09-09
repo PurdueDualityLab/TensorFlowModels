@@ -1,10 +1,11 @@
 import tensorflow as tf
+from collections import defaultdict
 import abc
 
 from functools import partial
 from yolo.ops import (loss_utils, box_ops, math_ops)
 
-class PerPathYoloLoss(object, metaclass=abc.ABCMeta):
+class YoloLossBase(object, metaclass=abc.ABCMeta):
 
   def __init__(self,
                classes,
@@ -152,15 +153,6 @@ class PerPathYoloLoss(object, metaclass=abc.ABCMeta):
     true_conf = tf.stop_gradient(true_conf)
     return true_conf, obj_mask
 
-  @abc.abstractmethod
-  def _build_per_path_attributes(self):
-    ...
-    
-  @abc.abstractmethod
-  def call():
-    ...
-
-
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
     (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf,
        ind_mask, grid_mask) = self.call(true_counts, inds, y_true,
@@ -168,7 +160,6 @@ class PerPathYoloLoss(object, metaclass=abc.ABCMeta):
 
     # Temporary metrics
     box_loss = tf.stop_gradient(0.05 * box_loss/self._iou_normalizer)
-    tf.print(mean_loss)
 
     # Metric compute using done here to save time and resources.
     sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
@@ -179,8 +170,24 @@ class PerPathYoloLoss(object, metaclass=abc.ABCMeta):
     return (loss, box_loss, conf_loss, class_loss, mean_loss,
             tf.stop_gradient(avg_iou), tf.stop_gradient(avg_obj))
 
+  @abc.abstractmethod
+  def _build_per_path_attributes(self):
+    ...
+    
+  @abc.abstractmethod
+  def call():
+    ...
 
-class DarknetLoss(PerPathYoloLoss):
+  def post_path_aggregation(self, loss, ground_truths, predictions):
+    """this method is not specific to each loss path, but each loss type"""
+    return loss
+  
+  @abc.abstractmethod
+  def cross_replica_aggregation(self, loss, num_replicas_in_sync):
+    """this method is not specific to each loss path, but each loss type"""
+    ...
+
+class DarknetLoss(YoloLossBase):
 
   def _build_per_path_attributes(self):
     self._anchor_generator = loss_utils.GridGenerator(
@@ -320,8 +327,12 @@ class DarknetLoss(PerPathYoloLoss):
     return (loss, box_loss, conf_loss, class_loss, loss, iou, pred_conf,
             ind_mask, grid_mask)
 
+  def cross_replica_aggregation(self, loss, num_replicas_in_sync):
+    """this method is not specific to each loss path, but each loss type"""
+    return loss/num_replicas_in_sync
 
-class ScaledLoss(PerPathYoloLoss):
+
+class ScaledLoss(YoloLossBase):
   def _build_per_path_attributes(self):
     self._anchor_generator = loss_utils.GridGenerator(
         masks=self._masks, anchors=self._anchors, scale_anchors=self._path_stride)
@@ -436,71 +447,53 @@ class ScaledLoss(PerPathYoloLoss):
     return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf,
             ind_mask, grid_mask)
 
+  def post_path_aggregation(self, loss, ground_truths, predictions):
+    scale = 3 / len(list(predictions.keys()))
+    return loss * scale
+
+  def cross_replica_aggregation(self, loss, num_replicas_in_sync):
+    """this method is not specific to each loss path, but each loss type"""
+    return loss
+
 
 LOSSES = {
   "darknet": DarknetLoss,
   "scaled" : ScaledLoss
 }
 
+class YoloLoss(object):
+  def __init__( self,
+                keys,
+                classes,
+                anchors,
 
-# class YoloLoss(object):
-#   def __init__(self,
-#                keys,
-#                classes,
-#                anchors,
+                masks = None, 
+                path_strides=None,
 
-#                masks = None, 
-#                path_strides=None,
+                truth_thresholds=None,
+                ignore_thresholds=None,
+                
+                loss_types=None,
+                iou_normalizers=None,
+                cls_normalizers=None,
+                obj_normalizers=None,
+                objectness_smooths=None,
+                box_types=None,
+                scale_xys=None,
+                max_deltas=None,
 
-#                truth_thresholds=None,
-#                ignore_thresholds=None,
-               
-#                loss_types=None,
-#                iou_normalizers=None,
-#                cls_normalizers=None,
-#                obj_normalizers=None,
-#                objectness_smooths=None,
-#                box_types=None,
-#                scale_xys=None,
-#                max_deltas=None,
-
-#                label_smoothing=0.0,
-#                use_scaled_loss=False,
-#                update_on_repeat=True,
-               
-#                **kwargs):
-
-def YoloLoss( keys,
-              classes,
-              anchors,
-
-              masks = None, 
-              path_strides=None,
-
-              truth_thresholds=None,
-              ignore_thresholds=None,
-              
-              loss_types=None,
-              iou_normalizers=None,
-              cls_normalizers=None,
-              obj_normalizers=None,
-              objectness_smooths=None,
-              box_types=None,
-              scale_xys=None,
-              max_deltas=None,
-
-              label_smoothing=0.0,
-              use_scaled_loss=False,
-              update_on_repeat=False):
+                label_smoothing=0.0,
+                use_scaled_loss=False,
+                update_on_repeat=False):
 
     if use_scaled_loss: 
       loss_type = "scaled"
     else:
       loss_type = "darknet"
 
-    loss_dict = {}
+    self._loss_dict = {}
     for key in keys:
-      loss_dict[key] = LOSSES[loss_type](
+      self._loss_dict[key] = LOSSES[loss_type](
         classes=classes,
         anchors=anchors,
 
@@ -521,4 +514,56 @@ def YoloLoss( keys,
         update_on_repeat=update_on_repeat,
         label_smoothing=label_smoothing
       )
-    return loss_dict
+
+  def __call__(self, ground_truth, predictions, use_reduced_logs = True):
+    metric_dict = defaultdict(dict)
+    metric_dict['net']['box'] = 0
+    metric_dict['net']['class'] = 0
+    metric_dict['net']['conf'] = 0
+
+    loss_val = 0
+    metric_loss = 0
+
+    num_replicas_in_sync = tf.distribute.get_strategy().num_replicas_in_sync
+
+    for key in predictions.keys():
+      (_loss, _loss_box, _loss_conf, _loss_class, _mean_loss, _avg_iou,
+       _avg_obj) = self._loss_dict[key](ground_truth['true_conf'][key], 
+                                        ground_truth['inds'][key], 
+                                        ground_truth['upds'][key],
+                                        ground_truth['bbox'], 
+                                        ground_truth['classes'],
+                                        predictions[key])
+      
+      _loss = self._loss_dict[key].post_path_aggregation(_loss, 
+                                                          ground_truth, 
+                                                          predictions)
+      _loss = self._loss_dict[key].cross_replica_aggregation(_loss, 
+                                                        num_replicas_in_sync)
+      loss_val += _loss
+      
+
+      # detach all the below gradients: none of them should make a
+      # contribution to the gradient form this point forwards
+      metric_loss += tf.stop_gradient(_mean_loss)
+      metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
+      metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
+      metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
+
+      if not use_reduced_logs:
+        metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
+        metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
+        metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
+
+      metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
+      metric_dict['net']['class'] += tf.stop_gradient(_loss_class)
+      metric_dict['net']['conf'] += tf.stop_gradient(_loss_conf)
+
+    tf.print(loss_val)
+    # loss_val = self._loss_dict[key].post_path_aggregation(loss_val, 
+    #                                                       ground_truth, 
+    #                                                       predictions)
+    # loss_val = self._loss_dict[key].cross_replica_aggregation(loss_val, 
+    #                                                    num_replicas_in_sync)
+
+    return loss_val, metric_loss, metric_dict

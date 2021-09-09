@@ -43,7 +43,7 @@ task:
       iou_normalizer: 
         'all': 0.05
       ignore_thresh:
-        'all': 0.7
+        'all': 0.0
       cls_normalizer: 
         'all': 0.3
       obj_normalizer: 
@@ -63,7 +63,7 @@ task:
       pre_nms_points: 5000
       use_scaled_loss: true
   train_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -115,7 +115,7 @@ task:
   darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 625 #312
   steps_per_loop: 1850
   summary_interval: 1850
   validation_interval: 1850
