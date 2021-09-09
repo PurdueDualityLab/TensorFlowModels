@@ -50,7 +50,7 @@ class YoloTask(base_task.Task):
     self._metrics = []
     self._use_reduced_logs = self.task_config.reduced_logs
 
-    preprocessing_ops.set_random_seeds(seed = params.train_data.seed)
+    preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     return
 
   def build_model(self):
@@ -214,7 +214,6 @@ class YoloTask(base_task.Task):
         parser_fn=parser.parse_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
 
-    
     return dataset
 
   def build_metrics(self, training=True):
@@ -251,9 +250,8 @@ class YoloTask(base_task.Task):
     return metrics
 
   def build_losses(self, outputs, labels, aux_losses=None):
-    return self._loss_dict(labels, 
-                           outputs, 
-                           use_reduced_logs = self._use_reduced_logs)
+    return self._loss_dict(
+        labels, outputs, use_reduced_logs=self._use_reduced_logs)
 
   ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):

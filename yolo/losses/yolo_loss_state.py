@@ -2,6 +2,7 @@ import tensorflow as tf
 from functools import partial
 from yolo.ops import (loss_utils, box_ops, math_ops)
 
+
 class YoloLoss(object):
 
   def __init__(self,
@@ -115,7 +116,6 @@ class YoloLoss(object):
         max_delta=self._max_delta)
     self._decode_boxes = partial(loss_utils.get_predicted_box, **box_kwargs)
 
-
   def box_loss(self, true_box, pred_box, darknet=False):
     if self._loss_type == "giou":
       iou, liou = box_ops.compute_giou(true_box, pred_box)
@@ -135,7 +135,7 @@ class YoloLoss(object):
                                smoothed,
                                scale=None):
 
-    # Search all predictions against ground truths to find mathcing boxes for 
+    # Search all predictions against ground truths to find mathcing boxes for
     # each pixel.
     _, _, iou_max, _ = self._search_pairs(
         pred_boxes, pred_classes, boxes, classes, scale=scale, yxyx=True)
@@ -145,11 +145,11 @@ class YoloLoss(object):
     iou_mask = iou_max > self._ignore_thresh
 
     if not smoothed:
-      # Ignore all pixels where a box was not supposed to be predicted but a 
+      # Ignore all pixels where a box was not supposed to be predicted but a
       # high confidence box was predicted.
       obj_mask = true_conf + (1 - true_conf) * ignore_mask
     else:
-      # Replace pixels in the tre confidence map with the max iou predicted 
+      # Replace pixels in the tre confidence map with the max iou predicted
       # with in that cell.
       obj_mask = tf.ones_like(true_conf)
       iou_ = (1 - self._objectness_smooth) + self._objectness_smooth * iou_max
@@ -369,7 +369,7 @@ class YoloLoss(object):
     # Compute the sigmoid binary cross entropy for the confidence maps.
     bce = tf.reduce_mean(
         loss_utils.sigmoid_BCE(
-          tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0),
+            tf.expand_dims(true_conf, axis=-1), pred_conf, 0.0),
         axis=-1)
 
     # Mask the confidence loss and take the sum across all the grid cells.
@@ -404,7 +404,7 @@ class YoloLoss(object):
                                                 boxes, classes, y_pred)
 
     # Temporary metrics
-    box_loss = tf.stop_gradient(0.05 * box_loss/self._iou_normalizer)
+    box_loss = tf.stop_gradient(0.05 * box_loss / self._iou_normalizer)
     # tf.print(mean_loss)
 
     # Metric compute using done here to save time and resources.

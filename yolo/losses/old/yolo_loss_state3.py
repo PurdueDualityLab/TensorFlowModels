@@ -762,7 +762,7 @@ class YoloLoss(object):
                                                 boxes, classes, y_pred)
 
     # Temporary metrics
-    box_loss = tf.stop_gradient(0.05 * box_loss/self._iou_normalizer)
+    box_loss = tf.stop_gradient(0.05 * box_loss / self._iou_normalizer)
     tf.print(mean_loss)
 
     # Metric compute using done here to save time and resources.

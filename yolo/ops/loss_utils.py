@@ -1,33 +1,17 @@
 import tensorflow as tf
-from tensorflow.keras import backend as K
-from yolo.ops import box_ops
-from yolo.ops import math_ops
 import numpy as np
-
-@tf.custom_gradient
-def grad_sigmoid(values):
-  # This is an identity operation that will
-  # allow us to add some steps to the back propagation.
-  def delta(dy):
-    # Darknet only propagtes sigmoids for the boxes
-    # under some conditions, so we need this to selectively
-    # add the sigmoid to the chain rule
-    t = tf.math.sigmoid(values)
-    return dy * t * (1 - t)
-
-  return values, delta
-
+from yolo.ops import (box_ops, math_ops)
 
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
-  """Applies the Sigmoid Cross Entropy Loss Using the same deriviative as that 
+  """Applies the Sigmoid Cross Entropy Loss Using the same derivative as that 
   found in the Darknet C library. The derivative of this method is not the same 
   as the standard binary cross entropy with logits function.
-
-  The BCE with logits function equasion is as follows: 
+ 
+  The BCE with logits function equation is as follows: 
     x = 1 / (1 + exp(-x_prime))
     bce = -ylog(x) - (1 - y)log(1 - x) 
-
+ 
   The standard BCE with logits function derivative is as follows: 
     dloss = -y/x + (1-y)/(1-x)
     dsigmoid = x * (1 - x)
@@ -38,20 +22,21 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
   
   This simplification is used by the darknet library in order to improve 
   training stability. The gradient is almost the same 
-  as tf.keras.losses.binary_crossentropy but varies slightly and actually yeilds
-  different performance
-
+  as tf.keras.losses.binary_crossentropy but varies slightly and   
+  yields different performance.
+ 
   Args: 
-    y: Tensor holding the ground truth data. 
-    x_prime: Tensor holding the predictions prior to application of the sigmoid 
-      operation.
+    y: `Tensor` holding ground truth data. 
+    x_prime: `Tensor` holding the predictions prior to application of the 
+      sigmoid operation.
     label_smoothing: float value between 0.0 and 1.0 indicating the amount of 
       smoothing to apply to the data.
-
+ 
   Returns: 
-    bce: Tensor of the bce applied loss values.
+    bce: Tensor of the be applied loss values.
     delta: callable function indicating the custom gradient for this operation.  
   """
+
   eps = 1e-9
   x = tf.math.sigmoid(x_prime)
   y = tf.stop_gradient(y * (1 - label_smoothing) + 0.5 * label_smoothing)
@@ -64,6 +49,7 @@ def sigmoid_BCE(y, x_prime, label_smoothing):
     return dy, dx, 0.0
 
   return bce, delta
+
 
 def apply_mask(mask, x, value=0):
   """This function is used for gradient masking. The YOLO loss function makes 
@@ -84,7 +70,22 @@ def apply_mask(mask, x, value=0):
   masked = tf.where(mask, x, tf.zeros_like(x) + value)
   return masked
 
-def build_grid(indexes, truths, preds, ind_mask, update = False, grid = None):
+
+def build_grid(indexes, truths, preds, ind_mask, update=False, grid=None):
+  """This function is used to broadcast all the indexes to the correct
+  ground truth mask, used for iou detection map in the scaled loss and
+  the classification mask in the darknet loss.
+  
+  Args:
+    indexes: A `Tensor` for the indexes
+    truths: A `Tensor` for the ground truth.
+    preds: A `Tensor` for the predictions.
+    ind_mask: A `Tensor` for the index masks.
+    update: A `bool` for updating the grid.
+    grid: A `Tensor` for the grid.
+  Returns:
+    grid: A `Tensor` representing the augmented grid.
+  """
   # this function is used to broadcast all the indexes to the correct
   # into the correct ground truth mask, used for iou detection map
   # in the scaled loss and the classification mask in the darknet loss
@@ -127,8 +128,21 @@ def build_grid(indexes, truths, preds, ind_mask, update = False, grid = None):
   # resources
   return grid
 
+
 class GridGenerator(object):
+
   def __init__(self, anchors, masks=None, scale_anchors=None):
+    """Grid generator that generates anchor grids that will be used 
+    in to decode the predicted boxes
+ 
+    Args:
+      anchors: A `List[List[int]]` for the anchor boxes that are used in the 
+        model at all levels. 
+      mask: A `List[int]` for the output level that this specific model output 
+        Level.
+      scale_anchors: An `int` for how much to scale this level to get the 
+        original input shape.
+    """
     self.dtype = tf.keras.backend.floatx()
     if masks is not None:
       self._num = len(masks)
@@ -143,7 +157,8 @@ class GridGenerator(object):
     return
 
   def _build_grid_points(self, lwidth, lheight, anchors, dtype):
-    """ generate a grid that is used to detemine the relative centers of the bounding boxs """
+    """Generate a grid that is used to detemine the relative centers 
+    of the bounding boxs. """
     with tf.name_scope('center_grid'):
       y = tf.range(0, lheight)
       x = tf.range(0, lwidth)
@@ -151,14 +166,14 @@ class GridGenerator(object):
       x_left = tf.tile(
           tf.transpose(tf.expand_dims(y, axis=-1), perm=[1, 0]), [lwidth, 1])
       y_left = tf.tile(tf.expand_dims(x, axis=-1), [1, lheight])
-      x_y = K.stack([x_left, y_left], axis=-1)
+      x_y = tf.stack([x_left, y_left], axis=-1)
       x_y = tf.cast(x_y, dtype=dtype)
       x_y = tf.expand_dims(
           tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
     return x_y
 
   def _build_anchor_grid(self, anchors, dtype):
-    """ get the transformed anchor boxes for each dimention """
+    """Get the transformed anchor boxes for each dimention. """
     with tf.name_scope('anchor_grid'):
       num = tf.shape(anchors)[0]
       anchors = tf.cast(anchors, dtype=dtype)
@@ -173,7 +188,8 @@ class GridGenerator(object):
       self.dtype = tf.keras.backend.floatx()
     else:
       self.dtype = dtype
-    grid_points = self._build_grid_points(width, height, self._anchors, self.dtype)
+    grid_points = self._build_grid_points(width, height, self._anchors,
+                                          self.dtype)
     anchor_grid = self._build_anchor_grid(
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype), self.dtype)
@@ -184,6 +200,8 @@ class GridGenerator(object):
 
 
 TILE_SIZE = 50
+
+
 class PairWiseSearch(object):
 
   def __init__(self,
@@ -192,11 +210,17 @@ class PairWiseSearch(object):
                min_conf=0.0,
                track_boxes=False,
                track_classes=False):
-    """
-    This method applies a pair wise serach between the ground truth 
+    """This method applies a pairwise search between the ground truth 
     and the labels. The goal is to indicate the locations where the 
-    predictions over lap with the groud truth for dynamic ground 
-    truth constructions.   
+    predictions overlap with ground truth for dynamic ground 
+    truth constructions.
+
+    Args: 
+      iou_type: An `str` for the iou type to use.
+      any: A `bool` for any match(no class match).
+      min_conf: An `int` for minimum confidence threshold.
+      track_boxes: A `bool` dynamic box assignment.
+      track_classes: A `bool` dynamic class assignment.
     """
     self.iou_type = iou_type
     self._any = any
@@ -274,15 +298,6 @@ class PairWiseSearch(object):
     return (pred_box, pred_class, boxes, classes, running_boxes,
             running_classes, max_iou, idx + 1)
 
-  def visualize(self, pred_boxes, max_iou, running_boxes, running_classes):
-    #if VISUALIZE:
-    iou = self.box_iou(pred_boxes, running_boxes)
-    fig, axe = plt.subplots(1, 2)
-    axe[0].imshow(max_iou[0, ...].numpy())
-    axe[1].imshow(iou[0, ...].numpy())
-    plt.show()
-    return
-
   def __call__(self,
                pred_boxes,
                pred_classes,
@@ -333,31 +348,21 @@ class PairWiseSearch(object):
     max_iou = tf.squeeze(max_iou, axis=-1)
     mask = tf.squeeze(mask, axis=-1)
 
-    #self.visualize(pred_boxes, max_iou, running_boxes, running_classes)
-
     return (tf.stop_gradient(running_boxes), tf.stop_gradient(running_classes),
             tf.stop_gradient(max_iou), tf.stop_gradient(mask))
 
-def APAR(pred_conf, true_conf, pct=0.5):
-  # capture all predictions of high confidence
-  dets = tf.cast(tf.squeeze(pred_conf, axis=-1) > pct, dtype=true_conf.dtype)
-
-  # compute the total number of true positive predictions
-  true_pos = tf.reduce_sum(true_conf * dets, axis=(1, 2, 3))
-  # compute the total number of poitives
-  gt_pos = tf.reduce_sum(true_conf, axis=(1, 2, 3))
-  # compute the total number of predictions, positve and negative
-  all_pos = tf.reduce_sum(dets, axis=(1, 2, 3))
-
-  # compute total recall = true_predicitons/ground_truth
-  recall = tf.reduce_mean(math_ops.divide_no_nan(true_pos, gt_pos))
-  # compute total precision = true_predicitons/total_predictions
-  precision = tf.reduce_mean(math_ops.divide_no_nan(true_pos, all_pos))
-  return tf.stop_gradient(recall), tf.stop_gradient(precision)
 
 def avgiou(iou):
-  # compute the average realtive to non zero locations, so the
-  # average is not biased in sparse tensors
+  """Computes the average intersection over union without counting locations
+  where the iou is zero.
+ 
+  Args:
+    iou: A `Tensor` representing the iou values.
+  
+  Returns:
+    tf.stop_gradient(avg_iou): A `Tensor` representing average
+     intersection over union.
+  """
   iou_sum = tf.reduce_sum(iou, axis=tf.range(1, tf.shape(tf.shape(iou))[0]))
   counts = tf.cast(
       tf.math.count_nonzero(iou, axis=tf.range(1,
@@ -366,7 +371,9 @@ def avgiou(iou):
   avg_iou = tf.reduce_mean(math_ops.divide_no_nan(iou_sum, counts))
   return tf.stop_gradient(avg_iou)
 
-def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_xy):
+
+def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
+                 scale_xy):
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -401,9 +408,10 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points, scale_x
 
 @tf.custom_gradient
 def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
-                  max_delta, scale_xy):
+                   max_delta, scale_xy):
   (scaler, scaled_box, pred_box) = _scale_boxes(encoded_boxes, width, height,
-                                            anchor_grid, grid_points, scale_xy)
+                                                anchor_grid, grid_points,
+                                                scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
@@ -420,7 +428,7 @@ def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
     pred_wh = encoded_boxes[..., 2:4]
     dy_wh *= tf.math.exp(pred_wh)
 
-    dbox = tf.concat([dy_xy, dy_wh], axis = -1)
+    dbox = tf.concat([dy_xy, dy_wh], axis=-1)
 
     # apply the gradient clipping to xy and wh
     dbox = math_ops.rm_nan_inf(dbox)
@@ -432,7 +440,7 @@ def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 
 
 def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
-                          grid_points, scale_xy):
+                           grid_points, scale_xy):
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -468,10 +476,10 @@ def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
 
 @tf.custom_gradient
 def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
-                            grid_points, max_delta, scale_xy):
+                             grid_points, max_delta, scale_xy):
   (scaler, scaled_box,
-   pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
-                                     anchor_grid, grid_points, scale_xy)
+   pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
+                                      grid_points, scale_xy)
 
   def delta(dy_scaler, dy_scaled, dy):
     dy_xy, dy_wh = tf.split(dy, 2, axis=-1)
@@ -482,7 +490,7 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
     dy_wh += dy_wh_
     dy_xy += dy_xy_
 
-    dbox = tf.concat([dy_xy, dy_wh], axis = -1)
+    dbox = tf.concat([dy_xy, dy_wh], axis=-1)
 
     # apply the gradient clipping to xy and wh
     dbox = math_ops.rm_nan_inf(dbox)
@@ -493,7 +501,8 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
   return (scaler, scaled_box, pred_box), delta
 
 
-def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points, scale_xy):
+def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
+                             scale_xy):
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -519,72 +528,75 @@ def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points, 
   pred_box = scaled_box / scaler
   return (scaler, scaled_box, pred_box)
 
+
 def get_predicted_box(width,
                       height,
                       encoded_boxes,
                       anchor_grid,
                       grid_points,
                       scale_xy,
-                      stride, 
+                      stride,
                       darknet=False,
                       box_type="original",
                       max_delta=np.inf):
   """Decodes the predicted boxes from the model format to a usable 
   [x, y, w, h] format for use in the loss function as well as for use 
-  with in the detection generator.   
-
+  within the detection generator.   
+ 
   Args: 
-    width: `float` scalar indicating the width of the prediction layer.
-    height: `float` scalar indicating the height of the prediction layer
-    unscaled_box: Tensor of shape [..., height, width, 4] holding encoded boxes.
-    anchor_grid: Tensor of shape [..., 1, 1, 2] holding the anchor boxes 
-      organized for box decoding box width and height.  
-    grid_points: Tensor of shape [..., height, width, 2] holding the anchor 
+    width: A `float` scalar indicating the width of the prediction layer.
+    height: A `float` scalar indicating the height of the prediction layer
+    encoded_boxes: A `Tensor` of shape [..., height, width, 4] holding encoded 
+      boxes.
+    anchor_grid: A `Tensor` of shape [..., 1, 1, 2] holding the anchor boxes 
+      organized for box decoding, box width and height.  
+    grid_points: A `Tensor` of shape [..., height, width, 2] holding the anchor 
       boxes for decoding the box centers.
-    scale_xy: `float` scaler used to indicating the range for each center 
+    scale_xy: A `float` scaler used to indicate the range for each center 
       outside of its given [..., i, j, 4] index, where i and j are indexing 
-      pixels along width and height in the predicited output map. 
-    darknet: `bool` used to select between custom gradient and default autograd.  
-    max_delta: `float` scaler used for gradient clipping in back propagation. 
+      pixels along the width and height of the predicted output map. 
+    stride: An `int` defining the amount of down stride realtive to the input 
+      image.
+    darknet: A `bool` used to select between custom gradient and default 
+      autograd.  
+    box_type: An `str` indicating the type of box encoding that is being used.
+    max_delta: A `float` scaler used for gradient clipping in back propagation. 
   
   Returns: 
-    scaler: Tensor of shape [4] returned to allow the scaling of the ground 
-      Truth boxes to be of the same magnitude as the decoded predicted boxes.
-    scaled_box: Tensor of shape [..., height, width, 4] with the predicted 
+    scaler: A `Tensor` of shape [4] returned to allow the scaling of the ground 
+      truth boxes to be of the same magnitude as the decoded predicted boxes.
+    scaled_box: A `Tensor` of shape [..., height, width, 4] with the predicted 
       boxes.
-    pred_box: Tensor of shape [..., height, width, 4] with the predicted boxes 
-      devided by the scaler parameter used to put all boxes in the [0, 1] range. 
+    pred_box: A `Tensor` of shape [..., height, width, 4] with the predicted 
+      boxes divided by the scaler parameter used to put all boxes in the [0, 1] 
+      range. 
   """
   if box_type == "anchor_free":
     (scaler, scaled_box,
-      pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, 
-                                           stride, grid_points, scale_xy)
+     pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, stride,
+                                          grid_points, scale_xy)
   elif darknet:
     # if we are using the darknet loss we shoud nto propagate the
     # decoding of the box
     if box_type == "scaled":
       (scaler, scaled_box,
-      pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,
-                                          anchor_grid, grid_points, max_delta,
-                                          scale_xy)
+       pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,
+                                            anchor_grid, grid_points, max_delta,
+                                            scale_xy)
     else:
       (scaler, scaled_box,
-      pred_box) = _darknet_boxes(encoded_boxes, width, height, anchor_grid,
-                                grid_points, max_delta, scale_xy)
+       pred_box) = _darknet_boxes(encoded_boxes, width, height, anchor_grid,
+                                  grid_points, max_delta, scale_xy)
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
     if box_type == "scaled":
       (scaler, scaled_box,
-      pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
-                                        anchor_grid, grid_points, scale_xy)
+       pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
+                                          anchor_grid, grid_points, scale_xy)
     else:
-      (scaler, scaled_box,
-      pred_box) = _scale_boxes(encoded_boxes, width, height, anchor_grid,
-                              grid_points, scale_xy)
+      (scaler, scaled_box, pred_box) = _scale_boxes(encoded_boxes, width,
+                                                    height, anchor_grid,
+                                                    grid_points, scale_xy)
 
-  
   return (scaler, scaled_box, pred_box)
-
-
-

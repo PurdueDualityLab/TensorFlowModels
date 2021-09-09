@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import random 
+import random
 import os
 
 import tensorflow_addons as tfa
@@ -11,16 +11,18 @@ from official.vision.beta.ops import box_ops as bbox_ops
 PAD_VALUE = 114
 GLOBAL_SEED_SET = False
 
-def set_random_seeds(seed = 0):
+
+def set_random_seeds(seed=0):
   if seed is not None:
     global GLOBAL_SEED_SET
-    os.environ['PYTHONHASHSEED']=str(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     tf.random.set_seed(seed)
     np.random.seed(seed)
     GLOBAL_SEED_SET = True
 
-def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape = []):
+
+def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval. Seed Safe random number generator.
@@ -34,16 +36,13 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape = [])
     A random tensor of type dtype that falls between minval and maxval excluding
     the bigger one.
   """
-  if GLOBAL_SEED_SET: 
+  if GLOBAL_SEED_SET:
     seed = None
 
   if minval > maxval:
     minval, maxval = maxval, minval
-  return tf.random.uniform(shape=shape,
-                           minval=minval,
-                           maxval=maxval,
-                           seed=seed,
-                           dtype=dtype)
+  return tf.random.uniform(
+      shape=shape, minval=minval, maxval=maxval, seed=seed, dtype=dtype)
 
 
 def rand_scale(val, dtype=tf.float32, seed=None):
@@ -61,7 +60,7 @@ def rand_scale(val, dtype=tf.float32, seed=None):
   Returns:
     The random scale.
   """
-  scale = rand_uniform_strong(1.0, val, dtype=dtype, seed = seed)
+  scale = rand_uniform_strong(1.0, val, dtype=dtype, seed=seed)
   do_ret = rand_uniform_strong(minval=0, maxval=2, dtype=tf.int32, seed=seed)
   if (do_ret == 1):
     return scale
@@ -171,8 +170,8 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   image = tf.image.rgb_to_hsv(image)
   gen_range = tf.cast([rh, rs, rv], image.dtype)
   scale = tf.cast([180, 255, 255], image.dtype)
-  r = rand_uniform_strong(-1, 1, shape = [3], dtype=image.dtype,
-                        seed=seed) * gen_range + 1
+  r = rand_uniform_strong(
+      -1, 1, shape=[3], dtype=image.dtype, seed=seed) * gen_range + 1
 
   # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32)
   image = tf.math.floor(tf.cast(image, scale.dtype) * scale)
@@ -186,6 +185,7 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   image = tf.cast(image, scale.dtype) / scale
   image = tf.image.hsv_to_rgb(image)
   return tf.cast(image, dtype)
+
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   """
@@ -213,7 +213,11 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   return image
 
 
-def random_window_crop(image, target_height, target_width, translate=0.0, seed = None):
+def random_window_crop(image,
+                       target_height,
+                       target_width,
+                       translate=0.0,
+                       seed=None):
   """Takes a random crop of the image to the target height and width
   
   Args: 
@@ -237,8 +241,8 @@ def random_window_crop(image, target_height, target_width, translate=0.0, seed =
   crop_offset = tf.convert_to_tensor(
       [crop_offset[0] // 2, crop_offset[1] // 2, 0])
   shift = tf.convert_to_tensor([
-      rand_uniform_strong(-translate, translate, seed = seed),
-      rand_uniform_strong(-translate, translate, seed = seed), 0
+      rand_uniform_strong(-translate, translate, seed=seed),
+      rand_uniform_strong(-translate, translate, seed=seed), 0
   ])
   crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, shift.dtype),
                                       crop_offset.dtype)
@@ -702,7 +706,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history):
 
   boxes = _aug_boxes(Mb, boxes)
   box_history = _aug_boxes(Mb, box_history)
-  
+
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, box_history
 
@@ -748,11 +752,8 @@ def boxes_candidates(clipped_boxes,
   indices = tf.where(cond)
   return indices[:, 0]
 
-def resize_and_crop_boxes(boxes,
-                          image_scale,
-                          output_size,
-                          offset,
-                          box_history):
+
+def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
   # Shift and scale the input boxes.
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
@@ -765,12 +766,13 @@ def resize_and_crop_boxes(boxes,
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, box_history
 
+
 def apply_infos(boxes,
                 infos,
                 affine=None,
                 shuffle_boxes=False,
                 area_thresh=0.1,
-                seed=None, 
+                seed=None,
                 augment=True):
   # Clip and clean boxes.
   def get_valid_boxes(boxes):
@@ -778,7 +780,7 @@ def apply_infos(boxes,
     # Convert the boxes to center width height formatting.
     height = boxes[:, 2] - boxes[:, 0]
     width = boxes[:, 3] - boxes[:, 1]
-    base = tf.logical_and(tf.greater(height, 0),tf.greater(width, 0))
+    base = tf.logical_and(tf.greater(height, 0), tf.greater(width, 0))
     return base
 
   # Initialize history to track operation applied to boxes
@@ -802,8 +804,9 @@ def apply_infos(boxes,
     # Shift and scale all boxes, and keep track of box history with no
     # box clipping, history is used for removing boxes that have become
     # too small or exit the image area.
-    (boxes,  # Clipped final boxes. 
-    box_history) = resize_and_crop_boxes(
+    (
+        boxes,  # Clipped final boxes. 
+        box_history) = resize_and_crop_boxes(
             boxes, info[2, :], info[1, :], info[3, :], box_history=box_history)
 
     # Get all the boxes that still remain in the image and store
@@ -814,15 +817,15 @@ def apply_infos(boxes,
     output_size = info[1]
     boxes = bbox_ops.normalize_boxes(boxes, output_size)
     box_history = bbox_ops.normalize_boxes(box_history, output_size)
-    
 
   if affine is not None:
     # Denormalize the boxes.
     boxes = bbox_ops.denormalize_boxes(boxes, affine[0])
     box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
 
-    (boxes,  # Clipped final boxes. 
-     box_history) = affine_warp_boxes(
+    (
+        boxes,  # Clipped final boxes. 
+        box_history) = affine_warp_boxes(
             affine[2], boxes, affine[1], box_history=box_history)
 
     # Get all the boxes that still remain in the image and store
@@ -833,7 +836,7 @@ def apply_infos(boxes,
     output_size = affine[1]
     boxes = bbox_ops.normalize_boxes(boxes, output_size)
     box_history = bbox_ops.normalize_boxes(box_history, output_size)
-    
+
   # Remove the bad boxes.
   boxes *= tf.cast(tf.expand_dims(cond, axis=-1), boxes.dtype)
 

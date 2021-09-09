@@ -335,15 +335,10 @@ class Parser(parser.Parser):
         random_pad=random_pad,
         seed=self._seed,
     )
-    augment = not (letter_box and 
-                   jitter == 0.0 and 
-                   resize == 1.0 and
-                   aug_scale_min == 1.0 and
-                   aug_scale_max == 1.0 and
-                   angle == 0.0 and
-                   perspective == 0.0 and
-                   random_pad == False and 
-                   translate == 0.0)
+    augment = not (letter_box and jitter == 0.0 and resize == 1.0 and
+                   aug_scale_min == 1.0 and aug_scale_max == 1.0 and
+                   angle == 0.0 and perspective == 0.0 and
+                   random_pad == False and translate == 0.0)
     return image, infos, affine, augment
 
   def reorg91to80(self, data):
@@ -453,10 +448,7 @@ class Parser(parser.Parser):
     # Clip and clean boxes.
     image = image / 255
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, 
-        shuffle_boxes=False, 
-        area_thresh=0.0, 
-        augment=False)
+        boxes, infos, shuffle_boxes=False, area_thresh=0.0, augment=False)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 

@@ -40,53 +40,49 @@ class YoloLayer(tf.keras.Model):
     parameters for the loss functions used at each detection head output
 
     Args:
-      classes: `int` for the number of classes 
-      mask: `List[int]` for the output level that this specific model output 
-        level
-      anchors: `List[List[int]]` for the anchor boxes that are used in the model 
-        at all levels
-      scale_anchors: `int` for how much to scale this level to get the orginal 
-        input shape
-      ignore_thresh: `float` for the IOU value over which the loss is not 
-        propagated, and a detection is assumed to have been made 
-      truth_thresh: `float` for the IOU value over which the loss is propagated 
-        despite a detection being made 
-      loss_type: `str` for the typeof iou loss to use with in {ciou, diou, 
-        giou, iou}
-      iou_normalizer: `float` for how much to scale the loss on the IOU or the 
-        boxes
-      cls_normalizer: `float` for how much to scale the loss on the classes
-      obj_normalizer: `float` for how much to scale loss on the detection map
-      objectness_smooth: `float` for how much to smooth the loss on the 
-        detection map 
-      use_scaled_loss: `bool` for whether to use the scaled loss 
-        or the traditional loss
-      label_smoothing: `float` for how much to smooth the loss on the classes
-      box_type: `bool` for which scaling type to use 
-      scale_xy: dictionary `float` values inidcating how far each pixel can see 
-        outside of its containment of 1.0. a value of 1.2 indicates there is a 
-        20% extended radius around each pixel that this specific pixel can 
-        predict values for a center at. the center can range from 0 - value/2 
-        to 1 + value/2, this value is set in the yolo filter, and resused here. 
-        there should be one value for scale_xy for each level from min_level to 
-        max_level
-      max_delta: gradient clipping to apply to the box loss 
-      nms_type: "greedy",
-      nms_thresh: 0.6,
-      iou_thresh: 0.213,
-      name=None,
-
-    Return:
-      loss: `float` for the actual loss
-      box_loss: `float` loss on the boxes used for metrics
-      conf_loss: `float` loss on the confidence used for metrics
-      class_loss: `float` loss on the classes used for metrics
-      avg_iou: `float` metric for the average iou between predictions 
-        and ground truth
-      avg_obj: `float` metric for the average confidence of the model 
-        for predictions
-      recall50: `float` metric for how accurate the model is
-      precision50: `float` metric for how precise the model is
+      masks: `List[int]` for the output level that this specific model output
+        level.
+      anchors: `List[List[int]]` for the anchor boxes that are used in the
+        model.
+      classes: `int` for the number of classes.
+      iou_thresh: `float` to use many anchors per object if IoU(Obj, Anchor) >
+        iou_thresh.
+      ignore_thresh: `float` for the IOU value over which the loss is not
+        propagated, and a detection is assumed to have been made.
+      truth_thresh: `float` for the IOU value over which the loss is propagated
+        despite a detection being made'.
+      nms_thresh: `float` for the minimum IOU value for an overlap.
+      max_delta: gradient clipping to apply to the box loss.
+      loss_type: `str` for the typeof iou loss to use with in {ciou, diou,
+        giou, iou}.
+      iou_normalizer: `float` for how much to scale the loss on the IOU or the
+        boxes.
+      cls_normalizer: `float` for how much to scale the loss on the classes.
+      obj_normalizer: `float` for how much to scale loss on the detection map.
+      use_scaled_loss: `bool` for whether to use the scaled loss
+        or the traditional loss.
+      darknet: `bool` for whether to use the DarkNet or PyTorch loss function
+        implementation.
+      pre_nms_points: `int` number of top candidate detections per class before
+        NMS.
+      label_smoothing: `float` for how much to smooth the loss on the classes.
+      max_boxes: `int` for the maximum number of boxes retained over all
+        classes.
+      box_type: `bool` for using the ScaledYOLOv4 coordinates.
+      path_scale: `dict` for the size of the input tensors. Defaults to
+        precalulated values from the `mask`.
+      scale_xy: dictionary `float` values inidcating how far each pixel can see
+        outside of its containment of 1.0. a value of 1.2 indicates there is a
+        20% extended radius around each pixel that this specific pixel can
+        predict values for a center at. the center can range from 0 - value/2
+        to 1 + value/2, this value is set in the yolo filter, and resused here.
+        there should be one value for scale_xy for each level from min_level to
+        max_level.
+      nms_type: `str` for which non max suppression to use.
+      objectness_smooth: `float` for how much to smooth the loss on the
+        detection map.
+      kwargs**: `Dict` constining additional inputs used for the initialization 
+        of the Keras Model. 
     """
     super().__init__(**kwargs)
     self._masks = masks
@@ -182,13 +178,19 @@ class YoloLayer(tf.keras.Model):
         data, [4, 1, self._classes], axis=-1)
 
     # determine the number of classes
-    classes = class_scores.get_shape().as_list()[-1]  
+    classes = class_scores.get_shape().as_list()[-1]
 
     # configurable to use the new coordinates in scaled Yolo v4 or not
     _, _, boxes = loss_utils.get_predicted_box(
-      tf.cast(height, data.dtype), tf.cast(width, data.dtype), boxes,
-      anchors, centers, scale_xy, stride = self._path_scale[key], 
-      darknet = False, box_type = self._box_type[key])
+        tf.cast(height, data.dtype),
+        tf.cast(width, data.dtype),
+        boxes,
+        anchors,
+        centers,
+        scale_xy,
+        stride=self._path_scale[key],
+        darknet=False,
+        box_type=self._box_type[key])
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_utils.xcycwh_to_yxyx(boxes)
@@ -302,30 +304,25 @@ class YoloLayer(tf.keras.Model):
     across both loss and detection generator
     """
     loss = YoloLoss(
-          keys = self._keys, 
-          classes = self._classes,
-          anchors = self._anchors,
-
-          masks=self._masks,
-          path_strides=self._path_scale,
-
-          truth_thresholds = self._truth_thresh,
-          ignore_thresholds = self._ignore_thresh,
-          loss_types = self._loss_type,
-          iou_normalizers = self._iou_normalizer,
-          cls_normalizers = self._cls_normalizer,
-          obj_normalizers = self._obj_normalizer,
-          objectness_smooths = self._objectness_smooth,
-
-          box_types = self._box_type,
-          max_deltas = self._max_delta,
-          scale_xys = self._scale_xy, 
-          
-          use_scaled_loss=self._use_scaled_loss,
-          update_on_repeat=self._update_on_repeat,
-          label_smoothing=self._label_smoothing)
+        keys=self._keys,
+        classes=self._classes,
+        anchors=self._anchors,
+        masks=self._masks,
+        path_strides=self._path_scale,
+        truth_thresholds=self._truth_thresh,
+        ignore_thresholds=self._ignore_thresh,
+        loss_types=self._loss_type,
+        iou_normalizers=self._iou_normalizer,
+        cls_normalizers=self._cls_normalizer,
+        obj_normalizers=self._obj_normalizer,
+        objectness_smooths=self._objectness_smooth,
+        box_types=self._box_type,
+        max_deltas=self._max_delta,
+        scale_xys=self._scale_xy,
+        use_scaled_loss=self._use_scaled_loss,
+        update_on_repeat=self._update_on_repeat,
+        label_smoothing=self._label_smoothing)
     return loss
-
 
   def get_config(self):
     return {

@@ -1,14 +1,37 @@
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Lint as: python3
 """Contains definitions of Darknet Backbone Networks.
-   The models are inspired by ResNet, and CSPNet
+
+   The models are inspired by ResNet and CSPNet.
+
 Residual networks (ResNets) were proposed in:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
+
 Cross Stage Partial networks (CSPNets) were proposed in:
-[1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh
-    CSPNet: A New Backbone that can Enhance Learning Capability of CNN. arXiv:1911.11929
-DarkNets Are used mainly for Object detection in:
+[1] Chien-Yao Wang, Hong-Yuan Mark Liao, I-Hau Yeh, Yueh-Hua Wu, Ping-Yang Chen,
+    Jun-Wei Hsieh
+    CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
+    arXiv:1911.11929
+
+
+Darknets are used mainly for object detection in:
 [1] Joseph Redmon, Ali Farhadi
     YOLOv3: An Incremental Improvement. arXiv:1804.02767
+
 [2] Alexey Bochkovskiy, Chien-Yao Wang, Hong-Yuan Mark Liao
     YOLOv4: Optimal Speed and Accuracy of Object Detection. arXiv:2004.10934
 """
@@ -20,31 +43,32 @@ from official.modeling import hyperparams
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
 
-# builder required classes
-
-
 class BlockConfig:
-  """
-    get layer config to make code more readable
-    Args:
-      layer: string layer name
-      stack: the type of layer ordering to use for this specific level
-      repetitions: integer for the number of times to repeat block
-      bottelneck: boolean for does this stack have a bottle neck layer
-      filters: integer for the output depth of the level
-      pool_size: integer the pool_size of max pool layers
-      kernel_size: optional integer, for convolution kernel size
-      strides: integer or tuple to indicate convolution strides
-      padding: the padding to apply to layers in this stack
-      activation: string for the activation to use for this stack
-      route: integer for what level to route from to get the next input
-      output_name: the name to use for this output
-      is_output: is this layer an output in the default model
-  """
+  """Class to store layer config to make code more readable."""
 
   def __init__(self, layer, stack, reps, bottleneck, filters, pool_size,
                kernel_size, strides, padding, activation, route, dilation_rate,
                output_name, is_output):
+    """Initializing method for BlockConfig.
+
+    Args:
+      layer: A `str` for layer name.
+      stack: A `str` for the type of layer ordering to use for this specific
+        level.
+      reps: An `int` for the number of times to repeat block.
+      bottleneck: A `bool` for whether this stack has a bottle neck layer.
+      filters: An `int` for the output depth of the level.
+      pool_size: An `int` for the pool_size of max pool layers.
+      kernel_size: An `int` for convolution kernel size.
+      strides: A `Union[int, tuple]` that indicates convolution strides.
+      padding: An `int` for the padding to apply to layers in this stack.
+      activation: A `str` for the activation to use for this stack.
+      route: An `int` for the level to route from to get the next input.
+      dilation_rate: An `int` for the scale used in dialated Darknet.
+      output_name: A `str` for the name to use for this output.
+      is_output: A `bool` for whether this layer is an output in the default
+        model.
+    """
     self.layer = layer
     self.stack = stack
     self.repetitions = reps
@@ -68,11 +92,12 @@ def build_block_specs(config):
   return specs
 
 
-class LayerFactory(object):
-  """
-  class for quick look up of default layers used by darknet to
+class LayerBuilder:
+  """Layer builder class.
+
+  Class for quick look up of default layers used by darknet to
   connect, introduce or exit a level. Used in place of an if condition
-  or switch to make adding new layers easier and to reduce redundant code
+  or switch to make adding new layers easier and to reduce redundant code.
   """
 
   def __init__(self):
@@ -348,6 +373,7 @@ BACKBONES = {
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Darknet(tf.keras.Model):
+  """The Darknet backbone architecture."""
 
   def __init__(
       self,
@@ -362,7 +388,6 @@ class Darknet(tf.keras.Model):
       use_sync_bn=False,
       norm_momentum=0.99,
       norm_epsilon=0.001,
-      subdivisions=8,
       dilate=False,
       kernel_initializer='VarianceScaling',
       kernel_regularizer=None,
@@ -374,7 +399,7 @@ class Darknet(tf.keras.Model):
     self._model_name = model_id
     self._splits = splits
     self._input_shape = input_specs
-    self._registry = LayerFactory()
+    self._registry = LayerBuilder()
 
     # default layer look up
     self._min_size = min_level
@@ -390,7 +415,6 @@ class Darknet(tf.keras.Model):
     self._activation = activation
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
-    self._subdivisions = subdivisions
     self._width_scale = width_scale
     self._depth_scale = depth_scale
 
@@ -402,7 +426,6 @@ class Darknet(tf.keras.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
-        'subdivisions': self._subdivisions,
         'dilation_rate': 1,
         'name': None
     }
@@ -632,7 +655,6 @@ class Darknet(tf.keras.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
-        'subdivisions': self._subdivisions,
     }
     return layer_config
 
