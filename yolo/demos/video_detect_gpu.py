@@ -475,7 +475,7 @@ class FastVideo(object):
         end='\n')
     print(
         '                                 \rmemuse: \033[1;37;40m%0.5f\033[0m GB'
-        % (tf.config.experimental.get_memory_usage(self._gpu_device) / 1e9),
+        % (tf.config.experimental.get_memory_info(self._gpu_device)["current"] / 1e9),
         end='\n')
 
     print('\033[F\033[F\033[F\033[F\033[F\033[F\033[F\033[F', end='\n')
