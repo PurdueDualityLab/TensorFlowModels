@@ -78,7 +78,7 @@ class YoloTask(base_task.Task):
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales)
 
-    model.summary()
+    model.summary(print_fn = logging.info)
     if anchor_free is not None:
       print("INFO: The model is operating under anchor free conditions")
 
