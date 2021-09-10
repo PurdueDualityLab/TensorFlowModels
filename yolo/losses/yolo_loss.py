@@ -37,7 +37,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
       anchors: `List[List[int]]` for the anchor boxes that are used in the model 
         at all levels. For anchor free prediction set the anchor list to be the 
         same as the image resolution. 
-      scale_anchors: `int` for how much to scale this level to get the orginal 
+      path_stride: `int` for how much to scale this level to get the orginal 
         input shape.
       ignore_thresh: `float` for the IOU value over which the loss is not 
         propagated, and a detection is assumed to have been made.
@@ -57,7 +57,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
         best value when an index is consumed by multiple objects. 
       label_smoothing: `float` for how much to smooth the loss on the classes
       box_type: `bool` for which scaling type to use. 
-      scale_xy: dictionary `float` values inidcating how far each pixel can see 
+      scale_x_y: dictionary `float` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
         predict values for a center at. the center can range from 0 - value/2 
@@ -515,6 +515,7 @@ class YoloLoss(object):
   selection and implementation of new versions of the YOLO loss as the model 
   is updated in the future. 
   """
+
   def __init__(self,
                keys,
                classes,
@@ -547,33 +548,34 @@ class YoloLoss(object):
       masks: `List[int]` for the output level that this specific model output 
         level
       path_strides: `Dict[int]` for how much to scale this level to get the 
-        orginal input shape.
+        orginal input shape for each FPN path.
       truth_thresholds: `Dict[float]` for the IOU value over which the loss is 
-        propagated despite a detection being made.
+        propagated despite a detection being made for each FPN path.
       ignore_thresholds: `Dict[float]` for the IOU value over which the loss is 
-        not propagated, and a detection is assumed to have been made.
+        not propagated, and a detection is assumed to have been made for each 
+        FPN path.
       loss_types: `Dict[str]` for the typeof iou loss to use with in {ciou, 
-        diou, giou, iou}.
-      iou_normalizers: `Dict[float]` for how much to scale the loss on the IOU or 
-        the boxes.
+        diou, giou, iou} for each FPN path.
+      iou_normalizers: `Dict[float]` for how much to scale the loss on the IOU 
+        or the boxes for each FPN path.
       cls_normalizers: `Dict[float]` for how much to scale the loss on the 
-        classes.
+        classes for each FPN path.
       obj_normalizers: `Dict[float]` for how much to scale loss on the detection 
-        map.
+        map for each FPN path.
       objectness_smooths: `Dict[float]` for how much to smooth the loss on the 
-        detection map.
-      box_type: `Dict[bool]` for which scaling type to use. 
+        detection map for each FPN path.
+      box_type: `Dict[bool]` for which scaling type to use for each FPN path. 
       scale_xys:  `Dict[float]` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
         predict values for a center at. the center can range from 0 - value/2 
         to 1 + value/2, this value is set in the yolo filter, and resused here. 
         there should be one value for scale_xy for each level from min_level to 
-        max_level.
-      max_deltas: `Dict[float]` for gradient clipping to apply to the box loss. 
+        max_level. One for each FPN path.
+      max_deltas: `Dict[float]` for gradient clipping to apply to the box loss 
+        for each FPN path.
       label_smoothing: `Dict[float]` for how much to smooth the loss on the 
-        classes.
-
+        classes for each FPN path.
       use_scaled_loss: `bool` for whether to use the scaled loss 
         or the traditional loss.
       update_on_repeat: `bool` for whether to replace with the newest or 
