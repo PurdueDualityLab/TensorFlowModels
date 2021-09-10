@@ -1,6 +1,7 @@
 runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
+  tpu_enable_xla_dynamic_padder: false
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -42,7 +43,7 @@ task:
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
-        'all': 0.7
+        'all': 0.75
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
@@ -54,7 +55,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -65,9 +66,9 @@ task:
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
-    shuffle_buffer_size: 10
+    shuffle_buffer_size: 10000
     drop_remainder: true
-    seed: null
+    seed: 0
     parser:
       max_num_instances: 300
       letter_box: True
@@ -98,7 +99,7 @@ task:
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
     parser:
       max_num_instances: 300
