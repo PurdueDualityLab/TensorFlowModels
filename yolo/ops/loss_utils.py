@@ -307,7 +307,7 @@ class PairWiseSearch(object):
                yxyx=True,
                clip_thresh=0.0):
     num_boxes = tf.shape(boxes)[-2]
-    num_tiles = num_boxes // TILE_SIZE
+    num_tiles = (num_boxes // TILE_SIZE) - 1
 
     if yxyx:
       boxes = box_ops.yxyx_to_xcycwh(boxes)
