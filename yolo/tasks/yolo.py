@@ -21,7 +21,7 @@ from yolo.dataloaders import yolo_input
 from yolo import optimization
 from yolo.ops import preprocessing_ops
 
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
+from tensorflow.keras import mixed_precision
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig

@@ -4,7 +4,7 @@ from tensorflow.keras.optimizers.schedules import LearningRateSchedule
 from tensorflow.python.training import gen_training_ops
 
 import tensorflow as tf
-import re
+import logging
 
 __all__ = ['SGD']
 
@@ -150,8 +150,9 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     self._wset = set([_var_key(w) for w in weights])
     self._bset = set([_var_key(b) for b in biases])
     self._oset = set([_var_key(o) for o in others])
-    print(" weights: ", len(weights), " biases: ", len(biases), " others: ",
-          len(others))
+
+    logging.info(f"weights: {len(weights)} biases: {len(biases)}\
+                    others: {len(others)}")
     return
 
   def _create_slots(self, var_list):
@@ -274,7 +275,6 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
       lr = coefficients["other_lr_t"]
     momentum = coefficients["momentum"]
 
-    # tf.print(weight_decay, lr, momentum)
     if self.sim_torch:
       return self._apply(grad, var, weight_decay, momentum, lr)
     else:
