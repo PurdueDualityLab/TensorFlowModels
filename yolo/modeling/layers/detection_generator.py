@@ -1,4 +1,18 @@
-"""Contains common building blocks for yolo neural networks."""
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Contains common building blocks for yolo layer (detection layer)."""
 import tensorflow as tf
 from official.vision.beta.modeling.layers import detection_generator
 
@@ -8,6 +22,7 @@ from yolo.losses import yolo_loss
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloLayer(tf.keras.Model):
+  """Yolo layer (detection generator)."""
 
   def __init__(self,
                masks,
@@ -27,14 +42,13 @@ class YoloLayer(tf.keras.Model):
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
-               box_type=False,
+               box_type='original',
                path_scale=None,
                scale_xy=None,
                nms_type='greedy',
                objectness_smooth=False,
                **kwargs):
-    """
-    parameters for the loss functions used at each detection head output
+    """Parameters for the loss functions used at each detection head output.
 
     Args:
       masks: `List[int]` for the output level that this specific model output
@@ -58,12 +72,14 @@ class YoloLayer(tf.keras.Model):
       obj_normalizer: `float` for how much to scale loss on the detection map.
       use_scaled_loss: `bool` for whether to use the scaled loss
         or the traditional loss.
+      darknet: `bool` for whether to use the DarkNet or PyTorch loss function
+        implementation.
       pre_nms_points: `int` number of top candidate detections per class before
         NMS.
       label_smoothing: `float` for how much to smooth the loss on the classes.
       max_boxes: `int` for the maximum number of boxes retained over all
         classes.
-      box_type: `bool` for using the ScaledYOLOv4 coordinates.
+      new_cords: `bool` for using the ScaledYOLOv4 coordinates.
       path_scale: `dict` for the size of the input tensors. Defaults to
         precalulated values from the `mask`.
       scale_xy: dictionary `float` values inidcating how far each pixel can see
@@ -76,8 +92,7 @@ class YoloLayer(tf.keras.Model):
       nms_type: `str` for which non max suppression to use.
       objectness_smooth: `float` for how much to smooth the loss on the
         detection map.
-      kwargs**: `Dict` constining additional inputs used for the initialization 
-        of the Keras Model. 
+      **kwargs: Addtional keyword arguments.
     """
     super().__init__(**kwargs)
     self._masks = masks
@@ -114,7 +129,7 @@ class YoloLayer(tf.keras.Model):
     self._len_mask = {}
     for key in self._keys:
       anchors = [self._anchors[mask] for mask in self._masks[key]]
-      self._generator[key] = self.get_generators(anchors, self._path_scale[key],
+      self._generator[key] = self.get_generators(anchors, self._path_scale[key],  # pylint: disable=assignment-from-none
                                                  key)
       self._len_mask[key] = len(self._masks[key])
     return
@@ -141,7 +156,6 @@ class YoloLayer(tf.keras.Model):
     #                             height,
     #                             number_anchors,
     #                             remaining_points)
-
     data = tf.reshape(inputs, [-1, height, width, len_mask, self._classes + 5])
 
     # use the grid generator to get the formatted anchor boxes and grid points
@@ -169,8 +183,10 @@ class YoloLayer(tf.keras.Model):
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
     boxes = box_ops.xcycwh_to_yxyx(boxes)
+
     # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
+
     # convert detection map to class detection probabailities
     class_scores = tf.math.sigmoid(class_scores) * obns_scores
 
@@ -203,13 +219,16 @@ class YoloLayer(tf.keras.Model):
     object_scores = tf.concat(object_scores, axis=1)
     class_scores = tf.concat(class_scores, axis=1)
 
+    # get masks to threshold all the predicitons
     object_mask = tf.cast(object_scores > self._thresh, object_scores.dtype)
     class_mask = tf.cast(class_scores > self._thresh, class_scores.dtype)
+    
+    # apply thresholds mask to all the predicitons
     object_scores *= object_mask
     class_scores *= (tf.expand_dims(object_mask, axis=-1) * class_mask)
 
     # apply nms
-    if self._nms_type == "greedy":
+    if self._nms_type == 'greedy':
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
@@ -226,6 +245,7 @@ class YoloLayer(tf.keras.Model):
       class_scores = tf.cast(class_scores, object_scores.dtype)
       object_scores = tf.cast(object_scores_, object_scores.dtype)
     else:
+      # TPU NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
       (boxes, confidence, 

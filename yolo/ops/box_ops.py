@@ -1,16 +1,30 @@
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Yolo box ops."""
+import math
 import tensorflow as tf
 from yolo.ops import math_ops
-import math
 
 
 def yxyx_to_xcycwh(box: tf.Tensor):
-  """Converts boxes from ymin, xmin, ymax, xmax to x_center, y_center, width, 
-  height.
+  """Converts boxes from yxyx to x_center, y_center, width, height.
 
   Args:
-    box: any `Tensor` whose last dimension is 4 representing the coordinates of 
+    box: any `Tensor` whose last dimension is 4 representing the coordinates of
       boxes in ymin, xmin, ymax, xmax.
-  
+
   Returns:
     box: a `Tensor` whose shape is the same as `box` in new format.
   """
@@ -275,7 +289,6 @@ def compute_ciou(box1, box2, yxyx=False, darknet=False):
   return iou, ciou
 
 
-# equal to bbox_overlap but far more versitile
 def aggregated_comparitive_iou(boxes1, boxes2=None, iou_type=0, beta=0.6):
   """Calculates the IOU between two set of boxes.
 

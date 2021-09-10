@@ -7,6 +7,9 @@ from yolo.ops import (loss_utils, box_ops, math_ops)
 
 
 class YoloLossBase(object, metaclass=abc.ABCMeta):
+  """Parameters for the YOLO loss functions used at each detection  
+  generator. This base class implements the base functionality required to 
+  implement a Yolo Loss function"""
 
   def __init__(self,
                classes,
@@ -25,12 +28,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                box_type="original",
                scale_x_y=1.0,
                max_delta=10):
-    """Parameters for the YOLO loss functions used at each detection head 
-    output. This method builds the loss to be used in both the Scaled YOLO 
-    papers and the standard YOLO papers. The Scaled loss is most optimal on 
-    images with a high resolution and models that are very large. The standard
-    Loss function will perform better on images that are smaller, have more 
-    sparse labels, and or on very small models. 
+    """Loss Function Initialization. 
 
     Args:
       classes: `int` for the number of classes 
@@ -67,16 +65,6 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
         there should be one value for scale_xy for each level from min_level to 
         max_level.
       max_delta: gradient clipping to apply to the box loss. 
-
-    Return:
-      loss: `float` for the actual loss.
-      box_loss: `float` loss on the boxes used for metrics.
-      conf_loss: `float` loss on the confidence used for metrics.
-      class_loss: `float` loss on the classes used for metrics.
-      avg_iou: `float` metric for the average iou between predictions 
-        and ground truth.
-      avg_obj: `float` metric for the average confidence of the model 
-        for predictions.
     """
     self._loss_type = loss_type
     self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
@@ -107,6 +95,8 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     self._build_per_path_attributes()
 
   def box_loss(self, true_box, pred_box, darknet=False):
+    """Calls the iou functions and uses it to compute the loss this op is 
+    the same regardless of Yolo Loss version"""
     if self._loss_type == "giou":
       iou, liou = box_ops.compute_giou(true_box, pred_box)
     elif self._loss_type == "ciou":
@@ -124,6 +114,8 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                                true_conf,
                                smoothed,
                                scale=None):
+    """Completes a search of all predictions against all the ground truths to 
+    dynamically associate ground truths with predictions."""
 
     # Search all predictions against ground truths to find mathcing boxes for
     # each pixel.
@@ -152,6 +144,37 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     return true_conf, obj_mask
 
   def __call__(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    """Call function to compute the loss and return the total loss as 
+    well as the loss for each detection mask on a given FPN level. 
+    
+    Args: 
+      true_counts: `Tensor` of shape [batchsize, height, width, num_anchors] 
+        represeneting how many boxes are in a given pixel [j, i] in the 
+        output map.
+      inds: `Tensor` of shape [batchsize, None, 3] indicating the location 
+        [j, i] that a given box is associatied with in the FPN prediction 
+        map. 
+      y_true: `Tensor` of shape [batchsize, None, 8] indicating the actual box 
+        associated with each index in the inds tensor list.
+      boxes: `Tensor` of shape [batchsize, None, 4] indicating the original 
+        ground truth boxes for each image as they came from the decoder used
+        for bounding box search. 
+      classes: `Tensor` of shape [batchsize, None, 1] indicating the original 
+        ground truth classes for each image as they came from the decoder used
+        for bounding box search.
+      y_pred: `Tensor` of shape [batchsize, height, width, output_depth] 
+        holding the models output at a specific FPN level.
+
+    Return:
+      loss: `float` for the actual loss.
+      box_loss: `float` loss on the boxes used for metrics.
+      conf_loss: `float` loss on the confidence used for metrics.
+      class_loss: `float` loss on the classes used for metrics.
+      avg_iou: `float` metric for the average iou between predictions 
+        and ground truth.
+      avg_obj: `float` metric for the average confidence of the model 
+        for predictions.
+    """
     (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf, ind_mask,
      grid_mask) = self.call(true_counts, inds, y_true, boxes, classes, y_pred)
 
@@ -169,19 +192,23 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
   @abc.abstractmethod
   def _build_per_path_attributes(self):
+    """Additional initialization required specifically for each unique YOLO 
+    loss version"""
     ...
 
   @abc.abstractmethod
   def call():
+    """The actual logic to apply to the raw model for optimization."""
     ...
 
   def post_path_aggregation(self, loss, ground_truths, predictions):
-    """this method is not specific to each loss path, but each loss type"""
+    """This method allows for post processing of a loss value after the loss
+    has been aggregateda across all the FPN levels."""
     return loss
 
   @abc.abstractmethod
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
-    """this method is not specific to each loss path, but each loss type"""
+    """This controls how the loss should be aggregated across replicas."""
     ...
 
 
@@ -200,8 +227,12 @@ def grad_sigmoid(values):
 
 
 class DarknetLoss(YoloLossBase):
+  """This class implements the full logic for the standard Yolo models 
+  encompassing Yolov3, Yolov4, and Yolo-Tiny."""
 
   def _build_per_path_attributes(self):
+    """Paramterization of pair wise search and grid generators for box 
+    decoding and dynamic ground truth association."""
     self._anchor_generator = loss_utils.GridGenerator(
         masks=self._masks,
         anchors=self._anchors,
@@ -213,6 +244,7 @@ class DarknetLoss(YoloLossBase):
     return
 
   def call(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    """Per FPN path loss computation logic."""
     if self._box_type == "scaled":
       # Darknet Model Propagates a sigmoid once in back prop so we replicate
       # that behaviour
@@ -345,8 +377,12 @@ class DarknetLoss(YoloLossBase):
 
 
 class ScaledLoss(YoloLossBase):
+  """This class implements the full logic for the scaled Yolo models 
+  encompassing Yolov4-csp, Yolov4-Large, and Yolov5."""
 
   def _build_per_path_attributes(self):
+    """Paramterization of pair wise search and grid generators for box 
+    decoding and dynamic ground truth association."""
     self._anchor_generator = loss_utils.GridGenerator(
         masks=self._masks,
         anchors=self._anchors,
@@ -358,6 +394,7 @@ class ScaledLoss(YoloLossBase):
     return
 
   def call(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    """Per FPN path loss computation logic."""
     # Generate shape constants.
     shape = tf.shape(true_counts)
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
@@ -472,10 +509,12 @@ class ScaledLoss(YoloLossBase):
 
 
 LOSSES = {"darknet": DarknetLoss, "scaled": ScaledLoss}
-
-
 class YoloLoss(object):
-
+  """This class implements the aggregated loss across paths for the YOLO 
+  model. The class implements the YOLO loss as a factory in order to allow 
+  selection and implementation of new versions of the YOLO loss as the model 
+  is updated in the future. 
+  """
   def __init__(self,
                keys,
                classes,
@@ -496,6 +535,50 @@ class YoloLoss(object):
                use_scaled_loss=False,
                update_on_repeat=False):
 
+    """Loss Function Initialization. 
+
+    Args:
+      keys: `List[str]` indicating the name of the FPN paths that need to be
+        optimized.
+      classes: `int` for the number of classes 
+      anchors: `List[List[int]]` for the anchor boxes that are used in the model 
+        at all levels. For anchor free prediction set the anchor list to be the 
+        same as the image resolution.
+      masks: `List[int]` for the output level that this specific model output 
+        level
+      path_strides: `Dict[int]` for how much to scale this level to get the 
+        orginal input shape.
+      truth_thresholds: `Dict[float]` for the IOU value over which the loss is 
+        propagated despite a detection being made.
+      ignore_thresholds: `Dict[float]` for the IOU value over which the loss is 
+        not propagated, and a detection is assumed to have been made.
+      loss_types: `Dict[str]` for the typeof iou loss to use with in {ciou, 
+        diou, giou, iou}.
+      iou_normalizers: `Dict[float]` for how much to scale the loss on the IOU or 
+        the boxes.
+      cls_normalizers: `Dict[float]` for how much to scale the loss on the 
+        classes.
+      obj_normalizers: `Dict[float]` for how much to scale loss on the detection 
+        map.
+      objectness_smooths: `Dict[float]` for how much to smooth the loss on the 
+        detection map.
+      box_type: `Dict[bool]` for which scaling type to use. 
+      scale_xys:  `Dict[float]` values inidcating how far each pixel can see 
+        outside of its containment of 1.0. a value of 1.2 indicates there is a 
+        20% extended radius around each pixel that this specific pixel can 
+        predict values for a center at. the center can range from 0 - value/2 
+        to 1 + value/2, this value is set in the yolo filter, and resused here. 
+        there should be one value for scale_xy for each level from min_level to 
+        max_level.
+      max_deltas: `Dict[float]` for gradient clipping to apply to the box loss. 
+      label_smoothing: `Dict[float]` for how much to smooth the loss on the 
+        classes.
+
+      use_scaled_loss: `bool` for whether to use the scaled loss 
+        or the traditional loss.
+      update_on_repeat: `bool` for whether to replace with the newest or 
+        the best value when an index is consumed by multiple objects. 
+    """
     if use_scaled_loss:
       loss_type = "scaled"
     else:

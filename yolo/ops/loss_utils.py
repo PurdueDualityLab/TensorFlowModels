@@ -130,10 +130,11 @@ def build_grid(indexes, truths, preds, ind_mask, update=False, grid=None):
 
 
 class GridGenerator(object):
+  """Grid generator that generates anchor grids that will be used 
+  in to decode the predicted boxes."""
 
   def __init__(self, anchors, masks=None, scale_anchors=None):
-    """Grid generator that generates anchor grids that will be used 
-    in to decode the predicted boxes
+    """Initialize Grid Generator
  
     Args:
       anchors: A `List[List[int]]` for the anchor boxes that are used in the 
@@ -200,20 +201,19 @@ class GridGenerator(object):
 
 
 TILE_SIZE = 50
-
-
 class PairWiseSearch(object):
+  """This method applies a pairwise search between the ground truth 
+  and the labels. The goal is to indicate the locations where the 
+  predictions overlap with ground truth for dynamic ground 
+  truth constructions."""
 
   def __init__(self,
-               iou_type="iou",
+               iou_type='iou',
                any=True,
                min_conf=0.0,
                track_boxes=False,
                track_classes=False):
-    """This method applies a pairwise search between the ground truth 
-    and the labels. The goal is to indicate the locations where the 
-    predictions overlap with ground truth for dynamic ground 
-    truth constructions.
+    """Initialization of Pair Wise Search.
 
     Args: 
       iou_type: An `str` for the iou type to use.
@@ -232,9 +232,9 @@ class PairWiseSearch(object):
   def box_iou(self, true_box, pred_box):
     # based on the type of loss, compute the iou loss for a box
     # compute_<name> indicated the type of iou to use
-    if self.iou_type == "giou":
+    if self.iou_type == 'giou':
       _, iou = box_ops.compute_giou(true_box, pred_box)
-    elif self.iou_type == "ciou":
+    elif self.iou_type == 'ciou':
       _, iou = box_ops.compute_ciou(true_box, pred_box)
     else:
       iou = box_ops.compute_iou(true_box, pred_box)
@@ -571,14 +571,14 @@ def get_predicted_box(width,
       boxes divided by the scaler parameter used to put all boxes in the [0, 1] 
       range. 
   """
-  if box_type == "anchor_free":
+  if box_type == 'anchor_free':
     (scaler, scaled_box,
      pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, stride,
                                           grid_points, scale_xy)
   elif darknet:
     # if we are using the darknet loss we shoud nto propagate the
     # decoding of the box
-    if box_type == "scaled":
+    if box_type == 'scaled':
       (scaler, scaled_box,
        pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,
                                             anchor_grid, grid_points, max_delta,
@@ -590,7 +590,7 @@ def get_predicted_box(width,
   else:
     # if we are using the scaled loss we should propagate the decoding of
     # the boxes
-    if box_type == "scaled":
+    if box_type == 'scaled':
       (scaler, scaled_box,
        pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height,
                                           anchor_grid, grid_points, scale_xy)

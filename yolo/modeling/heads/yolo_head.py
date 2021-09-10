@@ -30,7 +30,7 @@ class YoloHead(tf.keras.layers.Layer):
                output_extras=0,
                norm_momentum=0.99,
                norm_epsilon=0.001,
-               kernel_initializer="VarianceScaling",
+               kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_regularizer=None,
                activation=None,
@@ -83,7 +83,7 @@ class YoloHead(tf.keras.layers.Layer):
         filters=self._output_conv,
         kernel_size=(1, 1),
         strides=(1, 1),
-        padding="same",
+        padding='same',
         use_bn=False,
         **self._base_config)
 
@@ -125,7 +125,7 @@ class YoloHead(tf.keras.layers.Layer):
   def num_boxes(self):
     if self._min_level is None or self._max_level is None:
       raise Exception(
-          "model has to be built before number of boxes can be determined")
+          'Model has to be built before number of boxes can be determined.')
     return (self._max_level - self._min_level + 1) * self._boxes_per_level
 
   @property

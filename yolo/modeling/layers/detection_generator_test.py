@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
-"""Tests for resnet."""
 
-# Import libraries
+"""Tests for yolo detection generator."""
+
 from absl.testing import parameterized
-import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-# from yolo.modeling.backbones import darknet
 from yolo.modeling.layers import detection_generator as dg
 
 
@@ -45,7 +39,13 @@ class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
     anchors = [[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0],
                [133.0, 127.0], [79.0, 225.0], [301.0, 150.0], [172.0, 286.0],
                [348.0, 340.0]]
-    layer = dg.YoloLayer(masks, anchors, classes, max_boxes=10)
+    box_type = {key:"scaled" for key in masks.keys()}
+
+    layer = dg.YoloLayer(masks, 
+                         anchors, 
+                         classes, 
+                         box_type = box_type, 
+                         max_boxes=10)
 
     inputs = {}
     for key in input_shape.keys():
