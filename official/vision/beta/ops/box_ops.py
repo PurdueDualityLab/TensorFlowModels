@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Box related ops."""
 
 # Import libraries
@@ -47,6 +47,60 @@ def yxyx_to_xywh(boxes):
   new_boxes = np.stack(
       [boxes_xmin, boxes_ymin, boxes_width, boxes_height], axis=-1)
 
+  return new_boxes
+
+
+def yxyx_to_cycxhw(boxes):
+  """Converts box corner coordinates to center plus height and width terms.
+
+  Args:
+    boxes: a `Tensor` with last dimension of 4, representing the coordinates of
+      boxes in ymin, xmin, ymax, xmax order.
+
+  Returns:
+    boxes: a `Tensor` with the same shape as the inputted boxes, in the format
+      of cy, cx, height, width.
+
+  Raises:
+    ValueError: if the last dimension of boxes is not 4.
+  """
+  if boxes.shape[-1] != 4:
+    raise ValueError('Last dimension of boxes must be 4 but is {:d}'.format(
+        boxes.shape[-1]))
+
+  boxes_ycenter = (boxes[..., 0] + boxes[..., 2]) / 2
+  boxes_xcenter = (boxes[..., 1] + boxes[..., 3]) / 2
+  boxes_height = boxes[..., 2] - boxes[..., 0]
+  boxes_width = boxes[..., 3] - boxes[..., 1]
+
+  new_boxes = tf.stack(
+      [boxes_ycenter, boxes_xcenter, boxes_height, boxes_width], axis=-1)
+  return new_boxes
+
+
+def cycxhw_to_yxyx(boxes):
+  """Converts box center coordinates plus height and width terms to corner.
+
+  Args:
+    boxes: a numpy array whose last dimension is 4 representing the coordinates
+      of boxes in cy, cx, height, width order.
+
+  Returns:
+    boxes: a numpy array whose shape is the same as `boxes` in new format.
+
+  Raises:
+    ValueError: If the last dimension of boxes is not 4.
+  """
+  if boxes.shape[-1] != 4:
+    raise ValueError(
+        'boxes.shape[-1] is {:d}, but must be 4.'.format(boxes.shape[-1]))
+
+  boxes_ymin = boxes[..., 0] - boxes[..., 2] / 2
+  boxes_xmin = boxes[..., 1] - boxes[..., 3] / 2
+  boxes_ymax = boxes[..., 0] + boxes[..., 2] / 2
+  boxes_xmax = boxes[..., 1] + boxes[..., 3] / 2
+  new_boxes = tf.stack([
+      boxes_ymin, boxes_xmin, boxes_ymax, boxes_xmax], axis=-1)
   return new_boxes
 
 
@@ -568,6 +622,76 @@ def bbox_overlap(boxes, gt_boxes):
     iou = tf.where(boxes_invalid_mask, -tf.ones_like(iou), iou)
 
     return iou
+
+
+def bbox_generalized_overlap(boxes, gt_boxes):
+  """Calculates the GIOU between proposal and ground truth boxes.
+
+  The generalized intersection of union is an adjustment of the traditional IOU
+  metric which provides continuous updates even for predictions with no overlap.
+  This metric is defined in https://giou.stanford.edu/GIoU.pdf. Note, some
+  `gt_boxes` may have been padded. The returned `giou` tensor for these boxes
+  will be -1.
+
+  Args:
+    boxes: a `Tensor` with a shape of [batch_size, N, 4]. N is the number of
+      proposals before groundtruth assignment (e.g., rpn_post_nms_topn). The
+      last dimension is the pixel coordinates in [ymin, xmin, ymax, xmax] form.
+    gt_boxes: a `Tensor` with a shape of [batch_size, max_num_instances, 4].
+      This tensor may have paddings with a negative value and will also be in
+      the [ymin, xmin, ymax, xmax] format.
+
+  Returns:
+    giou: a `Tensor` with as a shape of [batch_size, N, max_num_instances].
+  """
+  with tf.name_scope('bbox_generalized_overlap'):
+    assert boxes.shape.as_list(
+    )[-1] == 4, 'Boxes must be defined by 4 coordinates.'
+    assert gt_boxes.shape.as_list(
+    )[-1] == 4, 'Groundtruth boxes must be defined by 4 coordinates.'
+
+    bb_y_min, bb_x_min, bb_y_max, bb_x_max = tf.split(
+        value=boxes, num_or_size_splits=4, axis=2)
+    gt_y_min, gt_x_min, gt_y_max, gt_x_max = tf.split(
+        value=gt_boxes, num_or_size_splits=4, axis=2)
+
+    # Calculates the hull area for each pair of boxes, with one from
+    # boxes and the other from gt_boxes.
+    # Outputs for coordinates are of shape [batch_size, N, max_num_instances]
+    h_xmin = tf.minimum(bb_x_min, tf.transpose(gt_x_min, [0, 2, 1]))
+    h_xmax = tf.maximum(bb_x_max, tf.transpose(gt_x_max, [0, 2, 1]))
+    h_ymin = tf.minimum(bb_y_min, tf.transpose(gt_y_min, [0, 2, 1]))
+    h_ymax = tf.maximum(bb_y_max, tf.transpose(gt_y_max, [0, 2, 1]))
+    h_area = tf.maximum((h_xmax - h_xmin), 0) * tf.maximum((h_ymax - h_ymin), 0)
+    # Add a small epsilon to avoid divide-by-zero.
+    h_area = h_area + 1e-8
+
+    # Calculates the intersection area.
+    i_xmin = tf.maximum(bb_x_min, tf.transpose(gt_x_min, [0, 2, 1]))
+    i_xmax = tf.minimum(bb_x_max, tf.transpose(gt_x_max, [0, 2, 1]))
+    i_ymin = tf.maximum(bb_y_min, tf.transpose(gt_y_min, [0, 2, 1]))
+    i_ymax = tf.minimum(bb_y_max, tf.transpose(gt_y_max, [0, 2, 1]))
+    i_area = tf.maximum((i_xmax - i_xmin), 0) * tf.maximum((i_ymax - i_ymin), 0)
+
+    # Calculates the union area.
+    bb_area = (bb_y_max - bb_y_min) * (bb_x_max - bb_x_min)
+    gt_area = (gt_y_max - gt_y_min) * (gt_x_max - gt_x_min)
+
+    # Adds a small epsilon to avoid divide-by-zero.
+    u_area = bb_area + tf.transpose(gt_area, [0, 2, 1]) - i_area + 1e-8
+
+    # Calculates IoU.
+    iou = i_area / u_area
+    # Calculates GIoU.
+    giou = iou - (h_area - u_area) / h_area
+
+    # Fills -1 for GIoU entries between the padded ground truth boxes.
+    gt_invalid_mask = tf.less(
+        tf.reduce_max(gt_boxes, axis=-1, keepdims=True), 0.0)
+    padding_mask = tf.broadcast_to(
+        tf.transpose(gt_invalid_mask, [0, 2, 1]), tf.shape(giou))
+    giou = tf.where(padding_mask, -tf.ones_like(giou), giou)
+    return giou
 
 
 def box_matching(boxes, gt_boxes, gt_classes):

@@ -38,7 +38,10 @@ class Task(tf.Module, metaclass=abc.ABCMeta):
   # Special keys in train/validate step returned logs.
   loss = "loss"
 
-  def __init__(self, params, logging_dir: str = None, name: str = None):
+  def __init__(self,
+               params,
+               logging_dir: Optional[str] = None,
+               name: Optional[str] = None):
     """Task initialization.
 
     Args:
@@ -76,7 +79,7 @@ class Task(tf.Module, metaclass=abc.ABCMeta):
     optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
     # Configuring optimizer when loss_scale is set in runtime config. This helps
     # avoiding overflow/underflow for float16 computations.
-    if runtime_config and runtime_config.loss_scale:
+    if runtime_config:
       optimizer = performance.configure_optimizer(
           optimizer,
           use_float16=runtime_config.mixed_precision_dtype == "float16",
@@ -216,8 +219,14 @@ class Task(tf.Module, metaclass=abc.ABCMeta):
     with tf.GradientTape() as tape:
       outputs = model(features, training=True)
       # Computes per-replica loss.
-      loss = self.build_losses(
-          labels=labels, model_outputs=outputs, aux_losses=model.losses)
+      if model.compiled_loss:
+        loss = model.compiled_loss(
+            labels, outputs, regularization_losses=model.losses)
+        loss += self.build_losses(
+            labels=labels, model_outputs=outputs, aux_losses=None)
+      else:
+        loss = self.build_losses(
+            labels=labels, model_outputs=outputs, aux_losses=model.losses)
       # Scales loss as the default gradients allreduce performs sum inside the
       # optimizer.
       scaled_loss = loss / tf.distribute.get_strategy().num_replicas_in_sync
@@ -288,9 +297,38 @@ class Task(tf.Module, metaclass=abc.ABCMeta):
     return model(inputs, training=False)
 
   def aggregate_logs(self, state, step_logs):
-    """Optional aggregation over logs returned from a validation step."""
+    """Optional aggregation over logs returned from a validation step.
+
+    Given step_logs from a validation step, this function aggregates the logs
+    after each eval_step() (see eval_reduce() function in
+    official/core/base_trainer.py). It runs on CPU and can be used to aggregate
+    metrics during validation, when there are too many metrics that cannot fit
+    into TPU memory. Note that this may increase latency due to data transfer
+    between TPU and CPU. Also, the step output from a validation step may be a
+    tuple with elements from replicas, and a concatenation of the elements is
+    needed in such case.
+
+    Args:
+      state: The current state of training, for example, it can be a sequence of
+        metrics.
+      step_logs: Logs from a validation step. Can be a dictionary.
+    """
     pass
 
-  def reduce_aggregated_logs(self, aggregated_logs):
-    """Optional reduce of aggregated logs over validation steps."""
+  def reduce_aggregated_logs(self,
+                             aggregated_logs,
+                             global_step: Optional[tf.Tensor] = None):
+    """Optional reduce of aggregated logs over validation steps.
+
+    This function reduces aggregated logs at the end of validation, and can be
+    used to compute the final metrics. It runs on CPU and in each eval_end() in
+    base trainer (see eval_end() function in official/core/base_trainer.py).
+
+    Args:
+      aggregated_logs: Aggregated logs over multiple validation steps.
+      global_step: An optional variable of global step.
+
+    Returns:
+      A dictionary of reduced results.
+    """
     return {}

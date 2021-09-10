@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Bert encoder network."""
 # pylint: disable=g-classes-have-attributes
 
@@ -60,7 +60,7 @@ class BertEncoder(tf.keras.Model):
     initializer: The initialzer to use for all weights in this encoder.
     output_range: The sequence output range, [0, output_range), by slicing the
       target sequence of the last transformer layer. `None` means the entire
-      target sequence will attend to the source sequence, which yeilds the full
+      target sequence will attend to the source sequence, which yields the full
       output.
     embedding_width: The width of the word embeddings. If the embedding width is
       not equal to hidden size, embedding parameters will be factorized into two
@@ -69,6 +69,9 @@ class BertEncoder(tf.keras.Model):
       smaller than 'hidden_size').
     embedding_layer: An optional Layer instance which will be called to
      generate embeddings for the input word IDs.
+    norm_first: Whether to normalize inputs to attention and intermediate
+      dense layers. If set False, output of attention and intermediate dense
+      layers is normalized.
   """
 
   def __init__(
@@ -87,6 +90,7 @@ class BertEncoder(tf.keras.Model):
       output_range=None,
       embedding_width=None,
       embedding_layer=None,
+      norm_first=False,
       **kwargs):
     activation = tf.keras.activations.get(inner_activation)
     initializer = tf.keras.initializers.get(initializer)
@@ -162,6 +166,7 @@ class BertEncoder(tf.keras.Model):
           inner_activation=inner_activation,
           output_dropout=output_dropout,
           attention_dropout=attention_dropout,
+          norm_first=norm_first,
           output_range=transformer_output_range,
           kernel_initializer=initializer,
           name='transformer/layer_%d' % i)
@@ -211,6 +216,7 @@ class BertEncoder(tf.keras.Model):
         'output_range': output_range,
         'embedding_width': embedding_width,
         'embedding_layer': embedding_layer,
+        'norm_first': norm_first,
     }
 
     # We are storing the config dict as a namedtuple here to ensure checkpoint

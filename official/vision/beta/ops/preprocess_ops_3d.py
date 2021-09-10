@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 """Utils for processing video dataset features."""
 
 from typing import Optional, Tuple
@@ -106,9 +106,10 @@ def sample_sequence(sequence: tf.Tensor,
 
   if random:
     sequence_length = tf.cast(sequence_length, tf.float32)
+    frame_stride = tf.cast(stride, tf.float32)
     max_offset = tf.cond(
-        sequence_length > (num_steps - 1) * stride,
-        lambda: sequence_length - (num_steps - 1) * stride,
+        sequence_length > (num_steps - 1) * frame_stride,
+        lambda: sequence_length - (num_steps - 1) * frame_stride,
         lambda: sequence_length)
     offset = tf.random.uniform(
         (),

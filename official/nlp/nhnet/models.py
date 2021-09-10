@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,21 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """tf.keras Models for NHNet."""
+from typing import Optional, Text
+
 from absl import logging
 import gin
 import tensorflow as tf
-from typing import Optional, Text
 
 from official.modeling import tf_utils
 from official.modeling.hyperparams import params_dict
 from official.nlp.modeling import networks
 from official.nlp.modeling.layers import multi_channel_attention
+from official.nlp.modeling.ops import beam_search
 from official.nlp.nhnet import configs
 from official.nlp.nhnet import decoder
 from official.nlp.nhnet import utils
-from official.nlp.modeling.ops import beam_search
 
 
 def embedding_linear(embedding_matrix, x):
@@ -457,7 +458,6 @@ def get_nhnet_layers(params: configs.NHNetConfig):
       activation=tf_utils.get_activation(bert_config.hidden_act),
       dropout_rate=bert_config.hidden_dropout_prob,
       attention_dropout_rate=bert_config.attention_probs_dropout_prob,
-      sequence_length=None,
       max_sequence_length=bert_config.max_position_embeddings,
       type_vocab_size=bert_config.type_vocab_size,
       initializer=tf.keras.initializers.TruncatedNormal(

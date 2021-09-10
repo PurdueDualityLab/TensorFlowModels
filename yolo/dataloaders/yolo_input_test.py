@@ -154,9 +154,9 @@ def test_yolo_pipeline(is_training=True, num=30):
     gt = j['true_conf']
     inds = j['inds']
 
-    obj3 = gt['3'][..., 0]
-    obj4 = gt['4'][..., 0]
-    obj5 = gt['5'][..., 0]
+    obj3 = tf.clip_by_value(gt['3'][..., 0], 0.0, 1.0)
+    obj4 = tf.clip_by_value(gt['4'][..., 0], 0.0, 1.0)
+    obj5 = tf.clip_by_value(gt['5'][..., 0], 0.0, 1.0)
 
     for shind in range(1):
       fig, axe = plt.subplots(1, 4)

@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """XLNet models."""
 # pylint: disable=g-classes-have-attributes
 
-from typing import Any, Mapping, Union
+from typing import Any, Mapping, Optional, Union
 
 import tensorflow as tf
 
@@ -99,7 +99,7 @@ class XLNetPretrainer(tf.keras.Model):
       network: Union[tf.keras.layers.Layer, tf.keras.Model],
       mlm_activation=None,
       mlm_initializer='glorot_uniform',
-      name: str = None,
+      name: Optional[str] = None,
       **kwargs):
     super().__init__(name=name, **kwargs)
     self._config = {
@@ -171,6 +171,7 @@ class XLNetClassifier(tf.keras.Model):
       Defaults to a RandomNormal initializer.
     summary_type: Method used to summarize a sequence into a compact vector.
     dropout_rate: The dropout probability of the cls head.
+    head_name: Name of the classification head.
   """
 
   def __init__(
@@ -180,6 +181,7 @@ class XLNetClassifier(tf.keras.Model):
       initializer: tf.keras.initializers.Initializer = 'random_normal',
       summary_type: str = 'last',
       dropout_rate: float = 0.1,
+      head_name: str = 'sentence_prediction',
       **kwargs):
     super().__init__(**kwargs)
     self._network = network
@@ -192,6 +194,7 @@ class XLNetClassifier(tf.keras.Model):
         'num_classes': num_classes,
         'summary_type': summary_type,
         'dropout_rate': dropout_rate,
+        'head_name': head_name,
     }
 
     if summary_type == 'last':
@@ -207,7 +210,7 @@ class XLNetClassifier(tf.keras.Model):
         initializer=initializer,
         dropout_rate=dropout_rate,
         cls_token_idx=cls_token_idx,
-        name='sentence_prediction')
+        name=head_name)
 
   def call(self, inputs: Mapping[str, Any]):
     input_ids = inputs['input_word_ids']

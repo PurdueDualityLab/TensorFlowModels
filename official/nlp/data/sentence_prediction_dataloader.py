@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Loads dataset for the sentence prediction (classification) task."""
-from typing import List, Mapping, Optional
+import functools
+from typing import List, Mapping, Optional, Tuple
 
 import dataclasses
 import tensorflow as tf
@@ -40,6 +40,12 @@ class SentencePredictionDataConfig(cfg.DataConfig):
   label_type: str = 'int'
   # Whether to include the example id number.
   include_example_id: bool = False
+  label_field: str = 'label_ids'
+  # Maps the key in TfExample to feature name.
+  # E.g 'label_ids' to 'next_sentence_labels'
+  label_name: Optional[Tuple[str, str]] = None
+  # Either tfrecord, sstable, or recordio.
+  file_type: str = 'tfrecord'
 
 
 @data_loader_factory.register_data_loader_cls(SentencePredictionDataConfig)
@@ -50,20 +56,29 @@ class SentencePredictionDataLoader(data_loader.DataLoader):
     self._params = params
     self._seq_length = params.seq_length
     self._include_example_id = params.include_example_id
+    self._label_field = params.label_field
+    if params.label_name:
+      self._label_name_mapping = dict([params.label_name])
+    else:
+      self._label_name_mapping = dict()
 
-  def _decode(self, record: tf.Tensor):
-    """Decodes a serialized tf.Example."""
+  def name_to_features_spec(self):
+    """Defines features to decode. Subclass may override to append features."""
     label_type = LABEL_TYPES_MAP[self._params.label_type]
     name_to_features = {
         'input_ids': tf.io.FixedLenFeature([self._seq_length], tf.int64),
         'input_mask': tf.io.FixedLenFeature([self._seq_length], tf.int64),
         'segment_ids': tf.io.FixedLenFeature([self._seq_length], tf.int64),
-        'label_ids': tf.io.FixedLenFeature([], label_type),
+        self._label_field: tf.io.FixedLenFeature([], label_type),
     }
     if self._include_example_id:
       name_to_features['example_id'] = tf.io.FixedLenFeature([], tf.int64)
 
-    example = tf.io.parse_single_example(record, name_to_features)
+    return name_to_features
+
+  def _decode(self, record: tf.Tensor):
+    """Decodes a serialized tf.Example."""
+    example = tf.io.parse_single_example(record, self.name_to_features_spec())
 
     # tf.Example only supports tf.int64, but the TPU only supports tf.int32.
     # So cast all int64 to int32.
@@ -77,21 +92,31 @@ class SentencePredictionDataLoader(data_loader.DataLoader):
 
   def _parse(self, record: Mapping[str, tf.Tensor]):
     """Parses raw tensors into a dict of tensors to be consumed by the model."""
-    x = {
-        'input_word_ids': record['input_ids'],
-        'input_mask': record['input_mask'],
-        'input_type_ids': record['segment_ids']
+    key_mapping = {
+        'input_ids': 'input_word_ids',
+        'input_mask': 'input_mask',
+        'segment_ids': 'input_type_ids'
     }
-    if self._include_example_id:
-      x['example_id'] = record['example_id']
+    ret = {}
+    for record_key in record:
+      if record_key in key_mapping:
+        ret[key_mapping[record_key]] = record[record_key]
+      else:
+        ret[record_key] = record[record_key]
 
-    y = record['label_ids']
-    return (x, y)
+    if self._label_field in self._label_name_mapping:
+      ret[self._label_name_mapping[self._label_field]] = record[
+          self._label_field]
+
+    return ret
 
   def load(self, input_context: Optional[tf.distribute.InputContext] = None):
     """Returns a tf.dataset.Dataset."""
     reader = input_reader.InputReader(
-        params=self._params, decoder_fn=self._decode, parser_fn=self._parse)
+        dataset_fn=dataset_fn.pick_dataset_fn(self._params.file_type),
+        params=self._params,
+        decoder_fn=self._decode,
+        parser_fn=self._parse)
     return reader.read(input_context)
 
 
@@ -123,6 +148,7 @@ class SentencePredictionTextDataConfig(cfg.DataConfig):
   preprocessing_hub_module_url: str = ''
   # Either tfrecord or sstsable or recordio.
   file_type: str = 'tfrecord'
+  include_example_id: bool = False
 
 
 class TextProcessor(tf.Module):
@@ -137,20 +163,9 @@ class TextProcessor(tf.Module):
     if preprocessing_hub_module_url:
       self._preprocessing_hub_module = hub.load(preprocessing_hub_module_url)
       self._tokenizer = self._preprocessing_hub_module.tokenize
-      def set_shape(t):
-        # Before TF2.4, the sequence length dimension loaded from the
-        # preprocessing hub module is None, so we recover the shape here.
-        # TODO(b/157636658): Remove once TF2.4 is released and being used.
-        t.set_shape([None, seq_length])
-        return t
-
-      def pack_inputs_fn(inputs):
-        result = self._preprocessing_hub_module.bert_pack_inputs(
-            inputs, seq_length=seq_length)
-        result = tf.nest.map_structure(set_shape, result)
-        return result
-
-      self._pack_inputs = pack_inputs_fn
+      self._pack_inputs = functools.partial(
+          self._preprocessing_hub_module.bert_pack_inputs,
+          seq_length=seq_length)
       return
 
     if tokenization == 'WordPiece':
@@ -158,7 +173,8 @@ class TextProcessor(tf.Module):
           vocab_file=vocab_file, lower_case=lower_case)
     elif tokenization == 'SentencePiece':
       self._tokenizer = modeling.layers.SentencepieceTokenizer(
-          model_file_path=vocab_file, lower_case=lower_case,
+          model_file_path=vocab_file,
+          lower_case=lower_case,
           strip_diacritics=True)  # Strip diacritics to follow ALBERT model
     else:
       raise ValueError('Unsupported tokenization: %s' % tokenization)
@@ -200,6 +216,7 @@ class SentencePredictionTextDataLoader(data_loader.DataLoader):
     self._text_fields = params.text_fields
     self._label_field = params.label_field
     self._label_type = params.label_type
+    self._include_example_id = params.include_example_id
     self._text_processor = TextProcessor(
         seq_length=params.seq_length,
         vocab_file=params.vocab_file,
@@ -211,19 +228,25 @@ class SentencePredictionTextDataLoader(data_loader.DataLoader):
     """Berts preprocess."""
     segments = [record[x] for x in self._text_fields]
     model_inputs = self._text_processor(segments)
-    y = record[self._label_field]
-    return model_inputs, y
+    for key in record:
+      if key not in self._text_fields:
+        model_inputs[key] = record[key]
+    return model_inputs
 
-  def _decode(self, record: tf.Tensor):
-    """Decodes a serialized tf.Example."""
+  def name_to_features_spec(self):
     name_to_features = {}
     for text_field in self._text_fields:
       name_to_features[text_field] = tf.io.FixedLenFeature([], tf.string)
 
     label_type = LABEL_TYPES_MAP[self._label_type]
     name_to_features[self._label_field] = tf.io.FixedLenFeature([], label_type)
-    example = tf.io.parse_single_example(record, name_to_features)
+    if self._include_example_id:
+      name_to_features['example_id'] = tf.io.FixedLenFeature([], tf.int64)
+    return name_to_features
 
+  def _decode(self, record: tf.Tensor):
+    """Decodes a serialized tf.Example."""
+    example = tf.io.parse_single_example(record, self.name_to_features_spec())
     # tf.Example only supports tf.int64, but the TPU only supports tf.int32.
     # So cast all int64 to int32.
     for name in example:

@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Spatial transform ops."""
 
 import tensorflow as tf
@@ -198,7 +198,8 @@ def multilevel_crop_and_resize(features,
     # Assigns boxes to the right level.
     box_width = boxes[:, :, 3] - boxes[:, :, 1]
     box_height = boxes[:, :, 2] - boxes[:, :, 0]
-    areas_sqrt = tf.cast(tf.sqrt(box_height * box_width), tf.float32)
+    areas_sqrt = tf.sqrt(
+        tf.cast(box_height, tf.float32) * tf.cast(box_width, tf.float32))
     levels = tf.cast(
         tf.math.floordiv(
             tf.math.log(tf.divide(areas_sqrt, 224.0)),
@@ -456,6 +457,12 @@ def crop_mask_in_target_box(masks,
     [batch_size, num_boxes, output_size, output_size].
   """
   with tf.name_scope('crop_mask_in_target_box'):
+    # Cast to float32, as the y_transform and other transform variables may
+    # overflow in float16
+    masks = tf.cast(masks, tf.float32)
+    boxes = tf.cast(boxes, tf.float32)
+    target_boxes = tf.cast(target_boxes, tf.float32)
+
     batch_size, num_masks, height, width = masks.get_shape().as_list()
     if batch_size is None:
       batch_size = tf.shape(masks)[0]
@@ -504,18 +511,22 @@ def crop_mask_in_target_box(masks,
   return cropped_masks
 
 
-def nearest_upsampling(data, scale):
+def nearest_upsampling(data, scale, use_keras_layer=False):
   """Nearest neighbor upsampling implementation.
 
   Args:
     data: A tensor with a shape of [batch, height_in, width_in, channels].
     scale: An integer multiple to scale resolution of input data.
+    use_keras_layer: If True, use keras Upsampling2D layer.
 
   Returns:
     data_up: A tensor with a shape of
       [batch, height_in*scale, width_in*scale, channels]. Same dtype as input
       data.
   """
+  if use_keras_layer:
+    return tf.keras.layers.UpSampling2D(size=(scale, scale),
+                                        interpolation='nearest')(data)
   with tf.name_scope('nearest_upsampling'):
     bs, _, _, c = data.get_shape().as_list()
     shape = tf.shape(input=data)
@@ -523,7 +534,7 @@ def nearest_upsampling(data, scale):
     w = shape[2]
     bs = -1 if bs is None else bs
     # Uses reshape to quickly upsample the input.  The nearest pixel is selected
-    # implicitly via broadcasting.
-    data = tf.reshape(data, [bs, h, 1, w, 1, c]) * tf.ones(
-        [1, 1, scale, 1, scale, 1], dtype=data.dtype)
+    # via tiling.
+    data = tf.tile(
+        tf.reshape(data, [bs, h, 1, w, 1, c]), [1, 1, scale, 1, scale, 1])
     return tf.reshape(data, [bs, h * scale, w * scale, c])

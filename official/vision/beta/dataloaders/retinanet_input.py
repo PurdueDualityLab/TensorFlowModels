@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Data parser and processing for RetinaNet.
+
 Parse image and ground truths in a dataset to training targets and package them
 into (image, labels) tuple for RetinaNet.
 """
@@ -49,6 +50,7 @@ class Parser(parser.Parser):
                dtype='bfloat16',
                mode=None):
     """Initializes parameters for parsing annotations in the dataset.
+
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
@@ -110,14 +112,19 @@ class Parser(parser.Parser):
     self._use_autoaugment = use_autoaugment
     self._autoaugment_policy_name = autoaugment_policy_name
 
-    # Device.
-    self._use_bfloat16 = True if dtype == 'bfloat16' else False
+    # Data type.
+    self._dtype = dtype
 
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
     classes = data['groundtruth_classes']
     boxes = data['groundtruth_boxes']
+    # If not empty, `attributes` is a dict of (name, ground_truth) pairs.
+    # `ground_gruth` of attributes is assumed in shape [N, attribute_size].
+    # TODO(xianzhi): support parsing attributes weights.
+    attributes = data.get('groundtruth_attributes', {})
     is_crowds = data['groundtruth_is_crowd']
+
     # Skips annotations with `is_crowd` = True.
     if self._skip_crowd_during_training:
       num_groundtrtuhs = tf.shape(input=classes)[0]
@@ -128,6 +135,8 @@ class Parser(parser.Parser):
             false_fn=lambda: tf.cast(tf.range(num_groundtrtuhs), tf.int64))
       classes = tf.gather(classes, indices)
       boxes = tf.gather(boxes, indices)
+      for k, v in attributes.items():
+        attributes[k] = tf.gather(v, indices)
 
     # Gets original image and its size.
     image = data['image']
@@ -135,7 +144,7 @@ class Parser(parser.Parser):
     image_shape = tf.shape(input=image)[0:2]
 
     # Normalizes image with mean and std pixel values.
-    image = image/255 #preprocess_ops.normalize_image(image)
+    image = preprocess_ops.normalize_image(image)
 
     # Flips image randomly during training.
     if self._aug_rand_hflip:
@@ -148,7 +157,8 @@ class Parser(parser.Parser):
     image, image_info = preprocess_ops.resize_and_crop_image(
         image,
         self._output_size,
-        padded_size= self._output_size,     #preprocess_ops.compute_padded_size(self._output_size, 2**self._max_level),
+        padded_size=preprocess_ops.compute_padded_size(self._output_size,
+                                                       2**self._max_level),
         aug_scale_min=self._aug_scale_min,
         aug_scale_max=self._aug_scale_max)
     image_height, image_width, _ = image.get_shape().as_list()
@@ -162,6 +172,8 @@ class Parser(parser.Parser):
     indices = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
+    for k, v in attributes.items():
+      attributes[k] = tf.gather(v, indices)
 
     # Assigns anchors.
     input_anchor = anchor.build_anchor_generator(
@@ -173,29 +185,14 @@ class Parser(parser.Parser):
     anchor_boxes = input_anchor(image_size=(image_height, image_width))
     anchor_labeler = anchor.AnchorLabeler(self._match_threshold,
                                           self._unmatched_threshold)
-    (cls_targets, box_targets, cls_weights,
+    (cls_targets, box_targets, att_targets, cls_weights,
      box_weights) = anchor_labeler.label_anchors(
-         anchor_boxes, boxes, tf.expand_dims(classes, axis=1))
+         anchor_boxes, boxes, tf.expand_dims(classes, axis=1), attributes)
 
-    # If bfloat16 is used, casts input image to tf.bfloat16.
-    if self._use_bfloat16:
-      image = tf.cast(image, dtype=tf.bfloat16)
+    # Casts input image to desired data type.
+    image = tf.cast(image, dtype=self._dtype)
 
     # Packs labels for model_fn outputs.
-
-    groundtruths = {
-        'source_id': data['source_id'],
-        'height': data['height'],
-        'width': data['width'],
-        'num_detections': tf.shape(data['groundtruth_classes']),
-        'boxes': box_ops.normalize_boxes(boxes, tf.shape(image)[:2]),
-        'classes': classes,
-        'areas': data['groundtruth_area'],
-        'is_crowds': tf.cast(data['groundtruth_is_crowd'], tf.int32),
-    }
-    groundtruths = utils.pad_groundtruths_to_fixed_size(
-        groundtruths, self._max_num_instances)
-
     labels = {
         'cls_targets': cls_targets,
         'box_targets': box_targets,
@@ -203,9 +200,9 @@ class Parser(parser.Parser):
         'cls_weights': cls_weights,
         'box_weights': box_weights,
         'image_info': image_info,
-        'bbox': groundtruths['boxes'], 
-        'classes': groundtruths['classes'],
     }
+    if att_targets:
+      labels['attribute_targets'] = att_targets
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -213,14 +210,17 @@ class Parser(parser.Parser):
     groundtruths = {}
     classes = data['groundtruth_classes']
     boxes = data['groundtruth_boxes']
+    # If not empty, `attributes` is a dict of (name, ground_truth) pairs.
+    # `ground_gruth` of attributes is assumed in shape [N, attribute_size].
+    # TODO(xianzhi): support parsing attributes weights.
+    attributes = data.get('groundtruth_attributes', {})
 
     # Gets original image and its size.
     image = data['image']
     image_shape = tf.shape(input=image)[0:2]
 
     # Normalizes image with mean and std pixel values.
-    # image = preprocess_ops.normalize_image(image)
-    image = image/255
+    image = preprocess_ops.normalize_image(image)
 
     # Converts boxes from normalized coordinates to pixel coordinates.
     boxes = box_ops.denormalize_boxes(boxes, image_shape)
@@ -244,6 +244,8 @@ class Parser(parser.Parser):
     indices = box_ops.get_non_empty_box_indices(boxes)
     boxes = tf.gather(boxes, indices)
     classes = tf.gather(classes, indices)
+    for k, v in attributes.items():
+      attributes[k] = tf.gather(v, indices)
 
     # Assigns anchors.
     input_anchor = anchor.build_anchor_generator(
@@ -255,13 +257,12 @@ class Parser(parser.Parser):
     anchor_boxes = input_anchor(image_size=(image_height, image_width))
     anchor_labeler = anchor.AnchorLabeler(self._match_threshold,
                                           self._unmatched_threshold)
-    (cls_targets, box_targets, cls_weights,
+    (cls_targets, box_targets, att_targets, cls_weights,
      box_weights) = anchor_labeler.label_anchors(
-         anchor_boxes, boxes, tf.expand_dims(classes, axis=1))
+         anchor_boxes, boxes, tf.expand_dims(classes, axis=1), attributes)
 
-    # If bfloat16 is used, casts input image to tf.bfloat16.
-    if self._use_bfloat16:
-      image = tf.cast(image, dtype=tf.bfloat16)
+    # Casts input image to desired data type.
+    image = tf.cast(image, dtype=self._dtype)
 
     # Sets up groundtruth data for evaluation.
     groundtruths = {
@@ -270,11 +271,14 @@ class Parser(parser.Parser):
         'width': data['width'],
         'num_detections': tf.shape(data['groundtruth_classes']),
         'image_info': image_info,
-        'boxes': box_ops.normalize_boxes(boxes, tf.shape(image)[:2]),
-        'classes': classes,
+        'boxes': box_ops.denormalize_boxes(
+            data['groundtruth_boxes'], image_shape),
+        'classes': data['groundtruth_classes'],
         'areas': data['groundtruth_area'],
         'is_crowds': tf.cast(data['groundtruth_is_crowd'], tf.int32),
     }
+    if 'groundtruth_attributes' in data:
+      groundtruths['attributes'] = data['groundtruth_attributes']
     groundtruths['source_id'] = utils.process_source_id(
         groundtruths['source_id'])
     groundtruths = utils.pad_groundtruths_to_fixed_size(
@@ -289,7 +293,7 @@ class Parser(parser.Parser):
         'box_weights': box_weights,
         'image_info': image_info,
         'groundtruths': groundtruths,
-        'bbox': groundtruths['boxes'], 
-        'classes': groundtruths['classes'],
     }
+    if att_targets:
+      labels['attribute_targets'] = att_targets
     return image, labels

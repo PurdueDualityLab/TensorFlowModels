@@ -1,4 +1,4 @@
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Run ALBERT on SQuAD 1.1 and SQuAD 2.0 using sentence piece tokenization.
 
 The file is forked from:
@@ -175,7 +175,7 @@ def _convert_index(index, pos, m=None, is_start=True):
     front -= 1
   assert index[front] is not None or index[rear] is not None
   if index[front] is None:
-    if index[rear] >= 1:
+    if index[rear] >= 1:  # pytype: disable=unsupported-operands
       if is_start:
         return 0
       else:

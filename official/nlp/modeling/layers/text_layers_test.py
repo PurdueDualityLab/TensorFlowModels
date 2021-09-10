@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tests bert.text_layers."""
 
 import os
@@ -24,60 +24,9 @@ from sentencepiece import SentencePieceTrainer
 from official.nlp.modeling.layers import text_layers
 
 
-class RoundRobinTruncatorTest(tf.test.TestCase):
-
-  def test_correct_outputs(self):
-
-    def test_input(start, lengths):
-      return tf.ragged.constant([[start + 10*j + i for i in range(length)]
-                                 for j, length in enumerate(lengths)],
-                                dtype=tf.int32)
-
-    # Single segment.
-    single_input = test_input(11, [4, 5, 6])
-    expected_single_output = tf.ragged.constant(
-        [[11, 12, 13, 14],
-         [21, 22, 23, 24, 25],
-         [31, 32, 33, 34, 35],  # Truncated.
-        ])
-
-    self.assertAllEqual(
-        expected_single_output,
-        text_layers.round_robin_truncate_inputs(single_input, limit=5))
-    # Test wrapping in a singleton list.
-    actual_single_list_output = text_layers.round_robin_truncate_inputs(
-        [single_input], limit=5)
-    self.assertIsInstance(actual_single_list_output, list)
-    self.assertAllEqual(expected_single_output, actual_single_list_output[0])
-
-    # Two segments.
-    input_a = test_input(111, [1, 2, 2, 3, 4, 5])
-    input_b = test_input(211, [1, 3, 4, 2, 2, 5])
-    expected_a = tf.ragged.constant(
-        [[111],
-         [121, 122],
-         [131, 132],
-         [141, 142, 143],
-         [151, 152, 153],  # Truncated.
-         [161, 162, 163],  # Truncated.
-        ])
-    expected_b = tf.ragged.constant(
-        [[211],
-         [221, 222, 223],
-         [231, 232, 233],  # Truncated.
-         [241, 242],
-         [251, 252],
-         [261, 262],  # Truncated.
-        ])
-    actual_a, actual_b = text_layers.round_robin_truncate_inputs(
-        [input_a, input_b], limit=5)
-    self.assertAllEqual(expected_a, actual_a)
-    self.assertAllEqual(expected_b, actual_b)
-
-
 # This test covers the in-process behavior of a BertTokenizer layer.
 # For saving, restoring, and the restored behavior (incl. shape inference),
-# see export_tfub_test.py.
+# see nlp/tools/export_tfhub_lib_test.py.
 class BertTokenizerTest(tf.test.TestCase):
 
   def _make_vocab_file(self, vocab, filename="vocab.txt"):
@@ -397,16 +346,19 @@ class BertPackInputsTest(tf.test.TestCase):
         tf.constant([[0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
                      [0, 0, 0, 0, 0, 0, 1, 1, 1, 1]]))
 
-    # Three inputs has not been supported for round_robin so far.
-    with self.assertRaisesRegex(ValueError, "Must pass 1 or 2 inputs"):
-      bert_inputs = bpi([
-          tf.ragged.constant([[[111], [112, 113]],
-                              [[121, 122, 123], [124, 125, 126], [127, 128]]]),
-          tf.ragged.constant([[[211, 212], [213]],
-                              [[221, 222], [223, 224, 225], [226, 227, 228]]]),
-          tf.ragged.constant([[[311, 312], [313]],
-                              [[321, 322], [323, 324, 325], [326, 327, 328]]])
-      ])
+    # Three inputs. rank 3.
+    bert_inputs = bpi([
+        tf.ragged.constant([[[111], [112, 113]],
+                            [[121, 122, 123], [124, 125, 126], [127, 128]]]),
+        tf.ragged.constant([[[211, 212], [213]],
+                            [[221, 222], [223, 224, 225], [226, 227, 228]]]),
+        tf.ragged.constant([[[311, 312], [313]],
+                            [[321, 322], [323, 324, 325], [326, 327, 328]]])
+    ])
+    self.assertAllEqual(
+        bert_inputs["input_word_ids"],
+        tf.constant([[1001, 111, 112, 1002, 211, 212, 1002, 311, 312, 1002],
+                     [1001, 121, 122, 1002, 221, 222, 1002, 321, 322, 1002]]))
 
   def test_waterfall_correct_outputs(self):
     bpi = text_layers.BertPackInputs(

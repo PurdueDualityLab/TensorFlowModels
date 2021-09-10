@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Sentence prediction (classification) task."""
+import dataclasses
 from typing import List, Union, Optional
 
 from absl import logging
-import dataclasses
 import numpy as np
 import orbit
 from scipy import stats
@@ -70,6 +69,10 @@ class SentencePredictionTask(base_task.Task):
     if params.metric_type not in METRIC_TYPES:
       raise ValueError('Invalid metric_type: {}'.format(params.metric_type))
     self.metric_type = params.metric_type
+    if hasattr(params.train_data, 'label_field'):
+      self.label_field = params.train_data.label_field
+    else:
+      self.label_field = 'label_ids'
 
   def build_model(self):
     if self.task_config.hub_module_url and self.task_config.init_checkpoint:
@@ -96,11 +99,12 @@ class SentencePredictionTask(base_task.Task):
           use_encoder_pooler=self.task_config.model.use_encoder_pooler)
 
   def build_losses(self, labels, model_outputs, aux_losses=None) -> tf.Tensor:
+    label_ids = labels[self.label_field]
     if self.task_config.model.num_classes == 1:
-      loss = tf.keras.losses.mean_squared_error(labels, model_outputs)
+      loss = tf.keras.losses.mean_squared_error(label_ids, model_outputs)
     else:
       loss = tf.keras.losses.sparse_categorical_crossentropy(
-          labels, tf.cast(model_outputs, tf.float32), from_logits=True)
+          label_ids, tf.cast(model_outputs, tf.float32), from_logits=True)
 
     if aux_losses:
       loss += tf.add_n(aux_losses)
@@ -121,7 +125,8 @@ class SentencePredictionTask(base_task.Task):
           y = tf.zeros((1,), dtype=tf.float32)
         else:
           y = tf.zeros((1, 1), dtype=tf.int32)
-        return x, y
+        x[self.label_field] = y
+        return x
 
       dataset = tf.data.Dataset.range(1)
       dataset = dataset.repeat()
@@ -135,24 +140,35 @@ class SentencePredictionTask(base_task.Task):
     del training
     if self.task_config.model.num_classes == 1:
       metrics = [tf.keras.metrics.MeanSquaredError()]
+    elif self.task_config.model.num_classes == 2:
+      metrics = [
+          tf.keras.metrics.SparseCategoricalAccuracy(name='cls_accuracy'),
+          tf.keras.metrics.AUC(name='auc', curve='PR'),
+      ]
     else:
       metrics = [
-          tf.keras.metrics.SparseCategoricalAccuracy(name='cls_accuracy')
+          tf.keras.metrics.SparseCategoricalAccuracy(name='cls_accuracy'),
       ]
     return metrics
 
   def process_metrics(self, metrics, labels, model_outputs):
     for metric in metrics:
-      metric.update_state(labels, model_outputs)
+      if metric.name == 'auc':
+        # Convert the logit to probability and extract the probability of True..
+        metric.update_state(
+            labels[self.label_field],
+            tf.expand_dims(tf.nn.softmax(model_outputs)[:, 1], axis=1))
+      if metric.name == 'cls_accuracy':
+        metric.update_state(labels[self.label_field], model_outputs)
 
   def process_compiled_metrics(self, compiled_metrics, labels, model_outputs):
-    compiled_metrics.update_state(labels, model_outputs)
+    compiled_metrics.update_state(labels[self.label_field], model_outputs)
 
   def validation_step(self, inputs, model: tf.keras.Model, metrics=None):
     if self.metric_type == 'accuracy':
       return super(SentencePredictionTask,
                    self).validation_step(inputs, model, metrics)
-    features, labels = inputs
+    features, labels = inputs, inputs
     outputs = self.inference_step(features, model)
     loss = self.build_losses(
         labels=labels, model_outputs=outputs, aux_losses=model.losses)
@@ -162,12 +178,12 @@ class SentencePredictionTask(base_task.Task):
           'sentence_prediction':  # Ensure one prediction along batch dimension.
               tf.expand_dims(tf.math.argmax(outputs, axis=1), axis=1),
           'labels':
-              labels,
+              labels[self.label_field],
       })
     if self.metric_type == 'pearson_spearman_corr':
       logs.update({
           'sentence_prediction': outputs,
-          'labels': labels,
+          'labels': labels[self.label_field],
       })
     return logs
 
@@ -183,7 +199,7 @@ class SentencePredictionTask(base_task.Task):
         np.concatenate([v.numpy() for v in step_outputs['labels']], axis=0))
     return state
 
-  def reduce_aggregated_logs(self, aggregated_logs):
+  def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
     if self.metric_type == 'accuracy':
       return None
     elif self.metric_type == 'matthews_corrcoef':
@@ -207,10 +223,10 @@ class SentencePredictionTask(base_task.Task):
   def initialize(self, model):
     """Load a pretrained checkpoint (if exists) and then train from iter 0."""
     ckpt_dir_or_file = self.task_config.init_checkpoint
-    if tf.io.gfile.isdir(ckpt_dir_or_file):
-      ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
     if not ckpt_dir_or_file:
       return
+    if tf.io.gfile.isdir(ckpt_dir_or_file):
+      ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
 
     pretrain2finetune_mapping = {
         'encoder': model.checkpoint_items['encoder'],
@@ -251,7 +267,7 @@ def predict(task: SentencePredictionTask,
 
   def predict_step(inputs):
     """Replicated prediction calculation."""
-    x, _ = inputs
+    x = inputs
     example_id = x.pop('example_id')
     outputs = task.inference_step(x, model)
     return dict(example_id=example_id, predictions=outputs)

@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 
 """Backbones configurations."""
 
@@ -24,11 +24,16 @@ from official.vision.beta.configs import backbones
 
 
 @dataclasses.dataclass
-class DarkNet(hyperparams.Config):
-  """DarkNet config."""
-  model_id: str = "darknet53"
+class Darknet(hyperparams.Config):
+  """Darknet config."""
+  model_id: str = 'darknet53'
+  width_scale: float = 1.0
+  depth_scale: float = 1.0
+  dilate: bool = False
+  min_level: int = 3
+  max_level: int = 5
 
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):
-  darknet: DarkNet = DarkNet()
+  darknet: Darknet = Darknet()

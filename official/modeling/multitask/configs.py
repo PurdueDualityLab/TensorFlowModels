@@ -23,6 +23,7 @@ from official.modeling import hyperparams
 
 @dataclasses.dataclass
 class TaskRoutine(hyperparams.Config):
+  # TODO(hongkuny): deprecate the task_name once we migrated client code.
   task_name: str = ""
   task_config: cfg.TaskConfig = None
   eval_steps: Optional[int] = None
@@ -37,10 +38,43 @@ class MultiTaskConfig(hyperparams.Config):
 
 
 @dataclasses.dataclass
+class ProportionalSampleConfig(hyperparams.Config):
+  alpha: float = 1.0
+
+
+@dataclasses.dataclass
+class AnnealingSampleConfig(hyperparams.Config):
+  steps_per_epoch: int = 5
+  total_steps: int = 20
+
+
+@dataclasses.dataclass
+class TaskSamplingConfig(hyperparams.OneOfConfig):
+  type: str = ""
+  uniform: hyperparams.Config = hyperparams.Config()
+  proportional: ProportionalSampleConfig = ProportionalSampleConfig()
+  annealing: AnnealingSampleConfig = AnnealingSampleConfig()
+
+
+@dataclasses.dataclass
+class MultiTaskTrainerConfig(cfg.TrainerConfig):
+  trainer_type: str = "interleaving"
+  task_sampler: TaskSamplingConfig = TaskSamplingConfig(type="proportional")
+
+
+@dataclasses.dataclass
+class MultiTaskExperimentConfig(hyperparams.Config):
+  """An experiment config for multi-task training and multi-task evaluation."""
+  task: MultiTaskConfig = MultiTaskConfig()
+  trainer: MultiTaskTrainerConfig = MultiTaskTrainerConfig()
+  runtime: cfg.RuntimeConfig = cfg.RuntimeConfig()
+
+
+@dataclasses.dataclass
 class MultiEvalExperimentConfig(cfg.ExperimentConfig):
   """An experiment config for single-task training and multi-task evaluation.
 
   Attributes:
     eval_tasks: individual evaluation tasks.
   """
-  eval_tasks: MultiTaskConfig = MultiTaskConfig()
+  eval_tasks: Tuple[TaskRoutine, ...] = ()

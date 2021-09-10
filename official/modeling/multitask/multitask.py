@@ -21,6 +21,7 @@ from official.core import base_task
 from official.core import config_definitions
 from official.core import task_factory
 from official.modeling import optimization
+from official.modeling.multitask import base_model
 from official.modeling.multitask import configs
 
 OptimizationConfig = optimization.OptimizationConfig
@@ -58,10 +59,7 @@ class MultiTask(tf.Module, metaclass=abc.ABCMeta):
     else:
       raise ValueError("The tasks argument has an invalid type: %s" %
                        type(tasks))
-    self._task_eval_steps = task_eval_steps or {}
-    self._task_eval_steps = dict([
-        (name, self._task_eval_steps.get(name, None)) for name in self.tasks
-    ])
+    self.task_eval_steps = task_eval_steps or {}
     self._task_weights = task_weights or {}
     self._task_weights = dict([
         (name, self._task_weights.get(name, 1.0)) for name in self.tasks
@@ -73,22 +71,17 @@ class MultiTask(tf.Module, metaclass=abc.ABCMeta):
     task_eval_steps = {}
     task_weights = {}
     for task_routine in config.task_routines:
-      task_name = task_routine.task_name
+      task_name = task_routine.task_name or task_routine.task_config.name
       tasks[task_name] = task_factory.get_task(
-          task_routine.task_config, logging_dir=logging_dir)
+          task_routine.task_config, logging_dir=logging_dir, name=task_name)
       task_eval_steps[task_name] = task_routine.eval_steps
       task_weights[task_name] = task_routine.task_weight
     return cls(
-        tasks,
-        task_eval_steps=task_eval_steps,
-        task_weights=task_weights)
+        tasks, task_eval_steps=task_eval_steps, task_weights=task_weights)
 
   @property
   def tasks(self):
     return self._tasks
-
-  def task_eval_steps(self, task_name):
-    return self._task_eval_steps[task_name]
 
   def task_weight(self, task_name):
     return self._task_weights[task_name]
@@ -104,15 +97,17 @@ class MultiTask(tf.Module, metaclass=abc.ABCMeta):
     return base_task.Task.create_optimizer(
         optimizer_config=optimizer_config, runtime_config=runtime_config)
 
-  def joint_train_step(self, task_inputs, multi_task_model, optimizer,
-                       task_metrics):
+  def joint_train_step(self, task_inputs,
+                       multi_task_model: base_model.MultiTaskBaseModel,
+                       optimizer: tf.keras.optimizers.Optimizer, task_metrics):
     """The joint train step.
 
     Args:
       task_inputs: a dictionary of task names and per-task features.
-      multi_task_model: a MultiTaskModel instance.
+      multi_task_model: a MultiTaskBaseModel instance.
       optimizer: a tf.optimizers.Optimizer.
       task_metrics: a dictionary of task names and per-task metrics.
+
     Returns:
       A dictionary of losses, inculding per-task losses and their weighted sum.
     """

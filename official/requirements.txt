@@ -1,6 +1,5 @@
 six
 google-api-python-client>=1.6.7
-google-cloud-bigquery>=0.31.0
 kaggle>=1.3.9
 numpy>=1.15.4
 oauth2client
@@ -12,15 +11,14 @@ tensorflow-hub>=0.6.0
 tensorflow-model-optimization>=0.4.1
 tensorflow-datasets
 tensorflow-addons
-tensorflow==2.4.1
-dataclasses
+dataclasses;python_version<"3.7"
 gin-config
 tf_slim>=1.1.0
 Cython
 matplotlib
 pyyaml>=5.1
 # CV related dependencies
-# opencv-python-headless
+opencv-python-headless
 Pillow
 pycocotools
 # NLP related dependencies

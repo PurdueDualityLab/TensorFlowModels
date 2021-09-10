@@ -39,6 +39,9 @@ class OptimizerConfig(oneof.OneOfConfig):
     adamw: adam with weight decay.
     lamb: lamb optimizer.
     rmsprop: rmsprop optimizer.
+    lars: lars optimizer.
+    adagrad: adagrad optimizer.
+    slide: slide optimizer.
   """
   type: Optional[str] = None
   sgd: opt_cfg.SGDConfig = opt_cfg.SGDConfig()
@@ -46,7 +49,10 @@ class OptimizerConfig(oneof.OneOfConfig):
   adamw: opt_cfg.AdamWeightDecayConfig = opt_cfg.AdamWeightDecayConfig()
   lamb: opt_cfg.LAMBConfig = opt_cfg.LAMBConfig()
   rmsprop: opt_cfg.RMSPropConfig = opt_cfg.RMSPropConfig()
-  sgd_accum: opt_cfg.SGDAccumConfig = opt_cfg.SGDAccumConfig()
+  lars: opt_cfg.LARSConfig = opt_cfg.LARSConfig()
+  adagrad: opt_cfg.AdagradConfig = opt_cfg.AdagradConfig()
+  slide: opt_cfg.SLIDEConfig = opt_cfg.SLIDEConfig()
+  adafactor: opt_cfg.AdafactorConfig = opt_cfg.AdafactorConfig()
 
 
 @dataclasses.dataclass
@@ -54,7 +60,7 @@ class LrConfig(oneof.OneOfConfig):
   """Configuration for lr schedule.
 
   Attributes:
-    type: 'str', type of lr schedule to be used, on the of fields below.
+    type: 'str', type of lr schedule to be used, one of the fields below.
     constant: constant learning rate config.
     stepwise: stepwise learning rate config.
     exponential: exponential learning rate config.
@@ -63,6 +69,8 @@ class LrConfig(oneof.OneOfConfig):
     power: step^power learning rate config.
     power_linear: learning rate config of step^power followed by
       step^power*linear.
+    power_with_offset: power decay with a step offset.
+    step_cosine_with_offset: Step cosine with a step offset.
   """
   type: Optional[str] = None
   constant: lr_cfg.ConstantLrConfig = lr_cfg.ConstantLrConfig()
@@ -70,10 +78,13 @@ class LrConfig(oneof.OneOfConfig):
   exponential: lr_cfg.ExponentialLrConfig = lr_cfg.ExponentialLrConfig()
   polynomial: lr_cfg.PolynomialLrConfig = lr_cfg.PolynomialLrConfig()
   cosine: lr_cfg.CosineLrConfig = lr_cfg.CosineLrConfig()
-  cosine_epoch: lr_cfg.CosineLrEpochConfig = lr_cfg.CosineLrEpochConfig()
   power: lr_cfg.DirectPowerLrConfig = lr_cfg.DirectPowerLrConfig()
   power_linear: lr_cfg.PowerAndLinearDecayLrConfig = (
       lr_cfg.PowerAndLinearDecayLrConfig())
+  power_with_offset: lr_cfg.PowerDecayWithOffsetLrConfig = (
+      lr_cfg.PowerDecayWithOffsetLrConfig())
+  step_cosine_with_offset: lr_cfg.StepCosineLrConfig = (
+      lr_cfg.StepCosineLrConfig())
 
 
 @dataclasses.dataclass
@@ -81,15 +92,14 @@ class WarmupConfig(oneof.OneOfConfig):
   """Configuration for lr schedule.
 
   Attributes:
-    type: 'str', type of warmup schedule to be used, on the of fields below.
+    type: 'str', type of warmup schedule to be used, one of the fields below.
     linear: linear warmup config.
     polynomial: polynomial warmup config.
   """
   type: Optional[str] = None
   linear: lr_cfg.LinearWarmupConfig = lr_cfg.LinearWarmupConfig()
   polynomial: lr_cfg.PolynomialWarmupConfig = lr_cfg.PolynomialWarmupConfig()
-  linear_indep: lr_cfg.LinearIndepWarmupConfig = lr_cfg.LinearIndepWarmupConfig()
-  polynomial_gen: lr_cfg.PolynomialGenWarmupConfig = lr_cfg.PolynomialGenWarmupConfig()
+
 
 @dataclasses.dataclass
 class OptimizationConfig(base_config.Config):
@@ -97,8 +107,8 @@ class OptimizationConfig(base_config.Config):
 
   Attributes:
     optimizer: optimizer oneof config.
-    ema: optional exponential moving average optimizer config, if specified,
-      ema optimizer will be used.
+    ema: optional exponential moving average optimizer config, if specified, ema
+      optimizer will be used.
     learning_rate: learning rate oneof config.
     warmup: warmup oneof config.
   """

@@ -12,7 +12,7 @@ task:
     seq_length: 128
     label_type: 'int'
   validation_data:
-    drop_remainder: true
+    drop_remainder: false
     global_batch_size: 32
     input_path: ''
     is_training: false

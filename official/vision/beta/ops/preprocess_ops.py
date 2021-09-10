@@ -26,10 +26,12 @@ CENTER_CROP_FRACTION = 0.875
 
 def clip_or_pad_to_fixed_size(input_tensor, size, constant_values=0):
   """Pads data to a fixed length at the first dimension.
+
   Args:
     input_tensor: `Tensor` with any dimension.
     size: `int` number for the first dimension of output Tensor.
     constant_values: `int` value assigned to the paddings.
+
   Returns:
     `Tensor` with the first dimension padded to `size`.
   """
@@ -79,14 +81,17 @@ def normalize_image(image,
 
 def compute_padded_size(desired_size, stride):
   """Compute the padded size given the desired size and the stride.
+
   The padded size will be the smallest rectangle, such that each dimension is
   the smallest multiple of the stride which is larger than the desired
   dimension. For example, if desired_size = (100, 200) and stride = 32,
   the output padded_size = (128, 224).
+
   Args:
     desired_size: a `Tensor` or `int` list/tuple of two elements representing
       [height, width] of the target output image size.
     stride: an integer, the stride of the backbone network.
+
   Returns:
     padded_size: a `Tensor` or `int` list/tuple of two elements representing
       [height, width] of the padded output image size.
@@ -110,13 +115,16 @@ def resize_and_crop_image(image,
                           seed=1,
                           method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (RetinaNet style).
+
   Resize and pad images given the desired output size of the image and
   stride size.
+
   Here are the preprocessing steps.
   1. For a given image, keep its aspect ratio and rescale the image to make it
      the largest rectangle to be bounded by the rectangle specified by the
      `desired_size`.
   2. Pad the rescaled image to the padded_size.
+
   Args:
     image: a `Tensor` of shape [height, width, 3] representing an image.
     desired_size: a `Tensor` or `int` list/tuple of two elements representing
@@ -130,6 +138,7 @@ def resize_and_crop_image(image,
       random scale applied to desired_size for training scale jittering.
     seed: seed for random scale jittering.
     method: function to resize input image to scaled image.
+
   Returns:
     output_image: `Tensor` of shape [height, width, 3] where [height, width]
       equals to `output_size`.
@@ -199,14 +208,17 @@ def resize_and_crop_image_v2(image,
                              seed=1,
                              method=tf.image.ResizeMethod.BILINEAR):
   """Resizes the input image to output size (Faster R-CNN style).
+
   Resize and pad images given the specified short / long side length and the
   stride size.
+
   Here are the preprocessing steps.
   1. For a given image, keep its aspect ratio and first try to rescale the short
      side of the original image to `short_side`.
   2. If the scaled image after 1 has a long side that exceeds `long_side`, keep
      the aspect ratio and rescal the long side of the image to `long_side`.
   2. Pad the rescaled image to the padded_size.
+
   Args:
     image: a `Tensor` of shape [height, width, 3] representing an image.
     short_side: a scalar `Tensor` or `int` representing the desired short side
@@ -222,6 +234,7 @@ def resize_and_crop_image_v2(image,
       random scale applied to desired_size for training scale jittering.
     seed: seed for random scale jittering.
     method: function to resize input image to scaled image.
+
   Returns:
     output_image: `Tensor` of shape [height, width, 3] where [height, width]
       equals to `output_size`.
@@ -291,14 +304,17 @@ def resize_and_crop_image_v2(image,
 
 def center_crop_image(image):
   """Center crop a square shape slice from the input image.
+
   It crops a square shape slice from the image. The side of the actual crop
   is 224 / 256 = 0.875 of the short side of the original image. References:
   [1] Very Deep Convolutional Networks for Large-Scale Image Recognition
       https://arxiv.org/abs/1409.1556
   [2] Deep Residual Learning for Image Recognition
       https://arxiv.org/abs/1512.03385
+
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
+
   Returns:
     cropped_image: a Tensor representing the center cropped image.
   """
@@ -316,18 +332,22 @@ def center_crop_image(image):
 
 def center_crop_image_v2(image_bytes, image_shape):
   """Center crop a square shape slice from the input image.
+
   It crops a square shape slice from the image. The side of the actual crop
   is 224 / 256 = 0.875 of the short side of the original image. References:
   [1] Very Deep Convolutional Networks for Large-Scale Image Recognition
       https://arxiv.org/abs/1409.1556
   [2] Deep Residual Learning for Image Recognition
       https://arxiv.org/abs/1512.03385
+
   This is a faster version of `center_crop_image` which takes the original
   image bytes and image size as the inputs, and partially decode the JPEG
   bytes according to the center crop.
+
   Args:
     image_bytes: a Tensor of type string representing the raw image bytes.
     image_shape: a Tensor specifying the shape of the raw image.
+
   Returns:
     cropped_image: a Tensor representing the center cropped image.
   """
@@ -350,6 +370,7 @@ def random_crop_image(image,
                       max_attempts=10,
                       seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
+
   Args:
     image: a Tensor of shape [height, width, 3] representing the input image.
     aspect_ratio_range: a list of floats. The cropped area of the image must
@@ -360,6 +381,7 @@ def random_crop_image(image,
       image of the specified constraints. After max_attempts failures, return
       the entire image.
     seed: the seed of the random generator.
+
   Returns:
     cropped_image: a Tensor representing the random cropped image. Can be the
       original image if max_attempts is exhausted.
@@ -384,9 +406,11 @@ def random_crop_image_v2(image_bytes,
                          max_attempts=10,
                          seed=1):
   """Randomly crop an arbitrary shaped slice from the input image.
+
   This is a faster version of `random_crop_image` which takes the original
   image bytes and image size as the inputs, and partially decode the JPEG
   bytes according to the generated crop.
+
   Args:
     image_bytes: a Tensor of type string representing the raw image bytes.
     image_shape: a Tensor specifying the shape of the raw image.
@@ -398,6 +422,7 @@ def random_crop_image_v2(image_bytes,
       image of the specified constraints. After max_attempts failures, return
       the entire image.
     seed: the seed of the random generator.
+
   Returns:
     cropped_image: a Tensor representing the random cropped image. Can be the
       original image if max_attempts is exhausted.
@@ -424,6 +449,7 @@ def resize_and_crop_boxes(boxes,
                           output_size,
                           offset):
   """Resizes boxes to output size with scale and offset.
+
   Args:
     boxes: `Tensor` of shape [N, 4] representing ground truth boxes.
     image_scale: 2D float `Tensor` representing scale factors that apply to
@@ -432,6 +458,7 @@ def resize_and_crop_boxes(boxes,
       output image size.
     offset: 2D `Tensor` representing top-left corner [y0, x0] to crop scaled
       boxes.
+
   Returns:
     boxes: `Tensor` of shape [N, 4] representing the scaled boxes.
   """
@@ -449,6 +476,7 @@ def resize_and_crop_masks(masks,
                           output_size,
                           offset):
   """Resizes boxes to output size with scale and offset.
+
   Args:
     masks: `Tensor` of shape [N, H, W, 1] representing ground truth masks.
     image_scale: 2D float `Tensor` representing scale factors that apply to
@@ -457,6 +485,7 @@ def resize_and_crop_masks(masks,
       output image size.
     offset: 2D `Tensor` representing top-left corner [y0, x0] to crop scaled
       boxes.
+
   Returns:
     masks: `Tensor` of shape [N, H, W, 1] representing the scaled masks.
   """
@@ -526,3 +555,183 @@ def random_horizontal_flip(image, normalized_boxes=None, masks=None, seed=1):
           lambda: masks)
 
     return image, normalized_boxes, masks
+
+
+def random_crop_image_with_boxes_and_labels(img, boxes, labels, min_scale,
+                                            aspect_ratio_range,
+                                            min_overlap_params, max_retry):
+  """Crops a random slice from the input image.
+
+  The function will correspondingly recompute the bounding boxes and filter out
+  outside boxes and their labels.
+
+  References:
+  [1] End-to-End Object Detection with Transformers
+  https://arxiv.org/abs/2005.12872
+
+  The preprocessing steps:
+  1. Sample a minimum IoU overlap.
+  2. For each trial, sample the new image width, height, and top-left corner.
+  3. Compute the IoUs of bounding boxes with the cropped image and retry if
+    the maximum IoU is below the sampled threshold.
+  4. Find boxes whose centers are in the cropped image.
+  5. Compute new bounding boxes in the cropped region and only select those
+    boxes' labels.
+
+  Args:
+    img: a 'Tensor' of shape [height, width, 3] representing the input image.
+    boxes: a 'Tensor' of shape [N, 4] representing the ground-truth bounding
+      boxes with (ymin, xmin, ymax, xmax).
+    labels: a 'Tensor' of shape [N,] representing the class labels of the boxes.
+    min_scale: a 'float' in [0.0, 1.0) indicating the lower bound of the random
+      scale variable.
+    aspect_ratio_range: a list of two 'float' that specifies the lower and upper
+      bound of the random aspect ratio.
+    min_overlap_params: a list of four 'float' representing the min value, max
+      value, step size, and offset for the minimum overlap sample.
+    max_retry: an 'int' representing the number of trials for cropping. If it is
+      exhausted, no cropping will be performed.
+
+  Returns:
+    img: a Tensor representing the random cropped image. Can be the
+      original image if max_retry is exhausted.
+    boxes: a Tensor representing the bounding boxes in the cropped image.
+    labels: a Tensor representing the new bounding boxes' labels.
+  """
+
+  shape = tf.shape(img)
+  original_h = shape[0]
+  original_w = shape[1]
+
+  minval, maxval, step, offset = min_overlap_params
+
+  min_overlap = tf.math.floordiv(
+      tf.random.uniform([], minval=minval, maxval=maxval), step) * step - offset
+
+  min_overlap = tf.clip_by_value(min_overlap, 0.0, 1.1)
+
+  if min_overlap > 1.0:
+    return img, boxes, labels
+
+  aspect_ratio_low = aspect_ratio_range[0]
+  aspect_ratio_high = aspect_ratio_range[1]
+
+  for _ in tf.range(max_retry):
+    scale_h = tf.random.uniform([], min_scale, 1.0)
+    scale_w = tf.random.uniform([], min_scale, 1.0)
+    new_h = tf.cast(
+        scale_h * tf.cast(original_h, dtype=tf.float32), dtype=tf.int32)
+    new_w = tf.cast(
+        scale_w * tf.cast(original_w, dtype=tf.float32), dtype=tf.int32)
+
+    # Aspect ratio has to be in the prespecified range
+    aspect_ratio = new_h / new_w
+    if aspect_ratio_low > aspect_ratio or aspect_ratio > aspect_ratio_high:
+      continue
+
+    left = tf.random.uniform([], 0, original_w - new_w, dtype=tf.int32)
+    right = left + new_w
+    top = tf.random.uniform([], 0, original_h - new_h, dtype=tf.int32)
+    bottom = top + new_h
+
+    normalized_left = tf.cast(
+        left, dtype=tf.float32) / tf.cast(
+            original_w, dtype=tf.float32)
+    normalized_right = tf.cast(
+        right, dtype=tf.float32) / tf.cast(
+            original_w, dtype=tf.float32)
+    normalized_top = tf.cast(
+        top, dtype=tf.float32) / tf.cast(
+            original_h, dtype=tf.float32)
+    normalized_bottom = tf.cast(
+        bottom, dtype=tf.float32) / tf.cast(
+            original_h, dtype=tf.float32)
+
+    cropped_box = tf.expand_dims(
+        tf.stack([
+            normalized_top,
+            normalized_left,
+            normalized_bottom,
+            normalized_right,
+        ]),
+        axis=0)
+    iou = box_ops.bbox_overlap(
+        tf.expand_dims(cropped_box, axis=0),
+        tf.expand_dims(boxes, axis=0))  # (1, 1, n_ground_truth)
+    iou = tf.squeeze(iou, axis=[0, 1])
+
+    # If not a single bounding box has a Jaccard overlap of greater than
+    # the minimum, try again
+    if tf.reduce_max(iou) < min_overlap:
+      continue
+
+    centroids = box_ops.yxyx_to_cycxhw(boxes)
+    mask = tf.math.logical_and(
+        tf.math.logical_and(centroids[:, 0] > normalized_top,
+                            centroids[:, 0] < normalized_bottom),
+        tf.math.logical_and(centroids[:, 1] > normalized_left,
+                            centroids[:, 1] < normalized_right))
+    # If not a single bounding box has its center in the crop, try again.
+    if tf.reduce_sum(tf.cast(mask, dtype=tf.int32)) > 0:
+      indices = tf.squeeze(tf.where(mask), axis=1)
+
+      filtered_boxes = tf.gather(boxes, indices)
+
+      boxes = tf.clip_by_value(
+          (filtered_boxes[..., :] * tf.cast(
+              tf.stack([original_h, original_w, original_h, original_w]),
+              dtype=tf.float32) -
+           tf.cast(tf.stack([top, left, top, left]), dtype=tf.float32)) /
+          tf.cast(tf.stack([new_h, new_w, new_h, new_w]), dtype=tf.float32),
+          0.0, 1.0)
+
+      img = tf.image.crop_to_bounding_box(img, top, left, bottom - top,
+                                          right - left)
+
+      labels = tf.gather(labels, indices)
+      break
+
+  return img, boxes, labels
+
+
+def random_crop(image,
+                boxes,
+                labels,
+                min_scale=0.3,
+                aspect_ratio_range=(0.5, 2.0),
+                min_overlap_params=(0.0, 1.4, 0.2, 0.1),
+                max_retry=50,
+                seed=None):
+  """Randomly crop the image and boxes, filtering labels.
+
+  Args:
+    image: a 'Tensor' of shape [height, width, 3] representing the input image.
+    boxes: a 'Tensor' of shape [N, 4] representing the ground-truth bounding
+      boxes with (ymin, xmin, ymax, xmax).
+    labels: a 'Tensor' of shape [N,] representing the class labels of the boxes.
+    min_scale: a 'float' in [0.0, 1.0) indicating the lower bound of the random
+      scale variable.
+    aspect_ratio_range: a list of two 'float' that specifies the lower and upper
+      bound of the random aspect ratio.
+    min_overlap_params: a list of four 'float' representing the min value, max
+      value, step size, and offset for the minimum overlap sample.
+    max_retry: an 'int' representing the number of trials for cropping. If it is
+      exhausted, no cropping will be performed.
+    seed: the random number seed of int, but could be None.
+
+  Returns:
+    image: a Tensor representing the random cropped image. Can be the
+      original image if max_retry is exhausted.
+    boxes: a Tensor representing the bounding boxes in the cropped image.
+    labels: a Tensor representing the new bounding boxes' labels.
+  """
+  with tf.name_scope('random_crop'):
+    do_crop = tf.greater(tf.random.uniform([], seed=seed), 0.5)
+    if do_crop:
+      return random_crop_image_with_boxes_and_labels(image, boxes, labels,
+                                                     min_scale,
+                                                     aspect_ratio_range,
+                                                     min_overlap_params,
+                                                     max_retry)
+    else:
+      return image, boxes, labels

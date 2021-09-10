@@ -1,4 +1,4 @@
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tests for BERT trainer network."""
 
 from absl.testing import parameterized
@@ -93,10 +93,8 @@ class BertSpanLabelerTest(keras_parameterized.TestCase):
 
   def test_serialize_deserialize(self):
     """Validate that the BERT trainer can be serialized and deserialized."""
-    # Build a transformer network to use within the BERT trainer. (Here, we use
-    # a short sequence_length for convenience.)
-    test_network = networks.BertEncoder(
-        vocab_size=100, num_layers=2, sequence_length=5)
+    # Build a transformer network to use within the BERT trainer.
+    test_network = networks.BertEncoder(vocab_size=100, num_layers=2)
 
     # Create a BERT trainer with the created network. (Note that all the args
     # are different, so we can catch any serialization mismatches.)

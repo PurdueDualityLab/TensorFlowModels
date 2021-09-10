@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tests for official.nlp.tasks.translation."""
 import functools
 import os
@@ -86,7 +85,8 @@ class TranslationTaskTest(tf.test.TestCase):
   def test_task(self):
     config = translation.TranslationConfig(
         model=translation.ModelConfig(
-            encoder=translation.EncDecoder(), decoder=translation.EncDecoder()),
+            encoder=translation.EncDecoder(num_layers=1),
+            decoder=translation.EncDecoder(num_layers=1)),
         train_data=wmt_dataloader.WMTDataConfig(
             input_path=self._record_input_path,
             src_lang="en", tgt_lang="reverse_en",
@@ -103,7 +103,8 @@ class TranslationTaskTest(tf.test.TestCase):
   def test_no_sentencepiece_path(self):
     config = translation.TranslationConfig(
         model=translation.ModelConfig(
-            encoder=translation.EncDecoder(), decoder=translation.EncDecoder()),
+            encoder=translation.EncDecoder(num_layers=1),
+            decoder=translation.EncDecoder(num_layers=1)),
         train_data=wmt_dataloader.WMTDataConfig(
             input_path=self._record_input_path,
             src_lang="en", tgt_lang="reverse_en",
@@ -123,7 +124,8 @@ class TranslationTaskTest(tf.test.TestCase):
         sentencepeice_model_prefix)
     config = translation.TranslationConfig(
         model=translation.ModelConfig(
-            encoder=translation.EncDecoder(), decoder=translation.EncDecoder()),
+            encoder=translation.EncDecoder(num_layers=1),
+            decoder=translation.EncDecoder(num_layers=1)),
         train_data=wmt_dataloader.WMTDataConfig(
             input_path=self._record_input_path,
             src_lang="en", tgt_lang="reverse_en",
@@ -138,7 +140,8 @@ class TranslationTaskTest(tf.test.TestCase):
   def test_evaluation(self):
     config = translation.TranslationConfig(
         model=translation.ModelConfig(
-            encoder=translation.EncDecoder(), decoder=translation.EncDecoder(),
+            encoder=translation.EncDecoder(num_layers=1),
+            decoder=translation.EncDecoder(num_layers=1),
             padded_decode=False,
             decode_max_length=64),
         validation_data=wmt_dataloader.WMTDataConfig(

@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Region Similarity Calculators."""
 
 import tensorflow as tf
@@ -132,6 +132,9 @@ class IouSimilarity:
     Output shape:
       [M, N], or [B, M, N]
     """
+    boxes_1 = tf.cast(boxes_1, tf.float32)
+    boxes_2 = tf.cast(boxes_2, tf.float32)
+
     boxes_1_rank = len(boxes_1.shape)
     boxes_2_rank = len(boxes_2.shape)
     if boxes_1_rank < 2 or boxes_1_rank > 3:

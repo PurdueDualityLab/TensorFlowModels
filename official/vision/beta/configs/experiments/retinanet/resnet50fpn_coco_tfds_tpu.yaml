@@ -19,7 +19,7 @@ task:
     tfds_name: 'coco/2017'
     tfds_split: 'train'
     drop_remainder: true
-    dtype: float32
+    dtype: bfloat16
     global_batch_size: 256
     input_path: ''
     is_training: true
@@ -28,7 +28,7 @@ task:
     tfds_name: 'coco/2017'
     tfds_split: 'validation'
     drop_remainder: true
-    dtype: float32
+    dtype: bfloat16
     global_batch_size: 8
     input_path: ''
     is_training: false

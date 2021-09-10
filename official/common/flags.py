@@ -18,17 +18,39 @@ from absl import flags
 
 
 def define_flags():
-  """Defines flags."""
+  """Defines flags.
+
+  All flags are defined as optional, but in practice most models use some of
+  these flags and so mark_flags_as_required() should be called after calling
+  this function. Typically, 'experiment', 'mode', and 'model_dir' are required.
+  For example:
+
+  ```
+  from absl import flags
+  from official.common import flags as tfm_flags  # pylint: disable=line-too-long
+  ...
+  tfm_flags.define_flags()
+  flags.mark_flags_as_required(['experiment', 'mode', 'model_dir'])
+  ```
+
+  The reason all flags are optional is because unit tests often do not set or
+  use any of the flags.
+  """
   flags.DEFINE_string(
-      'experiment', default=None, help='The experiment type registered.')
+      'experiment', default=None, help=
+      'The experiment type registered, specifying an ExperimentConfig.')
 
   flags.DEFINE_enum(
       'mode',
       default=None,
-      enum_values=['train', 'eval', 'train_and_eval',
-                   'continuous_eval', 'continuous_train_and_eval'],
+      enum_values=[
+          'train', 'eval', 'train_and_eval', 'continuous_eval',
+          'continuous_train_and_eval', 'train_and_validate'
+      ],
       help='Mode to run: `train`, `eval`, `train_and_eval`, '
-      '`continuous_eval`, and `continuous_train_and_eval`.')
+      '`continuous_eval`, `continuous_train_and_eval` and '
+      '`train_and_validate` (which is not implemented in '
+      'the open source version).')
 
   flags.DEFINE_string(
       'model_dir',
@@ -61,16 +83,25 @@ def define_flags():
       '--> params in params_override. See also the help message of '
       '`--config_file`.')
 
-  flags.DEFINE_multi_string(
-      'gin_file', default=None, help='List of paths to the config files.')
+  # The libraries rely on gin often make mistakes that include flags inside
+  # the library files which causes conflicts.
+  try:
+    flags.DEFINE_multi_string(
+        'gin_file', default=None, help='List of paths to the config files.')
+  except flags.DuplicateFlagError:
+    pass
 
-  flags.DEFINE_multi_string(
-      'gin_params',
-      default=None,
-      help='Newline separated list of Gin parameter bindings.')
+  try:
+    flags.DEFINE_multi_string(
+        'gin_params',
+        default=None,
+        help='Newline separated list of Gin parameter bindings.')
+  except flags.DuplicateFlagError:
+    pass
 
   flags.DEFINE_string(
-      'tpu', default=None,
+      'tpu',
+      default=None,
       help='The Cloud TPU to use for training. This should be either the name '
       'used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 '
       'url.')

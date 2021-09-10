@@ -91,10 +91,10 @@ class TestEvaluatorWithOutputsAggregation(standard_runner.StandardEvaluator):
     super().__init__(eval_dataset=dataset, options=options)
 
   def eval_begin(self):
-    return tf.constant((0.0,))
+    return {"logits": tf.constant((0.0,))}
 
   def eval_reduce(self, state, step_outputs):
-    state = tf.concat([state, step_outputs], 0)
+    state["logits"] = tf.concat([state["logits"], step_outputs], 0)
     return state
 
   def eval_step(self, iterator):
@@ -107,7 +107,7 @@ class TestEvaluatorWithOutputsAggregation(standard_runner.StandardEvaluator):
         self.strategy.run(replica_step, args=(next(iterator),)))
 
   def eval_end(self, outputs):
-    return tf.reduce_sum(outputs)
+    return tf.reduce_sum(outputs["logits"])
 
 
 class StandardRunnerTest(parameterized.TestCase):
@@ -135,6 +135,17 @@ class StandardRunnerTest(parameterized.TestCase):
         use_tf_while_loop=use_tf_while_loop)
     evaluator = TestEvaluatorWithOutputsAggregation(options)
     self.assertEqual(evaluator.evaluate(tf.constant(10)), 45)
+
+  @parameterized.named_parameters(
+      ("recreate_iterator_for_each_eval", True, 10, 10),
+      ("not_recreate_iterator_for_each_eval", False, 10, 35))
+  def test_evaluator_with_repeat_dataset(self, recreate_iterator_for_each_eval,
+                                         sum_for_1st_time, sum_for_2nd_time):
+    options = standard_runner.StandardEvaluatorOptions(
+        recreate_iterator_for_each_eval=recreate_iterator_for_each_eval)
+    evaluator = TestEvaluatorWithOutputsAggregation(options)
+    self.assertEqual(evaluator.evaluate(tf.constant(5)), sum_for_1st_time)
+    self.assertEqual(evaluator.evaluate(tf.constant(5)), sum_for_2nd_time)
 
 
 if __name__ == "__main__":

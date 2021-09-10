@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 """Tests for image_classification."""
 # pylint: disable=unused-import
 from absl.testing import parameterized
@@ -39,6 +39,7 @@ class ImageClassificationConfigTest(tf.test.TestCase, parameterized.TestCase):
     self.assertIsInstance(config.task.model,
                           exp_cfg.ImageClassificationModel)
     self.assertIsInstance(config.task.train_data, exp_cfg.DataConfig)
+    config.validate()
     config.task.train_data.is_training = None
     with self.assertRaises(KeyError):
       config.validate()

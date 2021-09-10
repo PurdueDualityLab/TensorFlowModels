@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Image segmentation task definition."""
+from typing import Any, Optional, List, Tuple, Mapping, Union
 
 from absl import logging
 import tensorflow as tf
 from official.common import dataset_fn
 from official.core import base_task
-from official.core import input_reader
 from official.core import task_factory
 from official.vision.beta.configs import semantic_segmentation as exp_cfg
+from official.vision.beta.dataloaders import input_reader_factory
 from official.vision.beta.dataloaders import segmentation_input
-from official.vision.beta.dataloaders import tfds_segmentation_decoders
+from official.vision.beta.dataloaders import tfds_factory
 from official.vision.beta.evaluation import segmentation_metrics
 from official.vision.beta.losses import segmentation_losses
 from official.vision.beta.modeling import factory
@@ -63,8 +63,8 @@ class SemanticSegmentationTask(base_task.Task):
     # Restoring checkpoint.
     if 'all' in self.task_config.init_checkpoint_modules:
       ckpt = tf.train.Checkpoint(**model.checkpoint_items)
-      status = ckpt.restore(ckpt_dir_or_file)
-      status.assert_consumed()
+      status = ckpt.read(ckpt_dir_or_file)
+      status.expect_partial().assert_existing_objects_matched()
     else:
       ckpt_items = {}
       if 'backbone' in self.task_config.init_checkpoint_modules:
@@ -73,29 +73,27 @@ class SemanticSegmentationTask(base_task.Task):
         ckpt_items.update(decoder=model.decoder)
 
       ckpt = tf.train.Checkpoint(**ckpt_items)
-      status = ckpt.restore(ckpt_dir_or_file)
+      status = ckpt.read(ckpt_dir_or_file)
       status.expect_partial().assert_existing_objects_matched()
 
     logging.info('Finished loading pretrained checkpoint from %s',
                  ckpt_dir_or_file)
 
-  def build_inputs(self, params, input_context=None):
+  def build_inputs(self,
+                   params: exp_cfg.DataConfig,
+                   input_context: Optional[tf.distribute.InputContext] = None):
     """Builds classification input."""
 
     ignore_label = self.task_config.losses.ignore_label
 
     if params.tfds_name:
-      if params.tfds_name in tfds_segmentation_decoders.TFDS_ID_TO_DECODER_MAP:
-        decoder = tfds_segmentation_decoders.TFDS_ID_TO_DECODER_MAP[
-            params.tfds_name]()
-      else:
-        raise ValueError('TFDS {} is not supported'.format(params.tfds_name))
+      decoder = tfds_factory.get_segmentation_decoder(params.tfds_name)
     else:
       decoder = segmentation_input.Decoder()
 
     parser = segmentation_input.Parser(
         output_size=params.output_size,
-        train_on_crops=params.train_on_crops,
+        crop_size=params.crop_size,
         ignore_label=ignore_label,
         resize_eval_groundtruth=params.resize_eval_groundtruth,
         groundtruth_padded_size=params.groundtruth_padded_size,
@@ -104,7 +102,7 @@ class SemanticSegmentationTask(base_task.Task):
         aug_rand_hflip=params.aug_rand_hflip,
         dtype=params.dtype)
 
-    reader = input_reader.InputReader(
+    reader = input_reader_factory.input_reader_generator(
         params,
         dataset_fn=dataset_fn.pick_dataset_fn(params.file_type),
         decoder_fn=decoder.decode,
@@ -114,7 +112,10 @@ class SemanticSegmentationTask(base_task.Task):
 
     return dataset
 
-  def build_losses(self, labels, model_outputs, aux_losses=None):
+  def build_losses(self,
+                   labels: Mapping[str, tf.Tensor],
+                   model_outputs: Union[Mapping[str, tf.Tensor], tf.Tensor],
+                   aux_losses: Optional[Any] = None):
     """Segmentation loss.
 
     Args:
@@ -140,7 +141,7 @@ class SemanticSegmentationTask(base_task.Task):
 
     return total_loss
 
-  def build_metrics(self, training=True):
+  def build_metrics(self, training: bool = True):
     """Gets streaming metrics for training/validation."""
     metrics = []
     if training and self.task_config.evaluation.report_train_mean_iou:
@@ -159,7 +160,11 @@ class SemanticSegmentationTask(base_task.Task):
 
     return metrics
 
-  def train_step(self, inputs, model, optimizer, metrics=None):
+  def train_step(self,
+                 inputs: Tuple[Any, Any],
+                 model: tf.keras.Model,
+                 optimizer: tf.keras.optimizers.Optimizer,
+                 metrics: Optional[List[Any]] = None):
     """Does forward and backward.
 
     Args:
@@ -214,7 +219,10 @@ class SemanticSegmentationTask(base_task.Task):
 
     return logs
 
-  def validation_step(self, inputs, model, metrics=None):
+  def validation_step(self,
+                      inputs: Tuple[Any, Any],
+                      model: tf.keras.Model,
+                      metrics: Optional[List[Any]] = None):
     """Validatation step.
 
     Args:
@@ -251,7 +259,7 @@ class SemanticSegmentationTask(base_task.Task):
 
     return logs
 
-  def inference_step(self, inputs, model):
+  def inference_step(self, inputs: tf.Tensor, model: tf.keras.Model):
     """Performs the forward step."""
     return model(inputs, training=False)
 
@@ -263,7 +271,7 @@ class SemanticSegmentationTask(base_task.Task):
                                  step_outputs[self.iou_metric.name][1])
     return state
 
-  def reduce_aggregated_logs(self, aggregated_logs):
+  def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
     result = {}
     ious = self.iou_metric.result()
     # TODO(arashwan): support loading class name from a label map file.

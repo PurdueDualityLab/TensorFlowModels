@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 """Tests for resnet."""
 
 # Import libraries
@@ -28,6 +28,7 @@ from official.vision.beta.modeling.backbones import resnet
 class ResNetTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters(
+      (128, 10, 1),
       (128, 18, 1),
       (128, 34, 1),
       (128, 50, 4),
@@ -38,6 +39,7 @@ class ResNetTest(parameterized.TestCase, tf.test.TestCase):
                             endpoint_filter_scale):
     """Test creation of ResNet family models."""
     resnet_params = {
+        10: 4915904,
         18: 11190464,
         34: 21306048,
         50: 23561152,
@@ -126,6 +128,7 @@ class ResNetTest(parameterized.TestCase, tf.test.TestCase):
         resnetd_shortcut=False,
         replace_stem_max_pool=False,
         init_stochastic_depth_rate=0.0,
+        scale_stem=True,
         use_sync_bn=False,
         activation='relu',
         norm_momentum=0.99,
@@ -133,7 +136,7 @@ class ResNetTest(parameterized.TestCase, tf.test.TestCase):
         kernel_initializer='VarianceScaling',
         kernel_regularizer=None,
         bias_regularizer=None,
-    )
+        bn_trainable=True)
     network = resnet.ResNet(**kwargs)
 
     expected_config = dict(kwargs)

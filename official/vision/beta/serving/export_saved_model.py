@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 r"""Vision models export binary for serving/inference.
 
 To export a trained checkpoint in saved_model format (shell script):
@@ -73,6 +73,10 @@ flags.DEFINE_string(
     'input_image_size', '224,224',
     'The comma-separated string of two integers representing the height,width '
     'of the input to the model.')
+flags.DEFINE_string('export_checkpoint_subdir', 'checkpoint',
+                    'The subdirectory for checkpoints.')
+flags.DEFINE_string('export_saved_model_subdir', 'saved_model',
+                    'The subdirectory for saved model.')
 
 
 def main(_):
@@ -95,8 +99,8 @@ def main(_):
       params=params,
       checkpoint_path=FLAGS.checkpoint_path,
       export_dir=FLAGS.export_dir,
-      export_checkpoint_subdir='checkpoint',
-      export_saved_model_subdir='saved_model')
+      export_checkpoint_subdir=FLAGS.export_checkpoint_subdir,
+      export_saved_model_subdir=FLAGS.export_saved_model_subdir)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tensorflow Example proto decoder for object detection.
 
 A decoder to decode string tensors containing serialized tensorflow.Example
@@ -38,7 +38,6 @@ class TfExampleDecoder(decoder.Decoder):
     self._regenerate_source_id = regenerate_source_id
     self._keys_to_features = {
         'image/encoded': tf.io.FixedLenFeature((), tf.string),
-        'image/source_id': tf.io.FixedLenFeature((), tf.string),
         'image/height': tf.io.FixedLenFeature((), tf.int64),
         'image/width': tf.io.FixedLenFeature((), tf.int64),
         'image/object/bbox/xmin': tf.io.VarLenFeature(tf.float32),
@@ -53,6 +52,10 @@ class TfExampleDecoder(decoder.Decoder):
     if include_mask:
       self._keys_to_features.update({
           'image/object/mask': tf.io.VarLenFeature(tf.string),
+      })
+    if not regenerate_source_id:
+      self._keys_to_features.update({
+          'image/source_id': tf.io.FixedLenFeature((), tf.string),
       })
 
   def _decode_image(self, parsed_tensors):

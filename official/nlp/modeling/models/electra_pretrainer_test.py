@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tests for ELECTRA pre trainer network."""
 
 import tensorflow as tf
@@ -100,7 +100,6 @@ class ElectraPretrainerTest(keras_parameterized.TestCase):
         discriminator_network=test_discriminator_network,
         vocab_size=100,
         num_classes=2,
-        sequence_length=3,
         num_token_predictions=2)
 
     # Create a set of 2-dimensional data tensors to feed into the model.
@@ -138,7 +137,6 @@ class ElectraPretrainerTest(keras_parameterized.TestCase):
         discriminator_network=test_discriminator_network,
         vocab_size=100,
         num_classes=2,
-        sequence_length=3,
         num_token_predictions=2)
 
     # Create another BERT trainer via serialization and deserialization.

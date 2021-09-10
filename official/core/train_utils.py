@@ -17,7 +17,7 @@ import copy
 import json
 import os
 import pprint
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from absl import logging
 import dataclasses
@@ -25,6 +25,9 @@ import gin
 import orbit
 import tensorflow as tf
 
+# pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2_as_graph
+# pylint: enable=g-direct-tensorflow-import
 from official.core import base_task
 from official.core import base_trainer
 from official.core import config_definitions
@@ -32,8 +35,7 @@ from official.core import exp_factory
 from official.modeling import hyperparams
 
 
-def get_leaf_nested_dict(
-    d: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+def get_leaf_nested_dict(d: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
   """Get leaf from a dictionary with arbitrary depth with a list of keys.
 
   Args:
@@ -60,9 +62,8 @@ def get_leaf_nested_dict(
   return leaf
 
 
-def cast_leaf_nested_dict(
-    d: Dict[str, Any],
-    cast_fn: Callable[[Any], Any]) -> Dict[str, Any]:
+def cast_leaf_nested_dict(d: Dict[str, Any],
+                          cast_fn: Callable[[Any], Any]) -> Dict[str, Any]:
   """Cast the leaves of a dictionary with arbitrary depth in place.
 
   Args:
@@ -88,8 +89,8 @@ def maybe_create_best_ckpt_exporter(params: config_definitions.ExperimentConfig,
   metric_comp = params.trainer.best_checkpoint_metric_comp
   if data_dir and export_subdir and metric_name:
     best_ckpt_dir = os.path.join(data_dir, export_subdir)
-    best_ckpt_exporter = BestCheckpointExporter(
-        best_ckpt_dir, metric_name, metric_comp)
+    best_ckpt_exporter = BestCheckpointExporter(best_ckpt_dir, metric_name,
+                                                metric_comp)
     logging.info(
         'Created the best checkpoint exporter. '
         'data_dir: %s, export_subdir: %s, metric_name: %s', data_dir,
@@ -130,8 +131,8 @@ class BestCheckpointExporter:
 
   def _get_checkpoint_manager(self, checkpoint):
     """Gets an existing checkpoint manager or creates a new one."""
-    if self._checkpoint_manager is None or (
-        self._checkpoint_manager.checkpoint != checkpoint):
+    if self._checkpoint_manager is None or (self._checkpoint_manager.checkpoint
+                                            != checkpoint):
       logging.info('Creates a new checkpoint manager.')
       self._checkpoint_manager = tf.train.CheckpointManager(
           checkpoint,
@@ -141,14 +142,19 @@ class BestCheckpointExporter:
 
     return self._checkpoint_manager
 
-  def maybe_export_checkpoint(self, checkpoint, eval_logs, global_step):
+  def maybe_export_checkpoint(
+      self, checkpoint, eval_logs, global_step, write_logs=True) -> bool:
+    """Compare eval_logs with past eval_logs and export checkpoint if better."""
     logging.info('[BestCheckpointExporter] received eval_logs: %s, at step: %d',
                  eval_logs, global_step)
     if self._best_ckpt_logs is None or self._new_metric_is_better(
         self._best_ckpt_logs, eval_logs):
       self._best_ckpt_logs = eval_logs
-      self._export_best_eval_metric(checkpoint, self._best_ckpt_logs,
-                                    global_step)
+      if write_logs:
+        self.export_best_eval_metric(self._best_ckpt_logs, global_step)
+      self._get_checkpoint_manager(checkpoint).save()
+      return True
+    return False
 
   def _maybe_load_best_eval_metric(self):
     if not tf.io.gfile.exists(self.best_ckpt_logs_path):
@@ -158,10 +164,12 @@ class BestCheckpointExporter:
 
   def _new_metric_is_better(self, old_logs, new_logs):
     """Check if the metric in new_logs is better than the metric in old_logs."""
-    old_value = float(orbit.utils.get_value(
-        get_leaf_nested_dict(old_logs, self._metric_name)))
-    new_value = float(orbit.utils.get_value(
-        get_leaf_nested_dict(new_logs, self._metric_name)))
+    old_value = float(
+        orbit.utils.get_value(
+            get_leaf_nested_dict(old_logs, self._metric_name)))
+    new_value = float(
+        orbit.utils.get_value(
+            get_leaf_nested_dict(new_logs, self._metric_name)))
 
     logging.info('[BestCheckpointExporter] comparing results. old: %f, new: %f',
                  old_value, new_value)
@@ -177,7 +185,7 @@ class BestCheckpointExporter:
         return True
     return False
 
-  def _export_best_eval_metric(self, checkpoint, eval_logs, global_step):
+  def export_best_eval_metric(self, eval_logs, global_step):
     """Export evaluation results of the best checkpoint into a json file."""
     eval_logs_ext = copy.copy(eval_logs)
     eval_logs_ext['best_ckpt_global_step'] = global_step
@@ -186,8 +194,6 @@ class BestCheckpointExporter:
     # Saving json file is very fast.
     with tf.io.gfile.GFile(self.best_ckpt_logs_path, 'w') as writer:
       writer.write(json.dumps(eval_logs_ext, indent=4) + '\n')
-
-    self._get_checkpoint_manager(checkpoint).save()
 
   @property
   def best_ckpt_logs(self):
@@ -234,9 +240,15 @@ class ParseConfigOptions:
   tf_data_service: str = ''
   params_override: str = ''
 
+  def __contains__(self, name):
+    return name in dataclasses.asdict(self)
+
 
 def parse_configuration(flags_obj, lock_return=True, print_return=True):
   """Parses ExperimentConfig from flags."""
+
+  if flags_obj.experiment is None:
+    raise ValueError('The flag --experiment must be specified.')
 
   # 1. Get the default config from the registered experiment.
   params = exp_factory.get_exp_config(flags_obj.experiment)
@@ -254,8 +266,8 @@ def parse_configuration(flags_obj, lock_return=True, print_return=True):
           'tpu': flags_obj.tpu,
       },
   })
-  if flags_obj.tf_data_service and isinstance(params.task,
-                                              config_definitions.TaskConfig):
+  if ('tf_data_service' in flags_obj and flags_obj.tf_data_service and
+      isinstance(params.task, config_definitions.TaskConfig)):
     params.override({
         'task': {
             'train_data': {
@@ -282,7 +294,7 @@ def parse_configuration(flags_obj, lock_return=True, print_return=True):
 
   if print_return:
     pp = pprint.PrettyPrinter()
-    logging.info('Final experiment parameters: %s',
+    logging.info('Final experiment parameters:\n%s',
                  pp.pformat(params.as_dict()))
 
   return params
@@ -291,6 +303,8 @@ def parse_configuration(flags_obj, lock_return=True, print_return=True):
 def serialize_config(params: config_definitions.ExperimentConfig,
                      model_dir: str):
   """Serializes and saves the experiment config."""
+  if model_dir is None:
+    raise ValueError('model_dir must be specified, but got None')
   params_save_path = os.path.join(model_dir, 'params.yaml')
   logging.info('Saving experiment configuration to %s', params_save_path)
   tf.io.gfile.makedirs(model_dir)
@@ -364,3 +378,79 @@ def remove_ckpts(model_dir):
   file_to_remove = os.path.join(model_dir, 'checkpoint')
   if tf.io.gfile.exists(file_to_remove):
     tf.io.gfile.remove(file_to_remove)
+
+
+def try_count_params(
+    model: Union[tf.Module, tf.keras.Model],
+    trainable_only: bool = False):
+  """Count the number of parameters if model is possible.
+
+  Args:
+    model: Try to count the number of params in this model.
+    trainable_only: Whether to calculate trainable params only. This flag is
+      not used when the model has `count_params` attribute.
+
+  Returns:
+    The number of parameters or None.
+  """
+  if hasattr(model, 'count_params'):
+    try:
+      return model.count_params()
+    except ValueError:
+      logging.info('Number of trainable params unknown, because the build() '
+                   'methods in keras layers were not called. This is probably '
+                   'because the model was not feed any input, e.g., the max '
+                   'train step already reached before this run.')
+      return None
+  else:
+    total_params = 0
+    variables = model.trainable_variables if trainable_only else model.variables
+    for var in variables:
+      shape = tf.shape(var)
+      total_params += tf.math.reduce_prod(shape).numpy()
+  return total_params
+
+
+def try_count_flops(model: Union[tf.Module, tf.keras.Model],
+                    inputs_kwargs: Optional[Dict[str, Any]] = None):
+  """Counts and returns model FLOPs.
+
+  Args:
+    model: A model instance.
+    inputs_kwargs: An optional dictionary of argument pairs specifying inputs'
+      shape specifications to getting corresponding concrete function.
+
+  Returns:
+    The model's FLOPs.
+  """
+  if hasattr(model, 'inputs'):
+    try:
+      # Get input shape and set batch size to 1.
+      if model.inputs:
+        inputs = [
+            tf.TensorSpec([1] + input.shape[1:], input.dtype)
+            for input in model.inputs
+        ]
+        concrete_func = tf.function(model).get_concrete_function(inputs)
+      # If model.inputs is invalid, try to use the input to get concrete
+      # function for model.call (subclass model).
+      else:
+        concrete_func = tf.function(model.call).get_concrete_function(
+            **inputs_kwargs)
+      frozen_func, _ = convert_variables_to_constants_v2_as_graph(concrete_func)
+
+      # Calculate FLOPs.
+      run_meta = tf.compat.v1.RunMetadata()
+      opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+      opts['output'] = 'none'
+      flops = tf.compat.v1.profiler.profile(
+          graph=frozen_func.graph, run_meta=run_meta, options=opts)
+      return flops.total_float_ops
+    except Exception as e:  # pylint: disable=broad-except
+      logging.info(
+          'Failed to count model FLOPs with error %s, because the build() '
+          'methods in keras layers were not called. This is probably because '
+          'the model was not feed any input, e.g., the max train step already '
+          'reached before this run.', e)
+      return None
+  return None

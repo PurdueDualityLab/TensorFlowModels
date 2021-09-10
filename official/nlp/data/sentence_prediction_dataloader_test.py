@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """Tests for official.nlp.data.sentence_prediction_dataloader."""
 import os
 
@@ -133,14 +132,40 @@ class SentencePredictionDataTest(tf.test.TestCase, parameterized.TestCase):
         global_batch_size=batch_size,
         label_type=label_type)
     dataset = loader.SentencePredictionDataLoader(data_config).load()
-    features, labels = next(iter(dataset))
-    self.assertCountEqual(['input_word_ids', 'input_mask', 'input_type_ids'],
-                          features.keys())
+    features = next(iter(dataset))
+    self.assertCountEqual(
+        ['input_word_ids', 'input_type_ids', 'input_mask', 'label_ids'],
+        features.keys())
     self.assertEqual(features['input_word_ids'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_mask'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_type_ids'].shape, (batch_size, seq_length))
-    self.assertEqual(labels.shape, (batch_size,))
-    self.assertEqual(labels.dtype, expected_label_type)
+    self.assertEqual(features['label_ids'].shape, (batch_size,))
+    self.assertEqual(features['label_ids'].dtype, expected_label_type)
+
+  def test_load_dataset_with_label_mapping(self):
+    input_path = os.path.join(self.get_temp_dir(), 'train.tf_record')
+    batch_size = 10
+    seq_length = 128
+    _create_fake_preprocessed_dataset(input_path, seq_length, 'int')
+    data_config = loader.SentencePredictionDataConfig(
+        input_path=input_path,
+        seq_length=seq_length,
+        global_batch_size=batch_size,
+        label_type='int',
+        label_name=('label_ids', 'next_sentence_labels'))
+    dataset = loader.SentencePredictionDataLoader(data_config).load()
+    features = next(iter(dataset))
+    self.assertCountEqual([
+        'input_word_ids', 'input_mask', 'input_type_ids',
+        'next_sentence_labels', 'label_ids'
+    ], features.keys())
+    self.assertEqual(features['input_word_ids'].shape, (batch_size, seq_length))
+    self.assertEqual(features['input_mask'].shape, (batch_size, seq_length))
+    self.assertEqual(features['input_type_ids'].shape, (batch_size, seq_length))
+    self.assertEqual(features['label_ids'].shape, (batch_size,))
+    self.assertEqual(features['label_ids'].dtype, tf.int32)
+    self.assertEqual(features['next_sentence_labels'].shape, (batch_size,))
+    self.assertEqual(features['next_sentence_labels'].dtype, tf.int32)
 
 
 class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
@@ -164,7 +189,6 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         input_path='' if use_tfds else tf_record_path,
         tfds_name='glue/mrpc' if use_tfds else '',
         tfds_split='train' if use_tfds else '',
-        tfds_download=True,
         text_fields=text_fields,
         global_batch_size=batch_size,
         seq_length=seq_length,
@@ -172,13 +196,18 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         lower_case=lower_case,
         vocab_file=vocab_file_path)
     dataset = loader.SentencePredictionTextDataLoader(data_config).load()
-    features, labels = next(iter(dataset))
-    self.assertCountEqual(['input_word_ids', 'input_type_ids', 'input_mask'],
-                          features.keys())
+    features = next(iter(dataset))
+    label_field = data_config.label_field
+    expected_keys = [
+        'input_word_ids', 'input_type_ids', 'input_mask', label_field
+    ]
+    if use_tfds:
+      expected_keys += ['idx']
+    self.assertCountEqual(expected_keys, features.keys())
     self.assertEqual(features['input_word_ids'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_mask'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_type_ids'].shape, (batch_size, seq_length))
-    self.assertEqual(labels.shape, (batch_size,))
+    self.assertEqual(features[label_field].shape, (batch_size,))
 
   @parameterized.parameters(True, False)
   def test_python_sentencepiece_preprocessing(self, use_tfds):
@@ -196,7 +225,6 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         input_path='' if use_tfds else tf_record_path,
         tfds_name='glue/mrpc' if use_tfds else '',
         tfds_split='train' if use_tfds else '',
-        tfds_download=True,
         text_fields=text_fields,
         global_batch_size=batch_size,
         seq_length=seq_length,
@@ -206,13 +234,18 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         vocab_file=sp_model_file_path,
     )
     dataset = loader.SentencePredictionTextDataLoader(data_config).load()
-    features, labels = next(iter(dataset))
-    self.assertCountEqual(['input_word_ids', 'input_type_ids', 'input_mask'],
-                          features.keys())
+    features = next(iter(dataset))
+    label_field = data_config.label_field
+    expected_keys = [
+        'input_word_ids', 'input_type_ids', 'input_mask', label_field
+    ]
+    if use_tfds:
+      expected_keys += ['idx']
+    self.assertCountEqual(expected_keys, features.keys())
     self.assertEqual(features['input_word_ids'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_mask'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_type_ids'].shape, (batch_size, seq_length))
-    self.assertEqual(labels.shape, (batch_size,))
+    self.assertEqual(features[label_field].shape, (batch_size,))
 
   @parameterized.parameters(True, False)
   def test_saved_model_preprocessing(self, use_tfds):
@@ -230,7 +263,6 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         input_path='' if use_tfds else tf_record_path,
         tfds_name='glue/mrpc' if use_tfds else '',
         tfds_split='train' if use_tfds else '',
-        tfds_download=True,
         text_fields=text_fields,
         global_batch_size=batch_size,
         seq_length=seq_length,
@@ -240,13 +272,18 @@ class SentencePredictionTfdsDataLoaderTest(tf.test.TestCase,
         label_type='int' if use_tfds else 'float',
     )
     dataset = loader.SentencePredictionTextDataLoader(data_config).load()
-    features, labels = next(iter(dataset))
-    self.assertCountEqual(['input_word_ids', 'input_type_ids', 'input_mask'],
-                          features.keys())
+    features = next(iter(dataset))
+    label_field = data_config.label_field
+    expected_keys = [
+        'input_word_ids', 'input_type_ids', 'input_mask', label_field
+    ]
+    if use_tfds:
+      expected_keys += ['idx']
+    self.assertCountEqual(expected_keys, features.keys())
     self.assertEqual(features['input_word_ids'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_mask'].shape, (batch_size, seq_length))
     self.assertEqual(features['input_type_ids'].shape, (batch_size, seq_length))
-    self.assertEqual(labels.shape, (batch_size,))
+    self.assertEqual(features[label_field].shape, (batch_size,))
 
 
 if __name__ == '__main__':

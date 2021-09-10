@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 """Image classification with darknet configs."""
 
-from typing import List, Optional
-
 import dataclasses
+from typing import List, Optional
 
 from official.core import config_definitions as cfg
 from official.core import exp_factory
@@ -32,10 +31,10 @@ class ImageClassificationModel(hyperparams.Config):
   num_classes: int = 0
   input_size: List[int] = dataclasses.field(default_factory=list)
   backbone: backbones.Backbone = backbones.Backbone(
-      type='darknet', resnet=backbones.DarkNet())
+      type='darknet', darknet=backbones.Darknet())
   dropout_rate: float = 0.0
   norm_activation: common.NormActivation = common.NormActivation()
-  # Adds a BatchNormalization layer pre-GlobalAveragePooling in classification
+  # Adds a Batch Normalization layer pre-GlobalAveragePooling in classification.
   add_head_batch_norm: bool = False
 
 

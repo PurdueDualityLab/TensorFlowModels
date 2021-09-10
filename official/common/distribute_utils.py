@@ -102,8 +102,10 @@ def get_distribution_strategy(distribution_strategy="mirrored",
     distribution_strategy: a string specifying which distribution strategy to
       use. Accepted values are "off", "one_device", "mirrored",
       "parameter_server", "multi_worker_mirrored", and "tpu" -- case
-      insensitive. "off" means not to use Distribution Strategy; "tpu" means to
-      use TPUStrategy using `tpu_address`.
+      insensitive. "tpu" means to use TPUStrategy using `tpu_address`.
+      "off" means to use the default strategy which is obtained from
+      tf.distribute.get_strategy (for details on the default strategy, see
+      https://www.tensorflow.org/guide/distributed_training#default_strategy).
     num_gpus: Number of GPUs to run this model.
     all_reduce_alg: Optional. Specifies which algorithm to use when performing
       all-reduce. For `MirroredStrategy`, valid values are "nccl" and
@@ -127,12 +129,22 @@ def get_distribution_strategy(distribution_strategy="mirrored",
   if num_gpus < 0:
     raise ValueError("`num_gpus` can not be negative.")
 
+  if not isinstance(distribution_strategy, str):
+    msg = ("distribution_strategy must be a string but got: %s." %
+           (distribution_strategy,))
+    if distribution_strategy == False:  # pylint: disable=singleton-comparison,g-explicit-bool-comparison
+      msg += (" If you meant to pass the string 'off', make sure you add "
+              "quotes around 'off' so that yaml interprets it as a string "
+              "instead of a bool.")
+    raise ValueError(msg)
+
   distribution_strategy = distribution_strategy.lower()
   if distribution_strategy == "off":
     if num_gpus > 1:
       raise ValueError("When {} GPUs are specified, distribution_strategy "
                        "flag cannot be set to `off`.".format(num_gpus))
-    return None
+    # Return the default distribution strategy.
+    return tf.distribute.get_strategy()
 
   if distribution_strategy == "tpu":
     # When tpu_address is an empty string, we communicate with local TPUs.
@@ -161,7 +173,8 @@ def get_distribution_strategy(distribution_strategy="mirrored",
         cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs))
 
   if distribution_strategy == "parameter_server":
-    return tf.compat.v1.distribute.experimental.ParameterServerStrategy()
+    cluster_resolver = tf.distribute.cluster_resolver.TFConfigClusterResolver()
+    return tf.distribute.experimental.ParameterServerStrategy(cluster_resolver)
 
   raise ValueError("Unrecognized Distribution Strategy: %r" %
                    distribution_strategy)
@@ -172,6 +185,7 @@ def configure_cluster(worker_hosts=None, task_index=-1):
 
   Args:
     worker_hosts: comma-separated list of worker ip:port pairs.
+    task_index: index of the worker.
 
   Returns:
     Number of workers in the cluster.

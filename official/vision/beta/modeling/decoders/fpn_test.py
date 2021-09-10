@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
+# Lint as: python3
 """Tests for FPN."""
 
 # Import libraries
 from absl.testing import parameterized
 import tensorflow as tf
 
+from official.vision.beta.modeling.backbones import mobilenet
 from official.vision.beta.modeling.backbones import resnet
 from official.vision.beta.modeling.decoders import fpn
 
@@ -26,17 +27,45 @@ from official.vision.beta.modeling.decoders import fpn
 class FPNTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters(
-      (256, 3, 7, False),
-      (256, 3, 7, True),
+      (256, 3, 7, False, 'sum'),
+      (256, 3, 7, True, 'concat'),
   )
   def test_network_creation(self, input_size, min_level, max_level,
-                            use_separable_conv):
+                            use_separable_conv, fusion_type):
     """Test creation of FPN."""
     tf.keras.backend.set_image_data_format('channels_last')
 
     inputs = tf.keras.Input(shape=(input_size, input_size, 3), batch_size=1)
 
     backbone = resnet.ResNet(model_id=50)
+    network = fpn.FPN(
+        input_specs=backbone.output_specs,
+        min_level=min_level,
+        max_level=max_level,
+        fusion_type=fusion_type,
+        use_separable_conv=use_separable_conv)
+
+    endpoints = backbone(inputs)
+    feats = network(endpoints)
+
+    for level in range(min_level, max_level + 1):
+      self.assertIn(str(level), feats)
+      self.assertAllEqual(
+          [1, input_size // 2**level, input_size // 2**level, 256],
+          feats[str(level)].shape.as_list())
+
+  @parameterized.parameters(
+      (256, 3, 7, False),
+      (256, 3, 7, True),
+  )
+  def test_network_creation_with_mobilenet(self, input_size, min_level,
+                                           max_level, use_separable_conv):
+    """Test creation of FPN with mobilenet backbone."""
+    tf.keras.backend.set_image_data_format('channels_last')
+
+    inputs = tf.keras.Input(shape=(input_size, input_size, 3), batch_size=1)
+
+    backbone = mobilenet.MobileNet(model_id='MobileNetV2')
     network = fpn.FPN(
         input_specs=backbone.output_specs,
         min_level=min_level,
@@ -59,6 +88,7 @@ class FPNTest(parameterized.TestCase, tf.test.TestCase):
         min_level=3,
         max_level=7,
         num_filters=256,
+        fusion_type='sum',
         use_separable_conv=False,
         use_sync_bn=False,
         activation='relu',

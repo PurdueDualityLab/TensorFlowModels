@@ -1,5 +1,4 @@
-# Lint as: python3
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+
 """RetinaNet task definition."""
+from typing import Any, Optional, List, Tuple, Mapping
 
 from absl import logging
 import tensorflow as tf
 from official.common import dataset_fn
 from official.core import base_task
-from official.core import input_reader
 from official.core import task_factory
 from official.vision import keras_cv
 from official.vision.beta.configs import retinanet as exp_cfg
+from official.vision.beta.dataloaders import input_reader_factory
 from official.vision.beta.dataloaders import retinanet_input
 from official.vision.beta.dataloaders import tf_example_decoder
-from official.vision.beta.dataloaders import tfds_detection_decoders
+from official.vision.beta.dataloaders import tfds_factory
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.modeling import factory
@@ -57,7 +57,6 @@ class RetinaNetTask(base_task.Task):
         input_specs=input_specs,
         model_config=self.task_config.model,
         l2_regularizer=l2_regularizer)
-    # model.summary()
     return model
 
   def initialize(self, model: tf.keras.Model):
@@ -72,28 +71,29 @@ class RetinaNetTask(base_task.Task):
     # Restoring checkpoint.
     if self.task_config.init_checkpoint_modules == 'all':
       ckpt = tf.train.Checkpoint(**model.checkpoint_items)
-      status = ckpt.restore(ckpt_dir_or_file)
-      status.assert_consumed()
-    elif self.task_config.init_checkpoint_modules == 'backbone':
-      ckpt = tf.train.Checkpoint(backbone=model.backbone)
-      status = ckpt.restore(ckpt_dir_or_file)
+      status = ckpt.read(ckpt_dir_or_file)
       status.expect_partial().assert_existing_objects_matched()
     else:
-      raise ValueError(
-          "Only 'all' or 'backbone' can be used to initialize the model.")
+      ckpt_items = {}
+      if 'backbone' in self.task_config.init_checkpoint_modules:
+        ckpt_items.update(backbone=model.backbone)
+      if 'decoder' in self.task_config.init_checkpoint_modules:
+        ckpt_items.update(decoder=model.decoder)
+
+      ckpt = tf.train.Checkpoint(**ckpt_items)
+      status = ckpt.read(ckpt_dir_or_file)
+      status.expect_partial().assert_existing_objects_matched()
 
     logging.info('Finished loading pretrained checkpoint from %s',
                  ckpt_dir_or_file)
 
-  def build_inputs(self, params, input_context=None):
+  def build_inputs(self,
+                   params: exp_cfg.DataConfig,
+                   input_context: Optional[tf.distribute.InputContext] = None):
     """Build input dataset."""
 
     if params.tfds_name:
-      if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
-        decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
-            params.tfds_name]()
-      else:
-        raise ValueError('TFDS {} is not supported'.format(params.tfds_name))
+      decoder = tfds_factory.get_detection_decoder(params.tfds_name)
     else:
       decoder_cfg = params.decoder.get()
       if params.decoder.type == 'simple_decoder':
@@ -123,7 +123,7 @@ class RetinaNetTask(base_task.Task):
         skip_crowd_during_training=params.parser.skip_crowd_during_training,
         max_num_instances=params.parser.max_num_instances)
 
-    reader = input_reader.InputReader(
+    reader = input_reader_factory.input_reader_generator(
         params,
         dataset_fn=dataset_fn.pick_dataset_fn(params.file_type),
         decoder_fn=decoder.decode,
@@ -132,9 +132,54 @@ class RetinaNetTask(base_task.Task):
 
     return dataset
 
-  def build_losses(self, outputs, labels, aux_losses=None):
+  def build_attribute_loss(self,
+                           attribute_heads: List[exp_cfg.AttributeHead],
+                           outputs: Mapping[str, Any],
+                           labels: Mapping[str, Any],
+                           box_sample_weight: tf.Tensor) -> float:
+    """Computes attribute loss.
+
+    Args:
+      attribute_heads: a list of attribute head configs.
+      outputs: RetinaNet model outputs.
+      labels: RetinaNet labels.
+      box_sample_weight: normalized bounding box sample weights.
+
+    Returns:
+      Attribute loss of all attribute heads.
+    """
+    attribute_loss = 0.0
+    for head in attribute_heads:
+      if head.name not in labels['attribute_targets']:
+        raise ValueError(f'Attribute {head.name} not found in label targets.')
+      if head.name not in outputs['attribute_outputs']:
+        raise ValueError(f'Attribute {head.name} not found in model outputs.')
+
+      y_true_att = keras_cv.losses.multi_level_flatten(
+          labels['attribute_targets'][head.name], last_dim=head.size)
+      y_pred_att = keras_cv.losses.multi_level_flatten(
+          outputs['attribute_outputs'][head.name], last_dim=head.size)
+      if head.type == 'regression':
+        att_loss_fn = tf.keras.losses.Huber(
+            1.0, reduction=tf.keras.losses.Reduction.SUM)
+        att_loss = att_loss_fn(
+            y_true=y_true_att,
+            y_pred=y_pred_att,
+            sample_weight=box_sample_weight)
+      else:
+        raise ValueError(f'Attribute type {head.type} not supported.')
+      attribute_loss += att_loss
+
+    return attribute_loss
+
+  def build_losses(self,
+                   outputs: Mapping[str, Any],
+                   labels: Mapping[str, Any],
+                   aux_losses: Optional[Any] = None):
     """Build RetinaNet losses."""
     params = self.task_config
+    attribute_heads = self.task_config.model.head.attribute_heads
+
     cls_loss_fn = keras_cv.losses.FocalLoss(
         alpha=params.losses.focal_loss_alpha,
         gamma=params.losses.focal_loss_gamma,
@@ -166,6 +211,10 @@ class RetinaNetTask(base_task.Task):
 
     model_loss = cls_loss + params.losses.box_loss_weight * box_loss
 
+    if attribute_heads:
+      model_loss += self.build_attribute_loss(attribute_heads, outputs, labels,
+                                              box_sample_weight)
+
     total_loss = model_loss
     if aux_losses:
       reg_loss = tf.reduce_sum(aux_losses)
@@ -173,7 +222,7 @@ class RetinaNetTask(base_task.Task):
 
     return total_loss, cls_loss, box_loss, model_loss
 
-  def build_metrics(self, training=True):
+  def build_metrics(self, training: bool = True):
     """Build detection metrics."""
     metrics = []
     metric_names = ['total_loss', 'cls_loss', 'box_loss', 'model_loss']
@@ -191,7 +240,11 @@ class RetinaNetTask(base_task.Task):
 
     return metrics
 
-  def train_step(self, inputs, model, optimizer, metrics=None):
+  def train_step(self,
+                 inputs: Tuple[Any, Any],
+                 model: tf.keras.Model,
+                 optimizer: tf.keras.optimizers.Optimizer,
+                 metrics: Optional[List[Any]] = None):
     """Does forward and backward.
 
     Args:
@@ -242,7 +295,10 @@ class RetinaNetTask(base_task.Task):
 
     return logs
 
-  def validation_step(self, inputs, model, metrics=None):
+  def validation_step(self,
+                      inputs: Tuple[Any, Any],
+                      model: tf.keras.Model,
+                      metrics: Optional[List[Any]] = None):
     """Validatation step.
 
     Args:
@@ -293,5 +349,5 @@ class RetinaNetTask(base_task.Task):
                                   step_outputs[self.coco_metric.name][1])
     return state
 
-  def reduce_aggregated_logs(self, aggregated_logs):
+  def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
     return self.coco_metric.result()
