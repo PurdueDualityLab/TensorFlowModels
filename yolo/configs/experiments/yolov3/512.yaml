@@ -46,8 +46,8 @@ task:
         'all': 1.0
       obj_normalizer: 
         'all': 1.0
-      new_cords:
-        'all': false
+      box_type:
+        'all': original
       objectness_smooth: 
         'all': 0.0
       max_delta:

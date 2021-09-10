@@ -14,7 +14,7 @@
 
 # Lint as: python3
 """Contains common building blocks for yolo neural networks."""
-from typing import Callable, List
+from typing import Callable
 import tensorflow as tf
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
@@ -23,15 +23,15 @@ from official.vision.beta.ops import spatial_transform_ops
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class Identity(tf.keras.layers.Layer):
 
-  def call(self, inputs):
-    return inputs
+  def call(self, input):
+    return input
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class ConvBN(tf.keras.layers.Layer):
   """ConvBN block.
 
-  Modified Convolution layer to match that of the Darknet Library.
+  Modified Convolution layer to match that of the DarkNet Library.
   The Layer is a standards combination of Conv BatchNorm Activation,
   however, the use of bias in the conv is determined by the use of batch
   normalization.
@@ -136,7 +136,7 @@ class ConvBN(tf.keras.layers.Layer):
         filters=self._filters,
         kernel_size=self._kernel_size,
         strides=self._strides,
-        padding=self._padding,
+        padding=self._padding,  # 'valid',
         dilation_rate=self._dilation_rate,
         use_bias=use_bias,
         kernel_initializer=self._kernel_initializer,
@@ -163,7 +163,7 @@ class ConvBN(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
 
-  def call(self, x):
+  def call(self, x, training=None):
     x = self.conv(x)
     if self._use_bn:
       x = self.bn(x)
@@ -195,7 +195,7 @@ class ConvBN(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class DarkResidual(tf.keras.layers.Layer):
-  """Darknet block with Residual connection for Yolo v3 Backbone."""
+  """DarkNet block with Residual connection for Yolo v3 Backbone."""
 
   def __init__(self,
                filters=1,
@@ -243,7 +243,6 @@ class DarkResidual(tf.keras.layers.Layer):
         downsample to True so the dimensions are forced to match.
       **kwargs: Keyword Arguments.
     """
-
     # downsample
     self._downsample = downsample
 
@@ -271,7 +270,7 @@ class DarkResidual(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -299,14 +298,14 @@ class DarkResidual(tf.keras.layers.Layer):
           strides=down_stride,
           dilation_rate=dilation_rate,
           padding='same',
-          **dark_conv_args)
+          **_dark_conv_args)
 
     self._conv1 = ConvBN(
         filters=self._filters // self._filter_scale,
         kernel_size=(1, 1),
         strides=(1, 1),
         padding='same',
-        **dark_conv_args)
+        **_dark_conv_args)
 
     self._conv2 = ConvBN(
         filters=self._filters,
@@ -314,7 +313,7 @@ class DarkResidual(tf.keras.layers.Layer):
         strides=(1, 1),
         dilation_rate=self._dilation_rate,
         padding='same',
-        **dark_conv_args)
+        **_dark_conv_args)
 
     self._shortcut = tf.keras.layers.Add()
     if self._sc_activation == 'leaky':
@@ -322,9 +321,7 @@ class DarkResidual(tf.keras.layers.Layer):
     elif self._sc_activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(
-          self._sc_activation
-      )
+      self._activation_fn = tf_utils.get_activation(self._sc_activation)
     super().build(input_shape)
 
   def call(self, inputs, training=None):
@@ -358,8 +355,7 @@ class DarkResidual(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class CSPTiny(tf.keras.layers.Layer):
-  """CSP Tiny layer.
-
+  """
   A Small size convolution block proposed in the CSPNet. The layer uses
   shortcuts, routing(concatnation), and feature grouping in order to improve
   gradient variablity and allow for high efficency, low power residual learning
@@ -369,6 +365,33 @@ class CSPTiny(tf.keras.layers.Layer):
         Ping-Yang Chen, Jun-Wei Hsieh
       CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
         arXiv:1911.11929
+  Args:
+    filters: integer for output depth, or the number of features to learn
+    kernel_initializer: string to indicate which function to use to initialize
+      weights
+    bias_initializer: string to indicate which function to use to initialize
+      bias
+    use_bn: boolean for whether to use batch normalization
+    kernel_regularizer: string to indicate which function to use to regularizer
+      weights
+    bias_regularizer: string to indicate which function to use to regularizer
+      bias
+    use_sync_bn: boolean for whether sync batch normalization statistics
+      of all batch norm layers to the models global statistics
+      (across all input batches)
+    group_id: integer for which group of features to pass through the csp
+      tiny stack.
+    groups: integer for how many splits there should be in the convolution
+      feature stack output
+    norm_momentum: float for moment to use for batch normalization
+    norm_epsilon: float for batch normalization epsilon
+    conv_activation: string or None for activation function to use in layer,
+      if None activation is replaced by linear
+    leaky_alpha: float to use as alpha if activation function is leaky
+    sc_activation: string for activation function to use in layer
+    downsample: boolean for if image input is larger than layer output, set
+      downsample to True so the dimensions are forced to match
+    **kwargs: Keyword Arguments
   """
 
   def __init__(self,
@@ -388,36 +411,6 @@ class CSPTiny(tf.keras.layers.Layer):
                downsample=True,
                leaky_alpha=0.1,
                **kwargs):
-    """Initializer for CSPTiny block.
-
-    Args:
-      filters: integer for output depth, or the number of features to learn.
-      kernel_initializer: string to indicate which function to use to initialize
-        weights.
-      bias_initializer: string to indicate which function to use to initialize
-        bias.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
-      kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      use_bn: boolean for whether to use batch normalization.
-      dilation_rate: `int`, dilation rate for conv layers.
-      use_sync_bn: boolean for whether sync batch normalization statistics
-        of all batch norm layers to the models global statistics
-        (across all input batches).
-      group_id: integer for which group of features to pass through the csp
-        tiny stack.
-      groups: integer for how many splits there should be in the convolution
-        feature stack output.
-      norm_momentum: float for moment to use for batch normalization.
-      norm_epsilon: float for batch normalization epsilon.
-      activation: string or None for activation function to use in layer,
-        if None activation is replaced by linear.
-      downsample: boolean for if image input is larger than layer output, set
-        downsample to True so the dimensions are forced to match.
-      leaky_alpha: float to use as alpha if activation function is leaky.
-      **kwargs: Keyword Arguments.
-    """
 
     # ConvBN params
     self._filters = filters
@@ -443,7 +436,7 @@ class CSPTiny(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -460,7 +453,7 @@ class CSPTiny(tf.keras.layers.Layer):
         kernel_size=(3, 3),
         strides=(1, 1),
         padding='same',
-        **dark_conv_args)
+        **_dark_conv_args)
 
     self._convlayer2 = ConvBN(
         filters=self._filters // 2,
@@ -483,14 +476,14 @@ class CSPTiny(tf.keras.layers.Layer):
         kernel_size=(3, 3),
         strides=(1, 1),
         padding='same',
-        **dark_conv_args)
+        **_dark_conv_args)
 
     self._convlayer4 = ConvBN(
         filters=self._filters,
         kernel_size=(1, 1),
         strides=(1, 1),
         padding='same',
-        **dark_conv_args)
+        **_dark_conv_args)
 
     if self._downsample:
       self._maxpool = tf.keras.layers.MaxPool2D(
@@ -513,8 +506,7 @@ class CSPTiny(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class CSPRoute(tf.keras.layers.Layer):
-  """CSPRoute block.
-
+  """
   Down sampling layer to take the place of down sampleing done in Residual
   networks. This is the first of 2 layers needed to convert any Residual Network
   model to a CSPNet. At the start of a new level change, this CSPRoute layer
@@ -533,6 +525,27 @@ class CSPRoute(tf.keras.layers.Layer):
         Ping-Yang Chen, Jun-Wei Hsieh
       CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
         arXiv:1911.11929
+  Args:
+    filters: integer for output depth, or the number of features to learn
+    filter_scale: integer dicating (filters//2) or the number of filters in the
+      partial feature stack
+    downsample: down_sample the input
+    activation: string for activation function to use in layer
+    kernel_initializer: string to indicate which function to use to
+      initialize weights
+    bias_initializer: string to indicate which function to use to initialize
+      bias
+    kernel_regularizer: string to indicate which function to use to regularizer
+      weights
+    bias_regularizer: string to indicate which function to use to regularizer
+      bias
+    use_bn: boolean for whether to use batch normalization
+    use_sync_bn: boolean for whether sync batch normalization statistics
+      of all batch norm layers to the models global statistics
+      (across all input batches)
+    norm_momentum: float for moment to use for batch normalization
+    norm_epsilon: float for batch normalization epsilon
+    **kwargs: Keyword Arguments
   """
 
   def __init__(self,
@@ -551,32 +564,6 @@ class CSPRoute(tf.keras.layers.Layer):
                downsample=True,
                leaky_alpha=0.1,
                **kwargs):
-    """CSPRoute layer initializer.
-
-    Args:
-      filters: integer for output depth, or the number of features to learn
-      filter_scale: integer dictating (filters//2) or the number of filters in
-        the partial feature stack.
-      activation: string for activation function to use in layer.
-      kernel_initializer: string to indicate which function to use to
-        initialize weights.
-      bias_initializer: string to indicate which function to use to initialize
-        bias.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
-      kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      dilation_rate: dilation rate for conv layers.
-      use_bn: boolean for whether to use batch normalization.
-      use_sync_bn: boolean for whether sync batch normalization statistics
-        of all batch norm layers to the models global statistics
-        (across all input batches).
-      norm_momentum: float for moment to use for batch normalization.
-      norm_epsilon: float for batch normalization epsilon.
-      downsample: down_sample the input.
-      leaky_alpha: `float`, for leaky alpha value.
-      **kwargs: Keyword Arguments.
-    """
 
     super().__init__(**kwargs)
     # layer params
@@ -598,7 +585,7 @@ class CSPRoute(tf.keras.layers.Layer):
     self._leaky_alpha = leaky_alpha
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -625,19 +612,19 @@ class CSPRoute(tf.keras.layers.Layer):
           kernel_size=(3, 3),
           strides=down_stride,
           dilation_rate=dilation_rate,
-          **dark_conv_args)
+          **_dark_conv_args)
 
     self._conv2 = ConvBN(
         filters=self._filters // self._filter_scale,
         kernel_size=(1, 1),
         strides=(1, 1),
-        **dark_conv_args)
+        **_dark_conv_args)
 
     self._conv3 = ConvBN(
         filters=self._filters // self._filter_scale,
         kernel_size=(1, 1),
         strides=(1, 1),
-        **dark_conv_args)
+        **_dark_conv_args)
 
   def call(self, inputs, training=None):
     if self._downsample:
@@ -649,8 +636,7 @@ class CSPRoute(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class CSPConnect(tf.keras.layers.Layer):
-  """CSPConnect block.
-
+  """
   Sister Layer to the CSPRoute layer. Merges the partial feature stacks
   generated by the CSPDownsampling layer, and the finaly output of the
   residual stack. Suggested in the CSPNet paper.
@@ -659,6 +645,26 @@ class CSPConnect(tf.keras.layers.Layer):
         Ping-Yang Chen, Jun-Wei Hsieh
       CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
         arXiv:1911.11929
+  Args:
+    filters: integer for output depth, or the number of features to learn
+    filter_scale: integer dicating (filters//2) or the number of filters in the
+      partial feature stack
+    activation: string for activation function to use in layer
+    kernel_initializer: string to indicate which function to use to initialize
+      weights
+    bias_initializer: string to indicate which function to use to initialize
+      bias
+    kernel_regularizer: string to indicate which function to use to regularizer
+      weights
+    bias_regularizer: string to indicate which function to use to regularizer
+      bias
+    use_bn: boolean for whether to use batch normalization
+    use_sync_bn: boolean for whether sync batch normalization statistics
+      of all batch norm layers to the models global
+      statistics (across all input batches)
+    norm_momentum: float for moment to use for batch normalization
+    norm_epsilon: float for batch normalization epsilon
+    **kwargs: Keyword Arguments
   """
 
   def __init__(self,
@@ -679,34 +685,6 @@ class CSPConnect(tf.keras.layers.Layer):
                norm_epsilon=0.001,
                leaky_alpha=0.1,
                **kwargs):
-    """Initializer for CSPConnect block.
-
-    Args:
-      filters: integer for output depth, or the number of features to learn.
-      filter_scale: integer dictating (filters//2) or the number of filters in
-        the partial feature stack.
-      drop_final: `bool`, whether to drop final conv layer.
-      drop_first: `bool`, whether to drop first conv layer.
-      activation: string for activation function to use in layer.
-      kernel_size: `Tuple`, kernel size for conv layers.
-      kernel_initializer: string to indicate which function to use to initialize
-        weights.
-      bias_initializer: string to indicate which function to use to initialize
-        bias.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
-      kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      dilation_rate: `int`, dilation rate for conv layers.
-      use_bn: boolean for whether to use batch normalization.
-      use_sync_bn: boolean for whether sync batch normalization statistics
-        of all batch norm layers to the models global
-        statistics (across all input batches).
-      norm_momentum: float for moment to use for batch normalization.
-      norm_epsilon: float for batch normalization epsilon.
-      leaky_alpha: `float`, for leaky alpha value.
-      **kwargs: Keyword Arguments.
-    """
 
     super().__init__(**kwargs)
     # layer params
@@ -729,7 +707,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._leaky_alpha = leaky_alpha
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -746,7 +724,7 @@ class CSPConnect(tf.keras.layers.Layer):
           filters=self._filters // self._filter_scale,
           kernel_size=self._kernel_size,
           strides=(1, 1),
-          **dark_conv_args)
+          **_dark_conv_args)
     self._concat = tf.keras.layers.Concatenate(axis=-1)
 
     if not self._drop_final:
@@ -754,7 +732,8 @@ class CSPConnect(tf.keras.layers.Layer):
           filters=self._filters,
           kernel_size=(1, 1),
           strides=(1, 1),
-          **dark_conv_args)
+          **_dark_conv_args)
+    return
 
   def call(self, inputs, training=None):
     x_prev, x_csp = inputs
@@ -769,8 +748,7 @@ class CSPConnect(tf.keras.layers.Layer):
 
 
 class CSPStack(tf.keras.layers.Layer):
-  """CSP Stack layer.
-
+  """
   CSP full stack, combines the route and the connect in case you dont want to
   jsut quickly wrap an existing callable or list of layers to
   make it a cross stage partial. Added for ease of use. you should be able
@@ -783,7 +761,31 @@ class CSPStack(tf.keras.layers.Layer):
         Ping-Yang Chen, Jun-Wei Hsieh
       CSPNet: A New Backbone that can Enhance Learning Capability of CNN.
         arXiv:1911.11929
-  """
+  Args:
+    model_to_wrap: callable Model or a list of callable objects that will
+      process the output of CSPRoute, and be input into CSPConnect.
+      list will be called sequentially.
+    downsample: down_sample the input
+    filters: integer for output depth, or the number of features to learn
+    filter_scale: integer dicating (filters//2) or the number of filters in the
+      partial feature stack
+    activation: string for activation function to use in layer
+    kernel_initializer: string to indicate which function to use to initialize
+      weights
+    bias_initializer: string to indicate which function to use to initialize
+      bias
+    kernel_regularizer: string to indicate which function to use to regularizer
+      weights
+    bias_regularizer: string to indicate which function to use to regularizer
+      bias
+    use_bn: boolean for whether to use batch normalization
+    use_sync_bn: boolean for whether sync batch normalization statistics
+      of all batch norm layers to the models global statistics
+      (across all input batches)
+    norm_momentum: float for moment to use for batch normalization
+    norm_epsilon: float for batch normalization epsilon
+    **kwargs: Keyword Arguments
+    """
 
   def __init__(self,
                filters,
@@ -800,35 +802,6 @@ class CSPStack(tf.keras.layers.Layer):
                norm_momentum=0.99,
                norm_epsilon=0.001,
                **kwargs):
-    """CSPStack layer initializer.
-
-    Args:
-      model_to_wrap: callable Model or a list of callable objects that will
-        process the output of CSPRoute, and be input into CSPConnect.
-        list will be called sequentially.
-      filter_scale: integer dictating (filters//2) or the number of filters in
-        the partial feature stack.
-      activation: string for activation function to use in layer.
-      kernel_initializer: string to indicate which function to use to initialize
-        weights.
-      bias_initializer: string to indicate which function to use to initialize
-        bias.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
-      kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      downsample: down_sample the input.
-      use_bn: boolean for whether to use batch normalization.
-      use_sync_bn: boolean for whether sync batch normalization statistics
-        of all batch norm layers to the models global statistics
-        (across all input batches).
-      norm_momentum: float for moment to use for batch normalization.
-      norm_epsilon: float for batch normalization epsilon.
-      **kwargs: Keyword Arguments.
-
-    Raises:
-      TypeError: model_to_wrap is not a layer or a list of layers
-    """
 
     super().__init__(**kwargs)
     # layer params
@@ -847,19 +820,20 @@ class CSPStack(tf.keras.layers.Layer):
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-    if model_to_wrap is None:
-      self._model_to_wrap = []
-    elif isinstance(model_to_wrap, Callable):
-      self._model_to_wrap = [model_to_wrap]
-    elif isinstance(model_to_wrap, List):
-      self._model_to_wrap = model_to_wrap
+    if model_to_wrap is not None:
+      if isinstance(model_to_wrap, Callable):
+        self._model_to_wrap = [model_to_wrap]
+      elif isinstance(model_to_wrap, List):
+        self._model_to_wrap = model_to_wrap
+      else:
+        raise Exception(
+            'the input to the CSPStack must be a list of layers that we can' +
+            'iterate through, or \n a callable')
     else:
-      raise TypeError(
-          'the input to the CSPStack must be a list of layers that we can' +
-          'iterate through, or \n a callable')
+      self._model_to_wrap = []
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'filters': self._filters,
         'filter_scale': self._filter_scale,
         'activation': self._activation,
@@ -872,8 +846,8 @@ class CSPStack(tf.keras.layers.Layer):
         'norm_epsilon': self._norm_epsilon,
         'kernel_regularizer': self._kernel_regularizer,
     }
-    self._route = CSPRoute(downsample=self._downsample, **dark_conv_args)
-    self._connect = CSPConnect(**dark_conv_args)
+    self._route = CSPRoute(downsample=self._downsample, **_dark_conv_args)
+    self._connect = CSPConnect(**_dark_conv_args)
 
   def call(self, inputs, training=None):
     x, x_route = self._route(inputs)
@@ -885,7 +859,6 @@ class CSPStack(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class PathAggregationBlock(tf.keras.layers.Layer):
-  """Path Aggregation block."""
 
   def __init__(self,
                filters=1,
@@ -905,36 +878,33 @@ class PathAggregationBlock(tf.keras.layers.Layer):
                upsample=False,
                upsample_size=2,
                **kwargs):
-    """Initializer for path aggregation block.
-
+    """
     Args:
-      filters: integer for output depth, or the number of features to learn.
-      drop_final: do not create the last convolution block.
+      filters: integer for output depth, or the number of features to learn
       kernel_initializer: string to indicate which function to use to initialize
-        weights.
+        weights
       bias_initializer: string to indicate which function to use to initialize
-        bias.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
+        bias
       kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      use_bn: boolean for whether to use batch normalization.
+        regularizer weights
+      bias_regularizer: string to indicate which function to use to regularizer
+        bias
+      use_bn: boolean for whether to use batch normalization
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
-        (across all input batches).
-      inverted: boolean for inverting the order of the convolutions.
-      norm_momentum: float for moment to use for batch normalization.
-      norm_epsilon: float for batch normalization epsilon.
+        (across all input batches)
+      norm_momentum: float for moment to use for batch normalization
+      norm_epsilon: float for batch normalization epsilon
       activation: string or None for activation function to use in layer,
-        if None activation is replaced by linear.
-      leaky_alpha: float to use as alpha if activation function is leaky.
-      downsample: `bool` for whehter to downwample and merge.
-      upsample: `bool` for whehter to upsample and merge.
-      upsample_size: `int` how much to upsample in order to match shapes.
-      **kwargs: Keyword Arguments.
+        if None activation is replaced by linear
+      leaky_alpha: float to use as alpha if activation function is leaky
+      downsample: `bool` for whehter to downwample and merge
+      upsample: `bool` for whehter to upsample and merge
+      upsample_size: `int` how much to upsample in order to match shapes
+      **kwargs: Keyword Arguments
     """
 
-    # Darkconv params
+    # darkconv params
     self._filters = filters
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
@@ -943,11 +913,11 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
 
-    # Normal params
+    # normal params
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-    # Activation params
+    # activation params
     self._conv_activation = activation
     self._leaky_alpha = leaky_alpha
     self._downsample = downsample
@@ -955,7 +925,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._upsample_size = upsample_size
     self._drop_final = drop_final
 
-    # Block params
+    #block params
     self._inverted = inverted
 
     super().__init__(**kwargs)
@@ -983,6 +953,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           strides=(1, 1),
           padding='same',
           **kwargs)
+    return
 
   def _build_reversed(self, input_shape, kwargs):
     if self._downsample:
@@ -1014,9 +985,10 @@ class PathAggregationBlock(tf.keras.layers.Layer):
           strides=(1, 1),
           padding='same',
           **kwargs)
+    return
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -1030,20 +1002,20 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     }
 
     if self._inverted:
-      self._build_reversed(input_shape, dark_conv_args)
+      self._build_reversed(input_shape, _dark_conv_args)
     else:
-      self._build_regular(input_shape, dark_conv_args)
+      self._build_regular(input_shape, _dark_conv_args)
 
     self._concat = tf.keras.layers.Concatenate()
     super().build(input_shape)
 
   def _call_regular(self, inputs, training=None):
-    input_to_convolve, input_to_concat = inputs
-    x_prev = self._conv(input_to_convolve)
+    inputToConvolve, inputToConcat = inputs
+    x_prev = self._conv(inputToConvolve)
     if self._upsample:
       x_prev = spatial_transform_ops.nearest_upsampling(x_prev,
                                                         self._upsample_size)
-    x = self._concat([x_prev, input_to_concat])
+    x = self._concat([x_prev, inputToConcat])
 
     # used in csp conversion
     if not self._drop_final:
@@ -1072,14 +1044,13 @@ class PathAggregationBlock(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class SPP(tf.keras.layers.Layer):
-  """Spatial Pyramid Pooling.
-
-  A non-agregated SPP layer that uses Pooling.
   """
+    a non-agregated SPP layer that uses Pooling to gain more performance
+    """
 
   def __init__(self, sizes, **kwargs):
     self._sizes = list(reversed(sizes))
-    if not sizes:
+    if len(sizes) == 0:
       raise ValueError('More than one maxpool should be specified in SSP block')
     super().__init__(**kwargs)
 
@@ -1110,8 +1081,7 @@ class SPP(tf.keras.layers.Layer):
 
 
 class SAM(tf.keras.layers.Layer):
-  """Spatial Attention Model.
-
+  """
   [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
   CBAM: Convolutional Block Attention Module. arXiv:1807.06521
 
@@ -1145,7 +1115,7 @@ class SAM(tf.keras.layers.Layer):
     self._output_activation = output_activation
     self._leaky_alpha = leaky_alpha
 
-    self.dark_conv_args = {
+    self._dark_conv_args = {
         'kernel_size': kernel_size,
         'strides': strides,
         'padding': padding,
@@ -1167,7 +1137,7 @@ class SAM(tf.keras.layers.Layer):
   def build(self, input_shape):
     if self._filters == -1:
       self._filters = input_shape[-1]
-    self._conv = ConvBN(filters=self._filters, **self.dark_conv_args)
+    self._conv = ConvBN(filters=self._filters, **self._dark_conv_args)
     if self._output_activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
     elif self._output_activation == 'mish':
@@ -1177,8 +1147,8 @@ class SAM(tf.keras.layers.Layer):
 
   def call(self, inputs, training=None):
     if self._use_pooling:
-      depth_max = tf.reduce_max(inputs, axis=-1, keepdims=True)
-      depth_avg = tf.reduce_mean(inputs, axis=-1, keepdims=True)
+      depth_max = tf.reduce_max(inputs, axis=-1, keep_dims=True)
+      depth_avg = tf.reduce_mean(inputs, axis=-1, keep_dims=True)
       input_maps = tf.concat([depth_avg, depth_max], axis=-1)
     else:
       input_maps = inputs
@@ -1188,12 +1158,11 @@ class SAM(tf.keras.layers.Layer):
 
 
 class CAM(tf.keras.layers.Layer):
-  """Channel Attention Model.
-
+  """
   [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
   CBAM: Convolutional Block Attention Module. arXiv:1807.06521
 
-  Implementation of the Channel Attention Model (CAM)
+  implementation of the Channel Attention Model (CAM)
   """
 
   def __init__(self,
@@ -1218,7 +1187,7 @@ class CAM(tf.keras.layers.Layer):
     if use_sync_bn:
       self._bn = tf.keras.layers.experimental.SyncBatchNormalization
     else:
-      self._bn = tf.keras.layers.BatchNormalization
+      self._bn = tf.keras.layers.experimental.BatchNormalization
 
     if not use_bn:
       self._bn = Identity
@@ -1263,6 +1232,8 @@ class CAM(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
 
+    return
+
   def call(self, inputs, training=None):
     depth_max = self._mlp(tf.reduce_max(inputs, axis=(1, 2)))
     depth_avg = self._mlp(tf.reduce_mean(inputs, axis=(1, 2)))
@@ -1275,8 +1246,7 @@ class CAM(tf.keras.layers.Layer):
 
 
 class CBAM(tf.keras.layers.Layer):
-  """Convolutional Block Attention Module.
-
+  """
   [1] Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
   CBAM: Convolutional Block Attention Module. arXiv:1807.06521
 
@@ -1340,6 +1310,7 @@ class CBAM(tf.keras.layers.Layer):
   def build(self, input_shape):
     self._cam = CAM(**self._cam_args)
     self._sam = SAM(**self._sam_args)
+    return
 
   def call(self, inputs, training=None):
     return self._sam(self._cam(inputs))
@@ -1347,18 +1318,6 @@ class CBAM(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class DarkRouteProcess(tf.keras.layers.Layer):
-  """Dark Route Process block.
-
-  Process darknet outputs and connect back bone to head more generalizably
-  Abstracts repetition of DarkConv objects that is common in YOLO.
-
-  It is used like the following:
-
-  x = ConvBN(1024, (3, 3), (1, 1))(x)
-  proc = DarkRouteProcess(filters = 1024,
-                          repetitions = 3,
-                          insert_spp = False)(x)
-  """
 
   def __init__(
       self,
@@ -1372,8 +1331,8 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       kernel_initializer='VarianceScaling',
       bias_initializer='zeros',
       bias_regularizer=None,
-      kernel_regularizer=None,
       use_sync_bn=False,
+      kernel_regularizer=None,  # default find where is it is stated
       norm_momentum=0.99,
       norm_epsilon=0.001,
       block_invert=False,
@@ -1381,53 +1340,40 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       leaky_alpha=0.1,
       spp_keys=None,
       **kwargs):
-    """DarkRouteProcess initializer.
+    """
+    process darknet outputs and connect back bone to head more generalizably
+    Abstracts repetition of DarkConv objects that is common in YOLO.
+
+    It is used like the following:
+
+    x = ConvBN(1024, (3, 3), (1, 1))(x)
+    proc = DarkRouteProcess(filters = 1024,
+                            repetitions = 3,
+                            insert_spp = False)(x)
 
     Args:
       filters: the number of filters to be used in all subsequent layers
         filters should be the depth of the tensor input into this layer,
-        as no downsampling can be done within this layer object.
-      repetitions: number of times to repeat the processign nodes.
-        for tiny: 1 repition, no spp allowed.
-        for spp: insert_spp = True, and allow for 6 repetitions.
-        for regular: insert_spp = False, and allow for 6 repetitions.
-      insert_spp: bool if true add the spatial pyramid pooling layer.
-      insert_sam: bool if true add spatial attention module to path.
-      insert_cbam: bool if true add convolutional block attention
-        module to path.
-      csp_stack: int for the number of sequential layers from 0
-        to <value> you would like to convert into a Cross Stage
-        Partial(csp) type.
-      csp_scale: int for how much to down scale the number of filters
-        only for the csp layers in the csp section of the processing
-        path. A value 2 indicates that each layer that is int eh CSP
-        stack will have filters = filters/2.
-      kernel_initializer: method to use to initialize kernel weights.
+        as no downsampling can be done within this layer object
+      repetitions: number of times to repeat the processign nodes
+        for tiny: 1 repition, no spp allowed
+        for spp: insert_spp = True, and allow for 3+ repetitions
+        for regular: insert_spp = False, and allow for 3+ repetitions
+      insert_spp: bool if true add the spatial pyramid pooling layer
+      kernel_initializer: method to use to initializa kernel weights
       bias_initializer: method to use to initialize the bias of the conv
-        layers.
-      bias_regularizer: string to indicate which function to use to regularizer
-        bias.
-      kernel_regularizer: string to indicate which function to use to
-        regularizer weights.
-      use_sync_bn: bool if true use the sync batch normalization.
-      norm_momentum: batch norm parameter see Tensorflow documentation.
-      norm_epsilon: batch norm parameter see Tensorflow documentation.
-      block_invert: bool use for switching between the even and odd
-        repretions of layers. usually the repetition is based on a
-        3x3 conv with filters, followed by a 1x1 with filters/2 with
-        an even number of repetitions to ensure each 3x3 gets a 1x1
-        sqeeze. block invert swaps the 3x3/1 1x1/2 to a 1x1/2 3x3/1
-        ordering typically used when the model requires an odd number
-        of repetiitions. All other peramters maintain their affects
-      activation: activation function to use in processing.
+        layers
+      norm_momentum: batch norm parameter see Tensorflow documentation
+      norm_epsilon: batch norm parameter see Tensorflow documentation
+      activation: activation function to use in processing
       leaky_alpha: if leaky acitivation function, the alpha to use in
-        processing the relu input.
-      spp_keys: List[int] of the sampling levels to be applied by
-        the Spatial Pyramid Pooling Layer. By default it is
-        [5, 9, 13] inidicating a 5x5 pooling followed by 9x9
-        followed by 13x13 then followed by the standard concatnation
-        and convolution.
-      **kwargs: Keyword Arguments.
+        processing the relu input
+
+    Returns:
+      callable tensorflow layer
+
+    Raises:
+      None
     """
 
     super().__init__(**kwargs)
@@ -1491,7 +1437,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     layer_list = []
     outputs = []
     for i in range(self._repetitions):
-      layers = ['conv1'] * ((i + 1) % 2) + ['conv2'] * (i % 2)
+      layers = ["conv1"] * ((i + 1) % 2) + ["conv2"] * (i % 2)
       layer_list.extend(layers)
       outputs = [False] + outputs
     return layer_list, outputs
@@ -1569,8 +1515,11 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     return x1
 
   def build(self, input_shape):
-    dark_conv_args = {
+    _dark_conv_args = {
         'activation': self._activation,
+    }
+
+    _args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
@@ -1581,23 +1530,24 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         'leaky_alpha': self._leaky_alpha,
     }
 
+    _dark_conv_args.update(_args)
     csp = False
     self.layers = []
     for layer in self.layer_list:
       if layer == 'csp_route':
-        self.layers.append(self._csp_route(self._filters, dark_conv_args))
+        self.layers.append(self._csp_route(self._filters, _dark_conv_args))
         csp = True
       elif layer == 'csp_connect':
-        self.layers.append(self._csp_connect(self._filters, dark_conv_args))
+        self.layers.append(self._csp_connect(self._filters, _dark_conv_args))
         csp = False
       elif layer == 'conv1':
-        self.layers.append(self._conv1(self._filters, dark_conv_args, csp=csp))
+        self.layers.append(self._conv1(self._filters, _dark_conv_args, csp=csp))
       elif layer == 'conv2':
-        self.layers.append(self._conv2(self._filters, dark_conv_args, csp=csp))
+        self.layers.append(self._conv2(self._filters, _dark_conv_args, csp=csp))
       elif layer == 'spp':
-        self.layers.append(self._spp(self._filters, dark_conv_args))
+        self.layers.append(self._spp(self._filters, _dark_conv_args))
       elif layer == 'sam':
-        self.layers.append(self._sam(-1, dark_conv_args))
+        self.layers.append(self._sam(-1, _args))
 
     self._lim = len(self.layers)
     super().build(input_shape)
@@ -1608,7 +1558,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     x_prev = x
     output_prev = True
 
-    for (layer, output) in zip(self.layers, self.outputs):
+    for i, (layer, output) in enumerate(zip(self.layers, self.outputs)):
       if output_prev:
         x_prev = x
       x = layer(x)

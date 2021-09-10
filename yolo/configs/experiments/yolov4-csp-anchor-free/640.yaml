@@ -40,8 +40,8 @@ task:
         '5': 0.28
         '4': 0.70
         '3': 2.80
-      new_cords:
-        'all': False
+      box_type:
+        'all': original
       objectness_smooth: 
         'all': 1.0
       scale_xy:

@@ -112,7 +112,7 @@ task:
   weight_decay: 0.000
   annotation_file: null
   load_darknet_weights: true
-  darknet_load_decoder: false
+  darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625 #312

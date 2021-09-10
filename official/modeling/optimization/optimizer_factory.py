@@ -26,8 +26,7 @@ from official.modeling.optimization.configs import optimization_config as opt_cf
 from official.nlp import optimization as nlp_optimization
 
 OPTIMIZERS_CLS = {
-    # 'sgd': tf.keras.optimizers.SGD,
-    'sgd': SGD.SGD,
+    'sgd': tf.keras.optimizers.SGD,
     'adam': tf.keras.optimizers.Adam,
     'adamw': nlp_optimization.AdamWeightDecay,
     'lamb': tfa_optimizers.LAMB,

@@ -13,7 +13,6 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
       model_config.decoder.activation
       if model_config.decoder.activation != "same" else
       model_config.norm_activation.activation)
-  subdivisions = 1
 
   if model_config.decoder.version is None:  # custom yolo
     model = YoloDecoder(
@@ -25,7 +24,6 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         max_level_process_len=model_config.decoder.max_level_process_len,
         xy_exponential=model_config.decoder.xy_exponential,
         activation=activation,
-        subdivisions=subdivisions,
         use_spatial_attention=model_config.use_sam,
         use_sync_bn=model_config.norm_activation.use_sync_bn,
         norm_momentum=model_config.norm_activation.norm_momentum,
@@ -57,7 +55,6 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
   base_dict = dict(
       activation=activation,
-      subdivisions=subdivisions,
       use_spatial_attention=model_config.decoder.use_spatial_attention,
       use_sync_bn=model_config.norm_activation.use_sync_bn,
       norm_momentum=model_config.norm_activation.norm_momentum,
@@ -92,7 +89,6 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       nms_type=model_config.filter.nms_type,
       path_scale=path_scales,
       scale_xy=xy_scales,
-      darknet=model_config.filter.darknet,
       label_smoothing=model_config.filter.label_smoothing,
       pre_nms_points=model_config.filter.pre_nms_points,
       use_scaled_loss=model_config.filter.use_scaled_loss,

@@ -289,7 +289,6 @@ class Yolo(ModelConfig):
   max_level: int = 5
   boxes_per_scale: int = 3
   base: Union[str, YoloBase] = YoloBase()
-  subdivisions: int = 1
   filter: YoloLossLayer = YoloLossLayer(
       min_level=min_level, max_level=max_level)
   norm_activation: common.NormActivation = common.NormActivation(

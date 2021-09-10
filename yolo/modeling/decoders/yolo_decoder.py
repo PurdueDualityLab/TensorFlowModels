@@ -22,12 +22,6 @@ from yolo.modeling.layers import nn_blocks
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class _IdentityRoute(tf.keras.layers.Layer):
 
-  def __init__(self, **kwargs):
-    """Private class to mirror the outputs of blocks in nn_blocks for an easier
-    programatic generation of the feature pyramid network"""
-
-    super().__init__(**kwargs)
-
   def call(self, inputs):  # pylint: disable=arguments-differ
     return None, inputs
 
@@ -50,6 +44,7 @@ class YoloFPN(tf.keras.layers.Layer):
                bias_regularizer=None,
                **kwargs):
     """Yolo FPN initialization function (Yolo V4).
+
     Args:
       fpn_depth: `int`, number of layers to use in each FPN path
         if you choose to use an FPN.
@@ -92,10 +87,12 @@ class YoloFPN(tf.keras.layers.Layer):
 
   def get_raw_depths(self, minimum_depth, inputs):
     """Calculates the unscaled depths of the FPN branches.
+
     Args:
       minimum_depth (int): depth of the smallest branch of the FPN.
       inputs (dict): dictionary of the shape of input args as a dictionary of
         lists.
+
     Returns:
       The unscaled depths of the FPN branches.
     """
@@ -106,8 +103,8 @@ class YoloFPN(tf.keras.layers.Layer):
     return list(reversed(depths))
 
   def build(self, inputs):
-    """Use config dictionary to generate all important attributes for head
-    construction.
+    """Use config dictionary to generate all important attributes for head.
+
     Args:
        inputs: dictionary of the shape of input args as a dictionary of lists.
     """
@@ -194,6 +191,7 @@ class YoloPAN(tf.keras.layers.Layer):
                fpn_filter_scale=1.0,
                **kwargs):
     """Yolo Path Aggregation Network initialization function (Yolo V3 and V4).
+
     Args:
       path_process_len: `int`, number of layers ot use in each Decoder path.
       max_level_process_len: `int`, number of layers ot use in the largest
@@ -246,8 +244,8 @@ class YoloPAN(tf.keras.layers.Layer):
         norm_momentum=self._norm_momentum)
 
   def build(self, inputs):
-    """Use config dictionary to generate all important attributes for head
-    construction.
+    """Use config dictionary to generate all important attributes for head.
+
     Args:
       inputs: dictionary of the shape of input args as a dictionary of lists.
     """
@@ -322,10 +320,12 @@ class YoloPAN(tf.keras.layers.Layer):
 
   def get_raw_depths(self, minimum_depth, inputs):
     """Calculates the unscaled depths of the FPN branches.
+
     Args:
       minimum_depth: `int` depth of the smallest branch of the FPN.
-      inputs: `dict[str, tf.InputSpec]` of the shape of input args as a dictionary of
-        lists.
+      inputs: `dict[str, tf.InputSpec]` of the shape of input args as a 
+        dictionary of lists.
+
     Returns:
       The unscaled depths of the FPN branches.
     """
@@ -358,7 +358,7 @@ class YoloPAN(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloDecoder(tf.keras.Model):
-  """Darknet Backbone Decoder"""
+  """Darknet Backbone Decoder."""
 
   def __init__(self,
                input_specs,
@@ -378,8 +378,11 @@ class YoloDecoder(tf.keras.Model):
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
-    """Yolo Decoder initialization function. A unified model that ties all decoder
-    components into a conditionally build YOLO decder.
+    """Yolo Decoder initialization function. 
+    
+    A unified model that ties all decoder components into a conditionally build 
+    YOLO decder.
+
     Args:
       input_specs: `dict[str, tf.InputSpec]`: input specs of each of the inputs
         to the heads.

@@ -668,18 +668,12 @@ def build_darknet(
   backbone_cfg = model_config.backbone.get()
   norm_activation_config = model_config.norm_activation
 
-  if hasattr(model_config, 'subdivisions'):
-    subdivisions = model_config.subdivisions
-  else:
-    subdivisions = 1
-
   model = Darknet(
       model_id=backbone_cfg.model_id,
       min_level=model_config.min_level,
       max_level=model_config.max_level,
       input_specs=input_specs,
       dilate=backbone_cfg.dilate,
-      subdivisions=subdivisions,
       width_scale=backbone_cfg.width_scale,
       depth_scale=backbone_cfg.depth_scale,
       activation=norm_activation_config.activation,
@@ -688,7 +682,6 @@ def build_darknet(
       norm_epsilon=norm_activation_config.norm_epsilon,
       kernel_regularizer=l2_regularizer)
   return model
-
 
 # @factory.register_backbone_builder('darknet')
 # def build_darknet(

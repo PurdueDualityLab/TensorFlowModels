@@ -1,11 +1,9 @@
 """Contains common building blocks for yolo neural networks."""
 import tensorflow as tf
-import tensorflow.keras.backend as K
+from official.vision.beta.modeling.layers import detection_generator
 
-from yolo.ops import loss_utils
-from yolo.ops import box_ops as box_utils
-from yolo.losses.yolo_loss import YoloLoss
-from yolo.ops import nms_ops
+from yolo.ops import (loss_utils, box_ops)
+from yolo.losses import yolo_loss
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -26,7 +24,6 @@ class YoloLayer(tf.keras.Model):
                obj_normalizer=1.0,
                use_scaled_loss=False,
                update_on_repeat=False,
-               darknet=None,
                pre_nms_points=5000,
                label_smoothing=0.0,
                max_boxes=200,
@@ -61,8 +58,6 @@ class YoloLayer(tf.keras.Model):
       obj_normalizer: `float` for how much to scale loss on the detection map.
       use_scaled_loss: `bool` for whether to use the scaled loss
         or the traditional loss.
-      darknet: `bool` for whether to use the DarkNet or PyTorch loss function
-        implementation.
       pre_nms_points: `int` number of top candidate detections per class before
         NMS.
       label_smoothing: `float` for how much to smooth the loss on the classes.
@@ -101,7 +96,6 @@ class YoloLayer(tf.keras.Model):
     self._loss_type = loss_type
 
     self._use_scaled_loss = use_scaled_loss
-    self._darknet = darknet
     self._update_on_repeat = update_on_repeat
 
     self._pre_nms_points = pre_nms_points
@@ -113,21 +107,7 @@ class YoloLayer(tf.keras.Model):
         key: 2**int(key) for key, _ in masks.items()
     }
 
-    self._nms_types = {
-        'greedy': 1,
-        'iou': 2,
-        'giou': 3,
-        'ciou': 4,
-        'diou': 5,
-        'class_independent': 6,
-        'weighted_diou': 7
-    }
-
-    self._nms_type = self._nms_types[nms_type]
-
-    if self._nms_type >= 2 and self._nms_type <= 5:
-      self._nms = nms_ops.TiledNMS(iou_type=nms_type)
-
+    self._nms_type = nms_type
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
 
     self._generator = {}
@@ -143,11 +123,6 @@ class YoloLayer(tf.keras.Model):
     anchor_generator = loss_utils.GridGenerator(
         anchors, scale_anchors=path_scale)
     return anchor_generator
-
-  def rm_nan_inf(self, x, val=0.0):
-    x = tf.where(tf.math.is_nan(x), tf.cast(val, dtype=x.dtype), x)
-    x = tf.where(tf.math.is_inf(x), tf.cast(val, dtype=x.dtype), x)
-    return x
 
   def parse_prediction_path(self, key, inputs):
     shape_ = tf.shape(inputs)
@@ -193,7 +168,7 @@ class YoloLayer(tf.keras.Model):
         box_type=self._box_type[key])
 
     # convert boxes from yolo(x, y, w. h) to tensorflow(ymin, xmin, ymax, xmax)
-    boxes = box_utils.xcycwh_to_yxyx(boxes)
+    boxes = box_ops.xcycwh_to_yxyx(boxes)
     # activate and detection map
     obns_scores = tf.math.sigmoid(obns_scores)
     # convert detection map to class detection probabailities
@@ -225,8 +200,8 @@ class YoloLayer(tf.keras.Model):
 
     # colate all predicitons
     boxes = tf.concat(boxes, axis=1)
-    object_scores = K.concatenate(object_scores, axis=1)
-    class_scores = K.concatenate(class_scores, axis=1)
+    object_scores = tf.concat(object_scores, axis=1)
+    class_scores = tf.concat(class_scores, axis=1)
 
     object_mask = tf.cast(object_scores > self._thresh, object_scores.dtype)
     class_mask = tf.cast(class_scores > self._thresh, class_scores.dtype)
@@ -234,31 +209,7 @@ class YoloLayer(tf.keras.Model):
     class_scores *= (tf.expand_dims(object_mask, axis=-1) * class_mask)
 
     # apply nms
-    if self._nms_type == 7:
-      boxes, class_scores, object_scores = nms_ops.non_max_suppression2(
-          boxes,
-          class_scores,
-          object_scores,
-          self._max_boxes,
-          pre_nms_thresh=self._thresh,
-          nms_thresh=self._nms_thresh,
-          prenms_top_k=self._pre_nms_points)
-      # compute the number of valid detections
-      num_detections = tf.reduce_sum(
-          input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
-    elif self._nms_type == 6:
-      boxes, class_scores, object_scores = nms_ops.nms(
-          boxes,
-          class_scores,
-          object_scores,
-          self._max_boxes,
-          self._thresh,
-          self._nms_thresh,
-          prenms_top_k=self._pre_nms_points)
-      # compute the number of valid detections
-      num_detections = tf.reduce_sum(
-          input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
-    elif self._nms_type == 1:
+    if self._nms_type == "greedy":
       # greedy NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
@@ -277,7 +228,8 @@ class YoloLayer(tf.keras.Model):
     else:
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
-      boxes, confidence, classes, num_detections = self._nms.complete_nms(
+      (boxes, confidence, 
+      classes, num_detections) = detection_generator._generate_detections_v2(
           tf.expand_dims(boxes, axis=-2),
           class_scores,
           pre_nms_top_k=self._pre_nms_points,
@@ -303,7 +255,7 @@ class YoloLayer(tf.keras.Model):
     Done in the detection generator because all parameters are the same 
     across both loss and detection generator
     """
-    loss = YoloLoss(
+    loss = yolo_loss.YoloLoss(
         keys=self._keys,
         classes=self._classes,
         anchors=self._anchors,

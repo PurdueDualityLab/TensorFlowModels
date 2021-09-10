@@ -15,8 +15,8 @@ task:
       decoder:
         version: v4
         type: tiny
-      # darknet_weights_file: 'cache://yolov4-tiny.weights'
-      # darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
+      darknet_weights_file: 'cache://yolov4-tiny.weights'
+      darknet_weights_cfg: 'cache://yolov4-tiny.cfg'
     num_classes: 80
     smart_bias: true
     boxes: ['[12.0, 16.0]',
@@ -31,7 +31,7 @@ task:
     input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
-    min_level: 3
+    min_level: 4
     norm_activation:
       activation: leaky
       norm_epsilon: 0.0001
@@ -50,14 +50,14 @@ task:
         '5': 0.28
         '4': 0.70
         '3': 2.80
-      new_cords:
-        'all': True
+      box_type:
+        'all': scaled
       objectness_smooth: 
         'all': 1.0
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -110,8 +110,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
-  # load_darknet_weights: true
-  # darknet_load_decoder: true
+  load_darknet_weights: true
+  darknet_load_decoder: true
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78

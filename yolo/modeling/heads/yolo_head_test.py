@@ -17,12 +17,8 @@
 
 # Import libraries
 from absl.testing import parameterized
-import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import strategy_combinations
-# from yolo.modeling.backbones import darknet
 from yolo.modeling.heads import yolo_head as heads
 
 
