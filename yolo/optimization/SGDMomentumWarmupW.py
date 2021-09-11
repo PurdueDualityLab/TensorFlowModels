@@ -153,7 +153,7 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     self._bset = set([_var_key(b) for b in biases])
     self._oset = set([_var_key(o) for o in others])
 
-    logging.info(f" Weights: {len(weights)} Biases: {len(biases)} Others: {len(others)}")
+    logging.info(f"Weights: {len(weights)} Biases: {len(biases)} Others: {len(others)}")
     return
 
   def _create_slots(self, var_list):
