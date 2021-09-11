@@ -1,6 +1,4 @@
-# Lint as: python3
-# pylint: skip-file
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,74 +11,39 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
-"""TensorFlow Model Garden Vision training driver."""
-from yolo.utils.run_utils import prep_gpu
 
+# Lint as: python3
+"""TensorFlow Model Garden Vision training driver."""
 from absl import app
 from absl import flags
 import gin
-import sys
 
-from official.core import train_utils
 # pylint: disable=unused-import
+from official.common import registry_imports
 from yolo.common import registry_imports
 # pylint: enable=unused-import
 from official.common import distribute_utils
 from official.common import flags as tfm_flags
 from official.core import task_factory
 from official.core import train_lib
+from official.core import train_utils
 from official.modeling import performance
-import tensorflow as tf
 
 FLAGS = flags.FLAGS
-"""
-get the cache file:
-scp -i <keyfile> cache.zip  purdue@<ip>:~/
-
-tensorboard:
-on the vm:
-nohup tensorboard --logdir ../checkpoints/yolov4-model --port 6006  >> temp.log
-
-on your device:
-ssh -i <keyfile> -N -f -L localhost:16006:localhost:6006 purdue@<ip>
-
-get the checkpoint from device:
-scp -i <keyfile> purdue@<ip>:<path to>/checkpoints/<checkpoint>.zip .
-
-
-
-train darknet:
-python3.8 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53 --config_file=yolo/configs/experiments/darknet/darknet53.yaml
-python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/dilated_darknet53 --config_file=yolo/configs/experiments/dilated_darknet53.yaml
-
-finetune darknet:
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=darknet_classification --model_dir=../checkpoints/darknet53_remap_fn --config_file=yolo/configs/experiments/darknet53_leaky_fn_tune.yaml >> darknet53.log & tail -f darknet53.log
-
-train yolo-v4:
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4-model --config_file=yolo/configs/experiments/yolov4.yaml  >> yolov4.log & tail -f yolov4.log
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-1gpu.yaml  >> yolov4-1gpu.log & tail -f yolov4-1gpu.log
-
-
-evalaute Yolo:
-nohup python3 -m yolo.train_vm --mode=train_and_eval --experiment=yolo_custom --model_dir=../checkpoints/yolov4- --config_file=yolo/configs/experiments/yolov4-eval.yaml  >> yolov4-eval.log & tail -f yolov4-eval.log
-"""
-
 
 def subdivison_adjustment(params):
   if params.task.model.filter.nms_type == "greedy":
+    import tensorflow as tf
     tf.config.set_soft_device_placement(True)
   return params
-
 
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   params = train_utils.parse_configuration(FLAGS)
-
-  subdivison_adjustment(params)
+  params = subdivison_adjustment(params)
 
   model_dir = FLAGS.model_dir
-  if 'train' in FLAGS.mode and model_dir != None:
+  if 'train' in FLAGS.mode:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
     # may race against the train job for writing the same file.
     train_utils.serialize_config(params, model_dir)
@@ -90,13 +53,7 @@ def main(_):
   # GPUs, and bfloat16 in the case of TPUs. loss_scale takes effect only when
   # dtype is float16
   if params.runtime.mixed_precision_dtype:
-    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
-                                           params.runtime.loss_scale)
-  if params.runtime.worker_hosts != '' and params.runtime.worker_hosts is not None:
-    num_workers = distribute_utils.configure_cluster(
-        worker_hosts=params.runtime.worker_hosts,
-        task_index=params.runtime.task_index)
-    print(num_workers)
+    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype)
   distribution_strategy = distribute_utils.get_distribution_strategy(
       distribution_strategy=params.runtime.distribution_strategy,
       all_reduce_alg=params.runtime.all_reduce_alg,
@@ -112,13 +69,9 @@ def main(_):
       params=params,
       model_dir=model_dir)
 
+  train_utils.save_gin_config(FLAGS.mode, model_dir)
 
 if __name__ == '__main__':
-  import datetime
-
-  a = datetime.datetime.now()
   tfm_flags.define_flags()
+  flags.mark_flags_as_required(['experiment', 'mode', 'model_dir'])
   app.run(main)
-  b = datetime.datetime.now()
-
-  print('\n\n\n\n\n\n\n {b - a}')
