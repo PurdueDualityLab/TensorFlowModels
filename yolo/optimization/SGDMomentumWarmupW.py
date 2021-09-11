@@ -139,6 +139,8 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     self._wset = set()
     self._bset = set()
     self._oset = set()
+    logging.info(f"Pytorch SGD simulation: ")
+    logging.info(f"Weight Decay: {weight_decay}")
 
   def set_bias_lr(self, lr):
     self._set_hyper("bias_learning_rate", lr)

@@ -62,7 +62,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    _, anchor_free = self._get_boxes()
+    boxes, anchor_free = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -79,8 +79,10 @@ class YoloTask(base_task.Task):
                                masks, xy_scales, path_scales)
 
     model.summary(print_fn = logging.info)
+    logging.info(f"Anchor Boxes: {boxes}")
+
     if anchor_free is not None:
-      print("INFO: The model is operating under anchor free conditions")
+      logging.info("The model is operating under anchor free conditions")
 
     self._loss_dict = losses
     self._model = model
@@ -444,7 +446,7 @@ class YoloTask(base_task.Task):
     else:
       """Loading pretrained checkpoint."""
       if not self.task_config.init_checkpoint:
-        print("loaded nothing")
+        logging.log("loaded nothing")
         return
 
       ckpt_dir_or_file = self.task_config.init_checkpoint
@@ -506,9 +508,6 @@ class YoloTask(base_task.Task):
       optimizer.set_params(weights, biases, others)
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
-
-    print(optimizer)
-
     opt_factory._use_ema = ema
     optimizer = opt_factory.add_ema(optimizer)
     optimizer = self._wrap_optimizer(optimizer, runtime_config)

@@ -62,10 +62,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
       kernel_regularizer=l2_regularization)
 
   base_model.update(base_dict)
-  print(base_model)
-
   model = YoloDecoder(input_specs, **base_model)
-
   return model
 
 

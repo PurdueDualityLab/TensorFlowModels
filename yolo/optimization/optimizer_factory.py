@@ -68,7 +68,6 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
   """
 
   def get_bias_lr_schedule(self, bias_lr):
-    print(self._warmup_config)
     temp = self._warmup_config.warmup_learning_rate
     self._warmup_config.warmup_learning_rate = bias_lr
     lr = self.build_learning_rate()

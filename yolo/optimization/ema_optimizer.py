@@ -18,6 +18,7 @@ from typing import List, Optional, Text
 import tensorflow as tf
 from tensorflow.python.keras import optimizer_v2
 from official.modeling.optimization import ema_optimizer
+import logging
 # pylint: disable=protected-access
 
 
@@ -82,7 +83,7 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         dynamic_decay=dynamic_decay,
         name=name,
         **kwargs)
-    print("YOLO Ema")
+    logging.info("EMA is enabled.")
 
   @tf.function
   def update_average(self, step: tf.Tensor):

@@ -100,7 +100,6 @@ class ModelConfig(hyperparams.Config):
         boxes.append([float(val) for val in key.findall(box)])
       elif isinstance(box, int):
         raise IOError('unsupported input type, only strings or tuples')
-    print(boxes)
     return boxes
 
   @_boxes.setter
