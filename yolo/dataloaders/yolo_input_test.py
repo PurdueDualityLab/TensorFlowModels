@@ -41,7 +41,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/hsv/640-hsv.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640-e1.yaml"]
   config_path = [
-      "yolo/configs/experiments/yolov4-csp/tpu/640.yaml"
+      "yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640.yaml"
   ]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/debug/640.yaml"]
 
