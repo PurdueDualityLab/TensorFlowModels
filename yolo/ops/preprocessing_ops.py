@@ -849,8 +849,8 @@ def apply_infos(boxes,
     if shuffle_boxes:
       inds = tf.random.shuffle(inds, seed=seed)
   else:
-    # boxes = box_history
-    boxes = tf.math.maximum(tf.math.minimum(box_history, 1.0), 0.0) 
+    boxes = box_history
+    # boxes = tf.math.maximum(tf.math.minimum(box_history, 1.0), 0.0) 
     boxes_ = bbox_ops.denormalize_boxes(boxes, output_size)
     inds = bbox_ops.get_non_empty_box_indices(boxes_)
   boxes = tf.gather(boxes, inds)
