@@ -17,9 +17,10 @@ def set_random_seeds(seed=0):
     global GLOBAL_SEED_SET
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
-    tf.random.set_seed(seed)
-    np.random.seed(seed)
     GLOBAL_SEED_SET = True
+  tf.random.set_seed(seed)
+  np.random.seed(seed)
+    
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):

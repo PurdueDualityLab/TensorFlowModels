@@ -104,6 +104,10 @@ def build_grid(indexes, truths, preds, ind_mask, update=False, grid=None):
   indexes = apply_mask(tf.cast(ind_mask, indexes.dtype), indexes)
   indexes = (indexes + (ind_mask - 1))
 
+  # mask truths
+  truths = apply_mask(tf.cast(ind_mask, truths.dtype), truths)
+  truths = (truths + (tf.cast(ind_mask, truths.dtype) - 1))
+
   # reshape the indexes into the correct shape for the loss,
   # just flatten all indexes but the last
   indexes = tf.reshape(indexes, [-1, 4])

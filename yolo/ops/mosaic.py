@@ -480,14 +480,21 @@ class Mosaic(object):
     dataset and to ensure that samples are not skipped or repeated more than 
     expected during training."""
 
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    one = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
-    two = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
-    three = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
-    four = dataset.shuffle(10, seed=self._seed, reshuffle_each_iteration=True)
-
     num = tf.data.AUTOTUNE
     determ = self._deterministic
+
+    if self._seed == None:
+      one = dataset.shard(4, 0)
+      two = dataset.shard(4, 1)
+      three = dataset.shard(4, 2)
+      four = dataset.shard(4, 3)
+    else:
+      dataset = dataset.prefetch(tf.data.AUTOTUNE)
+      one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
+      two = dataset.shuffle(100, seed=self._seed + 1, reshuffle_each_iteration=True)
+      three = dataset.shuffle(100, seed=self._seed + 2, reshuffle_each_iteration=True)
+      four = dataset.shuffle(100, seed=self._seed + 3, reshuffle_each_iteration=True)
+
     one = one.map(
         lambda x: self._im_process(x, 1.0, 1.0),
         num_parallel_calls=num,

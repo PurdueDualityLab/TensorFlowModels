@@ -55,7 +55,7 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 1
+  config.train_data.global_batch_size = 64
   config.validation_data.global_batch_size = 1
 
   config.train_data.dtype = 'float32'
@@ -220,7 +220,7 @@ def time_pipeline():
     times.append(ftime - ltime)
     ltime = time.time()
     print(times[-1], l)
-    if l >= 10000:
+    if l >= 100:
       break
 
   plt.plot(times)
