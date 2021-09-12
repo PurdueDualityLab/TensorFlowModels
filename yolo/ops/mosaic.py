@@ -230,8 +230,9 @@ class Mosaic(object):
         seed=self._seed)
     infos.extend(infos_)
 
-    augment = not (letter_box == True and random_crop == 0.0 and
-                   self._resize == 1.0 and cut is None)
+    augment = True 
+    
+    #not (letter_box == True and random_crop == 0.0 and self._resize == 1.0 and cut is None)
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(

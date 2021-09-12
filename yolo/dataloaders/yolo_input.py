@@ -446,7 +446,7 @@ class Parser(parser.Parser):
     # Clip and clean boxes.
     image = image / 255
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, infos, shuffle_boxes=False, area_thresh=0.0, augment=False)
+        boxes, infos, shuffle_boxes=False, area_thresh=0.0, augment=True)
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
