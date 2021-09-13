@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
 task:
   coco91to80: True
@@ -63,7 +63,7 @@ task:
       update_on_repeat: true
   train_data:
     global_batch_size: 64
-    dtype: bfloat16
+    dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
     shuffle_buffer_size: 10000
@@ -95,7 +95,7 @@ task:
         crop_area: [0.25]
   validation_data:
     global_batch_size: 8
-    dtype: bfloat16
+    dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
     shuffle_buffer_size: 10
