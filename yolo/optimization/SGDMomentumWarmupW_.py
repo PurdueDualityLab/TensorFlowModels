@@ -232,10 +232,6 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     dparams = grad
     groups = []
 
-    # do not update non-trainable weights
-    if not var.trainable:
-      return tf.group(*groups)
-
     if self._weight_decay:
       dparams += (weight_decay * var)
 
@@ -255,39 +251,31 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     return tf.group(*groups)
 
   def _get_vartype(self, var, coefficients):
-    weights, bias, others = False, False, False
     if (_var_key(var) in self._wset):
-      weights, bias, others = True, False, False
+      return True, False, False
     elif (_var_key(var) in self._bset):
-      weights, bias, others = False, True, False
-    elif (_var_key(var) in self._oset):
-      weights, bias, others = False, False, True
-
-    weight_decay = tf.zeros_like(coefficients["weight_decay"])
-    lr = tf.zeros_like(coefficients["lr_t"])
-    momentum = tf.zeros_like(coefficients["momentum"])    
-
-    if weights:
-      weight_decay = coefficients["weight_decay"]
-      lr = coefficients["lr_t"]
-      momentum = coefficients["momentum"]
-    elif bias:
-      weight_decay = tf.zeros_like(coefficients["weight_decay"])
-      lr = coefficients["bias_lr_t"]
-      momentum = coefficients["momentum"]
-    elif others:
-      weight_decay = tf.zeros_like(coefficients["weight_decay"])
-      lr = coefficients["other_lr_t"]
-      momentum = coefficients["momentum"]
-    return weight_decay, lr, momentum
-
+      return False, True, False
+    return False, False, True
 
   def _run_sgd(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
     coefficients = ((apply_state or {}).get((var_device, var_dtype)) or
                     self._fallback_apply_state(var_device, var_dtype))
 
-    weight_decay, lr, momentum = self._get_vartype(var, coefficients)
+    weights, bias, others = self._get_vartype(var, coefficients)
+    weight_decay = tf.zeros_like(coefficients["weight_decay"])
+    lr = coefficients["lr_t"]
+    if weights:
+      weight_decay = coefficients["weight_decay"]
+      lr = coefficients["lr_t"]
+    elif bias:
+      weight_decay = tf.zeros_like(coefficients["weight_decay"])
+      lr = coefficients["bias_lr_t"]
+    elif others:
+      weight_decay = tf.zeros_like(coefficients["weight_decay"])
+      lr = coefficients["other_lr_t"]
+    momentum = coefficients["momentum"]
+
     if self.sim_torch:
       return self._apply(grad, var, weight_decay, momentum, lr)
     else:

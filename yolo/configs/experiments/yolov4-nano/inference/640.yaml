@@ -19,47 +19,49 @@ task:
         use_separable_conv: True
     num_classes: 80
     smart_bias: true
-    boxes: ['(10, 14)', 
-            '(23, 27)', 
-            '(37, 58)', 
-            '(81, 82)', 
-            '(135, 169)', 
-            '(344, 319)']
-    input_size: [416, 416, 3]
+    boxes: ['[12.0, 16.0]',
+            '[19.0, 36.0]',
+            '[40.0, 28.0]',
+            '[36.0, 75.0]', 
+            '[76.0, 55.0]', 
+            '[72.0, 146.0]', 
+            '[142.0, 110.0]', 
+            '[192.0, 243.0]', 
+            '[459.0, 401.0]']
+    input_size: [640, 640, 3]
     boxes_per_scale: 3
     max_level: 5
-    min_level: 4
+    min_level: 3
     norm_activation:
       activation: leaky
       norm_epsilon: 0.0001
       norm_momentum: 0.97
-      use_sync_bn: true
+      use_sync_bn: false
     filter:
-      ignore_thresh:
-        'all': 0.7
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.07
-      cls_normalizer: 
-        'all': 1.0
-      obj_normalizer: 
-        'all': 1.0
-      box_type:
-        'all': original
-      objectness_smooth: 
+        'all': 0.05
+      ignore_thresh:
         'all': 0.0
-      max_delta:
-        'all': 5.0
+      cls_normalizer: 
+        'all': 0.3
+      obj_normalizer: 
+        '5': 0.28
+        '4': 0.70
+        '3': 2.80
+      box_type:
+        'all': scaled
+      objectness_smooth: 
+        'all': 1.0
       scale_xy:
-        '5': 1.05
-        '4': 1.1
-      max_boxes: 200
+        'all': 2.0
+      max_boxes: 300
       nms_type: greedy
       iou_thresh: 0.001
-      nms_thresh: 0.6
-      pre_nms_points: 500
-      use_scaled_loss: false
+      nms_thresh: 0.60
+      pre_nms_points: 5000
+      use_scaled_loss: true
   train_data:
     global_batch_size: 32
     dtype: float32
@@ -84,7 +86,7 @@ task:
       anchor_thresh: 4.0
       best_match_only: True
       mosaic: 
-        output_resolution: [416, 416]
+        output_resolution: [640, 640]
         max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
@@ -111,15 +113,15 @@ task:
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 78
-  steps_per_loop: 1
-  summary_interval: 1
+  steps_per_loop: 1850
+  summary_interval: 1850
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    # ema:
-    #   average_decay: 0.9999
-    #   trainable_weights_only: False
-    #   dynamic_decay: True
+    ema:
+      average_decay: 0.9999
+      trainable_weights_only: False
+      dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
@@ -134,7 +136,7 @@ trainer:
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0005
+        weight_decay: 0.000
         sim_torch: true
         name: SGD
     warmup:

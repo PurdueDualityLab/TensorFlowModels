@@ -223,11 +223,13 @@ class Trainer(_AsyncTrainer):
     # Runtime options are only applied to train_step.
     # We use default for eval_step.
     self._runtime_options = get_runtime_options(config)
+    self._inner_optimizer = (optimizer.inner_optimizer 
+                        if isinstance(optimizer, tf.keras.mixed_precision.LossScaleOptimizer) else optimizer)
 
     # Creates a shadow copy of the weights to store weights moving average.
-    if isinstance(self._optimizer, optimization.ExponentialMovingAverage
-                 ) and not self._optimizer.has_shadow_copy:
-      self._optimizer.shadow_copy(self._model)
+    if isinstance(self._inner_optimizer, optimization.ExponentialMovingAverage
+                 ) and not self._inner_optimizer.has_shadow_copy:
+      self._inner_optimizer.shadow_copy(self._model)
 
     # global_step increases by 1 after each training iteration.
     # We should have global_step.numpy() == self.optimizer.iterations.numpy()
@@ -332,6 +334,13 @@ class Trainer(_AsyncTrainer):
       return None
 
   @property
+  def inner_optimizer(self):
+    if hasattr(self, "_optimizer"):
+      return self._inner_optimizer
+    else:
+      return None
+      
+  @property
   def global_step(self):
     return self._global_step
 
@@ -391,8 +400,7 @@ class Trainer(_AsyncTrainer):
       # Maybe a self-implemented optimizer does not have `optimizer.iterations`.
       # So just to be safe here.
       if hasattr(self.optimizer, "iterations"):
-        logs["learning_rate"] = self.optimizer.learning_rate(
-            self.optimizer.iterations)
+        logs["learning_rate"] = self.optimizer.learning_rate(self.optimizer.iterations)
       else:
         logs["learning_rate"] = self.optimizer.learning_rate(self.global_step)
     else:
@@ -423,9 +431,9 @@ class Trainer(_AsyncTrainer):
     for metric in self.validation_metrics + [self.validation_loss]:
       metric.reset_states()
     # Swaps weights to test on weights moving average.
-    if self.optimizer and isinstance(self.optimizer,
+    if self.inner_optimizer and isinstance(self.inner_optimizer,
                                      optimization.ExponentialMovingAverage):
-      self.optimizer.swap_weights()
+      self.inner_optimizer.swap_weights()
 
   def eval_step(self, iterator):
     """See base class."""
@@ -468,9 +476,9 @@ class Trainer(_AsyncTrainer):
     # Swaps back weights after testing when EMA is used.
     # This happens after best checkpoint export so that average weights used for
     # eval are exported instead of regular weights.
-    if self.optimizer and isinstance(self.optimizer,
+    if self.inner_optimizer and isinstance(self.inner_optimizer,
                                      optimization.ExponentialMovingAverage):
-      self.optimizer.swap_weights()
+      self.inner_optimizer.swap_weights()
     return logs
 
   def eval_reduce(self, state=None, step_outputs=None):

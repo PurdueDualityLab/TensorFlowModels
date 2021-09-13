@@ -275,8 +275,9 @@ class YoloTask(base_task.Task):
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
 
     # Compute the gradient
-    train_vars = model.trainable_variables
-    gradients = tape.gradient(scaled_loss, train_vars)
+    train_vars = model.variables
+    gradients = tape.gradient(scaled_loss, train_vars, 
+                              unconnected_gradients=tf.UnconnectedGradients.ZERO)
 
     # Get unscaled loss if we are using the loss scale optimizer on fp16
     if isinstance(optimizer, mixed_precision.LossScaleOptimizer):

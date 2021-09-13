@@ -16,6 +16,7 @@
 from typing import List, Optional, Text
 
 import tensorflow as tf
+from tensorflow_addons.optimizers import moving_average
 from tensorflow.python.keras import optimizer_v2
 from official.modeling.optimization import ema_optimizer
 import logging
