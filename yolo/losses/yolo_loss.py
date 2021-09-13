@@ -421,7 +421,7 @@ class ScaledLoss(YoloLossBase):
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
     # Decode the boxes for loss compute.
-    scale, pred_box, _ = self._decode_boxes(
+    scale, pred_box, pbg = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
     # If the ignore threshold is enabled, search all boxes ignore all
@@ -429,13 +429,13 @@ class ScaledLoss(YoloLossBase):
     # noted ground truth list.
     if self._ignore_thresh != 0.0:
       (_, obj_mask) = self._tiled_global_box_search(
-          pred_box,
+          pbg,
           tf.stop_gradient(tf.sigmoid(pred_class)),
           boxes,
           classes,
           true_conf,
           smoothed=False,
-          scale=scale)
+          scale=None)
 
     # Scale and shift and select the ground truth boxes
     # and predictions to the prediciton domain.
