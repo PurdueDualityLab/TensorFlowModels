@@ -1,20 +1,24 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
-  tpu_enable_xla_dynamic_padder: false
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  loss_scale: "dynamic"
+  num_gpus: 1
 task:
   coco91to80: True
   smart_bias_lr: 0.1
-  reduced_logs: True
   model:
     base:
       backbone:
         type: 'darknet'
         darknet:
-          model_id: 'altered_cspdarknet53'
+          width_scale: 1.25
+          depth_scale: 1.00
+          model_id: 'cspdarknet53'
+          use_separable_conv: True
       decoder:
         version: v4
-        type: csp
+        type: regular
+        use_separable_conv: True
     num_classes: 80
     smart_bias: true
     boxes: ['[12.0, 16.0]',
@@ -40,10 +44,10 @@ task:
         'all': ciou
       iou_normalizer: 
         'all': 0.05
+      ignore_thresh:
+        'all': 0.7
       cls_normalizer: 
         'all': 0.3
-      ignore_thresh:
-        'all': 0.0
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
@@ -60,15 +64,14 @@ task:
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
-      update_on_repeat: true
   train_data:
-    global_batch_size: 64
-    dtype: bfloat16
-    input_path: 'gs://cam2-datasets/coco/train*'
+    global_batch_size: 1
+    dtype: float32
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
-    seed: 1000
+    seed: 0
     parser:
       max_num_instances: 300
       letter_box: True
@@ -87,6 +90,7 @@ task:
       best_match_only: True
       mosaic: 
         output_resolution: [640, 640]
+        max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
@@ -94,11 +98,11 @@ task:
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 8
-    dtype: bfloat16
-    input_path: 'gs://cam2-datasets/coco/val*'
+    global_batch_size: 1
+    dtype: float32
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
-    shuffle_buffer_size: 10
+    shuffle_buffer_size: 1
     drop_remainder: true
     parser:
       max_num_instances: 300
@@ -111,16 +115,16 @@ task:
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
+  validation_steps: 625 #312
   steps_per_loop: 1850
   summary_interval: 1850
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:

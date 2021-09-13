@@ -386,6 +386,7 @@ class Darknet(tf.keras.Model):
       csp_level_mod=(),
       activation=None,
       use_sync_bn=False,
+      use_separable_conv=False, 
       norm_momentum=0.99,
       norm_epsilon=0.001,
       dilate=False,
@@ -412,6 +413,7 @@ class Darknet(tf.keras.Model):
     self._norm_momentum = norm_momentum
     self._norm_epislon = norm_epsilon
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._activation = activation
     self._kernel_regularizer = kernel_regularizer
     self._dilate = dilate
@@ -426,6 +428,7 @@ class Darknet(tf.keras.Model):
         'norm_epsilon': self._norm_epislon,
         'use_sync_bn': self._use_sync_bn,
         'activation': self._activation,
+        'use_separable_conv': self._use_separable_conv,
         'dilation_rate': 1,
         'name': None
     }
@@ -678,6 +681,7 @@ def build_darknet(
       depth_scale=backbone_cfg.depth_scale,
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
+      use_separable_conv=backbone_cfg.use_separable_conv,
       norm_momentum=norm_activation_config.norm_momentum,
       norm_epsilon=norm_activation_config.norm_epsilon,
       kernel_regularizer=l2_regularizer)

@@ -14,7 +14,7 @@
 
 # Lint as: python3
 """Contains common building blocks for yolo neural networks."""
-from typing import Callable, List
+from typing import Callable, List, Tuple
 import tensorflow as tf
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
@@ -52,6 +52,7 @@ class ConvBN(tf.keras.layers.Layer):
                bias_initializer='zeros',
                bias_regularizer=None,
                kernel_regularizer=None,
+               use_separable_conv=False, 
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -112,9 +113,24 @@ class ConvBN(tf.keras.layers.Layer):
 
     # batch normalization params
     self._use_bn = use_bn
+    self._use_separable_conv = use_separable_conv
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
+
+    
+    ksize = self._kernel_size
+    if not isinstance(ksize, List) and not isinstance(ksize, Tuple):
+      ksize = [ksize]
+    if use_separable_conv and not all([a == 1 for a in ksize]):
+      self._conv_base = tf.keras.layers.SeparableConv2D
+    else:
+      self._conv_base = tf.keras.layers.Conv2D
+
+    if use_sync_bn:
+      self._bn_base = tf.keras.layers.experimental.SyncBatchNormalization
+    else:
+      self._bn_base = tf.keras.layers.BatchNormalization
 
     if tf.keras.backend.image_data_format() == 'channels_last':
       # format: (batch_size, height, width, channels)
@@ -132,7 +148,7 @@ class ConvBN(tf.keras.layers.Layer):
   def build(self, input_shape):
     use_bias = not self._use_bn
 
-    self.conv = tf.keras.layers.Conv2D(
+    self.conv = self._conv_base(
         filters=self._filters,
         kernel_size=self._kernel_size,
         strides=self._strides,
@@ -145,16 +161,10 @@ class ConvBN(tf.keras.layers.Layer):
         bias_regularizer=self._bias_regularizer)
 
     if self._use_bn:
-      if self._use_sync_bn:
-        self.bn = tf.keras.layers.experimental.SyncBatchNormalization(
-            momentum=self._norm_momentum,
-            epsilon=self._norm_epsilon,
-            axis=self._bn_axis)
-      else:
-        self.bn = tf.keras.layers.BatchNormalization(
-            momentum=self._norm_momentum,
-            epsilon=self._norm_epsilon,
-            axis=self._bn_axis)
+      self.bn = self._bn_base(
+          momentum=self._norm_momentum,
+          epsilon=self._norm_epsilon,
+          axis=self._bn_axis)
 
     if self._activation == 'leaky':
       self._activation_fn = tf.keras.layers.LeakyReLU(alpha=self._leaky_alpha)
@@ -207,6 +217,7 @@ class DarkResidual(tf.keras.layers.Layer):
                bias_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False, 
                norm_momentum=0.99,
                norm_epsilon=0.001,
                activation='leaky',
@@ -255,6 +266,7 @@ class DarkResidual(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._kernel_regularizer = kernel_regularizer
 
     # normal params
@@ -277,6 +289,7 @@ class DarkResidual(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
@@ -380,6 +393,7 @@ class CSPTiny(tf.keras.layers.Layer):
                use_bn=True,
                dilation_rate=1,
                use_sync_bn=False,
+               use_separable_conv=False, 
                group_id=1,
                groups=2,
                norm_momentum=0.99,
@@ -427,6 +441,7 @@ class CSPTiny(tf.keras.layers.Layer):
     self._use_bn = use_bn
     self._dilation_rate = dilation_rate
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._kernel_regularizer = kernel_regularizer
     self._groups = groups
     self._group_id = group_id
@@ -446,13 +461,14 @@ class CSPTiny(tf.keras.layers.Layer):
     dark_conv_args = {
         'kernel_initializer': self._kernel_initializer,
         'bias_initializer': self._bias_initializer,
+        'kernel_regularizer': self._kernel_regularizer,
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
-        'kernel_regularizer': self._kernel_regularizer,
         'leaky_alpha': self._leaky_alpha
     }
     self._convlayer1 = ConvBN(
@@ -467,16 +483,18 @@ class CSPTiny(tf.keras.layers.Layer):
         kernel_size=(3, 3),
         strides=(1, 1),
         padding='same',
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        bias_regularizer=self._bias_regularizer,
-        kernel_regularizer=self._kernel_regularizer,
-        use_bn=self._use_bn,
-        use_sync_bn=self._use_sync_bn,
-        norm_momentum=self._norm_momentum,
-        norm_epsilon=self._norm_epsilon,
-        activation=self._conv_activation,
-        leaky_alpha=self._leaky_alpha)
+        **dark_conv_args)
+
+        # kernel_initializer=self._kernel_initializer,
+        # bias_initializer=self._bias_initializer,
+        # bias_regularizer=self._bias_regularizer,
+        # kernel_regularizer=self._kernel_regularizer,
+        # use_bn=self._use_bn,
+        # use_sync_bn=self._use_sync_bn,
+        # norm_momentum=self._norm_momentum,
+        # norm_epsilon=self._norm_epsilon,
+        # activation=self._conv_activation,
+        # leaky_alpha=self._leaky_alpha)
 
     self._convlayer3 = ConvBN(
         filters=self._filters // 2,
@@ -546,6 +564,7 @@ class CSPRoute(tf.keras.layers.Layer):
                dilation_rate=1,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False, 
                norm_momentum=0.99,
                norm_epsilon=0.001,
                downsample=True,
@@ -592,6 +611,7 @@ class CSPRoute(tf.keras.layers.Layer):
     self._dilation_rate = dilation_rate
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._downsample = downsample
@@ -604,6 +624,7 @@ class CSPRoute(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
@@ -675,6 +696,7 @@ class CSPConnect(tf.keras.layers.Layer):
                dilation_rate=1,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                leaky_alpha=0.1,
@@ -722,6 +744,7 @@ class CSPConnect(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
     self._drop_final = drop_final
@@ -735,6 +758,7 @@ class CSPConnect(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
@@ -797,6 +821,7 @@ class CSPStack(tf.keras.layers.Layer):
                downsample=True,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                **kwargs):
@@ -844,6 +869,7 @@ class CSPStack(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
@@ -868,6 +894,7 @@ class CSPStack(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'kernel_regularizer': self._kernel_regularizer,
@@ -896,6 +923,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False, 
                inverted=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
@@ -942,6 +970,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
     self._kernel_regularizer = kernel_regularizer
     self._use_bn = use_bn
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
 
     # Normal params
     self._norm_momentum = norm_momentum
@@ -1022,6 +1051,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
         'bias_regularizer': self._bias_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._conv_activation,
@@ -1132,6 +1162,7 @@ class SAM(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=True,
+               use_separable_conv=False, 
                norm_momentum=0.99,
                norm_epsilon=0.001,
                activation='sigmoid',
@@ -1155,6 +1186,7 @@ class SAM(tf.keras.layers.Layer):
         'bias_regularizer': bias_regularizer,
         'use_bn': use_bn,
         'use_sync_bn': use_sync_bn,
+        'use_separable_conv': use_separable_conv,
         'norm_momentum': norm_momentum,
         'norm_epsilon': norm_epsilon,
         'activation': activation,
@@ -1297,6 +1329,7 @@ class CBAM(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
+               use_separable_conv=False, 
                norm_momentum=0.99,
                norm_epsilon=0.001,
                mlp_activation=None,
@@ -1313,6 +1346,7 @@ class CBAM(tf.keras.layers.Layer):
         'strides': strides,
         'padding': padding,
         'dilation_rate': dilation_rate,
+        'use_separable_conv': use_separable_conv,
     }
 
     self._cam_args = {
@@ -1374,6 +1408,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       bias_regularizer=None,
       kernel_regularizer=None,
       use_sync_bn=False,
+      use_separable_conv=False, 
       norm_momentum=0.99,
       norm_epsilon=0.001,
       block_invert=False,
@@ -1434,6 +1469,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
     # darkconv params
     self._filters = filters
     self._use_sync_bn = use_sync_bn
+    self._use_separable_conv = use_separable_conv
     self._kernel_initializer = kernel_initializer
     self._bias_initializer = bias_initializer
     self._bias_regularizer = bias_regularizer
@@ -1575,6 +1611,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
         'bias_initializer': self._bias_initializer,
         'bias_regularizer': self._bias_regularizer,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'kernel_regularizer': self._kernel_regularizer,

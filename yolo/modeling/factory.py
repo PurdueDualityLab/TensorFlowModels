@@ -56,6 +56,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   base_dict = dict(
       activation=activation,
       use_spatial_attention=model_config.decoder.use_spatial_attention,
+      use_separable_conv=model_config.decoder.use_separable_conv,
       use_sync_bn=model_config.norm_activation.use_sync_bn,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,

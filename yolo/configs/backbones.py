@@ -13,6 +13,7 @@ class Darknet(hyperparams.Config):
   width_scale: int = 1.0
   depth_scale: int = 1.0
   dilate: bool = False
+  use_separable_conv: bool = False
 
 
 @dataclasses.dataclass

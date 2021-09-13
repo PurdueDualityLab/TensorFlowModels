@@ -211,6 +211,7 @@ class YoloDecoder(hyperparams.Config):
   type: Optional[str] = None
   use_fpn: Optional[bool] = None
   use_spatial_attention: bool = False
+  use_separable_conv: bool = False
   csp_stack: Optional[bool] = None
   fpn_depth: Optional[int] = None
   fpn_filter_scale: Optional[int] = None
