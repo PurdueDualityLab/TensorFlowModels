@@ -43,7 +43,7 @@ task:
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
-        'all': 0.0
+        'all': 0.7
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
