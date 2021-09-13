@@ -475,7 +475,9 @@ class ScaledLoss(YoloLossBase):
         tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     if self._ignore_thresh != 0.0:
       bce = loss_utils.apply_mask(obj_mask, bce)
-    conf_loss = tf.reduce_mean(bce)
+      conf_loss = tf.reduce_sum(bce)/tf.reduce_sum(obj_mask)
+    else:
+      conf_loss = tf.reduce_mean(bce)
 
     # Compute the cross entropy loss for the class maps.
     class_loss = tf.keras.losses.binary_crossentropy(
