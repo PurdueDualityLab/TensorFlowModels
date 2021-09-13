@@ -317,7 +317,7 @@ class PairWiseSearch(object):
       boxes = box_ops.yxyx_to_xcycwh(boxes)
 
     if scale is not None:
-      boxes = boxes * tf.stop_gradient(scale)
+      boxes = boxes * tf.cast(tf.stop_gradient(scale), boxes.dtype)
 
     if self._min_conf > 0.0:
       pred_classes = tf.cast(pred_classes > self._min_conf, pred_classes.dtype)
