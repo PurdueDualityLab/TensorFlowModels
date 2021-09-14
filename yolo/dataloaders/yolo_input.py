@@ -186,14 +186,12 @@ class Parser(parser.Parser):
 
     # Image scaling params
     self._jitter = 0.0 if jitter is None else jitter
-    self._resize = 1.0 if resize is None else resize
     self._aug_scale_min = aug_scale_min
     self._aug_scale_max = aug_scale_max
     self._aug_rand_translate = aug_rand_transalate
 
     # Mosaic scaling params
     self._jitter_mosaic = 0.0 if jitter_mosaic is None else jitter_mosaic
-    self._resize_mosaic = 1.0 if resize_mosaic is None else resize_mosaic
     self._mosaic_min = mosaic_min
     self._mosaic_max = mosaic_max
     self._mosaic_translate = mosaic_translate
@@ -296,7 +294,7 @@ class Parser(parser.Parser):
     ])
     return val
 
-  def _jitter_scale(self, image, shape, letter_box, jitter, resize, random_pad,
+  def _jitter_scale(self, image, shape, letter_box, jitter, random_pad,
                     aug_scale_min, aug_scale_max, translate, angle,
                     perspective):
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
@@ -313,7 +311,6 @@ class Parser(parser.Parser):
         shape,
         letter_box=letter_box,
         jitter=jitter,
-        resize=resize,
         crop_only=crop_only,
         random_pad=random_pad,
         seed=self._seed,
@@ -333,7 +330,7 @@ class Parser(parser.Parser):
         random_pad=random_pad,
         seed=self._seed,
     )
-    augment = not (letter_box and jitter == 0.0 and resize == 1.0 and
+    augment = not (letter_box and jitter == 0.0 and
                    aug_scale_min == 1.0 and aug_scale_max == 1.0 and
                    angle == 0.0 and perspective == 0.0 and
                    random_pad == False and translate == 0.0)
@@ -369,14 +366,14 @@ class Parser(parser.Parser):
     if not data['is_mosaic']:
       image, infos, affine, augment = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box, self._jitter,
-          self._resize, self._random_pad, self._aug_scale_min,
-          self._aug_scale_max, self._aug_rand_translate, self._aug_rand_angle,
+          self._random_pad, self._aug_scale_min, self._aug_scale_max, 
+          self._aug_rand_translate, self._aug_rand_angle,
           0.0)
 
     else:
       image, infos, affine, augment = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box,
-          self._jitter_mosaic, self._resize_mosaic, self._random_pad,
+          self._jitter_mosaic, self._random_pad,
           self._mosaic_min, self._mosaic_max, self._mosaic_translate,
           self._aug_rand_angle, 0.0)
 
@@ -440,8 +437,7 @@ class Parser(parser.Parser):
         random_pad=False,
         shiftx=0.5,
         shifty=0.5,
-        jitter=0.0,
-        resize=1.0)
+        jitter=0.0)
 
     # Clip and clean boxes.
     image = image / 255

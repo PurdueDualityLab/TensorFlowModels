@@ -376,7 +376,6 @@ def resize_and_jitter_image(image,
                             desired_size,
                             jitter=0.0,
                             letter_box=None,
-                            resize=1.0,
                             random_pad=True,
                             crop_only=False,
                             shiftx=0.5,
@@ -438,34 +437,20 @@ def resize_and_jitter_image(image,
     # Cast all parameters to a usable float data type.
     jitter = tf.cast(jitter, tf.float32)
     original_dtype, original_dims = image.dtype, tf.shape(image)[:2]
+
+    # original width, original height, desigered width, desired height
     ow, oh, w, h = cast(
         [original_dims[1], original_dims[0], desired_size[1], desired_size[0]],
-        tf.float32)
+        tf.float32) 
 
     # Compute the random delta width and height etc. and randomize the
     # location of the corner points.
-    dw = ow * jitter
-    dh = oh * jitter
-    pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed)
-    pright = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed)
-    ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
-    pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
-
-    # Bounded resizing of the images.
-    if resize != 1:
-      max_rdw, max_rdh = 0.0, 0.0
-      if resize > 1.0:
-        max_rdw = ow * (1 - (1 / resize)) / 2
-        max_rdh = oh * (1 - (1 / resize)) / 2
-
-      resize_down = resize if resize < 1.0 else 1 / resize
-      min_rdw = ow * (1 - (1 / resize_down)) / 2
-      min_rdh = oh * (1 - (1 / resize_down)) / 2
-
-      pleft += rand_uniform_strong(min_rdw, max_rdw, seed=seed)
-      pright += rand_uniform_strong(min_rdw, max_rdw, seed=seed)
-      ptop += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
-      pbottom += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
+    dw = ow * jitter # delta width
+    dh = oh * jitter # delta height 
+    pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed) # point left 
+    pright = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed) # point right 
+    ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed) # point top
+    pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed) # point bottom
 
     # Letter box the image.
     if letter_box == True or letter_box is None:
@@ -586,7 +571,8 @@ def _build_transform(image,
                     random_pad=False,
                     desired_size=None,
                     seed=None):
-
+  """Builds a unifed affine transformation to spatially augment the image."""
+  
   height, width = get_image_shape(image)
   ch = height = tf.cast(height, tf.float32)
   cw = width = tf.cast(width, tf.float32)

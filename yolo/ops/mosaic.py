@@ -223,7 +223,6 @@ class Mosaic(object):
         random_pad=False,
         letter_box=letter_box,
         jitter=random_crop,
-        resize=self._resize,
         shiftx=xs,
         shifty=ys,
         cut=cut,
