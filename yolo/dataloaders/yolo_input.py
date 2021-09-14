@@ -49,40 +49,47 @@ class Parser(parser.Parser):
 
   def __init__(self,
                output_size,
-               min_level=3,
-               max_level=5,
-               jitter=0.0,
-               jitter_mosaic=0.0,
-               resize=1.0,
-               resize_mosaic=1.0,
-               area_thresh=0.1,
-               max_num_instances=200,
-               aug_rand_angle=0.0,
+               masks,
+               anchors,
+               strides,
+               anchor_free_limits=None,   
+               max_num_instances=200,  
+               area_thresh=0.1,  
+
+               aug_rand_hue=1.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
-               aug_rand_hue=1.0,
+               
+               letter_box=False,
                random_pad=True,
+               random_flip=True,
+               aug_rand_angle=0.0,
+
+               jitter=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
+               aug_rand_transalate=0.0,
+               
+               jitter_mosaic=0.0,
                mosaic_min=1.0,
                mosaic_max=1.0,
-               aug_rand_transalate=0.0,
                mosaic_translate=0.0,
+               
                anchor_t=4.0,
-               dynamic_conv=False,
-               stride=None,
                scale_xy=None,
-               use_scale_xy=False,
                best_match_only=False,
-               masks=None,
-               anchors=None,
-               letter_box=False,
-               random_flip=True,
+
+               coco91to80=False,
+               darknet=False,
                use_tie_breaker=True,
                dtype='float32',
-               coco91to80=False,
-               anchor_free_limits=None,
-               seed=None):
+               seed=None,
+
+               dynamic_conv=False,
+               min_level=3,
+               resize=1.0,
+               resize_mosaic=1.0,
+               ):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
       output_size: `Tensor` or `list` for [height, width] of output image. The
@@ -158,23 +165,18 @@ class Parser(parser.Parser):
         model parameters.
       seed: `int` the seed for random number generation. 
     """
+    for key in masks.keys():
+      # Assert that the width and height is viable
+      assert output_size[1] % strides[str(key)] == 0
+      assert output_size[0] % strides[str(key)] == 0
+
+    # scale of each FPN level
+    self._strides = strides
+
+    # Set the width and height properly and base init:
     self._coco91to80 = coco91to80
-
-    # Base initialization
-    image_w = output_size[1]
-    image_h = output_size[0]
-    if stride is None:
-      self._net_down_scale = 2**max_level
-    else:
-      self._net_down_scale = stride
-
-    # Assert that the width and height is viable
-    assert image_w % self._net_down_scale == 0
-    assert image_h % self._net_down_scale == 0
-
-    # Set the width and height properly
-    self._image_w = image_w
-    self._image_h = image_h
+    self._image_w = output_size[1]
+    self._image_h = output_size[0]
 
     # Set the anchor boxes and masks for each scale
     self._anchors = anchors
@@ -182,6 +184,7 @@ class Parser(parser.Parser):
         key: tf.convert_to_tensor(value) for key, value in masks.items()
     }
     self._use_tie_breaker = use_tie_breaker
+    self._best_match_only = best_match_only
     self._max_num_instances = max_num_instances
 
     # Image scaling params
@@ -206,80 +209,23 @@ class Parser(parser.Parser):
     self._aug_rand_saturation = aug_rand_saturation
     self._aug_rand_brightness = aug_rand_brightness
     self._aug_rand_hue = aug_rand_hue
-    self._best_match_only = best_match_only
+    
 
     # Set the per level values needed for operation
-    self._dynamic_conv = dynamic_conv
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
-    self._use_scale_xy = use_scale_xy
+    self._darknet = darknet
     keys = list(self._masks.keys())
 
-    scale = max(max(self._image_w, self._image_h) / 640, 1)
     self._scale_up = {key: 6 - i for i, key in enumerate(keys)
-                     } if self._use_scale_xy else {key: 1 for key in keys}
+                     } if not self._darknet else {key: 1 for key in keys}
     self._area_thresh = area_thresh
     self._anchor_free_limits = anchor_free_limits
 
     self._seed = seed
 
-    # Set the data type based on input string
-    if dtype == 'float16':
-      self._dtype = tf.float16
-    elif dtype == 'bfloat16':
-      self._dtype = tf.bfloat16
-    elif dtype == 'float32':
-      self._dtype = tf.float32
-    else:
-      raise Exception('Unsupported datatype used in parser\
-          only {float16, bfloat16, or float32}.')
-
-  def _build_grid(self,
-                  raw_true,
-                  width,
-                  height,
-                  batch=False,
-                  use_tie_breaker=False,
-                  is_training=True):
-    '''Private function for building the full scale object and class grid.'''
-    mask = self._masks
-    inds = {}
-    upds = {}
-    true_conf = {}
-
-    # based on if training or not determine how to scale up the number of
-    # boxes that may result for final loss computation
-    scale_up = self._scale_up
-
-    # for each prediction path generate a properly scaled output prediction map
-    for key in self._masks.keys():
-      if self._use_scale_xy:
-        scale_xy = self._scale_xy[key]
-      else:
-        scale_xy = 1
-
-      # build the actual grid as well and the list of boxes and classes AND
-      # their index in the prediction grid
-      indexes, updates, true_grid = preprocessing_ops.build_grided_gt_ind(
-          raw_true, self._masks[key], width // 2**int(key),
-          height // 2**int(key), 0, raw_true['bbox'].dtype, scale_xy,
-          scale_up[key], use_tie_breaker)
-
-      # set/fix the shape of the indexes
-      ishape = indexes.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * scale_up[key]
-      indexes.set_shape(ishape)
-
-      # set/fix the shape of the updates
-      ishape = updates.get_shape().as_list()
-      ishape[-2] = self._max_num_instances * scale_up[key]
-      updates.set_shape(ishape)
-
-      # add all the values to the final dictionary
-      inds[key] = indexes
-      upds[key] = tf.cast(updates, self._dtype)
-      true_conf[key] = true_grid
-    return mask, inds, upds, true_conf
+    # Set the data type based on input string    
+    self._dtype = dtype
 
   def _get_identity_info(self, image):
     """Get an identity image op to pad all info vectors, this is used because 
@@ -356,7 +302,6 @@ class Parser(parser.Parser):
     image = data['image']
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
-    height, width = preprocessing_ops.get_image_shape(image)
 
     if self._random_flip:
       # Randomly flip the image horizontally.
@@ -369,7 +314,6 @@ class Parser(parser.Parser):
           self._random_pad, self._aug_scale_min, self._aug_scale_max, 
           self._aug_rand_translate, self._aug_rand_angle,
           0.0)
-
     else:
       image, infos, affine, augment = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box,
@@ -379,8 +323,7 @@ class Parser(parser.Parser):
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes,
-        infos,
+        boxes, infos,
         affine=affine,
         shuffle_boxes=False,
         area_thresh=self._area_thresh,
@@ -390,7 +333,7 @@ class Parser(parser.Parser):
     info = infos[-1]
 
     # Apply scaling to the hue saturation and brightness of an image.
-    image = tf.cast(image, self._dtype)
+    image = tf.cast(image, dtype=self._dtype)
     image = image / 255
     image = preprocessing_ops.image_rand_hsv(
         image,
@@ -398,20 +341,11 @@ class Parser(parser.Parser):
         self._aug_rand_saturation,
         self._aug_rand_brightness,
         seed=self._seed,
-        darknet=not self._use_scale_xy)
+        darknet=self._darknet)
 
     # Cast the image to the selcted datatype.
-    height, width = self._image_h, self._image_w
-    image, labels = self._build_label(
-        image,
-        boxes,
-        classes,
-        width,
-        height,
-        info,
-        inds,
-        data,
-        is_training=True)
+    image, labels = self._build_label(image, boxes, classes, 
+        self._image_w, self._image_h, info, inds, data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -419,18 +353,12 @@ class Parser(parser.Parser):
     data = self.reorg91to80(data)
 
     # Get the image shape constants and cast the image to the selcted datatype.
-    image = tf.cast(data['image'], self._dtype)
+    image = tf.cast(data['image'], dtype=self._dtype)
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    if not self._dynamic_conv:
-      height, width = self._image_h, self._image_w
-    else:
-      fit = lambda x: tf.cast((tf.math.ceil(
-          (x / self._net_down_scale) + 0.5) * self._net_down_scale), x.dtype)
-      height, width = preprocessing_ops.get_image_shape(image)
-      height, width = fit(height), fit(width)
-
+    
+    height, width = self._image_h, self._image_w
     image, infos, _ = preprocessing_ops.resize_and_jitter_image(
         image, [height, width],
         letter_box=self._letter_box,
@@ -446,22 +374,62 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    image, labels = self._build_label(
-        image,
-        boxes,
-        classes,
-        width,
-        height,
-        info,
-        inds,
-        data,
-        is_training=False)
+    image, labels = self._build_label(image, boxes, classes, width, height,
+        info, inds, data, is_training=False)
     return image, labels
+
+  def set_shape(self, values, pad_axis = 0, pad_value = 0, inds = None, scale = 1):
+    if inds is not None:
+      values = tf.gather(values, inds)
+    vshape = values.get_shape().as_list()
+
+    if pad_value is not None:
+      values = preprocessing_ops.pad_max_instances(values, 
+                                                  self._max_num_instances,
+                                                  pad_axis = pad_axis, 
+                                                  pad_value = pad_value)
+
+    vshape[pad_axis] = self._max_num_instances * scale
+    values.set_shape(vshape)
+    return values
+
+  def _build_grid(self,
+                  raw_true,
+                  width,
+                  height,
+                  use_tie_breaker=False):
+    '''Private function for building the full scale object and class grid.'''
+    indexes = {}
+    updates = {}
+    true_grids = {}
+
+    # for each prediction path generate a properly scaled output prediction map
+    for key in self._masks.keys():
+      # build the actual grid as well and the list of boxes and classes AND
+      # their index in the prediction grid
+      scale_xy = self._scale_xy[key] if not self._darknet else 1
+      (indexes[key], updates[key], 
+      true_grids[key]) = preprocessing_ops.build_grided_gt_ind(
+          raw_true, self._masks[key], 
+          width // self._strides[str(key)],
+          height // self._strides[str(key)], 
+          raw_true['bbox'].dtype, scale_xy,
+          self._scale_up[key], use_tie_breaker)
+
+      # set/fix the shapes
+      indexes[key] = self.set_shape(indexes[key], -2, None, 
+                                    None, self._scale_up[key])
+      updates[key] = self.set_shape(updates[key], -2, 
+                                    None, None, self._scale_up[key])
+
+      # add all the values to the final dictionary
+      updates[key] = tf.cast(updates[key], dtype = self._dtype)
+    return indexes, updates, true_grids
 
   def _build_label(self,
                    image,
-                   boxes_,
-                   classes,
+                   gt_boxes,
+                   gt_classes,
                    width,
                    height,
                    info,
@@ -469,14 +437,8 @@ class Parser(parser.Parser):
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
-
-    # Set the image shape.
-    imshape = image.get_shape().as_list()
-    imshape[-1] = 3
-    image.set_shape(imshape)
-
     # Get the best anchors.
-    boxes = box_utils.yxyx_to_xcycwh(boxes_)
+    boxes = box_utils.yxyx_to_xcycwh(gt_boxes)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
         boxes,
         self._anchors,
@@ -487,95 +449,50 @@ class Parser(parser.Parser):
         best_match_only=self._best_match_only)
 
     # Set/fix the boxes shape.
-    bshape = boxes.get_shape().as_list()
-    boxes = preprocessing_ops.pad_max_instances(boxes, self._max_num_instances,
-                                                0)
-    bshape[0] = self._max_num_instances
-    boxes.set_shape(bshape)
-
-    # Set/fix the classes shape.
-    cshape = classes.get_shape().as_list()
-    classes = preprocessing_ops.pad_max_instances(classes,
-                                                  self._max_num_instances, -1)
-    cshape[0] = self._max_num_instances
-    classes.set_shape(cshape)
-
-    # Set/fix the best anchor shape.
-    bashape = best_anchors.get_shape().as_list()
-    best_anchors = preprocessing_ops.pad_max_instances(best_anchors,
-                                                       self._max_num_instances,
-                                                       -1)
-    bashape[0] = self._max_num_instances
-    best_anchors.set_shape(bashape)
-
-    # Set/fix the ious shape.
-    ishape = ious.get_shape().as_list()
-    ious = preprocessing_ops.pad_max_instances(ious, self._max_num_instances, 0)
-    ishape[0] = self._max_num_instances
-    ious.set_shape(ishape)
-
-    # Set/fix the area shape.
-    area = data['groundtruth_area']
-    area = tf.gather(area, inds)
-    ashape = area.get_shape().as_list()
-    area = preprocessing_ops.pad_max_instances(area, self._max_num_instances, 0)
-    ashape[0] = self._max_num_instances
-    area.set_shape(ashape)
-
-    # Set/fix the is_crowd shape.
-    is_crowd = data['groundtruth_is_crowd']
-    is_crowd = tf.gather(is_crowd, inds)
-    ishape = is_crowd.get_shape().as_list()
-    is_crowd = preprocessing_ops.pad_max_instances(
-        tf.cast(is_crowd, tf.int32), self._max_num_instances, 0)
-    ishape[0] = self._max_num_instances
-    is_crowd.set_shape(ishape)
+    boxes = self.set_shape(boxes, pad_axis = 0, pad_value = 0)
+    classes = self.set_shape(gt_classes, pad_axis = 0, pad_value = -1)
+    best_anchors = self.set_shape(best_anchors, pad_axis = 0, pad_value = -1)
+    ious = self.set_shape(ious, pad_axis = 0, pad_value = 0)
+    area = self.set_shape(data['groundtruth_area'], 
+                            pad_axis = 0, pad_value = 0, inds = inds)
+    is_crowd = self.set_shape(data['groundtruth_is_crowd'], 
+                            pad_axis = 0, pad_value = 0, inds = inds)
 
     # Build the dictionary set.
     labels = {
         'source_id': utils.process_source_id(data['source_id']),
-        'bbox': tf.cast(boxes, self._dtype),
-        'classes': tf.cast(classes, self._dtype),
-        'area': tf.cast(area, self._dtype),
-        'is_crowd': is_crowd,
-        'best_anchors': tf.cast(best_anchors, self._dtype),
+        'bbox': tf.cast(boxes, dtype=self._dtype),
+        'classes': tf.cast(classes, dtype=self._dtype),
+        'best_anchors': tf.cast(best_anchors, dtype=self._dtype),
         'best_iou_match': ious,
-        'width': width,
-        'height': height,
-        'info': info,
-        'num_detections': tf.shape(inds)[0]
     }
 
     # Build the grid formatted for loss computation in model output format.
-    grid, inds, upds, true_conf = self._build_grid(
+    labels['inds'], labels['upds'], labels['true_conf'] = self._build_grid(
         labels,
         width,
         height,
-        use_tie_breaker=self._use_tie_breaker,
-        is_training=is_training)
+        use_tie_breaker=self._use_tie_breaker)
 
     # Update the labels dictionary.
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-    labels['upds'] = upds
-    labels['inds'] = inds
-    labels['true_conf'] = true_conf
 
-    # Sets up groundtruth data for evaluation.
-    groundtruths = {
-        'source_id': data['source_id'],
-        'height': data['height'],
-        'width': data['width'],
-        'num_detections': labels['num_detections'],
-        'image_info': info,
-        'boxes': boxes_,
-        'classes': labels['classes'],
-        'areas': data['groundtruth_area'],
-        'is_crowds': tf.cast(data['groundtruth_is_crowd'], tf.int32),
-    }
-    groundtruths['source_id'] = utils.process_source_id(
-        groundtruths['source_id'])
-    groundtruths = utils.pad_groundtruths_to_fixed_size(groundtruths,
-                                                        self._max_num_instances)
-
-    labels['groundtruths'] = groundtruths
+    if not is_training:
+      # Sets up groundtruth data for evaluation.
+      groundtruths = {
+          'source_id': labels['source_id'],
+          'height': height,
+          'width': width,
+          'num_detections': tf.shape(gt_boxes)[0],
+          'image_info': info,
+          'boxes': gt_boxes,
+          'classes': gt_classes,
+          'areas': area,
+          'is_crowds': tf.cast(is_crowd, tf.int32),
+      }
+      groundtruths['source_id'] = utils.process_source_id(
+          groundtruths['source_id'])
+      groundtruths = utils.pad_groundtruths_to_fixed_size(
+          groundtruths, self._max_num_instances)
+      labels['groundtruths'] = groundtruths
     return image, labels

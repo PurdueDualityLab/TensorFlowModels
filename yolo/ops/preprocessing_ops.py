@@ -616,7 +616,7 @@ def _build_transform(image,
   if (random_pad and height * s < ch and width * s < cw):
     # The image is contained within the image and arbitrarily translated to
     # locations with in the image.
-    C = Cb = tf.eye(3, dtype=tf.float32)
+    center = center_boxes = tf.eye(3, dtype=tf.float32)
     Tx = rand_uniform_strong(-1, 0, seed=seed) * (cw / s - width)
     Ty = rand_uniform_strong(-1, 0, seed=seed) * (ch / s - height)
   else:
@@ -874,93 +874,121 @@ def apply_infos(boxes,
       inds = tf.random.shuffle(inds, seed=seed)
   else:
     boxes = box_history
-    # boxes = tf.math.maximum(tf.math.minimum(box_history, 1.0), 0.0) 
     boxes_ = bbox_ops.denormalize_boxes(boxes, output_size)
     inds = bbox_ops.get_non_empty_box_indices(boxes_)
   boxes = tf.gather(boxes, inds)
   return boxes, inds
 
 
-# write the boxes to the anchor grid
-def _get_num_reps(anchors, mask, box_mask):
-  """Calculate the number of anchor boxes that an object is repeated in.
-  
-  Args:
-    anchors: A list or Tensor representing the anchor boxes
-    mask: A `list` of `int`s representing the mask for the anchor boxes that
-      will be considered when creating the gridded ground truth.
-    box_mask: A mask for all of the boxes that are in the bounds of the image
-      and have positive height and width.
-  
-  Returns:
-    A tuple with three elements: the number of repetitions, the box indices
-    where the primary anchors are usable according to the mask, and the box
-    indices where the alternate anchors are usable according to the mask.
-  """
-  mask = tf.expand_dims(mask, 0)
-  mask = tf.expand_dims(mask, 0)
-  mask = tf.expand_dims(mask, 0)
-  box_mask = tf.expand_dims(box_mask, -1)
-  box_mask = tf.expand_dims(box_mask, -1)
 
+def _gen_viable_box_mask(boxes):
+  """Generate a mask to filter the boxes to only those with in the image. """
+  equal = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
+  lower_bound = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis=-1)
+  upper_bound = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis=-1)
+
+  negative_mask = tf.logical_or(tf.logical_or(equal, lower_bound), upper_bound)
+  return tf.logical_not(negative_mask)
+
+def _get_box_locations(anchors, mask, boxes):
+  """Calculate the number of anchors associated with each ground truth box."""
+  box_mask = _gen_viable_box_mask(boxes)
+
+  mask = tf.reshape(mask, [1, 1, 1, -1])
+  box_mask = tf.reshape(box_mask, [-1, 1, 1])
   anchors = tf.expand_dims(anchors, axis=-1)
+
+  # split the anchors into the best matches and other wise
   anchors_primary, anchors_alternate = tf.split(anchors, [1, -1], axis=-2)
-  fillin = tf.zeros_like(anchors_primary) - 1
-  anchors_alternate = tf.concat([fillin, anchors_alternate], axis=-2)
+  anchors_alternate = tf.concat(
+    [-tf.ones_like(anchors_primary), anchors_alternate], axis=-2)
 
-  viable_primary = tf.squeeze(
-      tf.logical_and(box_mask, anchors_primary == mask), axis=0)
-  viable_alternate = tf.squeeze(
-      tf.logical_and(box_mask, anchors_alternate == mask), axis=0)
-  viable_full = tf.squeeze(tf.logical_and(box_mask, anchors == mask), axis=0)
+  # convert all the masks into index locations
+  viable_primary = tf.where(tf.squeeze(
+      tf.logical_and(box_mask, anchors_primary == mask), axis=0))
+  viable_alternate = tf.where(tf.squeeze(
+      tf.logical_and(box_mask, anchors_alternate == mask), axis=0))
+  viable_full = tf.where(tf.squeeze(
+      tf.logical_and(box_mask, anchors == mask), axis=0))
 
-  viable_primary = tf.where(viable_primary)
-  viable_alternate = tf.where(viable_alternate)
-  viable_full = tf.where(viable_full)
+  # compute the number of anchors associated with each ground truth box.
+  acheck = tf.reduce_any(anchors == mask, axis=-1)
+  repititions = tf.squeeze(
+    tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
 
-  viable = anchors == mask
-  acheck = tf.reduce_any(viable, axis=-1)
-  reps = tf.squeeze(tf.reduce_sum(tf.cast(acheck, mask.dtype), axis=-1), axis=0)
-  return reps, viable_primary, viable_alternate, viable_full
+  # cast to int32
+  viable_primary = tf.cast(viable_primary, tf.int32)
+  viable_alternate = tf.cast(viable_alternate, tf.int32)
+  viable_full = tf.cast(viable_full, tf.int32)
+  return repititions, viable_primary, viable_alternate, viable_full
+
+def _write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
+                 width, num_written):
+  """Find the correct x,y indexs for each box in the output groundtruth."""
+
+  anchor_index = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
+  gain = tf.cast(tf.convert_to_tensor([width, height]), box.dtype)
+
+  y = box[1] * height
+  x = box[0] * width
+
+  y_index = tf.convert_to_tensor([tf.cast(y, tf.int32)])
+  x_index = tf.convert_to_tensor([tf.cast(x, tf.int32)])
+  grid_idx = tf.concat([y_index, x_index, anchor_index], axis=-1)
+  ind_val = ind_val.write(num_written, grid_idx)
+  ind_sample = ind_sample.write(num_written, sample)
+  num_written += 1
+
+  if offset > 0:
+    offset = tf.cast(offset, x.dtype)
+    grid_xy = tf.cast(tf.convert_to_tensor([x, y]), x.dtype)
+    clamp = lambda x, ma: tf.maximum(
+        tf.minimum(x, tf.cast(ma, x.dtype)), tf.zeros_like(x))
+
+    grid_xy_index = grid_xy - tf.floor(grid_xy)
+    positive_shift = ((grid_xy_index < offset) & (grid_xy > 1.))
+    negative_shift = ((grid_xy_index > (1 - offset)) & (grid_xy < (gain - 1.)))
+
+    shifts = [positive_shift[0], positive_shift[1], 
+              negative_shift[0], negative_shift[1]]
+    offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], offset.dtype) * offset
+
+    for i in range(4):
+      if shifts[i]:
+        x_index = tf.convert_to_tensor([tf.cast(x - offset[i, 0], tf.int32)])
+        y_index = tf.convert_to_tensor([tf.cast(y - offset[i, 1], tf.int32)])
+        grid_idx = tf.concat([clamp(y_index, height - 1), 
+                              clamp(x_index, width - 1), anchor_index], axis=-1)
+        ind_val = ind_val.write(num_written, grid_idx)
+        ind_sample = ind_sample.write(num_written, sample)
+        num_written += 1
+  return ind_val, ind_sample, num_written
 
 
-def _gen_utility(boxes):
-  """
-  Generate a mask to filter the boxes whose x and y coordinates are in
-  [0.0, 1.0) and have width and height are greater than 0.
-  
-  Args:
-    boxes: An tensor representing the bounding boxes in the (x, y, w, h) format
-      whose last dimension is of size 4.
-  
-  Returns:
-    A mask for all of the boxes that are in the bounds of the image and have
-    positive height and width.
-  """
-  eq0 = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
-  gtlb = tf.reduce_any(tf.math.less(boxes[..., 0:2], 0.0), axis=-1)
-  ltub = tf.reduce_any(tf.math.greater_equal(boxes[..., 0:2], 1.0), axis=-1)
+def _write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
+               height, width, num_written, num_instances, offset):
+  """Iterate all viable anchor boxes and write each sample to groundtruth."""
 
-  a = tf.logical_or(eq0, gtlb)
-  b = tf.logical_or(a, ltub)
-  return tf.logical_not(b)
+  const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
+  num_viable = tf.shape(viable)[0]
+  for val in range(num_viable):
+    idx = viable[val]
+    obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2]
+    if num_written >= num_instances:
+      break
 
+    reps = tf.convert_to_tensor([num_reps[obj_id]])
+    box = boxes[obj_id]
+    cls_ = classes[obj_id]
+    iou = tf.convert_to_tensor([ious[obj_id, anchor]])
+    sample = tf.concat([box, const, cls_, iou, reps], axis=-1)
 
-def _gen_offsets(scale_xy, dtype):
-  """Create offset Tensor for a `scale_xy` for use in `build_grided_gt_ind`.
-  
-  Args:
-    scale_xy: A `float` to represent the amount the boxes are scaled in the
-      loss function.
-    dtype: The type of the Tensor to create.
-  
-  Returns:
-    Returns the Tensor for the offsets.
-  """
-  return tf.cast(0.5 * (scale_xy - 1), dtype)
+    ind_val, ind_sample, num_written = _write_sample(box, anchor_idx, offset,
+                                                    sample, ind_val, ind_sample,
+                                                    height, width, num_written)
+  return ind_val, ind_sample, num_written
 
-
-def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
+def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
                         scale_xy, scale_num_inst, use_tie_breaker):
   """Convert ground truth for use in loss functions.
   
@@ -990,26 +1018,18 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
 
   width = tf.cast(sizew, boxes.dtype)
   height = tf.cast(sizeh, boxes.dtype)
-  # get the number of boxes in the ground truth boxs
-  num_boxes = tf.shape(boxes)[-2]
   # get the number of anchor boxes used for this anchor scale
-  len_masks = len(mask)  #mask is a python object tf.shape(mask)[0]
+  len_masks = len(mask) 
   # number of anchors
-  num_anchors = tf.shape(anchors)[-1]
-  num_instances = num_boxes * scale_num_inst
-
-  # how much to shift centers to get more GT locations in the prediciton map
-  pull_in = _gen_offsets(scale_xy, boxes.dtype)
+  num_instances = tf.shape(boxes)[-2] * scale_num_inst
 
   # rescale the x and y centers to the size of the grid [size, size]
+  pull_in = tf.cast(0.5 * (scale_xy - 1), boxes.dtype)
   mask = tf.cast(mask, dtype=dtype)
-  box_mask = _gen_utility(boxes)
-  num_reps, viable_primary, viable_alternate, viable = _get_num_reps(
-      anchors, mask, box_mask)
-  viable_primary = tf.cast(viable_primary, tf.int32)
-  viable_alternate = tf.cast(viable_alternate, tf.int32)
-  viable = tf.cast(viable, tf.int32)
+  num_reps, viable_primary, viable_alternate, viable = _get_box_locations(
+      anchors, mask, boxes)
 
+  # tensor arrays for tracking samples
   num_written = 0
   ind_val = tf.TensorArray(
       tf.int32, size=0, dynamic_size=True, element_shape=[
@@ -1022,27 +1042,24 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
 
   if pull_in > 0.0:
     (ind_val, ind_sample,
-     num_written) = write_grid(viable, num_reps, boxes, classes, ious, ind_val,
+     num_written) = _write_grid(viable, num_reps, boxes, classes, ious, ind_val,
                                ind_sample, height, width, num_written,
                                num_instances, pull_in)
   else:
     (ind_val, ind_sample,
-     num_written) = write_grid(viable_primary, num_reps, boxes, classes, ious,
+     num_written) = _write_grid(viable_primary, num_reps, boxes, classes, ious,
                                ind_val, ind_sample, height, width, num_written,
                                num_instances, 0.0)
 
     if use_tie_breaker:
       (ind_val, ind_sample,
-       num_written) = write_grid(viable_alternate, num_reps, boxes, classes,
+       num_written) = _write_grid(viable_alternate, num_reps, boxes, classes,
                                  ious, ind_val, ind_sample, height, width,
                                  num_written, num_instances, 0.0)
 
   indexs = ind_val.stack()
   samples = ind_sample.stack()
-
-  (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
-      samples, [4, 1, 1, 1, 1], axis=-1)
-
+  (_, ind_mask, _, _, num_reps) = tf.split(samples, [4, 1, 1, 1, 1], axis=-1)
   full = tf.zeros([sizeh, sizew, len_masks, 1], dtype=dtype)
   full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
 
@@ -1052,117 +1069,6 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   indexs = pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
   samples = pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
   return indexs, samples, full
-
-
-def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
-                 width, num_written):
-  """
-  Write out the y and x grid cell location and the anchor into the `ind_val`
-  TensorArray and write the `sample` to the `ind_sample` TensorArray.
-  
-  Args:
-    box: An `int` Tensor with two elements for the relative position of the
-      box in the image.
-    anchor_id: An `int` representing the anchor box.
-    offset: A `float` representing the offset from the grid cell.
-    sample: A `float` Tensor representing the data to write out.
-    ind_val: A TensorArray representing the indices for the detected boxes.
-    ind_sample: A TensorArray representing the indices for the detected boxes.
-    height: An `int` representing the height of the image.
-    width: An `int` representing the width of the image.
-    num_written: A `int` representing the number of samples that have been
-      written.
-  
-  Returns:
-    Modified `ind_val`, `ind_sample`, and `num_written`.
-  """
-
-  a_ = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
-
-  y = box[1] * height
-  x = box[0] * width
-
-  y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-  x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-  grid_idx = tf.concat([y_, x_, a_], axis=-1)
-  ind_val = ind_val.write(num_written, grid_idx)
-  ind_sample = ind_sample.write(num_written, sample)
-  num_written += 1
-
-  if offset > 0:
-    g = tf.cast(offset, x.dtype)
-    gain = tf.cast(tf.convert_to_tensor([width, height]), x.dtype)
-    gxy = tf.cast(tf.convert_to_tensor([x, y]), x.dtype)
-    clamp = lambda x, ma: tf.maximum(
-        tf.minimum(x, tf.cast(ma, x.dtype)), tf.zeros_like(x))
-
-    gxyi = gxy - tf.floor(gxy)
-    ps = ((gxyi < g) & (gxy > 1.))
-    ns = ((gxyi > (1 - g)) & (gxy < (gain - 1.)))
-
-    shifts = [ps[0], ps[1], ns[0], ns[1]]
-    offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
-
-    for i in range(4):
-      x_ = x - offset[i, 0]
-      y_ = y - offset[i, 1]
-
-      x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
-      y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i]:
-        grid_idx = tf.concat([y_, x_, a_], axis=-1)
-        ind_val = ind_val.write(num_written, grid_idx)
-        ind_sample = ind_sample.write(num_written, sample)
-        num_written += 1
-
-  return ind_val, ind_sample, num_written
-
-
-def write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
-               height, width, num_written, num_instances, offset):
-  """
-  Iterate through all viable anchor boxes and write the sample information to
-  the `ind_val` and `ind_sample` TensorArrays.
-  
-  Args:
-    num_reps: An `int` Tensor representing the number of repetitions.
-    boxes: A 2D `int` Tensor with two elements for the relative position of the
-      box in the image for each object.
-    classes: An `int` Tensor representing the class for each object.
-    ious: A 2D `int` Tensor representing the IOU of object with each anchor box.
-    ind_val: A TensorArray representing the indices for the detected boxes.
-    ind_sample: A TensorArray representing the indices for the detected boxes.
-    height: An `int` representing the height of the image.
-    width: An `int` representing the width of the image.
-    num_written: A `int` representing the number of samples that have been
-      written.
-    num_instances: A `int` representing the number of instances that can be
-      written at the maximum.
-    offset: A `float` representing the offset from the grid cell.
-  
-  Returns:
-    Modified `ind_val`, `ind_sample`, and `num_written`.
-  """
-
-  const = tf.cast(tf.convert_to_tensor([1.]), dtype=boxes.dtype)
-  num_viable = tf.shape(viable)[0]
-  for val in range(num_viable):
-    idx = viable[val]
-    obj_id, anchor, anchor_idx = idx[0], idx[1], idx[2]
-    if num_written >= num_instances:
-      break
-
-    reps = tf.convert_to_tensor([num_reps[obj_id]])
-    box = boxes[obj_id]
-    cls_ = classes[obj_id]
-    iou = tf.convert_to_tensor([ious[obj_id, anchor]])
-    sample = tf.concat([box, const, cls_, iou, reps], axis=-1)
-
-    ind_val, ind_sample, num_written = write_sample(box, anchor_idx, offset,
-                                                    sample, ind_val, ind_sample,
-                                                    height, width, num_written)
-  return ind_val, ind_sample, num_written
-
 
 def get_best_anchor(y_true,
                     anchors,

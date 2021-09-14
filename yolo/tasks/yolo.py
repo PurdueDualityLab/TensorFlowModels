@@ -66,10 +66,6 @@ class YoloTask(base_task.Task):
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
-      print("WARNING: dynamic convolution is only supported on GPU and may \
-             require significantly more memory. Validation will only work at \
-             a batchsize of 1. The model will be trained at the input \
-             resolution and evaluated at a dynamic resolution")
       input_size[0], input_size[1] = None, None
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
@@ -139,7 +135,7 @@ class YoloTask(base_task.Task):
     decoder = self.get_decoder(params)
     model = self.task_config.model
 
-    masks, _, xy_scales = self._get_masks()
+    masks, path_scales, xy_scales = self._get_masks()
     anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
     rsize = params.parser.mosaic.resize
@@ -173,8 +169,6 @@ class YoloTask(base_task.Task):
 
     parser = yolo_input.Parser(
         output_size=model.input_size,
-        min_level=model.min_level,
-        max_level=model.max_level,
         masks=masks,
         anchors=anchors,
         letter_box=params.parser.letter_box,
@@ -198,9 +192,9 @@ class YoloTask(base_task.Task):
         max_num_instances=params.parser.max_num_instances,
         dynamic_conv=model.dynamic_conv,
         scale_xy=xy_scales,
-        stride=params.parser.stride,
+        strides=path_scales,
         area_thresh=params.parser.area_thresh,
-        use_scale_xy=params.parser.use_scale_xy,
+        darknet=not params.parser.use_scale_xy,
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
@@ -299,7 +293,7 @@ class YoloTask(base_task.Task):
     return logs
 
   ## evaluation ##
-  def _reorg_boxes(self, boxes, num_detections, info, image):
+  def _reorg_boxes(self, boxes, num_detections, image):
     """This function is used to reorganize and clip the predicitions to remove
     all padding and only take predicitions within the image"""
 
@@ -308,21 +302,8 @@ class YoloTask(base_task.Task):
     mask = tf.cast(tf.expand_dims(mask, axis=-1), boxes.dtype)
 
     # Denormalize the boxes by the shape of the image
-    if self.task_config.model.dynamic_conv:
-      # Split all infos
-      inshape = tf.expand_dims(info[:, 1, :], axis=1)
-      ogshape = tf.expand_dims(info[:, 0, :], axis=1)
-      scale = tf.expand_dims(info[:, 2, :], axis=1)
-      offset = tf.expand_dims(info[:, 3, :], axis=1)
-
-      # Clip the boxes to remove all padding
-      boxes = box_ops.denormalize_boxes(boxes, inshape)
-      boxes /= tf.tile(scale, [1, 1, 2])
-      boxes += tf.tile(offset, [1, 1, 2])
-      boxes = box_ops.clip_boxes(boxes, ogshape)
-    else:
-      inshape = tf.cast(preprocessing_ops.get_image_shape(image), boxes.dtype)
-      boxes = box_ops.denormalize_boxes(boxes, inshape)
+    inshape = tf.cast(preprocessing_ops.get_image_shape(image), boxes.dtype)
+    boxes = box_ops.denormalize_boxes(boxes, inshape)
 
     # Mask the boxes for usage
     boxes *= mask
@@ -341,11 +322,10 @@ class YoloTask(base_task.Task):
 
     # Reorganize and rescale the boxes
     boxes = self._reorg_boxes(
-        y_pred['bbox'], y_pred['num_detections'],
-        tf.cast(label['groundtruths']['image_info'], tf.float32), image)
+        y_pred['bbox'], y_pred['num_detections'], image)
     label['groundtruths']["boxes"] = self._reorg_boxes(
-        label['groundtruths']["boxes"], label['groundtruths']["num_detections"],
-        tf.cast(label['groundtruths']['image_info'], tf.float32), image)
+        label['groundtruths']["boxes"], 
+        label['groundtruths']["num_detections"], image)
 
     # Build the input for the coc evaluation metric
     coco_model_outputs = {
