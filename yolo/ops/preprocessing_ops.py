@@ -880,7 +880,7 @@ def apply_infos(boxes,
   return boxes, inds
 
 
-
+# anchor based
 def _gen_viable_box_mask(boxes):
   """Generate a mask to filter the boxes to only those with in the image. """
   equal = tf.reduce_all(tf.math.less_equal(boxes[..., 2:4], 0), axis=-1)
@@ -1115,24 +1115,7 @@ def get_best_anchor(y_true,
         tf.concat([tf.zeros_like(anchors), anchors], axis=-1), axis=0)
     truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis=-1)
 
-    if anchor_free_limits is not None:
-      minim = tf.convert_to_tensor([0.0] + anchor_free_limits)
-      maxim = tf.convert_to_tensor(anchor_free_limits + [100000.0])
-
-      maxim = tf.tensor_scatter_nd_update(maxim, [[k - 1]], [100000.0])
-      minim = tf.reshape(minim[:k], [1, k, 1])
-      maxim = tf.reshape(maxim[:k], [1, k, 1])
-
-      bmax = tf.reduce_max(truth_comp, axis=-1)
-      bmask = tf.logical_and(bmax >= minim, bmax <= maxim)
-
-      bmask = tf.transpose(bmask, perm=[0, 2, 1])
-      ind_mask = tf.cast(bmask, dtype=bmax.dtype)
-
-      values, indexes = tf.math.top_k(
-          ind_mask, k=tf.cast(k, dtype=tf.int32), sorted=True)
-      ind_mask = tf.cast(values, dtype=indexes.dtype)
-    elif iou_thresh >= 1.0:
+    if iou_thresh >= 1.0:
       anchors = tf.expand_dims(anchors, axis=-2)
       truth_comp = tf.expand_dims(truth_comp, axis=-3)
 
@@ -1149,7 +1132,6 @@ def get_best_anchor(y_true,
       values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
     else:
-      # iou_raw = box_ops.compute_iou(truth_comp, anchors)
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
       anchors = box_ops.xcycwh_to_yxyx(anchors)
       iou_raw = box_ops.aggregated_comparitive_iou(

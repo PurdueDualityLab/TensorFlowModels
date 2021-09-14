@@ -515,7 +515,146 @@ class ScaledLoss(YoloLossBase):
     return loss
 
 
-LOSSES = {"darknet": DarknetLoss, "scaled": ScaledLoss}
+class AnchorFreeLoss(YoloLossBase):
+  """This class implements the full logic for the scaled Yolo models 
+  encompassing Yolov4-csp, Yolov4-Large, and Yolov5."""
+
+  def _build_per_path_attributes(self):
+    """Paramterization of pair wise search and grid generators for box 
+    decoding and dynamic ground truth association."""
+    self._anchor_generator = loss_utils.GridGenerator(
+        masks=self._masks,
+        anchors=self._anchors,
+        scale_anchors=self._path_stride)
+
+    if self._ignore_thresh > 0.0:
+      self._search_pairs = loss_utils.PairWiseSearch(
+          iou_type=self._loss_type, any=False, min_conf=0.25)
+    return
+
+  def get_gt_inds(self, boxes, grid_points, scale, batch_size):
+    # get x_y assignemnts
+    true_boxes = box_ops.yxyx_to_xcycwh(boxes)
+
+    x_shifts = grid_points[:, :, :, :, 0] * self._path_stride
+    y_shifts = grid_points[:, :, :, :, 1] * self._path_stride
+    x_centers = x_shifts + 0.5 * self._path_stride
+    y_centers = y_shifts + 0.5 * self._path_stride
+
+    true_box = true_boxes * (scale * self._path_stride)
+    true_box_tlbr = box_ops.xcycwh_to_yxyx(true_box)
+    true_box_tlbr = tf.reshape(true_box_tlbr, [batch_size, 1, 1, -1, 4])
+    true_box = tf.reshape(true_box, [batch_size, 1, 1, -1, 4])
+    b_t = y_centers - true_box_tlbr[:, :, :, :, 0]
+    b_l = x_centers - true_box_tlbr[:, :, :, :, 1]
+    b_b = true_box_tlbr[:, :, :, :, 2] - y_centers
+    b_r = true_box_tlbr[:, :, :, :, 3] - x_centers
+
+    box_delta = tf.stack([b_t, b_l, b_b, b_r], axis = -1)
+    is_in_boxes = tf.reduce_min(box_delta, axis = -1) > 0.0
+    is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1)
+
+    center_radius = 2.5
+    c_t = true_box[:, :, :, :, 1] - center_radius * self._path_stride
+    c_l = true_box[:, :, :, :, 0] - center_radius * self._path_stride
+    c_b = true_box[:, :, :, :, 1] + center_radius * self._path_stride
+    c_r = true_box[:, :, :, :, 0] + center_radius * self._path_stride
+    centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1)
+    is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
+    is_in_centers_all = tf.reduce_any(is_in_centers, axis = -1)
+
+    is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
+    is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
+    del is_in_boxes, is_in_centers, is_in_boxes_all, is_in_centers_all
+
+    b, y, x, t = tf.split(tf.where(is_in_boxes_and_center), 4, axis = -1)
+    pind = tf.concat([b, y, x], axis = -1)
+    tind = tf.concat([b, t], axis = -1)
+    return pind, tind, tf.cast(tf.shape(pind)[0], boxes.dtype), tf.zeros_like(b)
+
+  def call(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    """Per FPN path loss computation logic."""
+    # Generate shape constants.
+    shape = tf.shape(true_counts)
+    batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
+    fwidth = tf.cast(width, tf.float32)
+    fheight = tf.cast(height, tf.float32)
+
+    # Cast all input compontnts to float32 and stop gradient to save memory.
+    y_true = tf.cast(y_true, tf.float32)
+    true_counts = tf.cast(true_counts, tf.float32)
+    true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
+    grid_points, anchor_grid = self._anchor_generator(
+        width, height, batch_size, dtype=tf.float32)
+    boxes = tf.cast(boxes, tf.float32)
+    classes = tf.cast(classes, tf.int32)
+
+    # Split the y_true list.
+    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
+
+    # Split up the predicitons.
+    y_pred = tf.cast(
+        tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+    pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
+    scale, pred_box, _ = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+
+    pind, tind, num_objs, zero = self.get_gt_inds(boxes, grid_points, scale, batch_size)
+    pred_box = tf.squeeze(tf.gather_nd(pred_box, pind), axis = -2)
+    true_box = box_ops.yxyx_to_xcycwh(tf.gather_nd(boxes, tind))
+
+    pred_class = tf.squeeze(tf.gather_nd(pred_class, pind), axis = -2)
+    true_class = tf.gather_nd(classes, tind)
+    true_class = tf.one_hot(
+        tf.cast(true_class, tf.int32),
+        depth=tf.shape(pred_class)[-1],
+        dtype=pred_class.dtype)
+
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    # box_loss = loss_utils.apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
+
+    # Compute the cross entropy loss for the class maps.
+    class_loss = tf.keras.losses.binary_crossentropy(
+        true_class,
+        pred_class,
+        label_smoothing=self._label_smoothing,
+        from_logits=True)
+    # class_loss = loss_utils.apply_mask(
+    #     tf.squeeze(ind_mask, axis=-1), class_loss)
+    class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
+    del true_class, true_conf, true_counts, tind
+
+    pind = tf.concat([pind, zero], axis = -1)
+    true_conf = tf.squeeze(tf.zeros_like(pred_conf), axis = -1)
+    true_conf = tf.tensor_scatter_nd_update(true_conf, pind, iou)
+    bce = tf.keras.losses.binary_crossentropy(
+        tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    conf_loss = tf.reduce_mean(bce)
+    del pind, true_conf, boxes, classes
+
+    # Apply the weights to each loss.
+    box_loss *= self._iou_normalizer
+    class_loss *= self._cls_normalizer
+    conf_loss *= self._obj_normalizer
+
+    mean_loss = box_loss + class_loss + conf_loss
+    loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
+  
+    tf.print(box_loss, class_loss, conf_loss, mean_loss)
+    return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf, 
+            tf.expand_dims(tf.ones_like(iou), axis = -1), grid_mask)
+
+  def post_path_aggregation(self, loss, ground_truths, predictions):
+    scale = tf.stop_gradient(3 / len(list(predictions.keys())))
+    return loss * scale
+
+  def cross_replica_aggregation(self, loss, num_replicas_in_sync):
+    """this method is not specific to each loss path, but each loss type"""
+    return loss
+
+
+LOSSES = {"darknet": DarknetLoss, "scaled": ScaledLoss, "anchor_free":AnchorFreeLoss}
 class YoloLoss(object):
   """This class implements the aggregated loss across paths for the YOLO 
   model. The class implements the YOLO loss as a factory in order to allow 
@@ -540,7 +679,7 @@ class YoloLoss(object):
                scale_xys=None,
                max_deltas=None,
                label_smoothing=0.0,
-               use_scaled_loss=False,
+               loss_method='scaled',
                update_on_repeat=False):
 
     """Loss Function Initialization. 
@@ -588,14 +727,9 @@ class YoloLoss(object):
       update_on_repeat: `bool` for whether to replace with the newest or 
         the best value when an index is consumed by multiple objects. 
     """
-    if use_scaled_loss:
-      loss_type = "scaled"
-    else:
-      loss_type = "darknet"
-
     self._loss_dict = {}
     for key in keys:
-      self._loss_dict[key] = LOSSES[loss_type](
+      self._loss_dict[key] = LOSSES[loss_method](
           classes=classes,
           anchors=anchors,
           mask=masks[key],

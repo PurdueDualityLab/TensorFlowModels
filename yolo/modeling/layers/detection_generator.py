@@ -37,7 +37,7 @@ class YoloLayer(tf.keras.Model):
                iou_normalizer=1.0,
                cls_normalizer=1.0,
                obj_normalizer=1.0,
-               use_scaled_loss=False,
+               loss_method=False,
                update_on_repeat=False,
                pre_nms_points=5000,
                label_smoothing=0.0,
@@ -110,7 +110,7 @@ class YoloLayer(tf.keras.Model):
     self._classes = classes
     self._loss_type = loss_type
 
-    self._use_scaled_loss = use_scaled_loss
+    self._loss_method = loss_method
     self._update_on_repeat = update_on_repeat
 
     self._pre_nms_points = pre_nms_points
@@ -291,7 +291,7 @@ class YoloLayer(tf.keras.Model):
         box_types=self._box_type,
         max_deltas=self._max_delta,
         scale_xys=self._scale_xy,
-        use_scaled_loss=self._use_scaled_loss,
+        loss_method=self._loss_method,
         update_on_repeat=self._update_on_repeat,
         label_smoothing=self._label_smoothing)
     return loss
