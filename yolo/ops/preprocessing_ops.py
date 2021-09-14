@@ -13,6 +13,18 @@ GLOBAL_SEED_SET = False
 
 
 def set_random_seeds(seed=0):
+  """
+  Sets all accessible global seeds to properly apply randomization.
+
+  This is not the same as passing seed as a variable to each call to tf.random.
+  For more, see the documentation for tf.random on the tensorflow website 
+  https://www.tensorflow.org/api_docs/python/tf/random/set_seed. Note that 
+  passing seed to each random number generator will not giv you the expected 
+  behavior IF you use more than one generator in a single function. 
+
+  Args: 
+    seed: `Optional[int]` representing the seed you want to use.
+  """
   if seed is not None:
     global GLOBAL_SEED_SET
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -24,9 +36,11 @@ def set_random_seeds(seed=0):
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
-  """
+  """A unified fucntion for consistant random number generation. 
+
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval. Seed Safe random number generator.
+
   Args:
     minval: An `int` for a lower or upper endpoint of the interval from which to
       choose the random number.
@@ -47,7 +61,8 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
 
 
 def rand_scale(val, dtype=tf.float32, seed=None):
-  """
+  """Generate a random number for scaling a parameter by multiplication.
+
   Generates a random number for the scale. Half the time, the value is between
   [1.0, val) with uniformly distributed probability. The other half, the value
   is the reciprocal of this value.
@@ -69,7 +84,8 @@ def rand_scale(val, dtype=tf.float32, seed=None):
 
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
-  """
+  """Pad pr clip the tensor value to a fixed length along a given axis.
+
   Pad a dimension of the tensor to have a maximum number of instances filling
   additional entries with the `pad_value`. Allows for selection of the padding 
   axis
@@ -84,12 +100,20 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
     The output tensor whose dimensions match the input tensor except with the
     size along the `pad_axis` replaced by `instances`.
   """
+
+  # get the real shape of value
   shape = tf.shape(value)
+
+  # compute the padding axis
   if pad_axis < 0:
     pad_axis = tf.rank(value) + pad_axis
+  
+  # determin how much of the tensor value to keep 
   dim1 = shape[pad_axis]
   take = tf.math.reduce_min([instances, dim1])
   value, _ = tf.split(value, [take, -1], axis=pad_axis)
+
+  # pad the clipped tensor to the right shape
   pad = tf.convert_to_tensor([tf.math.reduce_max([instances - dim1, 0])])
   nshape = tf.concat([shape[:pad_axis], pad, shape[(pad_axis + 1):]], axis=0)
   pad_tensor = tf.fill(nshape, tf.cast(pad_value, dtype=value.dtype))
@@ -98,7 +122,8 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
 
 
 def get_image_shape(image):
-  """
+  """ Consitently get the width and height of the image. 
+  
   Get the shape of the image regardless of if the image is in the
   (batch_size, x, y, c) format or the (x, y, c) format.
   
@@ -119,8 +144,10 @@ def get_image_shape(image):
 
 
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
-  """
-  Randomly alter the hue, saturation, and brightness of an image. 
+  """Randomly alter the hue, saturation, and brightness of an image. 
+
+  Applies ranomdization the same way as Darknet by scaling the saturation and 
+  brightness of the image and adding/rotating the hue.
 
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -150,8 +177,10 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
 
 
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
-  """
-  Randomly alter the hue, saturation, and brightness of an image. 
+  """Randomly alter the hue, saturation, and brightness of an image. 
+
+  Applies ranomdization the same way as Darknet by scaling the saturation and 
+  brightness and hue of the image.
 
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -189,8 +218,7 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
-  """
-  Randomly alter the hue, saturation, and brightness of an image. 
+  """Randomly alter the hue, saturation, and brightness of an image. 
 
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -219,7 +247,11 @@ def random_window_crop(image,
                        target_width,
                        translate=0.0,
                        seed=None):
-  """Takes a random crop of the image to the target height and width
+  """Takes a random crop of the image to the target height and width.
+
+  This function will take a ranodm crop of the image such that the output 
+  image is target_width and target_height. If the input image is smaller than 
+  target_width and target_height we pass the respective axis along unaltered.
   
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -262,10 +294,11 @@ def random_window_crop(image,
 
 def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
                shiftx, shifty):
-  """Given a center location, cut the input image into a slice that will be 
+  """Generates a random center location to use for the mosaic operation. 
+  
+  Given a center location, cut the input image into a slice that will be 
   concatnated with other slices with the same center in order to construct 
   a final mosaiced image. 
-
   
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
@@ -351,7 +384,9 @@ def resize_and_jitter_image(image,
                             cut=None,
                             method=tf.image.ResizeMethod.BILINEAR,
                             seed=None):
-  """Resizes the input image to output size (RetinaNet style).
+  """Resize, Pad, and distort a given input image following Darknet.
+  
+  Resizes the input image to output size (RetinaNet style).
   Resize and pad images given the desired output size of the image and
   stride size.
   Here are the preprocessing steps.
@@ -359,6 +394,7 @@ def resize_and_jitter_image(image,
      the largest rectangle to be bounded by the rectangle specified by the
      `desired_size`.
   2. Pad the rescaled image to the padded_size.
+  
   Args:
     image: a `Tensor` of shape [height, width, 3] representing an image.
     desired_size: a `Tensor` or `int` list/tuple of two elements representing
@@ -372,6 +408,7 @@ def resize_and_jitter_image(image,
       random scale applied to desired_size for training scale jittering.
     seed: seed for random scale jittering.
     method: function to resize input image to scaled image.
+  
   Returns:
     output_image: `Tensor` of shape [height, width, 3] where [height, width]
       equals to `output_size`.
@@ -540,7 +577,7 @@ def resize_and_jitter_image(image,
                                tf.int32)
 
 
-def build_transform(image,
+def _build_transform(image,
                     perspective=0.00,
                     degrees=0.0,
                     scale_min=1.0,
@@ -561,35 +598,35 @@ def build_transform(image,
     cw = desired_size[1]
 
   # Compute the center of the image in the output resulution.
-  C = tf.eye(3, dtype=tf.float32)
-  C = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [-cw / 2, -ch / 2])
-  Cb = tf.tensor_scatter_nd_update(C, [[0, 2], [1, 2]], [cw / 2, ch / 2])
+  center = tf.eye(3, dtype=tf.float32)
+  center = tf.tensor_scatter_nd_update(center, [[0, 2], [1, 2]], [-cw / 2, -ch / 2])
+  center_boxes = tf.tensor_scatter_nd_update(center, [[0, 2], [1, 2]], [cw / 2, ch / 2])
 
   # Compute a random rotation to apply.
-  R = tf.eye(3, dtype=tf.float32)
+  rotation = tf.eye(3, dtype=tf.float32)
   a = deg_to_rad(rand_uniform_strong(-degrees, degrees, seed=seed))
   cos = tf.math.cos(a)
   sin = tf.math.sin(a)
-  R = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]],
+  rotation = tf.tensor_scatter_nd_update(rotation, [[0, 0], [0, 1], [1, 0], [1, 1]],
                                   [cos, -sin, sin, cos])
-  Rb = tf.tensor_scatter_nd_update(R, [[0, 0], [0, 1], [1, 0], [1, 1]],
+  rotation_boxes = tf.tensor_scatter_nd_update(rotation, [[0, 0], [0, 1], [1, 0], [1, 1]],
                                    [cos, sin, -sin, cos])
 
   # Compute a random prespective change to apply.
-  P = tf.eye(3)
+  prespective_warp = tf.eye(3)
   Px = rand_uniform_strong(-perspective, perspective, seed=seed)
   Py = rand_uniform_strong(-perspective, perspective, seed=seed)
-  P = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [Px, Py])
-  Pb = tf.tensor_scatter_nd_update(P, [[2, 0], [2, 1]], [-Px, -Py])
+  prespective_warp = tf.tensor_scatter_nd_update(prespective_warp, [[2, 0], [2, 1]], [Px, Py])
+  prespective_warp_boxes = tf.tensor_scatter_nd_update(prespective_warp, [[2, 0], [2, 1]], [-Px, -Py])
 
   # Compute a random scaling to apply.
-  S = tf.eye(3, dtype=tf.float32)
+  scale = tf.eye(3, dtype=tf.float32)
   s = rand_uniform_strong(scale_min, scale_max, seed=seed)
-  S = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [1 / s, 1 / s])
-  Sb = tf.tensor_scatter_nd_update(S, [[0, 0], [1, 1]], [s, s])
+  scale = tf.tensor_scatter_nd_update(scale, [[0, 0], [1, 1]], [1 / s, 1 / s])
+  scale_boxes = tf.tensor_scatter_nd_update(scale, [[0, 0], [1, 1]], [s, s])
 
   # Compute a random Translation to apply.
-  T = tf.eye(3)
+  translation = tf.eye(3)
   if (random_pad and height * s < ch and width * s < cw):
     # The image is contained within the image and arbitrarily translated to
     # locations with in the image.
@@ -614,17 +651,17 @@ def build_transform(image,
     Tx *= width
     Ty *= height
 
-  T = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [Tx, Ty])
-  Tb = tf.tensor_scatter_nd_update(T, [[0, 2], [1, 2]], [-Tx, -Ty])
+  translation = tf.tensor_scatter_nd_update(translation, [[0, 2], [1, 2]], [Tx, Ty])
+  translation_boxes = tf.tensor_scatter_nd_update(translation, [[0, 2], [1, 2]], [-Tx, -Ty])
 
   # Use repeated matric multiplications to combine all the image transforamtions
   # into a single unified augmentation operation M is applied to the image
   # Mb is to apply to the boxes. The order of matrix multiplication is
   # important. First, Translate, then Scale, then Rotate, then Center, then
   # finally alter the Prepsective.
-  M = T @ S @ R @ C @ P
-  Mb = Pb @ Cb @ Rb @ Sb @ Tb
-  return M, Mb, s
+  affine = (translation @ scale @ rotation @ center @ prespective_warp)
+  affine_boxes = (prespective_warp_boxes @ center_boxes @ rotation_boxes @ scale_boxes @ translation_boxes)
+  return affine, affine_boxes, s
 
 
 def affine_warp_image(image,
@@ -639,7 +676,7 @@ def affine_warp_image(image,
 
   # Build an image transformation matrix.
   image_size = tf.cast(get_image_shape(image), tf.float32)
-  M_, Mb, _ = build_transform(
+  affine_matrix, affine_boxes, _ = _build_transform(
       image,
       perspective=perspective,
       degrees=degrees,
@@ -649,23 +686,23 @@ def affine_warp_image(image,
       random_pad=random_pad,
       desired_size=desired_size,
       seed=seed)
-  M = tf.reshape(M_, [-1])
-  M = tf.cast(M[:-1], tf.float32)
+  affine = tf.reshape(affine_matrix, [-1])
+  affine = tf.cast(affine[:-1], tf.float32)
 
   # Apply the transformation to image.
   image = tfa.image.transform(
       image,
-      M,
+      affine,
       fill_value=PAD_VALUE,
       output_shape=desired_size,
       interpolation='bilinear')
 
   desired_size = tf.cast(desired_size, tf.float32)
-  return image, M_, [image_size, desired_size, Mb]
+  return image, affine_matrix, [image_size, desired_size, affine_boxes]
 
 
 # ops for box clipping and cleaning
-def affine_warp_boxes(Mb, boxes, output_size, box_history):
+def affine_warp_boxes(affine, boxes, output_size, box_history):
 
   def _get_corners(box):
     """Get the corner of each box as a tuple of (x, y) coordinates"""
@@ -688,7 +725,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history):
     x_max = tf.reduce_max(x, axis=-1)
     return tf.stack([y_min, x_min, y_max, x_max], axis=-1)
 
-  def _aug_boxes(M, box):
+  def _aug_boxes(affine_matrix, box):
     """Apply an affine transformation matrix M to the boxes to get the 
     randomly augmented boxes"""
     corners = _get_corners(box)
@@ -697,7 +734,7 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history):
     corners = tf.concat([corners, z], axis=-1)
 
     corners = tf.transpose(
-        tf.matmul(M, corners, transpose_b=True), perm=(0, 2, 1))
+        tf.matmul(affine_matrix, corners, transpose_b=True), perm=(0, 2, 1))
 
     corners, p = tf.split(corners, [2, 1], axis=-1)
     corners /= p
@@ -705,8 +742,8 @@ def affine_warp_boxes(Mb, boxes, output_size, box_history):
     box = _corners_to_boxes(corners)
     return box
 
-  boxes = _aug_boxes(Mb, boxes)
-  box_history = _aug_boxes(Mb, box_history)
+  boxes = _aug_boxes(affine, boxes)
+  box_history = _aug_boxes(affine, box_history)
 
   clipped_boxes = bbox_ops.clip_boxes(boxes, output_size)
   return clipped_boxes, box_history
@@ -860,8 +897,7 @@ def apply_infos(boxes,
 
 # write the boxes to the anchor grid
 def _get_num_reps(anchors, mask, box_mask):
-  """
-  Calculate the number of anchor boxes that an object is repeated in.
+  """Calculate the number of anchor boxes that an object is repeated in.
   
   Args:
     anchors: A list or Tensor representing the anchor boxes
@@ -925,8 +961,7 @@ def _gen_utility(boxes):
 
 
 def _gen_offsets(scale_xy, dtype):
-  """
-  Create offset Tensor for a `scale_xy` for use in `build_grided_gt_ind`.
+  """Create offset Tensor for a `scale_xy` for use in `build_grided_gt_ind`.
   
   Args:
     scale_xy: A `float` to represent the amount the boxes are scaled in the
@@ -941,8 +976,7 @@ def _gen_offsets(scale_xy, dtype):
 
 def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
                         scale_xy, scale_num_inst, use_tie_breaker):
-  """
-  convert ground truth for use in loss functions
+  """Convert ground truth for use in loss functions.
   
   Args:
     y_true: tf.Tensor[] ground truth
@@ -978,11 +1012,8 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, num_classes, dtype,
   num_anchors = tf.shape(anchors)[-1]
   num_instances = num_boxes * scale_num_inst
 
+  # how much to shift centers to get more GT locations in the prediciton map
   pull_in = _gen_offsets(scale_xy, boxes.dtype)
-  # x + 0.5
-  # x - 0.5
-  # y + 0.5
-  # y - 0.5
 
   # rescale the x and y centers to the size of the grid [size, size]
   mask = tf.cast(mask, dtype=dtype)
@@ -1072,7 +1103,6 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   ind_sample = ind_sample.write(num_written, sample)
   num_written += 1
 
-  # idk if this is right!!! just testing it now
   if offset > 0:
     g = tf.cast(offset, x.dtype)
     gain = tf.cast(tf.convert_to_tensor([width, height]), x.dtype)
@@ -1087,26 +1117,18 @@ def write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
     shifts = [ps[0], ps[1], ns[0], ns[1]]
     offset = tf.cast([[1, 0], [0, 1], [-1, 0], [0, -1]], g.dtype) * g
 
-    # xc = clamp(tf.convert_to_tensor([tf.cast(x, tf.int32)]), width - 1)
-    # yc = clamp(tf.convert_to_tensor([tf.cast(y, tf.int32)]), height - 1)
     for i in range(4):
       x_ = x - offset[i, 0]
       y_ = y - offset[i, 1]
 
       x_ = clamp(tf.convert_to_tensor([tf.cast(x_, tf.int32)]), width - 1)
       y_ = clamp(tf.convert_to_tensor([tf.cast(y_, tf.int32)]), height - 1)
-      if shifts[i]:  # and (xc != x_ or yc != y_):
+      if shifts[i]:
         grid_idx = tf.concat([y_, x_, a_], axis=-1)
         ind_val = ind_val.write(num_written, grid_idx)
         ind_sample = ind_sample.write(num_written, sample)
         num_written += 1
-  # else:
-  #   y_ = tf.convert_to_tensor([tf.cast(y, tf.int32)])
-  #   x_ = tf.convert_to_tensor([tf.cast(x, tf.int32)])
-  #   grid_idx = tf.concat([y_, x_, a_], axis=-1)
-  #   ind_val = ind_val.write(num_written, grid_idx)
-  #   ind_sample = ind_sample.write(num_written, sample)
-  #   num_written += 1
+
   return ind_val, ind_sample, num_written
 
 
