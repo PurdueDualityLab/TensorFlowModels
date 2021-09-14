@@ -378,6 +378,7 @@ def avgiou(iou):
 
 def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
                  scale_xy):
+  """Decode models boxes applying and exponential to width and height maps."""
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -413,6 +414,7 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 @tf.custom_gradient
 def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
                    max_delta, scale_xy):
+  """Wrapper for _scale_boxes to implement a custom gradient"""
   (scaler, scaled_box, pred_box) = _scale_boxes(encoded_boxes, width, height,
                                                 anchor_grid, grid_points,
                                                 scale_xy)
@@ -445,6 +447,7 @@ def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 
 def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
                            grid_points, scale_xy):
+  """Decode models boxes by squaring and scaling the width and height maps."""
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -481,6 +484,7 @@ def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
 @tf.custom_gradient
 def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
                              grid_points, max_delta, scale_xy):
+  """Wrapper for _new_coord_scale_boxes to implement a custom gradient"""
   (scaler, scaled_box,
    pred_box) = _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
                                       grid_points, scale_xy)
@@ -507,6 +511,7 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
 
 def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
                              scale_xy):
+  """Decode models boxes using FPN stride under anchor free conditions."""
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
   pred_wh = encoded_boxes[..., 2:4]
@@ -580,8 +585,10 @@ def get_predicted_box(width,
      pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, stride,
                                           grid_points, scale_xy)
   elif darknet:
-    # if we are using the darknet loss we shoud nto propagate the
-    # decoding of the box
+    # if we are using the darknet loss we shoud not propagate the
+    # decoding of the box. _darknet fucntions will return 4 values but the 
+    # fourth value is consumed by the custom gradient wrapper, so the caller 
+    # will only see 3 return values.
     if box_type == 'scaled':
       (scaler, scaled_box,
        pred_box) = _darknet_new_coord_boxes(encoded_boxes, width, height,

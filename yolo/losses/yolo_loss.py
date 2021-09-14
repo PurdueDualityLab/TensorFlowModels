@@ -92,6 +92,8 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
         box_type=self._box_type,
         max_delta=self._max_delta)
     self._decode_boxes = partial(loss_utils.get_predicted_box, **box_kwargs)
+
+    self._search_pairs = None
     self._build_per_path_attributes()
 
   def box_loss(self, true_box, pred_box, darknet=False):
@@ -116,6 +118,9 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                                scale=None):
     """Completes a search of all predictions against all the ground truths to 
     dynamically associate ground truths with predictions."""
+    
+    if self._search_pairs is None:
+      return true_conf, tf.ones_like(true_conf)
 
     # Search all predictions against ground truths to find mathcing boxes for
     # each pixel.
