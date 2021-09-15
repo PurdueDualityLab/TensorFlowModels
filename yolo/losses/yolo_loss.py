@@ -183,9 +183,6 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf, ind_mask,
      grid_mask) = self.call(true_counts, inds, y_true, boxes, classes, y_pred)
 
-    # Temporary metrics
-    box_loss = tf.stop_gradient(0.05 * box_loss / self._iou_normalizer)
-
     # Metric compute using done here to save time and resources.
     sigmoid_conf = tf.stop_gradient(tf.sigmoid(pred_conf))
     iou = tf.stop_gradient(iou)

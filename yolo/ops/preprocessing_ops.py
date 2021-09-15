@@ -1015,13 +1015,13 @@ def _write_anchor_free_grid(boxes, classes,
   box_delta = tf.stack([b_t, b_l, b_b, b_r], axis = -1)
   if fpn_limits is not None:
     max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
-    gt_min = max_reg_targets_per_im > fpn_limits[0]
+    gt_min = max_reg_targets_per_im >= fpn_limits[0]
     gt_max = max_reg_targets_per_im <= fpn_limits[1]
     is_in_boxes = tf.logical_and(gt_min, gt_max)
   else:
     is_in_boxes = tf.reduce_min(box_delta, axis = -1) > 0.0
   is_in_boxes = tf.logical_and(is_in_boxes, mask)
-  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1, keepdims = True)
+  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = (0, 1), keepdims = True)
 
   # check if the center is in the receptive feild of the this fpn level 
   c_t = y_centers - (boxes[..., 1] - center_radius * stride)
@@ -1031,7 +1031,7 @@ def _write_anchor_free_grid(boxes, classes,
   centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1) 
   is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
   is_in_centers = tf.logical_and(is_in_centers, mask)
-  is_in_centers_all = tf.reduce_any(is_in_centers, axis = -1, keepdims = True)
+  is_in_centers_all = tf.reduce_any(is_in_centers, axis = (0, 1), keepdims = True)
 
   # colate all masks to get the final locations
   is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)

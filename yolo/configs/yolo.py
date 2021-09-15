@@ -15,10 +15,8 @@
 # ==============================================================================
 """YOLO configuration definition."""
 # from yolo.ops.preprocessing_ops import random_pad
-import tensorflow as tf
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 import dataclasses
-import os
 
 from official.core import exp_factory
 from official.modeling import hyperparams
@@ -51,12 +49,7 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def backbone(self):
-    if isinstance(self.base, str):
-      # TODO: remove the automatic activation setter
-      # self.norm_activation.activation = Yolo._DEFAULTS[self.base].activation
-      return Yolo._DEFAULTS[self.base].backbone
-    else:
-      return self.base.backbone
+    return self.base.backbone
 
   @backbone.setter
   def backbone(self, val):
@@ -75,17 +68,11 @@ class ModelConfig(hyperparams.Config):
 
   @property
   def darknet_weights_file(self):
-    if isinstance(self.base, str):
-      return Yolo._DEFAULTS[self.base].darknet_weights_file
-    else:
-      return self.base.darknet_weights_file
+    return self.base.darknet_weights_file
 
   @property
   def darknet_weights_cfg(self):
-    if isinstance(self.base, str):
-      return Yolo._DEFAULTS[self.base].darknet_weights_cfg
-    else:
-      return self.base.darknet_weights_cfg
+    return self.base.darknet_weights_cfg
 
   @property
   def _boxes(self):
