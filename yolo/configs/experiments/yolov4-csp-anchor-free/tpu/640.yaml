@@ -56,7 +56,7 @@ task:
       use_scaled_loss: true
       update_on_repeat: true
   train_data:
-    global_batch_size: 64
+    global_batch_size: 128
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
@@ -105,12 +105,12 @@ task:
   weight_decay: 0.000
   annotation_file: null
 trainer:
-  train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
-  validation_interval: 1850
-  checkpoint_interval: 1850
+  steps_per_loop: 925
+  summary_interval: 925
+  validation_interval: 925
+  checkpoint_interval: 925
   optimizer_config:
     ema:
       average_decay: 0.9998
@@ -119,21 +119,21 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.02
         name: Cosine
         alpha: 0.2
-        decay_steps: 555000
+        decay_steps: 277500
     optimizer:
       type: sgd_dymow
       sgd_dymow:
         momentum: 0.9
         momentum_start: 0.9
         nesterov: True
-        warmup_steps: 9250
+        warmup_steps: 3700
         weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 3700 #learning rate rises from 0 to 0.0013 over 1000 steps
