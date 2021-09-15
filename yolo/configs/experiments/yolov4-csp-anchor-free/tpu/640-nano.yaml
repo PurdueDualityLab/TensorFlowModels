@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   reduced_logs: True
   model:
     base:
@@ -56,7 +56,7 @@ task:
       use_scaled_loss: true
       update_on_repeat: true
   train_data:
-    global_batch_size: 128
+    global_batch_size: 8
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true

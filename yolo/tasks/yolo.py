@@ -478,7 +478,7 @@ class YoloTask(base_task.Task):
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
     ema = opt_factory._use_ema
     opt_factory._use_ema = False
-    if (self._task_config.smart_bias_lr > 0.0):
+    if (self._task_config.model.smart_bias):
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer.set_bias_lr(
           opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))

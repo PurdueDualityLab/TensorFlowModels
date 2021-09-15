@@ -31,9 +31,9 @@ prep_gpu()
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
@@ -288,7 +288,7 @@ def test_ret_pipeline():
 if __name__ == '__main__':
 
   # test_ret_pipeline()
-  time_pipeline()
+  # time_pipeline()
   test_yolo_pipeline(is_training=True, num=30)
   test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()

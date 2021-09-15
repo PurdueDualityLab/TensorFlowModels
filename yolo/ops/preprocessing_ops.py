@@ -990,37 +990,32 @@ def _write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
 
 def _write_anchor_free_grid(boxes, classes, 
                             height, width, num_written, 
-                            num_instances, stride, fpn_limits):
-  """Iterate all viable anchor boxes and write each sample to groundtruth."""
+                            stride, fpn_limits, center_radius = 2.5):
+  """Iterate all boxes and write to grid without anchors each sample to groundtruth."""
   gen = loss_utils.GridGenerator(masks=None,anchors=[[1, 1]],scale_anchors=stride)
   grid_points = gen(width, height, 1, boxes.dtype)[0]
   grid_points = tf.squeeze(grid_points, axis = 0)
   box_list = boxes
   class_list = classes 
-  mask = class_list != -1
 
-  x_shifts = grid_points[:, :, :, 0] * stride
-  y_shifts = grid_points[:, :, :, 1] * stride
-  x_centers = x_shifts + 0.5 * stride
-  y_centers = y_shifts + 0.5 * stride
-  scaler = tf.convert_to_tensor([width, height, width, height]) * stride
-
-  boxes *= scaler
+  grid_points = (grid_points + 0.5) * stride
+  x_centers, y_centers = grid_points[..., 0], grid_points[..., 1]
+  boxes *= (tf.convert_to_tensor([width, height, width, height]) * stride)
   tlbr_boxes = box_ops.xcycwh_to_yxyx(boxes)
 
   boxes = tf.reshape(boxes, [1, 1, -1, 4])
   tlbr_boxes = tf.reshape(tlbr_boxes, [1, 1, -1, 4])
-  mask = tf.reshape(mask, [1, 1, -1])
+  mask = tf.reshape(class_list != -1, [1, 1, -1])
   
   # check if the box is in the receptive feild of the this fpn level 
-  b_t = y_centers - tlbr_boxes[:, :, :, 0]
-  b_l = x_centers - tlbr_boxes[:, :, :, 1]
-  b_b = tlbr_boxes[:, :, :, 2] - y_centers
-  b_r = tlbr_boxes[:, :, :, 3] - x_centers
+  b_t = y_centers - tlbr_boxes[..., 0]
+  b_l = x_centers - tlbr_boxes[..., 1]
+  b_b = tlbr_boxes[..., 2] - y_centers
+  b_r = tlbr_boxes[..., 3] - x_centers
   box_delta = tf.stack([b_t, b_l, b_b, b_r], axis = -1)
   if fpn_limits is not None:
     max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
-    gt_min = max_reg_targets_per_im >= fpn_limits[0]
+    gt_min = max_reg_targets_per_im > fpn_limits[0]
     gt_max = max_reg_targets_per_im <= fpn_limits[1]
     is_in_boxes = tf.logical_and(gt_min, gt_max)
   else:
@@ -1029,11 +1024,10 @@ def _write_anchor_free_grid(boxes, classes,
   is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1, keepdims = True)
 
   # check if the center is in the receptive feild of the this fpn level 
-  center_radius = 2.5
-  c_t = y_centers - (boxes[:, :, :, 1] - center_radius * stride)
-  c_l = x_centers - (boxes[:, :, :, 0] - center_radius * stride)
-  c_b = (boxes[:, :, :, 1] + center_radius * stride) - y_centers
-  c_r = (boxes[:, :, :, 0] + center_radius * stride) - x_centers
+  c_t = y_centers - (boxes[..., 1] - center_radius * stride)
+  c_l = x_centers - (boxes[..., 0] - center_radius * stride)
+  c_b = (boxes[..., 1] + center_radius * stride) - y_centers
+  c_r = (boxes[..., 0] + center_radius * stride) - x_centers
   centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1) 
   is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
   is_in_centers = tf.logical_and(is_in_centers, mask)
@@ -1112,7 +1106,7 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
   if fpn_limits is not None:
     (indexes, samples,
      num_written) = _write_anchor_free_grid(boxes, classes, height, 
-                                            width, num_written, num_instances, 
+                                            width, num_written, 
                                             stride, fpn_limits)
   else:
     ind_val = tf.TensorArray(
