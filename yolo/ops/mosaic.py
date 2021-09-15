@@ -488,7 +488,6 @@ class Mosaic(object):
       three = dataset.shard(4, 2)
       four = dataset.shard(4, 3)
     else:
-      dataset = dataset.prefetch(tf.data.AUTOTUNE)
       one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
       two = dataset.shuffle(100, seed=self._seed + 1, reshuffle_each_iteration=True)
       three = dataset.shuffle(100, seed=self._seed + 2, reshuffle_each_iteration=True)
