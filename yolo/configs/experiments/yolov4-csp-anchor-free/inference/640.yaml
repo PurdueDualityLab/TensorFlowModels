@@ -1,8 +1,7 @@
 runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 2
+  num_gpus: 1
 task:
   coco91to80: True
   smart_bias_lr: 0.1
@@ -35,21 +34,21 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.05
+        'all': 0.25 #0.05
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
-        'all': 0.6
+        'all': 0.0
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
         '3': 2.80
       box_type:
-        'all': original
+        'all': anchor_free
       objectness_smooth: 
-        'all': 1.0
+        'all': 0.0
       scale_xy:
-        'all': 2.0
+        'all': 1.0
       max_boxes: 300
       nms_type: iou
       iou_thresh: 0.001
@@ -58,7 +57,7 @@ task:
       use_scaled_loss: true
       update_on_repeat: true
   train_data:
-    global_batch_size: 64
+    global_batch_size: 4
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -78,19 +77,19 @@ task:
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 4.0
-      best_match_only: True
+      anchor_thresh: 0.0
+      best_match_only: False
       mosaic: 
         output_resolution: [640, 640]
         max_resolution: 720
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
-        aspect_ratio_mode: 'fixed'
+        aspect_ratio_mode: 'letter'
         crop_area_mosaic: [0.1, 1.9]
         crop_area: [0.25]
   validation_data:
-    global_batch_size: 128
+    global_batch_size: 1
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -101,22 +100,22 @@ task:
       letter_box: True
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 4.0
-      best_match_only: True
+      anchor_thresh: 0.0
+      best_match_only: False
   weight_decay: 0.000
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 39
-  steps_per_loop: 1850
-  summary_interval: 1850
-  validation_interval: 9250
+  steps_per_loop: 1
+  summary_interval: 1
+  validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9999
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
@@ -130,11 +129,11 @@ trainer:
         momentum: 0.937
         momentum_start: 0.8
         nesterov: True
-        warmup_steps: 5550
+        warmup_steps: 9250
         weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 5550 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps

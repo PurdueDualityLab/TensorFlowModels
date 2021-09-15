@@ -990,7 +990,6 @@ def _write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
   return ind_val, ind_sample, num_written
 
 def _write_anchor_free_grid(boxes, classes, 
-                            ind_val, ind_sample,
                             height, width, num_written, 
                             num_instances, stride, fpn_limits):
   """Iterate all viable anchor boxes and write each sample to groundtruth."""
@@ -1034,8 +1033,8 @@ def _write_anchor_free_grid(boxes, classes,
 
   if fpn_limits is not None:
     max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
-    gt_min = max_reg_targets_per_im > fpn_limits[0]
-    gt_max = max_reg_targets_per_im < fpn_limits[1]
+    gt_min = max_reg_targets_per_im >= fpn_limits[0]
+    gt_max = max_reg_targets_per_im <= fpn_limits[1]
     in_limit = tf.logical_and(gt_min, gt_max)
     is_in_boxes_and_center = tf.logical_and(in_limit, is_in_boxes_and_center) 
 
@@ -1052,11 +1051,8 @@ def _write_anchor_free_grid(boxes, classes,
 
   samples = tf.concat([boxes, conf, classes, conf, reps], axis = -1)
   indexes = tf.concat([y, x, tf.zeros_like(t)], axis = -1)
-  ind_val = ind_val.unstack(indexes)
-  ind_sample = ind_sample.unstack(samples)
   num_written = tf.shape(reps)[0]
-
-  return ind_val, ind_sample, num_written
+  return indexes, samples, num_written
 
 def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
                         scale_xy, scale_num_inst, use_tie_breaker, 
@@ -1102,47 +1098,46 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
 
   # tensor arrays for tracking samples
   num_written = 0
-  ind_val = tf.TensorArray(
-      tf.int32, size=0, dynamic_size=True, element_shape=[
-          3,
-      ])
-  ind_sample = tf.TensorArray(
-      dtype, size=0, dynamic_size=True, element_shape=[
-          8,
-      ])
+
 
   if fpn_limits is not None:
-    (ind_val, ind_sample,
-     num_written) = _write_anchor_free_grid(boxes, classes, ind_val,
-                               ind_sample, height, width, num_written,
-                               num_instances, stride, fpn_limits)
-  elif pull_in > 0.0:
-    (ind_val, ind_sample,
-     num_written) = _write_grid(viable, num_reps, boxes, classes, ious, ind_val,
-                               ind_sample, height, width, num_written,
-                               num_instances, pull_in)
+    (indexes, samples,
+     num_written) = _write_anchor_free_grid(boxes, classes, height, 
+                                            width, num_written, num_instances, 
+                                            stride, fpn_limits)
   else:
-    (ind_val, ind_sample,
-     num_written) = _write_grid(viable_primary, num_reps, boxes, classes, ious,
-                               ind_val, ind_sample, height, width, num_written,
-                               num_instances, 0.0)
+    ind_val = tf.TensorArray(
+        tf.int32, size=0, dynamic_size=True, element_shape=[3,])
+    ind_sample = tf.TensorArray(
+        dtype, size=0, dynamic_size=True, element_shape=[8,])
 
-    if use_tie_breaker:
+    if pull_in > 0.0:
       (ind_val, ind_sample,
-       num_written) = _write_grid(viable_alternate, num_reps, boxes, classes,
-                                 ious, ind_val, ind_sample, height, width,
-                                 num_written, num_instances, 0.0)
+      num_written) = _write_grid(viable, num_reps, boxes, classes, ious, 
+                                 ind_val, ind_sample, height, width, num_written, 
+                                 num_instances, pull_in)
+    else:
+      (ind_val, ind_sample,
+      num_written) = _write_grid(viable_primary, num_reps, boxes, classes, ious,
+                                ind_val, ind_sample, height, width, num_written,
+                                num_instances, 0.0)
 
-  indexs = ind_val.stack()
-  samples = ind_sample.stack()
+      if use_tie_breaker:
+        (ind_val, ind_sample,
+        num_written) = _write_grid(viable_alternate, num_reps, boxes, classes,
+                                  ious, ind_val, ind_sample, height, width,
+                                  num_written, num_instances, 0.0)
+    indexes = ind_val.stack()
+    samples = ind_sample.stack()
+
   (_, ind_mask, _, _, num_reps) = tf.split(samples, [4, 1, 1, 1, 1], axis=-1)
   full = tf.zeros([sizeh, sizew, len_masks, 1], dtype=dtype)
-  full = tf.tensor_scatter_nd_add(full, indexs, ind_mask)
+  full = tf.tensor_scatter_nd_add(full, indexes, ind_mask)
 
   if num_written >= num_instances:
     tf.print("clipped")
 
-  indexs = pad_max_instances(indexs, num_instances, pad_value=0, pad_axis=0)
+  indexs = pad_max_instances(indexes, num_instances, pad_value=0, pad_axis=0)
   samples = pad_max_instances(samples, num_instances, pad_value=0, pad_axis=0)
   return indexs, samples, full
 

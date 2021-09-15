@@ -405,9 +405,6 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
   # build the final predicted box
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
-
-  # shift scaled boxes
-  scaled_box = tf.concat([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -475,9 +472,6 @@ def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
   # build the final boxes
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
   pred_box = scaled_box / scaler
-
-  # shift scaled boxes
-  scaled_box = tf.concat([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 
@@ -534,7 +528,7 @@ def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
 
   # build the final predicted box
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
-  pred_box = scaled_box / scaler
+  pred_box = scaled_box / (scaler * stride)
   return (scaler, scaled_box, pred_box)
 
 

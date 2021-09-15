@@ -38,7 +38,7 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       config_path=[
-          "yolo/configs/experiments/yolov3/inference/512.yaml"
+          "yolo/configs/experiments/yolov4/inference/512.yaml"
           #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
           # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
       ],
