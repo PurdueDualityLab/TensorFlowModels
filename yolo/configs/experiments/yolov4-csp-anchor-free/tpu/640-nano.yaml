@@ -123,7 +123,7 @@ trainer:
       cosine:
         initial_learning_rate: 0.02
         name: Cosine
-        alpha: 0.2
+        alpha: 0.05
         decay_steps: 277500
     optimizer:
       type: sgd_dymow

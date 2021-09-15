@@ -25,7 +25,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
@@ -33,15 +33,13 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.25 #0.05
+        'all': 5.0
       cls_normalizer: 
-        'all': 0.3
+        'all': 1.0
       ignore_thresh:
         'all': 0.0
       obj_normalizer: 
-        '5': 0.28
-        '4': 0.70
-        '3': 2.80
+        'all': 1.0
       box_type:
         'all': anchor_free
       objectness_smooth: 
@@ -49,7 +47,7 @@ task:
       scale_xy:
         'all': 1.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -121,7 +119,7 @@ trainer:
       cosine:
         initial_learning_rate: 0.02
         name: Cosine
-        alpha: 0.2
+        alpha: 0.05
         decay_steps: 277500
     optimizer:
       type: sgd_dymow
@@ -136,4 +134,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 3700 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 3700 

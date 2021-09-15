@@ -32,17 +32,15 @@ task:
       use_sync_bn: true
     filter:
       loss_type:  
-        'all': ciou
+        'all': iou
       iou_normalizer: 
-        'all': 0.25 #0.05
+        'all': 5.0
       cls_normalizer: 
-        'all': 0.3
+        'all': 1.0
       ignore_thresh:
         'all': 0.0
       obj_normalizer: 
-        '5': 0.28
-        '4': 0.70
-        '3': 2.80
+        'all': 1.0
       box_type:
         'all': anchor_free
       objectness_smooth: 
@@ -50,19 +48,20 @@ task:
       scale_xy:
         'all': 1.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
       use_scaled_loss: true
       update_on_repeat: true
   train_data:
-    global_batch_size: 4
+    global_batch_size: 1
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10
     drop_remainder: true
+    seed: 1000
     parser:
       max_num_instances: 300
       letter_box: True
@@ -105,35 +104,35 @@ task:
   weight_decay: 0.000
   annotation_file: null
 trainer:
-  train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 39
-  steps_per_loop: 1
+  train_steps: 277500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  validation_steps: 625
+  steps_per_loop:  1
   summary_interval: 1
-  validation_interval: 1850
-  checkpoint_interval: 1850
+  validation_interval: 925
+  checkpoint_interval: 925
   optimizer_config:
     # ema:
-    #   average_decay: 0.9999
+    #   average_decay: 0.9998
     #   trainable_weights_only: False
     #   dynamic_decay: True
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.00001
         name: Cosine
         alpha: 0.2
-        decay_steps: 555000
+        decay_steps: 277500
     optimizer:
       type: sgd_dymow
       sgd_dymow:
-        momentum: 0.937
-        momentum_start: 0.8
+        momentum: 0.9
+        momentum_start: 0.9
         nesterov: True
-        warmup_steps: 9250
+        warmup_steps: 3700
         weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 3700 

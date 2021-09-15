@@ -997,6 +997,7 @@ def _write_anchor_free_grid(boxes, classes,
   grid_points = tf.squeeze(grid_points, axis = 0)
   box_list = boxes
   class_list = classes 
+  mask = class_list != -1
 
   x_shifts = grid_points[:, :, :, 0] * stride
   y_shifts = grid_points[:, :, :, 1] * stride
@@ -1009,45 +1010,54 @@ def _write_anchor_free_grid(boxes, classes,
 
   boxes = tf.reshape(boxes, [1, 1, -1, 4])
   tlbr_boxes = tf.reshape(tlbr_boxes, [1, 1, -1, 4])
-
+  mask = tf.reshape(mask, [1, 1, -1])
+  
+  # check if the box is in the receptive feild of the this fpn level 
   b_t = y_centers - tlbr_boxes[:, :, :, 0]
   b_l = x_centers - tlbr_boxes[:, :, :, 1]
   b_b = tlbr_boxes[:, :, :, 2] - y_centers
   b_r = tlbr_boxes[:, :, :, 3] - x_centers
   box_delta = tf.stack([b_t, b_l, b_b, b_r], axis = -1)
-  is_in_boxes = tf.reduce_min(box_delta, axis = -1) > 0.0
-  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1)
-
-  center_radius = 2.5
-  c_t = boxes[:, :, :, 1] - center_radius * stride
-  c_l = boxes[:, :, :, 0] - center_radius * stride
-  c_b = boxes[:, :, :, 1] + center_radius * stride
-  c_r = boxes[:, :, :, 0] + center_radius * stride
-  centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1)
-  is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
-  is_in_centers_all = tf.reduce_any(is_in_centers, axis = -1)
-
-  is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
-  is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
-
   if fpn_limits is not None:
     max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
     gt_min = max_reg_targets_per_im >= fpn_limits[0]
     gt_max = max_reg_targets_per_im <= fpn_limits[1]
-    in_limit = tf.logical_and(gt_min, gt_max)
-    is_in_boxes_and_center = tf.logical_and(in_limit, is_in_boxes_and_center) 
+    is_in_boxes = tf.logical_and(gt_min, gt_max)
+  else:
+    is_in_boxes = tf.reduce_min(box_delta, axis = -1) > 0.0
+  is_in_boxes = tf.logical_and(is_in_boxes, mask)
+  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1, keepdims = True)
 
+  # check if the center is in the receptive feild of the this fpn level 
+  center_radius = 2.5
+  c_t = y_centers - (boxes[:, :, :, 1] - center_radius * stride)
+  c_l = x_centers - (boxes[:, :, :, 0] - center_radius * stride)
+  c_b = (boxes[:, :, :, 1] + center_radius * stride) - y_centers
+  c_r = (boxes[:, :, :, 0] + center_radius * stride) - x_centers
+  centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1) 
+  is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
+  is_in_centers = tf.logical_and(is_in_centers, mask)
+  is_in_centers_all = tf.reduce_any(is_in_centers, axis = -1, keepdims = True)
+
+  # colate all masks to get the final locations
+  is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
+  is_in_boxes = tf.logical_and(is_in_index, is_in_boxes)
+  is_in_centers = tf.logical_and(is_in_index, is_in_centers)
+  is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
+  is_in_boxes_and_center = tf.logical_and(is_in_boxes_and_center, mask)
+
+  # construct the index update grid
   reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.float32), axis = -1)
   indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
   y, x, t = tf.split(indexes, 3, axis = -1)
 
-  
   boxes = tf.gather_nd(box_list, t)
   classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
   reps = tf.gather_nd(reps, tf.concat([y, x], axis = -1))
   reps = tf.expand_dims(reps, axis = -1)
-  conf = tf.ones_like(classes)
+  conf = tf.cast(classes >= 0.0, boxes.dtype)
 
+  # return the samples and the indexes
   samples = tf.concat([boxes, conf, classes, conf, reps], axis = -1)
   indexes = tf.concat([y, x, tf.zeros_like(t)], axis = -1)
   num_written = tf.shape(reps)[0]

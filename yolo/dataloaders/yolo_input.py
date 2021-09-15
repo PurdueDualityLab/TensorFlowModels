@@ -222,7 +222,7 @@ class Parser(parser.Parser):
     keys = list(self._masks.keys())
 
     if self._anchor_free_limits is not None:
-      self._scale_up = {key: 11 for i, key in enumerate(keys)} 
+      self._scale_up = {key: 10 for i, key in enumerate(keys)} 
     elif not self._darknet:
       self._scale_up = {key: 6 - i for i, key in enumerate(keys)} 
     else:
