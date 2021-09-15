@@ -115,7 +115,7 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.01
+        initial_learning_rate: 0.00125 #0.01
         name: Cosine
         alpha: 0.05
         decay_steps: 555000
