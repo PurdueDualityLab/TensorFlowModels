@@ -4,7 +4,7 @@ runtime:
   num_gpus: 1
 task:
   coco91to80: True
-  smart_bias_lr: 0.1
+  smart_bias_lr: 0.0
   reduced_logs: True
   model:
     base:
@@ -17,9 +17,7 @@ task:
         type: tiny
     num_classes: 80
     smart_bias: true
-    boxes: ['[64.0, 64.0]',
-            '[256.0, 256.0]',
-            '[1024.0, 1024.0]']
+    boxes: ['[640, 640]', '[640, 640]', '[640, 640]']
     anchor_free_limits: [64, 128]
     input_size: [640, 640, 3]
     boxes_per_scale: 1
@@ -76,7 +74,7 @@ task:
       random_pad: False
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.0
+      anchor_thresh: -0.01
       best_match_only: False
       mosaic: 
         output_resolution: [640, 640]
@@ -99,7 +97,7 @@ task:
       letter_box: True
       use_tie_breaker: True
       use_scale_xy: True
-      anchor_thresh: 0.0
+      anchor_thresh: -0.01
       best_match_only: False
   weight_decay: 0.000
   annotation_file: null
