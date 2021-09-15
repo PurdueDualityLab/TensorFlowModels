@@ -136,14 +136,13 @@ def get_image_shape(image):
     A tuple representing the (height, width) of the image.
   """
   shape = tf.shape(image)
-  if tf.shape(shape)[0] == 4:
+  if shape.get_shape().as_list()[0] == 4:
     width = shape[2]
     height = shape[1]
   else:
     width = shape[1]
     height = shape[0]
   return height, width
-
 
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   """Randomly alter the hue, saturation, and brightness of an image. 
