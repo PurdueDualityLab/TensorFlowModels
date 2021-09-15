@@ -3,6 +3,7 @@ Parse image and ground truths in a dataset to training targets and package them
 into (image, labels) tuple for RetinaNet.
 """
 import tensorflow as tf
+import numpy as np
 from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
 from official.vision.beta.ops import preprocess_ops
@@ -403,8 +404,16 @@ class Parser(parser.Parser):
     updates = {}
     true_grids = {}
 
+    if self._anchor_free_limits is not None:
+      self._anchor_free_limits = [0.0] + self._anchor_free_limits + [np.inf]
+
     # for each prediction path generate a properly scaled output prediction map
-    for key in self._masks.keys():
+    for i, key in enumerate(self._masks.keys()):
+      if self._anchor_free_limits is not None:
+        fpn_limits = self._anchor_free_limits[i:i+2]
+      else:
+        fpn_limits = None
+
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
       scale_xy = self._scale_xy[key] if not self._darknet else 1
@@ -414,7 +423,8 @@ class Parser(parser.Parser):
           width // self._strides[str(key)],
           height // self._strides[str(key)], 
           raw_true['bbox'].dtype, scale_xy,
-          self._scale_up[key], use_tie_breaker)
+          self._scale_up[key], use_tie_breaker, 
+          self._strides[str(key)], fpn_limits = fpn_limits)
 
       # set/fix the shapes
       indexes[key] = self.set_shape(indexes[key], -2, None, 

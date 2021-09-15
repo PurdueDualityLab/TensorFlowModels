@@ -1,3 +1,4 @@
+from matplotlib.pyplot import box, grid
 import tensorflow as tf
 import numpy as np
 import random
@@ -6,6 +7,7 @@ import os
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
 from yolo.ops import box_ops
+from yolo.ops import loss_utils
 from official.vision.beta.ops import box_ops as bbox_ops
 
 PAD_VALUE = 114
@@ -964,7 +966,6 @@ def _write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
         num_written += 1
   return ind_val, ind_sample, num_written
 
-
 def _write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                height, width, num_written, num_instances, offset):
   """Iterate all viable anchor boxes and write each sample to groundtruth."""
@@ -988,8 +989,78 @@ def _write_grid(viable, num_reps, boxes, classes, ious, ind_val, ind_sample,
                                                     height, width, num_written)
   return ind_val, ind_sample, num_written
 
+def _write_anchor_free_grid(boxes, classes, 
+                            ind_val, ind_sample,
+                            height, width, num_written, 
+                            num_instances, stride, fpn_limits):
+  """Iterate all viable anchor boxes and write each sample to groundtruth."""
+  gen = loss_utils.GridGenerator(masks=None,anchors=[[1, 1]],scale_anchors=stride)
+  grid_points = gen(width, height, 1, boxes.dtype)[0]
+  grid_points = tf.squeeze(grid_points, axis = 0)
+  box_list = boxes
+  class_list = classes 
+
+  x_shifts = grid_points[:, :, :, 0] * stride
+  y_shifts = grid_points[:, :, :, 1] * stride
+  x_centers = x_shifts + 0.5 * stride
+  y_centers = y_shifts + 0.5 * stride
+  scaler = tf.convert_to_tensor([width, height, width, height]) * stride
+
+  boxes *= scaler
+  tlbr_boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+  boxes = tf.reshape(boxes, [1, 1, -1, 4])
+  tlbr_boxes = tf.reshape(tlbr_boxes, [1, 1, -1, 4])
+
+  b_t = y_centers - tlbr_boxes[:, :, :, 0]
+  b_l = x_centers - tlbr_boxes[:, :, :, 1]
+  b_b = tlbr_boxes[:, :, :, 2] - y_centers
+  b_r = tlbr_boxes[:, :, :, 3] - x_centers
+  box_delta = tf.stack([b_t, b_l, b_b, b_r], axis = -1)
+  is_in_boxes = tf.reduce_min(box_delta, axis = -1) > 0.0
+  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis = -1)
+
+  center_radius = 2.5
+  c_t = boxes[:, :, :, 1] - center_radius * stride
+  c_l = boxes[:, :, :, 0] - center_radius * stride
+  c_b = boxes[:, :, :, 1] + center_radius * stride
+  c_r = boxes[:, :, :, 0] + center_radius * stride
+  centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis = -1)
+  is_in_centers = tf.reduce_min(centers_delta, axis = -1) > 0.0
+  is_in_centers_all = tf.reduce_any(is_in_centers, axis = -1)
+
+  is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
+  is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
+
+  if fpn_limits is not None:
+    max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
+    gt_min = max_reg_targets_per_im > fpn_limits[0]
+    gt_max = max_reg_targets_per_im < fpn_limits[1]
+    in_limit = tf.logical_and(gt_min, gt_max)
+    is_in_boxes_and_center = tf.logical_and(in_limit, is_in_boxes_and_center) 
+
+  reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.float32), axis = -1)
+  indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
+  y, x, t = tf.split(indexes, 3, axis = -1)
+
+  
+  boxes = tf.gather_nd(box_list, t)
+  classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
+  reps = tf.gather_nd(reps, tf.concat([y, x], axis = -1))
+  reps = tf.expand_dims(reps, axis = -1)
+  conf = tf.ones_like(classes)
+
+  samples = tf.concat([boxes, conf, classes, conf, reps], axis = -1)
+  indexes = tf.concat([y, x, tf.zeros_like(t)], axis = -1)
+  ind_val = ind_val.unstack(indexes)
+  ind_sample = ind_sample.unstack(samples)
+  num_written = tf.shape(reps)[0]
+
+  return ind_val, ind_sample, num_written
+
 def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
-                        scale_xy, scale_num_inst, use_tie_breaker):
+                        scale_xy, scale_num_inst, use_tie_breaker, 
+                        stride, fpn_limits = None):
   """Convert ground truth for use in loss functions.
   
   Args:
@@ -1040,7 +1111,12 @@ def build_grided_gt_ind(y_true, mask, sizew, sizeh, dtype,
           8,
       ])
 
-  if pull_in > 0.0:
+  if fpn_limits is not None:
+    (ind_val, ind_sample,
+     num_written) = _write_anchor_free_grid(boxes, classes, ind_val,
+                               ind_sample, height, width, num_written,
+                               num_instances, stride, fpn_limits)
+  elif pull_in > 0.0:
     (ind_val, ind_sample,
      num_written) = _write_grid(viable, num_reps, boxes, classes, ious, ind_val,
                                ind_sample, height, width, num_written,
@@ -1115,24 +1191,7 @@ def get_best_anchor(y_true,
         tf.concat([tf.zeros_like(anchors), anchors], axis=-1), axis=0)
     truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis=-1)
 
-    if anchor_free_limits is not None:
-      minim = tf.convert_to_tensor([0.0] + anchor_free_limits)
-      maxim = tf.convert_to_tensor(anchor_free_limits + [100000.0])
-
-      maxim = tf.tensor_scatter_nd_update(maxim, [[k - 1]], [100000.0])
-      minim = tf.reshape(minim[:k], [1, k, 1])
-      maxim = tf.reshape(maxim[:k], [1, k, 1])
-
-      bmax = tf.reduce_max(truth_comp, axis=-1)
-      bmask = tf.logical_and(bmax >= minim, bmax <= maxim)
-
-      bmask = tf.transpose(bmask, perm=[0, 2, 1])
-      ind_mask = tf.cast(bmask, dtype=bmax.dtype)
-
-      values, indexes = tf.math.top_k(
-          ind_mask, k=tf.cast(k, dtype=tf.int32), sorted=True)
-      ind_mask = tf.cast(values, dtype=indexes.dtype)
-    elif iou_thresh >= 1.0:
+    if iou_thresh >= 1.0:
       anchors = tf.expand_dims(anchors, axis=-2)
       truth_comp = tf.expand_dims(truth_comp, axis=-3)
 
