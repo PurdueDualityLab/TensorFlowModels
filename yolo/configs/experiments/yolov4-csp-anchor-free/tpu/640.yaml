@@ -33,7 +33,7 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.25 #0.05
+        'all': 0.25
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
@@ -49,7 +49,7 @@ task:
       scale_xy:
         'all': 1.0
       max_boxes: 300
-      nms_type: iou
+      nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
@@ -136,4 +136,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 3700 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 3700 
