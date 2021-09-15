@@ -1,7 +1,6 @@
 runtime:
   distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
   num_gpus: 1
 task:
   coco91to80: True
@@ -38,8 +37,6 @@ task:
         'all': 0.25
       cls_normalizer: 
         'all': 0.3
-      # ignore_thresh:
-      #   'all': 0.6
       obj_normalizer: 
         '5': 0.28
         '4': 0.70
@@ -47,17 +44,17 @@ task:
       box_type:
         'all': 'anchor_free'
       objectness_smooth: 
-        'all': 1.0
+        'all': 0.0
       scale_xy:
-        'all': 2.0
-      max_boxes: 300
+        'all': 1.0
+      max_boxes: 200
       nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
       pre_nms_points: 5000
       loss_method: 'anchor_free'
   train_data:
-    global_batch_size: 1
+    global_batch_size: 2
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true

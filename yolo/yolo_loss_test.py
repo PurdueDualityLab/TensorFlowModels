@@ -38,9 +38,9 @@ if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
       config_path=[
-          "yolo/configs/experiments/yolov3/inference/512.yaml"
-          #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
-          # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
+          # "yolo/configs/experiments/yolov3/inference/512.yaml"
+          # "yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
+          "yolo/configs/experiments/yolov4-csp-anchor-free/inference/640.yaml"
       ],
       # config_path=["yolo/configs/experiments/yolov4/inference/512.yaml"],
       model_dir="")
@@ -49,16 +49,16 @@ if __name__ == "__main__":
   optimizer = task.create_optimizer(params.trainer.optimizer_config,
                                     params.runtime)
 
-  config = params.task
-  config.coco91to80 = False
-  config.train_data.tfds_name = 'coco'
-  config.validation_data.tfds_name = 'coco'
-  config.train_data.tfds_split = 'train'
-  config.validation_data.tfds_split = 'validation'
-  config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.train_data.input_path = ''
-  config.validation_data.input_path = ''
+  # config = params.task
+  # config.coco91to80 = False
+  # config.train_data.tfds_name = 'coco'
+  # config.validation_data.tfds_name = 'coco'
+  # config.train_data.tfds_split = 'train'
+  # config.validation_data.tfds_split = 'validation'
+  # config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  # config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  # config.train_data.input_path = ''
+  # config.validation_data.input_path = ''
 
   train_data = task.build_inputs(params.task.train_data)
   test_data = task.build_inputs(params.task.validation_data)
@@ -71,13 +71,14 @@ if __name__ == "__main__":
   # if obj_mask.shape[1] == 16:
   #    plt.show()
 
-  lim = 1
+  lim = 10
   for p, image in enumerate(test_data):
     if p >= lim:
       break
     i, k = image
     id = k['source_id'][0]
-    # plt.imshow(tf.cast(i[0], tf.float32).numpy())
+    plt.imshow(tf.cast(i[0], tf.float32).numpy())
+    plt.show()
     a = task.validation_step(image, model)
     # a = task.train_step(image, model, optimizer)
 

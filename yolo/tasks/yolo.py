@@ -8,7 +8,7 @@ from official.core import input_reader
 from official.core import task_factory
 from official.core import config_definitions
 from official.modeling import performance
-from official.vision.beta.ops import box_ops
+from official.vision.beta.ops import anchor, box_ops
 from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tfds_detection_decoders
@@ -22,6 +22,7 @@ from yolo import optimization
 from yolo.ops import preprocessing_ops
 
 from tensorflow.keras import mixed_precision
+import numpy as np
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
@@ -62,7 +63,7 @@ class YoloTask(base_task.Task):
 
     masks, path_scales, xy_scales = self._get_masks()
 
-    boxes, anchor_free = self._get_boxes()
+    boxes, anchor_limits, per_path_anchor_limits = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
     if model_base_cfg.dynamic_conv:
@@ -72,12 +73,12 @@ class YoloTask(base_task.Task):
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
 
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
-                               masks, xy_scales, path_scales)
+                               masks, xy_scales, path_scales, per_path_anchor_limits)
 
     model.summary(print_fn = logging.info)
     logging.info(f"Anchor Boxes: {boxes}")
 
-    if anchor_free is not None:
+    if anchor_limits is not None:
       logging.info("The model is operating under anchor free conditions")
 
     self._loss_dict = losses
@@ -105,6 +106,21 @@ class YoloTask(base_task.Task):
             params.decoder.type))
     return decoder
 
+  def _get_boxes(self, gen_boxes=False):
+    """Checks for boxes or calls kmeans to auto generate a set of boxes"""
+    masks, path_scales, xy_scales = self._get_masks()
+    anchor_limits = self.task_config.model.anchor_free_limits
+
+    if anchor_limits is not None:
+      anchor_limits.append(np.inf)
+      anchor_limits = [0] + anchor_limits
+      limits = {}
+      for i, key in enumerate(masks.keys()):
+        limits[key] = anchor_limits[i: i+2]
+    else:
+      limits = None
+    return (self.task_config.model._boxes, anchor_limits, limits)
+            
   def _get_masks(self):
 
     def _build(values):
@@ -136,7 +152,7 @@ class YoloTask(base_task.Task):
     model = self.task_config.model
 
     masks, path_scales, xy_scales = self._get_masks()
-    anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
+    anchors, anchor_free_limits, _ = self._get_boxes(gen_boxes=params.is_training)
 
     rsize = params.parser.mosaic.resize
     if rsize is None:
@@ -368,11 +384,6 @@ class YoloTask(base_task.Task):
     else:
       ret_dict.update(res)
     return ret_dict
-
-  def _get_boxes(self, gen_boxes=False):
-    """Checks for boxes or calls kmeans to auto generate a set of boxes"""
-    return (self.task_config.model._boxes,
-            self.task_config.model.anchor_free_limits)
 
   def initialize(self, model: tf.keras.Model):
     """initialize the weights of the model"""

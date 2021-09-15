@@ -3,7 +3,7 @@ from collections import defaultdict
 import abc
 
 from functools import partial
-from yolo.ops import (loss_utils, box_ops, math_ops)
+from yolo.ops import (loss_utils, box_ops, math_ops, preprocessing_ops)
 
 
 class YoloLossBase(object, metaclass=abc.ABCMeta):
@@ -27,6 +27,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                update_on_repeat=False,
                box_type="original",
                scale_x_y=1.0,
+               anchor_limit=None, 
                max_delta=10):
     """Loss Function Initialization. 
 
@@ -85,6 +86,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     self._update_on_repeat = update_on_repeat
     self._box_type = box_type
     self._path_stride = path_stride
+    self._anchor_limit = anchor_limit
 
     box_kwargs = dict(
         stride=self._path_stride,
@@ -543,6 +545,7 @@ class AnchorFreeLoss(YoloLossBase):
 
     true_box = true_boxes * (scale * self._path_stride)
     true_box_tlbr = box_ops.xcycwh_to_yxyx(true_box)
+    
     true_box_tlbr = tf.reshape(true_box_tlbr, [batch_size, 1, 1, -1, 4])
     true_box = tf.reshape(true_box, [batch_size, 1, 1, -1, 4])
     b_t = y_centers - true_box_tlbr[:, :, :, :, 0]
@@ -566,11 +569,25 @@ class AnchorFreeLoss(YoloLossBase):
     is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
     is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
     del is_in_boxes, is_in_centers, is_in_boxes_all, is_in_centers_all
+    
+    # add this to the loss then you are solid
+    if self._anchor_limit is not None:
+      max_reg_targets_per_im = tf.reduce_max(box_delta, axis = -1) 
+      gt_min = max_reg_targets_per_im > self._anchor_limit[0]
+      gt_max = max_reg_targets_per_im < self._anchor_limit[1]
+      in_limit = tf.logical_and(gt_min, gt_max)
+      is_in_boxes_and_center = tf.logical_and(in_limit, is_in_boxes_and_center)
 
-    b, y, x, t = tf.split(tf.where(is_in_boxes_and_center), 4, axis = -1)
+    indexes = preprocessing_ops.pad_max_instances(
+                    tf.where(is_in_boxes_and_center), 
+                    900 * batch_size, pad_value = -1)
+
+    b, y, x, t = tf.split(indexes, 4, axis = -1)
     pind = tf.concat([b, y, x], axis = -1)
     tind = tf.concat([b, t], axis = -1)
-    return pind, tind, tf.cast(tf.shape(pind)[0], boxes.dtype), tf.zeros_like(b)
+    ind_mask = tf.cast(b+y+x+t > 0, boxes.dtype)
+    return (pind, tind, tf.maximum(tf.reduce_sum(ind_mask), 1.0), 
+            tf.squeeze(ind_mask, axis = -1), tf.zeros_like(b))
 
   def call(self, true_counts, inds, y_true, boxes, classes, y_pred):
     """Per FPN path loss computation logic."""
@@ -579,18 +596,13 @@ class AnchorFreeLoss(YoloLossBase):
     batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
     fwidth = tf.cast(width, tf.float32)
     fheight = tf.cast(height, tf.float32)
+    del y_true
 
     # Cast all input compontnts to float32 and stop gradient to save memory.
-    y_true = tf.cast(y_true, tf.float32)
-    true_counts = tf.cast(true_counts, tf.float32)
-    true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
     grid_points, anchor_grid = self._anchor_generator(
         width, height, batch_size, dtype=tf.float32)
     boxes = tf.cast(boxes, tf.float32)
     classes = tf.cast(classes, tf.int32)
-
-    # Split the y_true list.
-    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
 
     # Split up the predicitons.
     y_pred = tf.cast(
@@ -599,9 +611,11 @@ class AnchorFreeLoss(YoloLossBase):
     scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
-    pind, tind, num_objs, zero = self.get_gt_inds(boxes, grid_points, scale, batch_size)
+    pind, tind, num_objs, ind_mask, zero = self.get_gt_inds(boxes, grid_points, scale, batch_size)
     pred_box = tf.squeeze(tf.gather_nd(pred_box, pind), axis = -2)
-    true_box = box_ops.yxyx_to_xcycwh(tf.gather_nd(boxes, tind))
+
+    boxes = boxes * scale * self._path_stride
+    true_box = box_ops.yxyx_to_xcycwh(tf.gather_nd(boxes, tind)) 
 
     pred_class = tf.squeeze(tf.gather_nd(pred_class, pind), axis = -2)
     true_class = tf.gather_nd(classes, tind)
@@ -611,7 +625,7 @@ class AnchorFreeLoss(YoloLossBase):
         dtype=pred_class.dtype)
 
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
-    # box_loss = loss_utils.apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = loss_utils.apply_mask(ind_mask, box_loss)
     box_loss = math_ops.divide_no_nan(tf.reduce_sum(box_loss), num_objs)
 
     # Compute the cross entropy loss for the class maps.
@@ -620,17 +634,24 @@ class AnchorFreeLoss(YoloLossBase):
         pred_class,
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    # class_loss = loss_utils.apply_mask(
-    #     tf.squeeze(ind_mask, axis=-1), class_loss)
+    class_loss = loss_utils.apply_mask(ind_mask, class_loss)
     class_loss = math_ops.divide_no_nan(tf.reduce_sum(class_loss), num_objs)
-    del true_class, true_conf, true_counts, tind
+    del true_class, true_counts, tind
 
     pind = tf.concat([pind, zero], axis = -1)
     true_conf = tf.squeeze(tf.zeros_like(pred_conf), axis = -1)
-    true_conf = tf.tensor_scatter_nd_update(true_conf, pind, iou)
+
+    iou = tf.maximum(tf.stop_gradient(iou), 0.0)
+    smoothed_iou = ((
+        (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
+                    self._objectness_smooth * iou)
+    smoothed_iou = loss_utils.apply_mask(ind_mask, smoothed_iou)
+    true_conf = tf.tensor_scatter_nd_update(true_conf, pind, smoothed_iou)
     bce = tf.keras.losses.binary_crossentropy(
         tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     conf_loss = tf.reduce_mean(bce)
+
+    grid_mask = tf.math.ceil(true_conf)
     del pind, true_conf, boxes, classes
 
     # Apply the weights to each loss.
@@ -640,10 +661,15 @@ class AnchorFreeLoss(YoloLossBase):
 
     mean_loss = box_loss + class_loss + conf_loss
     loss = mean_loss * tf.cast(batch_size, mean_loss.dtype)
-  
-    tf.print(box_loss, class_loss, conf_loss, mean_loss)
+
+    # import matplotlib.pyplot as plt
+    # plt.imshow(grid_mask[0, ..., 0].numpy())
+    # plt.show()
+
+    ind_mask = tf.expand_dims(tf.ones_like(iou), axis = -1)
+
     return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf, 
-            tf.expand_dims(tf.ones_like(iou), axis = -1), grid_mask)
+            ind_mask, grid_mask)
 
   def post_path_aggregation(self, loss, ground_truths, predictions):
     scale = tf.stop_gradient(3 / len(list(predictions.keys())))
@@ -680,7 +706,8 @@ class YoloLoss(object):
                max_deltas=None,
                label_smoothing=0.0,
                loss_method='scaled',
-               update_on_repeat=False):
+               update_on_repeat=False, 
+               per_path_anchor_limits = None):
 
     """Loss Function Initialization. 
 
@@ -744,6 +771,7 @@ class YoloLoss(object):
           max_delta=max_deltas[key],
           path_stride=path_strides[key],
           scale_x_y=scale_xys[key],
+          anchor_limit=per_path_anchor_limits[key],
           update_on_repeat=update_on_repeat,
           label_smoothing=label_smoothing)
 

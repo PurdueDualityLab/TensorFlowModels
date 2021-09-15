@@ -68,7 +68,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
 
 def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
-                      xy_scales, path_scales):
+                      xy_scales, path_scales, per_path_anchor_limits):
 
   def _build(values):
     if "all" in values and values["all"] is not None:
@@ -99,7 +99,8 @@ def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
       cls_normalizer=_build(model_config.filter.cls_normalizer.as_dict()),
       obj_normalizer=_build(model_config.filter.obj_normalizer.as_dict()),
       ignore_thresh=_build(model_config.filter.ignore_thresh.as_dict()),
-      objectness_smooth=_build(model_config.filter.objectness_smooth.as_dict()))
+      objectness_smooth=_build(model_config.filter.objectness_smooth.as_dict()), 
+      per_path_anchor_limits = per_path_anchor_limits)
   return model
 
 
@@ -117,7 +118,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
 
 
 def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
-               path_scales):
+               path_scales, per_path_anchor_limits):
 
   # backbone = factory.build_backbone(input_specs, model_config,
   #                                   l2_regularization)
@@ -125,7 +126,7 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
-  filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
+  filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales, per_path_anchor_limits)
 
   model = yolo_model.Yolo(
       backbone=backbone, decoder=decoder, head=head, filter=filter)

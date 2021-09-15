@@ -47,6 +47,7 @@ class YoloLayer(tf.keras.Model):
                scale_xy=None,
                nms_type='greedy',
                objectness_smooth=False,
+               per_path_anchor_limits=None, 
                **kwargs):
     """Parameters for the loss functions used at each detection head output.
 
@@ -121,6 +122,7 @@ class YoloLayer(tf.keras.Model):
     self._path_scale = path_scale or {
         key: 2**int(key) for key, _ in masks.items()
     }
+    self._per_path_anchor_limits = per_path_anchor_limits
 
     self._nms_type = nms_type
     self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
@@ -293,7 +295,8 @@ class YoloLayer(tf.keras.Model):
         scale_xys=self._scale_xy,
         loss_method=self._loss_method,
         update_on_repeat=self._update_on_repeat,
-        label_smoothing=self._label_smoothing)
+        label_smoothing=self._label_smoothing, 
+        per_path_anchor_limits = self._per_path_anchor_limits)
     return loss
 
   def get_config(self):
