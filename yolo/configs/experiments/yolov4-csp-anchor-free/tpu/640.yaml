@@ -31,7 +31,7 @@ task:
       use_sync_bn: true
     filter:
       loss_type:  
-        'all': ciou
+        'all': iou
       iou_normalizer: 
         'all': 5.0
       cls_normalizer: 
