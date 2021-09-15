@@ -11,10 +11,11 @@ task:
         type: 'darknet'
         darknet:
           model_id: 'cspdarknettiny'
-          use_separable_conv: False
+          use_separable_conv: True
       decoder:
         version: v4
         type: tiny
+        use_separable_conv: True
     num_classes: 80
     smart_bias: true
     boxes: ['[64.0, 64.0]',

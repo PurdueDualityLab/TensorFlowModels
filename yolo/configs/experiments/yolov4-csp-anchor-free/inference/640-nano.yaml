@@ -12,10 +12,11 @@ task:
         type: 'darknet'
         darknet:
           model_id: 'cspdarknettiny'
-          use_separable_conv: False
+          use_separable_conv: True
       decoder:
         version: v4
         type: tiny
+        use_separable_conv: True
     num_classes: 80
     smart_bias: true
     boxes: ['[64.0, 64.0]',
@@ -108,8 +109,8 @@ task:
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 39
-  steps_per_loop: 1850
-  summary_interval: 1850
+  steps_per_loop: 1
+  summary_interval: 1
   validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
