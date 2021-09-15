@@ -109,7 +109,7 @@ def get_image_shape(image):
     A tuple representing the (height, width) of the image.
   """
   shape = tf.shape(image)
-  if shape.shape[0] == 4:
+  if shape.get_shape().as_list()[0] == 4:
     width = shape[2]
     height = shape[1]
   else:
