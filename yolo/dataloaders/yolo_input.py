@@ -453,6 +453,11 @@ class Parser(parser.Parser):
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
+      # Set the image shape.
+    imshape = image.get_shape().as_list()
+    imshape[-1] = 3
+    image.set_shape(imshape)
+    
     # Get the best anchors.
     boxes = box_utils.yxyx_to_xcycwh(gt_boxes)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
