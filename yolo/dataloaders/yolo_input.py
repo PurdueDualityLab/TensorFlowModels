@@ -216,12 +216,18 @@ class Parser(parser.Parser):
     self._scale_xy = scale_xy
     self._anchor_t = anchor_t
     self._darknet = darknet
-    keys = list(self._masks.keys())
-
-    self._scale_up = {key: 6 - i for i, key in enumerate(keys)
-                     } if not self._darknet else {key: 1 for key in keys}
     self._area_thresh = area_thresh
     self._anchor_free_limits = anchor_free_limits
+
+    keys = list(self._masks.keys())
+
+    if self._anchor_free_limits is not None:
+      self._scale_up = {key: 11 for i, key in enumerate(keys)} 
+    elif not self._darknet:
+      self._scale_up = {key: 6 - i for i, key in enumerate(keys)} 
+    else:
+      self._scale_up = {key: 1 for key in keys}
+
 
     self._seed = seed
 
