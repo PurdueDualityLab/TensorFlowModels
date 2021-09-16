@@ -15,7 +15,7 @@ class Mosaic(object):
                letter_box=True,
                jitter=0.0,
                mosaic_crop_mode='scale',
-               mosaic_center=[0.25],
+               mosaic_center=0.25,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                aug_rand_angle=0.0,
@@ -24,6 +24,40 @@ class Mosaic(object):
                random_pad=False,
                area_thresh=0.1,
                seed=None):
+    """Initializes parameters for mosaic.
+
+    Args:
+      output_size: `Tensor` or `List` for [height, width] of output image.
+      mosaic_frequency: `float` indicating how often to apply mosaic.
+      mixup_frequency: `float` indicating how often to apply mixup.
+      letter_box: `boolean` indicating whether upon start of the datapipeline 
+        regardless of the preprocessing ops that are used, the aspect ratio of 
+        the images should be preserved.  
+      jitter: `float` for the maximum change in aspect ratio expected in 
+        each preprocessing step.
+      mosaic_crop_mode: `str` they type of mosaic to apply. The options are 
+        {crop, scale, None}, crop will construct a mosaic by slicing images 
+        togther, scale will create a mosaic by concatnating and shifting the 
+        image, and None will default to scale and apply no post processing to 
+        the created mosaic.  
+      mosaic_center: `float` indicating how much to randomly deviate from the 
+        from the center of the image when creating a mosaic.
+      aug_scale_min: `float` indicating the minimum scaling value for image 
+        scale jitter. 
+      aug_scale_max: `float` indicating the maximum scaling value for image 
+        scale jitter.
+      aug_rand_angle: `float` indicating the maximum angle value for 
+        angle. angle will be changes between 0 and value.
+      aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
+        amount to randomly translate an image.
+      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
+        how much to prespective warp the image.
+      random_pad: `bool` indiccating wether to use padding to apply random 
+        translation true for darknet yolo false for scaled yolo.
+      area_thresh: `float` for the minimum area of a box to allow to pass 
+        through for optimization.
+      seed: `int` the seed for random number generation. 
+    """
 
     self._output_size = output_size
     self._area_thresh = area_thresh

@@ -78,6 +78,7 @@ class Parser(parser.Parser):
       seed=None,
   ):
     """Initializes parameters for parsing annotations in the dataset.
+    
     Args:
       output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
