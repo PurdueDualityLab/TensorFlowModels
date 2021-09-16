@@ -102,8 +102,9 @@ class YoloTask(base_task.Task):
 
     model.summary(print_fn = logging.info)
     if anchor_free is not None:
-      logging.info(f"Anchor Boxes: None --> The model is operating under \
-                     anchor free conditions")
+      logging.info(
+        f"Anchor Boxes: None -> Model is operating anchor-free.")
+      logging.info(" --> boxes_per_scale set to 1. ")
     else:
       logging.info(f"Anchor Boxes: {boxes}")
 
@@ -142,10 +143,6 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
-    rsize = params.parser.mosaic.resize
-    if rsize is None:
-      rsize = params.parser.resize
-
     rcrop = params.parser.mosaic.jitter
     if rcrop is None:
       rcrop = params.parser.jitter
@@ -166,7 +163,6 @@ class YoloTask(base_task.Task):
         random_crop=rcrop,
         random_pad=params.parser.mosaic.random_pad,
         translate=params.parser.aug_rand_translate,
-        resize=rsize,
         seed=params.seed,
         deterministic=params.seed != None,
         area_thresh=params.parser.area_thresh)
@@ -179,9 +175,7 @@ class YoloTask(base_task.Task):
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
         jitter=params.parser.jitter,
-        resize=params.parser.resize,
         jitter_mosaic=params.parser.jitter_mosaic,
-        resize_mosaic=params.parser.resize_mosaic,
         aug_rand_transalate=params.parser.aug_rand_translate,
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
@@ -197,7 +191,7 @@ class YoloTask(base_task.Task):
         scale_xy=xy_scales,
         strides=path_scales,
         area_thresh=params.parser.area_thresh,
-        darknet=not params.parser.use_scale_xy,
+        darknet=model.darknet_based_model,
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,

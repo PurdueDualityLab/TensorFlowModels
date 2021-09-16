@@ -7,8 +7,8 @@ task:
   smart_bias_lr: 0.1
   reduced_logs: True
   model:
+    darknet_based_model: False
     input_size: [640, 640, 3]
-    smart_bias: true
     backbone:
       type: 'darknet'
       darknet:
@@ -77,7 +77,6 @@ task:
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
-      use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
       mosaic: 
@@ -99,7 +98,6 @@ task:
       max_num_instances: 300
       letter_box: True
       use_tie_breaker: True
-      use_scale_xy: True
       anchor_thresh: 4.0
       best_match_only: True
   weight_decay: 0.000

@@ -1149,7 +1149,6 @@ def get_best_anchor(y_true,
                     width=1,
                     height=1,
                     iou_thresh=0.25,
-                    anchor_free_limits=None,
                     best_match_only=False):
   """
   get the correct anchor that is assoiciated with each box using IOU

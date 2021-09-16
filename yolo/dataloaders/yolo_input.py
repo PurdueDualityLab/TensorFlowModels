@@ -85,11 +85,6 @@ class Parser(parser.Parser):
                use_tie_breaker=True,
                dtype='float32',
                seed=None,
-
-               dynamic_conv=False,
-               min_level=3,
-               resize=1.0,
-               resize_mosaic=1.0,
                ):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
@@ -181,9 +176,8 @@ class Parser(parser.Parser):
 
     # Set the anchor boxes and masks for each scale
     self._anchors = anchors
-    self._masks = {
-        key: tf.convert_to_tensor(value) for key, value in masks.items()
-    }
+    self._anchor_free_limits = anchor_free_limits
+    self._masks = {key: tf.convert_to_tensor(value) for key, value in masks.items()}
     self._use_tie_breaker = use_tie_breaker
     self._best_match_only = best_match_only
     self._max_num_instances = max_num_instances
@@ -217,7 +211,6 @@ class Parser(parser.Parser):
     self._anchor_t = anchor_t
     self._darknet = darknet
     self._area_thresh = area_thresh
-    self._anchor_free_limits = anchor_free_limits
 
     keys = list(self._masks.keys())
 
@@ -466,7 +459,6 @@ class Parser(parser.Parser):
         width=width,
         height=height,
         iou_thresh=self._anchor_t,
-        anchor_free_limits=self._anchor_free_limits,
         best_match_only=self._best_match_only)
 
     # Set/fix the boxes shape.

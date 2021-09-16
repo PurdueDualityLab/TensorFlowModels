@@ -112,9 +112,8 @@ class Parser(hyperparams.Config):
   mosaic_scale_max: float = 1.0
   mosaic_translate: float = 0.0
   use_tie_breaker: bool = True
-  use_scale_xy: bool = False
   best_match_only: bool = False
-  anchor_thresh: float = 0.213
+  anchor_thresh: float = -0.01
   area_thresh: float = 0.1
   stride: Optional[int] = None
   mosaic: Mosaic = Mosaic()
@@ -241,6 +240,7 @@ class Yolo(ModelConfig):
   boxes_per_scale: int = 3
   boxes: Optional[List[str]] = None
   anchor_free_limits: Optional[int] = None
+  darknet_based_model: bool = False
 
 # model task
 @dataclasses.dataclass
