@@ -42,7 +42,9 @@ if __name__ == "__main__":
       #     #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
       #     # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
       # ],
-      config_path=["yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-nano.yaml"],
+      config_path=[
+          "yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-nano.yaml"
+      ],
       model_dir="")
   # model_dir='/home/vbanna/Research/checkpoints/yolov4-csp/tpu/512')
   # model_dir='/home/vbanna/Research/checkpoints/250k-512-lr-special-t2')

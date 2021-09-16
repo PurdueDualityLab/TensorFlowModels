@@ -58,7 +58,7 @@ class YoloTask(base_task.Task):
         masks[str(i)] = list(range(start, params.boxes_per_scale + start))
         start += params.boxes_per_scale
       self._masks = masks
-    
+
     path_scales = params.detection_generator.path_scales.get()
     scale_xy = params.detection_generator.scale_xy.get()
     return self._masks, path_scales, scale_xy
@@ -92,10 +92,9 @@ class YoloTask(base_task.Task):
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, scale_xy, path_scales, boxes)
 
-    model.summary(print_fn = logging.info)
+    model.summary(print_fn=logging.info)
     if anchor_free is not None:
-      logging.info(
-        f"Anchor Boxes: None -> Model is operating anchor-free.")
+      logging.info(f"Anchor Boxes: None -> Model is operating anchor-free.")
       logging.info(" --> boxes_per_scale set to 1. ")
     else:
       logging.info(f"Anchor Boxes: {model_base_cfg.boxes}")
@@ -125,7 +124,6 @@ class YoloTask(base_task.Task):
             params.decoder.type))
     return decoder
 
-
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
 
@@ -136,13 +134,13 @@ class YoloTask(base_task.Task):
     anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
     base_config = dict(
-      letter_box=params.parser.letter_box,
-      aug_rand_transalate=params.parser.aug_rand_translate,
-      aug_rand_angle=params.parser.aug_rand_angle,
-      aug_rand_perspective=params.parser.aug_rand_perspective, 
-      random_pad=params.parser.random_pad,
-      area_thresh=params.parser.area_thresh, 
-      seed=params.seed, 
+        letter_box=params.parser.letter_box,
+        aug_rand_transalate=params.parser.aug_rand_translate,
+        aug_rand_angle=params.parser.aug_rand_angle,
+        aug_rand_perspective=params.parser.aug_rand_perspective,
+        random_pad=params.parser.random_pad,
+        area_thresh=params.parser.area_thresh,
+        seed=params.seed,
     )
 
     sample_fn = mosaic.Mosaic(
@@ -152,9 +150,9 @@ class YoloTask(base_task.Task):
         jitter=params.parser.mosaic.jitter,
         mosaic_center=params.parser.mosaic.mosaic_center,
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
-        aug_scale_min = params.parser.mosaic.aug_scale_min,
-        aug_scale_max = params.parser.mosaic.aug_scale_max,
-        deterministic=params.seed != None, 
+        aug_scale_min=params.parser.mosaic.aug_scale_min,
+        aug_scale_max=params.parser.mosaic.aug_scale_max,
+        deterministic=params.seed != None,
         **base_config)
 
     parser = yolo_input.Parser(
@@ -177,7 +175,7 @@ class YoloTask(base_task.Task):
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
         anchor_free_limits=anchor_free_limits,
-        dtype=params.dtype, 
+        dtype=params.dtype,
         **base_config)
 
     reader = input_reader.InputReader(
@@ -292,11 +290,10 @@ class YoloTask(base_task.Task):
     logs = {self.loss: metric_loss}
 
     # Reorganize and rescale the boxes
-    boxes = self._reorg_boxes(
-        y_pred['bbox'], y_pred['num_detections'], image)
+    boxes = self._reorg_boxes(y_pred['bbox'], y_pred['num_detections'], image)
     label['groundtruths']["boxes"] = self._reorg_boxes(
-        label['groundtruths']["boxes"], 
-        label['groundtruths']["num_detections"], image)
+        label['groundtruths']["boxes"], label['groundtruths']["num_detections"],
+        image)
 
     # Build the input for the coc evaluation metric
     coco_model_outputs = {
@@ -349,15 +346,14 @@ class YoloTask(base_task.Task):
       status = ckpt.restore(ckpt_dir_or_file)
       status.expect_partial().assert_existing_objects_matched()
     elif self.task_config.init_checkpoint_modules == 'decoder':
-      ckpt = tf.train.Checkpoint(
-          backbone=model.backbone, decoder=model.decoder)
+      ckpt = tf.train.Checkpoint(backbone=model.backbone, decoder=model.decoder)
       status = ckpt.restore(ckpt_dir_or_file)
       status.expect_partial()  #.assert_existing_objects_matched()
     else:
       assert "Only 'all' or 'backbone' can be used to initialize the model."
 
     logging.info('Finished loading pretrained checkpoint from %s',
-                  ckpt_dir_or_file)
+                 ckpt_dir_or_file)
 
   def _wrap_optimizer(self, optimizer, runtime_config):
     if runtime_config and runtime_config.loss_scale:

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for yolo detection generator."""
 
 from absl.testing import parameterized
@@ -39,13 +38,10 @@ class YoloDecoderTest(parameterized.TestCase, tf.test.TestCase):
     anchors = [[12.0, 19.0], [31.0, 46.0], [96.0, 54.0], [46.0, 114.0],
                [133.0, 127.0], [79.0, 225.0], [301.0, 150.0], [172.0, 286.0],
                [348.0, 340.0]]
-    box_type = {key:"scaled" for key in masks.keys()}
+    box_type = {key: "scaled" for key in masks.keys()}
 
-    layer = dg.YoloLayer(masks, 
-                         anchors, 
-                         classes, 
-                         box_type = box_type, 
-                         max_boxes=10)
+    layer = dg.YoloLayer(
+        masks, anchors, classes, box_type=box_type, max_boxes=10)
 
     inputs = {}
     for key in input_shape.keys():

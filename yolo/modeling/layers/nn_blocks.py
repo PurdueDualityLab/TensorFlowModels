@@ -52,7 +52,7 @@ class ConvBN(tf.keras.layers.Layer):
                bias_initializer='zeros',
                bias_regularizer=None,
                kernel_regularizer=None,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -118,7 +118,6 @@ class ConvBN(tf.keras.layers.Layer):
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-    
     ksize = self._kernel_size
     if not isinstance(ksize, List) and not isinstance(ksize, Tuple):
       ksize = [ksize]
@@ -217,7 +216,7 @@ class DarkResidual(tf.keras.layers.Layer):
                bias_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                activation='leaky',
@@ -335,9 +334,7 @@ class DarkResidual(tf.keras.layers.Layer):
     elif self._sc_activation == 'mish':
       self._activation_fn = lambda x: x * tf.math.tanh(tf.math.softplus(x))
     else:
-      self._activation_fn = tf_utils.get_activation(
-          self._sc_activation
-      )
+      self._activation_fn = tf_utils.get_activation(self._sc_activation)
     super().build(input_shape)
 
   def call(self, inputs, training=None):
@@ -393,7 +390,7 @@ class CSPTiny(tf.keras.layers.Layer):
                use_bn=True,
                dilation_rate=1,
                use_sync_bn=False,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                group_id=1,
                groups=2,
                norm_momentum=0.99,
@@ -485,16 +482,16 @@ class CSPTiny(tf.keras.layers.Layer):
         padding='same',
         **dark_conv_args)
 
-        # kernel_initializer=self._kernel_initializer,
-        # bias_initializer=self._bias_initializer,
-        # bias_regularizer=self._bias_regularizer,
-        # kernel_regularizer=self._kernel_regularizer,
-        # use_bn=self._use_bn,
-        # use_sync_bn=self._use_sync_bn,
-        # norm_momentum=self._norm_momentum,
-        # norm_epsilon=self._norm_epsilon,
-        # activation=self._conv_activation,
-        # leaky_alpha=self._leaky_alpha)
+    # kernel_initializer=self._kernel_initializer,
+    # bias_initializer=self._bias_initializer,
+    # bias_regularizer=self._bias_regularizer,
+    # kernel_regularizer=self._kernel_regularizer,
+    # use_bn=self._use_bn,
+    # use_sync_bn=self._use_sync_bn,
+    # norm_momentum=self._norm_momentum,
+    # norm_epsilon=self._norm_epsilon,
+    # activation=self._conv_activation,
+    # leaky_alpha=self._leaky_alpha)
 
     self._convlayer3 = ConvBN(
         filters=self._filters // 2,
@@ -564,7 +561,7 @@ class CSPRoute(tf.keras.layers.Layer):
                dilation_rate=1,
                use_bn=True,
                use_sync_bn=False,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                downsample=True,
@@ -923,7 +920,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                inverted=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
@@ -1162,7 +1159,7 @@ class SAM(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=True,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                activation='sigmoid',
@@ -1329,7 +1326,7 @@ class CBAM(tf.keras.layers.Layer):
                kernel_regularizer=None,
                use_bn=True,
                use_sync_bn=False,
-               use_separable_conv=False, 
+               use_separable_conv=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
                mlp_activation=None,
@@ -1394,28 +1391,27 @@ class DarkRouteProcess(tf.keras.layers.Layer):
                           insert_spp = False)(x)
   """
 
-  def __init__(
-      self,
-      filters=2,
-      repetitions=2,
-      insert_spp=False,
-      insert_sam=False,
-      insert_cbam=False,
-      csp_stack=0,
-      csp_scale=2,
-      kernel_initializer='VarianceScaling',
-      bias_initializer='zeros',
-      bias_regularizer=None,
-      kernel_regularizer=None,
-      use_sync_bn=False,
-      use_separable_conv=False, 
-      norm_momentum=0.99,
-      norm_epsilon=0.001,
-      block_invert=False,
-      activation='leaky',
-      leaky_alpha=0.1,
-      spp_keys=None,
-      **kwargs):
+  def __init__(self,
+               filters=2,
+               repetitions=2,
+               insert_spp=False,
+               insert_sam=False,
+               insert_cbam=False,
+               csp_stack=0,
+               csp_scale=2,
+               kernel_initializer='VarianceScaling',
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               kernel_regularizer=None,
+               use_sync_bn=False,
+               use_separable_conv=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               block_invert=False,
+               activation='leaky',
+               leaky_alpha=0.1,
+               spp_keys=None,
+               **kwargs):
     """DarkRouteProcess initializer.
 
     Args:

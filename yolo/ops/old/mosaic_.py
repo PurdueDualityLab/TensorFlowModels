@@ -483,9 +483,12 @@ class Mosaic(object):
       four = dataset.shard(4, 3)
     else:
       one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
-      two = dataset.shuffle(100, seed=self._seed + 1, reshuffle_each_iteration=True)
-      three = dataset.shuffle(100, seed=self._seed + 2, reshuffle_each_iteration=True)
-      four = dataset.shuffle(100, seed=self._seed + 3, reshuffle_each_iteration=True)
+      two = dataset.shuffle(
+          100, seed=self._seed + 1, reshuffle_each_iteration=True)
+      three = dataset.shuffle(
+          100, seed=self._seed + 2, reshuffle_each_iteration=True)
+      four = dataset.shuffle(
+          100, seed=self._seed + 3, reshuffle_each_iteration=True)
 
     one = one.map(
         lambda x: self._im_process(x, 1.0, 1.0),

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Contains common building blocks for yolo layer (detection layer)."""
 import tensorflow as tf
 from official.vision.beta.modeling.layers import detection_generator
@@ -129,8 +128,10 @@ class YoloLayer(tf.keras.Model):
     self._len_mask = {}
     for key in self._keys:
       anchors = [self._anchors[mask] for mask in self._masks[key]]
-      self._generator[key] = self.get_generators(anchors, self._path_scale[key],  # pylint: disable=assignment-from-none
-                                                 key)
+      self._generator[key] = self.get_generators(
+          anchors,
+          self._path_scale[key],  # pylint: disable=assignment-from-none
+          key)
       self._len_mask[key] = len(self._masks[key])
     return
 
@@ -222,7 +223,7 @@ class YoloLayer(tf.keras.Model):
     # get masks to threshold all the predicitons
     object_mask = tf.cast(object_scores > self._thresh, object_scores.dtype)
     class_mask = tf.cast(class_scores > self._thresh, class_scores.dtype)
-    
+
     # apply thresholds mask to all the predicitons
     object_scores *= object_mask
     class_scores *= (tf.expand_dims(object_mask, axis=-1) * class_mask)
@@ -248,14 +249,14 @@ class YoloLayer(tf.keras.Model):
       # TPU NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
-      (boxes, confidence, 
-      classes, num_detections) = detection_generator._generate_detections_v2(
-          tf.expand_dims(boxes, axis=-2),
-          class_scores,
-          pre_nms_top_k=self._pre_nms_points,
-          max_num_detections=self._max_boxes,
-          nms_iou_threshold=self._nms_thresh,
-          pre_nms_score_threshold=self._thresh)
+      (boxes, confidence, classes,
+       num_detections) = detection_generator._generate_detections_v2(
+           tf.expand_dims(boxes, axis=-2),
+           class_scores,
+           pre_nms_top_k=self._pre_nms_points,
+           max_num_detections=self._max_boxes,
+           nms_iou_threshold=self._nms_thresh,
+           pre_nms_score_threshold=self._thresh)
       boxes = tf.cast(boxes, object_scores.dtype)
       class_scores = tf.cast(classes, object_scores.dtype)
       object_scores = tf.cast(confidence, object_scores.dtype)

@@ -45,85 +45,85 @@ def _coco91_to_80(classif, box, areas, iscrowds):
 
 
 class Parser(parser.Parser):
-  """Parser to parse an image and its annotations into a dictionary of 
-  tensors."""
+  """Parse the dataset in to the YOLO model format. """
 
-  def __init__(self,
-               output_size,
-               masks,
-               anchors,
-               strides,
-               anchor_free_limits=None,   
-               max_num_instances=200,  
-               area_thresh=0.1,  
-               aug_rand_hue=1.0,
-               aug_rand_saturation=1.0,
-               aug_rand_brightness=1.0,
-               letter_box=False,
-               random_pad=True,
-               random_flip=True,
-               jitter=0.0,
-               aug_scale_min=1.0,
-               aug_scale_max=1.0,
-               aug_rand_transalate=0.0,
-               aug_rand_perspective=0.0, 
-               aug_rand_angle=0.0,
-               anchor_t=4.0,
-               scale_xy=None,
-               best_match_only=False,
-               coco91to80=False,
-               darknet=False,
-               use_tie_breaker=True,
-               dtype='float32',
-               seed=None,
-               ):
+  def __init__(
+      self,
+      output_size,
+      masks,
+      anchors,
+      strides,
+      anchor_free_limits=None,
+      max_num_instances=200,
+      area_thresh=0.1,
+      aug_rand_hue=1.0,
+      aug_rand_saturation=1.0,
+      aug_rand_brightness=1.0,
+      letter_box=False,
+      random_pad=True,
+      random_flip=True,
+      jitter=0.0,
+      aug_scale_min=1.0,
+      aug_scale_max=1.0,
+      aug_rand_transalate=0.0,
+      aug_rand_perspective=0.0,
+      aug_rand_angle=0.0,
+      anchor_t=4.0,
+      scale_xy=None,
+      best_match_only=False,
+      coco91to80=False,
+      darknet=False,
+      use_tie_breaker=True,
+      dtype='float32',
+      seed=None,
+  ):
     """Initializes parameters for parsing annotations in the dataset.
     Args:
-      output_size: `Tensor` or `list` for [height, width] of output image. The
+      output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
-      min_level: `int` number of minimum level of the output feature pyramid.
-      max_level: `int` number of maximum level of the output feature pyramid.
-      jitter: `float` for the maximum change in aspect ratio expected in 
-        each preprocessing step.
-      jitter_mosaic: `float` for the maximum change in aspect ratio expected in 
-        each preprocessing step to be applied to mosaiced images.
-      resize: `float` for the maximum change in image size.
-      resize_mosaic: `float` for the maximum change in image size to be applied 
-        to mosaiced images.
+      masks: `Dict[List[int]]` of values indicating the indexes in the 
+        list of anchor boxes to use an each prediction level between min_level 
+        and max_level. each level must have a list of indexes.  
+      anchors: `List[List[Union[int, float]]]` values for each anchor box.
+      strides: `Dict[int]` for how much the model scales down the images at the
+        largest level.
+      anchor_free_limits: `List` the box sizes that will be allowed at each FPN 
+        level as is done in the FCOS and YOLOX paper for anchor free box 
+        assignment. Anchor free will perform worse than Anchor based, but only 
+        slightly.
+      max_num_instances: `int` for the number of boxes to compute loss on.
       area_thresh: `float` for the minimum area of a box to allow to pass 
         through for optimization.
-      max_num_instances: `int` for the number of boxes to compute loss on.
-      aug_rand_angle: `float` indicating the maximum angle value for 
-        angle. angle will be changes between 0 and value.
+      aug_rand_hue: `float` indicating the maximum scaling value for 
+        hue. saturation will be scaled between 1 - value and 1 + value.
       aug_rand_saturation: `float` indicating the maximum scaling value for 
         saturation. saturation will be scaled between 1/value and value.
       aug_rand_brightness: `float` indicating the maximum scaling value for 
         brightness. brightness will be scaled between 1/value and value.
-      aug_rand_hue: `float` indicating the maximum scaling value for 
-        hue. saturation will be scaled between 1 - value and 1 + value.
+      letter_box: `boolean` indicating whether upon start of the datapipeline 
+        regardless of the preprocessing ops that are used, the aspect ratio of 
+        the images should be preserved.  
+      random_pad: `bool` indiccating wether to use padding to apply random 
+        translation true for darknet yolo false for scaled yolo.
+      random_flip: `boolean` indicating whether or not to randomly flip the 
+        image horizontally. 
+      jitter: `float` for the maximum change in aspect ratio expected in 
+        each preprocessing step.
       aug_scale_min: `float` indicating the minimum scaling value for image 
         scale jitter. 
       aug_scale_max: `float` indicating the maximum scaling value for image 
         scale jitter.
-      mosaic_min: `float` indicating the minimum scaling value for image 
-        scale jitter for mosaiced images. 
-      mosaic_max: `float` indicating the maximum scaling value for image 
-        scale jitter for mosaiced images.
-      random_pad: `bool` indiccating wether to use padding to apply random 
-        translation true for darknet yolo false for scaled yolo.
       aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
         amount to randomly translate an image.
-      mosaic_translate: `float` ranging from 0 to 1 indicating the maximum 
-        amount to randomly translate an image for mosaiced images.
+      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
+        how much to prespective warp the image.
+      aug_rand_angle: `float` indicating the maximum angle value for 
+        angle. angle will be changes between 0 and value.
       anchor_t: `float` indicating the threshold over which an anchor will be 
         considered for prediction, at zero, all the anchors will be used and at
         1.0 only the best will be used. for anchor thresholds larger than 1.0 
         we stop using the IOU for anchor comparison and resort directly to 
         comparing the width and height, this is used for the scaled models.  
-      dynamic_conv: `bool` for whether to use a padding in evaluation on the 
-        GPUs.
-      stride: `int` for how much the model scales down the images at the largest
-        level.
       scale_xy: dictionary `float` values inidcating how far each pixel can see 
         outside of its containment of 1.0. a value of 1.2 indicates there is a 
         20% extended radius around each pixel that this specific pixel can 
@@ -131,25 +131,16 @@ class Parser(parser.Parser):
         to 1 + value/2, this value is set in the yolo filter, and resused here. 
         there should be one value for scale_xy for each level from min_level to 
         max_level.
-      use_scale_xy: `boolean` indicating weather the scale_xy values shoudl be 
-        used or ignored. used if set to True. 
       best_match_only: `boolean` indicating how boxes are selected for 
         optimization.
-      masks: dictionary of lists of `int` values indicating the indexes in the 
-        list of anchor boxes to use an each prediction level between min_level 
-        and max_level. each level must have a list of indexes.  
-      anchors: list of lists of `float` values for each anchor box.
-      letter_box: `boolean` indicating whether upon start of the datapipeline 
-        regardless of the preprocessing ops that are used, the aspect ratio of 
-        the images should be preserved.  
-      random_flip: `boolean` indicating whether or not to randomly flip the 
-        image horizontally. 
+      coco91to80: `bool` for wether to convert coco91 to coco80 to minimize 
+        model parameters.      
+      darknet: `boolean` indicating which data pipeline to use. Setting to True 
+        swaps the pipeline to output images realtive to Yolov4 and older. 
       use_tie_breaker: `boolean` indicating whether to use the anchor threshold 
         value.
       dtype: `str` indicating the output datatype of the datapipeline selecting 
         from {"float32", "float16", "bfloat16"}.
-      coco91to80: `bool` for wether to convert coco91 to coco80 to minimize 
-        model parameters.
       seed: `int` the seed for random number generation. 
     """
     for key in masks.keys():
@@ -168,7 +159,9 @@ class Parser(parser.Parser):
     # Set the anchor boxes and masks for each scale
     self._anchors = anchors
     self._anchor_free_limits = anchor_free_limits
-    self._masks = {key: tf.convert_to_tensor(value) for key, value in masks.items()}
+    self._masks = {
+        key: tf.convert_to_tensor(value) for key, value in masks.items()
+    }
     self._use_tie_breaker = use_tie_breaker
     self._best_match_only = best_match_only
     self._max_num_instances = max_num_instances
@@ -201,16 +194,16 @@ class Parser(parser.Parser):
 
     if self._anchor_free_limits is not None:
       maxim = 2000
-      self._scale_up = {key: maxim//self._max_num_instances for key in keys} 
+      self._scale_up = {key: maxim // self._max_num_instances for key in keys}
       self._anchor_t = -0.01
     elif not self._darknet:
-      self._scale_up = {key: 6 - i for i, key in enumerate(keys)} 
+      self._scale_up = {key: 6 - i for i, key in enumerate(keys)}
     else:
       self._scale_up = {key: 1 for key in keys}
 
     self._seed = seed
 
-    # Set the data type based on input string    
+    # Set the data type based on input string
     self._dtype = dtype
 
   def _get_identity_info(self, image):
@@ -293,13 +286,14 @@ class Parser(parser.Parser):
     if not data['is_mosaic']:
       image, infos, affine = self._jitter_scale(
           image, [self._image_h, self._image_w], self._letter_box, self._jitter,
-          self._random_pad, self._aug_scale_min, self._aug_scale_max, 
+          self._random_pad, self._aug_scale_min, self._aug_scale_max,
           self._aug_rand_translate, self._aug_rand_angle,
           self._aug_rand_perspective)
 
       # Clip and clean boxes.
       boxes, inds = preprocessing_ops.apply_infos(
-          boxes, infos,
+          boxes,
+          infos,
           affine=affine,
           shuffle_boxes=False,
           area_thresh=self._area_thresh,
@@ -308,8 +302,8 @@ class Parser(parser.Parser):
       classes = tf.gather(classes, inds)
       info = infos[-1]
     else:
-      image = tf.image.resize(image, 
-                (self._image_h, self._image_w), method = 'nearest')
+      image = tf.image.resize(
+          image, (self._image_h, self._image_w), method='nearest')
       inds = tf.cast(tf.range(0, tf.shape(boxes)[0]), tf.int64)
       info = self._get_identity_info(image)
 
@@ -325,8 +319,16 @@ class Parser(parser.Parser):
         darknet=self._darknet)
 
     # Cast the image to the selcted datatype.
-    image, labels = self._build_label(image, boxes, classes, 
-        self._image_w, self._image_h, info, inds, data, is_training=True)
+    image, labels = self._build_label(
+        image,
+        boxes,
+        classes,
+        self._image_w,
+        self._image_h,
+        info,
+        inds,
+        data,
+        is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -338,7 +340,6 @@ class Parser(parser.Parser):
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    
     height, width = self._image_h, self._image_w
     image, infos, _ = preprocessing_ops.resize_and_jitter_image(
         image, [height, width],
@@ -355,30 +356,35 @@ class Parser(parser.Parser):
     classes = tf.gather(classes, inds)
     info = infos[-1]
 
-    image, labels = self._build_label(image, boxes, classes, width, height,
-        info, inds, data, is_training=False)
+    image, labels = self._build_label(
+        image,
+        boxes,
+        classes,
+        width,
+        height,
+        info,
+        inds,
+        data,
+        is_training=False)
     return image, labels
 
-  def set_shape(self, values, pad_axis = 0, pad_value = 0, inds = None, scale = 1):
+  def set_shape(self, values, pad_axis=0, pad_value=0, inds=None, scale=1):
     if inds is not None:
       values = tf.gather(values, inds)
     vshape = values.get_shape().as_list()
 
     if pad_value is not None:
-      values = preprocessing_ops.pad_max_instances(values, 
-                                                  self._max_num_instances,
-                                                  pad_axis = pad_axis, 
-                                                  pad_value = pad_value)
+      values = preprocessing_ops.pad_max_instances(
+          values,
+          self._max_num_instances,
+          pad_axis=pad_axis,
+          pad_value=pad_value)
 
     vshape[pad_axis] = self._max_num_instances * scale
     values.set_shape(vshape)
     return values
 
-  def _build_grid(self,
-                  raw_true,
-                  width,
-                  height,
-                  use_tie_breaker=False):
+  def _build_grid(self, raw_true, width, height, use_tie_breaker=False):
     '''Private function for building the full scale object and class grid.'''
     indexes = {}
     updates = {}
@@ -390,30 +396,34 @@ class Parser(parser.Parser):
     # for each prediction path generate a properly scaled output prediction map
     for i, key in enumerate(self._masks.keys()):
       if self._anchor_free_limits is not None:
-        fpn_limits = self._anchor_free_limits[i:i+2]
+        fpn_limits = self._anchor_free_limits[i:i + 2]
       else:
         fpn_limits = None
 
       # build the actual grid as well and the list of boxes and classes AND
       # their index in the prediction grid
       scale_xy = self._scale_xy[key] if not self._darknet else 1
-      (indexes[key], updates[key], 
-      true_grids[key]) = preprocessing_ops.build_grided_gt_ind(
-          raw_true, self._masks[key], 
-          width // self._strides[str(key)],
-          height // self._strides[str(key)], 
-          raw_true['bbox'].dtype, scale_xy,
-          self._scale_up[key], use_tie_breaker, 
-          self._strides[str(key)], fpn_limits = fpn_limits)
+      (indexes[key], updates[key],
+       true_grids[key]) = preprocessing_ops.build_grided_gt_ind(
+           raw_true,
+           self._masks[key],
+           width // self._strides[str(key)],
+           height // self._strides[str(key)],
+           raw_true['bbox'].dtype,
+           scale_xy,
+           self._scale_up[key],
+           use_tie_breaker,
+           self._strides[str(key)],
+           fpn_limits=fpn_limits)
 
       # set/fix the shapes
-      indexes[key] = self.set_shape(indexes[key], -2, None, 
-                                    None, self._scale_up[key])
-      updates[key] = self.set_shape(updates[key], -2, 
-                                    None, None, self._scale_up[key])
+      indexes[key] = self.set_shape(indexes[key], -2, None, None,
+                                    self._scale_up[key])
+      updates[key] = self.set_shape(updates[key], -2, None, None,
+                                    self._scale_up[key])
 
       # add all the values to the final dictionary
-      updates[key] = tf.cast(updates[key], dtype = self._dtype)
+      updates[key] = tf.cast(updates[key], dtype=self._dtype)
     return indexes, updates, true_grids
 
   def _build_label(self,
@@ -427,11 +437,11 @@ class Parser(parser.Parser):
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
-      # Set the image shape.
+    # Set the image shape.
     imshape = image.get_shape().as_list()
     imshape[-1] = 3
     image.set_shape(imshape)
-    
+
     # Get the best anchors.
     boxes = box_utils.yxyx_to_xcycwh(gt_boxes)
     best_anchors, ious = preprocessing_ops.get_best_anchor(
@@ -443,14 +453,14 @@ class Parser(parser.Parser):
         best_match_only=self._best_match_only)
 
     # Set/fix the boxes shape.
-    boxes = self.set_shape(boxes, pad_axis = 0, pad_value = 0)
-    classes = self.set_shape(gt_classes, pad_axis = 0, pad_value = -1)
-    best_anchors = self.set_shape(best_anchors, pad_axis = 0, pad_value = -1)
-    ious = self.set_shape(ious, pad_axis = 0, pad_value = 0)
-    area = self.set_shape(data['groundtruth_area'], 
-                            pad_axis = 0, pad_value = 0, inds = inds)
-    is_crowd = self.set_shape(data['groundtruth_is_crowd'], 
-                            pad_axis = 0, pad_value = 0, inds = inds)
+    boxes = self.set_shape(boxes, pad_axis=0, pad_value=0)
+    classes = self.set_shape(gt_classes, pad_axis=0, pad_value=-1)
+    best_anchors = self.set_shape(best_anchors, pad_axis=0, pad_value=-1)
+    ious = self.set_shape(ious, pad_axis=0, pad_value=0)
+    area = self.set_shape(
+        data['groundtruth_area'], pad_axis=0, pad_value=0, inds=inds)
+    is_crowd = self.set_shape(
+        data['groundtruth_is_crowd'], pad_axis=0, pad_value=0, inds=inds)
 
     # Build the dictionary set.
     labels = {
@@ -463,10 +473,7 @@ class Parser(parser.Parser):
 
     # Build the grid formatted for loss computation in model output format.
     labels['inds'], labels['upds'], labels['true_conf'] = self._build_grid(
-        labels,
-        width,
-        height,
-        use_tie_breaker=self._use_tie_breaker)
+        labels, width, height, use_tie_breaker=self._use_tie_breaker)
 
     # Update the labels dictionary.
     labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])

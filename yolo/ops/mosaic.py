@@ -18,24 +18,19 @@ class Mosaic(object):
 
   def __init__(self,
                output_size,
-
                mosaic_frequency=1.0,
                mixup_frequency=0.0,
-               
                letter_box=True,
                jitter=0.0,
-
                mosaic_crop_mode='scale',
                mosaic_center=[0.25],
-
-               aug_scale_min = 1.0, 
-               aug_scale_max = 1.0,
-               aug_rand_angle=0.0, 
+               aug_scale_min=1.0,
+               aug_scale_max=1.0,
+               aug_rand_angle=0.0,
                aug_rand_perspective=0.0,
                aug_rand_transalate=0.0,
                random_pad=False,
                area_thresh=0.1,
-
                deterministic=True,
                seed=None):
 
@@ -54,7 +49,7 @@ class Mosaic(object):
     # arbitraty changes to aspect ratio and crops.
     self._letter_box = letter_box
     self._random_crop = jitter
-    
+
     # How to treat final output images, None indicates that nothing will occur,
     # if the mode is crop then the mosaic will be generate by cropping and
     # slicing. If scale is selected the images are concatnated together and
@@ -166,9 +161,10 @@ class Mosaic(object):
 
     # Clip and clean boxes.
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes, None, 
-        affine=affine, 
-        area_thresh=self._area_thresh, 
+        boxes,
+        None,
+        affine=affine,
+        area_thresh=self._area_thresh,
         augment=True,
         seed=self._seed)
     classes = tf.gather(classes, inds)
@@ -267,15 +263,15 @@ class Mosaic(object):
       domo = 1.0
     else:
       domo = preprocessing_ops.rand_uniform_strong(
-        0.0, 1.0, dtype=tf.float32, seed=self._seed)
+          0.0, 1.0, dtype=tf.float32, seed=self._seed)
       noop = one.copy()
 
     if domo >= (1 - self._mosaic_frequency):
       cut, ishape = self._generate_cut()
-      one   = self._im_process(one, 1.0, 1.0, cut, ishape)
-      two   = self._im_process(two, 0.0, 1.0, cut, ishape)
+      one = self._im_process(one, 1.0, 1.0, cut, ishape)
+      two = self._im_process(two, 0.0, 1.0, cut, ishape)
       three = self._im_process(three, 1.0, 0.0, cut, ishape)
-      four  = self._im_process(four, 0.0, 0.0, cut, ishape)
+      four = self._im_process(four, 0.0, 0.0, cut, ishape)
       patch1 = self._patch2(one, two)
       patch2 = self._patch2(three, four)
       stitched = self._patch(patch1, patch2)
@@ -288,9 +284,9 @@ class Mosaic(object):
       domo = 1.0
     else:
       domo = preprocessing_ops.rand_uniform_strong(
-        0.0, 1.0, dtype=tf.float32, seed=self._seed)
+          0.0, 1.0, dtype=tf.float32, seed=self._seed)
       noop = one.copy()
-    
+
     if domo >= (1 - self._mixup_frequency):
       sample = one
       otype = one["image"].dtype
@@ -321,22 +317,27 @@ class Mosaic(object):
   def _apply(self, dataset):
     determ = self._deterministic
     one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
-    two = dataset.shuffle(100, seed=self._seed + 1, reshuffle_each_iteration=True)
-    three = dataset.shuffle(100, seed=self._seed + 2, reshuffle_each_iteration=True)
-    four = dataset.shuffle(100, seed=self._seed + 3, reshuffle_each_iteration=True)
+    two = dataset.shuffle(
+        100, seed=self._seed + 1, reshuffle_each_iteration=True)
+    three = dataset.shuffle(
+        100, seed=self._seed + 2, reshuffle_each_iteration=True)
+    four = dataset.shuffle(
+        100, seed=self._seed + 3, reshuffle_each_iteration=True)
 
     dataset = tf.data.Dataset.zip((one, two, three, four))
     dataset = dataset.map(
-          self._mosaic,
-          num_parallel_calls=tf.data.AUTOTUNE,
-          deterministic=determ)
+        self._mosaic, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
 
     if self._mixup_frequency > 0:
-      one = dataset.shuffle(10, seed=self._seed + 4, reshuffle_each_iteration=True)
-      two = dataset.shuffle(10, seed=self._seed + 5, reshuffle_each_iteration=True)
+      one = dataset.shuffle(
+          10, seed=self._seed + 4, reshuffle_each_iteration=True)
+      two = dataset.shuffle(
+          10, seed=self._seed + 5, reshuffle_each_iteration=True)
       dataset = tf.data.Dataset.zip((one, two))
       dataset = dataset.map(
-        self._mixup, num_parallel_calls=tf.data.AUTOTUNE, deterministic=determ)
+          self._mixup,
+          num_parallel_calls=tf.data.AUTOTUNE,
+          deterministic=determ)
     return dataset
 
   def _skip(self, dataset):

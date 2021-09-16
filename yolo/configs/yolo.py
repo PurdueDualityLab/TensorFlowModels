@@ -35,6 +35,7 @@ COCO_VAL_EXAMPLES = 5000
 # default param classes
 @dataclasses.dataclass
 class ModelConfig(hyperparams.Config):
+
   def as_dict(self):
     model_kwargs = super().as_dict()
     if self.boxes is not None:
@@ -57,8 +58,10 @@ class ModelConfig(hyperparams.Config):
         raise IOError('unsupported input type, only strings or tuples')
     return boxes
 
+
 @dataclasses.dataclass
 class FPNConfig(hyperparams.Config):
+
   def get(self):
     values = self.as_dict()
     if "all" in values and values["all"] is not None:
@@ -66,6 +69,7 @@ class FPNConfig(hyperparams.Config):
         if key != 'all':
           values[key] = values["all"]
     return values
+
 
 # dataset parsers
 @dataclasses.dataclass
@@ -77,6 +81,7 @@ class Mosaic(hyperparams.Config):
   aug_scale_min: float = 1.0
   aug_scale_max: float = 1.0
   jitter: float = 0.0
+
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -100,15 +105,18 @@ class Parser(hyperparams.Config):
   stride: Optional[int] = None
   mosaic: Mosaic = Mosaic()
 
+
 # pylint: disable=missing-class-docstring
 @dataclasses.dataclass
 class TfExampleDecoder(hyperparams.Config):
   regenerate_source_id: bool = False
 
+
 @dataclasses.dataclass
 class TfExampleDecoderLabelMap(hyperparams.Config):
   regenerate_source_id: bool = False
   label_map: str = ''
+
 
 @dataclasses.dataclass
 class DataDecoder(hyperparams.OneOfConfig):
@@ -116,13 +124,14 @@ class DataDecoder(hyperparams.OneOfConfig):
   simple_decoder: TfExampleDecoder = TfExampleDecoder()
   label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
 
+
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   global_batch_size: int = 64
-  input_path: str = ''  
-  tfds_name: str = None  
-  tfds_split: str = None 
+  input_path: str = ''
+  tfds_name: str = None
+  tfds_split: str = None
   global_batch_size: int = 1
   is_training: bool = True
   dtype: str = 'float16'
@@ -131,6 +140,7 @@ class DataConfig(cfg.DataConfig):
   shuffle_buffer_size: int = 10000
   tfds_download: bool = True
   cache: bool = False
+
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
@@ -149,19 +159,23 @@ class YoloDecoder(hyperparams.Config):
   embed_spp: Optional[bool] = None
   activation: Optional[str] = 'same'
 
+
 @dataclasses.dataclass
 class YoloHead(hyperparams.Config):
   """if the name is specified, or version is specified we ignore 
   input parameters and use version and name defaults"""
   smart_bias: bool = True
 
+
 def _build_dict(min_level, max_level, value):
   vals = {str(key): value for key in range(min_level, max_level + 1)}
   vals["all"] = None
   return lambda: vals
 
+
 def _build_path_scales(min_level, max_level):
   return lambda: {str(key): 2**key for key in range(min_level, max_level + 1)}
+
 
 @dataclasses.dataclass
 class YoloDetectionGenerator(hyperparams.Config):
@@ -176,6 +190,7 @@ class YoloDetectionGenerator(hyperparams.Config):
   nms_thresh: float = 0.6
   max_boxes: int = 200
   pre_nms_points: int = 5000
+
 
 @dataclasses.dataclass
 class YoloLoss(hyperparams.Config):
@@ -199,11 +214,13 @@ class YoloLoss(hyperparams.Config):
   use_scaled_loss: bool = True
   update_on_repeat: bool = True
 
+
 @dataclasses.dataclass
 class Yolo(ModelConfig):
-  input_size: Optional[List[int]] = dataclasses.field(default_factory=lambda: [512, 512, 3])
-  backbone: backbones.Backbone = backbones.Backbone(type='darknet', 
-    darknet=backbones.Darknet(model_id='cspdarknet53'))
+  input_size: Optional[List[int]] = dataclasses.field(
+      default_factory=lambda: [512, 512, 3])
+  backbone: backbones.Backbone = backbones.Backbone(
+      type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
   decoder: YoloDecoder = YoloDecoder(version='v4', type='regular')
   head: YoloHead = YoloHead()
   detection_generator: YoloDetectionGenerator = YoloDetectionGenerator()
@@ -219,6 +236,7 @@ class Yolo(ModelConfig):
   anchor_free_limits: Optional[int] = None
   darknet_based_model: bool = False
 
+
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
@@ -232,6 +250,7 @@ class YoloTask(cfg.TaskConfig):
   annotation_file: Optional[str] = None
   init_checkpoint_modules: str = None
   gradient_clip_norm: float = 0.0
+
 
 @exp_factory.register_config_factory('yolo_custom')
 def yolo_custom() -> cfg.ExperimentConfig:

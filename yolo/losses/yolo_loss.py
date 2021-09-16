@@ -118,7 +118,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                                scale=None):
     """Completes a search of all predictions against all the ground truths to 
     dynamically associate ground truths with predictions."""
-    
+
     if self._search_pairs is None:
       return true_conf, tf.ones_like(true_conf)
 
@@ -443,7 +443,7 @@ class ScaledLoss(YoloLossBase):
     # and predictions to the prediciton domain.
     true_box *= scale
     if self._box_type == "anchor_free":
-        true_box *= self._path_stride
+      true_box *= self._path_stride
     true_box = loss_utils.apply_mask(ind_mask, true_box)
     pred_box = loss_utils.apply_mask(ind_mask,
                                      tf.gather_nd(pred_box, inds, batch_dims=1))
@@ -477,7 +477,7 @@ class ScaledLoss(YoloLossBase):
         tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
     if self._ignore_thresh != 0.0:
       bce = loss_utils.apply_mask(obj_mask, bce)
-      conf_loss = tf.reduce_sum(bce)/tf.reduce_sum(obj_mask)
+      conf_loss = tf.reduce_sum(bce) / tf.reduce_sum(obj_mask)
     else:
       conf_loss = tf.reduce_mean(bce)
 
@@ -511,6 +511,7 @@ class ScaledLoss(YoloLossBase):
     """this method is not specific to each loss path, but each loss type"""
     return loss
 
+
 class YoloLoss(object):
   """This class implements the aggregated loss across paths for the YOLO 
   model. The class implements the YOLO loss as a factory in order to allow 
@@ -537,7 +538,6 @@ class YoloLoss(object):
                label_smoothing=0.0,
                use_scaled_loss=False,
                update_on_repeat=False):
-
     """Loss Function Initialization. 
 
     Args:
@@ -631,7 +631,7 @@ class YoloLoss(object):
       # across FPN levels
       _loss = self._loss_dict[key].post_path_aggregation(
           _loss, ground_truth, predictions)
-          
+
       # after completing the scaling of the loss on each replica, handle
       # scaling the loss for mergeing the loss across replicas
       _loss = self._loss_dict[key].cross_replica_aggregation(

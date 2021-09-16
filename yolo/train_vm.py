@@ -31,11 +31,13 @@ from official.modeling import performance
 
 FLAGS = flags.FLAGS
 
+
 def subdivison_adjustment(params):
   if params.task.model.detection_generator.nms_type == "greedy":
     import tensorflow as tf
     tf.config.set_soft_device_placement(True)
   return params
+
 
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
@@ -70,6 +72,7 @@ def main(_):
       model_dir=model_dir)
 
   train_utils.save_gin_config(FLAGS.mode, model_dir)
+
 
 if __name__ == '__main__':
   tfm_flags.define_flags()

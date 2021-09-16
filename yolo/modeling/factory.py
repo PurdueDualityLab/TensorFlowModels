@@ -67,8 +67,8 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   return model
 
 
-def build_yolo_detection_generator(model_config: yolo.Yolo, masks,
-                      scale_xy, path_scales, anchor_boxes):
+def build_yolo_detection_generator(model_config: yolo.Yolo, masks, scale_xy,
+                                   path_scales, anchor_boxes):
   model = YoloLayer(
       masks=masks,
       classes=model_config.num_classes,
@@ -95,7 +95,7 @@ def build_yolo_detection_generator(model_config: yolo.Yolo, masks,
   return model
 
 
-def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):  
+def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   min_level = min(map(int, input_specs.keys()))
   max_level = max(map(int, input_specs.keys()))
   head = YoloHead(
@@ -110,35 +110,24 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   return head
 
 
-def build_yolo(input_specs, 
-               model_config, 
-               l2_regularization, 
-               masks, 
-               scale_xy,
-               path_scales, 
-               anchor_boxes):
+def build_yolo(input_specs, model_config, l2_regularization, masks, scale_xy,
+               path_scales, anchor_boxes):
 
-  backbone = factory.build_backbone(input_specs, 
-                                    model_config.backbone,
+  backbone = factory.build_backbone(input_specs, model_config.backbone,
                                     model_config.norm_activation,
                                     l2_regularization)
-  decoder = build_yolo_decoder(backbone.output_specs, 
-                               model_config,
+  decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
-  head = build_yolo_head(decoder.output_specs, 
-                         model_config, 
-                         l2_regularization)
-  detection_generator = build_yolo_detection_generator(model_config, 
-                                                       masks, 
-                                                       scale_xy, 
-                                                       path_scales, 
+  head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
+  detection_generator = build_yolo_detection_generator(model_config, masks,
+                                                       scale_xy, path_scales,
                                                        anchor_boxes)
 
   model = yolo_model.Yolo(
-                  backbone=backbone, 
-                  decoder=decoder, 
-                  head=head, 
-                  detection_generator=detection_generator)
+      backbone=backbone,
+      decoder=decoder,
+      head=head,
+      detection_generator=detection_generator)
   model.build(input_specs.shape)
 
   losses = detection_generator.losses

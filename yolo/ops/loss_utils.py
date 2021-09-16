@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from yolo.ops import (box_ops, math_ops)
 
+
 @tf.custom_gradient
 def sigmoid_BCE(y, x_prime, label_smoothing):
   """Applies the Sigmoid Cross Entropy Loss Using the same derivative as that 
@@ -205,6 +206,8 @@ class GridGenerator(object):
 
 
 TILE_SIZE = 50
+
+
 class PairWiseSearch(object):
   """This method applies a pairwise search between the ground truth 
   and the labels. The goal is to indicate the locations where the 
@@ -503,8 +506,13 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
   return (scaler, scaled_box, pred_box), delta
 
 
-def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
-                             scale_xy, darknet = False):
+def _anchor_free_scale_boxes(encoded_boxes,
+                             width,
+                             height,
+                             stride,
+                             grid_points,
+                             scale_xy,
+                             darknet=False):
   """Decode models boxes using FPN stride under anchor free conditions."""
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
@@ -514,8 +522,8 @@ def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
   scaler = tf.convert_to_tensor([height, width, height, width])
   scale_xy = tf.cast(scale_xy, encoded_boxes.dtype)
 
-  scale_down = lambda x, y: x/y
-  scale_up = lambda x, y: x*y
+  scale_down = lambda x, y: x / y
+  scale_up = lambda x, y: x * y
   if darknet:
     scale_down = tf.grad_pass_through(scale_down)
     scale_up = tf.grad_pass_through(scale_up)
@@ -526,18 +534,18 @@ def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
-  box_xy = (grid_points + pred_xy) 
+  box_xy = (grid_points + pred_xy)
 
   # scale the width and height of the predictions and corlate them
   # to anchor boxes
-  box_wh = tf.math.exp(pred_wh) 
+  box_wh = tf.math.exp(pred_wh)
 
   # build the final predicted box
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
-  
+
   # properly scaling boxes gradeints
   scaled_box = scale_up(scaled_box, stride)
-  pred_box = scale_down(scaled_box , (scaler * stride))
+  pred_box = scale_down(scaled_box, (scaler * stride))
   return (scaler, scaled_box, pred_box)
 
 
@@ -584,13 +592,18 @@ def get_predicted_box(width,
       range. 
   """
   if box_type == 'anchor_free':
-    (scaler, scaled_box,
-     pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, stride,
-                                          grid_points, scale_xy, darknet = darknet)
+    (scaler, scaled_box, pred_box) = _anchor_free_scale_boxes(
+        encoded_boxes,
+        width,
+        height,
+        stride,
+        grid_points,
+        scale_xy,
+        darknet=darknet)
   elif darknet:
     # if we are using the darknet loss we shoud not propagate the
-    # decoding of the box. _darknet fucntions will return 4 values but the 
-    # fourth value is consumed by the custom gradient wrapper, so the caller 
+    # decoding of the box. _darknet fucntions will return 4 values but the
+    # fourth value is consumed by the custom gradient wrapper, so the caller
     # will only see 3 return values.
     if box_type == 'scaled':
       (scaler, scaled_box,

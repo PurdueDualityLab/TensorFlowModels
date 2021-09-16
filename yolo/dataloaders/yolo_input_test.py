@@ -187,7 +187,7 @@ def test_yolo_pipeline(is_training=True, num=30):
       break
 
 
-def time_pipeline(num = 100):
+def time_pipeline(num=100):
   dataset, dsp, config = test_yolo_input_task()
   # dataset = dataset.take(100000)
   # print(dataset, dataset.cardinality())
@@ -275,7 +275,6 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
-  time_pipeline(num = 10)
+  time_pipeline(num=10)
   test_yolo_pipeline(is_training=True, num=20)
   # test_yolo_pipeline(is_training=False, num=11)
-

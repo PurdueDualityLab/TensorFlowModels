@@ -43,6 +43,7 @@ from official.modeling import hyperparams
 from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.layers import nn_blocks
 
+
 class BlockConfig:
   """Class to store layer config to make code more readable."""
 
@@ -386,7 +387,7 @@ class Darknet(tf.keras.Model):
       csp_level_mod=(),
       activation=None,
       use_sync_bn=False,
-      use_separable_conv=False, 
+      use_separable_conv=False,
       norm_momentum=0.99,
       norm_epsilon=0.001,
       dilate=False,
@@ -687,6 +688,7 @@ class Darknet(tf.keras.Model):
 #       kernel_regularizer=l2_regularizer)
 #   return model
 
+
 @factory.register_backbone_builder('darknet')
 def build_darknet(
     input_specs: tf.keras.layers.InputSpec,
@@ -712,6 +714,7 @@ def build_darknet(
       norm_epsilon=norm_activation_config.norm_epsilon,
       kernel_regularizer=l2_regularizer)
   return model
+
 
 # @factory.register_backbone_builder('darknet')
 # def build_darknet(

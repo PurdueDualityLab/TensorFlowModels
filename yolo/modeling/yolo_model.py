@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Yolo models."""
 
 import tensorflow as tf
-
 
 # static base Yolo Models that do not require configuration
 # similar to a backbone model id.
