@@ -201,9 +201,7 @@ class Parser(parser.Parser):
 
     if self._anchor_free_limits is not None:
       maxim = 2000
-      self._scale_up = {
-        key: maxim//self._max_num_instances for i, key in enumerate(keys)} 
-      print(self._scale_up)
+      self._scale_up = {key: maxim//self._max_num_instances for key in keys} 
       self._anchor_t = -0.01
     elif not self._darknet:
       self._scale_up = {key: 6 - i for i, key in enumerate(keys)} 
