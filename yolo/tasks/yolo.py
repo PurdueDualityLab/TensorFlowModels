@@ -84,30 +84,28 @@ class YoloTask(base_task.Task):
 
 
   def build_model(self):
-    """get an instance of Yolo v3 or v4"""
+    """Build an instance of Yolo v3 or v4"""
     from yolo.modeling.factory import build_yolo
 
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
     masks, path_scales, xy_scales = self._get_masks()
-
     boxes, anchor_free = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
-
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
-
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
                                masks, xy_scales, path_scales, boxes)
 
     model.summary(print_fn = logging.info)
-    logging.info(f"Anchor Boxes: {boxes}")
-
     if anchor_free is not None:
-      logging.info("The model is operating under anchor free conditions")
+      logging.info(f"Anchor Boxes: None --> The model is operating under \
+                     anchor free conditions")
+    else:
+      logging.info(f"Anchor Boxes: {boxes}")
 
     self._loss_fn = losses
     self._model = model
