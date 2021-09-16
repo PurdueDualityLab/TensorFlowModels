@@ -63,7 +63,7 @@ class YoloTask(base_task.Task):
     scale_xy = params.detection_generator.scale_xy.get()
     return self._masks, path_scales, scale_xy
 
-  def _get_boxes(self, gen_boxes=False):
+  def _get_boxes(self):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
     boxes = self.task_config.model.get_boxes()
     anchor_limits = self.task_config.model.anchor_free_limits
@@ -129,9 +129,8 @@ class YoloTask(base_task.Task):
 
     decoder = self.get_decoder(params)
     model = self.task_config.model
-
     masks, path_scales, scale_xy = self._get_masks()
-    anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
+    anchors, anchor_free_limits = self._get_boxes()
 
     base_config = dict(
         letter_box=params.parser.letter_box,
@@ -152,7 +151,6 @@ class YoloTask(base_task.Task):
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aug_scale_min=params.parser.mosaic.aug_scale_min,
         aug_scale_max=params.parser.mosaic.aug_scale_max,
-        deterministic=params.seed != None,
         **base_config)
 
     parser = yolo_input.Parser(

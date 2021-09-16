@@ -1,21 +1,13 @@
 import random
 import tensorflow as tf
-from tensorflow._api.v2 import data
 import tensorflow_addons as tfa
-import tensorflow.keras.backend as K
-from yolo.ops import box_ops as bbox_ops
+
 from yolo.ops import preprocessing_ops
-from official.vision.beta.ops import box_ops, preprocess_ops
+from official.vision.beta.ops import box_ops
 
-import tensorflow_datasets as tfds
-from yolo.dataloaders.decoders import tfds_coco_decoder
-from yolo.utils.demos import utils, coco
-import matplotlib.pyplot as plt
-
-
-# gen a random number for each sample a subset of the dataset to mosaic?
 class Mosaic(object):
-
+  """Stitch together sets of 4 images to generate samples with more boxes."""
+  
   def __init__(self,
                output_size,
                mosaic_frequency=1.0,
@@ -31,7 +23,6 @@ class Mosaic(object):
                aug_rand_transalate=0.0,
                random_pad=False,
                area_thresh=0.1,
-               deterministic=True,
                seed=None):
 
     # Establish the expected output size and the maximum resolution to use for
@@ -64,9 +55,8 @@ class Mosaic(object):
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_perspective = aug_rand_perspective
 
+    self._deterministic = seed != None
     self._seed = seed if seed is not None else random.randint(0, 2**30)
-    self._deterministic = deterministic
-    return
 
   def _generate_cut(self):
     """Using the provided maximum delat for center location generate a 
@@ -133,6 +123,8 @@ class Mosaic(object):
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._mosaic_center
 
+      # shift the center of the image by applying a translation to the whole 
+      # image
       ch = tf.math.round(
           preprocessing_ops.rand_uniform_strong(
               -center[0], center[0], seed=self._seed))
@@ -140,6 +132,7 @@ class Mosaic(object):
           preprocessing_ops.rand_uniform_strong(
               -center[1], center[1], seed=self._seed))
 
+      # clip the boxes to those with in the image
       image = tfa.image.translate(
           image, [cw, ch], fill_value=preprocessing_ops.get_pad_value())
       boxes = box_ops.denormalize_boxes(boxes, shape[:2])
@@ -147,6 +140,7 @@ class Mosaic(object):
       boxes = box_ops.clip_boxes(boxes, shape[:2])
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
 
+    # warp and scale the fully stitched sample 
     image, _, affine = preprocessing_ops.affine_warp_image(
         image, [self._output_size[0], self._output_size[1]],
         scale_min=self._aug_scale_min,
@@ -159,7 +153,7 @@ class Mosaic(object):
     height, width = self._output_size[0], self._output_size[1]
     image = tf.image.resize(image, (height, width))
 
-    # Clip and clean boxes.
+    # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
         boxes,
         None,
@@ -173,8 +167,7 @@ class Mosaic(object):
     return image, boxes, classes, is_crowd, area, area
 
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
-    """Scale and translate the boxes for each image after patching has been 
-    completed"""
+    """Scale and translate the boxes for each image prior to patching."""
     xs = tf.cast(xs, boxes.dtype)
     ys = tf.cast(ys, boxes.dtype)
     pshape = tf.cast(tf.shape(patch), boxes.dtype)
@@ -191,7 +184,7 @@ class Mosaic(object):
 
   # mosaic full frequency doubles model speed
   def _im_process(self, sample, shiftx, shifty, cut, ishape):
-    """Distributed processing of each image"""
+    """Process and augment each image."""
     (image, boxes, classes, is_crowd, area, crop_points) = self._process_image(
         sample['image'], sample['groundtruth_boxes'],
         sample['groundtruth_classes'], sample['groundtruth_is_crowd'],
@@ -214,6 +207,7 @@ class Mosaic(object):
     return sample
 
   def _patch2(self, one, two):
+    """Stitch together 2 images in totality"""
     sample = one
     sample['image'] = tf.concat([one["image"], two["image"]], axis=-2)
 
@@ -228,6 +222,7 @@ class Mosaic(object):
     return sample
 
   def _patch(self, one, two):
+    """Build the full 4 patch of images from sets of 2 images."""
     image = tf.concat([one["image"], two["image"]], axis=-3)
     boxes = tf.concat([one['groundtruth_boxes'], two['groundtruth_boxes']],
                       axis=0)
@@ -257,8 +252,8 @@ class Mosaic(object):
     del sample['shiftx'], sample['shifty'], sample['crop_points'], sample['cut']
     return sample
 
-  # mosaic partial frequency
   def _mosaic(self, one, two, three, four):
+    """Stitch together 4 images to build a mosaic."""
     if self._mosaic_frequency >= 1.0:
       domo = 1.0
     else:
@@ -280,6 +275,7 @@ class Mosaic(object):
       return self._add_param(noop)
 
   def _mixup(self, one, two):
+    """Blend together 2 images for the mixup data augmentation."""
     if self._mixup_frequency >= 1.0:
       domo = 1.0
     else:
@@ -310,11 +306,13 @@ class Mosaic(object):
       return self._add_param(noop)
 
   def _add_param(self, sample):
+    """Add parameters to handle skipped images."""
     sample['is_mosaic'] = tf.cast(0.0, tf.bool)
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[0]
     return sample
 
   def _apply(self, dataset):
+    """Apply mosaic to an input dataset."""
     determ = self._deterministic
     one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
     two = dataset.shuffle(
@@ -330,9 +328,9 @@ class Mosaic(object):
 
     if self._mixup_frequency > 0:
       one = dataset.shuffle(
-          10, seed=self._seed + 4, reshuffle_each_iteration=True)
+          100, seed=self._seed + 4, reshuffle_each_iteration=True)
       two = dataset.shuffle(
-          10, seed=self._seed + 5, reshuffle_each_iteration=True)
+          100, seed=self._seed + 5, reshuffle_each_iteration=True)
       dataset = tf.data.Dataset.zip((one, two))
       dataset = dataset.map(
           self._mixup,
@@ -341,6 +339,7 @@ class Mosaic(object):
     return dataset
 
   def _skip(self, dataset):
+    """Skip samples in a dataset."""
     determ = self._deterministic
     return dataset.map(
         self._add_param,
@@ -348,6 +347,7 @@ class Mosaic(object):
         deterministic=determ)
 
   def mosaic_fn(self, is_training=True):
+    """Determine which function to apply based on whether model is training"""
     if is_training and self._mosaic_frequency > 0.0:
       return self._apply
     else:
