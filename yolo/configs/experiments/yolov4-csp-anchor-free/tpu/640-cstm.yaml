@@ -7,7 +7,6 @@ task:
   reduced_logs: True
   model:
     input_size: [640, 640, 3]
-    smart_bias: true
     backbone:
       type: 'darknet'
       darknet:

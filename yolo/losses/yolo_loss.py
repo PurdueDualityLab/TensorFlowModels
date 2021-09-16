@@ -609,7 +609,7 @@ class YoloLoss(object):
           update_on_repeat=update_on_repeat,
           label_smoothing=label_smoothing)
 
-  def __call__(self, ground_truth, predictions, use_reduced_logs=True):
+  def __call__(self, ground_truth, predictions):
     metric_dict = defaultdict(dict)
     metric_dict['net']['box'] = 0
     metric_dict['net']['class'] = 0
@@ -644,11 +644,6 @@ class YoloLoss(object):
       metric_dict[key]['loss'] = tf.stop_gradient(_mean_loss)
       metric_dict[key]['avg_iou'] = tf.stop_gradient(_avg_iou)
       metric_dict[key]["avg_obj"] = tf.stop_gradient(_avg_obj)
-
-      if not use_reduced_logs:
-        metric_dict[key]['conf_loss'] = tf.stop_gradient(_loss_conf)
-        metric_dict[key]['box_loss'] = tf.stop_gradient(_loss_box)
-        metric_dict[key]['class_loss'] = tf.stop_gradient(_loss_class)
 
       metric_dict['net']['box'] += tf.stop_gradient(_loss_box)
       metric_dict['net']['class'] += tf.stop_gradient(_loss_class)

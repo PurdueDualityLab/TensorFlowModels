@@ -69,7 +69,6 @@ class FPNConfig(hyperparams.Config):
       for key in values:
         if key != 'all':
           values[key] = values["all"]
-    print(values)
     return values
 
 

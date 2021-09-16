@@ -37,9 +37,7 @@ class YoloTask(base_task.Task):
 
   def __init__(self, params, logging_dir: str = None):
     super().__init__(params, logging_dir)
-    self._loss_dict = None
-    self._num_boxes = None
-    self._anchors_built = False
+    self._loss_fn = None
 
     self._model = None
     self._masks = None
@@ -48,12 +46,10 @@ class YoloTask(base_task.Task):
     self.coco_metric = None
 
     self._metrics = []
-    self._use_reduced_logs = self.task_config.reduced_logs
-
-    self._get_boxes()
-    self._get_masks()
 
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
+    self._get_boxes()
+    self._get_masks()
     return
 
   def _get_boxes(self, gen_boxes=False):
@@ -113,7 +109,7 @@ class YoloTask(base_task.Task):
     if anchor_free is not None:
       logging.info("The model is operating under anchor free conditions")
 
-    self._loss_dict = losses
+    self._loss_fn = losses
     self._model = model
     return model
 
@@ -231,11 +227,6 @@ class YoloTask(base_task.Task):
       metric_names[key].append("avg_iou")
       metric_names[key].append("avg_obj")
 
-      if not self._use_reduced_logs:
-        metric_names[key].append('box_loss')
-        metric_names[key].append('class_loss')
-        metric_names[key].append('conf_loss')
-
     metric_names['net'].append('box')
     metric_names['net'].append('class')
     metric_names['net'].append('conf')
@@ -255,8 +246,7 @@ class YoloTask(base_task.Task):
     return metrics
 
   def build_losses(self, outputs, labels, aux_losses=None):
-    return self._loss_dict(
-        labels, outputs, use_reduced_logs=self._use_reduced_logs)
+    return self._loss_fn(labels, outputs)
 
   ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):
@@ -365,18 +355,7 @@ class YoloTask(base_task.Task):
 
   def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
     res = self.coco_metric.result()
-    ret_dict = dict()
-    if self._use_reduced_logs:
-      ret_dict["AP"] = res["AP"]
-      ret_dict["AP50"] = res["AP50"]
-      ret_dict["AP75"] = res["AP75"]
-      ret_dict["APs"] = res["APs"]
-      ret_dict["APm"] = res["APm"]
-      ret_dict["APl"] = res["APl"]
-      ret_dict = {"AP": ret_dict}
-    else:
-      ret_dict.update(res)
-    return ret_dict
+    return res
 
   def initialize(self, model: tf.keras.Model):
     """Loading pretrained checkpoint."""
