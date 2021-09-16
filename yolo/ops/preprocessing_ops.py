@@ -1045,21 +1045,19 @@ def _write_anchor_free_grid(boxes, classes,
 
   # colate all masks to get the final locations
   is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
-  is_in_boxes = tf.logical_and(is_in_index, is_in_boxes)
-  is_in_centers = tf.logical_and(is_in_index, is_in_centers)
   is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
-  is_in_boxes_and_center = tf.logical_and(is_in_boxes_and_center, mask)
+  is_in_boxes_and_center = tf.logical_and(is_in_index, is_in_boxes_and_center)
 
   # construct the index update grid
-  reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.float32), axis = -1)
+  reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis = -1)
   indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
   y, x, t = tf.split(indexes, 3, axis = -1)
 
   boxes = tf.gather_nd(box_list, t)
   classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
   reps = tf.gather_nd(reps, tf.concat([y, x], axis = -1))
-  reps = tf.expand_dims(reps, axis = -1)
-  conf = tf.cast(classes >= 0.0, boxes.dtype)
+  reps = tf.cast(tf.expand_dims(reps, axis = -1), boxes.dtype)
+  conf = tf.ones_like(classes)
 
   # return the samples and the indexes
   samples = tf.concat([boxes, conf, classes, conf, reps], axis = -1)

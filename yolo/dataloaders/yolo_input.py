@@ -56,26 +56,21 @@ class Parser(parser.Parser):
                anchor_free_limits=None,   
                max_num_instances=200,  
                area_thresh=0.1,  
-
                aug_rand_hue=1.0,
                aug_rand_saturation=1.0,
                aug_rand_brightness=1.0,
-               
                letter_box=False,
                random_pad=True,
                random_flip=True,
-               
                jitter=0.0,
                aug_scale_min=1.0,
                aug_scale_max=1.0,
                aug_rand_transalate=0.0,
                aug_rand_perspective=0.0, 
                aug_rand_angle=0.0,
-               
                anchor_t=4.0,
                scale_xy=None,
                best_match_only=False,
-
                coco91to80=False,
                darknet=False,
                use_tie_breaker=True,
@@ -205,7 +200,10 @@ class Parser(parser.Parser):
     keys = list(self._masks.keys())
 
     if self._anchor_free_limits is not None:
-      self._scale_up = {key: 10 for i, key in enumerate(keys)} 
+      maxim = 2000
+      self._scale_up = {
+        key: maxim//self._max_num_instances for i, key in enumerate(keys)} 
+      print(self._scale_up)
       self._anchor_t = -0.01
     elif not self._darknet:
       self._scale_up = {key: 6 - i for i, key in enumerate(keys)} 

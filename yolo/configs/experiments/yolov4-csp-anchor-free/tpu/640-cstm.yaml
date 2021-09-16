@@ -67,7 +67,7 @@ task:
         mosaic_center: 0.25
         aug_scale_min: 0.1
         aug_scale_max: 1.9
-      max_num_instances: 300
+      max_num_instances: 150
       letter_box: True
       random_flip: True
       aug_rand_saturation: 0.7
@@ -87,7 +87,7 @@ task:
     shuffle_buffer_size: 10
     drop_remainder: true
     parser:
-      max_num_instances: 300
+      max_num_instances: 150
       letter_box: True
       use_tie_breaker: True
       anchor_thresh: 4.0

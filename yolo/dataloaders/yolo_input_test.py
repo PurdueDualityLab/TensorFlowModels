@@ -31,9 +31,9 @@ prep_gpu()
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
@@ -187,7 +187,7 @@ def test_yolo_pipeline(is_training=True, num=30):
       break
 
 
-def time_pipeline():
+def time_pipeline(num = 100):
   dataset, dsp, config = test_yolo_input_task()
   # dataset = dataset.take(100000)
   # print(dataset, dataset.cardinality())
@@ -195,22 +195,11 @@ def time_pipeline():
   ltime = time.time()
   for l, (i, j) in enumerate(dataset):
     ftime = time.time()
-    # print(tf.reduce_min(i))
-    # print(l , ftime - ltime, end = ", ")
-
-    # gt = j['true_conf']
-    # inds = j['inds']
-
-    # with tf.device('CPU:0'):
-    #   test = tf.gather_nd(gt['3'], inds['3'], batch_dims=1)
-    #   test = tf.gather_nd(gt['4'], inds['4'], batch_dims=1)
-    #   test = tf.gather_nd(gt['5'], inds['5'], batch_dims=1)
-    # tf.print(test)
 
     times.append(ftime - ltime)
     ltime = time.time()
     print(times[-1], l)
-    if l >= 100:
+    if l >= num:
       break
 
   plt.plot(times)
@@ -286,7 +275,7 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
-  # time_pipeline()
-  test_yolo_pipeline(is_training=True, num=20)
-  test_yolo_pipeline(is_training=False, num=11)
+  time_pipeline(num = 30)
+  # test_yolo_pipeline(is_training=True, num=20)
+  # test_yolo_pipeline(is_training=False, num=11)
 
