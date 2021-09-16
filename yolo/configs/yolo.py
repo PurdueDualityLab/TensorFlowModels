@@ -190,9 +190,12 @@ def _build_path_scales(min_level, max_level):
 
 @dataclasses.dataclass
 class YoloDetectionGenerator(hyperparams.Config):
-  box_type: FPNConfig = dataclasses.field(default_factory=_build_dict(3, 7, "original"))
-  scale_xy: FPNConfig = dataclasses.field(default_factory=_build_dict(3, 7, 1.0))
-  path_scales: FPNConfig = dataclasses.field(default_factory=_build_path_scales(3, 7))
+  box_type: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, "original"))
+  scale_xy: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 1.0))
+  path_scales: FPNConfig = dataclasses.field(
+      default_factory=_build_path_scales(3, 7))
   nms_type: str = 'greedy'
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6

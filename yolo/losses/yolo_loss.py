@@ -511,8 +511,6 @@ class ScaledLoss(YoloLossBase):
     """this method is not specific to each loss path, but each loss type"""
     return loss
 
-
-LOSSES = {"darknet": DarknetLoss, "scaled": ScaledLoss}
 class YoloLoss(object):
   """This class implements the aggregated loss across paths for the YOLO 
   model. The class implements the YOLO loss as a factory in order to allow 
@@ -590,6 +588,7 @@ class YoloLoss(object):
     else:
       loss_type = "darknet"
 
+    LOSSES = {"darknet": DarknetLoss, "scaled": ScaledLoss}
     self._loss_dict = {}
     for key in keys:
       self._loss_dict[key] = LOSSES[loss_type](
