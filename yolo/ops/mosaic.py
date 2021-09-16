@@ -7,7 +7,7 @@ from official.vision.beta.ops import box_ops
 
 class Mosaic(object):
   """Stitch together sets of 4 images to generate samples with more boxes."""
-  
+
   def __init__(self,
                output_size,
                mosaic_frequency=1.0,
@@ -25,26 +25,15 @@ class Mosaic(object):
                area_thresh=0.1,
                seed=None):
 
-    # Establish the expected output size and the maximum resolution to use for
-    # padding and batching throughout the mosaic process.
     self._output_size = output_size
     self._area_thresh = area_thresh
 
-    # Establish the mosaic frequency and mix up frequency.
     self._mosaic_frequency = mosaic_frequency
     self._mixup_frequency = mixup_frequency
 
-    # Establish how the image to treat images prior to cropping
-    # letter boxing preserves aspect ratio, cropping will take random crops
-    # of the input samples prior to patching, distortion will allow for
-    # arbitraty changes to aspect ratio and crops.
     self._letter_box = letter_box
     self._random_crop = jitter
 
-    # How to treat final output images, None indicates that nothing will occur,
-    # if the mode is crop then the mosaic will be generate by cropping and
-    # slicing. If scale is selected the images are concatnated together and
-    # and scaled.
     self._mosaic_crop_mode = mosaic_crop_mode
     self._mosaic_center = mosaic_center
 
@@ -59,9 +48,7 @@ class Mosaic(object):
     self._seed = seed if seed is not None else random.randint(0, 2**30)
 
   def _generate_cut(self):
-    """Using the provided maximum delat for center location generate a 
-    random delta from the center of the image to use for image patching 
-    and slicing."""
+    """Generate a random center to use for slicing and patching the images."""
     if self._mosaic_crop_mode == 'crop':
       min_offset = self._mosaic_center
       cut_x = preprocessing_ops.rand_uniform_strong(
@@ -233,7 +220,7 @@ class Mosaic(object):
     area = tf.concat([one['groundtruth_area'], two['groundtruth_area']], axis=0)
 
     if self._mosaic_crop_mode is not None:
-      image, boxes, classes, is_crowd, area, info = self._mosaic_crop_image(
+      image, boxes, classes, is_crowd, area, _ = self._mosaic_crop_image(
           image, boxes, classes, is_crowd, area)
 
     sample = one
