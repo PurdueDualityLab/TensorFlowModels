@@ -31,9 +31,9 @@ prep_gpu()
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
-  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/debug/alt-cfg/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)
@@ -286,39 +286,7 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
-
-  # test_ret_pipeline()
   # time_pipeline()
   test_yolo_pipeline(is_training=True, num=20)
   test_yolo_pipeline(is_training=False, num=11)
-  # test_classification_pipeline()
-  # from yolo.ops import preprocessing_ops as po
-  # dataset, dsp = test_yolo_input_task()
 
-  # dataset = dataset.unbatch()
-  # dataset = dataset.batch(4)
-  # drawer = utils.DrawBoxes(labels=coco.get_coco_names(), thickness=1)
-
-  # for l, (image, sample) in enumerate(dataset):
-
-  #   image, boxes, classes, num_instances = po.randomized_cutmix_split(image, sample['bbox'], sample['classes'])
-
-  #   # print(num_instances, tf.shape(boxes))
-  #   sample = {
-  #     'bbox': boxes,
-  #     'classes': classes
-  #   }
-
-  #   image = drawer(image, sample)
-  #   fig, axe = plt.subplots(1, 4)
-
-  #   axe[0].imshow(image[0])
-  #   axe[1].imshow(image[1])
-  #   axe[2].imshow(image[2])
-  #   axe[3].imshow(image[3])
-
-  #   fig.set_size_inches(18.5, 6.5, forward=True)
-  #   plt.tight_layout()
-  #   plt.show()
-  #   if l > 5:
-  #     break

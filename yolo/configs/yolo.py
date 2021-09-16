@@ -14,16 +14,13 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
-# from yolo.ops.preprocessing_ops import random_pad
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 import dataclasses
-from yolo.modeling.layers import detection_generator
 
 from official.core import exp_factory
 from official.modeling import hyperparams
 from official.modeling.hyperparams import config_definitions as cfg
 from official.vision.beta.configs import common
-
 from yolo import optimization
 
 from yolo.configs import backbones
@@ -31,9 +28,8 @@ import numpy as np
 import regex as re
 
 COCO_INPUT_PATH_BASE = 'coco'
-IMAGENET_TRAIN_EXAMPLES = 1281167
-IMAGENET_VAL_EXAMPLES = 50000
-IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
+COCO_TRIAN_EXAMPLES = 118287
+COCO_VAL_EXAMPLES = 5000
 
 
 # default param classes
@@ -71,25 +67,16 @@ class FPNConfig(hyperparams.Config):
           values[key] = values["all"]
     return values
 
-
 # dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
-  max_resolution: int = 640
-  mosaic_frequency: float = 0.75
+  mosaic_frequency: float = 0.0
   mixup_frequency: float = 0.0
-  crop_area: List[int] = dataclasses.field(default_factory=lambda: [0.2, 1.0])
-  crop_area_mosaic: List[int] = dataclasses.field(
-      default_factory=lambda: [1.0, 1.0])
-  aspect_ratio_mode: str = 'crop'
-  random_pad: bool = False
-  mosaic_crop_mode: Optional[str] = 'crop_scale'
-  aug_scale_min: Optional[float] = None
-  aug_scale_max: Optional[float] = None
-  jitter: Optional[float] = None
-  resize: Optional[float] = None
-  output_resolution: Optional[List[int]] = None  
-
+  mosaic_center: float = 0.2
+  mosaic_crop_mode: Optional[str] = None
+  aug_scale_min: float = 1.0
+  aug_scale_max: float = 1.0
+  jitter: float = 0.0
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -98,19 +85,14 @@ class Parser(hyperparams.Config):
   random_flip: bool = True
   random_pad: float = False
   jitter: float = 0.0
-  resize: float = 1.0
-  jitter_mosaic: float = 0.0
-  resize_mosaic: float = 1.0
-  aug_rand_angle: float = 0.0
+  aug_scale_min: float = 1.0
+  aug_scale_max: float = 1.0
   aug_rand_saturation: float = 0.0
   aug_rand_brightness: float = 0.0
   aug_rand_hue: float = 0.0
-  aug_scale_min: float = 1.0
-  aug_scale_max: float = 1.0
+  aug_rand_angle: float = 0.0
   aug_rand_translate: float = 0.0
-  mosaic_scale_min: float = 1.0
-  mosaic_scale_max: float = 1.0
-  mosaic_translate: float = 0.0
+  aug_rand_perspective: float = 0.0
   use_tie_breaker: bool = True
   best_match_only: bool = False
   anchor_thresh: float = -0.01
@@ -118,18 +100,15 @@ class Parser(hyperparams.Config):
   stride: Optional[int] = None
   mosaic: Mosaic = Mosaic()
 
-
 # pylint: disable=missing-class-docstring
 @dataclasses.dataclass
 class TfExampleDecoder(hyperparams.Config):
   regenerate_source_id: bool = False
 
-
 @dataclasses.dataclass
 class TfExampleDecoderLabelMap(hyperparams.Config):
   regenerate_source_id: bool = False
   label_map: str = ''
-
 
 @dataclasses.dataclass
 class DataDecoder(hyperparams.OneOfConfig):
@@ -137,14 +116,13 @@ class DataDecoder(hyperparams.OneOfConfig):
   simple_decoder: TfExampleDecoder = TfExampleDecoder()
   label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
 
-
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   global_batch_size: int = 64
-  input_path: str = ''  #'gs://tensorflow2/coco_records/train/2017*'
-  tfds_name: str = None  #'coco'
-  tfds_split: str = None  #'train'
+  input_path: str = ''  
+  tfds_name: str = None  
+  tfds_split: str = None 
   global_batch_size: int = 1
   is_training: bool = True
   dtype: str = 'float16'
@@ -153,7 +131,6 @@ class DataConfig(cfg.DataConfig):
   shuffle_buffer_size: int = 10000
   tfds_download: bool = True
   cache: bool = False
-
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
@@ -245,29 +222,16 @@ class Yolo(ModelConfig):
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
+  per_category_metrics: bool = False
+  smart_bias_lr: float = 0.0
+  coco91to80: bool = False
   model: Yolo = Yolo()
   train_data: DataConfig = DataConfig(is_training=True)
   validation_data: DataConfig = DataConfig(is_training=False)
   weight_decay: float = 5e-4
   annotation_file: Optional[str] = None
-  gradient_clip_norm: float = 0.0
-  
-  smart_bias_lr: float = 0.0
-  coco91to80: bool = False
-  reduced_logs: bool = True
   init_checkpoint_modules: str = None
-  per_category_metrics: bool = False
-
-
-@dataclasses.dataclass
-class YoloSubDivTask(YoloTask):
-  subdivisions: int = 4
-
-
-COCO_INPUT_PATH_BASE = 'coco'
-COCO_TRIAN_EXAMPLES = 118287
-COCO_VAL_EXAMPLES = 5000
-
+  gradient_clip_norm: float = 0.0
 
 @exp_factory.register_config_factory('yolo_custom')
 def yolo_custom() -> cfg.ExperimentConfig:
@@ -278,21 +242,15 @@ def yolo_custom() -> cfg.ExperimentConfig:
   num_batches = 1200000 * 64 / train_batch_size
 
   config = cfg.ExperimentConfig(
-      runtime=cfg.RuntimeConfig(
-          #            mixed_precision_dtype='float16',
-          #            loss_scale='dynamic',
-          num_gpus=2),
+      runtime=cfg.RuntimeConfig(num_gpus=2),
       task=YoloTask(
           model=Yolo(),
-          train_data=DataConfig(  # input_path=os.path.join(
-              # COCO_INPUT_PATH_BASE, 'train*'),
+          train_data=DataConfig(
               is_training=True,
               global_batch_size=train_batch_size,
               parser=Parser(),
               shuffle_buffer_size=2),
           validation_data=DataConfig(
-              # input_path=os.path.join(COCO_INPUT_PATH_BASE,
-              #                        'val*'),
               is_training=False,
               global_batch_size=eval_batch_size,
               shuffle_buffer_size=2)),

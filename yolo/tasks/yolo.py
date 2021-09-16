@@ -15,10 +15,9 @@ from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from yolo.configs import yolo as exp_cfg
 
-from yolo.ops import mosaic
-from yolo.ops.kmeans_anchors import BoxGenInputReader
-from yolo.dataloaders import yolo_input
 from yolo import optimization
+from yolo.ops import mosaic
+from yolo.dataloaders import yolo_input
 from yolo.ops import preprocessing_ops
 
 from tensorflow.keras import mixed_precision
@@ -106,7 +105,7 @@ class YoloTask(base_task.Task):
         f"Anchor Boxes: None -> Model is operating anchor-free.")
       logging.info(" --> boxes_per_scale set to 1. ")
     else:
-      logging.info(f"Anchor Boxes: {boxes}")
+      logging.info(f"Anchor Boxes: {model_base_cfg.boxes}")
 
     self._loss_fn = losses
     self._model = model
@@ -143,61 +142,50 @@ class YoloTask(base_task.Task):
     masks, path_scales, xy_scales = self._get_masks()
     anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
-    rcrop = params.parser.mosaic.jitter
-    if rcrop is None:
-      rcrop = params.parser.jitter
-
-    osize = params.parser.mosaic.output_resolution
-    if osize is None:
-      osize = model.input_size
+    base_config = dict(
+      letter_box=params.parser.letter_box,
+      aug_rand_transalate=params.parser.aug_rand_translate,
+      aug_rand_angle=params.parser.aug_rand_angle,
+      aug_rand_perspective=params.parser.aug_rand_perspective, 
+      random_pad=params.parser.random_pad,
+      area_thresh=params.parser.area_thresh, 
+      seed=params.seed, 
+    )
 
     sample_fn = mosaic.Mosaic(
-        output_size=osize,
-        max_resolution=params.parser.mosaic.max_resolution,
+        output_size=model.input_size,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
         mixup_frequency=params.parser.mosaic.mixup_frequency,
-        crop_area=params.parser.mosaic.crop_area,
-        crop_area_mosaic=params.parser.mosaic.crop_area_mosaic,
+        jitter=params.parser.mosaic.jitter,
+        mosaic_center=params.parser.mosaic.mosaic_center,
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
-        aspect_ratio_mode=params.parser.mosaic.aspect_ratio_mode,
-        random_crop=rcrop,
-        random_pad=params.parser.mosaic.random_pad,
-        translate=params.parser.aug_rand_translate,
-        seed=params.seed,
-        deterministic=params.seed != None,
-        area_thresh=params.parser.area_thresh)
+        aug_scale_min = params.parser.mosaic.aug_scale_min,
+        aug_scale_max = params.parser.mosaic.aug_scale_max,
+        deterministic=params.seed != None, 
+        **base_config)
 
     parser = yolo_input.Parser(
         output_size=model.input_size,
         masks=masks,
         anchors=anchors,
-        letter_box=params.parser.letter_box,
         use_tie_breaker=params.parser.use_tie_breaker,
         random_flip=params.parser.random_flip,
         jitter=params.parser.jitter,
-        jitter_mosaic=params.parser.jitter_mosaic,
-        aug_rand_transalate=params.parser.aug_rand_translate,
-        aug_rand_saturation=params.parser.aug_rand_saturation,
-        aug_rand_brightness=params.parser.aug_rand_brightness,
         aug_scale_min=params.parser.aug_scale_min,
         aug_scale_max=params.parser.aug_scale_max,
-        mosaic_min=params.parser.mosaic_scale_min,
-        mosaic_max=params.parser.mosaic_scale_max,
-        mosaic_translate=params.parser.mosaic_translate,
-        random_pad=params.parser.random_pad,
         aug_rand_hue=params.parser.aug_rand_hue,
-        aug_rand_angle=params.parser.aug_rand_angle,
+        aug_rand_saturation=params.parser.aug_rand_saturation,
+        aug_rand_brightness=params.parser.aug_rand_brightness,
         max_num_instances=params.parser.max_num_instances,
         scale_xy=xy_scales,
         strides=path_scales,
-        area_thresh=params.parser.area_thresh,
         darknet=model.darknet_based_model,
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         coco91to80=self.task_config.coco91to80,
         anchor_free_limits=anchor_free_limits,
-        seed=params.seed,
-        dtype=params.dtype)
+        dtype=params.dtype, 
+        **base_config)
 
     reader = input_reader.InputReader(
         params,

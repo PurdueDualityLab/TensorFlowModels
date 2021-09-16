@@ -4,7 +4,6 @@ runtime:
   num_gpus: 1
 task:
   coco91to80: True
-  reduced_logs: True
   model:
     input_size: [640, 640, 3]
     backbone:

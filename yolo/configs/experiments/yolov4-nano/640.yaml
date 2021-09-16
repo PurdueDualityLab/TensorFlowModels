@@ -5,7 +5,6 @@ runtime:
   num_gpus: 2
 task:
   coco91to80: True
-  reduced_logs: True
   smart_bias_lr: 0.1
   model:
     base:

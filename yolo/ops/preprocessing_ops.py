@@ -34,7 +34,9 @@ def set_random_seeds(seed=0):
     GLOBAL_SEED_SET = True
   tf.random.set_seed(seed)
   np.random.seed(seed)
-    
+
+def get_pad_value():
+  return PAD_VALUE
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
@@ -323,36 +325,44 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
     crop_info: `float` tensor that is applied to the boxes in order to select 
       the boxes still contained within the image.
   """
+  def cast(values, dtype):
+    return [tf.cast(value, dtype) for value in values]
+  
   with tf.name_scope('mosaic_cut'):
     center = tf.cast(center, w.dtype)
+    zero = tf.cast(0.0, w.dtype)
     cut_x, cut_y = center[1], center[0]
 
     # Select the crop of the image to use
     left_shift = tf.minimum(
-        tf.minimum(cut_x, tf.maximum(0.0, -pleft * w / ow)), w - cut_x)
+        tf.minimum(cut_x, tf.maximum(zero, -pleft * w / ow)), w - cut_x)
     top_shift = tf.minimum(
-        tf.minimum(cut_y, tf.maximum(0.0, -ptop * h / oh)), h - cut_y)
+        tf.minimum(cut_y, tf.maximum(zero, -ptop * h / oh)), h - cut_y)
     right_shift = tf.minimum(
-        tf.minimum(w - cut_x, tf.maximum(0.0, -pright * w / ow)), cut_x)
+        tf.minimum(w - cut_x, tf.maximum(zero, -pright * w / ow)), cut_x)
     bot_shift = tf.minimum(
-        tf.minimum(h - cut_y, tf.maximum(0.0, -pbottom * h / oh)), cut_y)
+        tf.minimum(h - cut_y, tf.maximum(zero, -pbottom * h / oh)), cut_y)
 
+    (left_shift, 
+    top_shift, 
+    right_shift, 
+    bot_shift, zero) = cast([left_shift, top_shift, 
+                       right_shift, bot_shift, zero], tf.float32)
     # Build a crop offset and a crop size tensor to use for slicing.
+    crop_offset = [zero, zero, zero]
+    crop_size = [zero-1, zero-1, zero-1]
     if shiftx == 0.0 and shifty == 0.0:
-      crop_offset = [top_shift, left_shift, 0]
-      crop_size = [cut_y, cut_x, -1]
+      crop_offset = [top_shift, left_shift, zero]
+      crop_size = [cut_y, cut_x, zero-1]
     elif shiftx == 1.0 and shifty == 0.0:
-      crop_offset = [top_shift, cut_x - right_shift, 0]
-      crop_size = [cut_y, w - cut_x, -1]
+      crop_offset = [top_shift, cut_x - right_shift, zero]
+      crop_size = [cut_y, w - cut_x, zero-1]
     elif shiftx == 0.0 and shifty == 1.0:
-      crop_offset = [cut_y - bot_shift, left_shift, 0]
-      crop_size = [h - cut_y, cut_x, -1]
+      crop_offset = [cut_y - bot_shift, left_shift, zero]
+      crop_size = [h - cut_y, cut_x, zero-1]
     elif shiftx == 1.0 and shifty == 1.0:
-      crop_offset = [cut_y - bot_shift, cut_x - right_shift, 0]
-      crop_size = [h - cut_y, w - cut_x, -1]
-    else:
-      crop_offset = [0, 0, 0]
-      crop_size = [-1, -1, -1]
+      crop_offset = [cut_y - bot_shift, cut_x - right_shift, zero]
+      crop_size = [h - cut_y, w - cut_x, zero-1]
 
     # Contain and crop the image.
     ishape = tf.cast(tf.shape(image)[:2], crop_size[0].dtype)
@@ -531,7 +541,7 @@ def resize_and_jitter_image(image,
     # Pad the image to desired size.
     image_ = tf.pad(
         cropped_image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=PAD_VALUE)
+        constant_values=get_pad_value())
     pad_info = tf.stack([
         tf.cast(tf.shape(cropped_image)[:2], tf.float32),
         tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
@@ -560,7 +570,7 @@ def resize_and_jitter_image(image,
                                      pbottom, pright, shiftx, shifty)
       infos.append(crop_info)
     return image_, infos, cast([ow, oh, w, h, ptop, pleft, pbottom, pright],
-                               tf.int32)
+                               tf.float32)
 
 
 def _build_transform(image,
@@ -680,7 +690,7 @@ def affine_warp_image(image,
   image = tfa.image.transform(
       image,
       affine,
-      fill_value=PAD_VALUE,
+      fill_value=get_pad_value(),
       output_shape=desired_size,
       interpolation='bilinear')
 
