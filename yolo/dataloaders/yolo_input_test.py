@@ -289,7 +289,7 @@ if __name__ == '__main__':
 
   # test_ret_pipeline()
   # time_pipeline()
-  test_yolo_pipeline(is_training=True, num=30)
+  # test_yolo_pipeline(is_training=True, num=30)
   test_yolo_pipeline(is_training=False, num=11)
   # test_classification_pipeline()
   # from yolo.ops import preprocessing_ops as po

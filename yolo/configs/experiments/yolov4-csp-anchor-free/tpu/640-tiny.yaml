@@ -6,20 +6,17 @@ task:
   smart_bias_lr: 0.0
   reduced_logs: True
   model:
-    base:
-      backbone:
-        type: 'darknet'
-        darknet:
-          model_id: 'cspdarknettiny'
-      decoder:
-        version: v4
-        type: tiny
+    backbone:
+      type: 'darknet'
+      darknet:
+        model_id: 'cspdarknettiny'
+    decoder:
+      version: v4
+      type: tiny
     num_classes: 80
     smart_bias: true
-    boxes: ['[640, 640]', '[640, 640]', '[640, 640]']
-    anchor_free_limits: [64, 128]
     input_size: [640, 640, 3]
-    boxes_per_scale: 1
+    anchor_free_limits: [64, 128]
     max_level: 5
     min_level: 3
     norm_activation:

@@ -17,6 +17,7 @@
 # from yolo.ops.preprocessing_ops import random_pad
 from typing import Dict, List, Optional, Union
 import dataclasses
+from yolo.modeling.layers import detection_generator
 
 from official.core import exp_factory
 from official.modeling import hyperparams
@@ -38,7 +39,6 @@ IMAGENET_INPUT_PATH_BASE = 'imagenet-2012-tfrecord'
 # default param classes
 @dataclasses.dataclass
 class ModelConfig(hyperparams.Config):
-
   def as_dict(self):
     model_kwargs = super().as_dict()
     if self.boxes is not None:
@@ -47,35 +47,7 @@ class ModelConfig(hyperparams.Config):
       model_kwargs.update({'boxes': None})
     return model_kwargs
 
-  @property
-  def backbone(self):
-    return self.base.backbone
-
-  @backbone.setter
-  def backbone(self, val):
-    self.base.backbone = val
-
-  @property
-  def decoder(self):
-    if isinstance(self.base, str):
-      return Yolo._DEFAULTS[self.base].decoder
-    else:
-      return self.base.decoder
-
-  @decoder.setter
-  def decoder(self, val):
-    self.base.decoder = val
-
-  @property
-  def darknet_weights_file(self):
-    return self.base.darknet_weights_file
-
-  @property
-  def darknet_weights_cfg(self):
-    return self.base.darknet_weights_cfg
-
-  @property
-  def _boxes(self):
+  def get_boxes(self):
     if self.boxes is None:
       return None
     boxes = []
@@ -89,20 +61,16 @@ class ModelConfig(hyperparams.Config):
         raise IOError('unsupported input type, only strings or tuples')
     return boxes
 
-  @_boxes.setter
-  def _boxes(self, box_list):
-    setter = []
-    for value in box_list:
-      value = str(list(value))
-      setter.append(value[1:-1])
-    self.boxes = setter
-
-  def set_boxes(self, box_list):
-    setter = []
-    for value in box_list:
-      value = str(list(value))
-      setter.append(value[1:-1])
-    self.boxes = setter
+@dataclasses.dataclass
+class FPNConfig(hyperparams.Config):
+  def get(self):
+    values = self.as_dict()
+    if "all" in values and values["all"] is not None:
+      for key in values:
+        if key != 'all':
+          values[key] = values["all"]
+    print(values)
+    return values
 
 
 # dataset parsers
@@ -121,8 +89,7 @@ class Mosaic(hyperparams.Config):
   aug_scale_max: Optional[float] = None
   jitter: Optional[float] = None
   resize: Optional[float] = None
-  output_resolution: Optional[
-      List[int]] = None  #dataclasses.field(default_factory=lambda: [640, 640])
+  output_resolution: Optional[List[int]] = None  
 
 
 @dataclasses.dataclass
@@ -207,104 +174,87 @@ class YoloDecoder(hyperparams.Config):
   embed_spp: Optional[bool] = None
   activation: Optional[str] = 'same'
 
+@dataclasses.dataclass
+class YoloHead(hyperparams.Config):
+  """if the name is specified, or version is specified we ignore 
+  input parameters and use version and name defaults"""
+  smart_bias: bool = True
 
 def _build_dict(min_level, max_level, value):
   vals = {str(key): value for key in range(min_level, max_level + 1)}
   vals["all"] = None
   return lambda: vals
 
-
 def _build_path_scales(min_level, max_level):
   return lambda: {str(key): 2**key for key in range(min_level, max_level + 1)}
 
-
 @dataclasses.dataclass
-class YoloLossLayer(hyperparams.Config):
-  min_level: int = 3
-  max_level: int = 7
-  ignore_thresh: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 0.0))
-  truth_thresh: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 1.0))
-  loss_type: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 'ciou'))
-  iou_normalizer: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 1.0))
-  cls_normalizer: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 1.0))
-  obj_normalizer: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 1.0))
-  max_delta: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, np.inf))
-  box_type: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level,
-                                  "original"))  # original, scaled, anchor_free
-  scale_xy: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 1.0))
-  path_scales: Dict = dataclasses.field(
-      default_factory=_build_path_scales(min_level, max_level))
-  objectness_smooth: Dict = dataclasses.field(
-      default_factory=_build_dict(min_level, max_level, 0.0))
+class YoloDetectionGenerator(hyperparams.Config):
+  box_type: FPNConfig = dataclasses.field(default_factory=_build_dict(3, 7, "original"))
+  scale_xy: FPNConfig = dataclasses.field(default_factory=_build_dict(3, 7, 1.0))
+  path_scales: FPNConfig = dataclasses.field(default_factory=_build_path_scales(3, 7))
   nms_type: str = 'greedy'
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6
   max_boxes: int = 200
   pre_nms_points: int = 5000
-  label_smoothing: float = 0.0
-  anchor_generation_scale: int = 512
-  use_scaled_loss: bool = True
-  update_on_repeat: bool = True
-  darknet: Optional[bool] = None
-
 
 @dataclasses.dataclass
-class YoloBase(hyperparams.OneOfConfig):
-  backbone: backbones.Backbone = backbones.Backbone(
-      type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
-  decoder: YoloDecoder = YoloDecoder(version='v4', type='regular')
-  darknet_weights_file: str = 'yolov4.weights'
-  darknet_weights_cfg: str = 'yolov4.cfg'
-
+class YoloLoss(hyperparams.Config):
+  ignore_thresh: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 0.0))
+  truth_thresh: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 1.0))
+  box_loss_type: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 'ciou'))
+  iou_normalizer: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 1.0))
+  cls_normalizer: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 1.0))
+  obj_normalizer: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 1.0))
+  max_delta: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, np.inf))
+  objectness_smooth: FPNConfig = dataclasses.field(
+      default_factory=_build_dict(3, 7, 0.0))
+  label_smoothing: float = 0.0
+  use_scaled_loss: bool = True
+  update_on_repeat: bool = True
 
 @dataclasses.dataclass
 class Yolo(ModelConfig):
-  num_classes: int = 91
-  dynamic_conv: bool = False
-  input_size: Optional[List[int]] = dataclasses.field(
-      default_factory=lambda: [512, 512, 3])
-  min_level: int = 3
-  max_level: int = 5
-  boxes_per_scale: int = 3
-  base: Union[str, YoloBase] = YoloBase()
-  filter: YoloLossLayer = YoloLossLayer(
-      min_level=min_level, max_level=max_level)
+  input_size: Optional[List[int]] = dataclasses.field(default_factory=lambda: [512, 512, 3])
+  backbone: backbones.Backbone = backbones.Backbone(type='darknet', 
+    darknet=backbones.Darknet(model_id='cspdarknet53'))
+  decoder: YoloDecoder = YoloDecoder(version='v4', type='regular')
+  head: YoloHead = YoloHead()
+  detection_generator: YoloDetectionGenerator = YoloDetectionGenerator()
+  loss: YoloLoss = YoloLoss()
   norm_activation: common.NormActivation = common.NormActivation(
       activation='leaky',
       use_sync_bn=True,
       norm_momentum=0.99,
       norm_epsilon=0.001)
+  num_classes: int = 91
+  boxes_per_scale: int = 3
   boxes: Optional[List[str]] = None
   anchor_free_limits: Optional[int] = None
-  smart_bias: bool = False
-
 
 # model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
-  model: Yolo = Yolo(base='v4')
+  model: Yolo = Yolo()
   train_data: DataConfig = DataConfig(is_training=True)
   validation_data: DataConfig = DataConfig(is_training=False)
   weight_decay: float = 5e-4
   annotation_file: Optional[str] = None
   gradient_clip_norm: float = 0.0
-  per_category_metrics: bool = False
-
-  load_darknet_weights: bool = False
-  darknet_load_decoder: bool = False
-  init_checkpoint_modules: str = None  #'backbone'
+  
   smart_bias_lr: float = 0.0
   coco91to80: bool = False
   reduced_logs: bool = True
+  init_checkpoint_modules: str = None
+  per_category_metrics: bool = False
 
 
 @dataclasses.dataclass

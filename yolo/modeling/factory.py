@@ -68,64 +68,65 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
 
 
 def build_yolo_filter(model_config: yolo.Yolo, decoder: YoloDecoder, masks,
-                      xy_scales, path_scales):
-
-  def _build(values):
-    if "all" in values and values["all"] is not None:
-      for key in values:
-        if key != 'all':
-          values[key] = values["all"]
-    return values
-
+                      xy_scales, path_scales, anchor_boxes):
   model = YoloLayer(
       masks=masks,
       classes=model_config.num_classes,
-      anchors=model_config._boxes,
-      iou_thresh=model_config.filter.iou_thresh,
-      nms_thresh=model_config.filter.nms_thresh,
-      max_boxes=model_config.filter.max_boxes,
-      nms_type=model_config.filter.nms_type,
+      anchors=anchor_boxes,
+      iou_thresh=model_config.detection_generator.iou_thresh,
+      nms_thresh=model_config.detection_generator.nms_thresh,
+      max_boxes=model_config.detection_generator.max_boxes,
+      pre_nms_points=model_config.detection_generator.pre_nms_points,
+      nms_type=model_config.detection_generator.nms_type,
+      box_type=model_config.detection_generator.box_type.get(),
       path_scale=path_scales,
       scale_xy=xy_scales,
-      label_smoothing=model_config.filter.label_smoothing,
-      pre_nms_points=model_config.filter.pre_nms_points,
-      use_scaled_loss=model_config.filter.use_scaled_loss,
-      update_on_repeat=model_config.filter.update_on_repeat,
-      truth_thresh=_build(model_config.filter.truth_thresh.as_dict()),
-      loss_type=_build(model_config.filter.loss_type.as_dict()),
-      max_delta=_build(model_config.filter.max_delta.as_dict()),
-      box_type=_build(model_config.filter.box_type.as_dict()),
-      iou_normalizer=_build(model_config.filter.iou_normalizer.as_dict()),
-      cls_normalizer=_build(model_config.filter.cls_normalizer.as_dict()),
-      obj_normalizer=_build(model_config.filter.obj_normalizer.as_dict()),
-      ignore_thresh=_build(model_config.filter.ignore_thresh.as_dict()),
-      objectness_smooth=_build(model_config.filter.objectness_smooth.as_dict()))
+      label_smoothing=model_config.loss.label_smoothing,
+      use_scaled_loss=model_config.loss.use_scaled_loss,
+      update_on_repeat=model_config.loss.update_on_repeat,
+      truth_thresh=model_config.loss.truth_thresh.get(),
+      loss_type=model_config.loss.box_loss_type.get(),
+      max_delta=model_config.loss.max_delta.get(),
+      iou_normalizer=model_config.loss.iou_normalizer.get(),
+      cls_normalizer=model_config.loss.cls_normalizer.get(),
+      obj_normalizer=model_config.loss.obj_normalizer.get(),
+      ignore_thresh=model_config.loss.ignore_thresh.get(),
+      objectness_smooth=model_config.loss.objectness_smooth.get())
   return model
 
 
-def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
+def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):  
+  min_level = min(map(int, input_specs.keys()))
+  max_level = max(map(int, input_specs.keys()))
   head = YoloHead(
-      min_level=model_config.min_level,
-      max_level=model_config.max_level,
+      min_level=min_level,
+      max_level=max_level,
       classes=model_config.num_classes,
       boxes_per_level=model_config.boxes_per_scale,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization,
-      smart_bias=model_config.smart_bias)
+      smart_bias=model_config.head.smart_bias)
   return head
 
 
-def build_yolo(input_specs, model_config, l2_regularization, masks, xy_scales,
-               path_scales):
+def build_yolo(input_specs, 
+               model_config, 
+               l2_regularization, 
+               masks, 
+               xy_scales,
+               path_scales, 
+               anchor_boxes):
 
-  # backbone = factory.build_backbone(input_specs, model_config,
-  #                                   l2_regularization)
-  backbone = build_darknet(input_specs, model_config, l2_regularization)
+  backbone = factory.build_backbone(input_specs, 
+                                    model_config.backbone,
+                                    model_config.norm_activation,
+                                    l2_regularization)
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
-  filter = build_yolo_filter(model_config, head, masks, xy_scales, path_scales)
+  filter = build_yolo_filter(model_config, head, masks, 
+                             xy_scales, path_scales, anchor_boxes)
 
   model = yolo_model.Yolo(
       backbone=backbone, decoder=decoder, head=head, filter=filter)

@@ -50,13 +50,47 @@ class YoloTask(base_task.Task):
     self._metrics = []
     self._use_reduced_logs = self.task_config.reduced_logs
 
+    self._get_boxes()
+    self._get_masks()
+
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     return
+
+  def _get_boxes(self, gen_boxes=False):
+    """Checks for boxes or calls kmeans to auto generate a set of boxes"""
+    boxes = self.task_config.model.get_boxes()
+    anchor_limits = self.task_config.model.anchor_free_limits
+    input_shape = self.task_config.model.input_size.copy()[:2]
+
+    if anchor_limits is not None:
+      self.task_config.model.boxes_per_scale = 1
+      masks, _, _ = self._get_masks()
+      boxes = [list(input_shape)] * len(masks.keys())
+      
+    return (boxes, anchor_limits)
+
+  def _get_masks(self):
+    start = 0
+    masks = {}
+    backbone = self.task_config.model.backbone.get()
+    params = self.task_config.model
+
+    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
+      for i in range(backbone.min_level, backbone.max_level + 1):
+        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
+        start += params.boxes_per_scale
+
+      self._masks = masks
+      self._path_scales = params.detection_generator.path_scales.get()
+      self._x_y_scales = params.detection_generator.scale_xy.get()
+
+    return self._masks, self._path_scales, self._x_y_scales
+
 
   def build_model(self):
     """get an instance of Yolo v3 or v4"""
     from yolo.modeling.factory import build_yolo
-    params = self.task_config.train_data
+
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
@@ -65,14 +99,13 @@ class YoloTask(base_task.Task):
     boxes, anchor_free = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
-    if model_base_cfg.dynamic_conv:
-      input_size[0], input_size[1] = None, None
+
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
 
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
-                               masks, xy_scales, path_scales)
+                               masks, xy_scales, path_scales, boxes)
 
     model.summary(print_fn = logging.info)
     logging.info(f"Anchor Boxes: {boxes}")
@@ -105,29 +138,6 @@ class YoloTask(base_task.Task):
             params.decoder.type))
     return decoder
 
-  def _get_masks(self):
-
-    def _build(values):
-      if "all" in values and values["all"] is not None:
-        for key in values:
-          if key != 'all':
-            values[key] = values["all"]
-      return values
-
-    start = 0
-    masks = {}
-    params = self.task_config.model
-
-    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
-      for i in range(params.min_level, params.max_level + 1):
-        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
-        start += params.boxes_per_scale
-
-      self._masks = masks
-      self._path_scales = _build(params.filter.path_scales.as_dict())
-      self._x_y_scales = _build(params.filter.scale_xy.as_dict())
-
-    return self._masks, self._path_scales, self._x_y_scales
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
@@ -190,7 +200,6 @@ class YoloTask(base_task.Task):
         aug_rand_hue=params.parser.aug_rand_hue,
         aug_rand_angle=params.parser.aug_rand_angle,
         max_num_instances=params.parser.max_num_instances,
-        dynamic_conv=model.dynamic_conv,
         scale_xy=xy_scales,
         strides=path_scales,
         area_thresh=params.parser.area_thresh,
@@ -369,89 +378,35 @@ class YoloTask(base_task.Task):
       ret_dict.update(res)
     return ret_dict
 
-  def _get_boxes(self, gen_boxes=False):
-    """Checks for boxes or calls kmeans to auto generate a set of boxes"""
-    return (self.task_config.model._boxes,
-            self.task_config.model.anchor_free_limits)
-
   def initialize(self, model: tf.keras.Model):
-    """initialize the weights of the model"""
-    if self.task_config.load_darknet_weights:
-      from yolo.utils import DarkNetConverter
-      from yolo.utils._darknet2tf.load_weights import split_converter
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_decoder
-      from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
-      from yolo.utils.downloads.file_manager import download
+    """Loading pretrained checkpoint."""
+    if not self.task_config.init_checkpoint:
+      logging.info("Training from Scratch.")
+      return
 
-      weights_file = self.task_config.model.darknet_weights_file
-      config_file = self.task_config.model.darknet_weights_cfg
+    ckpt_dir_or_file = self.task_config.init_checkpoint
+    if tf.io.gfile.isdir(ckpt_dir_or_file):
+      ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
 
-      if ('cache' not in weights_file and 'cache' not in config_file):
-        list_encdec = DarkNetConverter.read(config_file, weights_file)
-      else:
-        import os
-        path = os.path.abspath('cache')
-        if (not os.path.isdir(path)):
-          os.mkdir(path)
-
-        cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
-        if not os.path.isfile(cfg):
-          download(config_file.split('/')[-1])
-
-        wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
-        if not os.path.isfile(wgt):
-          download(weights_file.split('/')[-1])
-
-        list_encdec = DarkNetConverter.read(cfg, wgt)
-
-      splits = model.backbone._splits
-      if 'neck_split' in splits.keys():
-        encoder, neck, decoder = split_converter(list_encdec,
-                                                 splits['backbone_split'],
-                                                 splits['neck_split'])
-      else:
-        encoder, decoder = split_converter(list_encdec,
-                                           splits['backbone_split'])
-        neck = None
-
-      load_weights_backbone(model.backbone, encoder)
-
-      if self.task_config.darknet_load_decoder:
-        cfgheads = load_weights_decoder(
-            model.decoder, [neck, decoder],
-            csp=self._task_config.model.base.decoder.type == 'csp')
-        load_weights_prediction_layers(cfgheads, model.head)
-
+    # Restoring checkpoint.
+    if self.task_config.init_checkpoint_modules == 'all':
+      ckpt = tf.train.Checkpoint(model=model)
+      status = ckpt.restore(ckpt_dir_or_file)
+      status.expect_partial().assert_existing_objects_matched()
+    elif self.task_config.init_checkpoint_modules == 'backbone':
+      ckpt = tf.train.Checkpoint(backbone=model.backbone)
+      status = ckpt.restore(ckpt_dir_or_file)
+      status.expect_partial().assert_existing_objects_matched()
+    elif self.task_config.init_checkpoint_modules == 'decoder':
+      ckpt = tf.train.Checkpoint(
+          backbone=model.backbone, decoder=model.decoder)
+      status = ckpt.restore(ckpt_dir_or_file)
+      status.expect_partial()  #.assert_existing_objects_matched()
     else:
-      """Loading pretrained checkpoint."""
-      if not self.task_config.init_checkpoint:
-        logging.info("Training from Scratch.")
-        return
+      assert "Only 'all' or 'backbone' can be used to initialize the model."
 
-      ckpt_dir_or_file = self.task_config.init_checkpoint
-      if tf.io.gfile.isdir(ckpt_dir_or_file):
-        ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
-
-      # Restoring checkpoint.
-      if self.task_config.init_checkpoint_modules == 'all':
-        ckpt = tf.train.Checkpoint(model=model)
-        status = ckpt.restore(ckpt_dir_or_file)
-        status.expect_partial().assert_existing_objects_matched()
-      elif self.task_config.init_checkpoint_modules == 'backbone':
-        ckpt = tf.train.Checkpoint(backbone=model.backbone)
-        status = ckpt.restore(ckpt_dir_or_file)
-        status.expect_partial().assert_existing_objects_matched()
-      elif self.task_config.init_checkpoint_modules == 'decoder':
-        ckpt = tf.train.Checkpoint(
-            backbone=model.backbone, decoder=model.decoder)
-        status = ckpt.restore(ckpt_dir_or_file)
-        status.expect_partial()  #.assert_existing_objects_matched()
-      else:
-        assert "Only 'all' or 'backbone' can be used to initialize the model."
-
-      logging.info('Finished loading pretrained checkpoint from %s',
-                   ckpt_dir_or_file)
+    logging.info('Finished loading pretrained checkpoint from %s',
+                  ckpt_dir_or_file)
 
   def _wrap_optimizer(self, optimizer, runtime_config):
     if runtime_config and runtime_config.loss_scale:
@@ -478,7 +433,7 @@ class YoloTask(base_task.Task):
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
     ema = opt_factory._use_ema
     opt_factory._use_ema = False
-    if (self._task_config.model.smart_bias):
+    if (self._task_config.model.head.smart_bias):
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer.set_bias_lr(
           opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))

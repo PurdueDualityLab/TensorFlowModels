@@ -4,58 +4,52 @@ runtime:
   num_gpus: 1
 task:
   coco91to80: True
-  smart_bias_lr: 0.0
   reduced_logs: True
   model:
-    base:
-      backbone:
-        type: 'darknet'
-        darknet:
-          model_id: 'cspdarknettiny'
-          use_separable_conv: True
-      decoder:
-        version: v4
-        type: tiny
-        use_separable_conv: True
-    num_classes: 80
-    smart_bias: true
-    boxes: ['[640, 640]',
-            '[640, 640]',
-            '[640, 640]']
-    anchor_free_limits: [64, 128]
     input_size: [640, 640, 3]
-    boxes_per_scale: 1
-    max_level: 5
-    min_level: 3
-    norm_activation:
-      activation: mish
-      norm_epsilon: 0.0001
-      norm_momentum: 0.97
-      use_sync_bn: true
-    filter:
-      loss_type:  
-        'all': iou
-      iou_normalizer: 
-        'all': 5.0
-      cls_normalizer: 
-        'all': 1.0
-      ignore_thresh:
-        'all': 0.0
-      obj_normalizer: 
-        'all': 1.0
+    backbone:
+      type: 'darknet'
+      darknet:
+        model_id: 'cspdarknettiny'
+        max_level: 5
+        min_level: 3
+        use_separable_conv: True
+    decoder:
+      version: v4
+      type: tiny
+      use_separable_conv: True
+    detection_generator:
       box_type:
         'all': anchor_free
-      objectness_smooth: 
-        'all': 0.0
       scale_xy:
         'all': 1.0
       max_boxes: 300
       nms_type: greedy
       iou_thresh: 0.001
       nms_thresh: 0.60
-      pre_nms_points: 5000
+    loss:
       use_scaled_loss: true
       update_on_repeat: true
+      box_loss_type:  
+        'all': iou
+      ignore_thresh:
+        'all': 0.0
+      iou_normalizer: 
+        'all': 5.0
+      cls_normalizer: 
+        'all': 1.0
+      obj_normalizer: 
+        'all': 1.0
+      objectness_smooth: 
+        'all': 0.0
+    norm_activation:
+      activation: mish
+      norm_epsilon: 0.0001
+      norm_momentum: 0.97
+      use_sync_bn: true
+    num_classes: 80
+    smart_bias: true
+    anchor_free_limits: [64, 128]
   train_data:
     global_batch_size: 16
     dtype: float32

@@ -39,7 +39,7 @@ task:
       loss_type:  
         'all': ciou
       iou_normalizer: 
-        'all': 0.06
+        'all': 0.05
       cls_normalizer: 
         'all': 0.3
       ignore_thresh:
@@ -135,7 +135,7 @@ trainer:
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0004
+        weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:

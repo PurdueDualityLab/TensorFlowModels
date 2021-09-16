@@ -35,7 +35,7 @@ from official.modeling import performance
 FLAGS = flags.FLAGS
 
 def subdivison_adjustment(params):
-  if params.task.model.filter.nms_type == "greedy":
+  if params.task.model.detection_generator.nms_type == "greedy":
     import tensorflow as tf
     tf.config.set_soft_device_placement(True)
   return params

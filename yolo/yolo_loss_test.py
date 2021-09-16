@@ -37,12 +37,12 @@ python3.8 -m yolo.run_image
 if __name__ == "__main__":
   task, model, params = load_model(
       experiment="yolo_custom",
-      config_path=[
-          "yolo/configs/experiments/yolov4/inference/512.yaml"
-          #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
-          # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
-      ],
-      # config_path=["yolo/configs/experiments/yolov4/inference/512.yaml"],
+      # config_path=[
+      #     "yolo/configs/experiments/yolov4/inference/512.yaml"
+      #     #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
+      #     # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
+      # ],
+      config_path=["yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-nano.yaml"],
       model_dir="")
   # model_dir='/home/vbanna/Research/checkpoints/yolov4-csp/tpu/512')
   # model_dir='/home/vbanna/Research/checkpoints/250k-512-lr-special-t2')
