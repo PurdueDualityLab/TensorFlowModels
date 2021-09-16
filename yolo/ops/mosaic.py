@@ -68,7 +68,7 @@ class Mosaic(object):
           [self._output_size[1] * 2, self._output_size[0] * 2, 3])
     return cut, ishape
 
-  def _process_image(self,
+  def _augment_image(self,
                      image,
                      boxes,
                      classes,
@@ -170,9 +170,9 @@ class Mosaic(object):
     return boxes, classes
 
   # mosaic full frequency doubles model speed
-  def _im_process(self, sample, shiftx, shifty, cut, ishape):
+  def _process_image(self, sample, shiftx, shifty, cut, ishape):
     """Process and augment each image."""
-    (image, boxes, classes, is_crowd, area, crop_points) = self._process_image(
+    (image, boxes, classes, is_crowd, area, crop_points) = self._augment_image(
         sample['image'], sample['groundtruth_boxes'],
         sample['groundtruth_classes'], sample['groundtruth_is_crowd'],
         sample['groundtruth_area'], shiftx, shifty, cut)
@@ -250,10 +250,10 @@ class Mosaic(object):
 
     if domo >= (1 - self._mosaic_frequency):
       cut, ishape = self._generate_cut()
-      one = self._im_process(one, 1.0, 1.0, cut, ishape)
-      two = self._im_process(two, 0.0, 1.0, cut, ishape)
-      three = self._im_process(three, 1.0, 0.0, cut, ishape)
-      four = self._im_process(four, 0.0, 0.0, cut, ishape)
+      one = self._process_image(one, 1.0, 1.0, cut, ishape)
+      two = self._process_image(two, 0.0, 1.0, cut, ishape)
+      three = self._process_image(three, 1.0, 0.0, cut, ishape)
+      four = self._process_image(four, 0.0, 0.0, cut, ishape)
       patch1 = self._patch2(one, two)
       patch2 = self._patch2(three, four)
       stitched = self._patch(patch1, patch2)
