@@ -32,7 +32,7 @@ task:
       use_scaled_loss: true
       update_on_repeat: true
       box_loss_type:  
-        'all': ciou
+        'all': iou
       ignore_thresh:
         'all': 0.0
       iou_normalizer: 
