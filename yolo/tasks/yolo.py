@@ -134,7 +134,7 @@ class YoloTask(base_task.Task):
 
     base_config = dict(
         letter_box=params.parser.letter_box,
-        aug_rand_transalate=params.parser.aug_rand_translate,
+        aug_rand_translate=params.parser.aug_rand_translate,
         aug_rand_angle=params.parser.aug_rand_angle,
         aug_rand_perspective=params.parser.aug_rand_perspective,
         random_pad=params.parser.random_pad,

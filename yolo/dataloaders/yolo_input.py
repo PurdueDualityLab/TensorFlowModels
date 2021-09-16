@@ -65,7 +65,7 @@ class Parser(parser.Parser):
       jitter=0.0,
       aug_scale_min=1.0,
       aug_scale_max=1.0,
-      aug_rand_transalate=0.0,
+      aug_rand_translate=0.0,
       aug_rand_perspective=0.0,
       aug_rand_angle=0.0,
       anchor_t=4.0,
@@ -78,7 +78,7 @@ class Parser(parser.Parser):
       seed=None,
   ):
     """Initializes parameters for parsing annotations in the dataset.
-    
+
     Args:
       output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
@@ -114,7 +114,7 @@ class Parser(parser.Parser):
         scale jitter. 
       aug_scale_max: `float` indicating the maximum scaling value for image 
         scale jitter.
-      aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
+      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum 
         amount to randomly translate an image.
       aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
         how much to prespective warp the image.
@@ -171,7 +171,7 @@ class Parser(parser.Parser):
     self._jitter = 0.0 if jitter is None else jitter
     self._aug_scale_min = aug_scale_min
     self._aug_scale_max = aug_scale_max
-    self._aug_rand_translate = aug_rand_transalate
+    self._aug_rand_translate = aug_rand_translate
     self._aug_rand_perspective = aug_rand_perspective
 
     # Image spatial distortion

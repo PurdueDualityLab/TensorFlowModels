@@ -20,7 +20,7 @@ class Mosaic(object):
                aug_scale_max=1.0,
                aug_rand_angle=0.0,
                aug_rand_perspective=0.0,
-               aug_rand_transalate=0.0,
+               aug_rand_translate=0.0,
                random_pad=False,
                area_thresh=0.1,
                seed=None):
@@ -48,7 +48,7 @@ class Mosaic(object):
         scale jitter.
       aug_rand_angle: `float` indicating the maximum angle value for 
         angle. angle will be changes between 0 and value.
-      aug_rand_transalate: `float` ranging from 0 to 1 indicating the maximum 
+      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum 
         amount to randomly translate an image.
       aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
         how much to prespective warp the image.
@@ -74,7 +74,7 @@ class Mosaic(object):
     self._aug_scale_min = aug_scale_min
     self._aug_scale_max = aug_scale_max
     self._random_pad = random_pad
-    self._aug_rand_transalate = aug_rand_transalate
+    self._aug_rand_translate = aug_rand_translate
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_perspective = aug_rand_perspective
 
@@ -166,7 +166,7 @@ class Mosaic(object):
         image, [self._output_size[0], self._output_size[1]],
         scale_min=self._aug_scale_min,
         scale_max=self._aug_scale_max,
-        translate=self._aug_rand_transalate,
+        translate=self._aug_rand_translate,
         degrees=self._aug_rand_angle,
         perspective=self._aug_rand_perspective,
         random_pad=self._random_pad,
