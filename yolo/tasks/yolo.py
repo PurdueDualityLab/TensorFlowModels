@@ -13,12 +13,12 @@ from official.vision.beta.evaluation import coco_evaluator
 from official.vision.beta.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
-from yolo.configs import yolo as exp_cfg
 
 from yolo import optimization
 from yolo.ops import mosaic
-from yolo.dataloaders import yolo_input
 from yolo.ops import preprocessing_ops
+from yolo.dataloaders import yolo_input
+from yolo.configs import yolo as exp_cfg
 
 from tensorflow.keras import mixed_precision
 
@@ -36,20 +36,32 @@ class YoloTask(base_task.Task):
 
   def __init__(self, params, logging_dir: str = None):
     super().__init__(params, logging_dir)
-    self._loss_fn = None
-
-    self._model = None
     self._masks = None
-    self._path_scales = None
-    self._x_y_scales = None
     self.coco_metric = None
-
+    self._loss_fn = None
+    self._model = None
     self._metrics = []
 
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     self._get_boxes()
     self._get_masks()
     return
+
+  def _get_masks(self):
+    start = 0
+    masks = {}
+    backbone = self.task_config.model.backbone.get()
+    params = self.task_config.model
+
+    if self._masks is None:
+      for i in range(backbone.min_level, backbone.max_level + 1):
+        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
+        start += params.boxes_per_scale
+      self._masks = masks
+    
+    path_scales = params.detection_generator.path_scales.get()
+    scale_xy = params.detection_generator.scale_xy.get()
+    return self._masks, path_scales, scale_xy
 
   def _get_boxes(self, gen_boxes=False):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
@@ -61,26 +73,7 @@ class YoloTask(base_task.Task):
       self.task_config.model.boxes_per_scale = 1
       masks, _, _ = self._get_masks()
       boxes = [list(input_shape)] * len(masks.keys())
-      
     return (boxes, anchor_limits)
-
-  def _get_masks(self):
-    start = 0
-    masks = {}
-    backbone = self.task_config.model.backbone.get()
-    params = self.task_config.model
-
-    if self._masks is None or self._path_scales is None or self._x_y_scales is None:
-      for i in range(backbone.min_level, backbone.max_level + 1):
-        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
-        start += params.boxes_per_scale
-
-      self._masks = masks
-      self._path_scales = params.detection_generator.path_scales.get()
-      self._x_y_scales = params.detection_generator.scale_xy.get()
-
-    return self._masks, self._path_scales, self._x_y_scales
-
 
   def build_model(self):
     """Build an instance of Yolo v3 or v4"""
@@ -89,7 +82,7 @@ class YoloTask(base_task.Task):
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
-    masks, path_scales, xy_scales = self._get_masks()
+    masks, path_scales, scale_xy = self._get_masks()
     boxes, anchor_free = self._get_boxes()
 
     input_size = model_base_cfg.input_size.copy()
@@ -97,7 +90,7 @@ class YoloTask(base_task.Task):
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
     model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
-                               masks, xy_scales, path_scales, boxes)
+                               masks, scale_xy, path_scales, boxes)
 
     model.summary(print_fn = logging.info)
     if anchor_free is not None:
@@ -139,7 +132,7 @@ class YoloTask(base_task.Task):
     decoder = self.get_decoder(params)
     model = self.task_config.model
 
-    masks, path_scales, xy_scales = self._get_masks()
+    masks, path_scales, scale_xy = self._get_masks()
     anchors, anchor_free_limits = self._get_boxes(gen_boxes=params.is_training)
 
     base_config = dict(
@@ -177,7 +170,7 @@ class YoloTask(base_task.Task):
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         max_num_instances=params.parser.max_num_instances,
-        scale_xy=xy_scales,
+        scale_xy=scale_xy,
         strides=path_scales,
         darknet=model.darknet_based_model,
         best_match_only=params.parser.best_match_only,
