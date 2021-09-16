@@ -244,59 +244,9 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
   return image
 
 
-def random_window_crop(image,
-                       target_height,
-                       target_width,
-                       translate=0.0,
-                       seed=None):
-  """Takes a random crop of the image to the target height and width.
-
-  This function will take a ranodm crop of the image such that the output 
-  image is target_width and target_height. If the input image is smaller than 
-  target_width and target_height we pass the respective axis along unaltered.
-  
-  Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    target_height: `int` indicating the espected output height of the image.
-    target_width: `int` indicating the espected output width of the image.
-    translate: `float` indicating the maximum delta at which you can take a 
-      random crop relative to the center of the image. 
-  
-  Returns:
-    image: The cropped image in the same datatype as the input image.
-    info: `float` tensor that is applied to the boxes in order to select the 
-      boxes still contained within the image.
-  """
-  ishape = tf.shape(image)
-  th = target_height if target_height < ishape[0] else ishape[0]
-  tw = target_width if target_width < ishape[1] else ishape[1]
-  crop_size = tf.convert_to_tensor([th, tw, -1])
-
-  crop_offset = ishape - crop_size
-  crop_offset = tf.convert_to_tensor(
-      [crop_offset[0] // 2, crop_offset[1] // 2, 0])
-  shift = tf.convert_to_tensor([
-      rand_uniform_strong(-translate, translate, seed=seed),
-      rand_uniform_strong(-translate, translate, seed=seed), 0
-  ])
-  crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, shift.dtype),
-                                      crop_offset.dtype)
-  cropped_image = tf.slice(image, crop_offset, crop_size)
-
-  scale = tf.cast(ishape[:2] / ishape[:2], tf.float32)
-  offset = tf.cast(crop_offset[:2], tf.float32)
-
-  info = tf.stack([
-      tf.cast(ishape[:2], tf.float32),
-      tf.cast(crop_size[:2], tf.float32), scale, offset
-  ],
-                  axis=0)
-  return cropped_image, info
-
-
-def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
+def mosaic_cut(image, original_width, original_height, width, height, center, ptop, pleft, pbottom, pright,
                shiftx, shifty):
-  """Generates a random center location to use for the mosaic operation. 
+  """Use a provided center to take slices of 4 images to apply mosaic. 
   
   Given a center location, cut the input image into a slice that will be 
   concatnated with other slices with the same center in order to construct 
@@ -304,10 +254,10 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
   
   Args: 
     image: Tensor of shape [None, None, 3] that needs to be altered.
-    ow: `float` value indicating the orignal width of the image.
-    oh: `float` value indicating the orignal height of the image.
-    w: `float` value indicating the final width image.
-    h: `float` value indicating the final height image.
+    original_width: `float` value indicating the orignal width of the image.
+    original_height: `float` value indicating the orignal height of the image.
+    width: `float` value indicating the final width image.
+    height: `float` value indicating the final height image.
     center: `float` value indicating the desired center of the final patched 
       image.
     ptop: `float` value indicating the top of the image without padding.
@@ -328,19 +278,19 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
     return [tf.cast(value, dtype) for value in values]
   
   with tf.name_scope('mosaic_cut'):
-    center = tf.cast(center, w.dtype)
-    zero = tf.cast(0.0, w.dtype)
+    center = tf.cast(center, width.dtype)
+    zero = tf.cast(0.0, width.dtype)
     cut_x, cut_y = center[1], center[0]
 
     # Select the crop of the image to use
     left_shift = tf.minimum(
-        tf.minimum(cut_x, tf.maximum(zero, -pleft * w / ow)), w - cut_x)
+        tf.minimum(cut_x, tf.maximum(zero, -pleft * width / original_width)), width - cut_x)
     top_shift = tf.minimum(
-        tf.minimum(cut_y, tf.maximum(zero, -ptop * h / oh)), h - cut_y)
+        tf.minimum(cut_y, tf.maximum(zero, -ptop * height / original_height)), height - cut_y)
     right_shift = tf.minimum(
-        tf.minimum(w - cut_x, tf.maximum(zero, -pright * w / ow)), cut_x)
+        tf.minimum(width - cut_x, tf.maximum(zero, -pright * width / original_width)), cut_x)
     bot_shift = tf.minimum(
-        tf.minimum(h - cut_y, tf.maximum(zero, -pbottom * h / oh)), cut_y)
+        tf.minimum(height - cut_y, tf.maximum(zero, -pbottom * height / original_height)), cut_y)
 
     (left_shift, 
     top_shift, 
@@ -355,13 +305,13 @@ def mosaic_cut(image, ow, oh, w, h, center, ptop, pleft, pbottom, pright,
       crop_size = [cut_y, cut_x, zero-1]
     elif shiftx == 1.0 and shifty == 0.0:
       crop_offset = [top_shift, cut_x - right_shift, zero]
-      crop_size = [cut_y, w - cut_x, zero-1]
+      crop_size = [cut_y, width - cut_x, zero-1]
     elif shiftx == 0.0 and shifty == 1.0:
       crop_offset = [cut_y - bot_shift, left_shift, zero]
-      crop_size = [h - cut_y, cut_x, zero-1]
+      crop_size = [height - cut_y, cut_x, zero-1]
     elif shiftx == 1.0 and shifty == 1.0:
       crop_offset = [cut_y - bot_shift, cut_x - right_shift, zero]
-      crop_size = [h - cut_y, w - cut_x, zero-1]
+      crop_size = [height - cut_y, width - cut_x, zero-1]
 
     # Contain and crop the image.
     ishape = tf.cast(tf.shape(image)[:2], crop_size[0].dtype)
@@ -449,37 +399,37 @@ def resize_and_jitter_image(image,
     original_dtype, original_dims = image.dtype, tf.shape(image)[:2]
 
     # original width, original height, desigered width, desired height
-    ow, oh, w, h = cast(
+    original_width, original_height, width, height = cast(
         [original_dims[1], original_dims[0], desired_size[1], desired_size[0]],
         tf.float32) 
 
     # Compute the random delta width and height etc. and randomize the
     # location of the corner points.
-    dw = ow * jitter # delta width
-    dh = oh * jitter # delta height 
-    pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed) # point left 
-    pright = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed) # point right 
-    ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed) # point top
-    pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed) # point bottom
+    jitter_width = original_width * jitter 
+    jitter_height = original_height * jitter  
+    pleft = rand_uniform_strong(-jitter_width, jitter_width, jitter_width.dtype, seed=seed) 
+    pright = rand_uniform_strong(-jitter_width, jitter_width, jitter_width.dtype, seed=seed) 
+    ptop = rand_uniform_strong(-jitter_height, jitter_height, jitter_height.dtype, seed=seed) 
+    pbottom = rand_uniform_strong(-jitter_height, jitter_height, jitter_height.dtype, seed=seed)
 
     # Letter box the image.
     if letter_box == True or letter_box is None:
-      image_aspect_ratio, input_aspect_ratio = ow / oh, w / h
+      image_aspect_ratio, input_aspect_ratio = original_width / original_height, width / height
       distorted_aspect = image_aspect_ratio / input_aspect_ratio
 
       delta_h, delta_w = 0.0, 0.0
       pullin_h, pullin_w = 0.0, 0.0
       if distorted_aspect > 1:
-        delta_h = ((ow / input_aspect_ratio) - oh) / 2
+        delta_h = ((original_width / input_aspect_ratio) - original_height) / 2
       else:
-        delta_w = ((oh * input_aspect_ratio) - ow) / 2
+        delta_w = ((original_height * input_aspect_ratio) - original_width) / 2
 
       if letter_box is None:
-        rwidth = ow + delta_w + delta_w
-        rheight = oh + delta_h + delta_h
-        if rheight < h and rwidth < w:
-          pullin_h = ((h - rheight) * rheight / h) / 2
-          pullin_w = ((w - rwidth) * rwidth / w) / 2
+        rwidth = original_width + delta_w + delta_w
+        rheight = original_height + delta_h + delta_h
+        if rheight < height and rwidth < width:
+          pullin_h = ((height - rheight) * rheight / height) / 2
+          pullin_w = ((width - rwidth) * rwidth / width) / 2
 
       ptop = ptop - delta_h - pullin_h
       pbottom = pbottom - delta_h - pullin_h
@@ -488,10 +438,10 @@ def resize_and_jitter_image(image,
 
     # Compute the width and height to crop or pad too, and clip all crops to
     # to be contained within the image.
-    swidth = ow - pleft - pright
-    sheight = oh - ptop - pbottom
+    swidth = original_width - pleft - pright
+    sheight = original_height - ptop - pbottom
     src_crop = intersection([ptop, pleft, sheight + ptop, swidth + pleft],
-                            [0, 0, oh, ow])
+                            [0, 0, original_height, original_width])
 
     # Random padding used for mosaic.
     h_ = src_crop[2] - src_crop[0]
@@ -529,13 +479,13 @@ def resize_and_jitter_image(image,
 
     if crop_only:
       if not letter_box:
-        h_, w_ = cast(get_image_shape(cropped_image), w.dtype)
-        w = tf.cast(tf.round((w_ * w) / swidth), tf.int32)
-        h = tf.cast(tf.round((h_ * h) / sheight), tf.int32)
-        cropped_image = tf.image.resize(cropped_image, [h, w], method=method)
+        h_, w_ = cast(get_image_shape(cropped_image), width.dtype)
+        width = tf.cast(tf.round((w_ * width) / swidth), tf.int32)
+        height = tf.cast(tf.round((h_ * height) / sheight), tf.int32)
+        cropped_image = tf.image.resize(cropped_image, [height, width], method=method)
         cropped_image = tf.cast(cropped_image, original_dtype)
       return cropped_image, infos, cast(
-          [ow, oh, w, h, ptop, pleft, pbottom, pright], tf.int32)
+          [original_width, original_height, width, height, ptop, pleft, pbottom, pright], tf.int32)
 
     # Pad the image to desired size.
     image_ = tf.pad(
@@ -565,10 +515,10 @@ def resize_and_jitter_image(image,
 
     image_ = tf.cast(image_, original_dtype)
     if cut is not None:
-      image_, crop_info = mosaic_cut(image_, ow, oh, w, h, cut, ptop, pleft,
+      image_, crop_info = mosaic_cut(image_, original_width, original_height, width, height, cut, ptop, pleft,
                                      pbottom, pright, shiftx, shifty)
       infos.append(crop_info)
-    return image_, infos, cast([ow, oh, w, h, ptop, pleft, pbottom, pright],
+    return image_, infos, cast([original_width, original_height, width, height, ptop, pleft, pbottom, pright],
                                tf.float32)
 
 
