@@ -20,9 +20,9 @@ task:
       smart_bias: true
     detection_generator:
       box_type:
-        'all': scaled
+        'all': anchor_free
       scale_xy:
-        'all': 2.0
+        'all': 1.0
       max_boxes: 300
       nms_type: greedy
       iou_thresh: 0.001
@@ -31,7 +31,7 @@ task:
       use_scaled_loss: true
       update_on_repeat: true
       box_loss_type:  
-        'all': iou
+        'all': ciou
       ignore_thresh:
         'all': 0.0
       iou_normalizer: 

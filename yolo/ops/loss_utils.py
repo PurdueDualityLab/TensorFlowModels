@@ -504,7 +504,7 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
 
 
 def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
-                             scale_xy):
+                             scale_xy, darknet = False):
   """Decode models boxes using FPN stride under anchor free conditions."""
   # split the boxes
   pred_xy = encoded_boxes[..., 0:2]
@@ -514,21 +514,30 @@ def _anchor_free_scale_boxes(encoded_boxes, width, height, stride, grid_points,
   scaler = tf.convert_to_tensor([height, width, height, width])
   scale_xy = tf.cast(scale_xy, encoded_boxes.dtype)
 
+  scale_down = lambda x, y: x/y
+  scale_up = lambda x, y: x*y
+  if darknet:
+    scale_down = tf.grad_pass_through(scale_down)
+    scale_up = tf.grad_pass_through(scale_up)
+
   # scale the centers and find the offset of each box relative to
   # their center pixel
   pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
-  box_xy = (grid_points + pred_xy) * stride
+  box_xy = (grid_points + pred_xy) 
 
   # scale the width and height of the predictions and corlate them
   # to anchor boxes
-  box_wh = tf.math.exp(pred_wh) * stride
+  box_wh = tf.math.exp(pred_wh) 
 
   # build the final predicted box
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
-  pred_box = scaled_box / (scaler * stride)
+  
+  # properly scaling boxes gradeints
+  scaled_box = scale_up(scaled_box, stride)
+  pred_box = scale_down(scaled_box , (scaler * stride))
   return (scaler, scaled_box, pred_box)
 
 
@@ -577,7 +586,7 @@ def get_predicted_box(width,
   if box_type == 'anchor_free':
     (scaler, scaled_box,
      pred_box) = _anchor_free_scale_boxes(encoded_boxes, width, height, stride,
-                                          grid_points, scale_xy)
+                                          grid_points, scale_xy, darknet = darknet)
   elif darknet:
     # if we are using the darknet loss we shoud not propagate the
     # decoding of the box. _darknet fucntions will return 4 values but the 
