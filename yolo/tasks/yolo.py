@@ -215,7 +215,6 @@ class YoloTask(base_task.Task):
       metrics.append(ListMetrics(metric_names[key], name=key))
 
     self._metrics = metrics
-
     if not training:
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=self.task_config.annotation_file,

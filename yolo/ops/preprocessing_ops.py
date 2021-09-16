@@ -38,7 +38,6 @@ def set_random_seeds(seed=0):
 def get_pad_value():
   return PAD_VALUE
 
-
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
   """A unified fucntion for consistant random number generation. 
 
