@@ -105,6 +105,12 @@ class Mosaic(object):
           [self._output_size[1] * 2, self._output_size[0] * 2, 3])
     return cut, ishape
 
+  def _select_ind(self, inds, *args):
+    items = []
+    for item in args:
+      items.append(tf.gather(item, inds))
+    return items
+
   def _augment_image(self,
                      image,
                      boxes,
@@ -120,7 +126,7 @@ class Mosaic(object):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    #augment the image wihtout resizing
+    #augment the image without resizing
     image, infos, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],
         random_pad=False,
@@ -139,9 +145,7 @@ class Mosaic(object):
         shuffle_boxes=False,
         augment=True,
         seed=self._seed)
-    classes = tf.gather(classes, inds)
-    is_crowd = tf.gather(is_crowd, inds)
-    area = tf.gather(area, inds)
+    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)
     return image, boxes, classes, is_crowd, area, crop_points
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
@@ -165,7 +169,11 @@ class Mosaic(object):
       boxes = box_ops.denormalize_boxes(boxes, shape[:2])
       boxes = boxes + tf.cast([ch, cw, ch, cw], boxes.dtype)
       boxes = box_ops.clip_boxes(boxes, shape[:2])
+      inds = box_ops.get_non_empty_box_indices(boxes)
+
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
+      boxes, classes, is_crowd, area = self._select_ind(inds, boxes, classes, is_crowd, area)
+
 
     # warp and scale the fully stitched sample 
     image, _, affine = preprocessing_ops.affine_warp_image(
@@ -184,9 +192,7 @@ class Mosaic(object):
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, None, affine=affine, area_thresh=self._area_thresh, 
         seed=self._seed)
-    classes = tf.gather(classes, inds)
-    is_crowd = tf.gather(is_crowd, inds)
-    area = tf.gather(area, inds)
+    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)
     return image, boxes, classes, is_crowd, area, area
 
   def scale_boxes(self, patch, ishape, boxes, classes, xs, ys):
@@ -212,8 +218,6 @@ class Mosaic(object):
         sample['image'], sample['groundtruth_boxes'],
         sample['groundtruth_classes'], sample['groundtruth_is_crowd'],
         sample['groundtruth_area'], shiftx, shifty, cut)
-    if cut is None and ishape is None:
-      cut, ishape = self._generate_cut()
 
     (boxes, classes) = self.scale_boxes(image, ishape, boxes, classes,
                                         1 - shiftx, 1 - shifty)
@@ -223,7 +227,6 @@ class Mosaic(object):
     sample['groundtruth_classes'] = classes
     sample['groundtruth_is_crowd'] = is_crowd
     sample['groundtruth_area'] = area
-    sample['cut'] = cut
     sample['shiftx'] = shiftx
     sample['shifty'] = shifty
     sample['crop_points'] = crop_points
@@ -272,7 +275,9 @@ class Mosaic(object):
     sample['num_detections'] = tf.shape(sample['groundtruth_boxes'])[1]
     sample['is_mosaic'] = tf.cast(1.0, tf.bool)
 
-    del sample['shiftx'], sample['shifty'], sample['crop_points'], sample['cut']
+    del sample['shiftx']
+    del sample['shifty']
+    del sample['crop_points']
     return sample
 
   def _mosaic(self, one, two, three, four):
