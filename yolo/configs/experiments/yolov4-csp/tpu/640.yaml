@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
 task:
   coco91to80: True
