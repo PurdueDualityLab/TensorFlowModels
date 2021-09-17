@@ -84,26 +84,3 @@ class ExponentialMovingAverage(ema_optimizer.ExponentialMovingAverage):
         name=name,
         **kwargs)
     logging.info("EMA is enabled.")
-
-  # @tf.function
-  # def update_average(self, step: tf.Tensor):
-  #   step = tf.cast(step, tf.float32)
-  #   if step < self._start_step:
-  #     decay = tf.constant(0., tf.float32)
-  #   elif self._dynamic_decay:
-  #     decay = self._average_decay * (1 - tf.math.exp(-step / 2000))
-  #   else:
-  #     decay = self._average_decay
-
-  #   def _apply_moving(v_moving, v_normal):
-  #     new = v_moving * decay + v_normal * (1 - decay)
-  #     v_moving.assign(new)
-  #     return v_moving
-
-  #   def _update(strategy, v_moving_and_v_normal):
-  #     for v_moving, v_normal in v_moving_and_v_normal:
-  #       strategy.extended.update(v_moving, _apply_moving, args=(v_normal,))
-
-  #   ctx = tf.distribute.get_replica_context()
-  #   return ctx.merge_call(
-  #       _update, args=(zip(self._average_weights, self._model_weights),))
