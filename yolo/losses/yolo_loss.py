@@ -444,6 +444,11 @@ class ScaledLoss(YoloLossBase):
     true_box *= scale
     if self._box_type == "anchor_free":
       true_box *= self._path_stride
+    else:
+      offset = tf.cast(
+          tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
+      offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
+      true_box -= offset
     true_box = loss_utils.apply_mask(ind_mask, true_box)
     pred_box = loss_utils.apply_mask(ind_mask,
                                      tf.gather_nd(pred_box, inds, batch_dims=1))
