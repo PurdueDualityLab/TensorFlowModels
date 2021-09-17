@@ -203,7 +203,8 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     """The actual logic to apply to the raw model for optimization."""
     ...
 
-  def post_path_aggregation(self, loss, ground_truths, predictions):
+  def post_path_aggregation(self, 
+      loss, box_loss, conf_loss, class_loss, ground_truths, predictions):
     """This method allows for post processing of a loss value after the loss
     has been aggregateda across all the FPN levels."""
     return loss
@@ -507,7 +508,8 @@ class ScaledLoss(YoloLossBase):
     return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf,
             ind_mask, grid_mask)
 
-  def post_path_aggregation(self, loss, ground_truths, predictions):
+  def post_path_aggregation(self, 
+      loss, box_loss, conf_loss, class_loss, ground_truths, predictions):
     scale = tf.stop_gradient(3 / len(list(predictions.keys())))
     return loss * scale
 
@@ -634,7 +636,7 @@ class YoloLoss(object):
       # after computing the loss, scale loss as needed for aggregation
       # across FPN levels
       _loss = self._loss_dict[key].post_path_aggregation(
-          _loss, ground_truth, predictions)
+          _loss, _loss_box, _loss_conf, _loss_class, ground_truth, predictions)
 
       # after completing the scaling of the loss on each replica, handle
       # scaling the loss for mergeing the loss across replicas

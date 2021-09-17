@@ -15,7 +15,7 @@
 import tensorflow as tf
 from official.vision.beta.modeling.layers import detection_generator
 
-from yolo.ops import (loss_utils, box_ops)
+from yolo.ops import (loss_utils, box_ops, nms_ops)
 from yolo.losses import yolo_loss
 
 
@@ -245,6 +245,20 @@ class YoloLayer(tf.keras.Model):
       boxes = tf.cast(boxes, object_scores.dtype)
       class_scores = tf.cast(class_scores, object_scores.dtype)
       object_scores = tf.cast(object_scores_, object_scores.dtype)
+    elif self._nms_type == 'tflite':
+      boxes, classes, confidence = nms_ops.nms(
+        boxes,
+        class_scores,
+        object_scores,
+        self._max_boxes,
+        self._thresh,
+        self._nms_thresh,
+        use_classes=True)
+      boxes = tf.cast(boxes, object_scores.dtype)
+      class_scores = tf.cast(classes, object_scores.dtype)
+      object_scores = tf.cast(confidence, object_scores.dtype)
+      num_detections = tf.reduce_sum(
+        input_tensor=tf.cast(tf.greater(object_scores, -1), tf.int32), axis=1)
     else:
       # TPU NMS
       boxes = tf.cast(boxes, dtype=tf.float32)
