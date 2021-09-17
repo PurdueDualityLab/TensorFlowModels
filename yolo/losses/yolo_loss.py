@@ -441,7 +441,6 @@ class ScaledLoss(YoloLossBase):
 
     # Scale and shift and select the ground truth boxes
     # and predictions to the prediciton domain.
-    true_box *= scale
     if self._box_type == "anchor_free":
       true_box *= (scale * self._path_stride)
     else:
