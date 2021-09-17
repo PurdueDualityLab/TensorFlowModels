@@ -30,9 +30,7 @@ def _var_key(var):
 
 
 class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
-  r"""Gradient descent (with momentum) optimizer matching Pytorch.
-
-  """
+  """Gradient descent (with momentum) optimizer matching Pytorch."""
 
   _HAS_AGGREGATE_GRAD = True
 

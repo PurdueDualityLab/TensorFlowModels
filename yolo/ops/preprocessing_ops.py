@@ -4,7 +4,6 @@ import random
 import os
 
 import tensorflow_addons as tfa
-import tensorflow.keras.backend as K
 from yolo.ops import box_ops
 from yolo.ops import loss_utils
 from official.vision.beta.ops import box_ops as bbox_ops
