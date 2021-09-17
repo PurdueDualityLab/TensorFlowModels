@@ -1,4 +1,3 @@
-from matplotlib.pyplot import box, grid
 import tensorflow as tf
 import numpy as np
 import random
@@ -1238,7 +1237,7 @@ def get_best_anchor(y_true,
       iou_index = ((indexes[..., 0:] + 1) * ind_mask[..., 0:]) - 1
     else:
       iou_index = tf.concat([
-          K.expand_dims(indexes[..., 0], axis=-1),
+          tf.expand_dims(indexes[..., 0], axis=-1),
           ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
       ],
                             axis=-1)
