@@ -177,24 +177,43 @@ class DrawBoxes(object):
     def draw_box_name(image, box, classes, conf):
       if box[1] - box[0] == 0 or box[3] - box[2] == 0:
         return False
-      cv2.rectangle(image, (box[0], box[2]), (box[1], box[3]), colors[classes],
-                    self._thickness)
-      x = (box[1] + box[0]) // 2
-      y = (box[3] + box[2]) // 2
+      
+      x0 = int(box[0])
+      y0 = int(box[2])
+      x1 = int(box[1])
+      y1 = int(box[3])   
 
-      cv2.circle(
-          image, (x, y),
-          radius=0,
-          color=colors[classes],
-          thickness=self._thickness * 3)
+      color = colors[classes]
+      txt_bk_color = (np.array(colors[classes]) * 0.7).tolist()
+
       if conf is not None:
-        cv2.putText(image, "%s, %0.3f" % (label_names[classes], conf),
-                    (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    colors[classes], self._thickness)
+        text = '{}:{:.1f}%'.format(label_names[classes], conf * 100)
       else:
-        cv2.putText(image, "%s, %0.3f" % (label_names[classes]),
-                    (box[0], box[2] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    colors[classes], self._thickness)
+        text = '{}'.format(label_names[classes])
+      txt_color = (0, 0, 0) if np.mean(colors[classes]) > 0.5 else (255, 255, 255)
+      font = cv2.FONT_HERSHEY_SIMPLEX
+
+      txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]
+
+      cv2.rectangle(image, (x0, y0), (x1, y1), color, self._thickness)
+
+      if conf is None:
+        x = (box[1] + box[0]) // 2
+        y = (box[3] + box[2]) // 2
+        cv2.circle(
+            image, (x, y),
+            radius=0,
+            color=colors[classes],
+            thickness=self._thickness * 3)
+
+      cv2.rectangle(
+          image,
+          (x0, y0 + 1),
+          (x0 + txt_size[0] + 1, y0 + int(1.5*txt_size[1])),
+          txt_bk_color,
+          -1
+      )
+      cv2.putText(image, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=1)
       return True
 
     def draw_box(image, box, classes, conf):
