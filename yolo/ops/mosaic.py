@@ -4,6 +4,7 @@ import tensorflow_addons as tfa
 
 from yolo.ops import preprocessing_ops
 from official.vision.beta.ops import box_ops
+from official.vision.beta.ops import preprocess_ops
 
 class Mosaic(object):
   """Stitch together sets of 4 images to generate samples with more boxes."""
@@ -22,6 +23,7 @@ class Mosaic(object):
                aug_rand_perspective=0.0,
                aug_rand_translate=0.0,
                random_pad=False,
+               random_flip=False, 
                area_thresh=0.1,
                seed=None):
     """Initializes parameters for mosaic.
@@ -77,6 +79,7 @@ class Mosaic(object):
     self._aug_rand_translate = aug_rand_translate
     self._aug_rand_angle = aug_rand_angle
     self._aug_rand_perspective = aug_rand_perspective
+    self._random_flip = random_flip
 
     self._deterministic = seed != None
     self._seed = seed if seed is not None else random.randint(0, 2**30)
@@ -112,6 +115,11 @@ class Mosaic(object):
                      ys=0.0,
                      cut=None):
     """Process a single image prior to the application of patching."""
+    if self._random_flip:
+      # Randomly flip the image horizontally.
+      image, boxes, _ = preprocess_ops.random_horizontal_flip(
+          image, boxes, seed=self._seed)
+
     # Randomly flip the image horizontally.
     letter_box = self._letter_box
 
@@ -176,11 +184,7 @@ class Mosaic(object):
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.apply_infos(
-        boxes,
-        None,
-        affine=affine,
-        area_thresh=self._area_thresh,
-        augment=True,
+        boxes, None, affine=affine, area_thresh=self._area_thresh, 
         seed=self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -335,6 +339,7 @@ class Mosaic(object):
   def _apply(self, dataset):
     """Apply mosaic to an input dataset."""
     determ = self._deterministic
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     one = dataset.shuffle(100, seed=self._seed, reshuffle_each_iteration=True)
     two = dataset.shuffle(
         100, seed=self._seed + 1, reshuffle_each_iteration=True)

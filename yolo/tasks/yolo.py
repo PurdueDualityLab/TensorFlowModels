@@ -139,6 +139,7 @@ class YoloTask(base_task.Task):
         aug_rand_perspective=params.parser.aug_rand_perspective,
         random_pad=params.parser.random_pad,
         area_thresh=params.parser.area_thresh,
+        random_flip=params.parser.random_flip,
         seed=params.seed,
     )
 
@@ -158,7 +159,6 @@ class YoloTask(base_task.Task):
         masks=masks,
         anchors=anchors,
         use_tie_breaker=params.parser.use_tie_breaker,
-        random_flip=params.parser.random_flip,
         jitter=params.parser.jitter,
         aug_scale_min=params.parser.aug_scale_min,
         aug_scale_max=params.parser.aug_scale_max,
