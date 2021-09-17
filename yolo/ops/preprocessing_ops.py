@@ -915,7 +915,6 @@ def _write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
   """Find the correct x,y indexs for each box in the output groundtruth."""
 
   anchor_index = tf.convert_to_tensor([tf.cast(anchor_id, tf.int32)])
-  gain = tf.cast(tf.convert_to_tensor([width, height]), box.dtype)
 
   y = box[1] * height
   x = box[0] * width
@@ -929,13 +928,14 @@ def _write_sample(box, anchor_id, offset, sample, ind_val, ind_sample, height,
 
   if offset > 0:
     offset = tf.cast(offset, x.dtype)
+    wh_scale = tf.cast(tf.convert_to_tensor([width, height]), box.dtype)
     grid_xy = tf.cast(tf.convert_to_tensor([x, y]), x.dtype)
     clamp = lambda x, ma: tf.maximum(
         tf.minimum(x, tf.cast(ma, x.dtype)), tf.zeros_like(x))
 
     grid_xy_index = grid_xy - tf.floor(grid_xy)
     positive_shift = ((grid_xy_index < offset) & (grid_xy > 1.))
-    negative_shift = ((grid_xy_index > (1 - offset)) & (grid_xy < (gain - 1.)))
+    negative_shift = ((grid_xy_index > (1 - offset)) & (grid_xy < (wh_scale - 1.)))
 
     shifts = [
         positive_shift[0], positive_shift[1], negative_shift[0],
