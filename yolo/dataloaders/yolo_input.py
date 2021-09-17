@@ -7,6 +7,7 @@ import numpy as np
 from yolo.ops import preprocessing_ops
 from yolo.ops import box_ops as box_utils
 from official.vision.beta.ops import preprocess_ops
+from official.vision.beta.ops import box_ops as bbox_ops
 from official.vision.beta.dataloaders import parser, utils
 
 
@@ -305,7 +306,11 @@ class Parser(parser.Parser):
     else:
       image = tf.image.resize(
           image, (self._image_h, self._image_w), method='nearest')
-      inds = tf.cast(tf.range(0, tf.shape(boxes)[0]), tf.int64)
+      output_size = tf.cast([640, 640], tf.float32)
+      boxes_ = bbox_ops.denormalize_boxes(boxes, output_size)
+      inds = bbox_ops.get_non_empty_box_indices(boxes_)
+      boxes = tf.gather(boxes, inds)
+      classes = tf.gather(classes, inds)
       info = self._get_identity_info(image)
 
     # Apply scaling to the hue saturation and brightness of an image.
