@@ -120,13 +120,11 @@ class Mosaic(object):
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    # Randomly flip the image horizontally.
-    letter_box = self._letter_box
-
+    #augment the image wihtout resizing
     image, infos, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],
         random_pad=False,
-        letter_box=letter_box,
+        letter_box=self._letter_box,
         jitter=self._random_crop,
         shiftx=xs,
         shifty=ys,
