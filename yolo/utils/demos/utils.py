@@ -190,7 +190,7 @@ class DrawBoxes(object):
         text = '{}:{:.1f}%'.format(label_names[classes], conf * 100)
       else:
         text = '{}'.format(label_names[classes])
-      txt_color = (0, 0, 0) if np.mean(colors[classes]) > 0.5 else (255, 255, 255)
+      txt_color = (0, 0, 0) if np.mean(colors[classes]) > 0.5 else (1, 1, 1)
       font = cv2.FONT_HERSHEY_SIMPLEX
 
       txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]

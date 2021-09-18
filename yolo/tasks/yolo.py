@@ -36,27 +36,13 @@ class YoloTask(base_task.Task):
 
   def __init__(self, params, logging_dir: str = None):
     super().__init__(params, logging_dir)
-    self._masks = None
     self.coco_metric = None
     self._loss_fn = None
     self._model = None
     self._metrics = []
 
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
-    self._get_boxes()
-    self._get_masks()
     return
-
-  def _get_masks(self):
-    params = self.task_config.model
-    masks = params.get_masks()
-    path_scales = params.detection_generator.path_scales.get()
-    scale_xy = params.detection_generator.scale_xy.get()
-    return masks, path_scales, scale_xy
-
-  def _get_boxes(self):
-    """Checks for boxes or calls kmeans to auto generate a set of boxes"""
-    return self.task_config.model.get_boxes()
 
   def build_model(self):
     """Build an instance of Yolo"""
