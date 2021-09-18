@@ -336,7 +336,6 @@ def mosaic_cut(image, original_width, original_height, width, height, center,
 
   return image, crop_info
 
-
 def resize_and_jitter_image(image,
                             desired_size,
                             jitter=0.0,

@@ -4,6 +4,7 @@ from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
 
 from yolo.modeling import yolo_model
+from yolo.losses import yolo_loss
 from yolo.configs import yolo
 from absl import logging
 
@@ -94,7 +95,6 @@ def build_yolo_detection_generator(model_config: yolo.Yolo, masks, scale_xy,
       objectness_smooth=model_config.loss.objectness_smooth.get())
   return model
 
-
 def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   min_level = min(map(int, input_specs.keys()))
   max_level = max(map(int, input_specs.keys()))
@@ -109,9 +109,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       smart_bias=model_config.head.smart_bias)
   return head
 
-
-def build_yolo(input_specs, model_config, l2_regularization):
-
+def build_yolo(input_specs, model_config, l2_regularization = None, train_or_eval = False):
   anchor_boxes, anchor_free = model_config.get_boxes()
   masks = model_config.get_masks()
   scale_xy = model_config.detection_generator.scale_xy.get()
@@ -143,5 +141,8 @@ def build_yolo(input_specs, model_config, l2_regularization):
   else:
     logging.info(f"Anchor Boxes: {model_config.boxes}")
 
-  losses = detection_generator.losses
-  return model, losses
+  if train_or_eval: 
+    losses = detection_generator.get_losses()
+    return model, losses
+  else:
+    return model

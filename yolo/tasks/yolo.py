@@ -55,7 +55,10 @@ class YoloTask(base_task.Task):
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
-    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
+    model, losses = build_yolo(input_specs, 
+                               model_base_cfg, 
+                               l2_regularization = l2_regularizer, 
+                               train_or_eval=True)
 
     self._loss_fn = losses
     self._model = model

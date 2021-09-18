@@ -117,12 +117,10 @@ class YoloLayer(tf.keras.Model):
     self._keys = list(masks.keys())
     self._len_keys = len(self._keys)
     self._box_type = box_type
-    self._path_scale = path_scale or {
-        key: 2**int(key) for key, _ in masks.items()
-    }
+    self._path_scale = path_scale 
 
     self._nms_type = nms_type
-    self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
+    self._scale_xy = scale_xy 
 
     self._generator = {}
     self._len_mask = {}
@@ -283,8 +281,7 @@ class YoloLayer(tf.keras.Model):
         'num_detections': num_detections,
     }
 
-  @property
-  def losses(self):
+  def get_losses(self):
     """ Generates a dictionary of losses to apply to each path 
     
     Done in the detection generator because all parameters are the same 
