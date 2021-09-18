@@ -45,18 +45,34 @@ class ModelConfig(hyperparams.Config):
     return model_kwargs
 
   def get_boxes(self):
-    if self.boxes is None:
-      return None
-    boxes = []
-    key = re.compile('([\d\.]+)')
-    for box in self.boxes:
-      if isinstance(box, list) or isinstance(box, tuple):
-        boxes.append(box)
-      elif isinstance(box, str):
-        boxes.append([float(val) for val in key.findall(box)])
-      elif isinstance(box, int):
-        raise IOError('unsupported input type, only strings or tuples')
-    return boxes
+    if self.boxes is None and self.anchor_limits is None:
+      raise Exception("Boxes or Anchor Free Limits must be defined for usage.")
+    
+    anchor_limits = self.anchor_free_limits
+    if anchor_limits is None:
+      boxes = []
+      key = re.compile('([\d\.]+)')
+      for box in self.boxes:
+        if isinstance(box, list) or isinstance(box, tuple):
+          boxes.append(box)
+        elif isinstance(box, str):
+          boxes.append([float(val) for val in key.findall(box)])
+        elif isinstance(box, int):
+          raise IOError('unsupported input type, only strings or tuples')
+    else:
+      backbone = self.backbone.get()
+      ishape = self.input_size.copy()[:2]
+      boxes = [list(ishape)] * (backbone.max_level - backbone.min_level + 1)
+    return boxes, anchor_limits
+
+  def get_masks(self):
+    masks = {}
+    start = 0
+    backbone = self.backbone.get()
+    for i in range(backbone.min_level, backbone.max_level + 1):
+      masks[str(i)] = list(range(start, self.boxes_per_scale + start))
+      start += self.boxes_per_scale
+    return masks
 
 
 @dataclasses.dataclass

@@ -2,10 +2,10 @@ from official.vision.beta.modeling.backbones import factory
 from yolo.modeling.decoders.yolo_decoder import YoloDecoder
 from yolo.modeling.heads.yolo_head import YoloHead
 from yolo.modeling.layers.detection_generator import YoloLayer
-from yolo.modeling.backbones.darknet import build_darknet
 
 from yolo.modeling import yolo_model
 from yolo.configs import yolo
+from absl import logging
 
 
 def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
@@ -110,12 +110,18 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   return head
 
 
-def build_yolo(input_specs, model_config, l2_regularization, masks, scale_xy,
-               path_scales, anchor_boxes):
+def build_yolo(input_specs, model_config, l2_regularization):
 
-  backbone = factory.build_backbone(input_specs, model_config.backbone,
+  anchor_boxes, anchor_free = model_config.get_boxes()
+  masks = model_config.get_masks()
+  scale_xy = model_config.detection_generator.scale_xy.get()
+  path_scales = model_config.detection_generator.path_scales.get()
+
+  backbone = factory.build_backbone(input_specs, 
+                                    model_config.backbone,
                                     model_config.norm_activation,
                                     l2_regularization)
+
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
@@ -129,6 +135,13 @@ def build_yolo(input_specs, model_config, l2_regularization, masks, scale_xy,
       head=head,
       detection_generator=detection_generator)
   model.build(input_specs.shape)
+
+  model.summary(print_fn=logging.info)
+  if anchor_free is not None:
+    logging.info(f"Anchor Boxes: None -> Model is operating anchor-free.")
+    logging.info(" --> boxes_per_scale set to 1. ")
+  else:
+    logging.info(f"Anchor Boxes: {model_config.boxes}")
 
   losses = detection_generator.losses
   return model, losses

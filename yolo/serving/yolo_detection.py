@@ -1,3 +1,4 @@
+
 # Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""TFDS Classification decoder."""
+# Lint as: python3
+"""Detection input and model functions for serving/inference."""
 
 import tensorflow as tf
-from official.vision.beta.dataloaders import decoder
 
 
-class Decoder(decoder.Decoder):
-  """A tf.Example decoder for classification task."""
 
-  def __init__(self):
-    return
-
-  def decode(self, serialized_example):
-    sample_dict = {
-        'image/encoded':
-            tf.io.encode_jpeg(serialized_example['image'], quality=100),
-        'image/class/label':
-            serialized_example['label'],
-    }
-    return sample_dict

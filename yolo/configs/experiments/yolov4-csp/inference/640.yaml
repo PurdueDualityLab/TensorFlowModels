@@ -26,7 +26,7 @@ task:
         'all': 2.0
       max_boxes: 300
       nms_type: tflite
-      iou_thresh: 0.45
+      iou_thresh: 0.3
       nms_thresh: 0.5
     loss:
       use_scaled_loss: true

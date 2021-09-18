@@ -48,56 +48,28 @@ class YoloTask(base_task.Task):
     return
 
   def _get_masks(self):
-    start = 0
-    masks = {}
-    backbone = self.task_config.model.backbone.get()
     params = self.task_config.model
-
-    if self._masks is None:
-      for i in range(backbone.min_level, backbone.max_level + 1):
-        masks[str(i)] = list(range(start, params.boxes_per_scale + start))
-        start += params.boxes_per_scale
-      self._masks = masks
-
+    masks = params.get_masks()
     path_scales = params.detection_generator.path_scales.get()
     scale_xy = params.detection_generator.scale_xy.get()
-    return self._masks, path_scales, scale_xy
+    return masks, path_scales, scale_xy
 
   def _get_boxes(self):
     """Checks for boxes or calls kmeans to auto generate a set of boxes"""
-    boxes = self.task_config.model.get_boxes()
-    anchor_limits = self.task_config.model.anchor_free_limits
-    input_shape = self.task_config.model.input_size.copy()[:2]
-
-    if anchor_limits is not None:
-      self.task_config.model.boxes_per_scale = 1
-      masks, _, _ = self._get_masks()
-      boxes = [list(input_shape)] * len(masks.keys())
-    return (boxes, anchor_limits)
+    return self.task_config.model.get_boxes()
 
   def build_model(self):
-    """Build an instance of Yolo v3 or v4"""
+    """Build an instance of Yolo"""
     from yolo.modeling.factory import build_yolo
 
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
-    masks, path_scales, scale_xy = self._get_masks()
-    boxes, anchor_free = self._get_boxes()
-
     input_size = model_base_cfg.input_size.copy()
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
-    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer,
-                               masks, scale_xy, path_scales, boxes)
-
-    model.summary(print_fn=logging.info)
-    if anchor_free is not None:
-      logging.info(f"Anchor Boxes: None -> Model is operating anchor-free.")
-      logging.info(" --> boxes_per_scale set to 1. ")
-    else:
-      logging.info(f"Anchor Boxes: {model_base_cfg.boxes}")
+    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
 
     self._loss_fn = losses
     self._model = model
@@ -126,11 +98,8 @@ class YoloTask(base_task.Task):
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
-
-    decoder = self.get_decoder(params)
     model = self.task_config.model
-    masks, path_scales, scale_xy = self._get_masks()
-    anchors, anchor_free_limits = self._get_boxes()
+    anchors, anchor_free_limits = model.get_boxes()
 
     base_config = dict(
         letter_box=params.parser.letter_box,
@@ -142,6 +111,8 @@ class YoloTask(base_task.Task):
         random_flip=params.parser.random_flip,
         seed=params.seed,
     )
+
+    decoder = self.get_decoder(params)
 
     sample_fn = mosaic.Mosaic(
         output_size=model.input_size,
@@ -156,7 +127,7 @@ class YoloTask(base_task.Task):
 
     parser = yolo_input.Parser(
         output_size=model.input_size,
-        masks=masks,
+        masks=model.get_masks(),
         anchors=anchors,
         use_tie_breaker=params.parser.use_tie_breaker,
         jitter=params.parser.jitter,
@@ -166,8 +137,8 @@ class YoloTask(base_task.Task):
         aug_rand_saturation=params.parser.aug_rand_saturation,
         aug_rand_brightness=params.parser.aug_rand_brightness,
         max_num_instances=params.parser.max_num_instances,
-        scale_xy=scale_xy,
-        strides=path_scales,
+        scale_xy=model.detection_generator.scale_xy.get(),
+        strides=model.detection_generator.path_scales.get(),
         darknet=model.darknet_based_model,
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
@@ -189,9 +160,9 @@ class YoloTask(base_task.Task):
   def build_metrics(self, training=True):
     metrics = []
 
-    self._get_masks()
+    masks = self.task_config.model.get_masks()
     metric_names = defaultdict(list)
-    for key in self._masks.keys():
+    for key in masks.keys():
       metric_names[key].append('loss')
       metric_names[key].append("avg_iou")
       metric_names[key].append("avg_obj")
