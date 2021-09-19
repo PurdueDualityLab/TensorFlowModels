@@ -32,7 +32,7 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-nano/tpu/416-3l.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
 
   config = train_utils.ParseConfigOptions(
