@@ -276,5 +276,5 @@ def test_ret_pipeline():
 
 if __name__ == '__main__':
   time_pipeline(num=100)
-  test_yolo_pipeline(is_training=True, num=20)
-  # test_yolo_pipeline(is_training=False, num=11)
+  # test_yolo_pipeline(is_training=True, num=20)
+  test_yolo_pipeline(is_training=False, num=11)

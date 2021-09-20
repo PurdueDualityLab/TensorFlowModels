@@ -23,7 +23,43 @@ from yolo.utils.run_utils import prep_gpu
 from yolo.configs import yolo as exp_cfg
 from yolo.tasks.yolo import YoloTask
 import yolo.demos.three_servers.video_server as video_t
+from official.vision.beta.ops import box_ops
+from yolo.ops import preprocessing_ops
 
+
+def letterbox(image, desired_size, letter_box = True):
+  """Letter box an image for image serving."""
+
+  with tf.name_scope('letter_box'):
+    image_size = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
+
+    scaled_size = desired_size
+    if letterbox:
+      scale = tf.minimum(
+          scaled_size[0] / image_size[0], scaled_size[1] / image_size[1])
+    else:
+      scale = 1.0
+    scaled_size = tf.round(image_size * scale)
+
+    # Computes 2D image_scale.
+    image_scale = scaled_size / image_size
+    image_offset = tf.cast((desired_size - scaled_size) * 0.5, tf.int32)
+    offset = (scaled_size - desired_size) * 0.5
+    scaled_image = tf.image.resize(image, 
+                        tf.cast(scaled_size, tf.int32), 
+                        method = 'nearest')
+
+    output_image = tf.image.pad_to_bounding_box(
+        scaled_image, image_offset[0], image_offset[1], 
+                      desired_size[0], desired_size[1])
+
+    
+    image_info = tf.stack([
+        image_size,
+        tf.cast(desired_size, dtype=tf.float32),
+        image_scale,
+        tf.cast(offset, tf.float32)])
+    return output_image, image_info
 
 class FastVideo(object):
   """
@@ -74,7 +110,7 @@ class FastVideo(object):
                disp_h=720,
                classes=80,
                labels=None,
-               save_file=None,
+               save_file='../../Videos/nyc_detected.mp4',
                print_conf=True,
                max_batch=None,
                wait_time=None,
@@ -116,9 +152,9 @@ class FastVideo(object):
     self._og_height = int(self._cap.get(4))
     self._width = int(self._cap.get(3) * (self._height / self._og_height))
 
-    if self._letter_box:
-      self._height = self._height
-      self._width = self._height
+    # if self._letter_box:
+    #   self._height = self._height
+    #   self._width = self._height
 
     self._classes = classes
     self._p_width = process_width
@@ -180,7 +216,9 @@ class FastVideo(object):
     self._frames = 1
     self._obj_detected = -1
 
-    self._display = video_t.DisplayThread()
+    self._display = video_t.DisplayThread(
+      res = (self._width, self._height)
+    )
 
     if save_file is not None:
       fps = self._cap.get(cv2.CAP_PROP_FPS)
@@ -192,16 +230,6 @@ class FastVideo(object):
     else:
       self._save_t = None
     return
-
-  def _preprocess(self, image):
-    if type(self._file) == int:
-      image = tf.image.flip_left_right(image)
-    image = tf.cast(image, dtype=tf.float32)
-    image = image / 255
-    if self._letter_box:
-      g = max(image.shape[2], image.shape[1])
-      image = tf.image.pad_to_bounding_box(image, (g - image.shape[1])//2, (g - image.shape[2])//2, g, g)
-    return image
 
   def read(self, lock=None):
     """ read video frames in a thread """
@@ -266,6 +294,9 @@ class FastVideo(object):
         """
     # init the starting variables to calculate FPS
     self._display.start()
+
+    if self._save_t is not None:
+      self._save_t.start()
     try:
       start = time.time()
       l = 0
@@ -300,16 +331,48 @@ class FastVideo(object):
     except ValueError:
       self._running = False
       self._display.close()
+      if self._save_t is not None:
+        self._save_t.close()
       raise
     except Exception as e:
       #print ("display", e)
       self._running = False
       self._display.close()
+      if self._save_t is not None:
+        self._save_t.close()
       # time.sleep(10)
       raise e
     self._running = False
     self._display.close()
+    if self._save_t is not None:
+      self._save_t.close()
     return
+
+  def _undo_info(self, boxes, num_detections, info):
+    mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
+    mask = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype)
+
+    # split all infos 
+    info = tf.cast(tf.expand_dims(info, axis = 0), boxes.dtype)
+    inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    offset = tf.expand_dims(info[:, 3, :], axis = 1)
+
+    boxes = box_ops.denormalize_boxes(boxes, inshape)
+    boxes += tf.tile(offset, [1, 1, 2])
+    boxes /= tf.tile(scale, [1, 1, 2])
+    boxes = box_ops.normalize_boxes(boxes, ogshape)
+
+    boxes = box_ops.clip_boxes(boxes, ogshape)    
+    return boxes
+
+  def _preprocess(self, image):
+    if type(self._file) == int:
+      image = tf.image.flip_left_right(image)
+    image = tf.cast(image, dtype=tf.float32)
+    image = image / 255
+    return image
 
   def run(self):
     # init the model
@@ -348,6 +411,9 @@ class FastVideo(object):
     display_thread = t.Thread(target=self.display, args=())
     display_thread.start()
 
+    
+
+
     try:
       # while the captue is open start processing frames
       while (self._cap.isOpened()):
@@ -369,10 +435,12 @@ class FastVideo(object):
         with tf.device(self._gpu_device):
           image = tf.stack(proc, axis=0)
           image = preprocess(image)
-          pimage = tf.image.resize(image, (self._p_width, self._p_height))
+          pimage, info = letterbox(image, [self._p_height, self._p_width], letter_box = self._letter_box)
           pred = predfunc(pimage)
+
+          pred["bbox"] = self._undo_info(pred["bbox"], pred["num_detections"], info)
           if image.shape[1] != self._height:  # and not self._letter_box:
-            image = tf.image.resize(pimage, (self._height, self._width))
+            image = tf.image.resize(image, (self._height, self._width))
         b = datetime.datetime.now()
 
         # computation latency to see how much delay between input and output

@@ -7,7 +7,7 @@ task:
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
-    input_size: [512, 512, 3]
+    input_size: [640, 640, 3]
     backbone:
       type: 'darknet'
       darknet:
@@ -25,9 +25,10 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: tflite
-      iou_thresh: 0.3
-      nms_thresh: 0.5
+      nms_type: greedy
+      iou_thresh: 0.25
+      nms_thresh: 0.50
+      pre_nms_points: 500
     loss:
       use_scaled_loss: true
       update_on_repeat: true
@@ -98,8 +99,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
-  init_checkpoint: '/home/vbanna/Research/checkpoints/yolo/v4-csp/'
-  init_checkpoint_modules: 'all'
+  # init_checkpoint: '/home/vbanna/Research/checkpoints/yolo/v4-csp/'
+  # init_checkpoint_modules: 'all'
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625

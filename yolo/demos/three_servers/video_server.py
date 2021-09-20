@@ -300,6 +300,7 @@ class DisplayThread(Thread):
                wait_time=0.0001,
                alpha=0.1,
                fix_wt=False,
+               res = None, 
                use_colab=False):
     if frame_buffer is None:
       self._frame_buffer = FrameQue(1000)
@@ -313,6 +314,7 @@ class DisplayThread(Thread):
     self._fix_wt = fix_wt
     self._alpha = alpha
     self._use_colab = use_colab
+    self._res = res
     return
 
   def start(self):
@@ -329,6 +331,10 @@ class DisplayThread(Thread):
     return
 
   def display(self):
+    if self._res is not None:
+      fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+      out = cv2.VideoWriter("../../Videos/soccer.avi", fourcc,
+                          45, [int(k) for k in self._res])
     try:
       start = time.time()
       l = 0
@@ -339,7 +345,12 @@ class DisplayThread(Thread):
         # success, frame = self._frame_buffer.read()
         success, frame = self._frame_buffer.read()
         if success and frame is not None:
-          cv2.imshow("frame", frame)
+          if self._res[-1] <= 1080:
+            cv2.imshow("frame", frame)
+          if self._res is not None:
+            frame = cv2.resize(frame, self._res)
+            frame = cv2.convertScaleAbs(frame, alpha=(255.0))
+            out.write(frame)
 
           if cv2.waitKey(1) & 0xFF == ord("q"):
             break
@@ -364,10 +375,14 @@ class DisplayThread(Thread):
             self._frame_buffer.wait_time = self._wait_time
 
         time.sleep(self._wait_time)
+      if self._res is not None:
+        out.release()
       self._running = False
       cv2.destroyAllWindows()
     except Exception as e:
       print(e)
+      if self._res is not None:
+        out.release()
       self._running = False
       cv2.destroyAllWindows()
     return
@@ -481,6 +496,7 @@ class saveVideoThread(Thread):
     try:
       while self._running:
         success, frame = self._frame_buffer.read()
+        print(success)
         if success and frame is not None:
           frame = cv2.convertScaleAbs(frame, alpha=(255.0))
           out.write(frame)
