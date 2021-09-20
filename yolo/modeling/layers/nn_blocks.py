@@ -1672,3 +1672,12 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       return self._call_csp(inputs, training=training)
     else:
       return self._call_regular(inputs)
+
+
+class Reorg(tf.keras.layers.Layer):
+
+  def call(self, x, training=None):
+    return tf.concat([x[..., ::2, ::2, :], 
+                      x[..., 1::2, ::2, :], 
+                      x[..., ::2, 1::2, :], 
+                      x[..., 1::2, 1::2, :]], axis = -1)

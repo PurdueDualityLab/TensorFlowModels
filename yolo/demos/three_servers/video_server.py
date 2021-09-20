@@ -333,8 +333,8 @@ class DisplayThread(Thread):
   def display(self):
     if self._res is not None:
       fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-      out = cv2.VideoWriter("../../Videos/basketball.avi", fourcc,
-                          45, [int(k) for k in self._res])
+      out = cv2.VideoWriter("../../Videos/nyc_1.avi", fourcc,
+                          60, [int(k) for k in self._res])
     try:
       start = time.time()
       l = 0

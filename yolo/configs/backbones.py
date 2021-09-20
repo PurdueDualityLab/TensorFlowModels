@@ -16,6 +16,7 @@ class Darknet(hyperparams.Config):
   min_level: int = 3
   max_level: int = 5
   use_separable_conv: bool = False
+  use_reorg_input: bool = False
 
 
 @dataclasses.dataclass

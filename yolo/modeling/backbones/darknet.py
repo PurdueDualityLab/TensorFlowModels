@@ -384,6 +384,7 @@ class Darknet(tf.keras.Model):
       max_level=5,
       width_scale=1.0,
       depth_scale=1.0,
+      use_reorg_input = False, 
       csp_level_mod=(),
       activation=None,
       use_sync_bn=False,
@@ -420,6 +421,7 @@ class Darknet(tf.keras.Model):
     self._dilate = dilate
     self._width_scale = width_scale
     self._depth_scale = depth_scale
+    self._use_reorg_input = use_reorg_input
 
     self._default_dict = {
         'kernel_initializer': self._kernel_initializer,
@@ -451,6 +453,9 @@ class Darknet(tf.keras.Model):
     return self._splits
 
   def _build_struct(self, net, inputs):
+    if self._use_reorg_input:
+      inputs = nn_blocks.Reorg()(inputs)
+
     endpoints = collections.OrderedDict()
     stack_outputs = [inputs]
     for i, config in enumerate(net):
@@ -707,6 +712,7 @@ def build_darknet(
       dilate=backbone_config.dilate,
       width_scale=backbone_config.width_scale,
       depth_scale=backbone_config.depth_scale,
+      use_reorg_input=backbone_config.use_reorg_input,
       activation=norm_activation_config.activation,
       use_sync_bn=norm_activation_config.use_sync_bn,
       use_separable_conv=backbone_config.use_separable_conv,

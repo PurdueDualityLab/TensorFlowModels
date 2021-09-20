@@ -22,7 +22,6 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
         fpn_depth=model_config.decoder.fpn_depth,
         path_process_len=model_config.decoder.path_process_len,
         max_level_process_len=model_config.decoder.max_level_process_len,
-        xy_exponential=model_config.decoder.xy_exponential,
         activation=activation,
         use_spatial_attention=model_config.use_sam,
         use_sync_bn=model_config.norm_activation.use_sync_bn,
