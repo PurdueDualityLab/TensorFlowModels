@@ -11,47 +11,12 @@ from official.vision.beta.ops import box_ops as bbox_ops
 from official.vision.beta.dataloaders import parser, utils
 
 
-def _coco91_to_80(classif, box, areas, iscrowds):
-  """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
-  foramt to the 2014 format"""
-  # Vector where index i coralates to the class at index[i].
-  x = [
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-      23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-      44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
-      63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85,
-      86, 87, 88, 89, 90
-  ]
-  no = tf.expand_dims(tf.convert_to_tensor(x), axis=0)
-
-  # Resahpe the classes to in order to build a class mask.
-  ce = tf.expand_dims(classif, axis=-1)
-
-  # One hot the classificiations to match the 80 class format.
-  ind = ce == tf.cast(no, ce.dtype)
-
-  # Select the max values.
-  co = tf.reshape(tf.math.argmax(tf.cast(ind, tf.float32), axis=-1), [-1])
-  ind = tf.where(tf.reduce_any(ind, axis=-1))
-
-  # Gather the valuable instances.
-  classif = tf.gather_nd(co, ind)
-  box = tf.gather_nd(box, ind)
-  areas = tf.gather_nd(areas, ind)
-  iscrowds = tf.gather_nd(iscrowds, ind)
-
-  # Restate the number of viable detections, ideally it should be the same.
-  num_detections = tf.shape(classif)[0]
-  return classif, box, areas, iscrowds, num_detections
-
-
 class Parser(parser.Parser):
   """Parse the dataset in to the YOLO model format. """
 
   def __init__(
       self,
       output_size,
-      masks,
       anchors,
       strides,
       anchor_free_limits=None,
@@ -72,7 +37,6 @@ class Parser(parser.Parser):
       anchor_t=4.0,
       scale_xy=None,
       best_match_only=False,
-      coco91to80=False,
       darknet=False,
       use_tie_breaker=True,
       dtype='float32',
@@ -83,10 +47,7 @@ class Parser(parser.Parser):
     Args:
       output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
-      masks: `Dict[List[int]]` of values indicating the indexes in the 
-        list of anchor boxes to use an each prediction level between min_level 
-        and max_level. each level must have a list of indexes.  
-      anchors: `List[List[Union[int, float]]]` values for each anchor box.
+      anchors: `Dict[List[Union[int, float]]]` values for each anchor box.
       strides: `Dict[int]` for how much the model scales down the images at the
         largest level.
       anchor_free_limits: `List` the box sizes that will be allowed at each FPN 
@@ -145,7 +106,7 @@ class Parser(parser.Parser):
         from {"float32", "float16", "bfloat16"}.
       seed: `int` the seed for random number generation. 
     """
-    for key in masks.keys():
+    for key in anchors.keys():
       # Assert that the width and height is viable
       assert output_size[1] % strides[str(key)] == 0
       assert output_size[0] % strides[str(key)] == 0
@@ -154,16 +115,14 @@ class Parser(parser.Parser):
     self._strides = strides
 
     # Set the width and height properly and base init:
-    self._coco91to80 = coco91to80
     self._image_w = output_size[1]
     self._image_h = output_size[0]
 
-    # Set the anchor boxes and masks for each scale
+    # Set the anchor boxes for each scale
     self._anchors = anchors
     self._anchor_free_limits = anchor_free_limits
-    self._masks = {
-        key: tf.convert_to_tensor(value) for key, value in masks.items()
-    }
+
+    # anchor labeling paramters
     self._use_tie_breaker = use_tie_breaker
     self._best_match_only = best_match_only
     self._max_num_instances = max_num_instances
@@ -192,7 +151,7 @@ class Parser(parser.Parser):
     self._darknet = darknet
     self._area_thresh = area_thresh
 
-    keys = list(self._masks.keys())
+    keys = list(self._anchors.keys())
 
     if self._anchor_free_limits is not None:
       maxim = 2000
@@ -208,10 +167,10 @@ class Parser(parser.Parser):
     # Set the data type based on input string
     self._dtype = dtype
 
-    self.masks = masks
     self._label_builder = anchor.YoloAnchorLabeler(
       match_threshold=self._anchor_t, 
       best_matches_only=self._best_match_only,
+      use_tie_breaker=self._use_tie_breaker
     )
 
   def _padded_info_object(self, image):
@@ -262,21 +221,9 @@ class Parser(parser.Parser):
     )
     return image, infos, affine
 
-  def reorg91to80(self, data):
-    """Function used to reduce COCO 91 to COCO 80, or to convert from the 2017 
-    foramt to the 2014 format"""
-    if self._coco91to80:
-      (data['groundtruth_classes'], data['groundtruth_boxes'],
-       data['groundtruth_area'], data['groundtruth_is_crowd'],
-       _) = _coco91_to_80(data['groundtruth_classes'],
-                          data['groundtruth_boxes'], data['groundtruth_area'],
-                          data['groundtruth_is_crowd'])
-    return data
-
   def _parse_train_data(self, data):
     """Parses data for training and evaluation."""
     # Down size coco 91 to coco 80 if the option is selected.
-    data = self.reorg91to80(data)
 
     # Initialize the shape constants.
     image = data['image']
@@ -342,7 +289,6 @@ class Parser(parser.Parser):
 
   def _parse_eval_data(self, data):
     # Down size coco 91 to coco 80 if the option is selected.
-    data = self.reorg91to80(data)
 
     # Get the image shape constants and cast the image to the selcted datatype.
     image = tf.cast(data['image'], dtype=self._dtype)
@@ -403,17 +349,16 @@ class Parser(parser.Parser):
       self._anchor_free_limits = [0.0] + self._anchor_free_limits + [np.inf]
 
     # for each prediction path generate a properly scaled output prediction map
-    for i, key in enumerate(self._masks.keys()):
+    for i, key in enumerate(self._anchors.keys()):
       if self._anchor_free_limits is not None:
         fpn_limits = self._anchor_free_limits[i:i + 2]
       else:
         fpn_limits = None
 
       scale_xy = self._scale_xy[key] if not self._darknet else 1
-      anchors = [self._anchors[k] for k in self.masks[key]]
 
       indexes[key], updates[key], true_grids[key] = self._label_builder(
-        boxes, classes, anchors, 
+        boxes, classes, self._anchors[key], 
         width, height, self._strides[str(key)],
         scale_xy, self._max_num_instances * self._scale_up[key], 
         fpn_limits = fpn_limits)

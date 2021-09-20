@@ -125,6 +125,7 @@ class Parser(hyperparams.Config):
 @dataclasses.dataclass
 class TfExampleDecoder(hyperparams.Config):
   regenerate_source_id: bool = False
+  coco91_to_80: bool = True 
 
 
 @dataclasses.dataclass

@@ -6,7 +6,7 @@ from yolo.ops import preprocessing_ops
 from official.vision.beta.ops import box_ops
 from official.vision.beta.ops import preprocess_ops
 
-class Mosaic(object):
+class Mosaic:
   """Stitch together sets of 4 images to generate samples with more boxes."""
 
   def __init__(self,
