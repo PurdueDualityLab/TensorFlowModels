@@ -45,7 +45,7 @@ class ModelConfig(hyperparams.Config):
     return model_kwargs
 
   def get_boxes(self):
-    if self.boxes is None and self.anchor_limits is None:
+    if self.boxes is None and self.anchor_free_limits is None:
       raise Exception("Boxes or Anchor Free Limits must be defined for usage.")
     
     anchor_limits = self.anchor_free_limits

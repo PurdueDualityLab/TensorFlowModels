@@ -32,7 +32,7 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-nano/tpu/416-3l.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
 
   config = train_utils.ParseConfigOptions(
@@ -45,7 +45,7 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 1
+  config.train_data.global_batch_size = 64
   config.validation_data.global_batch_size = 1
 
   config.train_data.dtype = 'float32'
@@ -275,6 +275,6 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
-  # time_pipeline(num=10)
+  time_pipeline(num=100)
   test_yolo_pipeline(is_training=True, num=20)
   # test_yolo_pipeline(is_training=False, num=11)

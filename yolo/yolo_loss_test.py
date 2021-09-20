@@ -35,32 +35,30 @@ python3.8 -m yolo.run_image
 """
 
 if __name__ == "__main__":
+  model_dir='/home/vbanna/Research/checkpoints/yolo/v4-csp'
   task, model, params = load_model(
       experiment="yolo_custom",
-      # config_path=[
+      config_path=[
       #     "yolo/configs/experiments/yolov4/inference/512.yaml"
       #     #"yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
-      #     # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
-      # ],
-      config_path=[
-          "yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-nano.yaml"
+            "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
       ],
-      model_dir="")
-  # model_dir='/home/vbanna/Research/checkpoints/yolov4-csp/tpu/512')
-  # model_dir='/home/vbanna/Research/checkpoints/250k-512-lr-special-t2')
-  optimizer = task.create_optimizer(params.trainer.optimizer_config,
-                                    params.runtime)
+      model_dir='')
+  
 
-  config = params.task
-  config.coco91to80 = False
-  config.train_data.tfds_name = 'coco'
-  config.validation_data.tfds_name = 'coco'
-  config.train_data.tfds_split = 'train'
-  config.validation_data.tfds_split = 'validation'
-  config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  config.train_data.input_path = ''
-  config.validation_data.input_path = ''
+  # optimizer = task.create_optimizer(params.trainer.optimizer_config,
+  #                                   params.runtime)
+
+  # config = params.task
+  # config.coco91to80 = False
+  # config.train_data.tfds_name = 'coco'
+  # config.validation_data.tfds_name = 'coco'
+  # config.train_data.tfds_split = 'train'
+  # config.validation_data.tfds_split = 'validation'
+  # config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  # config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  # config.train_data.input_path = ''
+  # config.validation_data.input_path = ''
 
   train_data = task.build_inputs(params.task.train_data)
   test_data = task.build_inputs(params.task.validation_data)
@@ -73,7 +71,7 @@ if __name__ == "__main__":
   # if obj_mask.shape[1] == 16:
   #    plt.show()
 
-  lim = 1
+  lim = 10
   for p, image in enumerate(test_data):
     if p >= lim:
       break

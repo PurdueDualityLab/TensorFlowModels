@@ -4,7 +4,7 @@ into (image, labels) tuple for RetinaNet.
 """
 import tensorflow as tf
 import numpy as np
-from yolo.ops import preprocessing_ops
+from yolo.ops import preprocessing_ops, anchor
 from yolo.ops import box_ops as box_utils
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
@@ -208,7 +208,13 @@ class Parser(parser.Parser):
     # Set the data type based on input string
     self._dtype = dtype
 
-  def _get_identity_info(self, image):
+    self.masks = masks
+    self._label_builder = anchor.YoloAnchorLabeler(
+      match_threshold=self._anchor_t, 
+      best_matches_only=self._best_match_only,
+    )
+
+  def _padded_info_object(self, image):
     """Get an identity image op to pad all info vectors, this is used because 
     graph compilation if there are a variable number of info objects in a list.
     """
@@ -224,16 +230,16 @@ class Parser(parser.Parser):
   def _jitter_scale(self, image, shape, letter_box, jitter, random_pad,
                     aug_scale_min, aug_scale_max, translate, angle,
                     perspective):
+    infos = []
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True
       # jitter gives you only one info object, resize and crop gives you one,
       # if crop only then there can be 1 form jitter and 1 from crop
-      reps = 1
+      infos = [self._padded_info_object(image)]
     else:
       crop_only = False
-      reps = 0
-    infos = []
-    image, info_a, _ = preprocessing_ops.resize_and_jitter_image(
+      infos = []
+    image, crop_info, _ = preprocessing_ops.resize_and_jitter_image(
         image,
         shape,
         letter_box=letter_box,
@@ -242,10 +248,7 @@ class Parser(parser.Parser):
         random_pad=random_pad,
         seed=self._seed,
     )
-    infos.extend(info_a)
-    stale_a = self._get_identity_info(image)
-    for _ in range(reps):
-      infos.append(stale_a)
+    infos.extend(crop_info)
     image, _, affine = preprocessing_ops.affine_warp_image(
         image,
         shape,
@@ -311,7 +314,7 @@ class Parser(parser.Parser):
       inds = bbox_ops.get_non_empty_box_indices(boxes_)
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
-      info = self._get_identity_info(image)
+      info = self._padded_info_object(image)
 
     # Apply scaling to the hue saturation and brightness of an image.
     image = tf.cast(image, dtype=self._dtype)
@@ -390,7 +393,7 @@ class Parser(parser.Parser):
     values.set_shape(vshape)
     return values
 
-  def _build_grid(self, raw_true, width, height, use_tie_breaker=False):
+  def _build_grid(self, boxes, classes, width, height):
     '''Private function for building the full scale object and class grid.'''
     indexes = {}
     updates = {}
@@ -406,21 +409,14 @@ class Parser(parser.Parser):
       else:
         fpn_limits = None
 
-      # build the actual grid as well and the list of boxes and classes AND
-      # their index in the prediction grid
       scale_xy = self._scale_xy[key] if not self._darknet else 1
-      (indexes[key], updates[key],
-       true_grids[key]) = preprocessing_ops.build_grided_gt_ind(
-           raw_true,
-           self._masks[key],
-           width // self._strides[str(key)],
-           height // self._strides[str(key)],
-           raw_true['bbox'].dtype,
-           scale_xy,
-           self._scale_up[key],
-           use_tie_breaker,
-           self._strides[str(key)],
-           fpn_limits=fpn_limits)
+      anchors = [self._anchors[k] for k in self.masks[key]]
+
+      indexes[key], updates[key], true_grids[key] = self._label_builder(
+        boxes, classes, anchors, 
+        width, height, self._strides[str(key)],
+        scale_xy, self._max_num_instances * self._scale_up[key], 
+        fpn_limits = fpn_limits)
 
       # set/fix the shapes
       indexes[key] = self.set_shape(indexes[key], -2, None, None,
@@ -447,43 +443,27 @@ class Parser(parser.Parser):
     imshape = image.get_shape().as_list()
     imshape[-1] = 3
     image.set_shape(imshape)
-
-    # Get the best anchors.
-    boxes = box_utils.yxyx_to_xcycwh(gt_boxes)
-    best_anchors, ious = preprocessing_ops.get_best_anchor(
-        boxes,
-        self._anchors,
-        width=width,
-        height=height,
-        iou_thresh=self._anchor_t,
-        best_match_only=self._best_match_only)
+    
+    labels = dict()
+    labels['inds'], labels['upds'], labels['true_conf'] = self._build_grid(
+        gt_boxes, gt_classes, width, height)
 
     # Set/fix the boxes shape.
-    boxes = self.set_shape(boxes, pad_axis=0, pad_value=0)
+    boxes = self.set_shape(gt_boxes, pad_axis=0, pad_value=0)
     classes = self.set_shape(gt_classes, pad_axis=0, pad_value=-1)
-    best_anchors = self.set_shape(best_anchors, pad_axis=0, pad_value=-1)
-    ious = self.set_shape(ious, pad_axis=0, pad_value=0)
     area = self.set_shape(
         data['groundtruth_area'], pad_axis=0, pad_value=0, inds=inds)
     is_crowd = self.set_shape(
         data['groundtruth_is_crowd'], pad_axis=0, pad_value=0, inds=inds)
 
     # Build the dictionary set.
-    labels = {
+    labels.update({
         'source_id': utils.process_source_id(data['source_id']),
         'bbox': tf.cast(boxes, dtype=self._dtype),
         'classes': tf.cast(classes, dtype=self._dtype),
-        'best_anchors': tf.cast(best_anchors, dtype=self._dtype),
-        'best_iou_match': ious,
-    }
-
-    # Build the grid formatted for loss computation in model output format.
-    labels['inds'], labels['upds'], labels['true_conf'] = self._build_grid(
-        labels, width, height, use_tie_breaker=self._use_tie_breaker)
+    })
 
     # Update the labels dictionary.
-    labels['bbox'] = box_utils.xcycwh_to_yxyx(labels['bbox'])
-
     if not is_training:
       # Sets up groundtruth data for evaluation.
       groundtruths = {
@@ -503,3 +483,5 @@ class Parser(parser.Parser):
           groundtruths, self._max_num_instances)
       labels['groundtruths'] = groundtruths
     return image, labels
+
+
