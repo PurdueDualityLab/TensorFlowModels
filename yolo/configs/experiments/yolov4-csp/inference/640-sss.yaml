@@ -18,6 +18,9 @@ task:
     decoder:
       version: v4
       type: csp
+      csp_stack: 3
+      fpn_depth: 3
+      path_process_len: 3
     head:
       smart_bias: true
     detection_generator:
