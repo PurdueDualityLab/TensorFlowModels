@@ -67,7 +67,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
       max_delta: gradient clipping to apply to the box loss. 
     """
     self._loss_type = loss_type
-    self._classes = tf.constant(tf.cast(classes, dtype=tf.int32))
+    self._classes = classes
     self._num = tf.cast(len(mask), dtype=tf.int32)
     self._truth_thresh = truth_thresh
     self._ignore_thresh = ignore_thresh

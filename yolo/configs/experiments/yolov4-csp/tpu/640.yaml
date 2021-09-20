@@ -3,7 +3,6 @@ runtime:
   mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
 task:
-  coco91to80: True
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
@@ -64,6 +63,8 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     seed: 1000
+    decoder: 
+      coco91_to_80: True
     parser:
       mosaic: 
         mosaic_frequency: 1.0

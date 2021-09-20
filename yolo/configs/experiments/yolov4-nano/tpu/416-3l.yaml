@@ -3,7 +3,6 @@ runtime:
   mixed_precision_dtype: 'bfloat16'
   tpu_enable_xla_dynamic_padder: false
 task:
-  coco91to80: True
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False

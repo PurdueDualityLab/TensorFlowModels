@@ -2,7 +2,6 @@ runtime:
   distribution_strategy: 'tpu'
   mixed_precision_dtype: 'bfloat16'
 task:
-  coco91to80: True
   smart_bias_lr: 0.0
   model:
     base:

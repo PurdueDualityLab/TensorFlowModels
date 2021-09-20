@@ -4,7 +4,6 @@ runtime:
   loss_scale: "dynamic"
   num_gpus: 1
 task:
-  coco91to80: True
   model:
     base:
       backbone:
