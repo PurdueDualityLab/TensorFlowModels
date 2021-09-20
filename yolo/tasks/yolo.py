@@ -44,10 +44,22 @@ class YoloTask(base_task.Task):
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     return
 
+  def get_masks(self):
+    masks = {}
+    start = 0
+
+    model = self.task_config.model
+    backbone = model.backbone.get()
+    for i in range(backbone.min_level, backbone.max_level + 1):
+      masks[str(i)] = list(range(start, model.boxes_per_scale + start))
+      start += model.boxes_per_scale
+    return masks
+
   def build_model(self):
     """Build an instance of Yolo"""
     from yolo.modeling.factory import build_yolo
 
+    masks = self.get_masks()
     model_base_cfg = self.task_config.model
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
@@ -55,7 +67,8 @@ class YoloTask(base_task.Task):
     input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
-    model, losses = build_yolo(input_specs, model_base_cfg, l2_regularizer)
+    model, losses = build_yolo(input_specs, model_base_cfg, 
+                               l2_regularizer, masks)
 
     self._loss_fn = losses
     self._model = model
@@ -86,8 +99,8 @@ class YoloTask(base_task.Task):
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
     model = self.task_config.model
-    masks = model.get_masks()
-    anchors, anchor_free_limits = model.get_boxes()
+    masks = self.get_masks()
+    anchors, anchor_free_limits = model.anchor_boxes.get()
 
     base_config = dict(
         letter_box=params.parser.letter_box,
@@ -114,6 +127,7 @@ class YoloTask(base_task.Task):
         **base_config)
 
     anchor_dict = {key:[anchors[v] for v in value] for key, value in masks.items()}
+
     parser = yolo_input.Parser(
         output_size=model.input_size,
         anchors=anchor_dict,

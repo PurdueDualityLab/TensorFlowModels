@@ -109,10 +109,8 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   return head
 
 
-def build_yolo(input_specs, model_config, l2_regularization):
-
-  anchor_boxes, anchor_free = model_config.get_boxes()
-  masks = model_config.get_masks()
+def build_yolo(input_specs, model_config, l2_regularization, masks):
+  anchor_boxes, anchor_free = model_config.anchor_boxes.get()
   scale_xy = model_config.detection_generator.scale_xy.get()
   path_scales = model_config.detection_generator.path_scales.get()
 
@@ -140,7 +138,7 @@ def build_yolo(input_specs, model_config, l2_regularization):
     logging.info(f"Anchor Boxes: None -> Model is operating anchor-free.")
     logging.info(" --> boxes_per_scale set to 1. ")
   else:
-    logging.info(f"Anchor Boxes: {model_config.boxes}")
+    logging.info(f"Anchor Boxes: {anchor_boxes}")
 
   losses = detection_generator.losses
   return model, losses

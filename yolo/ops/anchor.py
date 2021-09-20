@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from yolo.ops import box_ops
 from yolo.ops import preprocessing_ops
@@ -104,76 +105,7 @@ def get_best_anchor(y_true,
       values = tf.squeeze(values, axis=0)
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
 
-def _write_anchor_free_grid(boxes,
-                            classes,
-                            height,
-                            width,
-                            stride,
-                            fpn_limits,
-                            center_radius=2.5):
-  """Iterate all boxes and write to grid without anchors boxes."""
-  gen = loss_utils.GridGenerator(
-      masks=None, anchors=[[1, 1]], scale_anchors=stride)
-  grid_points = gen(width, height, 1, boxes.dtype)[0]
-  grid_points = tf.squeeze(grid_points, axis=0)
-  box_list = boxes
-  class_list = classes
 
-  grid_points = (grid_points + 0.5) * stride
-  x_centers, y_centers = grid_points[..., 0], grid_points[..., 1]
-  boxes *= (tf.convert_to_tensor([width, height, width, height]) * stride)
-  tlbr_boxes = box_ops.xcycwh_to_yxyx(boxes)
-
-  boxes = tf.reshape(boxes, [1, 1, -1, 4])
-  tlbr_boxes = tf.reshape(tlbr_boxes, [1, 1, -1, 4])
-  mask = tf.reshape(class_list != -1, [1, 1, -1])
-
-  # check if the box is in the receptive feild of the this fpn level
-  b_t = y_centers - tlbr_boxes[..., 0]
-  b_l = x_centers - tlbr_boxes[..., 1]
-  b_b = tlbr_boxes[..., 2] - y_centers
-  b_r = tlbr_boxes[..., 3] - x_centers
-  box_delta = tf.stack([b_t, b_l, b_b, b_r], axis=-1)
-  if fpn_limits is not None:
-    max_reg_targets_per_im = tf.reduce_max(box_delta, axis=-1)
-    gt_min = max_reg_targets_per_im >= fpn_limits[0]
-    gt_max = max_reg_targets_per_im <= fpn_limits[1]
-    is_in_boxes = tf.logical_and(gt_min, gt_max)
-  else:
-    is_in_boxes = tf.reduce_min(box_delta, axis=-1) > 0.0
-  is_in_boxes = tf.logical_and(is_in_boxes, mask)
-  is_in_boxes_all = tf.reduce_any(is_in_boxes, axis=(0, 1), keepdims=True)
-
-  # check if the center is in the receptive feild of the this fpn level
-  c_t = y_centers - (boxes[..., 1] - center_radius * stride)
-  c_l = x_centers - (boxes[..., 0] - center_radius * stride)
-  c_b = (boxes[..., 1] + center_radius * stride) - y_centers
-  c_r = (boxes[..., 0] + center_radius * stride) - x_centers
-  centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis=-1)
-  is_in_centers = tf.reduce_min(centers_delta, axis=-1) > 0.0
-  is_in_centers = tf.logical_and(is_in_centers, mask)
-  is_in_centers_all = tf.reduce_any(is_in_centers, axis=(0, 1), keepdims=True)
-
-  # colate all masks to get the final locations
-  is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
-  is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
-  is_in_boxes_and_center = tf.logical_and(is_in_index, is_in_boxes_and_center)
-
-  # construct the index update grid
-  reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis=-1)
-  indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
-  y, x, t = tf.split(indexes, 3, axis=-1)
-
-  boxes = tf.gather_nd(box_list, t)
-  classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
-  reps = tf.gather_nd(reps, tf.concat([y, x], axis=-1))
-  reps = tf.cast(tf.expand_dims(reps, axis=-1), boxes.dtype)
-  conf = tf.ones_like(classes)
-
-  # return the samples and the indexes
-  samples = tf.concat([boxes, conf, classes, conf, reps], axis=-1)
-  indexes = tf.concat([y, x, tf.zeros_like(t)], axis=-1)
-  return indexes, samples
 
 class YoloAnchorLabeler:
   def __init__(self, 
@@ -190,7 +122,6 @@ class YoloAnchorLabeler:
                                       best_match_only=self.best_matches_only, 
                                       use_tie_breaker=self.use_tie_breaker,
                                       iou_thresh=self.match_threshold)
-
 
     num_anchors = len(anchors)
     classes = tf.cast(tf.expand_dims(classes, axis = -1), boxes.dtype)
@@ -272,6 +203,87 @@ class YoloAnchorLabeler:
     centers = tf.cast(tf.concat([y, x, anchors], axis = -1), tf.int32)
     return boxes, classes, centers
 
+  def _get_anchor_free(self,
+                       boxes,
+                       classes,
+                       height,
+                       width,
+                       stride,
+                       fpn_limits,
+                       center_radius=2.5):
+    """Iterate all boxes and write to grid without anchors boxes."""
+    gen = loss_utils.GridGenerator(
+      masks=None, anchors=[[1, 1]], scale_anchors=stride)
+    grid_points = gen(width, height, 1, boxes.dtype)[0]
+    grid_points = tf.squeeze(grid_points, axis=0)
+    box_list = boxes
+    class_list = classes
+
+    grid_points = (grid_points + 0.5) * stride
+    x_centers, y_centers = grid_points[..., 0], grid_points[..., 1]
+    boxes *= (tf.convert_to_tensor([width, height, width, height]) * stride)
+
+    tlbr_boxes = box_ops.xcycwh_to_yxyx(boxes)
+
+    boxes = tf.reshape(boxes, [1, 1, -1, 4])
+    tlbr_boxes = tf.reshape(tlbr_boxes, [1, 1, -1, 4])
+    if self.use_tie_breaker:
+      area = tf.reduce_prod(boxes[..., 2:], axis = -1)
+
+    # check if the box is in the receptive feild of the this fpn level
+    b_t = y_centers - tlbr_boxes[..., 0]
+    b_l = x_centers - tlbr_boxes[..., 1]
+    b_b = tlbr_boxes[..., 2] - y_centers
+    b_r = tlbr_boxes[..., 3] - x_centers
+    box_delta = tf.stack([b_t, b_l, b_b, b_r], axis=-1)
+    if fpn_limits is not None:
+      max_reg_targets_per_im = tf.reduce_max(box_delta, axis=-1)
+      gt_min = max_reg_targets_per_im >= fpn_limits[0]
+      gt_max = max_reg_targets_per_im <= fpn_limits[1]
+      is_in_boxes = tf.logical_and(gt_min, gt_max)
+    else:
+      is_in_boxes = tf.reduce_min(box_delta, axis=-1) > 0.0
+    is_in_boxes_all = tf.reduce_any(is_in_boxes, axis=(0, 1), keepdims=True)
+
+    # check if the center is in the receptive feild of the this fpn level
+    c_t = y_centers - (boxes[..., 1] - center_radius * stride)
+    c_l = x_centers - (boxes[..., 0] - center_radius * stride)
+    c_b = (boxes[..., 1] + center_radius * stride) - y_centers
+    c_r = (boxes[..., 0] + center_radius * stride) - x_centers
+    centers_delta = tf.stack([c_t, c_l, c_b, c_r], axis=-1)
+    is_in_centers = tf.reduce_min(centers_delta, axis=-1) > 0.0
+    is_in_centers_all = tf.reduce_any(is_in_centers, axis=(0, 1), keepdims=True)
+
+    # colate all masks to get the final locations
+    is_in_index = tf.logical_or(is_in_boxes_all, is_in_centers_all)
+    is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
+    is_in_boxes_and_center = tf.logical_and(is_in_index, is_in_boxes_and_center)
+
+    if self.use_tie_breaker:
+      inf = 10000000
+      boxes_all = tf.cast(is_in_boxes_and_center, area.dtype) 
+      boxes_all = ((boxes_all * area) + ((1 - boxes_all) * inf))
+      boxes_min = tf.reduce_min(boxes_all, axis = -1, keepdims = True)
+      boxes_min = tf.where(boxes_min == inf, -1.0, boxes_min)
+      is_in_boxes_and_center = boxes_all == boxes_min
+
+    # construct the index update grid
+    reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis=-1)
+    indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
+    y, x, t = tf.split(indexes, 3, axis=-1)
+
+    boxes = tf.gather_nd(box_list, t)
+    classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
+    reps = tf.gather_nd(reps, tf.concat([y, x], axis=-1))
+    reps = tf.cast(tf.expand_dims(reps, axis=-1), boxes.dtype)
+    classes = tf.cast(tf.expand_dims(classes, axis=-1), boxes.dtype)
+    conf = tf.ones_like(classes)
+
+    # return the samples and the indexes
+    samples = tf.concat([boxes, conf, classes, conf, reps], axis=-1)
+    indexes = tf.concat([y, x, tf.zeros_like(t)], axis=-1)
+    return indexes, samples
+
   def __call__(self, 
                boxes, 
                classes, 
@@ -300,10 +312,10 @@ class YoloAnchorLabeler:
       updates = tf.concat(
         [boxes, ind_mask, classes, ind_mask, ind_mask], axis = -1)
     else:
-      (centers, updates) = _write_anchor_free_grid(boxes, classes, height, 
+      (centers, updates) = self._get_anchor_free(boxes, classes, height, 
                                                    width, stride, fpn_limits)
       boxes, ind_mask, classes, _ = tf.split(updates, [4, 1, 1, 2], axis = -1)
-      num_anchors = 1.0 
+      num_anchors = 1
 
 
     width = tf.cast(width, tf.int32)

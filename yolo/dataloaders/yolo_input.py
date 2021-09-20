@@ -173,7 +173,7 @@ class Parser(parser.Parser):
       use_tie_breaker=self._use_tie_breaker
     )
 
-  def _padded_info_object(self, image):
+  def _pad_infos_object(self, image):
     """Get an identity image op to pad all info vectors, this is used because 
     graph compilation if there are a variable number of info objects in a list.
     """
@@ -194,10 +194,9 @@ class Parser(parser.Parser):
       crop_only = True
       # jitter gives you only one info object, resize and crop gives you one,
       # if crop only then there can be 1 form jitter and 1 from crop
-      infos = [self._padded_info_object(image)]
+      infos = infos.append(self._pad_infos_object(image))
     else:
       crop_only = False
-      infos = []
     image, crop_info, _ = preprocessing_ops.resize_and_jitter_image(
         image,
         shape,
@@ -261,11 +260,11 @@ class Parser(parser.Parser):
       inds = bbox_ops.get_non_empty_box_indices(boxes_)
       boxes = tf.gather(boxes, inds)
       classes = tf.gather(classes, inds)
-      info = self._padded_info_object(image)
+      info = self._pad_infos_object(image)
 
     # Apply scaling to the hue saturation and brightness of an image.
     image = tf.cast(image, dtype=self._dtype)
-    image = image / 255
+    image = image / 255.0
     image = preprocessing_ops.image_rand_hsv(
         image,
         self._aug_rand_hue,
@@ -275,29 +274,18 @@ class Parser(parser.Parser):
         darknet=self._darknet)
 
     # Cast the image to the selcted datatype.
-    image, labels = self._build_label(
-        image,
-        boxes,
-        classes,
-        self._image_w,
-        self._image_h,
-        info,
-        inds,
-        data,
-        is_training=True)
+    image, labels = self._build_label(image, boxes, classes, 
+                                      info, inds, data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
-    # Down size coco 91 to coco 80 if the option is selected.
-
     # Get the image shape constants and cast the image to the selcted datatype.
     image = tf.cast(data['image'], dtype=self._dtype)
     boxes = data['groundtruth_boxes']
     classes = data['groundtruth_classes']
 
-    height, width = self._image_h, self._image_w
     image, infos, _ = preprocessing_ops.resize_and_jitter_image(
-        image, [height, width],
+        image, [self._image_h, self._image_w],
         letter_box=self._letter_box,
         random_pad=False,
         shiftx=0.5,
@@ -305,7 +293,7 @@ class Parser(parser.Parser):
         jitter=0.0)
 
     # Clip and clean boxes.
-    image = image / 255
+    image = image / 255.0
     boxes, inds = preprocessing_ops.apply_infos(
         boxes, infos, shuffle_boxes=False, area_thresh=0.0, augment=True)
     classes = tf.gather(classes, inds)
@@ -315,8 +303,6 @@ class Parser(parser.Parser):
         image,
         boxes,
         classes,
-        width,
-        height,
         info,
         inds,
         data,
@@ -377,13 +363,14 @@ class Parser(parser.Parser):
                    image,
                    gt_boxes,
                    gt_classes,
-                   width,
-                   height,
                    info,
                    inds,
                    data,
                    is_training=True):
     """Label construction for both the train and eval data. """
+    width = self._image_w
+    height = self._image_h
+
     # Set the image shape.
     imshape = image.get_shape().as_list()
     imshape[-1] = 3

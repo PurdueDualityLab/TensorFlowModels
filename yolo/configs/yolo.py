@@ -31,53 +31,8 @@ COCO_INPUT_PATH_BASE = 'coco'
 COCO_TRIAN_EXAMPLES = 118287
 COCO_VAL_EXAMPLES = 5000
 
-
-# default param classes
-@dataclasses.dataclass
-class ModelConfig(hyperparams.Config):
-
-  def as_dict(self):
-    model_kwargs = super().as_dict()
-    if self.boxes is not None:
-      model_kwargs.update({'boxes': [str(b) for b in self.boxes]})
-    else:
-      model_kwargs.update({'boxes': None})
-    return model_kwargs
-
-  def get_boxes(self):
-    if self.boxes is None and self.anchor_free_limits is None:
-      raise Exception("Boxes or Anchor Free Limits must be defined for usage.")
-    
-    anchor_limits = self.anchor_free_limits
-    if anchor_limits is None:
-      boxes = []
-      key = re.compile('([\d\.]+)')
-      for box in self.boxes:
-        if isinstance(box, list) or isinstance(box, tuple):
-          boxes.append(box)
-        elif isinstance(box, str):
-          boxes.append([float(val) for val in key.findall(box)])
-        elif isinstance(box, int):
-          raise IOError('unsupported input type, only strings or tuples')
-    else:
-      backbone = self.backbone.get()
-      ishape = self.input_size.copy()[:2]
-      boxes = [list(ishape)] * (backbone.max_level - backbone.min_level + 1)
-    return boxes, anchor_limits
-
-  def get_masks(self):
-    masks = {}
-    start = 0
-    backbone = self.backbone.get()
-    for i in range(backbone.min_level, backbone.max_level + 1):
-      masks[str(i)] = list(range(start, self.boxes_per_scale + start))
-      start += self.boxes_per_scale
-    return masks
-
-
 @dataclasses.dataclass
 class FPNConfig(hyperparams.Config):
-
   def get(self):
     values = self.as_dict()
     if "all" in values and values["all"] is not None:
@@ -86,6 +41,18 @@ class FPNConfig(hyperparams.Config):
           values[key] = values["all"]
     return values
 
+@dataclasses.dataclass
+class AnchorBoxes(hyperparams.Config):
+  widths: Optional[List[int]] = None
+  heights: Optional[List[int]] = None
+  anchor_free_limits: Optional[List[int]] = None
+
+  def get(self):
+    if self.anchor_free_limits is None:
+      boxes = [[w, h] for w, h in zip(self.widths, self.heights)]
+    else:
+      boxes = [[1.0, 1.0]] * (len(self.anchor_free_limits) + 1)
+    return boxes, self.anchor_free_limits
 
 # dataset parsers
 @dataclasses.dataclass
@@ -232,7 +199,7 @@ class YoloLoss(hyperparams.Config):
 
 
 @dataclasses.dataclass
-class Yolo(ModelConfig):
+class Yolo(hyperparams.Config):
   input_size: Optional[List[int]] = dataclasses.field(
       default_factory=lambda: [512, 512, 3])
   backbone: backbones.Backbone = backbones.Backbone(
@@ -248,8 +215,7 @@ class Yolo(ModelConfig):
       norm_epsilon=0.001)
   num_classes: int = 91
   boxes_per_scale: int = 3
-  boxes: Optional[List[str]] = None
-  anchor_free_limits: Optional[int] = None
+  anchor_boxes: AnchorBoxes = AnchorBoxes()
   darknet_based_model: bool = False
 
 
