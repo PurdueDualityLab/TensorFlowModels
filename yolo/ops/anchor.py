@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from yolo.ops import box_ops, preprocessing_ops
 from yolo.ops import loss_utils
-from official.vision.beta.ops import box_ops as bbox_ops
+from official.vision.beta.ops import anchor, box_ops as bbox_ops
 
 
 def get_best_anchor(y_true,
@@ -187,8 +187,8 @@ class YoloAnchorLabeler:
                                       best_match_only=self.best_matches_only, 
                                       iou_thresh=self.match_threshold)
 
-    num_anchors = tf.shape(iou_index)
-    num_anchors = num_anchors[-1]
+
+    num_anchors = len(anchors)
     classes = tf.cast(tf.expand_dims(classes, axis = -1), boxes.dtype)
 
     boxes = tf.tile(tf.expand_dims(boxes, axis = -2), [1, num_anchors, 1])
