@@ -178,14 +178,17 @@ def _write_anchor_free_grid(boxes,
 class YoloAnchorLabeler:
   def __init__(self, 
                match_threshold = 0.25, 
-               best_matches_only = False):
+               best_matches_only = False, 
+               use_tie_breaker = True):
     self.match_threshold = match_threshold
     self.best_matches_only = best_matches_only
+    self.use_tie_breaker = use_tie_breaker
 
   def _get_anchor_id(self, boxes, classes, anchors, width, height, stride):
     iou_index, ious = get_best_anchor(boxes, anchors, stride,
                                       width=width, height=height, 
                                       best_match_only=self.best_matches_only, 
+                                      use_tie_breaker=self.use_tie_breaker,
                                       iou_thresh=self.match_threshold)
 
 

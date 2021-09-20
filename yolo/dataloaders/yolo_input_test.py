@@ -121,7 +121,7 @@ def test_yolo_pipeline(is_training=True, num=30):
   print(dataset, dsp)
   # shind = 3
   dip = 0
-  if config.coco91to80:
+  if config.model.num_classes == 80:
     drawer = utils.DrawBoxes(
         labels=coco.get_coco_names(
             path="yolo/dataloaders/dataset_specs/coco.names"),

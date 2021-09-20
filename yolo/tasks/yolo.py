@@ -10,7 +10,7 @@ from official.core import config_definitions
 from official.modeling import performance
 from official.vision.beta.ops import box_ops
 from official.vision.beta.evaluation import coco_evaluator
-from official.vision.beta.dataloaders import tf_example_decoder
+from yolo.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
@@ -72,6 +72,7 @@ class YoloTask(base_task.Task):
       decoder_cfg = params.decoder.get()
       if params.decoder.type == 'simple_decoder':
         decoder = tf_example_decoder.TfExampleDecoder(
+            coco91_to_80=decoder_cfg.coco91_to_80,
             regenerate_source_id=decoder_cfg.regenerate_source_id)
       elif params.decoder.type == 'label_map_decoder':
         decoder = tf_example_label_map_decoder.TfExampleDecoderLabelMap(
@@ -85,6 +86,7 @@ class YoloTask(base_task.Task):
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""
     model = self.task_config.model
+    masks = model.get_masks()
     anchors, anchor_free_limits = model.get_boxes()
 
     base_config = dict(
@@ -111,10 +113,10 @@ class YoloTask(base_task.Task):
         aug_scale_max=params.parser.mosaic.aug_scale_max,
         **base_config)
 
+    anchor_dict = {key:[anchors[v] for v in value] for key, value in masks.items()}
     parser = yolo_input.Parser(
         output_size=model.input_size,
-        masks=model.get_masks(),
-        anchors=anchors,
+        anchors=anchor_dict,
         use_tie_breaker=params.parser.use_tie_breaker,
         jitter=params.parser.jitter,
         aug_scale_min=params.parser.aug_scale_min,
@@ -128,7 +130,6 @@ class YoloTask(base_task.Task):
         darknet=model.darknet_based_model,
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
-        coco91to80=self.task_config.coco91to80,
         anchor_free_limits=anchor_free_limits,
         dtype=params.dtype,
         **base_config)
