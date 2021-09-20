@@ -45,7 +45,7 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1
   config.validation_data.global_batch_size = 1
 
   config.train_data.dtype = 'float32'
@@ -54,19 +54,19 @@ def test_yolo_input_task():
   config.validation_data.shuffle_buffer_size = 1
   config.train_data.shuffle_buffer_size = 1
 
-  if config.train_data.input_path == '':
-    config.coco91to80 = False
-    config.train_data.tfds_name = 'coco'
-    config.validation_data.tfds_name = 'coco'
-    config.train_data.tfds_split = 'train'
-    config.validation_data.tfds_split = 'validation'
-    config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-    config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-    config.train_data.input_path = ''
-    config.validation_data.input_path = ''
-  else:
-    config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-    config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+  # if config.train_data.input_path == '':
+  config.coco91to80 = False
+  config.train_data.tfds_name = 'coco'
+  config.validation_data.tfds_name = 'coco'
+  config.train_data.tfds_split = 'train'
+  config.validation_data.tfds_split = 'validation'
+  config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  config.train_data.input_path = ''
+  config.validation_data.input_path = ''
+  # else:
+  #   config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+  #   config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 
   with tf.device('/CPU:0'):
     train_data = task.build_inputs(config.train_data)
@@ -275,6 +275,6 @@ def test_ret_pipeline():
 
 
 if __name__ == '__main__':
-  time_pipeline(num=100)
+  # time_pipeline(num=100)
   test_yolo_pipeline(is_training=True, num=20)
   # test_yolo_pipeline(is_training=False, num=11)

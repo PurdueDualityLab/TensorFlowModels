@@ -1,9 +1,7 @@
-from operator import pos
 import tensorflow as tf
-
-from yolo.ops import box_ops, preprocessing_ops
+from yolo.ops import box_ops
+from yolo.ops import preprocessing_ops
 from yolo.ops import loss_utils
-from official.vision.beta.ops import anchor, box_ops as bbox_ops
 
 
 def get_best_anchor(y_true,
@@ -12,7 +10,8 @@ def get_best_anchor(y_true,
                     width=1,
                     height=1,
                     iou_thresh=0.25,
-                    best_match_only=False):
+                    best_match_only=False, 
+                    use_tie_breaker=True):
   """
   get the correct anchor that is assoiciated with each box using IOU
   
@@ -88,12 +87,14 @@ def get_best_anchor(y_true,
     # subtract 1 makeing all the bad locations 0.
     if best_match_only:
       iou_index = ((indexes[..., 0:] + 1) * ind_mask[..., 0:]) - 1
+    elif use_tie_breaker:
+      iou_index = tf.concat([
+          tf.expand_dims(indexes[..., 0], axis=-1),
+          ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1], axis=-1)
     else:
       iou_index = tf.concat([
           tf.expand_dims(indexes[..., 0], axis=-1),
-          ((indexes[..., 1:] + 1) * ind_mask[..., 1:]) - 1
-      ],
-                            axis=-1)
+          tf.zeros_like(indexes[..., 1:]) - 1], axis=-1)
 
     true_prod = tf.reduce_prod(true_wh, axis=-1, keepdims=True)
     iou_index = tf.where(true_prod > 0, iou_index, tf.zeros_like(iou_index) - 1)
