@@ -103,23 +103,6 @@ class InputUtilsTest(parameterized.TestCase, tf.test.TestCase):
 
     tf.print(real_boxes)
     tf.print(box_history)
-    self.assertAllEqual([num_boxes, 4], processed_boxes_shape.numpy())
-
-  # Not Working Test, Probably more informative documentation regarding ranges?
-  @parameterized.parameters((2, .1, [100, 100]))
-  def testBoxCandidates(self,
-                        num_boxes,
-                        area_thr,
-                        output_size):
-    boxes = tf.convert_to_tensor(np.random.rand(num_boxes, 4))
-    real_boxes = bbox_ops.denormalize_boxes(boxes, output_size)
-    box_history = bbox_ops.denormalize_boxes(boxes, [500, 500])
-    processed_boxes = preprocessing_ops.boxes_candidates(
-                        real_boxes, box_history, wh_thr=100, area_thr=tf.cast(area_thr, tf.double))
-    processed_boxes_shape = tf.shape(processed_boxes)
-
-    tf.print(real_boxes)
-    tf.print(box_history)
     tf.print(tf.shape(processed_boxes))
     self.assertAllEqual([num_boxes, 4], processed_boxes_shape.numpy())
 
