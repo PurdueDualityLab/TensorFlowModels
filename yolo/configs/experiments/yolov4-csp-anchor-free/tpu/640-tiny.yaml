@@ -14,7 +14,7 @@ task:
     num_classes: 80
     smart_bias: true
     input_size: [640, 640, 3]
-    anchor_free_limits: [64, 128]
+    level_limits: [64, 128]
     max_level: 5
     min_level: 3
     norm_activation:

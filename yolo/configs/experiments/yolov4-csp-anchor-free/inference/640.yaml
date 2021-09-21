@@ -49,7 +49,7 @@ task:
       norm_momentum: 0.97
       use_sync_bn: true
     num_classes: 80
-    anchor_free_limits: [64, 128]
+    level_limits: [64, 128]
   train_data:
     global_batch_size: 1
     dtype: float32

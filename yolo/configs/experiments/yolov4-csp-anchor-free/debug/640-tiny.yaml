@@ -17,7 +17,7 @@ task:
     boxes: ['[64.0, 64.0]',
             '[256.0, 256.0]',
             '[1024.0, 1024.0]']
-    anchor_free_limits: [64, 128]
+    level_limits: [64, 128]
     input_size: [640, 640, 3]
     boxes_per_scale: 1
     max_level: 5

@@ -45,14 +45,14 @@ class FPNConfig(hyperparams.Config):
 class AnchorBoxes(hyperparams.Config):
   widths: Optional[List[int]] = None
   heights: Optional[List[int]] = None
-  anchor_free_limits: Optional[List[int]] = None
+  level_limits: Optional[List[int]] = None
 
   def get(self):
-    if self.anchor_free_limits is None:
+    if self.level_limits is None:
       boxes = [[w, h] for w, h in zip(self.widths, self.heights)]
     else:
-      boxes = [[1.0, 1.0]] * (len(self.anchor_free_limits) + 1)
-    return boxes, self.anchor_free_limits
+      boxes = [[1.0, 1.0]] * (len(self.level_limits) + 1)
+    return boxes, self.level_limits
 
 # dataset parsers
 @dataclasses.dataclass

@@ -100,7 +100,7 @@ class YoloTask(base_task.Task):
     """Build input dataset."""
     model = self.task_config.model
     masks = self.get_masks()
-    anchors, anchor_free_limits = model.anchor_boxes.get()
+    anchors, level_limits = model.anchor_boxes.get()
 
     base_config = dict(
         letter_box=params.parser.letter_box,
@@ -144,7 +144,7 @@ class YoloTask(base_task.Task):
         best_match_only=params.parser.best_match_only,
         anchor_t=params.parser.anchor_thresh,
         random_pad=params.parser.random_pad,
-        anchor_free_limits=anchor_free_limits,
+        level_limits=level_limits,
         dtype=params.dtype,
         **base_config)
 
