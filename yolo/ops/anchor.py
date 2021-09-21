@@ -296,7 +296,7 @@ class YoloAnchorLabeler:
     conf = tf.ones_like(classes)
 
     # return the samples and the indexes
-    samples = tf.concat([boxes, conf, classes, conf, reps], axis=-1)
+    samples = tf.concat([boxes, conf, classes], axis=-1)
     indexes = tf.concat([y, x, tf.zeros_like(t)], axis=-1)
     return indexes, samples
 
@@ -350,12 +350,11 @@ class YoloAnchorLabeler:
       boxes, classes, centers = self._get_centers(boxes, classes, anchors, 
                                                   width, height, offset)
       ind_mask = tf.ones_like(classes)
-      updates = tf.concat(
-        [boxes, ind_mask, classes, ind_mask, ind_mask], axis = -1)
+      updates = tf.concat([boxes, ind_mask, classes], axis = -1)
     else:
       (centers, updates) = self._get_anchor_free(boxes, classes, height, 
                                                    width, stride, fpn_limits)
-      boxes, ind_mask, classes, _ = tf.split(updates, [4, 1, 1, 2], axis = -1)
+      boxes, ind_mask, classes = tf.split(updates, [4, 1, 1], axis = -1)
       num_anchors = 1
 
 

@@ -271,8 +271,7 @@ class DarknetLoss(YoloLossBase):
     anchor_grid = tf.stop_gradient(anchor_grid)
 
     # Split all the ground truths to use as seperate items in loss computation.
-    (true_box, ind_mask, true_class, _, _) = tf.split(
-        y_true, [4, 1, 1, 1, 1], axis=-1)
+    (true_box, ind_mask, true_class) = tf.split(y_true, [4, 1, 1], axis=-1)
     true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     grid_mask = true_conf
@@ -414,8 +413,7 @@ class ScaledLoss(YoloLossBase):
         width, height, batch_size, dtype=tf.float32)
 
     # Split the y_true list.
-    (true_box, ind_mask, true_class, _, _) = tf.split(
-        y_true, [4, 1, 1, 1, 1], axis=-1)
+    (true_box, ind_mask, true_class) = tf.split(y_true, [4, 1, 1], axis=-1)
     grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
     true_class = tf.squeeze(true_class, axis=-1)
     num_objs = tf.cast(tf.reduce_sum(ind_mask), dtype=y_pred.dtype)

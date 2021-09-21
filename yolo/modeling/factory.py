@@ -140,5 +140,5 @@ def build_yolo(input_specs, model_config, l2_regularization, masks):
   else:
     logging.info(f"Anchor Boxes: {anchor_boxes}")
 
-  losses = detection_generator.losses
+  losses = detection_generator.get_losses()
   return model, losses

@@ -193,6 +193,7 @@ class ConvBN(tf.keras.layers.Layer):
         'kernel_regularizer': self._kernel_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
+        'use_separable_conv': self._use_separable_conv, 
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
