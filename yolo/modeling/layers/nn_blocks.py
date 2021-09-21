@@ -483,17 +483,6 @@ class CSPTiny(tf.keras.layers.Layer):
         padding='same',
         **dark_conv_args)
 
-    # kernel_initializer=self._kernel_initializer,
-    # bias_initializer=self._bias_initializer,
-    # bias_regularizer=self._bias_regularizer,
-    # kernel_regularizer=self._kernel_regularizer,
-    # use_bn=self._use_bn,
-    # use_sync_bn=self._use_sync_bn,
-    # norm_momentum=self._norm_momentum,
-    # norm_epsilon=self._norm_epsilon,
-    # activation=self._conv_activation,
-    # leaky_alpha=self._leaky_alpha)
-
     self._convlayer3 = ConvBN(
         filters=self._filters // 2,
         kernel_size=(3, 3),

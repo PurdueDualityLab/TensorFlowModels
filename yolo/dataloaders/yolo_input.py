@@ -4,8 +4,8 @@ into (image, labels) tuple for RetinaNet.
 """
 import tensorflow as tf
 import numpy as np
-from yolo.ops import preprocessing_ops, anchor
-from yolo.ops import box_ops as box_utils
+from yolo.ops import preprocessing_ops
+from yolo.ops import anchor
 from official.vision.beta.ops import preprocess_ops
 from official.vision.beta.ops import box_ops as bbox_ops
 from official.vision.beta.dataloaders import parser, utils
@@ -18,7 +18,7 @@ class Parser(parser.Parser):
       self,
       output_size,
       anchors,
-      strides,
+      expanded_strides,
       anchor_free_limits=None,
       max_num_instances=200,
       area_thresh=0.1,
@@ -40,16 +40,15 @@ class Parser(parser.Parser):
       darknet=False,
       use_tie_breaker=True,
       dtype='float32',
-      seed=None,
-  ):
+      seed=None):
     """Initializes parameters for parsing annotations in the dataset.
 
     Args:
       output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
       anchors: `Dict[List[Union[int, float]]]` values for each anchor box.
-      strides: `Dict[int]` for how much the model scales down the images at the
-        largest level.
+      expanded_strides: `Dict[int]` for how much the model scales down the 
+        images at the largest level.
       anchor_free_limits: `List` the box sizes that will be allowed at each FPN 
         level as is done in the FCOS and YOLOX paper for anchor free box 
         assignment. Anchor free will perform worse than Anchor based, but only 
@@ -95,9 +94,7 @@ class Parser(parser.Parser):
         there should be one value for scale_xy for each level from min_level to 
         max_level.
       best_match_only: `boolean` indicating how boxes are selected for 
-        optimization.
-      coco91to80: `bool` for wether to convert coco91 to coco80 to minimize 
-        model parameters.      
+        optimization.  
       darknet: `boolean` indicating which data pipeline to use. Setting to True 
         swaps the pipeline to output images realtive to Yolov4 and older. 
       use_tie_breaker: `boolean` indicating whether to use the anchor threshold 
@@ -108,11 +105,11 @@ class Parser(parser.Parser):
     """
     for key in anchors.keys():
       # Assert that the width and height is viable
-      assert output_size[1] % strides[str(key)] == 0
-      assert output_size[0] % strides[str(key)] == 0
+      assert output_size[1] % expanded_strides[str(key)] == 0
+      assert output_size[0] % expanded_strides[str(key)] == 0
 
     # scale of each FPN level
-    self._strides = strides
+    self._strides = expanded_strides
 
     # Set the width and height properly and base init:
     self._image_w = output_size[1]
@@ -175,9 +172,7 @@ class Parser(parser.Parser):
     )
 
   def _pad_infos_object(self, image):
-    """Get an identity image op to pad all info vectors, this is used because 
-    graph compilation if there are a variable number of info objects in a list.
-    """
+    """Get a Tensor to pad the info object list."""
     shape_ = tf.shape(image)
     val = tf.stack([
         tf.cast(shape_[:2], tf.float32),
@@ -190,6 +185,7 @@ class Parser(parser.Parser):
   def _jitter_scale(self, image, shape, letter_box, jitter, random_pad,
                     aug_scale_min, aug_scale_max, translate, angle,
                     perspective):
+    """Distort and scale each input image"""
     infos = []
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True
@@ -222,8 +218,7 @@ class Parser(parser.Parser):
     return image, infos, affine
 
   def _parse_train_data(self, data):
-    """Parses data for training and evaluation."""
-    # Down size coco 91 to coco 80 if the option is selected.
+    """Parses data for training."""
 
     # Initialize the shape constants.
     image = data['image']
@@ -280,6 +275,8 @@ class Parser(parser.Parser):
     return image, labels
 
   def _parse_eval_data(self, data):
+    """Parses data for evaluation."""
+
     # Get the image shape constants and cast the image to the selcted datatype.
     image = tf.cast(data['image'], dtype=self._dtype)
     boxes = data['groundtruth_boxes']
@@ -311,6 +308,7 @@ class Parser(parser.Parser):
     return image, labels
 
   def set_shape(self, values, pad_axis=0, pad_value=0, inds=None, scale=1):
+    """Calls set shape for all input objects."""
     if inds is not None:
       values = tf.gather(values, inds)
     vshape = values.get_shape().as_list()
@@ -327,7 +325,7 @@ class Parser(parser.Parser):
     return values
 
   def _build_grid(self, boxes, classes, width, height):
-    '''Private function for building the full scale object and class grid.'''
+    """Private function for building the full scale object and class grid."""
     indexes = {}
     updates = {}
     true_grids = {}

@@ -160,8 +160,8 @@ def test_yolo_pipeline(is_training=True, num=30):
       # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
       image = drawer(image, draw_dict)
 
-      (true_box, ind_mask, true_class, best_iou_match, num_reps) = tf.split(
-          j['upds']['5'], [4, 1, 1, 1, 1], axis=-1)
+      (true_box, ind_mask, true_class) = tf.split(
+          j['upds']['5'], [4, 1, 1], axis=-1)
 
       # true_xy = true_box[shind][..., 0:2] * 20
       # ind_xy = tf.cast(j['inds']['5'][shind][..., 0:2], true_xy.dtype)

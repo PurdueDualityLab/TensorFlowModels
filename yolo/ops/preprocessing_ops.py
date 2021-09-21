@@ -13,18 +13,17 @@ GLOBAL_SEED_SET = False
 
 
 def set_random_seeds(seed=0):
-  """
-  Sets all accessible global seeds to properly apply randomization.
+  """Sets all accessible global seeds to properly apply randomization.
 
-  This is not the same as passing seed as a variable to each call to tf.random.
-  For more, see the documentation for tf.random on the tensorflow website 
-  https://www.tensorflow.org/api_docs/python/tf/random/set_seed. Note that 
-  passing seed to each random number generator will not giv you the expected 
-  behavior IF you use more than one generator in a single function. 
+  This is not the same as passing the seed as a variable to each call 
+  to tf.random.For more, see the documentation for tf.random on the tensorflow 
+  website https://www.tensorflow.org/api_docs/python/tf/random/set_seed. Note 
+  that passing the seed to each random number generator will not give you the 
+  expected behavior if you use more than one generator in a single function.
 
   Args: 
     seed: `Optional[int]` representing the seed you want to use.
-  """
+  """  
   if seed is not None:
     global GLOBAL_SEED_SET
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -35,15 +34,16 @@ def set_random_seeds(seed=0):
 
 
 def get_pad_value():
+  """Return the padding value."""
   return PAD_VALUE
 
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
-  """A unified fucntion for consistant random number generation. 
-
+  """A unified function for consistent random number generation. 
+  
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval. Seed Safe random number generator.
-
+  
   Args:
     minval: An `int` for a lower or upper endpoint of the interval from which to
       choose the random number.
@@ -51,8 +51,8 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
     dtype: The output type of the tensor.
   
   Returns:
-    A random tensor of type dtype that falls between minval and maxval excluding
-    the bigger one.
+    A random tensor of type `dtype` that falls between `minval` and `maxval` 
+    excluding the larger one.
   """
   if GLOBAL_SEED_SET:
     seed = None
@@ -64,18 +64,18 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
 
 
 def rand_scale(val, dtype=tf.float32, seed=None):
-  """Generate a random number for scaling a parameter by multiplication.
+  """Generates a random number for scaling a parameter by multiplication.
 
-  Generates a random number for the scale. Half the time, the value is between
-  [1.0, val) with uniformly distributed probability. The other half, the value
-  is the reciprocal of this value.
-  
-  The function is identical to the one in the original implementation:
+  Generates a random number for the scale. Half of the time, the value is 
+  between [1.0, val) with uniformly distributed probability. In the other half, 
+  the value is the reciprocal of this value. The function is identical to the 
+  one in the original implementation:
   https://github.com/AlexeyAB/darknet/blob/a3714d0a/src/utils.c#L708-L713
   
   Args:
     val: A float representing the maximum scaling allowed.
     dtype: The output type of the tensor.
+    
   Returns:
     The random scale.
   """
@@ -87,18 +87,19 @@ def rand_scale(val, dtype=tf.float32, seed=None):
 
 
 def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
-  """Pad pr clip the tensor value to a fixed length along a given axis.
+  """Pad or clip the tensor value to a fixed length along a given axis.
 
-  Pad a dimension of the tensor to have a maximum number of instances filling
+  Pads a dimension of the tensor to have a maximum number of instances filling
   additional entries with the `pad_value`. Allows for selection of the padding 
-  axis
+  axis.
    
   Args:
     value: An input tensor.
-    instances: An int representing the maximum number of instances.
-    pad_value: An int representing the value used for padding until the maximum
-      number of instances is obtained.
-    pad_axis: An int representing the axis index to pad.
+    instances: An `int` representing the maximum number of instances.
+    pad_value: An `int` representing the value used for padding until the 
+      maximum number of instances is obtained.
+    pad_axis: An `int` representing the axis index to pad.
+  
   Returns:
     The output tensor whose dimensions match the input tensor except with the
     size along the `pad_axis` replaced by `instances`.
@@ -125,16 +126,17 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
 
 
 def get_image_shape(image):
-  """ Consitently get the width and height of the image. 
+  """Consistently gets the width and height of the image.
   
-  Get the shape of the image regardless of if the image is in the
+  Gets the shape of the image regardless of if the image is in the
   (batch_size, x, y, c) format or the (x, y, c) format.
   
   Args:
     image: A tensor who has either 3 or 4 dimensions.
   
   Returns:
-    A tuple representing the (height, width) of the image.
+    A tuple (height, width), where height is the height of the image 
+    and width is the width of the image.
   """
   shape = tf.shape(image)
   if shape.get_shape().as_list()[0] == 4:
@@ -147,23 +149,7 @@ def get_image_shape(image):
 
 
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
-  """Randomly alter the hue, saturation, and brightness of an image. 
-
-  Applies ranomdization the same way as Darknet by scaling the saturation and 
-  brightness of the image and adding/rotating the hue.
-
-  Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be added to hue.
-    rs: `float32` used to indicate the maximum delta that can be multiplied to 
-      saturation.
-    rv: `float32` used to indicate the maximum delta that can be multiplied to 
-      brightness.
-    seed: `Optional[int]` for the seed to use in random number generation.
-  
-  Returns:
-    The HSV altered image in the same datatype as the input image
-  """
+  """Randomize the hue, saturation, and brightness via the darknet method."""
   if rh > 0.0:
     delta = rand_uniform_strong(-rh, rh, seed=seed)
     image = tf.image.adjust_hue(image, delta)
@@ -180,24 +166,7 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
 
 
 def _augment_hsv_torch(image, rh, rs, rv, seed=None):
-  """Randomly alter the hue, saturation, and brightness of an image. 
-
-  Applies ranomdization the same way as Darknet by scaling the saturation and 
-  brightness and hue of the image.
-
-  Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
-      hue.
-    rs: `float32` used to indicate the maximum delta that can be multiplied to 
-      saturation.
-    rv: `float32` used to indicate the maximum delta that can be multiplied to 
-      brightness.
-    seed: `Optional[int]` for the seed to use in random number generation.
-  
-  Returns:
-    The HSV altered image in the same datatype as the input image
-  """
+  """Randomize the hue, saturation, and brightness via the pytorch method."""
   dtype = image.dtype
   image = tf.cast(image, tf.float32)
   image = tf.image.rgb_to_hsv(image)
@@ -206,7 +175,6 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
   r = rand_uniform_strong(
       -1, 1, shape=[3], dtype=image.dtype, seed=seed) * gen_range + 1
 
-  # image = tf.cast(tf.cast(image, r.dtype) * (r * scale), tf.int32)
   image = tf.math.floor(tf.cast(image, scale.dtype) * scale)
   image = tf.math.floor(tf.cast(image, r.dtype) * r)
   h, s, v = tf.split(image, 3, axis=-1)
@@ -221,23 +189,24 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
-  """Randomly alter the hue, saturation, and brightness of an image. 
+  """Randomly alters the hue, saturation, and brightness of an image. 
 
   Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be  multiplied to 
-      hue.
+    image: `Tensor` of shape [None, None, 3] that needs to be altered.
+    rh: `float32` used to indicate the maximum delta that can be multiplied to 
+      the hue.
     rs: `float32` used to indicate the maximum delta that can be multiplied to 
-      saturation.
+      the saturation.
     rv: `float32` used to indicate the maximum delta that can be multiplied to 
-      brightness.
-    seed: `Optional[int]` for the seed to use in random number generation.
-    darknet: `bool` indicating wether the model was orignally built in the 
-      darknet or the pytorch library.
+      the brightness.
+    seed: `Optional[int]` for the seed to use in the random number generation.
+    darknet: `bool` indicating whether the model was originally built in the 
+      Darknet or PyTorch library.
   
   Returns:
-    The HSV altered image in the same datatype as the input image
+    The HSV altered image in the same datatype as the input image.
   """
+
   if darknet:
     image = _augment_hsv_darknet(image, rh, rs, rv, seed=seed)
   else:
@@ -247,27 +216,27 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
 
 def mosaic_cut(image, original_width, original_height, width, height, center,
                ptop, pleft, pbottom, pright, shiftx, shifty):
-  """Use a provided center to take slices of 4 images to apply mosaic. 
+  """Generates a random center location to use for the mosaic operation. 
   
-  Given a center location, cut the input image into a slice that will be 
-  concatnated with other slices with the same center in order to construct 
-  a final mosaiced image. 
+  Given a center location, cuts the input image into a slice that will be 
+  concatenated with other slices with the same center in order to construct 
+  a final mosaicked image. 
   
   Args: 
-    image: Tensor of shape [None, None, 3] that needs to be altered.
-    original_width: `float` value indicating the orignal width of the image.
-    original_height: `float` value indicating the orignal height of the image.
-    width: `float` value indicating the final width image.
-    height: `float` value indicating the final height image.
+    image: `Tensor` of shape [None, None, 3] that needs to be altered.
+    ow: `float` value indicating the original width of the image.
+    oh: `float` value indicating the original height of the image.
+    w: `float` value indicating the final width of the image.
+    h: `float` value indicating the final height of the image.
     center: `float` value indicating the desired center of the final patched 
       image.
     ptop: `float` value indicating the top of the image without padding.
     pleft: `float` value indicating the left of the image without padding. 
     pbottom: `float` value indicating the bottom of the image without padding. 
     pright: `float` value indicating the right of the image without padding. 
-    shiftx: `float` 0.0 or 1.0 value indicating if the image is in the 
+    shiftx: `float` 0.0 or 1.0 value indicating if the image is on the 
       left or right.
-    shifty: `float` 0.0 or 1.0 value indicating if the image is in the 
+    shifty: `float` 0.0 or 1.0 value indicating if the image is at the 
       top or bottom.
   
   Returns:
@@ -546,7 +515,7 @@ def _build_transform(image,
                      random_pad=False,
                      desired_size=None,
                      seed=None):
-  """Builds a unifed affine transformation to spatially augment the image."""
+  """Builds a unified affine transformation to spatially augment the image."""
 
   height, width = get_image_shape(image)
   ch = height = tf.cast(height, tf.float32)
@@ -645,6 +614,30 @@ def affine_warp_image(image,
                       translate=0.0,
                       random_pad=False,
                       seed=None):
+  """Applies random spatial augmentation to the image.
+ 
+  Args: 
+    image: A `Tensor` for the image.
+    desired_size: A `tuple` for desired output image size.
+    perspective: An `int` for the maximum that can be applied to random
+      perspective change.
+    degrees: An `int` for the maximum degrees that can be applied to random
+      rotation.
+    scale_min: An `int` for the minimum scaling factor that can be
+      applied to random scaling.
+    scale_max: An `int` for the maximum scaling factor that can be
+      applied to random scaling.
+    translate: An `int` for the maximum translation that can be applied to
+      random translation.
+    random_pad: A `bool` for using random padding.
+    seed: An `Optional[int]` for the seed to use in random number generation.
+ 
+  Returns:
+    image: A `Tensor` representing the augmented image.
+    affine_matrix: A `Tensor` representing the augmenting matrix for the image.
+    affine_info: A `List` containing the size of the original image, the desired 
+      output_size of the image and the augmenting matrix for the boxes.
+  """
 
   # Build an image transformation matrix.
   image_size = tf.cast(get_image_shape(image), tf.float32)
@@ -670,11 +663,30 @@ def affine_warp_image(image,
       interpolation='bilinear')
 
   desired_size = tf.cast(desired_size, tf.float32)
-  return image, affine_matrix, [image_size, desired_size, affine_boxes]
+  affine_info = [image_size, desired_size, affine_boxes]
+  return image, affine_matrix, affine_info
 
 
 # ops for box clipping and cleaning
 def affine_warp_boxes(affine, boxes, output_size, box_history):
+  """Applies random rotation, random perspective change and random translation 
+  and random scaling to the boxes.
+ 
+  Args:
+    Mb: A `Tensor` for the augmenting matrix for the boxes.
+    boxes: A `Tensor` for the boxes.
+    output_size: A `list` of two integers, a two-element vector or a tensor 
+      such that all but the last dimensions are `broadcastable` to `boxes`. 
+      The last dimension is 2, which represents [height, width].
+    box_history: A `Tensor` for the boxes history, which are the boxes that
+    	undergo the same augmentations as `boxes`, but no clipping was applied.
+    	We can keep track of how much changes are done to the boxes by keeping
+    	track of this tensor.
+  
+  Returns:
+    clipped_boxes: A `Tensor` representing the augmented boxes.
+    box_history: A `Tensor` representing the augmented box_history.
+  """
 
   def _get_corners(box):
     """Get the corner of each box as a tuple of (x, y) coordinates"""
@@ -726,6 +738,22 @@ def boxes_candidates(clipped_boxes,
                      wh_thr=2,
                      ar_thr=20,
                      area_thr=0.1):
+  """Filters the boxes and keeps the boxes that satisfy thewidth/height and 
+  area constraints.
+ 
+  Args:
+    clipped_boxes: A `Tensor` for the boxes.
+    box_history: A `Tensor` for the boxes history, which are the boxes that
+    	undergo the same augmentations as `boxes`, but no clipping was applied.
+    	We can keep track of how much changes are done to the boxes by keeping
+    	track of this tensor.
+    wh_thr: An `int` for the width/height threshold.
+    ar_thr: An `int` for the aspect ratio threshold.
+    area_thr: An `int` for the area threshold.
+  
+  Returns:
+    indices[:, 0]: A `Tensor` representing valid boxes after filtering.
+  """
 
   area_thr = tf.math.abs(area_thr)
 
@@ -764,6 +792,25 @@ def boxes_candidates(clipped_boxes,
 
 
 def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
+  """Resizes and crops the boxes.
+ 
+  Args:
+    boxes: A `Tensor` for the boxes.
+    image_scale: A `Tensor` for the scaling factor of the image.
+    output_size: A `list` of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
+    offset: A `Tensor` for how much translation was applied to the image.
+    box_history: A `Tensor` for the boxes history, which are the boxes that
+      undergo the same augmentations as `boxes`, but no clipping was applied.
+      We can keep track of how much changes are done to the boxes by keeping
+      track of this tensor.
+  
+  Returns:
+    clipped_boxes: A `Tensor` representing the augmented boxes.
+    box_history: A `Tensor` representing the augmented box_history.
+  """
+
   # Shift and scale the input boxes.
   boxes *= tf.tile(tf.expand_dims(image_scale, axis=0), [1, 2])
   boxes -= tf.tile(tf.expand_dims(offset, axis=0), [1, 2])
@@ -784,6 +831,22 @@ def apply_infos(boxes,
                 area_thresh=0.1,
                 seed=None,
                 augment=True):
+  """Clips and cleans the boxes.
+ 
+  Args:
+    boxes: A `Tensor` for the boxes.
+    image_scale: A `list` that contains the information of the image.
+    affine: A `list` that contains parameters for resize and crop.
+    shuffle_boxes: A `bool` for shuffling the boxes.
+    area_thresh: An `int` for the area threshold.
+    seed: seed for random number generation.
+    augment: A `bool` for clipping the boxes to [0, 1].
+  
+  Returns:
+    boxes: A `Tensor` representing the augmented boxes.
+    ind: A `Tensor` valid box indices.
+  """
+
   # Clip and clean boxes.
   def get_valid_boxes(boxes):
     """Get indices for non-empty boxes."""

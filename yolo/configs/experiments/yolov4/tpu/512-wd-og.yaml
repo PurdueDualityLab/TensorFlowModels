@@ -64,12 +64,12 @@ task:
     seed: 1000
     parser:
       mosaic:
-        mosaic_frequency: 0.6
+        mosaic_frequency: 0.5
         mixup_frequency: 0.0
         mosaic_crop_mode: 'crop'
         mosaic_center: 0.2
-        aug_scale_min: 0.2
-        aug_scale_max: 1.6
+        aug_scale_min: 1.0
+        aug_scale_max: 1.0
         jitter: 0.3
       max_num_instances: 200
       letter_box: False

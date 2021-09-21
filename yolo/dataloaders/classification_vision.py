@@ -91,7 +91,7 @@ class Parser(parser.Parser):
       image = self._augmenter.distort(image)
 
     image = tf.image.random_flip_left_right(image)
-    image = tf.cast(image, tf.float32) / 255
+    image = tf.cast(image, tf.float32) / 255.0
     image = tf.image.resize(image, (self._output_size[0], self._output_size[1]))
 
     label = decoded_tensors['image/class/label']

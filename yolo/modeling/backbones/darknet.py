@@ -667,33 +667,6 @@ class Darknet(tf.keras.Model):
     }
     return layer_config
 
-
-# @factory.register_backbone_builder('darknet')
-# def build_darknet(
-#     input_specs: tf.keras.layers.InputSpec,
-#     model_config,
-#     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
-
-#   backbone_cfg = model_config.backbone.get()
-#   norm_activation_config = model_config.norm_activation
-
-#   model = Darknet(
-#       model_id=backbone_cfg.model_id,
-#       min_level=model_config.min_level,
-#       max_level=model_config.max_level,
-#       input_specs=input_specs,
-#       dilate=backbone_cfg.dilate,
-#       width_scale=backbone_cfg.width_scale,
-#       depth_scale=backbone_cfg.depth_scale,
-#       activation=norm_activation_config.activation,
-#       use_sync_bn=norm_activation_config.use_sync_bn,
-#       use_separable_conv=backbone_cfg.use_separable_conv,
-#       norm_momentum=norm_activation_config.norm_momentum,
-#       norm_epsilon=norm_activation_config.norm_epsilon,
-#       kernel_regularizer=l2_regularizer)
-#   return model
-
-
 @factory.register_backbone_builder('darknet')
 def build_darknet(
     input_specs: tf.keras.layers.InputSpec,
@@ -703,7 +676,6 @@ def build_darknet(
   """Builds darknet."""
 
   backbone_config = backbone_config.get()
-
   model = Darknet(
       model_id=backbone_config.model_id,
       min_level=backbone_config.min_level,
@@ -720,30 +692,3 @@ def build_darknet(
       norm_epsilon=norm_activation_config.norm_epsilon,
       kernel_regularizer=l2_regularizer)
   return model
-
-
-# @factory.register_backbone_builder('darknet')
-# def build_darknet(
-#     input_specs: tf.keras.layers.InputSpec,
-#     backbone_cfg: hyperparams.Config,
-#     norm_activation_config: hyperparams.Config,
-#     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
-#   """Builds darknet."""
-
-#   backbone_cfg = backbone_cfg.get()
-
-#   model = Darknet(
-#       model_id=backbone_cfg.model_id,
-#       min_level=backbone_cfg.min_level,
-#       max_level=backbone_cfg.max_level,
-#       input_specs=input_specs,
-#       dilate=backbone_cfg.dilate,
-#       width_scale=backbone_cfg.width_scale,
-#       depth_scale=backbone_cfg.depth_scale,
-#       activation=norm_activation_config.activation,
-#       use_sync_bn=norm_activation_config.use_sync_bn,
-#       norm_momentum=norm_activation_config.norm_momentum,
-#       norm_epsilon=norm_activation_config.norm_epsilon,
-#       kernel_regularizer=l2_regularizer)
-#   model.summary()
-#   return model

@@ -69,9 +69,9 @@ class TfExampleDecoder(tf_example_decoder.TfExampleDecoder):
 
     self._coco91_to_80 = coco91_to_80
     super().__init__(
-      include_mask=False,
-      regenerate_source_id=False,
-      mask_binarize_threshold=None
+      include_mask=include_mask,
+      regenerate_source_id=regenerate_source_id,
+      mask_binarize_threshold=mask_binarize_threshold
     )
 
   def decode(self, serialized_example):

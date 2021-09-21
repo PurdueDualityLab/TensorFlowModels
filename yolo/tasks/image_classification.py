@@ -20,7 +20,6 @@ from official.core import task_factory
 from yolo.configs import darknet_classification as exp_cfg
 from yolo.dataloaders.decoders import classification_tfds_decoder as cli
 from yolo.dataloaders import classification_input
-from yolo.dataloaders import classification_vision
 from official.vision.beta.tasks import image_classification
 from official.modeling import tf_utils
 import logging
@@ -151,7 +150,7 @@ class ImageClassificationTask(image_classification.ImageClassificationTask):
     else:
       decoder = classification_input.Decoder()
 
-    parser = classification_vision.Parser(
+    parser = classification_input.Parser(
         output_size=input_size[:2], aug_policy='randaug', dtype=params.dtype)
 
     reader = input_reader.InputReader(
