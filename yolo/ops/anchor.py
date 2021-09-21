@@ -118,60 +118,45 @@ class YoloAnchorLabeler:
 
     gather_id, _, anchor_id = tf.split(viable, 3, axis = -1)
 
-    boxes_ = tf.gather_nd(boxes, gather_id)
+    boxes = tf.gather_nd(boxes, gather_id)
     classes = tf.gather_nd(classes, gather_id)
     
-    # TODO: return the cvorrect values including IOU
-    tf.print(anchors, mask, viable, tf.shape(boxes_), tf.shape(boxes))
-    return viable
+    classes = tf.expand_dims(classes, axis = -1)
+    classes = tf.cast(classes, boxes.dtype)
+    anchor_id = tf.cast(anchor_id, boxes.dtype)
+    return boxes, classes, anchor_id
 
   def _get_anchor_id(self, key, boxes, classes, anchors, width, height, stride):
     """Find the object anchor assignments in an anchor based paradigm. """
     
-    # # find the best anchors for each box.
-    if self.use_tie_breaker: 
+    # find the best anchor
+    num_anchors = len(anchors)
+    if self.best_matches_only:
+      # get the best anchor for each box
+      iou_index, _ = get_best_anchor(boxes, anchors, stride,
+                                        width=width, height=height, 
+                                        best_match_only=True, 
+                                        iou_thresh=self.match_threshold)
+      mask = range(num_anchors)
+    else: 
+      # stitch and search boxes across fpn levels
       anchorsvec = []
-      for key in self.anchors.keys():
-        anchorsvec.extend(self.anchors[key])
-        
-      iou_index, ious = get_best_anchor(boxes, anchorsvec, stride,
+      for stitch in self.anchors.keys():
+        anchorsvec.extend(self.anchors[stitch])
+
+      # get the best anchor for each box
+      iou_index, _ = get_best_anchor(boxes, anchorsvec, stride,
                                         width=width, height=height, 
                                         best_match_only=False, 
                                         use_tie_breaker=self.use_tie_breaker,
                                         iou_thresh=self.match_threshold)
+      mask = self.masks[key]
 
-      valid = self._tie_breaking_search(iou_index, self.masks[key], boxes, classes)
-  
-    # find the best anchors for each box.
-    iou_index, ious = get_best_anchor(boxes, anchors, stride,
-                                      width=width, height=height, 
-                                      best_match_only=True, 
-                                      iou_thresh=self.match_threshold)
-
-    # find the number of anchors assocaited with this fpn level. 
-    num_anchors = len(anchors)
-    classes = tf.cast(tf.expand_dims(classes, axis = -1), boxes.dtype)
-
-    # tile the boxes and classes to allow one for each anchor box.
-    boxes = tf.tile(tf.expand_dims(boxes, axis = -2), [1, num_anchors, 1])
-    classes = tf.tile(tf.expand_dims(classes, axis = -2), [1, num_anchors, 1])
-    indexes = tf.expand_dims(iou_index, axis = -1)
-    ious = tf.expand_dims(ious, axis = -1)
-
-    # stitch together all the items that will get flattened and gathered
-    boxes_and_anchors = tf.concat([boxes, classes, ious, indexes], axis = -1)
-    boxes_and_anchors = tf.reshape(boxes_and_anchors, [-1, 7])
-    _, anchors_ids =  tf.split(boxes_and_anchors, [6, 1], axis = -1)
-
-    # gather the values that match these anchors
-    anchors_ids = tf.squeeze(anchors_ids, axis = -1)
-    select = tf.where(anchors_ids >= 0)
-    boxes_and_anchors = tf.gather_nd(boxes_and_anchors, select)
-
-    # split the stitched vector and return
-    (boxes, classes, 
-    ious, anchors) = tf.split(boxes_and_anchors, [4, 1, 1, 1], axis = -1)
-    return boxes, classes, ious, anchors, num_anchors
+    # search for the correct box to use
+    (boxes, 
+    classes,
+    anchors) = self._tie_breaking_search(iou_index, mask, boxes, classes)
+    return boxes, classes, anchors, num_anchors
 
   def _get_centers(self, boxes, classes, anchors, width, height, offset):
     """Find the object center assignments in an anchor based paradigm. """
@@ -359,7 +344,7 @@ class YoloAnchorLabeler:
 
     if fpn_limits is None:
       offset = tf.cast(0.5 * (scale_xy - 1), boxes.dtype)
-      (boxes, classes, ious, 
+      (boxes, classes, 
        anchors, num_anchors) = self._get_anchor_id(key, boxes, classes, anchors, 
                                                    width, height, stride)
       boxes, classes, centers = self._get_centers(boxes, classes, anchors, 

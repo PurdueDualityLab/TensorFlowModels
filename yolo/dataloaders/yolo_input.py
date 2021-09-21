@@ -195,7 +195,7 @@ class Parser(parser.Parser):
       crop_only = True
       # jitter gives you only one info object, resize and crop gives you one,
       # if crop only then there can be 1 form jitter and 1 from crop
-      infos = infos.append(self._pad_infos_object(image))
+      infos.append(self._pad_infos_object(image))
     else:
       crop_only = False
     image, crop_info, _ = preprocessing_ops.resize_and_jitter_image(
