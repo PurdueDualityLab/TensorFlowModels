@@ -88,23 +88,28 @@ class InputUtilsTest(parameterized.TestCase, tf.test.TestCase):
     processed_boxes_shape = tf.shape(processed_boxes)
     self.assertAllEqual([num_boxes, 4], processed_boxes_shape.numpy())
 
-  # Not Working Test, Probably more informative documentation regarding ranges?
-  @parameterized.parameters((2, .1, [100, 100]))
+  # Not Working Test, Probably more informative documentation regarding ranges? 100000
+  @parameterized.parameters((2, [100, 100]))
   def testBoxCandidates(self,
                         num_boxes,
-                        area_thr,
                         output_size):
     boxes = tf.convert_to_tensor(np.random.rand(num_boxes, 4))
-    real_boxes = bbox_ops.denormalize_boxes(boxes, output_size)
-    box_history = bbox_ops.denormalize_boxes(boxes, [500, 500])
-    processed_boxes = preprocessing_ops.boxes_candidates(
-                        real_boxes, box_history, wh_thr=100, area_thr=tf.cast(area_thr, tf.double))
-    processed_boxes_shape = tf.shape(processed_boxes)
+    boxes = bbox_ops.denormalize_boxes(boxes, output_size)
+    clipped_ind = preprocessing_ops.boxes_candidates(
+                        boxes, boxes, ar_thr=10000000000000, wh_thr=0, area_thr=tf.cast(0, tf.double))
+    tf.print(clipped_ind)
 
-    tf.print(real_boxes)
-    tf.print(box_history)
-    tf.print(tf.shape(processed_boxes))
+  # Working Test
+  @parameterized.parameters((50,
+                             [0.5, 0.5],
+                             [0,0], # Clipping all boxes
+                             [0.0, 0.0]))
+  def testResizeAndCropBoxes(self, num_boxes, image_scale, output_size, offset):
+    boxes = tf.convert_to_tensor(np.random.rand(num_boxes, 4))
+    processed_boxes, _ = preprocessing_ops.resize_and_crop_boxes(boxes, tf.cast(image_scale, tf.double), output_size, tf.cast(offset, tf.double), boxes)
+    processed_boxes_shape = tf.shape(processed_boxes)
     self.assertAllEqual([num_boxes, 4], processed_boxes_shape.numpy())
+    self.assertAllEqual(tf.math.reduce_sum(processed_boxes), tf.convert_to_tensor(0))
 
 if __name__ == '__main__':
   tf.test.main()
