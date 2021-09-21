@@ -168,6 +168,7 @@ class Parser(parser.Parser):
     self._dtype = dtype
 
     self._label_builder = anchor.YoloAnchorLabeler(
+      anchors = self._anchors, 
       match_threshold=self._anchor_t, 
       best_matches_only=self._best_match_only,
       use_tie_breaker=self._use_tie_breaker
@@ -344,7 +345,7 @@ class Parser(parser.Parser):
       scale_xy = self._scale_xy[key] if not self._darknet else 1
 
       indexes[key], updates[key], true_grids[key] = self._label_builder(
-        boxes, classes, self._anchors[key], 
+        key, boxes, classes, self._anchors[key], 
         width, height, self._strides[str(key)],
         scale_xy, self._max_num_instances * self._scale_up[key], 
         fpn_limits = fpn_limits)

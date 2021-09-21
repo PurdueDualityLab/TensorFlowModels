@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.ops.gen_math_ops import maximum, minimum
 from yolo.ops import box_ops
 from yolo.ops import preprocessing_ops
 from yolo.ops import loss_utils
@@ -27,18 +28,6 @@ def get_best_anchor(y_true,
     box known
   """
   with tf.name_scope('get_best_anchor'):
-    is_batch = True
-    ytrue_shape = y_true.get_shape()
-    if ytrue_shape.ndims == 2:
-      is_batch = False
-      y_true = tf.expand_dims(y_true, 0)
-    elif ytrue_shape.ndims is None:
-      is_batch = False
-      y_true = tf.expand_dims(y_true, 0)
-      y_true.set_shape([None] * 3)
-    elif ytrue_shape.ndims != 3:
-      raise ValueError('\'box\' (shape %s) must have either 3 or 4 dimensions.')
-
     width = tf.cast(width, dtype=tf.float32)
     height = tf.cast(height, dtype=tf.float32)
     scaler = tf.convert_to_tensor([width, height])
@@ -48,8 +37,7 @@ def get_best_anchor(y_true,
 
     k = tf.shape(anchors)[0]
 
-    anchors = tf.expand_dims(
-        tf.concat([tf.zeros_like(anchors), anchors], axis=-1), axis=0)
+    anchors = tf.concat([tf.zeros_like(anchors), anchors], axis=-1)
     truth_comp = tf.concat([tf.zeros_like(true_wh), true_wh], axis=-1)
 
     if iou_thresh >= 1.0:
@@ -63,7 +51,7 @@ def get_best_anchor(y_true,
       aspect = tf.reduce_max(aspect, axis=-1)
 
       values, indexes = tf.math.top_k(
-          tf.transpose(-aspect, perm=[0, 2, 1]),
+          tf.transpose(-aspect, perm=[1, 0]),
           k=tf.cast(k, dtype=tf.int32),
           sorted=True)
       values = -values
@@ -97,53 +85,96 @@ def get_best_anchor(y_true,
           tf.expand_dims(indexes[..., 0], axis=-1),
           tf.zeros_like(indexes[..., 1:]) - 1], axis=-1)
 
-    true_prod = tf.reduce_prod(true_wh, axis=-1, keepdims=True)
-    iou_index = tf.where(true_prod > 0, iou_index, tf.zeros_like(iou_index) - 1)
-
-    if not is_batch:
-      iou_index = tf.squeeze(iou_index, axis=0)
-      values = tf.squeeze(values, axis=0)
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
-
-
 
 class YoloAnchorLabeler:
   def __init__(self, 
+               anchors = None, 
                match_threshold = 0.25, 
                best_matches_only = False, 
                use_tie_breaker = True):
+    self.anchors = anchors
+    self.masks = self._get_mask()
     self.match_threshold = match_threshold
     self.best_matches_only = best_matches_only
     self.use_tie_breaker = use_tie_breaker
 
-  def _get_anchor_id(self, boxes, classes, anchors, width, height, stride):
+  def _get_mask(self):
+    masks = {}
+    start = 0
+
+    minimum = int(min(self.anchors.keys()))
+    maximum = int(max(self.anchors.keys()))
+    for i in range(minimum, maximum + 1):
+      per_scale = len(self.anchors[str(i)])
+      masks[str(i)] = list(range(start, per_scale + start))
+      start += per_scale
+    return masks
+
+  def _tie_breaking_search(self, anchors, mask, boxes, classes):
+    mask = tf.cast(tf.reshape(mask, [1, 1, 1, -1]), anchors.dtype)
+    anchors = tf.expand_dims(anchors, axis=-1)
+    viable =  tf.where(tf.squeeze(anchors == mask, axis = 0))
+
+    gather_id, _, anchor_id = tf.split(viable, 3, axis = -1)
+
+    boxes_ = tf.gather_nd(boxes, gather_id)
+    classes = tf.gather_nd(classes, gather_id)
+    
+    # TODO: return the cvorrect values including IOU
+    tf.print(anchors, mask, viable, tf.shape(boxes_), tf.shape(boxes))
+    return viable
+
+  def _get_anchor_id(self, key, boxes, classes, anchors, width, height, stride):
+    """Find the object anchor assignments in an anchor based paradigm. """
+    
+    # # find the best anchors for each box.
+    if self.use_tie_breaker: 
+      anchorsvec = []
+      for key in self.anchors.keys():
+        anchorsvec.extend(self.anchors[key])
+        
+      iou_index, ious = get_best_anchor(boxes, anchorsvec, stride,
+                                        width=width, height=height, 
+                                        best_match_only=False, 
+                                        use_tie_breaker=self.use_tie_breaker,
+                                        iou_thresh=self.match_threshold)
+
+      valid = self._tie_breaking_search(iou_index, self.masks[key], boxes, classes)
+  
+    # find the best anchors for each box.
     iou_index, ious = get_best_anchor(boxes, anchors, stride,
                                       width=width, height=height, 
-                                      best_match_only=self.best_matches_only, 
-                                      use_tie_breaker=self.use_tie_breaker,
+                                      best_match_only=True, 
                                       iou_thresh=self.match_threshold)
 
+    # find the number of anchors assocaited with this fpn level. 
     num_anchors = len(anchors)
     classes = tf.cast(tf.expand_dims(classes, axis = -1), boxes.dtype)
 
+    # tile the boxes and classes to allow one for each anchor box.
     boxes = tf.tile(tf.expand_dims(boxes, axis = -2), [1, num_anchors, 1])
     classes = tf.tile(tf.expand_dims(classes, axis = -2), [1, num_anchors, 1])
     indexes = tf.expand_dims(iou_index, axis = -1)
     ious = tf.expand_dims(ious, axis = -1)
 
+    # stitch together all the items that will get flattened and gathered
     boxes_and_anchors = tf.concat([boxes, classes, ious, indexes], axis = -1)
     boxes_and_anchors = tf.reshape(boxes_and_anchors, [-1, 7])
     _, anchors_ids =  tf.split(boxes_and_anchors, [6, 1], axis = -1)
 
+    # gather the values that match these anchors
     anchors_ids = tf.squeeze(anchors_ids, axis = -1)
     select = tf.where(anchors_ids >= 0)
     boxes_and_anchors = tf.gather_nd(boxes_and_anchors, select)
 
+    # split the stitched vector and return
     (boxes, classes, 
     ious, anchors) = tf.split(boxes_and_anchors, [4, 1, 1, 1], axis = -1)
     return boxes, classes, ious, anchors, num_anchors
 
   def _get_centers(self, boxes, classes, anchors, width, height, offset):
+    """Find the object center assignments in an anchor based paradigm. """
     grid_xy, wh = tf.split(boxes, 2, axis = -1)
     wh_scale = tf.cast(tf.convert_to_tensor([width, height]), boxes.dtype)
 
@@ -211,7 +242,7 @@ class YoloAnchorLabeler:
                        stride,
                        fpn_limits,
                        center_radius=2.5):
-    """Iterate all boxes and write to grid without anchors boxes."""
+    """Find the box assignements in an anchor free paradigm. """
     gen = loss_utils.GridGenerator(
       masks=None, anchors=[[1, 1]], scale_anchors=stride)
     grid_points = gen(width, height, 1, boxes.dtype)[0]
@@ -285,6 +316,7 @@ class YoloAnchorLabeler:
     return indexes, samples
 
   def __call__(self, 
+               key, 
                boxes, 
                classes, 
                anchors, 
@@ -294,6 +326,30 @@ class YoloAnchorLabeler:
                scale_xy, 
                num_instances, 
                fpn_limits = None):
+    """Builds the labels for a single image, not functional in batch mode. 
+    
+    Args: 
+      boxes: `Tensor` of shape [None, 4] indicating the object locations in 
+        an image. 
+      classes: `Tensor` of shape [None] indicating the each objects classes.
+      anchors: `List[List[int, float]]` representing the anchor boxes to build 
+        the model against. 
+      width: `int` for the images width. 
+      height: `int` for the images height.
+      stride: `int` for how much the image gets scaled at this level.
+      scale_xy: `float` for the center shifts to apply when finding center 
+        assignments for a box. 
+      num_instances: `int` for the maximum number of expanded boxes to allow. 
+      fpn_limits: `List[int]` given no anchor boxes this is used to limit the 
+        boxes assied to the each fpn level based on the levels receptive feild. 
+
+    Returns: 
+      centers: `Tensor` of shape [None, 3] of indexes in the final grid where 
+        boxes are located.  
+      updates: `Tensor` of shape [None, 8] the value to place in the final grid.
+      full: `Tensor` of [width/stride, height/stride, num_anchors, 1] holding 
+        a mask of where boxes are locates for confidence losses. 
+    """
     boxes = box_ops.yxyx_to_xcycwh(boxes)
 
     width //= stride
@@ -304,7 +360,7 @@ class YoloAnchorLabeler:
     if fpn_limits is None:
       offset = tf.cast(0.5 * (scale_xy - 1), boxes.dtype)
       (boxes, classes, ious, 
-       anchors, num_anchors) = self._get_anchor_id(boxes, classes, anchors, 
+       anchors, num_anchors) = self._get_anchor_id(key, boxes, classes, anchors, 
                                                    width, height, stride)
       boxes, classes, centers = self._get_centers(boxes, classes, anchors, 
                                                   width, height, offset)
