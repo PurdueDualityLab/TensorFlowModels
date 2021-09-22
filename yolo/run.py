@@ -136,7 +136,7 @@ def load_model(experiment='yolo_custom', config_path=[], model_dir=''):
     # status.expect_partial().assert_existing_objects_matched()
     print(dir(status), status)
   else:
-    task.initialize(model)
+    task.initialize(model, fuse = True)
 
   return task, model, params
 
@@ -166,6 +166,8 @@ def load_flags(CFG):
     print(dir(status), status)
   else:
     task.initialize(model)
+  
+  model.fuse()
 
   return task, model, params
 

@@ -350,9 +350,8 @@ class FastVideo(object):
 
   def _undo_info(self, boxes, num_detections, info):
     mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
-    mask = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype)
+    boxes = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype) * boxes
 
-    # split all infos 
     info = tf.cast(tf.expand_dims(info, axis = 0), boxes.dtype)
     inshape = tf.expand_dims(info[:, 1, :], axis = 1)
     ogshape = tf.expand_dims(info[:, 0, :], axis = 1)

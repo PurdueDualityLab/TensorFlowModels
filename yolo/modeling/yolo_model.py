@@ -167,7 +167,10 @@ class Yolo(tf.keras.Model):
     return weights, bias, other
   
   def fuse(self):
+    print("fusing")
     for layer in self.submodules:
       if isinstance(layer, nn_blocks.ConvBN):
-        layer.fuse = True
+        layer.fuse()
+
+    self.summary()
     return 
