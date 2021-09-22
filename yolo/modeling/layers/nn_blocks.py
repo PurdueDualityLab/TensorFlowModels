@@ -141,7 +141,7 @@ class ConvBN(tf.keras.layers.Layer):
     # activation params
     self._activation = activation
     self._leaky_alpha = leaky_alpha
-
+    self.fuse = False 
     super().__init__(**kwargs)
 
   def build(self, input_shape):

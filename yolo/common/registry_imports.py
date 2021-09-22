@@ -22,7 +22,7 @@ from yolo.modeling.backbones import darknet
 from yolo.configs import darknet_classification
 from yolo.configs import yolo
 from yolo.configs.yolo import yolo_custom
-from yolo.configs.darknet_classification import image_classification
+from yolo.configs.darknet_classification import darknet_classification
 from yolo.configs.darknet_classification import ImageClassificationTask
 from yolo.configs.yolo import YoloTask
 

@@ -14,6 +14,7 @@
 """Yolo models."""
 
 import tensorflow as tf
+from yolo.modeling.layers import nn_blocks
 
 # static base Yolo Models that do not require configuration
 # similar to a backbone model id.
@@ -164,3 +165,9 @@ class Yolo(tf.keras.Model):
       else:
         other.append(var)
     return weights, bias, other
+  
+  def fuse(self):
+    for layer in self.submodules:
+      if isinstance(layer, nn_blocks.ConvBN):
+        layer.fuse = True
+    return 

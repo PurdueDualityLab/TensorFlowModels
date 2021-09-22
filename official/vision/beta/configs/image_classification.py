@@ -30,7 +30,7 @@ from official.vision.beta.configs import backbones
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
   input_path: str = ''
-  global_batch_size: int = 0
+  global_batch_size: int = 1
   is_training: bool = True
   dtype: str = 'float32'
   shuffle_buffer_size: int = 10000
@@ -46,7 +46,7 @@ class DataConfig(cfg.DataConfig):
   decoder: Optional[common.DataDecoder] = common.DataDecoder()
 
   # Keep for backward compatibility.
-  aug_policy: Optional[str] = None  # None, 'autoaug', or 'randaug'.
+  aug_policy: Optional[str] = 'autoaug'  # None, 'autoaug', or 'randaug'.
   randaug_magnitude: Optional[int] = 10
 
 
