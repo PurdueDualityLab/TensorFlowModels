@@ -70,7 +70,7 @@ task:
         mosaic_center: 0.25
         aug_scale_min: 0.1
         aug_scale_max: 1.9
-        jitter: 0.3
+        jitter: 0.0
       max_num_instances: 200
       letter_box: True
       random_flip: True
