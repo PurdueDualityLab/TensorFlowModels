@@ -147,9 +147,10 @@ class YoloTask(base_task.Task):
   def build_metrics(self, training=True):
     metrics = []
 
-    masks = self.get_masks()
+    backbone = self.task_config.model.backbone.get()
     metric_names = defaultdict(list)
-    for key in masks.keys():
+    for key in range(backbone.min_level, backbone.max_level):
+      key = str(key)
       metric_names[key].append('loss')
       metric_names[key].append("avg_iou")
       metric_names[key].append("avg_obj")

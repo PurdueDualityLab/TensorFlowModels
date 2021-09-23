@@ -288,20 +288,19 @@ class Parser(parser.Parser):
         is_training=False)
     return image, labels
 
-  def set_shape(self, values, pad_axis=0, pad_value=0, inds=None, scale=1):
+  def set_shape(self, values, pad_axis=0, pad_value=0, inds=None):
     """Calls set shape for all input objects."""
     if inds is not None:
       values = tf.gather(values, inds)
     vshape = values.get_shape().as_list()
 
-    if pad_value is not None:
-      values = preprocessing_ops.pad_max_instances(
+    values = preprocessing_ops.pad_max_instances(
           values,
           self._max_num_instances,
           pad_axis=pad_axis,
           pad_value=pad_value)
 
-    vshape[pad_axis] = self._max_num_instances * scale
+    vshape[pad_axis] = self._max_num_instances 
     values.set_shape(vshape)
     return values
 
@@ -332,10 +331,6 @@ class Parser(parser.Parser):
     # Set/fix the boxes shape.
     boxes = self.set_shape(gt_boxes, pad_axis=0, pad_value=0)
     classes = self.set_shape(gt_classes, pad_axis=0, pad_value=-1)
-    area = self.set_shape(
-        data['groundtruth_area'], pad_axis=0, pad_value=0, inds=inds)
-    is_crowd = self.set_shape(
-        data['groundtruth_is_crowd'], pad_axis=0, pad_value=0, inds=inds)
 
     # Build the dictionary set.
     labels.update({
@@ -346,6 +341,11 @@ class Parser(parser.Parser):
 
     # Update the labels dictionary.
     if not is_training:
+      # area = self.set_shape(
+      #     data['groundtruth_area'], pad_axis=0, pad_value=0, inds=inds)
+      # is_crowd = self.set_shape(
+      #     data['groundtruth_is_crowd'], pad_axis=0, pad_value=0, inds=inds)
+
       # Sets up groundtruth data for evaluation.
       groundtruths = {
           'source_id': labels['source_id'],
@@ -355,8 +355,9 @@ class Parser(parser.Parser):
           'image_info': info,
           'boxes': gt_boxes,
           'classes': gt_classes,
-          'areas': area,
-          'is_crowds': tf.cast(is_crowd, tf.int32),
+          'areas': tf.gather(data['groundtruth_area'], inds),
+          'is_crowds': tf.cast(
+            tf.gather(data['groundtruth_is_crowd'], inds), tf.int32),
       }
       groundtruths['source_id'] = utils.process_source_id(
           groundtruths['source_id'])
