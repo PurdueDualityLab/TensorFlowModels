@@ -6,7 +6,7 @@ task:
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
-    input_size: [736, 1280, 3]
+    input_size: [640, 640, 3]
     backbone:
       type: 'darknet'
       darknet:
