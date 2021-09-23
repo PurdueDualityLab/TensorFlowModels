@@ -30,6 +30,8 @@ import regex as re
 COCO_INPUT_PATH_BASE = 'coco'
 COCO_TRIAN_EXAMPLES = 118287
 COCO_VAL_EXAMPLES = 5000
+MIN_LEVEL = 1
+MAX_LEVEL = 7
 
 @dataclasses.dataclass
 class FPNConfig(hyperparams.Config):
@@ -163,11 +165,11 @@ def _build_path_scales(min_level, max_level):
 @dataclasses.dataclass
 class YoloDetectionGenerator(hyperparams.Config):
   box_type: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, "original"))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, "original"))
   scale_xy: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 1.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 1.0))
   path_scales: FPNConfig = dataclasses.field(
-      default_factory=_build_path_scales(3, 7))
+      default_factory=_build_path_scales(MIN_LEVEL, MAX_LEVEL))
   nms_type: str = 'greedy'
   iou_thresh: float = 0.001
   nms_thresh: float = 0.6
@@ -178,21 +180,21 @@ class YoloDetectionGenerator(hyperparams.Config):
 @dataclasses.dataclass
 class YoloLoss(hyperparams.Config):
   ignore_thresh: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 0.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 0.0))
   truth_thresh: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 1.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 1.0))
   box_loss_type: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 'ciou'))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 'ciou'))
   iou_normalizer: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 1.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 1.0))
   cls_normalizer: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 1.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 1.0))
   obj_normalizer: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 1.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 1.0))
   max_delta: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, np.inf))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, np.inf))
   objectness_smooth: FPNConfig = dataclasses.field(
-      default_factory=_build_dict(3, 7, 0.0))
+      default_factory=_build_dict(MIN_LEVEL, MAX_LEVEL, 0.0))
   label_smoothing: float = 0.0
   use_scaled_loss: bool = True
   update_on_repeat: bool = True

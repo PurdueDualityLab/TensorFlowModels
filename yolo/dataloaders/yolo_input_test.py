@@ -32,8 +32,8 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-dga.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/tpu/640.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-dga.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
 
   config = train_utils.ParseConfigOptions(
@@ -62,6 +62,9 @@ def test_yolo_input_task():
     config.train_data.input_path = ''
     config.validation_data.input_path = ''
   else:
+    
+    # config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/bdd100k/records/train*'
+    # config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/bdd100k/records/bdd100k-val*'
     config.train_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     config.validation_data.input_path = '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 

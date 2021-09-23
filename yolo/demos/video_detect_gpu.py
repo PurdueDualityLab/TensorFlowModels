@@ -145,7 +145,7 @@ class FastVideo(object):
     # self._cap.set(cv2.CAP_PROP_FPS, int(30))
     print(self._cap.get(3), self._cap.get(4))
 
-    self._letter_box = True
+    self._letter_box = False
 
     self._preprocess_function = preprocess_function
     self._height = int(self._cap.get(4)) if disp_h is None else disp_h
