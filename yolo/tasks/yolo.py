@@ -155,7 +155,6 @@ class YoloTask(base_task.Task):
         sample_fn=sample_fn.mosaic_fn(is_training=params.is_training),
         parser_fn=parser.parse_fn(params.is_training))
     dataset = reader.read(input_context=input_context)
-
     return dataset
 
   def build_metrics(self, training=True):

@@ -166,10 +166,13 @@ class Parser(parser.Parser):
 
     self._label_builder = anchor.YoloAnchorLabeler(
       anchors = self._anchors, 
+      anchor_free_level_limits = self._level_limits,
+      level_strides=self._strides, 
+      center_radius=self._scale_xy, 
       match_threshold=self._anchor_t, 
       best_matches_only=self._best_match_only,
-      use_tie_breaker=self._use_tie_breaker
-    )
+      use_tie_breaker=self._use_tie_breaker, 
+      darknet = self._darknet)
 
   def _pad_infos_object(self, image):
     """Get a Tensor to pad the info object list."""
@@ -330,31 +333,11 @@ class Parser(parser.Parser):
     updates = {}
     true_grids = {}
 
-    if self._level_limits is not None:
-      self._level_limits = [0.0] + self._level_limits + [np.inf]
-
     # for each prediction path generate a properly scaled output prediction map
     for i, key in enumerate(self._anchors.keys()):
-      if self._level_limits is not None:
-        fpn_limits = self._level_limits[i:i + 2]
-      else:
-        fpn_limits = None
-
-      scale_xy = self._scale_xy[key] if not self._darknet else 1
-
+      num_instances = self._max_num_instances * self._scale_up[key]
       indexes[key], updates[key], true_grids[key] = self._label_builder(
-        key, boxes, classes, self._anchors[key], 
-        width, height, self._strides[str(key)],
-        scale_xy, self._max_num_instances * self._scale_up[key], 
-        fpn_limits = fpn_limits)
-
-      # set/fix the shapes
-      indexes[key] = self.set_shape(indexes[key], -2, None, None,
-                                    self._scale_up[key])
-      updates[key] = self.set_shape(updates[key], -2, None, None,
-                                    self._scale_up[key])
-
-      # add all the values to the final dictionary
+        key, boxes, classes, width, height, num_instances)
       updates[key] = tf.cast(updates[key], dtype=self._dtype)
     return indexes, updates, true_grids
 

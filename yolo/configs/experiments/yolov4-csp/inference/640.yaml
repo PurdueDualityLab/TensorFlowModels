@@ -6,7 +6,7 @@ task:
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
-    input_size: [736, 1280, 3]
+    input_size: [640, 640, 3]
     backbone:
       type: 'darknet'
       darknet:
@@ -68,9 +68,9 @@ task:
         mosaic_frequency: 1.0
         mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
-        mosaic_center: 0.0
-        aug_scale_min: 1.0
-        aug_scale_max: 1.0
+        mosaic_center: 0.25
+        aug_scale_min: 0.1
+        aug_scale_max: 1.9
       max_num_instances: 300
       letter_box: True
       random_flip: True

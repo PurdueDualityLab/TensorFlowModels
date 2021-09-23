@@ -21,7 +21,7 @@ task:
       box_type:
         'all': anchor_free
       scale_xy:
-        'all': 1.0
+        'all': 2.5
       max_boxes: 300
       nms_type: greedy
       iou_thresh: 0.35

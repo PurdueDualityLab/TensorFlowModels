@@ -517,7 +517,6 @@ def _anchor_free_scale_boxes(encoded_boxes,
                              height,
                              stride,
                              grid_points,
-                             scale_xy,
                              darknet=False):
   """Decode models boxes using FPN stride under anchor free conditions."""
   # split the boxes
@@ -526,17 +525,12 @@ def _anchor_free_scale_boxes(encoded_boxes,
 
   # build a scaling tensor to get the offset of th ebox relative to the image
   scaler = tf.convert_to_tensor([height, width, height, width])
-  scale_xy = tf.cast(scale_xy, encoded_boxes.dtype)
 
   scale_down = lambda x, y: x / y
   scale_up = lambda x, y: x * y
   if darknet:
     scale_down = tf.grad_pass_through(scale_down)
     scale_up = tf.grad_pass_through(scale_up)
-
-  # scale the centers and find the offset of each box relative to
-  # their center pixel
-  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
@@ -604,7 +598,6 @@ def get_predicted_box(width,
         height,
         stride,
         grid_points,
-        scale_xy,
         darknet=darknet)
   elif darknet:
     # if we are using the darknet loss we shoud not propagate the
