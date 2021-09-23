@@ -108,20 +108,9 @@ class Parser(parser.Parser):
       assert output_size[1] % expanded_strides[str(key)] == 0
       assert output_size[0] % expanded_strides[str(key)] == 0
 
-    # scale of each FPN level
-    self._strides = expanded_strides
-
     # Set the width and height properly and base init:
     self._image_w = output_size[1]
     self._image_h = output_size[0]
-
-    # Set the anchor boxes for each scale
-    self._anchors = anchors
-    self._level_limits = level_limits
-
-    # anchor labeling paramters
-    self._use_tie_breaker = use_tie_breaker
-    self._best_match_only = best_match_only
     self._max_num_instances = max_num_instances
 
     # Image scaling params
@@ -143,36 +132,23 @@ class Parser(parser.Parser):
     self._aug_rand_hue = aug_rand_hue
 
     # Set the per level values needed for operation
-    self._scale_xy = scale_xy
-    self._anchor_t = anchor_t
     self._darknet = darknet
     self._area_thresh = area_thresh
 
-    keys = list(self._anchors.keys())
-
-    if self._level_limits is not None:
-      maxim = 2000
-      self._scale_up = {key: maxim // self._max_num_instances for key in keys}
-      self._anchor_t = -0.01
-    elif not self._darknet:
-      self._scale_up = {key: 6 - i for i, key in enumerate(keys)}
-    else:
-      self._scale_up = {key: 1 for key in keys}
-
     self._seed = seed
-
-    # Set the data type based on input string
     self._dtype = dtype
 
     self._label_builder = anchor.YoloAnchorLabeler(
-      anchors = self._anchors, 
-      anchor_free_level_limits = self._level_limits,
-      level_strides=self._strides, 
-      center_radius=self._scale_xy, 
-      match_threshold=self._anchor_t, 
-      best_matches_only=self._best_match_only,
-      use_tie_breaker=self._use_tie_breaker, 
-      darknet = self._darknet)
+      anchors = anchors, 
+      anchor_free_level_limits = level_limits,
+      level_strides=expanded_strides, 
+      center_radius=scale_xy, 
+      max_num_instances=self._max_num_instances,
+      match_threshold=anchor_t, 
+      best_matches_only=best_match_only,
+      use_tie_breaker=use_tie_breaker, 
+      darknet=darknet, 
+      dtype=dtype)
 
   def _pad_infos_object(self, image):
     """Get a Tensor to pad the info object list."""
@@ -327,20 +303,6 @@ class Parser(parser.Parser):
     values.set_shape(vshape)
     return values
 
-  def _build_grid(self, boxes, classes, width, height):
-    """Private function for building the full scale object and class grid."""
-    indexes = {}
-    updates = {}
-    true_grids = {}
-
-    # for each prediction path generate a properly scaled output prediction map
-    for i, key in enumerate(self._anchors.keys()):
-      num_instances = self._max_num_instances * self._scale_up[key]
-      indexes[key], updates[key], true_grids[key] = self._label_builder(
-        key, boxes, classes, width, height, num_instances)
-      updates[key] = tf.cast(updates[key], dtype=self._dtype)
-    return indexes, updates, true_grids
-
   def _build_label(self,
                    image,
                    gt_boxes,
@@ -359,8 +321,9 @@ class Parser(parser.Parser):
     image.set_shape(imshape)
     
     labels = dict()
-    labels['inds'], labels['upds'], labels['true_conf'] = self._build_grid(
-        gt_boxes, gt_classes, width, height)
+    labels['inds'], labels['upds'], labels['true_conf'] = self._label_builder(
+                                                          gt_boxes, gt_classes, 
+                                                          width, height)
 
     # Set/fix the boxes shape.
     boxes = self.set_shape(gt_boxes, pad_axis=0, pad_value=0)
