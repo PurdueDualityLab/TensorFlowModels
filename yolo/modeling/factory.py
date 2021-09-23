@@ -66,8 +66,7 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   return model
 
 
-def build_yolo_detection_generator(model_config: yolo.Yolo, scale_xy,
-                                   path_scales, anchor_boxes):
+def build_yolo_detection_generator(model_config: yolo.Yolo, anchor_boxes):
   model = YoloLayer(
       classes=model_config.num_classes,
       anchors=anchor_boxes,
@@ -77,8 +76,8 @@ def build_yolo_detection_generator(model_config: yolo.Yolo, scale_xy,
       pre_nms_points=model_config.detection_generator.pre_nms_points,
       nms_type=model_config.detection_generator.nms_type,
       box_type=model_config.detection_generator.box_type.get(),
-      path_scale=path_scales,
-      scale_xy=scale_xy,
+      path_scale=model_config.detection_generator.path_scales.get(),
+      scale_xy=model_config.detection_generator.scale_xy.get(),
       label_smoothing=model_config.loss.label_smoothing,
       use_scaled_loss=model_config.loss.use_scaled_loss,
       update_on_repeat=model_config.loss.update_on_repeat,
@@ -100,7 +99,7 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
       min_level=min_level,
       max_level=max_level,
       classes=model_config.num_classes,
-      boxes_per_level=model_config.boxes_per_scale,
+      boxes_per_level=model_config.anchor_boxes.anchors_per_scale,
       norm_momentum=model_config.norm_activation.norm_momentum,
       norm_epsilon=model_config.norm_activation.norm_epsilon,
       kernel_regularizer=l2_regularization,
@@ -108,25 +107,18 @@ def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   return head
 
 
-def build_yolo(input_specs, model_config, l2_regularization, masks):
-  anchor_boxes, anchor_free = model_config.anchor_boxes.get()
-  scale_xy = model_config.detection_generator.scale_xy.get()
-  path_scales = model_config.detection_generator.path_scales.get()
-
+def build_yolo(input_specs, model_config, l2_regularization):
+  backbone = model_config.backbone.get()
+  anchor_dict, anchor_free = model_config.anchor_boxes.get(backbone.min_level,
+                                                           backbone.max_level)
   backbone = factory.build_backbone(input_specs, 
                                     model_config.backbone,
                                     model_config.norm_activation,
                                     l2_regularization)
-
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
-
-
-  anchor_dict = {key:[anchor_boxes[v] for v in value] for key, value in masks.items()}
-  detection_generator = build_yolo_detection_generator(model_config,
-                                                       scale_xy, path_scales,
-                                                       anchor_dict)
+  detection_generator = build_yolo_detection_generator(model_config,anchor_dict)
 
   model = yolo_model.Yolo(
       backbone=backbone,
@@ -138,9 +130,9 @@ def build_yolo(input_specs, model_config, l2_regularization, masks):
   model.summary(print_fn=logging.info)
   if anchor_free is not None:
     logging.info(f"Anchor Boxes: None -> Model is operating anchor-free.")
-    logging.info(" --> boxes_per_scale set to 1. ")
+    logging.info(" --> anchors_per_scale set to 1. ")
   else:
-    logging.info(f"Anchor Boxes: {anchor_boxes}")
+    logging.info(f"Anchor Boxes: {anchor_dict}")
 
   losses = detection_generator.get_losses()
   return model, losses

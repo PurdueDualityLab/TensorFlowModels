@@ -16,6 +16,7 @@
 """YOLO configuration definition."""
 from typing import List, Optional
 import dataclasses
+from yolo.ops import anchor
 
 from official.core import exp_factory
 from official.modeling import hyperparams
@@ -43,18 +44,41 @@ class FPNConfig(hyperparams.Config):
           values[key] = values["all"]
     return values
 
+# @dataclasses.dataclass
+# class AnchorBoxes(hyperparams.Config):
+#   widths: Optional[List[int]] = None
+#   heights: Optional[List[int]] = None
+#   level_limits: Optional[List[int]] = None
+
+#   def get(self):
+#     if self.level_limits is None:
+#       boxes = [[w, h] for w, h in zip(self.widths, self.heights)]
+#     else:
+#       boxes = [[1.0, 1.0]] * (len(self.level_limits) + 1)
+#     return boxes, self.level_limits
+
+class Box(hyperparams.Config):
+  box: List[int] = dataclasses.field(default=list)
+
 @dataclasses.dataclass
 class AnchorBoxes(hyperparams.Config):
-  widths: Optional[List[int]] = None
-  heights: Optional[List[int]] = None
+  boxes: List[Box] = None
   level_limits: Optional[List[int]] = None
+  anchors_per_scale: int = 3
 
-  def get(self):
+  def get(self, min_level, max_level):
     if self.level_limits is None:
-      boxes = [[w, h] for w, h in zip(self.widths, self.heights)]
+      boxes = [box.box for box in self.boxes]
     else:
-      boxes = [[1.0, 1.0]] * (len(self.level_limits) + 1)
-    return boxes, self.level_limits
+      boxes = [[1.0, 1.0]] * ((max_level - min_level) + 1)
+      self.anchors_per_scale = 1
+    
+    anchors_per_level = dict()
+    start = 0
+    for i in range(min_level, max_level + 1):
+      anchors_per_level[str(i)] = boxes[start:start + self.anchors_per_scale]
+      start += self.anchors_per_scale
+    return anchors_per_level, self.level_limits
 
 # dataset parsers
 @dataclasses.dataclass
@@ -216,7 +240,6 @@ class Yolo(hyperparams.Config):
       norm_momentum=0.99,
       norm_epsilon=0.001)
   num_classes: int = 91
-  boxes_per_scale: int = 3
   anchor_boxes: AnchorBoxes = AnchorBoxes()
   darknet_based_model: bool = False
 
