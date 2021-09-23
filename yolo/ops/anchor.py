@@ -301,8 +301,7 @@ class YoloAnchorLabeler:
                        center_radius):
     """Find the box assignements in an anchor free paradigm."""
     level_limits = self.anchor_free_level_limits[key]
-    gen = loss_utils.GridGenerator(
-      masks=None, anchors=[[1, 1]], scale_anchors=stride)
+    gen = loss_utils.GridGenerator(anchors=[[1, 1]], scale_anchors=stride)
     grid_points = gen(width, height, 1, boxes.dtype)[0]
     grid_points = tf.squeeze(grid_points, axis=0)
     box_list = boxes
