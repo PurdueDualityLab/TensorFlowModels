@@ -168,7 +168,7 @@ class YoloAnchorLabeler:
     anchor_id = tf.cast(anchor_id, boxes.dtype)
     return boxes, classes, anchor_id
 
-  def _get_anchor_id(self, key, boxes, classes, width, height, stride):
+  def _get_anchor_id(self, key, boxes, classes, width, height, stride, iou_index = None):
     """Find the object anchor assignments in an anchor based paradigm. """
     
     # find the best anchor
@@ -182,17 +182,6 @@ class YoloAnchorLabeler:
                                         iou_thresh=self.match_threshold)
       mask = range(num_anchors)
     else: 
-      # stitch and search boxes across fpn levels
-      anchorsvec = []
-      for stitch in self.anchors.keys():
-        anchorsvec.extend(self.anchors[stitch])
-
-      # get the best anchor for each box
-      iou_index, _ = get_best_anchor(boxes, anchorsvec, stride,
-                                        width=width, height=height, 
-                                        best_match_only=False, 
-                                        use_tie_breaker=self.use_tie_breaker,
-                                        iou_thresh=self.match_threshold)
       mask = self.masks[key]
 
     # search for the correct box to use
@@ -349,9 +338,9 @@ class YoloAnchorLabeler:
                            boxes, 
                            classes, 
                            width, 
-                           height):
+                           height, 
+                           iou_index = None):
     """Builds the labels for one path."""
-    boxes = box_ops.yxyx_to_xcycwh(boxes)
     stride = self.level_strides[key]
     scale_xy = self.center_radius[key] if self.center_radius is not None else 1
 
@@ -361,7 +350,8 @@ class YoloAnchorLabeler:
     if self.anchor_free_level_limits is None:
       (boxes, classes, 
        anchors, num_anchors) = self._get_anchor_id(key, boxes, classes, 
-                                                   width, height, stride)
+                                                   width, height, stride, 
+                                                   iou_index = iou_index)
       boxes, classes, centers = self._get_centers(boxes, classes, anchors, 
                                                   width, height, scale_xy)
       ind_mask = tf.ones_like(classes)
@@ -408,8 +398,24 @@ class YoloAnchorLabeler:
     indexes = {}
     updates = {}
     true_grids = {}
-    
+    iou_index = None
+
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+    if not self.best_matches_only and self.anchor_free_level_limits is None: 
+      # stitch and search boxes across fpn levels
+      anchorsvec = []
+      for stitch in self.anchors:
+        anchorsvec.extend(self.anchors[stitch])
+
+      stride = tf.cast([width, height], boxes.dtype)
+      # get the best anchor for each box
+      iou_index, _ = get_best_anchor(boxes, anchorsvec, stride,
+                                        width=1.0, height=1.0, 
+                                        best_match_only=False, 
+                                        use_tie_breaker=self.use_tie_breaker,
+                                        iou_thresh=self.match_threshold)
+
     for key in self.keys:
       indexes[key], updates[key], true_grids[key] = self.build_label_per_path(
-        key, boxes, classes, width, height)
+        key, boxes, classes, width, height, iou_index = iou_index)
     return indexes, updates, true_grids 
