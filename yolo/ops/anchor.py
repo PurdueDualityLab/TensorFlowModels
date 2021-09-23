@@ -15,15 +15,22 @@ def get_best_anchor(y_true,
                     iou_thresh=0.25,
                     best_match_only=False, 
                     use_tie_breaker=True):
-  """
-  Get the correct anchor that is assoiciated with each box using IOU.
+  """Get the correct anchor that is assoiciated with each box using IOU.
   
   Args:
-    y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
+    y_true: tf.Tensor[] for the list of bounding boxes in the yolo format.
     anchors: list or tensor for the anchor boxes to be used in prediction
-      found via Kmeans
-    width: int for the image width
-    height: int for the image height
+      found via Kmeans.
+    width: int for the image width.
+    height: int for the image height.
+    iou_thresh: `float` the minimum iou threshold to use for selecting boxes for 
+      each level. 
+    best_match_only: `bool` if the box only has one match and it is less than 
+      the iou threshold, when set to True, this match will be dropped as no 
+      anchors can be linked to it. 
+    use_tie_breaker: `bool` if there is many anchors for a given box, then 
+      attempt to use all of them, if False, only the first matching box will 
+      be used. 
   Return:
     tf.Tensor: y_true with the anchor associated with each ground truth
     box known

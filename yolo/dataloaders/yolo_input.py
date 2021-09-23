@@ -48,7 +48,10 @@ class Parser(parser.Parser):
         output_size should be divided by the largest feature stride 2^max_level.
       anchors: `Dict[List[Union[int, float]]]` values for each anchor box.
       expanded_strides: `Dict[int]` for how much the model scales down the 
-        images at the each level.
+        images at the largest level. For example, level 3 down samples the image 
+        by a factor of 16, in the expanded strides dictionary, we will pass 
+        along {3: 16} indicating that relative to the original image, the 
+        shapes must be reduced by a factor of 16 to compute the loss.
       level_limits: `List` the box sizes that will be allowed at each FPN 
         level as is done in the FCOS and YOLOX paper for anchor free box 
         assignment.
@@ -142,7 +145,7 @@ class Parser(parser.Parser):
       anchor_free_level_limits = level_limits,
       level_strides=expanded_strides, 
       center_radius=scale_xy, 
-      max_num_instances=self._max_num_instances,
+      max_num_instances=max_num_instances,
       match_threshold=anchor_t, 
       best_matches_only=best_match_only,
       use_tie_breaker=use_tie_breaker, 

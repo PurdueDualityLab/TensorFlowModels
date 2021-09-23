@@ -107,7 +107,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     self._decode_boxes = functools.partial(
         loss_utils.get_predicted_box, **box_kwargs)
 
-    self._search_pairs = None
+    self._search_pairs = lambda *args: (None, None, None, None)
     self._build_per_path_attributes()
 
   def box_loss(self, true_box, pred_box, darknet=False):
@@ -131,13 +131,18 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                                scale=None):
     """Search of all groundtruths to associate groundtruths to predictions."""
 
-    if self._search_pairs is None:
-      return true_conf, tf.ones_like(true_conf)
+    boxes = box_ops.yxyx_to_xcycwh(boxes)
+
+    if scale is not None:
+      boxes = boxes * tf.cast(tf.stop_gradient(scale), boxes.dtype)
 
     # Search all predictions against ground truths to find mathcing boxes for
     # each pixel.
-    _, _, iou_max, _ = self._search_pairs(
-        pred_boxes, pred_classes, boxes, classes, scale=scale, yxyx=True)
+    _, _, iou_max, _ = self._search_pairs(pred_boxes, pred_classes, 
+                                          boxes, classes)
+
+    if iou_max is None:
+      return true_conf, tf.ones_like(true_conf)
 
     # Find the exact indexes to ignore and keep.
     ignore_mask = tf.cast(iou_max < self._ignore_thresh, pred_boxes.dtype)

@@ -326,17 +326,9 @@ class PairWiseSearch:
                pred_classes,
                boxes,
                classes,
-               scale=None,
-               yxyx=True,
                clip_thresh=0.0):
     num_boxes = tf.shape(boxes)[-2]
     num_tiles = (num_boxes // TILE_SIZE) - 1
-
-    if yxyx:
-      boxes = box_ops.yxyx_to_xcycwh(boxes)
-
-    if scale is not None:
-      boxes = boxes * tf.cast(tf.stop_gradient(scale), boxes.dtype)
 
     if self._min_conf > 0.0:
       pred_classes = tf.cast(pred_classes > self._min_conf, pred_classes.dtype)
