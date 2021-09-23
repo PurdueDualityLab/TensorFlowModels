@@ -16,7 +16,7 @@ def get_best_anchor(y_true,
                     best_match_only=False, 
                     use_tie_breaker=True):
   """
-  get the correct anchor that is assoiciated with each box using IOU
+  Get the correct anchor that is assoiciated with each box using IOU.
   
   Args:
     y_true: tf.Tensor[] for the list of bounding boxes in the yolo format
@@ -92,6 +92,8 @@ def get_best_anchor(y_true,
   return tf.cast(iou_index, dtype=tf.float32), tf.cast(values, dtype=tf.float32)
 
 class YoloAnchorLabeler:
+  """Anchor labeler for the Yolo Models"""
+
   def __init__(self, 
                anchors = None, 
                anchor_free_level_limits = None, 
@@ -103,7 +105,32 @@ class YoloAnchorLabeler:
                use_tie_breaker = True, 
                darknet = False, 
                dtype = 'float32'):
-
+    """Initialization for anchor labler. 
+    
+    Args: 
+      anchors: `Dict[List[Union[int, float]]]` values for each anchor box.
+      anchor_free_level_limits: `List` the box sizes that will be allowed at 
+        each FPN level as is done in the FCOS and YOLOX paper for anchor free 
+        box assignment.
+      level_strides: `Dict[int]` for how much the model scales down the 
+        images at the each level.
+      center_radius: `Dict[float]` for radius around each box center to search 
+        for extra centers in each level.
+      max_num_instances: `int` for the number of boxes to compute loss on.
+      match_threshold: `float` indicating the threshold over which an anchor 
+        will be considered for prediction, at zero, all the anchors will be used 
+        and at 1.0 only the best will be used. for anchor thresholds larger than 
+        1.0 we stop using the IOU for anchor comparison and resort directly to 
+        comparing the width and height, this is used for the scaled models.  
+      best_matches_only: `boolean` indicating how boxes are selected for 
+        optimization.  
+      use_tie_breaker: `boolean` indicating whether to use the anchor threshold 
+        value.
+      darknet: `boolean` indicating which data pipeline to use. Setting to True 
+        swaps the pipeline to output images realtive to Yolov4 and older.
+      dtype: `str` indicating the output datatype of the datapipeline selecting 
+        from {"float32", "float16", "bfloat16"}.
+    """
     self.anchors = anchors
     self.masks = self._get_mask()
     self.anchor_free_level_limits = self._get_level_limits(
@@ -131,6 +158,7 @@ class YoloAnchorLabeler:
     self.dtype = dtype
 
   def _get_mask(self):
+    """For each level get indexs of each anchor for box search across levels."""
     masks = {}
     start = 0
 
@@ -143,6 +171,7 @@ class YoloAnchorLabeler:
     return masks
   
   def _get_level_limits(self, level_limits):
+    """For each level receptive feild range for anchor free box placement."""
     if level_limits is not None:
       level_limits_dict = {}
       level_limits = [0.0] + level_limits + [np.inf]
@@ -154,6 +183,7 @@ class YoloAnchorLabeler:
     return level_limits_dict
 
   def _tie_breaking_search(self, anchors, mask, boxes, classes):
+    """After search, link each anchor ind to the correct map in ground truth."""
     mask = tf.cast(tf.reshape(mask, [1, 1, 1, -1]), anchors.dtype)
     anchors = tf.expand_dims(anchors, axis=-1)
     viable =  tf.where(tf.squeeze(anchors == mask, axis = 0))
@@ -182,6 +212,8 @@ class YoloAnchorLabeler:
                                         iou_thresh=self.match_threshold)
       mask = range(num_anchors)
     else: 
+      # search is done across FPN levels, get the mask of anchor indexes
+      # corralated to this level.  
       mask = self.masks[key]
 
     # search for the correct box to use

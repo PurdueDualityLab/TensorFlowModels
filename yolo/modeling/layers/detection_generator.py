@@ -13,10 +13,14 @@
 # limitations under the License.
 """Contains common building blocks for yolo layer (detection layer)."""
 import tensorflow as tf
-from official.vision.beta.modeling.layers import detection_generator
 
-from yolo.ops import (loss_utils, box_ops, nms_ops)
+from official.vision.beta.modeling.layers import detection_generator
 from yolo.losses import yolo_loss
+from yolo.ops import box_ops
+from yolo.ops import loss_utils
+
+from yolo.ops import nms_ops
+
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -24,7 +28,6 @@ class YoloLayer(tf.keras.Model):
   """Yolo layer (detection generator)."""
 
   def __init__(self,
-               masks,
                anchors,
                classes,
                iou_thresh=0.0,
@@ -50,8 +53,6 @@ class YoloLayer(tf.keras.Model):
     """Parameters for the loss functions used at each detection head output.
 
     Args:
-      masks: `List[int]` for the output level that this specific model output
-        level.
       anchors: `List[List[int]]` for the anchor boxes that are used in the
         model.
       classes: `int` for the number of classes.
@@ -71,14 +72,25 @@ class YoloLayer(tf.keras.Model):
       obj_normalizer: `float` for how much to scale loss on the detection map.
       use_scaled_loss: `bool` for whether to use the scaled loss
         or the traditional loss.
-      darknet: `bool` for whether to use the DarkNet or PyTorch loss function
-        implementation.
+      update_on_repeat: `bool` indicating how you would like to handle repeated
+        indexes in a given [j, i] index. Setting this to True will give more
+        consistent MAP, setting it to falls will improve recall by 1-2% but will
+        sacrifice some MAP.
       pre_nms_points: `int` number of top candidate detections per class before
         NMS.
       label_smoothing: `float` for how much to smooth the loss on the classes.
       max_boxes: `int` for the maximum number of boxes retained over all
         classes.
-      new_cords: `bool` for using the ScaledYOLOv4 coordinates.
+      box_type: `str`, there are 3 different box types that will affect training
+        differently {original, scaled and anchor_free}. The original method
+        decodes the boxes by applying an exponential to the model width and
+        height maps, then scaling the maps by the anchor boxes. This method is
+        used in Yolo-v4, Yolo-v3, and all its counterparts. The Scale method
+        squares the width and height and scales both by a fixed factor of 4.
+        This method is used in the Scale Yolo models, as well as Yolov4-CSP.
+        Finally, anchor_free is like the original method but will not apply an
+        activation function to the boxes, this is used for some of the newer
+        anchor free versions of YOLO.
       path_scale: `dict` for the size of the input tensors. Defaults to
         precalulated values from the `mask`.
       scale_xy: dictionary `float` values inidcating how far each pixel can see
@@ -94,7 +106,6 @@ class YoloLayer(tf.keras.Model):
       **kwargs: Addtional keyword arguments.
     """
     super().__init__(**kwargs)
-    self._masks = masks
     self._anchors = anchors
     self._thresh = iou_thresh
     self._ignore_thresh = ignore_thresh
@@ -114,31 +125,23 @@ class YoloLayer(tf.keras.Model):
 
     self._pre_nms_points = pre_nms_points
     self._label_smoothing = label_smoothing
-    self._keys = list(masks.keys())
+
+    self._keys = list(anchors.keys())
     self._len_keys = len(self._keys)
     self._box_type = box_type
-    self._path_scale = path_scale or {
-        key: 2**int(key) for key, _ in masks.items()
-    }
+    self._path_scale = path_scale or {key: 2**int(key) for key in self._keys}
 
     self._nms_type = nms_type
-    self._scale_xy = scale_xy or {key: 1.0 for key, _ in masks.items()}
+    self._scale_xy = scale_xy or {key: 1.0 for key, _ in anchors.items()}
 
     self._generator = {}
     self._len_mask = {}
     for key in self._keys:
-      anchors = [self._anchors[mask] for mask in self._masks[key]]
-      self._generator[key] = self.get_generators(
-          anchors,
-          self._path_scale[key],  # pylint: disable=assignment-from-none
-          key)
-      self._len_mask[key] = len(self._masks[key])
+      anchors = self._anchors[key]
+      self._generator[key] = loss_utils.GridGenerator(
+        anchors, scale_anchors=self._path_scale[key])
+      self._len_mask[key] = len(anchors)
     return
-
-  def get_generators(self, anchors, path_scale, path_key):
-    anchor_generator = loss_utils.GridGenerator(
-        anchors, scale_anchors=path_scale)
-    return anchor_generator
 
   def parse_prediction_path(self, key, inputs):
     shape_ = tf.shape(inputs)
@@ -264,7 +267,7 @@ class YoloLayer(tf.keras.Model):
       boxes = tf.cast(boxes, dtype=tf.float32)
       class_scores = tf.cast(class_scores, dtype=tf.float32)
       (boxes, confidence, classes,
-       num_detections) = detection_generator._generate_detections_v2(
+       num_detections) = detection_generator._generate_detections_v2(  # pylint:disable=protected-access
            tf.expand_dims(boxes, axis=-2),
            class_scores,
            pre_nms_top_k=self._pre_nms_points,
@@ -284,16 +287,15 @@ class YoloLayer(tf.keras.Model):
     }
 
   def get_losses(self):
-    """ Generates a dictionary of losses to apply to each path 
-    
-    Done in the detection generator because all parameters are the same 
+    """Generates a dictionary of losses to apply to each path.
+
+    Done in the detection generator because all parameters are the same
     across both loss and detection generator
     """
     loss = yolo_loss.YoloLoss(
         keys=self._keys,
         classes=self._classes,
         anchors=self._anchors,
-        masks=self._masks,
         path_strides=self._path_scale,
         truth_thresholds=self._truth_thresh,
         ignore_thresholds=self._ignore_thresh,
@@ -312,7 +314,6 @@ class YoloLayer(tf.keras.Model):
 
   def get_config(self):
     return {
-        'masks': dict(self._masks),
         'anchors': [list(a) for a in self._anchors],
         'thresh': self._thresh,
         'max_boxes': self._max_boxes,

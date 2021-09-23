@@ -66,10 +66,9 @@ def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
   return model
 
 
-def build_yolo_detection_generator(model_config: yolo.Yolo, masks, scale_xy,
+def build_yolo_detection_generator(model_config: yolo.Yolo, scale_xy,
                                    path_scales, anchor_boxes):
   model = YoloLayer(
-      masks=masks,
       classes=model_config.num_classes,
       anchors=anchor_boxes,
       iou_thresh=model_config.detection_generator.iou_thresh,
@@ -122,9 +121,12 @@ def build_yolo(input_specs, model_config, l2_regularization, masks):
   decoder = build_yolo_decoder(backbone.output_specs, model_config,
                                l2_regularization)
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
-  detection_generator = build_yolo_detection_generator(model_config, masks,
+
+
+  anchor_dict = {key:[anchor_boxes[v] for v in value] for key, value in masks.items()}
+  detection_generator = build_yolo_detection_generator(model_config,
                                                        scale_xy, path_scales,
-                                                       anchor_boxes)
+                                                       anchor_dict)
 
   model = yolo_model.Yolo(
       backbone=backbone,
