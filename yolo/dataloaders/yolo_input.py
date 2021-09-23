@@ -323,9 +323,11 @@ class Parser(parser.Parser):
     image.set_shape(imshape)
     
     labels = dict()
-    labels['inds'], labels['upds'], labels['true_conf'] = self._label_builder(
-                                                          gt_boxes, gt_classes, 
-                                                          width, height)
+    (labels['inds'], 
+    labels['upds'], labels['true_conf']) = self._label_builder(gt_boxes, 
+                                                               gt_classes, 
+                                                               width, 
+                                                               height)
 
     # Set/fix the boxes shape.
     boxes = self.set_shape(gt_boxes, pad_axis=0, pad_value=0)
