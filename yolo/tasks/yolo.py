@@ -160,7 +160,7 @@ class YoloTask(base_task.Task):
   def build_metrics(self, training=True):
     metrics = []
 
-    masks = self.task_config.model.get_masks()
+    masks = self.get_masks()
     metric_names = defaultdict(list)
     for key in masks.keys():
       metric_names[key].append('loss')
