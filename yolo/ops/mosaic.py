@@ -204,7 +204,8 @@ class Mosaic:
       inds = box_ops.get_non_empty_box_indices(boxes)
 
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
-      boxes, classes, is_crowd, area = self._select_ind(inds, boxes, classes, is_crowd, area)
+      boxes, classes, is_crowd, area = self._select_ind(
+        inds, boxes, classes, is_crowd, area)
 
 
     # warp and scale the fully stitched sample 

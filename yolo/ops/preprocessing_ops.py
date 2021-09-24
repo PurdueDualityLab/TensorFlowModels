@@ -385,7 +385,8 @@ def resize_and_jitter_image(image,
 
     # Letter box the image.
     if letter_box == True or letter_box is None:
-      image_aspect_ratio, input_aspect_ratio = original_width / original_height, width / height
+      (image_aspect_ratio, 
+      input_aspect_ratio) = original_width / original_height, width / height
       distorted_aspect = image_aspect_ratio / input_aspect_ratio
 
       delta_h, delta_w = 0.0, 0.0

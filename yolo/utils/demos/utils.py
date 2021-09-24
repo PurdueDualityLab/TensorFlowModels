@@ -179,10 +179,6 @@ class DrawBoxes(object):
       if box[1] - box[0] == 0 or box[3] - box[2] == 0:
         return False
       
-      # x0 = int(box[0])
-      # y0 = int(box[2])
-      # x1 = int(box[1])
-      # y1 = int(box[3])   
       x0 = int(box[1])
       y0 = int(box[0])
       x1 = int(box[3])

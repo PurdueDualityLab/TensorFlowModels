@@ -63,9 +63,11 @@ def letterbox(image, desired_size, letter_box = True):
     return output_image, image_info
 
 DESIRED_SIZE = [640, 640]
-LETTERBOX = False
+# DESIRED_SIZE = [512, 512]
+# DESIRED_SIZE = [416, 416]
+LETTERBOX = True
 HALF_PRECISION = True
-BATCH_SIZE=2
+BATCH_SIZE=1
 
 def preprocess_fn(image):
   if HALF_PRECISION:
@@ -126,8 +128,8 @@ def run_fn(model):
     predictions = model(pimage)
     predictions["bbox"] = undo_info(
       predictions["bbox"], predictions["num_detections"], info)
-    predictions["bbox"], predictions["classes"] = int_scale_boxes(
-      predictions["bbox"], predictions["classes"], image)
+    # predictions["bbox"], predictions["classes"] = int_scale_boxes(
+    #   predictions["bbox"], predictions["classes"], image)
     return image, predictions
   return run
 
@@ -136,11 +138,13 @@ if __name__ == '__main__':
   from yolo import run
   import os
 
-  video_file = "../../Videos/nyc2.mp4"
+  video_file = 0 #"../../Videos/nyc2.mp4"
   config = [os.path.abspath('yolo/configs/experiments/yolov4-csp/inference/640.yaml')]
   model_dir = os.path.abspath("../checkpoints/640-baseline-e13")
   # config = [os.path.abspath('yolo/configs/experiments/yolov4-nano/inference/416-3l.yaml')]
   # model_dir = os.path.abspath("../checkpoints/416-3l-baseline-e1")
+  # config = [os.path.abspath('yolo/configs/experiments/yolov4/inference/512.yaml')]
+  # model_dir = os.path.abspath("../checkpoints/512-wd-baseline-e1")
 
   task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
   model.fuse()
