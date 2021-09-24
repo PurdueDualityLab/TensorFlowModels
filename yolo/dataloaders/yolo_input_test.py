@@ -159,7 +159,7 @@ def test_yolo_pipeline(is_training=True, num=30):
     obj5 = tf.clip_by_value(gt['5'][..., 0], 0.0, 1.0)
 
     for shind in range(1):
-      fig, axe = plt.subplots(1, 4)
+      fig, axe = plt.subplots(1, 5)
 
       image = i[shind]
       boxes = j["bbox"][shind]
@@ -186,6 +186,7 @@ def test_yolo_pipeline(is_training=True, num=30):
       axe[1].imshow(obj3[shind].numpy())
       axe[2].imshow(obj4[shind].numpy())
       axe[3].imshow(obj5[shind].numpy())
+      axe[4].imshow(i_[shind].numpy())
 
       fig.set_size_inches(18.5, 6.5, forward=True)
       plt.tight_layout()

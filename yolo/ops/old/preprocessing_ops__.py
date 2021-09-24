@@ -8,7 +8,7 @@ import numpy as np
 PAD_VALUE = 114
 
 
-def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
+def random_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
   """
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval.
@@ -32,7 +32,7 @@ def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None):
                            dtype=dtype)
 
 
-def rand_scale(val, dtype=tf.float32, seed=None):
+def random_scale(val, dtype=tf.float32, seed=None):
   """
   Generates a random number for the scale. Half the time, the value is between
   [1.0, val) with uniformly distributed probability. The other half, the value
@@ -47,7 +47,7 @@ def rand_scale(val, dtype=tf.float32, seed=None):
   Returns:
     The random scale.
   """
-  scale = rand_uniform_strong(1.0, val, dtype=dtype)
+  scale = random_uniform_strong(1.0, val, dtype=dtype)
   do_ret = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32, seed=seed)
   if (do_ret == 1):
     return scale
@@ -121,13 +121,13 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
     The HSV altered image in the same datatype as the input image
   """
   if rh > 0.0:
-    delta = rand_uniform_strong(-rh, rh, seed=seed)
+    delta = random_uniform_strong(-rh, rh, seed=seed)
     image = tf.image.adjust_hue(image, delta)
   if rs > 0.0:
-    delta = rand_scale(rs, seed=seed)
+    delta = random_scale(rs, seed=seed)
     image = tf.image.adjust_saturation(image, delta)
   if rv > 0.0:
-    delta = rand_scale(rv, seed=seed)
+    delta = random_scale(rv, seed=seed)
     image *= delta
 
   # clip the values of the image between 0.0 and 1.0
@@ -287,8 +287,8 @@ def random_window_crop(image, target_height, target_width, translate=0.0):
   crop_offset = tf.convert_to_tensor(
       [crop_offset[0] // 2, crop_offset[1] // 2, 0])
   shift = tf.convert_to_tensor([
-      rand_uniform_strong(-translate, translate),
-      rand_uniform_strong(-translate, translate), 0
+      random_uniform_strong(-translate, translate),
+      random_uniform_strong(-translate, translate), 0
   ])
   crop_offset = crop_offset + tf.cast(shift * tf.cast(crop_offset, shift.dtype),
                                       crop_offset.dtype)
@@ -454,10 +454,10 @@ def resize_and_jitter_image(image,
     # location of the corner points.
     dw = ow * jitter
     dh = oh * jitter
-    pleft = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed)
-    pright = rand_uniform_strong(-dw, dw, dw.dtype, seed=seed)
-    ptop = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
-    pbottom = rand_uniform_strong(-dh, dh, dh.dtype, seed=seed)
+    pleft = random_uniform_strong(-dw, dw, dw.dtype, seed=seed)
+    pright = random_uniform_strong(-dw, dw, dw.dtype, seed=seed)
+    ptop = random_uniform_strong(-dh, dh, dh.dtype, seed=seed)
+    pbottom = random_uniform_strong(-dh, dh, dh.dtype, seed=seed)
 
     # Bounded resizing of the images.
     if resize != 1:
@@ -470,10 +470,10 @@ def resize_and_jitter_image(image,
       min_rdw = ow * (1 - (1 / resize_down)) / 2
       min_rdh = oh * (1 - (1 / resize_down)) / 2
 
-      pleft += rand_uniform_strong(min_rdw, max_rdw, seed=seed)
-      pright += rand_uniform_strong(min_rdw, max_rdw, seed=seed)
-      ptop += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
-      pbottom += rand_uniform_strong(min_rdh, max_rdh, seed=seed)
+      pleft += random_uniform_strong(min_rdw, max_rdw, seed=seed)
+      pright += random_uniform_strong(min_rdw, max_rdw, seed=seed)
+      ptop += random_uniform_strong(min_rdh, max_rdh, seed=seed)
+      pbottom += random_uniform_strong(min_rdh, max_rdh, seed=seed)
 
     # Letter box the image.
     if letter_box == True or letter_box is None:

@@ -91,11 +91,11 @@ class Mosaic(object):
     and slicing."""
     if self._mosaic_crop_mode == 'crop':
       min_offset = self._crop_area[0]
-      cut_x = preprocessing_ops.rand_uniform_strong(
+      cut_x = preprocessing_ops.random_uniform_strong(
           self._output_size[1] * min_offset,
           self._output_size[1] * (1 - min_offset),
           seed=self._seed)
-      cut_y = preprocessing_ops.rand_uniform_strong(
+      cut_y = preprocessing_ops.random_uniform_strong(
           self._output_size[1] * min_offset,
           self._output_size[1] * (1 - min_offset),
           seed=self._seed)
@@ -166,7 +166,7 @@ class Mosaic(object):
   def _crop_image(self, image, crop_area):
     """A function to apply a random crop with in the crop area to a given 
     image."""
-    scale = preprocessing_ops.rand_uniform_strong(
+    scale = preprocessing_ops.random_uniform_strong(
         tf.math.sqrt(crop_area[0]), tf.math.sqrt(crop_area[1]))
     height, width = preprocessing_ops.get_image_shape(image)
     width = tf.cast(tf.cast(width, scale.dtype) * scale, tf.int32)
@@ -246,9 +246,9 @@ class Mosaic(object):
     if self._mosaic_crop_mode == "scale":
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._crop_area[0]
-      ch = preprocessing_ops.rand_uniform_strong(
+      ch = preprocessing_ops.random_uniform_strong(
           -center[0], center[0], seed=self._seed)
-      cw = preprocessing_ops.rand_uniform_strong(
+      cw = preprocessing_ops.random_uniform_strong(
           -center[1], center[1], seed=self._seed)
 
       image = tfa.image.translate(
