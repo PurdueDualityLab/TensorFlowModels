@@ -828,7 +828,7 @@ def resize_and_crop_boxes(boxes,
   return clipped_boxes, boxes, box_history
 
 
-def apply_infos(boxes,
+def transform_and_clip_boxes(boxes,
                 infos,
                 affine=None,
                 shuffle_boxes=False,

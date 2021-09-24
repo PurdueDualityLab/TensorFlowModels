@@ -166,8 +166,6 @@ def load_flags(CFG):
     print(dir(status), status)
   else:
     task.initialize(model)
-  
-  model.fuse()
 
   return task, model, params
 

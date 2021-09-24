@@ -1,3 +1,4 @@
+from inspect import stack
 import tensorflow as tf
 import tensorflow.keras.backend as K
 import socket
@@ -149,10 +150,10 @@ def get_draw_fn(colors, label_names, display_name):
 
 def int_scale_boxes(boxes, classes, width, height):
   boxes = K.stack([
-      tf.cast(boxes[..., 1] * width, dtype=tf.int32),
-      tf.cast(boxes[..., 3] * width, dtype=tf.int32),
       tf.cast(boxes[..., 0] * height, dtype=tf.int32),
-      tf.cast(boxes[..., 2] * height, dtype=tf.int32)
+      tf.cast(boxes[..., 1] * width, dtype=tf.int32),
+      tf.cast(boxes[..., 2] * height, dtype=tf.int32),
+      tf.cast(boxes[..., 3] * width, dtype=tf.int32)
   ],
                   axis=-1)
   classes = tf.cast(classes, dtype=tf.int32)
@@ -178,10 +179,15 @@ class DrawBoxes(object):
       if box[1] - box[0] == 0 or box[3] - box[2] == 0:
         return False
       
-      x0 = int(box[0])
-      y0 = int(box[2])
-      x1 = int(box[1])
-      y1 = int(box[3])   
+      # x0 = int(box[0])
+      # y0 = int(box[2])
+      # x1 = int(box[1])
+      # y1 = int(box[3])   
+      x0 = int(box[1])
+      y0 = int(box[0])
+      x1 = int(box[3])
+      y1 = int(box[2])   
+      classes = int(classes)
 
       color = colors[classes]
       txt_bk_color = (np.array(colors[classes]) * 0.7).tolist()
@@ -233,13 +239,16 @@ class DrawBoxes(object):
     else:
       return draw_box
 
-  def _draw(self, image, boxes, classes, conf):
+  def _draw(self, image, boxes, classes, conf, num_detections = None):
     i = 0
-    for i in range(boxes.shape[0]):
+
+    if num_detections is None:
+      lim = boxes.shape[0]
+    else:
+      lim = int(num_detections)
+    for i in range(lim):
       if self._draw_fn(image, boxes[i], classes[i], conf[i]):
         i += 1
-      # else:
-      #   return image
     return image
 
   def _parent(self, image, boxes, classes, conf):
@@ -249,7 +258,7 @@ class DrawBoxes(object):
 
     return func
 
-  def __call__(self, image, results):
+  def __call__(self, image, results, stacked = True):
     """ expectoed format = {bbox: , classes: , "confidence": }"""
 
     boxes = results["bbox"]
@@ -259,6 +268,11 @@ class DrawBoxes(object):
       conf = results["confidence"]
     except:
       conf = results["classes"]
+
+    # if "num_detections" in results.keys():
+    #   num_detections = results["num_detections"]
+    # else:
+    num_detections = None
 
     if not isinstance(image, list):
       ndims = len(image.shape)
@@ -302,7 +316,10 @@ class DrawBoxes(object):
       for i, im in enumerate(image):
         if hasattr(im, "numpy"):
           im = im.numpy()
-        self._draw(im, boxes[i], classes[i], conf[i])
+        self._draw(im, boxes[i], classes[i], conf[i], num_detections = num_detections[i])
         images.append(im)
-      image = np.stack(images, axis=0)
+      if stacked:
+        image = np.stack(images, axis=0)
+      else:
+        image = images
     return image

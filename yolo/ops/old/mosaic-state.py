@@ -230,7 +230,7 @@ class Mosaic(object):
     infos.extend(infos_)
 
     # Clip and clean boxes.
-    boxes, inds = preprocessing_ops.apply_infos(
+    boxes, inds = preprocessing_ops.transform_and_clip_boxes(
         boxes, infos, area_thresh=self._area_thresh, seed=self._seed)
     classes = tf.gather(classes, inds)
     is_crowd = tf.gather(is_crowd, inds)
@@ -273,7 +273,7 @@ class Mosaic(object):
       infos = [info]
 
     # Clip and clean boxes.
-    boxes, inds = preprocessing_ops.apply_infos(
+    boxes, inds = preprocessing_ops.transform_and_clip_boxes(
         boxes, infos, affine=affine, area_thresh=at, seed=self._seed)
 
     classes = tf.gather(classes, inds)

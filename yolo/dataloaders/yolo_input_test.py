@@ -33,8 +33,8 @@ def test_yolo_input_task():
   experiment = "yolo_custom"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-dga.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640-cstm2.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)

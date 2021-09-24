@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Yolo box ops."""
 import math
 import tensorflow as tf
@@ -43,7 +44,6 @@ def xcycwh_to_yxyx(box: tf.Tensor):
   Args:
     box: any `Tensor` whose last dimension is 4 representing the coordinates of
       boxes in x_center, y_center, width, height.
-    darknet: `bool`, if True a scale of 1.0 is used.
 
   Returns:
     box: a `Tensor` whose shape is the same as `box` in new format.
@@ -160,8 +160,6 @@ def compute_giou(box1, box2, yxyx=False):
       boxes.
     yxyx: a `bool` indicating whether the input box is of the format x_center
       y_center, width, height or y_min, x_min, y_max, x_max.
-    darknet: a `bool` indicating whether the calling function is the YOLO
-      darknet loss.
 
   Returns:
     giou: a `Tensor` who represents the General intersection over union.
@@ -197,8 +195,6 @@ def compute_diou(box1, box2, beta=1.0, yxyx=False, darknet=False):
       regularization term.
     yxyx: a `bool` indicating whether the input box is of the format x_center
       y_center, width, height or y_min, x_min, y_max, x_max.
-    darknet: a `bool` indicating whether the calling function is the YOLO
-      darknet loss.
 
   Returns:
     diou: a `Tensor` who represents the distance intersection over union.

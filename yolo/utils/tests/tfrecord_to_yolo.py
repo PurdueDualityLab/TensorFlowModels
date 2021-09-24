@@ -8,7 +8,7 @@ from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 from tensorflow.python.ops.gen_array_ops import shape
 from tensorflow.python.training import optimizer
-from yolo.ops.preprocessing_ops import apply_infos
+from yolo.ops.preprocessing_ops import transform_and_clip_boxes
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 

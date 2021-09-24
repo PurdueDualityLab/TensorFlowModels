@@ -1,6 +1,21 @@
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Yolo Anchor labler."""
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops.gen_math_ops import maximum, minimum
+
 from yolo.ops import box_ops
 from yolo.ops import preprocessing_ops
 from yolo.ops import loss_utils
@@ -68,7 +83,6 @@ def get_best_anchor(y_true,
       values = -values
       ind_mask = tf.cast(values < iou_thresh, dtype=indexes.dtype)
     else:
-      # iou_raw = box_ops.compute_iou(truth_comp, anchors)
       truth_comp = box_ops.xcycwh_to_yxyx(truth_comp)
       anchors = box_ops.xcycwh_to_yxyx(anchors)
       iou_raw = box_ops.aggregated_comparitive_iou(
@@ -77,7 +91,7 @@ def get_best_anchor(y_true,
           iou_type=3,
       )
       values, indexes = tf.math.top_k(
-          iou_raw,  #tf.transpose(iou_raw, perm=[0, 2, 1]),
+          iou_raw,
           k=tf.cast(k, dtype=tf.int32),
           sorted=True)
       ind_mask = tf.cast(values >= iou_thresh, dtype=indexes.dtype)
@@ -205,7 +219,8 @@ class YoloAnchorLabeler:
     anchor_id = tf.cast(anchor_id, boxes.dtype)
     return boxes, classes, anchor_id
 
-  def _get_anchor_id(self, key, boxes, classes, width, height, stride, iou_index = None):
+  def _get_anchor_id(self, key, boxes, classes, width, height, stride, 
+                     iou_index = None):
     """Find the object anchor assignments in an anchor based paradigm. """
     
     # find the best anchor

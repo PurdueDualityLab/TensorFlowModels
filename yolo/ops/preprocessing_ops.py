@@ -1,16 +1,12 @@
 import tensorflow as tf
 import numpy as np
 import random
-import os
 
 import tensorflow_addons as tfa
-from yolo.ops import box_ops
-from yolo.ops import loss_utils
 from official.vision.beta.ops import box_ops as bbox_ops
 
 PAD_VALUE = 114
 GLOBAL_SEED_SET = False
-
 
 def set_random_seeds(seed=0):
   """Sets all accessible global seeds to properly apply randomization.
@@ -26,17 +22,10 @@ def set_random_seeds(seed=0):
   """  
   if seed is not None:
     global GLOBAL_SEED_SET
-    os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     GLOBAL_SEED_SET = True
   tf.random.set_seed(seed)
   np.random.seed(seed)
-
-
-def get_pad_value():
-  """Return the padding value."""
-  return PAD_VALUE
-
 
 def rand_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
   """A unified function for consistent random number generation. 
@@ -322,44 +311,43 @@ def resize_and_jitter_image(image,
                             cut=None,
                             method=tf.image.ResizeMethod.BILINEAR,
                             seed=None):
-  """Resize, Pad, and distort a given input image following Darknet.
-  
-  Resizes the input image to output size (RetinaNet style).
-  Resize and pad images given the desired output size of the image and
-  stride size.
-  Here are the preprocessing steps.
-  1. For a given image, keep its aspect ratio and rescale the image to make it
-     the largest rectangle to be bounded by the rectangle specified by the
-     `desired_size`.
-  2. Pad the rescaled image to the padded_size.
+  """Resize, Pad, and distort a given input image.
   
   Args:
     image: a `Tensor` of shape [height, width, 3] representing an image.
     desired_size: a `Tensor` or `int` list/tuple of two elements representing
       [height, width] of the desired actual output image size.
-    padded_size: a `Tensor` or `int` list/tuple of two elements representing
-      [height, width] of the padded output image size. Padding will be applied
-      after scaling the image to the desired_size.
-    aug_scale_min: a `float` with range between [0, 1.0] representing minimum
-      random scale applied to desired_size for training scale jittering.
-    aug_scale_max: a `float` with range between [1.0, inf] representing maximum
-      random scale applied to desired_size for training scale jittering.
-    seed: seed for random scale jittering.
+    jitter: an `int` representing the maximum jittering that can be applied to
+      the image.
+    letter_box: a `bool` representing if letterboxing should be applied.
+    random_pad: a `bool` representing if random padding should be applied.
+    crop_only: a `bool` representing if only cropping will be applied.
+    shiftx: a `float` indicating if the image is in the
+      left or right.
+    shifty: a `float` value indicating if the image is in the
+      top or bottom.
+    cut: a `float` value indicating the desired center of the final patched
+      image.
     method: function to resize input image to scaled image.
+    seed: seed for random scale jittering.
   
   Returns:
-    output_image: `Tensor` of shape [height, width, 3] where [height, width]
-      equals to `output_size`.
-    image_info: a 2D `Tensor` that encodes the information of the image and the
+    image_: a `Tensor` of shape [height, width, 3] where [height, width]
+      equals to `desired_size`.
+    infos: a 2D `Tensor` that encodes the information of the image and the
       applied preprocessing. It is in the format of
       [[original_height, original_width], [desired_height, desired_width],
-       [y_scale, x_scale], [y_offset, x_offset]], where [desired_height,
+        [y_scale, x_scale], [y_offset, x_offset]], where [desired_height,
       desired_width] is the actual scaled image size, and [y_scale, x_scale] is
       the scaling factor, which is the ratio of
       scaled dimension / original dimension.
+    cast([original_width, original_height, width, height, ptop, pleft, pbottom,
+      pright], tf.float32): a `Tensor` containing the information of the image
+        andthe applied preprocessing.
   """
 
   def intersection(a, b):
+    """Find the intersection between 2 crops"""
     minx = tf.maximum(a[0], b[0])
     miny = tf.maximum(a[1], b[1])
     maxx = tf.minimum(a[2], b[2])
@@ -370,7 +358,7 @@ def resize_and_jitter_image(image,
     return [tf.cast(value, dtype) for value in values]
 
   if jitter > 0.5 or jitter < 0:
-    raise Exception("maximum change in aspect ratio must be between 0 and 0.5")
+    raise Exception('maximum change in aspect ratio must be between 0 and 0.5')
 
   with tf.name_scope('resize_and_jitter_image'):
     # Cast all parameters to a usable float data type.
@@ -476,7 +464,7 @@ def resize_and_jitter_image(image,
     # Pad the image to desired size.
     image_ = tf.pad(
         cropped_image, [[pad[0], pad[2]], [pad[1], pad[3]], [0, 0]],
-        constant_values=get_pad_value())
+        constant_values=PAD_VALUE)
     pad_info = tf.stack([
         tf.cast(tf.shape(cropped_image)[:2], tf.float32),
         tf.cast(tf.shape(image_)[:2], dtype=tf.float32),
@@ -663,7 +651,7 @@ def affine_warp_image(image,
   image = tfa.image.transform(
       image,
       affine,
-      fill_value=get_pad_value(),
+      fill_value=PAD_VALUE,
       output_shape=desired_size,
       interpolation='bilinear')
 
@@ -829,7 +817,7 @@ def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
   return clipped_boxes, box_history
 
 
-def apply_infos(boxes,
+def transform_and_clip_boxes(boxes,
                 infos,
                 affine=None,
                 shuffle_boxes=False,

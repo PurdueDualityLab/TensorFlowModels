@@ -1,4 +1,5 @@
 from queue import Queue
+import time
 
 
 class FrameQue(object):
@@ -14,7 +15,9 @@ class FrameQue(object):
     return True
 
   def put_all(self, frames):
-    map(self._que.put, frames)
+    for frame in frames:
+      while not self.put(frame):
+        time.sleep(0.00001)
     return True
 
   def get(self):

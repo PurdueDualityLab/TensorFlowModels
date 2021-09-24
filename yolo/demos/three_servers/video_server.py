@@ -342,12 +342,13 @@ class DisplayThread(Thread):
       display_fps = 0
 
       while (self._running):
-        # success, frame = self._frame_buffer.read()
         success, frame = self._frame_buffer.read()
+ 
         if success and frame is not None:
-          if self._res[-1] <= 1080:
-            cv2.imshow("frame", frame)
+          #if self._res[0] <= 1080:
+          cv2.imshow("frame", frame)
           if self._res is not None:
+            
             frame = cv2.resize(frame, self._res)
             frame = cv2.convertScaleAbs(frame, alpha=(255.0))
             out.write(frame)

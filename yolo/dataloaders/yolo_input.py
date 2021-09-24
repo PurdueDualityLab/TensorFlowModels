@@ -1,7 +1,18 @@
-""" Detection Data parser and processing for YOLO.
-Parse image and ground truths in a dataset to training targets and package them
-into (image, labels) tuple for RetinaNet.
-"""
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Detection Data parser and processing for YOLO."""
 import tensorflow as tf
 import numpy as np
 from yolo.ops import preprocessing_ops
@@ -219,7 +230,7 @@ class Parser(parser.Parser):
           self._aug_rand_perspective)
 
       # Clip and clean boxes.
-      boxes, inds = preprocessing_ops.apply_infos(
+      boxes, inds = preprocessing_ops.transform_and_clip_boxes(
           boxes,
           infos,
           affine=affine,
@@ -273,7 +284,7 @@ class Parser(parser.Parser):
 
     # Clip and clean boxes.
     image = image / 255.0
-    boxes, inds = preprocessing_ops.apply_infos(
+    boxes, inds = preprocessing_ops.transform_and_clip_boxes(
         boxes, infos, shuffle_boxes=False, area_thresh=0.0, augment=True)
     classes = tf.gather(classes, inds)
     info = infos[-1]
@@ -341,10 +352,6 @@ class Parser(parser.Parser):
 
     # Update the labels dictionary.
     if not is_training:
-      # area = self.set_shape(
-      #     data['groundtruth_area'], pad_axis=0, pad_value=0, inds=inds)
-      # is_crowd = self.set_shape(
-      #     data['groundtruth_is_crowd'], pad_axis=0, pad_value=0, inds=inds)
 
       # Sets up groundtruth data for evaluation.
       groundtruths = {
