@@ -1,5 +1,7 @@
 from yolo.tasks import image_classification as imc
 from yolo.utils.demos import utils, coco
+
+from yolo.demos.utils import drawer as draw
 from yolo.tasks import yolo
 from yolo.configs import yolo as yolocfg
 from yolo.configs import darknet_classification as dcfg
@@ -132,17 +134,14 @@ def test_yolo_pipeline(is_training=True, num=30):
   # shind = 3
   dip = 0
   if config.model.num_classes == 80:
-    drawer = utils.DrawBoxes(
-        labels=coco.get_coco_names(
-            path="yolo/dataloaders/dataset_specs/coco.names"),
-        thickness=2,
-        classes=91)
+    labels=draw.get_coco_names(
+            path="yolo/dataloaders/dataset_specs/coco.names")
   else:
-    drawer = utils.DrawBoxes(
-        labels=coco.get_coco_names(
-            path="yolo/dataloaders/dataset_specs/coco-91.names"),
-        thickness=2,
-        classes=91)
+    labels = draw.get_coco_names(
+            path="yolo/dataloaders/dataset_specs/coco-91.names")
+  colors = draw.gen_colors_per_class(len(labels))
+  drawer = draw.DrawBoxes(
+      labels=labels, colors=colors)
   ltime = time.time()
 
   data = dataset if is_training else dsp
@@ -172,7 +171,7 @@ def test_yolo_pipeline(is_training=True, num=30):
           'confidence': confidence,
       }
       # print(tf.cast(bops.denormalize_boxes(boxes, image.shape[:2]), tf.int32))
-      image = drawer(image, draw_dict)
+      image = drawer(image, draw_dict, scale_boxes=True)
 
       (true_box, ind_mask, true_class) = tf.split(
           j['upds']['5'], [4, 1, 1], axis=-1)

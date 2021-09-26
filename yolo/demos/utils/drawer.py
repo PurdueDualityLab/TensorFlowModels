@@ -30,6 +30,8 @@ class DrawBoxes(object):
 
   def _scale_boxes(self, boxes, classes, image):
     height, width = preprocessing_ops.get_image_shape(image)
+    height = tf.cast(height, boxes.dtype)
+    width = tf.cast(width, boxes.dtype)
     boxes = tf.stack([
         tf.cast(boxes[..., 0] * height, dtype=tf.int32),
         tf.cast(boxes[..., 1] * width, dtype=tf.int32),
@@ -61,7 +63,7 @@ class DrawBoxes(object):
     txt_color = (0, 0, 0) if np.mean(color/255) > 0.5 else (255, 255, 255)
     txt_size = cv2.getTextSize(text, self._font, 0.4, 1)[0]
 
-    if isinstance(image.item, np.uint8) or isinstance(image.item, np.int32):
+    if not isinstance(image.item(0), int):
       txt_bk_color = (np.array(txt_bk_color)/255).tolist()
       txt_color = (np.array(txt_color)/255).tolist()
       color = (np.array(color)/255).tolist()
@@ -89,10 +91,6 @@ class DrawBoxes(object):
 
     if "confidence" in results: 
       conf = results["confidence"]
-      if conf is not None:
-        conf = tf.convert_to_tensor(results["confidence"])
-      else:
-        conf = [None] * classes.shape[0] if len(images.shape) != 3 else 1
     else:
       conf = tf.convert_to_tensor(results["classes"])/100
 
@@ -102,10 +100,8 @@ class DrawBoxes(object):
       conf = conf.numpy()
 
     if len(images.shape) == 3: 
-      if len(boxes.shape) == 2:
-        self._draw(images, boxes, classes, conf)
-      else:
-        self._draw(images, boxes[0], classes[0], conf[0])
+      for j in range(boxes.shape[0]):
+        self._draw(images, boxes[j], classes[j], conf[j])
       return images
     else:
       image = []
