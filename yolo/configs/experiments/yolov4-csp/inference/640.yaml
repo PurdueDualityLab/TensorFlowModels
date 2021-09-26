@@ -99,8 +99,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
-  init_checkpoint: '/home/vbanna/Research/checkpoints/yolo/v4-csp/'
-  init_checkpoint_modules: 'all'
+  # init_checkpoint: '/home/vbanna/Research/checkpoints/yolo/v4-csp/'
+  # init_checkpoint_modules: 'all'
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625

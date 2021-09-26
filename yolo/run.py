@@ -1,6 +1,7 @@
 # Lint as: python3
 # pylint: skip-file
 
+from official import modeling
 from yolo.utils.run_utils import prep_gpu
 # try:
 #
@@ -24,28 +25,22 @@ from official.modeling import performance
 from official.core import task_factory
 import os
 
-from yolo.demos import video_detect_gpu as vgu
-from yolo.demos import video_detect_cpu as vcu
+# from yolo.demos.old import video_detect_gpu as vgu
+# from yolo.demos.old import video_detect_cpu as vcu
+from yolo.demos import detect
 import tensorflow as tf
+from skimage import io
+import cv2
+
 '''
-python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 640 --config_file=yolo/configs/experiments/yolov4-csp/inference/640.yaml --video ../videos/nyc.mp4  --max_batch 5 --model_dir ../checkpoints/640-baseline-ema-e1/  --process_size 640'''
-"""
-export GOOGLE_APPLICATION_CREDENTIALS=<key>.json 
-python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4/inference/512-baseline.yaml --video ../videos/nyc.mp4  --max_batch 5 
-"""
-"""
-python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov3-eval.yaml --video ../videos/nyc.mp4  --max_batch 9
-"""
-"""
-python3.8 -m yolo.run --experiment=yolo_custom --out_resolution 416 --config_file=yolo/configs/experiments/yolov4-tiny-eval.yaml --video ../videos/nyc.mp4  --max_batch 9
-"""
+python3.8 -m yolo.run --experiment=yolo_custom --config_file=yolo/configs/experiments/yolov4-csp/inference/640.yaml --model_dir ../checkpoints/640-baseline-e13/ --file ../../Videos/korea.mp4 --save_file ../../Videos/korea-detect.avi --batch_size 1 --buffer_size 100 
+'''
 
 FLAGS = flags.FLAGS
 
 
 def define_flags():
   """Defines flags."""
-  flags.DEFINE_bool('gpu', default=True, help='The experiment type registered.')
 
   flags.DEFINE_string(
       'experiment', default=None, help='The experiment type registered.')
@@ -91,27 +86,14 @@ def define_flags():
   flags.DEFINE_string(
       'tf_data_service', default=None, help='The tf.data service address')
 
-  flags.DEFINE_string('video', default=None, help='path to video to run on')
-
-  flags.DEFINE_bool(
-      'preprocess_gpu', default=False, help='preprocess on the gpu')
-
-  flags.DEFINE_bool('print_conf', default=True, help='preprocess on the gpu')
-
-  flags.DEFINE_integer(
-      'process_size', default=416, help='preprocess on the gpu')
-
-  flags.DEFINE_integer('max_batch', default=None, help='preprocess on the gpu')
-
-  flags.DEFINE_float('wait_time', default=None, help='preprocess on the gpu')
-
-  flags.DEFINE_integer(
-      'out_resolution', default=416, help='preprocess on the gpu')
-
-  flags.DEFINE_integer('scale_que', default=1, help='preprocess on the gpu')
-
-  flags.DEFINE_string(
-      'save_file', default=None, help='The tf.data service address')
+  
+  flags.DEFINE_integer('batch_size', default=1, help='preprocess on the gpu')
+  flags.DEFINE_integer('buffer_size', default=1, help='preprocess on the gpu')
+  flags.DEFINE_integer('resolution', default=720, help='preprocess on the gpu')
+  flags.DEFINE_string('save_file', default=None, help='The tf.data service address')
+  flags.DEFINE_string('file', default="/dev/video0", help='path to video to run on')
+  flags.DEFINE_string('label_file', default="yolo/dataloaders/dataset_specs/coco.names", help='path to video to run on')
+  flags.DEFINE_bool('no_display', default=False, help='The experiment type registered.')
 
 
 def load_model(experiment='yolo_custom', config_path=[], model_dir=''):
@@ -170,35 +152,44 @@ def load_flags(CFG):
   return task, model, params
 
 
+def url_to_image(url):
+  image = io.imread(url)
+  return image
+
+
 def main(_):
   prep_gpu()
-  task, model, params = load_flags(FLAGS)
+  _, model, params = load_flags(FLAGS)
+  module = detect.DetectionModule(params, model, FLAGS.label_file)
 
-  if FLAGS.gpu:
-    cap = vgu.FastVideo(
-        FLAGS.video,
-        model=model,
-        process_width=FLAGS.process_size,
-        process_height=FLAGS.process_size,
-        preprocess_with_gpu=FLAGS.preprocess_gpu,
-        classes=params.task.model.num_classes,
-        print_conf=FLAGS.print_conf,
-        save_file=FLAGS.save_file,
-        max_batch=FLAGS.max_batch,
-        disp_h=FLAGS.out_resolution,
-        scale_que=FLAGS.scale_que,
-        wait_time=FLAGS.wait_time)
-    cap.run()
+  valid = [".jpeg", ".jpg", ".png"]
+  if any([str.endswith(FLAGS.file, key) for key in valid]): 
+    image = url_to_image(FLAGS.file)
+    _, image, _ = module.image(image)
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    if FLAGS.save_file is not None:
+      cv2.imwrite(FLAGS.save_file, image)
+
+    if not FLAGS.no_display:
+      cv2.imshow("frame", image)
+      k = cv2.waitKey(0)
+      if k:
+        cv2.destroyAllWindows()
   else:
-    vcu.runner(model, FLAGS.video, FLAGS.process_size, FLAGS.out_resolution)
+    module.video(
+      file_name=FLAGS.file, 
+      save_file=FLAGS.save_file,
+      display = not FLAGS.no_display,
+      batch_size = FLAGS.batch_size,
+      buffer_size = FLAGS.buffer_size,
+      output_resolution = FLAGS.resolution,
+    )
 
 
 if __name__ == '__main__':
-  import datetime
-
-  a = datetime.datetime.now()
   define_flags()
   app.run(main)
-  b = datetime.datetime.now()
 
-  print('\n\n\n\n\n\n\n {b - a}')
+
