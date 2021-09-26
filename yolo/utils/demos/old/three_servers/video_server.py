@@ -4,7 +4,7 @@ from queue import Queue
 import traceback
 import time
 
-from yolo.demos.three_servers.frame_que import FrameQue
+from yolo.serving.three_servers.frame_que import FrameQue
 from yolo.utils.demos import utils
 
 

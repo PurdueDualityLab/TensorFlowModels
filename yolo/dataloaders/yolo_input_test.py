@@ -1,7 +1,7 @@
 from yolo.tasks import image_classification as imc
 from yolo.utils.demos import utils, coco
 
-from yolo.demos.utils import drawer as draw
+from yolo.serving.utils import drawer as draw
 from yolo.tasks import yolo
 from yolo.configs import yolo as yolocfg
 from yolo.configs import darknet_classification as dcfg

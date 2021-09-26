@@ -25,9 +25,9 @@ from official.modeling import performance
 from official.core import task_factory
 import os
 
-# from yolo.demos.old import video_detect_gpu as vgu
-# from yolo.demos.old import video_detect_cpu as vcu
-from yolo.demos import detect
+# from yolo.serving.old import video_detect_gpu as vgu
+# from yolo.serving.old import video_detect_cpu as vcu
+from yolo.serving import detect
 import tensorflow as tf
 from skimage import io
 import cv2

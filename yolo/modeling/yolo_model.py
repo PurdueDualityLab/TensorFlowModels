@@ -104,6 +104,7 @@ class Yolo(tf.keras.Model):
     self._decoder = decoder
     self._head = head
     self._detection_generator = detection_generator
+    self._fused = False
     return
 
   def call(self, inputs, training=False):
@@ -169,9 +170,10 @@ class Yolo(tf.keras.Model):
   
   def fuse(self):
     print("fusing")
-    for layer in self.submodules:
-      if isinstance(layer, nn_blocks.ConvBN):
-        layer.fuse()
-
-    self.summary()
+    if not self._fused:
+      self._fused = True
+      for layer in self.submodules:
+        if isinstance(layer, nn_blocks.ConvBN):
+          layer.fuse()
+      self.summary()
     return 
