@@ -52,11 +52,11 @@ task:
     anchor_boxes: 
       level_limits: [64, 128]
   train_data:
-    global_batch_size: 1
+    global_batch_size: 16
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 10
     drop_remainder: true
     seed: 1000
     parser:
@@ -77,10 +77,8 @@ task:
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
-      anchor_thresh: 4.0
-      best_match_only: True
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 16
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -97,21 +95,21 @@ task:
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
+  steps_per_loop: 1
+  summary_interval: 1
   validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9998
-      trainable_weights_only: False
-      dynamic_decay: True
+    # ema:
+    #   average_decay: 0.9998
+    #   trainable_weights_only: False
+    #   dynamic_decay: True
     learning_rate:
       type: stepwise
       stepwise:
         boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] 
+        values: [0.0003275, 0.00003275, 0.000003275] 
     optimizer:
       type: sgd_dymow
       sgd_dymow:

@@ -16,8 +16,9 @@ class FrameQue(object):
 
   def put_all(self, frames):
     for frame in frames:
-      while not self.put(frame):
-        time.sleep(0.00001)
+      if not self.put(frame):
+        _ = self.get()
+        self.put(frame)
     return True
 
   def get(self):

@@ -2,6 +2,7 @@ import tensorflow as tf
 # import tensorflow.experimental.tensorrt as trt
 
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
+import tensorflow.python as tfp
 
 from yolo.utils.run_utils import prep_gpu
 
@@ -27,9 +28,9 @@ class TensorRT(object):
       raise Exception("model save path not specified")
     self._params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(
         precision_mode=precision_mode,
-        is_dynamic_op=is_dynamic_op,
+        # is_dynamic_op=is_dynamic_op,
         max_workspace_size_bytes=max_workspace_size_bytes,
-        max_batch_size=8,
+        # max_batch_size=8,
         use_calibration=use_calibration)
     #self._parent = None
     self._model = None
@@ -69,9 +70,9 @@ class TensorRT(object):
       saved_model_dir = self._model_path
 
     saved_model_loaded = tf.saved_model.load(
-        saved_model_dir, tags=[tf.python.saved_model.tag_constants.SERVING])
+        saved_model_dir, tags=[tfp.saved_model.tag_constants.SERVING])
     graph_func = saved_model_loaded.signatures[
-        tf.python.saved_model.signature_constants
+        tfp.saved_model.signature_constants
         .DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     self._model = graph_func
     return

@@ -225,10 +225,15 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
     After the loss has been aggregated across all the FPN levels some post
     proceessing may need to occur to poroperly scale the loss. The default
-    behavior is to pass the loss through with no alterations.
+    behavior is to pass the loss through with no alterations. Passing the 
+    individual losses for each mask will allow for aggeregation of loss across 
+    paths for some losses.
 
     Args:
       loss: `tf.float` scalar for the actual loss.
+      box_loss: `tf.float` for the loss on the boxs only.
+      conf_loss: `tf.float` for the loss on the confidences only.
+      class_loss: `tf.float` for the loss on the classes only.
       ground_truths: `Dict` holding all the ground truth tensors.
       predictions: `Dict` holding all the predicted values.
 

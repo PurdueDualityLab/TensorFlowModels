@@ -149,7 +149,7 @@ class YoloTask(base_task.Task):
 
     backbone = self.task_config.model.backbone.get()
     metric_names = defaultdict(list)
-    for key in range(backbone.min_level, backbone.max_level):
+    for key in range(backbone.min_level, backbone.max_level + 1):
       key = str(key)
       metric_names[key].append('loss')
       metric_names[key].append("avg_iou")

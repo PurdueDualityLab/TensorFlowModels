@@ -303,7 +303,7 @@ class DisplayThread(Thread):
                res = None, 
                use_colab=False):
     if frame_buffer is None:
-      self._frame_buffer = FrameQue(1000)
+      self._frame_buffer = FrameQue(1)
     else:
       self._frame_buffer = frame_buffer
     self._thread = None

@@ -135,10 +135,23 @@ def run_fn(model):
 
 
 if __name__ == '__main__':
+  import yolo.utils.export.tensor_rt as trt
   from yolo import run
   import os
-
   video_file = 0 #"../../Videos/nyc2.mp4"
+
+
+  # name = "/home/vbanna/Research/TensorFlowModels/cache/saved_models/yolo_v4_csp"
+  # new_name = f"{name}_tensorrt"
+  # model = trt.TensorRT(saved_model=name, save_new_path=new_name, max_workspace_size_bytes=4000000000, max_batch_size=5)
+  # model.convertModel()
+  # model.compile()
+  # model.summary()
+  # # model.set_postprocessor_fn(func)
+
+
+
+  # 
   config = [os.path.abspath('yolo/configs/experiments/yolov4-csp/inference/640.yaml')]
   model_dir = os.path.abspath("../checkpoints/640-baseline-e13")
   # config = [os.path.abspath('yolo/configs/experiments/yolov4-nano/inference/416-3l.yaml')]
@@ -146,8 +159,13 @@ if __name__ == '__main__':
   # config = [os.path.abspath('yolo/configs/experiments/yolov4/inference/512.yaml')]
   # model_dir = os.path.abspath("../checkpoints/512-wd-baseline-e1")
 
+
   task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
   model.fuse()
+
+  # model = tf.keras.models.save_model(model, "cache/saved_models/yolo_v4_csp", include_optimizer = False)
+  model(tf.ones([1] + DESIRED_SIZE + [3]))
+  # model.save("cache/saved_models/yolo_v4_csp", include_optimizer = False)
 
   model_fn = run_fn(model)
   labels = get_coco_names(path='yolo/dataloaders/dataset_specs/coco.names')
@@ -162,9 +180,12 @@ if __name__ == '__main__':
   video_stream = video(cap)
 
   display.start()
+  latency = 0.0
+  alpha = 0.9
   for frames in video_stream:
-    
+    start = time.time()
     images, preds = model_fn(*frames)  
+    end = time.time()
     images = draw_fn(images, preds, stacked = False)
     display.put_all(images)
     
@@ -174,5 +195,5 @@ if __name__ == '__main__':
     # for i, im in enumerate(images):
     #   ims.append(im)
     # display.put_all(ims)
-
-    print(f"fps: {display.fps}", end = "\r")
+    latency = alpha*latency + (1 - alpha)*((end - start)/BATCH_SIZE)
+    print(f"fps: {display.fps}, latency: {latency}", end = "\r")
