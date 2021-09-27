@@ -671,8 +671,10 @@ class AnchorFreeLoss(ScaledLoss):
     # scale the loss by the number of objects across all fpn paths
     num_objs = tf.cast(0, loss.dtype)
     for key in predictions:
-      y_true = ground_truths['upds'][key]
-      (_, ind_mask, _) = tf.split(y_true, [4, 1, 1], axis=-1)
+      true_counts = tf.cast(ground_truths['true_conf'][key], loss.dtype)
+      ind_mask = tf.clip_by_value(true_counts, 0.0, 1.0)
+      # y_true = ground_truths['upds'][key]
+      # (_, ind_mask, _) = tf.split(y_true, [4, 1, 1], axis=-1)
       num_objs += tf.cast(tf.reduce_sum(ind_mask), dtype=loss.dtype)
 
     num_objs = tf.maximum(tf.ones_like(num_objs), num_objs)
