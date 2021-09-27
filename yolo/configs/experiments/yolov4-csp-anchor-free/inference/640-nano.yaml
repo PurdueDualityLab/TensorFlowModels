@@ -27,8 +27,8 @@ task:
         'all': 2.5
       max_boxes: 300
       nms_type: greedy
-      iou_thresh: 0.001
-      nms_thresh: 0.60
+      iou_thresh: 0.01
+      nms_thresh: 0.65
     loss:
       use_scaled_loss: null
       update_on_repeat: true
@@ -45,7 +45,7 @@ task:
       objectness_smooth: 
         'all': 0.0
     norm_activation:
-      activation: mish
+      activation: silu
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
@@ -57,13 +57,13 @@ task:
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
-    shuffle_buffer_size: 1
+    shuffle_buffer_size: 10000
     drop_remainder: true
     seed: 1000
     parser:
       mosaic: 
         mosaic_frequency: 1.0
-        mixup_frequency: 0.2
+        mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         mosaic_center: 0.25
         aug_scale_min: 0.1
@@ -71,40 +71,39 @@ task:
       max_num_instances: 300
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 0.7
-      aug_rand_brightness: 0.4
+      aug_rand_saturation: 1.7
+      aug_rand_brightness: 1.6
       aug_rand_hue: 0.015
       aug_rand_translate: 0.1
+      aug_rand_angle: 10
       area_thresh: 0.1
       random_pad: False
-      use_tie_breaker: True
-      anchor_thresh: 4.0
-      best_match_only: True
+      use_tie_breaker: False
+      anchor_thresh: 0.0
   validation_data:
     global_batch_size: 10
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
-    shuffle_buffer_size: 1
+    shuffle_buffer_size: 10
     drop_remainder: true
     parser:
       max_num_instances: 300
       letter_box: True
-      use_tie_breaker: True
-      anchor_thresh: 4.0
-      best_match_only: True
+      use_tie_breaker: False
+      anchor_thresh: 0.0
   weight_decay: 0.000
   annotation_file: null
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
-  validation_interval: 1850
+  steps_per_loop: 1
+  summary_interval: 1
+  validation_interval: 9250
   checkpoint_interval: 1850
   optimizer_config:
     # ema:
-    #   average_decay: 0.9999
+    #   average_decay: 0.9998
     #   trainable_weights_only: False
     #   dynamic_decay: True
     learning_rate:
@@ -118,7 +117,7 @@ trainer:
       type: sgd_dymow
       sgd_dymow:
         momentum: 0.9
-        momentum_start: 0.8
+        momentum_start: 0.9
         nesterov: True
         warmup_steps: 9250
         weight_decay: 0.0005

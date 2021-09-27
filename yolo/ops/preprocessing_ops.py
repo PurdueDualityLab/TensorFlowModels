@@ -145,15 +145,15 @@ def get_image_shape(image):
 def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   """Randomize the hue, saturation, and brightness via the darknet method."""
   if rh > 0.0:
-    delta = random_uniform_strong(-rh, rh, seed=seed)
-    image = tf.image.adjust_hue(image, delta)
+    deltah = random_uniform_strong(-rh, rh, seed=seed)
+    image = tf.image.adjust_hue(image, deltah)
   if rs > 0.0:
-    delta = random_scale(rs, seed=seed)
-    image = tf.image.adjust_saturation(image, delta)
+    deltas = random_scale(rs, seed=seed)
+    image = tf.image.adjust_saturation(image, deltas)
   if rv > 0.0:
-    delta = random_scale(rv, seed=seed)
-    image *= delta
-
+    deltav = random_scale(rv, seed=seed)
+    image *= deltav
+  
   # clip the values of the image between 0.0 and 1.0
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image

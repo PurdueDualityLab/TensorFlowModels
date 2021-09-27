@@ -674,6 +674,9 @@ class AnchorFreeLoss(ScaledLoss):
       y_true = ground_truths['upds'][key]
       (_, ind_mask, _) = tf.split(y_true, [4, 1, 1], axis=-1)
       num_objs += tf.cast(tf.reduce_sum(ind_mask), dtype=loss.dtype)
+
+    num_objs = tf.maximum(tf.ones_like(num_objs), num_objs)
+    num_objs = tf.stop_gradient(num_objs)
     return loss/num_objs, num_objs
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
