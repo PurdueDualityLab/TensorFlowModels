@@ -526,7 +526,7 @@ def scale(a, b):
   c = a/tf.cast(b, a.dtype)
   def delta(dc):
     return dc, dc
-  return c
+  return delta, c
 
 def _anchor_free_scale_boxes(encoded_boxes,
                              width,
