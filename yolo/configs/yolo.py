@@ -249,7 +249,6 @@ class Yolo(hyperparams.Config):
 class YoloTask(cfg.TaskConfig):
   per_category_metrics: bool = False
   smart_bias_lr: float = 0.0
-  coco91to80: bool = False
   model: Yolo = Yolo()
   train_data: DataConfig = DataConfig(is_training=True)
   validation_data: DataConfig = DataConfig(is_training=False)

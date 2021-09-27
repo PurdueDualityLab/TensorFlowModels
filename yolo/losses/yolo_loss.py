@@ -572,6 +572,12 @@ class ScaledLoss(YoloLossBase):
     """this method is not specific to each loss path, but each loss type"""
     return loss
 
+class AnchorFreeLoss(ScaledLoss):
+  """Temp hold anchor free loss."""
+
+  def cross_replica_aggregation(self, loss, num_replicas_in_sync):
+    """this method is not specific to each loss path, but each loss type"""
+    return loss/num_replicas_in_sync
 
 class YoloLoss:
   """This class implements the aggregated loss across YOLO model FPN levels."""
@@ -638,10 +644,12 @@ class YoloLoss:
         best value when an index is consumed by multiple objects.
     """
 
-    losses = {'darknet': DarknetLoss, 'scaled': ScaledLoss}
+    losses = {'darknet': DarknetLoss, 'scaled': ScaledLoss, 'anchor_free': AnchorFreeLoss}
 
     if use_scaled_loss:
       loss_type = 'scaled'
+    elif use_scaled_loss is None:
+      loss_type = 'anchor_free'
     else:
       loss_type = 'darknet'
     
