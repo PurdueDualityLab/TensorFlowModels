@@ -18,7 +18,7 @@ class DetectionModule:
     colors = pydraw.gen_colors_per_class(len(labels))
 
     self.model_fn = pymodel_run.get_wrapped_model(model, params, include_statistics=True)
-    self.drawer = pydraw.DrawBoxes(labels = labels, colors = colors)
+    self.drawer = pydraw.DrawBoxes(labels = labels, colors = colors, thickness=1)
 
   def video(self, 
           file_name = 0, 

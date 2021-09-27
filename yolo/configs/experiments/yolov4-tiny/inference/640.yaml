@@ -10,17 +10,12 @@ task:
     backbone:
       type: 'darknet'
       darknet:
-        model_id: 'altered_cspdarknet53'
+        model_id: 'cspdarknettiny'
         max_level: 5
         min_level: 3
-        width_scale: 0.5
-        depth_scale: 0.333
     decoder:
       version: v4
-      type: csp
-      csp_stack: 3
-      fpn_depth: 3
-      path_process_len: 3
+      type: tiny
     head:
       smart_bias: true
     detection_generator:
@@ -54,7 +49,7 @@ task:
       activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
-      use_sync_bn: false
+      use_sync_bn: true
     num_classes: 80
     anchor_boxes:
       anchors_per_scale: 3

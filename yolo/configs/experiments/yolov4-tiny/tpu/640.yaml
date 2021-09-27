@@ -1,6 +1,6 @@
 runtime:
   distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
 task:
   smart_bias_lr: 0.1
@@ -50,10 +50,11 @@ task:
       norm_momentum: 0.97
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
-    boxes: ['[12.0, 16.0]' ,  '[19.0, 36.0]'  , '[40.0, 28.0]',
-            '[36.0, 75.0]' ,  '[76.0, 55.0]'  , '[72.0, 146.0]', 
-            '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    anchor_boxes:
+      anchors_per_scale: 3
+      boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
+              box: [36, 75],   box: [76, 55],   box: [72, 146], 
+              box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -62,8 +63,6 @@ task:
     shuffle_buffer_size: 10000
     drop_remainder: true
     seed: 1000
-    decoder: 
-      coco91_to_80: True
     parser:
       mosaic: 
         mosaic_frequency: 1.0
@@ -104,7 +103,7 @@ trainer:
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
-  validation_interval: 18500
+  validation_interval: 1850
   checkpoint_interval: 1850
   optimizer_config:
     ema:

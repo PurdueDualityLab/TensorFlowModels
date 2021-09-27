@@ -1,17 +1,18 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  num_gpus: 1
 task:
   smart_bias_lr: 0.0
   model:
     darknet_based_model: True
-    input_size: [416, 416, 3]
+    input_size: [512, 512, 3]
     backbone:
       type: 'darknet'
       darknet:
         model_id: 'cspdarknettiny'
         max_level: 5
-        min_level: 4
+        min_level: 3
     decoder:
       version: v4
       type: tiny
@@ -23,6 +24,7 @@ task:
       scale_xy:
         '5': 1.05
         '4': 1.1
+        '3': 1.2
       max_boxes: 200
       nms_type: greedy
       iou_thresh: 0.001
@@ -49,10 +51,10 @@ task:
       norm_momentum: 0.99
       use_sync_bn: true
     num_classes: 80
-    anchor_boxes:
-      anchors_per_scale: 3
-      boxes: [box: [10, 14], box: [23,   27], box: [37,   58], 
-              box: [81, 82], box: [135, 169], box: [344, 319]]
+    boxes_per_scale: 3
+    boxes: ['[12.0, 16.0]' ,  '[19.0, 36.0]'  , '[40.0, 28.0]',
+            '[36.0, 75.0]' ,  '[76.0, 55.0]'  , '[72.0, 146.0]', 
+            '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -99,7 +101,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 2000200 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
@@ -113,14 +115,14 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [1600000,1800000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00261, 0.000261, 0.0000261] 
+        values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
       type: sgd_dymow
       sgd_dymow:
-        momentum: 0.9
-        momentum_start: 0.9
+        momentum: 0.949
+        momentum_start: 0.949
         nesterov: True
         warmup_steps: 1000
         weight_decay: 0.0005
