@@ -240,7 +240,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     Returns:
       loss: `tf.float` scalar for the scaled loss.
     """
-    return loss
+    return loss, tf.ones_like(loss)
 
   @abc.abstractmethod
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
@@ -566,7 +566,7 @@ class ScaledLoss(YoloLossBase):
 
     """
     scale = tf.stop_gradient(3 / len(list(predictions.keys())))
-    return loss * scale
+    return loss * scale, 1/scale
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
     """this method is not specific to each loss path, but each loss type"""
@@ -574,6 +574,107 @@ class ScaledLoss(YoloLossBase):
 
 class AnchorFreeLoss(ScaledLoss):
   """Temp hold anchor free loss."""
+
+  def _compute_loss(self, true_counts, inds, y_true, boxes, classes, y_pred):
+    """Per FPN path loss logic for Yolov4-csp, Yolov4-Large, and Yolov5."""
+    # Generate shape constants.
+    shape = tf.shape(true_counts)
+    batch_size, width, height, num = shape[0], shape[1], shape[2], shape[3]
+    fwidth = tf.cast(width, tf.float32)
+    fheight = tf.cast(height, tf.float32)
+
+    # Cast all input compontnts to float32 and stop gradient to save memory.
+    y_true = tf.cast(y_true, tf.float32)
+    true_counts = tf.cast(true_counts, tf.float32)
+    true_conf = tf.clip_by_value(true_counts, 0.0, 1.0)
+    grid_points, anchor_grid = self._anchor_generator(
+        width, height, batch_size, dtype=tf.float32)
+
+    # Split the y_true list.
+    (true_box, ind_mask, true_class) = tf.split(y_true, [4, 1, 1], axis=-1)
+    grid_mask = true_conf = tf.squeeze(true_conf, axis=-1)
+    true_class = tf.squeeze(true_class, axis=-1)
+
+    # Split up the predicitons.
+    y_pred = tf.cast(
+        tf.reshape(y_pred, [batch_size, width, height, num, -1]), tf.float32)
+    pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
+
+    # Decode the boxes for loss compute.
+    scale, pred_box, pbg = self._decode_boxes(
+        fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
+
+    # Scale and shift and select the ground truth boxes
+    # and predictions to the prediciton domain.
+    if self._box_type == "anchor_free":
+      true_box = loss_utils.apply_mask(
+        ind_mask, (scale * self._path_stride * true_box))
+    else:
+      offset = tf.cast(
+          tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
+      offset = tf.concat([offset, tf.zeros_like(offset)], axis=-1)
+      true_box = loss_utils.apply_mask(ind_mask, (scale * true_box) - offset)
+    pred_box = loss_utils.apply_mask(ind_mask,
+                                     tf.gather_nd(pred_box, inds, batch_dims=1))
+
+    # Select the correct/used prediction classes.
+    true_class = tf.one_hot(
+        tf.cast(true_class, tf.int32),
+        depth=tf.shape(pred_class)[-1],
+        dtype=pred_class.dtype)
+    true_class = loss_utils.apply_mask(ind_mask, true_class)
+    pred_class = loss_utils.apply_mask(
+        ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
+
+    # Compute the box loss.
+    _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    box_loss = loss_utils.apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
+    box_loss = tf.reduce_sum(box_loss)
+
+    # Use the box IOU to build the map for confidence loss computation.
+    iou = tf.maximum(tf.stop_gradient(iou), 0.0)
+    smoothed_iou = ((
+        (1 - self._objectness_smooth) * tf.cast(ind_mask, iou.dtype)) +
+                    self._objectness_smooth * tf.expand_dims(iou, axis=-1))
+    smoothed_iou = loss_utils.apply_mask(ind_mask, smoothed_iou)
+    true_conf = loss_utils.build_grid(
+        inds, smoothed_iou, pred_conf, ind_mask, update=self._update_on_repeat)
+    true_conf = tf.squeeze(true_conf, axis=-1)
+
+    # Compute the cross entropy loss for the confidence map.
+    bce = tf.keras.losses.binary_crossentropy(
+        tf.expand_dims(true_conf, axis=-1), pred_conf, from_logits=True)
+    conf_loss = tf.reduce_sum(bce)
+
+    # Compute the cross entropy loss for the class maps.
+    class_loss = tf.keras.losses.binary_crossentropy(
+        true_class,
+        pred_class,
+        label_smoothing=self._label_smoothing,
+        from_logits=True)
+    class_loss = loss_utils.apply_mask(
+        tf.squeeze(ind_mask, axis=-1), class_loss)
+    class_loss = tf.reduce_sum(class_loss)
+
+    # Apply the weights to each loss.
+    box_loss *= self._iou_normalizer
+    class_loss *= self._cls_normalizer
+    conf_loss *= self._obj_normalizer
+
+    # Add all the losses together then take the sum over the batches.
+    loss = mean_loss = box_loss + class_loss + conf_loss
+    return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf,
+            ind_mask, grid_mask)
+
+  def post_path_aggregation(self, 
+      loss, box_loss, conf_loss, class_loss, ground_truths, predictions):
+    # scale the loss by the number of objects across all fpn paths
+    num_objs = tf.cast(0, loss.dtype)
+    for key in predictions:
+      y_true = ground_truths['upds'][key]
+      (_, ind_mask, _) = tf.split(y_true, [4, 1, 1], axis=-1)
+      num_objs += tf.cast(tf.reduce_sum(ind_mask), dtype=loss.dtype)
+    return loss/num_objs, num_objs
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
     """this method is not specific to each loss path, but each loss type"""
@@ -692,7 +793,7 @@ class YoloLoss:
 
       # after computing the loss, scale loss as needed for aggregation
       # across FPN levels
-      loss = self._loss_dict[key].post_path_aggregation(
+      loss, scale = self._loss_dict[key].post_path_aggregation(
           loss, loss_box, loss_conf, loss_class, ground_truth, predictions)
 
       # after completing the scaling of the loss on each replica, handle
@@ -703,12 +804,13 @@ class YoloLoss:
 
       # detach all the below gradients: none of them should make a
       # contribution to the gradient form this point forwards
-      metric_loss += tf.stop_gradient(mean_loss)
-      metric_dict[key]['loss'] = tf.stop_gradient(mean_loss)
+      metric_loss += tf.stop_gradient(mean_loss/scale)
+      metric_dict[key]['loss'] = tf.stop_gradient(mean_loss/scale)
       metric_dict[key]['avg_iou'] = tf.stop_gradient(avg_iou)
       metric_dict[key]['avg_obj'] = tf.stop_gradient(avg_obj)
 
-      metric_dict['net']['box'] += tf.stop_gradient(loss_box)
-      metric_dict['net']['class'] += tf.stop_gradient(loss_class)
-      metric_dict['net']['conf'] += tf.stop_gradient(loss_conf)
+      metric_dict['net']['box'] += tf.stop_gradient(loss_box/scale)
+      metric_dict['net']['class'] += tf.stop_gradient(loss_class/scale)
+      metric_dict['net']['conf'] += tf.stop_gradient(loss_conf/scale)
+
     return loss_val, metric_loss, metric_dict
