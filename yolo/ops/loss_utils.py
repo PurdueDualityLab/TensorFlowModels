@@ -522,11 +522,11 @@ def _darknet_new_coord_boxes(encoded_boxes, width, height, anchor_grid,
   return (scaler, scaled_box, pred_box), delta
 
 @tf.custom_gradient
-def scale(a, b):
-  c = a/tf.cast(b, a.dtype)
-  def delta(dc):
-    return dc, dc
-  return c, delta
+def scale(a, b, c):
+  d = a/tf.cast(b, a.dtype)
+  def delta(dd):
+    return dd / tf.cast(c, dd.dtype), 0.0, 0.0
+  return d, delta
 
 def _anchor_free_scale_boxes(encoded_boxes,
                              width,
@@ -557,7 +557,7 @@ def _anchor_free_scale_boxes(encoded_boxes,
   scaled_box = scaled_box * tf.cast(stride, scaled_box.dtype)
 
   if darknet:
-    pred_box = scale(scaled_box, tf.cast(scaler * stride, scaled_box.dtype))
+    pred_box = scale(scaled_box, tf.cast(scaler * stride, scaled_box.dtype), tf.cast(scaler, scaled_box.dtype))
   else:
     pred_box = scaled_box/tf.cast(scaler * stride, scaled_box.dtype)
   return (scaler, scaled_box, pred_box)
