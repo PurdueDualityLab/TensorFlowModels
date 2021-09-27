@@ -601,7 +601,7 @@ class AnchorFreeLoss(ScaledLoss):
     pred_box, pred_conf, pred_class = tf.split(y_pred, [4, 1, -1], axis=-1)
 
     # Decode the boxes for loss compute.
-    scale, pred_box, pbg = self._decode_boxes(
+    scale, pred_box, _ = self._decode_boxes(
         fwidth, fheight, pred_box, anchor_grid, grid_points, darknet=False)
 
     # Scale and shift and select the ground truth boxes
