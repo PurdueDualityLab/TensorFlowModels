@@ -234,11 +234,9 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     # This method is only needed for momentum optimization.
-    return self._run_sgd(grad, var, apply_state=apply_state)
-
-  def _resource_apply_sparse_duplicate_indices(self, grad, var, indices,
-                                               **kwargs):
-    return self._run_sgd(grad, var)
+    holder = tf.tensor_scatter_nd_add(
+        tf.zeros_like(var), tf.expand_dims(indices, axis = -1), grad) 
+    return self._run_sgd(holder, var, apply_state=apply_state)
 
   def get_config(self):
     config = super(SGDMomentumWarmupW, self).get_config()
