@@ -25,8 +25,8 @@ task:
         'all': 2.5
       max_boxes: 300
       nms_type: greedy
-      iou_thresh: 0.01
-      nms_thresh: 0.65
+      iou_thresh: 0.001
+      nms_thresh: 0.60
     loss:
       use_scaled_loss: null
       update_on_repeat: true
@@ -43,7 +43,7 @@ task:
       objectness_smooth: 
         'all': 0.0
     norm_activation:
-      activation: silu
+      activation: swish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
@@ -109,7 +109,7 @@ trainer:
       cosine:
         initial_learning_rate: 0.01
         name: Cosine
-        alpha: 0.2
+        alpha: 0.05
         decay_steps: 555000
     optimizer:
       type: sgd_dymow

@@ -21,7 +21,7 @@ task:
     max_level: 5
     min_level: 3
     norm_activation:
-      activation: silu
+      activation: swish
       norm_epsilon: 0.001
       norm_momentum: 0.97
       use_sync_bn: true
