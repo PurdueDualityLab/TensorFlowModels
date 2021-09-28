@@ -16,7 +16,7 @@ task:
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
     norm_activation:
-      activation: 'mish'
+      activation: 'gelu'
   losses:
     l2_weight_decay: 0.0005
     one_hot: true
