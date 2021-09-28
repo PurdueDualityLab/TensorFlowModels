@@ -48,10 +48,10 @@ trainer:
     optimizer:
       type: 'adam'
       adam:
-      name: Adam
-      beta_1: 0.9
-      beta_2: 0.999
-      amsgrad:  False
+        name: Adam
+        beta_1: 0.9
+        beta_2: 0.999
+        amsgrad:  False
     learning_rate:
       type: 'polynomial'
       polynomial:
