@@ -28,7 +28,8 @@ task:
     is_training: true
     global_batch_size: 128
     dtype: 'bfloat16'
-    aug_type: autoaug
+    aug_type: 
+      type: randaug
   validation_data:
     tfds_name: imagenet2012
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
