@@ -648,10 +648,11 @@ class AnchorFreeLoss(ScaledLoss):
 
     # Compute the cross entropy loss for the class maps.
     class_loss = tf.keras.losses.binary_crossentropy(
-        true_class,
-        pred_class,
+        tf.expand_dims(true_class, axis = -1),
+        tf.expand_dims(pred_class, axis = -1),
         label_smoothing=self._label_smoothing,
         from_logits=True)
+    class_loss = tf.reduce_sum(class_loss, axis = -1)
     class_loss = loss_utils.apply_mask(
         tf.squeeze(ind_mask, axis=-1), class_loss)
     class_loss = tf.reduce_sum(class_loss)
