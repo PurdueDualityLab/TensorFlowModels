@@ -23,6 +23,7 @@ task:
     label_smoothing: 0.1
   train_data:
     tfds_name: imagenet2012
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: train
     is_training: true
     global_batch_size: 128
@@ -30,6 +31,7 @@ task:
     aug_type: RandAugment
   validation_data:
     tfds_name: imagenet2012
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: validation
     is_training: false
     global_batch_size: 128
