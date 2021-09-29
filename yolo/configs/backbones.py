@@ -19,19 +19,21 @@ class Darknet(hyperparams.Config):
 
 @dataclasses.dataclass
 class Swin(hyperparams.Config):
-  min_level: int = 3
+  min_level: Optional[int] = None
   max_level: Optional[int] = None
-  mlp_ratio: int = 4
-  patch_size: int = 4 
-  embed_dims: int = 96 
-  window_size: List[int] = dataclasses.field(default_factory=lambda:[7, 7, 7, 7])
+  embed_dims: int = 96
   depths: List[int] = dataclasses.field(default_factory=lambda:[2, 2, 6, 2])
-  num_heads: List[int] = dataclasses.field(default_factory=lambda:[3, 6, 12, 24])
-  drop: float = 0.0
-  attention_drop: float = 0.0 
+  num_heads: List[int] = dataclasses.field(default_factory=lambda:[3, 6, 12, 24]) 
+  window_size: List[int] = dataclasses.field(default_factory=lambda:[7, 7, 7, 7]) 
+  patch_size: int = 4
+  mlp_ratio: int = 4
+  qkv_bias: bool = True
+  qk_scale: bool = None
+  dropout: float = 0.0
+  attention_dropout: float = 0.0
   drop_path: float = 0.1
-  downsample_all: bool = False
-  
+  absolute_positional_embed: bool = False
+
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):
   darknet: Darknet = Darknet()

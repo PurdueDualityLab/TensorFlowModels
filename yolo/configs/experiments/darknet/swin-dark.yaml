@@ -12,11 +12,12 @@ task:
       swin:
         min_level: null
         max_level: null
-        patch_size: 4
+        patch_size: 2
         embed_dims: 96 
-        window_size: [7, 7, 7, 7] 
+        window_size: [8, 8, 8, 8] 
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
+        downsample_all: false
     norm_activation:
       activation: 'gelu'
   losses:

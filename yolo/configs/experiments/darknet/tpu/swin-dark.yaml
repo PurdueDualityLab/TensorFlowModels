@@ -1,12 +1,10 @@
 runtime:
-  distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float16'
-  loss_scale: "dynamic"
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
 task:
   model:
     num_classes: 1001
-    input_size: [224, 224, 3]
+    input_size: [256, 256, 3]
     backbone:
       type: 'swin'
       swin:
@@ -14,7 +12,7 @@ task:
         max_level: null
         patch_size: 4
         embed_dims: 96 
-        window_size: [7, 7, 7, 7] 
+        window_size: [8, 8, 8, 8] 
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
     norm_activation:
@@ -25,17 +23,25 @@ task:
     label_smoothing: 0.1
   train_data:
     tfds_name: imagenet2012
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: train
     is_training: true
-    global_batch_size: 10
+    global_batch_size: 1024
     dtype: 'bfloat16'
+    aug_type: 
+      type: randaug
+      randaug:
+        num_layers: 2
+        magnitude: 10
+        cutout_const: 40
+        translate_const: 10
+        prob_to_apply: null
   validation_data:
     tfds_name: imagenet2012
-    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
+    tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: validation
     is_training: false
-    global_batch_size: 10
+    global_batch_size: 1024
     dtype: 'bfloat16'
     drop_remainder: true
 trainer:
@@ -55,7 +61,7 @@ trainer:
         weight_decay_rate: 0.05
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
-        gradient_clip_norm: 0.0
+        gradient_clip_norm: 1.0
     learning_rate:
       type: cosine
       cosine:
