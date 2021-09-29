@@ -27,7 +27,10 @@ class Swin(hyperparams.Config):
   window_size: List[int] = dataclasses.field(default_factory=lambda:[7, 7, 7, 7])
   depths: List[int] = dataclasses.field(default_factory=lambda:[2, 2, 6, 2])
   num_heads: List[int] = dataclasses.field(default_factory=lambda:[3, 6, 12, 24])
-
+  drop: float = 0.0
+  attention_drop: float = 0.0 
+  drop_path: float = 0.1
+  
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):
   darknet: Darknet = Darknet()

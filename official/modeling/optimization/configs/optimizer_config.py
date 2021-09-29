@@ -113,6 +113,7 @@ class AdamConfig(BaseOptimizerConfig):
   beta_2: float = 0.999
   epsilon: float = 1e-07
   amsgrad: bool = False
+  # clipvalue: float = 0.0
 
 
 @dataclasses.dataclass

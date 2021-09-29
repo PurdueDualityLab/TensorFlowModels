@@ -67,22 +67,21 @@ class MLP(tf.keras.layers.Layer):
     else:
       self._activation_fn = tf_utils.get_activation(self._activation)
     
-    self.drop1 = tf.keras.layers.Dropout(self._dropout)
+    self.drop = tf.keras.layers.Dropout(self._dropout)
     self.fc2 = tf.keras.layers.Dense(out_features, 
                                      kernel_initializer = self._kernel_initializer, 
                                      kernel_regularizer = self._kernel_regularizer, 
                                      bias_initializer = self._bias_initializer, 
                                      bias_regularizer = self._bias_regularizer)
-    self.drop2 = tf.keras.layers.Dropout(self._dropout)
     return 
 
   def call(self, x):
     x = self.fc1(x)
     x = self._activation_fn(x)
-    x = self.drop1(x)
+    x = self.drop(x)
 
     x = self.fc2(x)
-    x = self.drop2(x)
+    x = self.drop(x)
     return x
 
 class WindowPartition(tf.keras.layers.Layer):
@@ -118,12 +117,6 @@ class WindowReverse(tf.keras.layers.Layer):
     H = self._height
     W = self._width
     _, window_size, _, C = self._input_shape 
-
-    # fwsize = tf.cast(window_size, tf.float32)
-    # B = tf.cast(
-    #   tf.cast(
-    #     expB, tf.float32) / (tf.cast(
-    #       W * H, tf.float32) / fwsize / fwsize), tf.int32)
 
     x = tf.reshape(x, [-1, H // window_size, W // window_size, window_size, window_size, C])
     x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
@@ -181,7 +174,6 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     head_dims = input_dims/self._num_heads
 
     self.scale = self._qk_scale or head_dims ** -5
-
     window_size = self._window_size
 
     # biases to apply to each "position" learned 
@@ -193,21 +185,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
       regularizer = self._bias_regularizer, 
       trainable = True)
 
-    # get the postions to associate the above bais table with
-    # coords_h = tf.range(window_size[0])
-    # coords_w = tf.range(window_size[1])
-    # coords = tf.stack(tf.meshgrid(coords_h, coords_w), axis = 0)
-    # coords_flatten = tf.reshape(coords, [2, -1])
-    # coords_flatten_h = tf.expand_dims(coords_flatten, axis = -1)
-    # coords_flatten_w = tf.expand_dims(coords_flatten, axis = -2)
-    # relative_coords = coords_flatten_h - coords_flatten_w
-    # relative_coords = tf.transpose(relative_coords, perm = (1, 2, 0))
-    # rh, rw = tf.split(relative_coords, 2, axis = -1)
-    # rh += (window_size[0] - 1)
-    # rw += (window_size[1] - 1)
-    # rh *= (2 * window_size[1] - 1)
-    # relative_positional_indexes = tf.reduce_sum(tf.concat([rh, rw], axis = -1), axis = -1)
-    
+    # get the postions to associate the above bais table with    
     coords_h = np.arange(window_size[0])
     coords_w = np.arange(window_size[1])
     coords_matrix = np.meshgrid(coords_h, coords_w, indexing='ij')
@@ -226,18 +204,18 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
       name='{}_realtive_indexes'.format(self.name))
 
     self.qkv = tf.keras.layers.Dense(input_dims * 3, 
-                                     kernel_initializer = self._kernel_initializer, 
-                                     kernel_regularizer = self._kernel_regularizer, 
-                                     use_bias = self._bias_qkv, 
-                                     bias_initializer = self._bias_initializer, 
-                                     bias_regularizer = self._bias_regularizer)
+                                use_bias = self._bias_qkv, 
+                                kernel_initializer = self._kernel_initializer, 
+                                kernel_regularizer = self._kernel_regularizer, 
+                                bias_initializer = self._bias_initializer, 
+                                bias_regularizer = self._bias_regularizer)
     self.attention_drop = tf.keras.layers.Dropout(self._attention_dropout)
 
     self.projection = tf.keras.layers.Dense(input_dims, 
-                                     kernel_initializer = self._kernel_initializer, 
-                                     kernel_regularizer = self._kernel_regularizer, 
-                                     bias_initializer = self._bias_initializer, 
-                                     bias_regularizer = self._bias_regularizer)
+                                kernel_initializer = self._kernel_initializer, 
+                                kernel_regularizer = self._kernel_regularizer, 
+                                bias_initializer = self._bias_initializer, 
+                                bias_regularizer = self._bias_regularizer)
     self.projection_drop = tf.keras.layers.Dropout(self._projection_dropout)
 
     if self._attention_activation == 'leaky':
@@ -276,11 +254,10 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
       mask_shape = tf.shape(mask)
       num_windows = mask_shape[0]
       mask = tf.cast(mask, attention.dtype)
-      # attention = tf.reshape(attention, [B//num_windows, num_windows, self._num_heads, N, N])
-      # attention = attention + tf.expand_dims(tf.expand_dims(mask, axis = 1), axis = 0)
-      # attention = tf.reshape(attention, [B, self._num_heads, N, N])
+      mask = tf.expand_dims(tf.expand_dims(mask, axis = 1), axis = 0)
+
       attention = tf.reshape(attention, [-1, num_windows, self._num_heads, N, N])
-      attention = attention + tf.expand_dims(tf.expand_dims(mask, axis = 1), axis = 0)
+      attention = attention + mask
       attention = tf.reshape(attention, [-1, self._num_heads, N, N])
       attention = self._activation_fn(attention)
     else:
@@ -309,8 +286,6 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                attention_drop = 0.0, 
                drop_path = 0.0, 
                activation = 'gelu',
-               use_bn = False, 
-               use_sync_bn = False, 
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -331,14 +306,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     self._drop_path = drop_path
 
     self._activation = activation
-    
-    if use_bn:
-      self._norm_fn = tf.keras.layers.BatchNormalization
-    elif use_sync_bn:
-      self._norm_fn = tf.keras.layers.experimental.SyncBatchNormalization
-    else:
-      #default
-      self._norm_fn = tf.keras.layers.LayerNormalization
+    self._norm_fn = tf.keras.layers.LayerNormalization
 
     # init and regularizer
     self._kernel_initializer = kernel_initializer
@@ -394,7 +362,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       # just masking the locations to consider post shift so pixels rolled "out"
       # of the image get set to zero? we need to visualize this somehow.
       H, W = self._input_resolution
-      img_mask = np.zeros((1, H, W, 1))
+      
 
       h_slices = (
         slice(0, -self._window_size), 
@@ -407,8 +375,9 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
         slice(-self._shift_size, None)
       )
 
-      cnt = 0 
+      img_mask = np.zeros((1, H, W, 1))
 
+      cnt = 0 
       for h in h_slices: 
         for w in w_slices:
           img_mask[:, h, w, :] = cnt 
@@ -424,11 +393,12 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       dtype = tf.keras.backend.floatx()
       attention_mask = tf.cast(attention_mask, dtype)
       attention_mask = tf.where(
-          attention_mask == 0.0, float(0.0), attention_mask)
-      attention_mask = tf.where(
           attention_mask != 0.0, float(-100.0), attention_mask)
+      attention_mask = tf.where(
+          attention_mask == 0.0, float(0.0), attention_mask)
       attention_mask = tf.Variable(
-          initial_value=attention_mask, trainable=False)
+          initial_value=attention_mask, trainable=False, 
+          name='{}_attn_mask'.format(self.name))
     else:
       attention_mask = None
     
@@ -436,10 +406,13 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
   
   def call(self, x, training = None):
     H, W = self._input_resolution
-    # shape = tf.shape(x)
-    # B, _, _, C = shape[0], shape[1], shape[2], shape[3]
+    C = self._dims
 
-    shortcut = tf.reshape(x, [-1, H * W, self._dims])
+    x = tf.reshape(x, [-1, H * W, C])
+    
+    shortcut = x
+    x = self.norm1(x)
+    x = tf.reshape(x, [-1, H, W, C])
 
     if self._shift_size > 0:
       shifted_x = tf.roll(
@@ -449,13 +422,13 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     
     x_windows = self.partition(shifted_x)
     x_windows = tf.reshape(
-        x_windows, [-1, self._window_size * self._window_size, self._dims])
+        x_windows, [-1, self._window_size * self._window_size, C])
 
     attention_windows, _ = self.attention_layer(
         x_windows, mask = self.attention_mask)
-    attention_windows = tf.reshape(
-        attention_windows, [-1, self._window_size, self._window_size, self._dims])
 
+    attention_windows = tf.reshape(
+        attention_windows, [-1, self._window_size, self._window_size, C])
     shifted_x = self.undo_partition(attention_windows)
 
     if self._shift_size > 0:
@@ -465,17 +438,16 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       x = shifted_x
 
     # Feed Forward Network
-    x = tf.reshape(x, [-1, H * W, self._dims])
+    x = tf.reshape(x, [-1, H * W, C])
     x = shortcut + self.drop_path(x)
     x = x + self.drop_path(self.mlp(self.norm2(x)))
-    x = tf.reshape(x, [-1, H, W, self._dims])
+
+    x = tf.reshape(x, [-1, H, W, C])
     return x
 
 class PatchMerge(tf.keras.layers.Layer):
 
   def __init__(self,
-               use_bn = False, 
-               use_sync_bn = False, 
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -483,13 +455,8 @@ class PatchMerge(tf.keras.layers.Layer):
                **kwargs):
     super().__init__(**kwargs)
 
-    if use_bn:
-      self._norm_fn = tf.keras.layers.BatchNormalization
-    elif use_sync_bn:
-      self._norm_fn = tf.keras.layers.experimental.SyncBatchNormalization
-    else:
-      #default
-      self._norm_fn = tf.keras.layers.LayerNormalization
+    #default
+    self._norm_fn = tf.keras.layers.LayerNormalization
 
     # init and regularizer
     self._kernel_initializer = kernel_initializer
@@ -514,6 +481,9 @@ class PatchMerge(tf.keras.layers.Layer):
 
     H, W = self._input_resolution
     C = self._dims
+
+    # x = tf.reshape(x, [-1, H, W, C])
+
     x0 = x[:, 0::2, 0::2, :]
     x1 = x[:, 1::2, 0::2, :]
     x2 = x[:, 0::2, 1::2, :]
@@ -534,8 +504,6 @@ class PatchEmbed(tf.keras.layers.Layer):
                patch_size = 4, 
                embed_dimentions = 96, 
                use_layer_norm = False, 
-               use_bn = False, 
-               use_sync_bn = False, 
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -552,11 +520,7 @@ class PatchEmbed(tf.keras.layers.Layer):
     self._drop_out = drop
     self._absolute_positional_embed = absolute_positional_embed
 
-    if use_bn:
-      self._norm_fn = tf.keras.layers.BatchNormalization
-    elif use_sync_bn:
-      self._norm_fn = tf.keras.layers.experimental.SyncBatchNormalization
-    elif use_layer_norm:
+    if use_layer_norm:
       #default
       self._norm_fn = tf.keras.layers.LayerNormalization
     else:
@@ -597,27 +561,86 @@ class PatchEmbed(tf.keras.layers.Layer):
         shape = [1, 
                  self._patch_resolution[0] * self._patch_resolution[1], 
                  self._embed_dimentions],
-        initializer = self._bias_initializer, 
+        initializer = self._kernel_initializer, 
         regularizer = self._bias_regularizer, 
         trainable = True)
   
   def call(self, x):
     """Down sample by 2. """
     x = self.project(x)
-    if (self._norm_fn is not None 
-            or self._drop_out > 0.0 
-                or self._absolute_positional_embed):
-      H, W = self._patch_resolution
-      C = self._embed_dimentions
-      x = tf.reshape(x, [-1, H * W, C])
-      if self._norm_fn is not None:
-        x = self.norm(x)
-      if self._drop_out > 0.0:
-        x = self.drop(x)
-      if self._absolute_positional_embed:
-        x = x + self.ape
-      x = tf.reshape(x, [-1, H, W, C])
+
+    H, W = self._patch_resolution
+    C = self._embed_dimentions
+
+    x = tf.reshape(x, [-1, H * W, C])
+    if self._norm_fn is not None:
+      x = self.norm(x)
+    if self._absolute_positional_embed:
+      x = x + self.ape
+    if self._drop_out > 0.0:
+      x = self.drop(x)
+    x = tf.reshape(x, [-1, H, W, C])
     return x
+
+class PatchExtractEmbed(tf.keras.layers.Layer):
+
+  def __init__(self,
+               patch_size = 4, 
+               embed_dimentions = 96, 
+               use_layer_norm = False, 
+               kernel_initializer='VarianceScaling',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               activation = None,
+               drop = 0.0, 
+               absolute_positional_embed = False, 
+               **kwargs):
+    super().__init__(**kwargs)
+
+    self._patch_size = patch_size
+    self._embed_dimentions = embed_dimentions
+    self._activation = activation
+    self._drop_out = drop
+    self._absolute_positional_embed = absolute_positional_embed
+
+    # init and regularizer
+    self._kernel_initializer = kernel_initializer
+    self._bias_initializer = bias_initializer
+    self._kernel_regularizer = kernel_regularizer
+    self._bias_regularizer = bias_regularizer
+
+  def build(self, input_shape):
+    self._input_resolution = input_shape[1:-1]
+    self._dims = input_shape[-1]
+
+    self._patch_resolution = (self._input_resolution[0]//self._patch_size,
+                              self._input_resolution[1]//self._patch_size)
+
+    self._num_patches = self._patch_resolution[0] * self._patch_resolution[1]  
+    
+    self.project = tf.keras.layers.Dense(self._embed_dimentions)
+    self.pos_embed = tf.keras.layers.Embedding(input_dim = self._num_patches, 
+                                               output_dim = self._embed_dimentions)
+
+  def call(self, x):
+    patches = tf.image.extract_patches(x, 
+        sizes = (1, self._patch_size, self._patch_size, 1),
+        strides = (1, self._patch_size, self._patch_size, 1), 
+        rates=(1, 1, 1, 1), padding='VALID')
+
+    patch_dim = patches.shape[-1]
+    patch_num = patches.shape[1]
+    patches = tf.reshape(patches, [-1, patch_num * patch_num, patch_dim])
+    
+    pos = tf.range(0, self._num_patches, delta = 1)
+    embed = self.project(patches) + self.pos_embed(pos)
+
+    H, W = self._patch_resolution
+    C = self._embed_dimentions
+    embed = tf.reshape(embed, [-1, H, W, C])
+    return embed
+
 
 class SwinTransformerBlock(tf.keras.layers.Layer):
 
@@ -631,9 +654,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
                drop = 0.0, 
                attention_drop = 0.0, 
                drop_path = 0.0, 
-               use_layer_norm = True, 
-               use_bn = False, 
-               use_sync_bn = False, 
                downsample_type = 'patch_and_merge', 
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
@@ -656,13 +676,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._drop_path = drop_path
 
     self._activation = activation
-    
-    if use_layer_norm:
-      self._use_bn = False
-      self._use_sync_bn = False
-    else:
-      self._use_bn = use_bn
-      self._use_sync_bn = use_sync_bn
 
     self._downsample_type = downsample_type
 
@@ -687,8 +700,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
         drop=self._drop, 
         attention_drop=self._attention_drop, 
         drop_path=(self._drop_path[i] if isinstance(self._drop_path, List) else self._drop_path),
-        use_bn=self._use_bn, 
-        use_sync_bn=self._use_sync_bn, 
         activation=self._activation, 
         kernel_initializer = self._kernel_initializer,
         kernel_regularizer = self._kernel_regularizer, 
@@ -698,8 +709,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     
     if self._downsample_type == "patch_and_merge":
       self.downsample = PatchMerge(
-        use_bn=self._use_bn, 
-        use_sync_bn=self._use_sync_bn,
         kernel_initializer = self._kernel_initializer,
         kernel_regularizer = self._kernel_regularizer, 
         bias_initializer = self._bias_initializer, 

@@ -30,8 +30,23 @@ class ClassificationDecorder(decoder.Decoder):
     }
     return sample_dict
 
+class GrayDecorder(decoder.Decoder):
+  """A tf.Example decoder for tfds classification datasets."""
+
+  def decode(self, serialized_example):
+    
+    image = serialized_example['image']
+    # image = tf.concat([image, image, image], axis =-1)
+    sample_dict = {
+        'image/encoded':
+            tf.io.encode_jpeg(image, quality=100),
+        'image/class/label':
+            serialized_example['label'],
+    }
+    return sample_dict
 
 TFDS_ID_TO_DECODER_MAP = {
+    'mnist': GrayDecorder,
     'cifar10': ClassificationDecorder,
     'cifar100': ClassificationDecorder,
     'imagenet2012': ClassificationDecorder,

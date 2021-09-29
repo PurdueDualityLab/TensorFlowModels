@@ -33,17 +33,22 @@ class SwinTransformer(tf.keras.Model):
                patch_size = 4, 
                window_size = 7, 
                embed_dims = 96, 
+               patch_norm = True, 
                depths = [2, 2, 6, 2], 
                num_heads = [3, 6, 12, 24], 
                mlp_ratio = 4, 
                use_bias_qkv = True, 
                qk_scale = None, 
+
+               dense_embeddings = False, 
+               absolute_positional_embed = True, 
+               down_sample_all = True, 
+               normalize_endpoints = True, 
+
                drop = 0.0, 
                attention_drop = 0.0, 
                drop_path = 0.1, 
-               use_layer_norm = True, 
-               use_bn = False, 
-               use_sync_bn = False,  
+               
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -51,11 +56,16 @@ class SwinTransformer(tf.keras.Model):
                activation = 'gelu',
                **kwargs):
 
+    if kernel_initializer == 'TruncatedNormal':
+      kernel_initializer = tf.keras.initializers.TruncatedNormal(
+                                      mean=0.0, stddev=0.02, seed=None)
+
     self._input_shape = input_specs
     self._min_level = min_level
     self._max_level = max_level
 
     self._patch_size = patch_size
+    self._patch_norm = patch_norm
     self._window_size = window_size
     self._embed_dims = embed_dims
 
@@ -69,14 +79,8 @@ class SwinTransformer(tf.keras.Model):
     self._drop = drop 
     self._attention_drop = attention_drop
     self._drop_path = drop_path
-
-    self._use_layer_norm = use_layer_norm
-    self._use_bn = use_bn
-    self._use_sync_bn = use_sync_bn
-
-    if use_layer_norm:
-      self._use_bn = False
-      self._use_sync_bn = False
+    self._normalize_endpoints = normalize_endpoints
+    self._norm_fn = tf.keras.layers.LayerNormalization
 
     # init and regularizer
     self._kernel_initializer = kernel_initializer
@@ -85,6 +89,10 @@ class SwinTransformer(tf.keras.Model):
     self._bias_regularizer = bias_regularizer
 
     self._activation = activation
+    self._dense_embeddings = dense_embeddings
+    self._absolute_positional_embed = absolute_positional_embed
+
+    self._down_sample_all = down_sample_all
 
     inputs = tf.keras.layers.Input(shape=self._input_shape.shape[1:])
     output = self._build_struct(inputs)
@@ -93,25 +101,38 @@ class SwinTransformer(tf.keras.Model):
   def _build_struct(self, inputs):
     outputs = dict()
 
-    x = attention_blocks.PatchEmbed(
-            patch_size=self._patch_size, 
-            embed_dimentions=self._embed_dims, 
-            use_layer_norm=self._use_layer_norm, 
-            use_bn = self._use_bn, 
-            use_sync_bn = self._use_sync_bn, 
-            kernel_initializer = self._kernel_initializer,
-            kernel_regularizer = self._kernel_regularizer, 
-            bias_initializer = self._bias_initializer, 
-            bias_regularizer = self._bias_regularizer, 
-            drop=self._drop, 
-            absolute_positional_embed=False,
-            activation = None)(inputs)
+    if self._dense_embeddings:
+      x = attention_blocks.PatchExtractEmbed(
+              patch_size=self._patch_size, 
+              embed_dimentions=self._embed_dims, 
+              use_layer_norm=self._patch_norm, 
+              kernel_initializer = self._kernel_initializer,
+              kernel_regularizer = self._kernel_regularizer, 
+              bias_initializer = self._bias_initializer, 
+              bias_regularizer = self._bias_regularizer, 
+              drop=self._drop, 
+              absolute_positional_embed=self._absolute_positional_embed,
+              activation = None)(inputs)
+    else:
+      x = attention_blocks.PatchEmbed(
+              patch_size=self._patch_size, 
+              embed_dimentions=self._embed_dims, 
+              use_layer_norm=self._patch_norm, 
+              kernel_initializer = self._kernel_initializer,
+              kernel_regularizer = self._kernel_regularizer, 
+              bias_initializer = self._bias_initializer, 
+              bias_regularizer = self._bias_regularizer, 
+              drop=self._drop, 
+              absolute_positional_embed=self._absolute_positional_embed,
+              activation = None)(inputs)
 
-    key = int(math.log2(self._patch_size))
+    base = key = int(math.log2(self._patch_size))
     outputs[str(key)] = x 
-
-    stochastic_drops = np.linspace(0, self._drop_path, num = sum(self._depths))
-    stochastic_drops = stochastic_drops.tolist()
+    
+    num = sum(self._depths)
+    stochastic_drops = [self._drop_path] * num
+    # stochastic_drops = np.linspace(0, self._drop_path, num = sum(self._depths))
+    # stochastic_drops = stochastic_drops.tolist()
 
     num_layers = len(self._depths)
     for i in range(num_layers):
@@ -122,7 +143,11 @@ class SwinTransformer(tf.keras.Model):
       else:
         window_size = self._window_size
 
-      downsample = i < num_layers - 1
+      if self._down_sample_all:
+        downsample = True
+      else: 
+        downsample = i < num_layers - 1
+
       layer = attention_blocks.SwinTransformerBlock(
           depth=depth, 
           num_heads=num_heads, 
@@ -134,9 +159,6 @@ class SwinTransformer(tf.keras.Model):
           drop=self._drop, 
           attention_drop=self._attention_drop, 
           drop_path=stochastic_drops[sum(self._depths[:i]):sum(self._depths[:i+1])], 
-          use_layer_norm=self._use_layer_norm, 
-          use_sync_bn=self._use_sync_bn, 
-          use_bn=self._use_bn, 
           downsample_type= 'patch_and_merge' if downsample else None, 
           kernel_initializer = self._kernel_initializer,
           kernel_regularizer = self._kernel_regularizer, 
@@ -154,8 +176,14 @@ class SwinTransformer(tf.keras.Model):
 
     if self._max_level is None:
       self._max_level = key
+    if self._min_level is None:
+      self._min_level = key
     for i in range(self._min_level, self._max_level + 1):
-      endpoints[str(i)] = outputs[str(i)]
+      x = outputs[str(i)]
+      if self._normalize_endpoints:
+        endpoints[str(i)] = self._norm_fn()(x)
+      else:
+        endpoints[str(i)] = x
       output_spec[str(i)] = endpoints[str(i)].get_shape()
     
     self._output_specs = output_spec
@@ -191,7 +219,7 @@ def build_swin(
     backbone_config: hyperparams.Config,
     norm_activation_config: hyperparams.Config,
     l2_regularizer: tf.keras.regularizers.Regularizer = None) -> tf.keras.Model:
-  """Builds darknet."""
+  """Builds swin."""
 
   backbone_config = backbone_config.get()
   model = SwinTransformer(
@@ -204,7 +232,12 @@ def build_swin(
       depths=backbone_config.depths,
       num_heads=backbone_config.num_heads, 
       activation=norm_activation_config.activation,
-      kernel_regularizer=l2_regularizer)
+      kernel_regularizer=l2_regularizer,
+      drop = backbone_config.drop, 
+      attention_drop = backbone_config.attention_drop, 
+      drop_path = backbone_config.drop_path, 
+      )
+  model.summary()
   return model
 
 if __name__ == "__main__":
@@ -219,6 +252,7 @@ if __name__ == "__main__":
     window_size = [8, 8, 8, 4], 
     depths = [2, 2, 6, 2], 
     num_heads = [3, 6, 12, 24], 
+    
   )
 
   model.summary()
