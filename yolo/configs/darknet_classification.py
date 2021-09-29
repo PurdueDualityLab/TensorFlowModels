@@ -25,6 +25,8 @@ from official.vision.beta.configs import common
 from official.vision.beta.configs import image_classification as imc
 from yolo.configs import backbones
 
+from official.vision.beta.configs import common
+
 
 @dataclasses.dataclass
 class ImageClassificationModel(hyperparams.Config):
@@ -49,7 +51,18 @@ class Losses(hyperparams.Config):
 class ImageClassificationTask(cfg.TaskConfig):
   """The model config."""
   model: ImageClassificationModel = ImageClassificationModel()
-  train_data: imc.DataConfig = imc.DataConfig(is_training=True)
+  train_data: imc.DataConfig = imc.DataConfig(
+    is_training=True, 
+    aug_policy= common.Augmentation(
+      type = 'randaug',
+      randaug = common.RandAugment(
+        num_layers=2, 
+        magnitude=10, 
+        cutout_const=40, 
+        translate_const=10, 
+        prob_to_apply=None
+      )
+    ))
   validation_data: imc.DataConfig = imc.DataConfig(is_training=False)
   evaluation: imc.Evaluation = imc.Evaluation()
   losses: Losses = Losses()
