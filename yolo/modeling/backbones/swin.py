@@ -236,7 +236,74 @@ def build_swin(
   return model
 
 if __name__ == "__main__":
-  shape = [640, 640, 3]
+  # # yolo p5 
+  # shape = [896, 896, 3]
+  # input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
+  # model = SwinTransformer(
+  #   input_specs = input_specs, 
+  #   min_level = 3, 
+  #   max_level = None, 
+  #   patch_size = 4, 
+  #   embed_dims = 96, 
+  #   window_size = [7, 7, 7, 7], 
+  #   depths = [2, 2, 6, 2], 
+  #   num_heads = [3, 6, 12, 24], 
+  #   down_sample_all=False
+  # )
+
+  # model.summary()
+
+  # # yolo csp
+  # shape = [640, 640, 3]
+  # input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
+  # model = SwinTransformer(
+  #   input_specs = input_specs, 
+  #   min_level = 3, 
+  #   max_level = None, 
+  #   patch_size = 2, 
+  #   embed_dims = 96, 
+  #   window_size = [8, 8, 8, 8], 
+  #   depths = [2, 2, 6, 2], 
+  #   num_heads = [3, 6, 12, 24], 
+  #   down_sample_all=True
+  # )
+
+  # yolo csp - small
+  # shape = [640, 640, 3]
+  # input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
+  # model = SwinTransformer(
+  #   input_specs = input_specs, 
+  #   min_level = 3, 
+  #   max_level = None, 
+  #   patch_size = 4, 
+  #   embed_dims = 96, 
+  #   window_size = [8, 8, 8], #, 4], 
+  #   depths = [2, 2, 6], #, 2], 
+  #   num_heads = [3, 6, 12], #, 24], 
+  #   down_sample_all=True
+  # )
+
+
+  # # yolo csp - smaller
+  # shape = [448, 448, 3]
+  # input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
+  # model = SwinTransformer(
+  #   input_specs = input_specs, 
+  #   min_level = 3, 
+  #   max_level = None, 
+  #   patch_size = 4, 
+  #   embed_dims = 96, 
+  #   window_size = [7, 7, 7, 7],  
+  #   depths = [2, 2, 6, 2], 
+  #   num_heads = [3, 6, 12, 24], 
+  #   down_sample_all=False, 
+  #   dense_embeddings=False, 
+  # )
+
+  # model.summary()
+
+  # yolo csp - smaller
+  shape = [512, 512, 3]
   input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
   model = SwinTransformer(
     input_specs = input_specs, 
@@ -244,16 +311,27 @@ if __name__ == "__main__":
     max_level = None, 
     patch_size = 4, 
     embed_dims = 96, 
-    window_size = [8, 8, 8, 4], 
+    window_size = [8, 8, 8, 8],  
     depths = [2, 2, 6, 2], 
     num_heads = [3, 6, 12, 24], 
-    
+    down_sample_all=False, 
+    dense_embeddings=False, 
   )
 
-  model.summary()
-  input1 = tf.ones([1] + shape)
+  # model.summary()
+  # shape = [576, 576, 3]
+  # input_specs = tf.keras.layers.InputSpec(shape=[None]+shape)
+  # model = SwinTransformer(
+  #   input_specs = input_specs, 
+  #   min_level = 3, 
+  #   max_level = None, 
+  #   patch_size = 4, 
+  #   embed_dims = 96, 
+  #   window_size = [8, 8, 8, 8],  
+  #   depths = [2, 2, 6, 2], 
+  #   num_heads = [3, 6, 12, 24], 
+  #   down_sample_all=False, 
+  #   dense_embeddings=False, 
+  # )
 
-  output = model(input1)
-  print({k:v.get_shape() for k,v in output.items()})
-  # output = layer(input1)
-  # print(output.shape)
+  model.summary()
