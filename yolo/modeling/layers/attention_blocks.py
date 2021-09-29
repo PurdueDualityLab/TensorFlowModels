@@ -612,9 +612,10 @@ class PatchEmbed(tf.keras.layers.Layer):
     embed_dims = self._embed_dimentions
     patch_size = self._patch_size
 
+    # TF corner pads by default so no need to do it manually
     self.project = nn_blocks.ConvBN(
       filters =embed_dims, kernel_size = patch_size, 
-      strides = patch_size, padding = 'valid',
+      strides = patch_size, padding = 'same',
       **self._init_args)
 
     self.norm = None
@@ -633,13 +634,6 @@ class PatchEmbed(tf.keras.layers.Layer):
 
   
   def call(self, x):
-    """Down sample by 2. """
-    _, H, W, C = x.shape
-    if W % self._patch_size:
-      x = tf.pad(x, [[0,0],[0,0],[0,self._patch_size-W%self._patch_size],[0,0]])
-    if H % self._patch_size:
-      x = tf.pad(x, [[0,0],[0,self._patch_size-H%self._patch_size],[0,0],[0,0]])
-
     x = self.project(x)
     if self.norm is not None:
       _, H, W, C = x.shape
@@ -653,62 +647,6 @@ class PatchEmbed(tf.keras.layers.Layer):
       absolute_positional_embed = self.ape
       x = x + absolute_positional_embed
     return x
-
-class PatchExtractEmbed(tf.keras.layers.Layer):
-
-  def __init__(self,
-               patch_size = 4, 
-               embed_dimentions = 96, 
-               kernel_initializer='VarianceScaling',
-               kernel_regularizer=None,
-               bias_initializer='zeros',
-               bias_regularizer=None, 
-               activation = None,
-               drop = 0.0, 
-               **kwargs):
-    super().__init__(**kwargs)
-
-    self._patch_size = patch_size
-    self._embed_dimentions = embed_dimentions
-    self._activation = activation
-    self._drop_out = drop
-
-    # init and regularizer
-    self._kernel_initializer = kernel_initializer
-    self._bias_initializer = bias_initializer
-    self._kernel_regularizer = kernel_regularizer
-    self._bias_regularizer = bias_regularizer
-
-  def build(self, input_shape):
-    self._input_resolution = input_shape[1:-1]
-    self._dims = input_shape[-1]
-
-    self._patch_resolution = (self._input_resolution[0]//self._patch_size,
-                              self._input_resolution[1]//self._patch_size)
-
-    self._num_patches = self._patch_resolution[0] * self._patch_resolution[1]  
-    
-    self.project = tf.keras.layers.Dense(self._embed_dimentions)
-    self.pos_embed = tf.keras.layers.Embedding(input_dim = self._num_patches, 
-                                               output_dim = self._embed_dimentions)
-
-  def call(self, x):
-    patches = tf.image.extract_patches(x, 
-        sizes = (1, self._patch_size, self._patch_size, 1),
-        strides = (1, self._patch_size, self._patch_size, 1), 
-        rates=(1, 1, 1, 1), padding='VALID')
-
-    patch_dim = patches.shape[-1]
-    patch_num = patches.shape[1]
-    patches = tf.reshape(patches, [-1, patch_num * patch_num, patch_dim])
-    
-    pos = tf.range(0, self._num_patches, delta = 1)
-    embed = self.project(patches) + self.pos_embed(pos)
-
-    H, W = self._patch_resolution
-    C = self._embed_dimentions
-    embed = tf.reshape(embed, [-1, H, W, C])
-    return embed
 
 if __name__ == "__main__":
   inputs = {"3": [2, 56, 56, 256], "4": [2, 28, 28, 512], "5": [2, 14, 14, 1024]}

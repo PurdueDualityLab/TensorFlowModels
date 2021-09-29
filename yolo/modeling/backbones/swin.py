@@ -42,7 +42,6 @@ class SwinTransformer(tf.keras.Model):
                attention_dropout = 0.0, 
                drop_path = 0.1, 
                absolute_positional_embed = False, 
-
                norm_layer = 'layer_norm',
                patch_norm = True, 
                activation = 'gelu',
