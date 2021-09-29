@@ -28,14 +28,6 @@ task:
     is_training: true
     global_batch_size: 1024
     dtype: 'bfloat16'
-    aug_type: 
-      type: randaug
-      randaug:
-        num_layers: 2
-        magnitude: 10
-        cutout_const: 40
-        translate_const: 10
-        prob_to_apply: null
   validation_data:
     tfds_name: imagenet2012
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'

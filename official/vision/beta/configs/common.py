@@ -66,7 +66,7 @@ class RandAugment(hyperparams.Config):
 @dataclasses.dataclass
 class AutoAugment(hyperparams.Config):
   """Configuration for AutoAugment."""
-  augmentation_name: str = 'v0'
+  augmentation_name: str = 'policy_reduced_imagenet'
   cutout_const: float = 100
   translate_const: float = 250
 
