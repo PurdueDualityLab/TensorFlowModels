@@ -55,7 +55,7 @@ trainer:
         weight_decay_rate: 0.05
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
-        gradient_clip_norm: 0.0
+        gradient_clip_norm: 1.0
     learning_rate:
       type: cosine
       cosine:
