@@ -107,7 +107,13 @@ class ConvBN(tf.keras.layers.Layer):
     else:
       self._kernel_initializer = kernel_initializer
 
-    self._bias_initializer = bias_initializer
+    if bias_initializer == "VarianceScaling":
+      # to match pytorch initialization method
+      self._bias_initializer = tf.keras.initializers.VarianceScaling(
+          scale=1 / 3, mode='fan_in', distribution='uniform')
+    else:
+      self._bias_initializer = bias_initializer
+
     self._kernel_regularizer = kernel_regularizer
 
     self._bias_regularizer = bias_regularizer

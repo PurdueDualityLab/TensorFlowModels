@@ -528,7 +528,10 @@ class PatchEmbed(tf.keras.layers.Layer):
 
     # init and regularizer
     self._kernel_initializer = kernel_initializer
-    self._bias_initializer = bias_initializer
+    if not self._absolute_positional_embed:
+      self._bias_initializer = kernel_initializer
+    else:
+      self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
     self._bias_regularizer = bias_regularizer
   
@@ -538,7 +541,8 @@ class PatchEmbed(tf.keras.layers.Layer):
 
     self._patch_resolution = (self._input_resolution[0]//self._patch_size,
                               self._input_resolution[1]//self._patch_size)
-
+    
+    # potential issue here
     self.project = nn_blocks.ConvBN(
       filters = self._embed_dimentions, 
       kernel_size = self._patch_size, 
@@ -549,6 +553,7 @@ class PatchEmbed(tf.keras.layers.Layer):
       bias_regularizer = self._bias_regularizer, 
       activation = self._activation,
       use_bn = False)
+
     if self._norm_fn is not None:
       self.norm = self._norm_fn()
     
@@ -561,16 +566,17 @@ class PatchEmbed(tf.keras.layers.Layer):
         shape = [1, 
                  self._patch_resolution[0] * self._patch_resolution[1], 
                  self._embed_dimentions],
-        initializer = self._kernel_initializer, 
+        initializer = tf.keras.initializers.TruncatedNormal(
+          mean=0.0, stddev=0.02), 
         regularizer = self._bias_regularizer, 
         trainable = True)
   
   def call(self, x):
     """Down sample by 2. """
-    x = self.project(x)
-
     H, W = self._patch_resolution
     C = self._embed_dimentions
+
+    x = self.project(x)
 
     x = tf.reshape(x, [-1, H * W, C])
     if self._norm_fn is not None:
@@ -587,14 +593,12 @@ class PatchExtractEmbed(tf.keras.layers.Layer):
   def __init__(self,
                patch_size = 4, 
                embed_dimentions = 96, 
-               use_layer_norm = False, 
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
                activation = None,
                drop = 0.0, 
-               absolute_positional_embed = False, 
                **kwargs):
     super().__init__(**kwargs)
 
@@ -602,7 +606,6 @@ class PatchExtractEmbed(tf.keras.layers.Layer):
     self._embed_dimentions = embed_dimentions
     self._activation = activation
     self._drop_out = drop
-    self._absolute_positional_embed = absolute_positional_embed
 
     # init and regularizer
     self._kernel_initializer = kernel_initializer

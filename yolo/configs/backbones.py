@@ -30,6 +30,7 @@ class Swin(hyperparams.Config):
   drop: float = 0.0
   attention_drop: float = 0.0 
   drop_path: float = 0.1
+  downsample_all: bool = False
   
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

@@ -8,7 +8,7 @@ task:
     backbone:
       type: 'swin'
       swin:
-        min_level: 3
+        min_level: null
         max_level: null
         patch_size: 4
         embed_dims: 96 

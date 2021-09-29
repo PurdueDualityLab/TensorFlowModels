@@ -41,8 +41,8 @@ class SwinTransformer(tf.keras.Model):
                qk_scale = None, 
 
                dense_embeddings = False, 
-               absolute_positional_embed = True, 
-               down_sample_all = True, 
+               absolute_positional_embed = False, 
+               down_sample_all = False, 
                normalize_endpoints = True, 
 
                drop = 0.0, 
@@ -105,13 +105,11 @@ class SwinTransformer(tf.keras.Model):
       x = attention_blocks.PatchExtractEmbed(
               patch_size=self._patch_size, 
               embed_dimentions=self._embed_dims, 
-              use_layer_norm=self._patch_norm, 
               kernel_initializer = self._kernel_initializer,
               kernel_regularizer = self._kernel_regularizer, 
               bias_initializer = self._bias_initializer, 
               bias_regularizer = self._bias_regularizer, 
               drop=self._drop, 
-              absolute_positional_embed=self._absolute_positional_embed,
               activation = None)(inputs)
     else:
       x = attention_blocks.PatchEmbed(
@@ -123,16 +121,13 @@ class SwinTransformer(tf.keras.Model):
               bias_initializer = self._bias_initializer, 
               bias_regularizer = self._bias_regularizer, 
               drop=self._drop, 
-              absolute_positional_embed=self._absolute_positional_embed,
-              activation = None)(inputs)
+              absolute_positional_embed=self._absolute_positional_embed)(inputs)
 
     base = key = int(math.log2(self._patch_size))
     outputs[str(key)] = x 
     
-    num = sum(self._depths)
-    stochastic_drops = [self._drop_path] * num
-    # stochastic_drops = np.linspace(0, self._drop_path, num = sum(self._depths))
-    # stochastic_drops = stochastic_drops.tolist()
+    stochastic_drops = np.linspace(0, self._drop_path, num = sum(self._depths))
+    stochastic_drops = stochastic_drops.tolist()
 
     num_layers = len(self._depths)
     for i in range(num_layers):
@@ -236,7 +231,7 @@ def build_swin(
       drop = backbone_config.drop, 
       attention_drop = backbone_config.attention_drop, 
       drop_path = backbone_config.drop_path, 
-      )
+      down_sample_all = backbone_config.downsample_all)
   model.summary()
   return model
 
