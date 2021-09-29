@@ -32,17 +32,17 @@ from official.modeling import performance
 FLAGS = flags.FLAGS
 
 
-def subdivison_adjustment(params):
-  # if params.task.model.detection_generator.nms_type == "greedy":
-  #   import tensorflow as tf
-  #   tf.config.set_soft_device_placement(True)
+def subdivison_adjustment(params, expirement):
+  if expirement == 'yolo_custom' and params.task.model.detection_generator.nms_type == "greedy":
+    import tensorflow as tf
+    tf.config.set_soft_device_placement(True)
   return params
 
 
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   params = train_utils.parse_configuration(FLAGS)
-  params = subdivison_adjustment(params)
+  params = subdivison_adjustment(params, FLAGS.experiment)
 
   model_dir = FLAGS.model_dir
   if 'train' in FLAGS.mode:

@@ -9,7 +9,7 @@ task:
       type: 'swin'
       swin:
         min_level: 3
-        max_level: 5
+        max_level: null
         patch_size: 4
         embed_dims: 96 
         window_size: [7, 7, 7, 7] 
@@ -18,7 +18,7 @@ task:
     norm_activation:
       activation: 'gelu'
   losses:
-    l2_weight_decay: 0.0005
+    l2_weight_decay: 0.00
     one_hot: true
     label_smoothing: 0.1
   train_data:
@@ -26,7 +26,7 @@ task:
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: train
     is_training: true
-    global_batch_size: 128
+    global_batch_size: 1024
     dtype: 'bfloat16'
     aug_type: 
       type: randaug
@@ -35,38 +35,39 @@ task:
         magnitude: 10
         cutout_const: 40
         translate_const: 10
-        prob_to_apply: None
+        prob_to_apply: null
   validation_data:
     tfds_name: imagenet2012
     tfds_data_dir: 'gs://tensorflow2/tensorflow_datasets/'
     tfds_split: validation
     is_training: false
-    global_batch_size: 128
+    global_batch_size: 1024
     dtype: 'bfloat16'
     drop_remainder: true
 trainer:
-  train_steps: 1200000  # epochs: 120
-  validation_steps: 400  # size of validation data
+  train_steps: 351563  # epochs: 120
+  validation_steps: 48  # size of validation data
   validation_interval: 10000
-  steps_per_loop: 10000
-  summary_interval: 10000
-  checkpoint_interval: 10000
+  steps_per_loop: 1000
+  summary_interval: 1000
+  checkpoint_interval: 1000
   optimizer_config:
     optimizer:
-      type: 'adam'
-      adam:
-        name: Adam
+      type: 'adamw'
+      adamw:
+        name: AdamWeightDecay
         beta_1: 0.9
         beta_2: 0.999
-        amsgrad:  False
+        weight_decay_rate: 0.05
+        include_in_weight_decay: ['kernel']
+        exclude_from_weight_decay: ['(.)*']
+        gradient_clip_norm: 0.0
     learning_rate:
-      type: 'polynomial'
-      polynomial:
-        initial_learning_rate: 0.1
-        end_learning_rate: 0.0001
-        power: 4.0
-        decay_steps: 1200000
+      type: cosine
+      cosine:
+        initial_learning_rate: 0.001
+        decay_steps: 350195
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1000  # learning rate rises from 0 to 0.1 over 1000 steps
+        warmup_steps: 23348  # learning rate rises from 0 to 0.1 over 1000 steps
