@@ -3,7 +3,7 @@ runtime:
   mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
 task:
-  smart_bias_lr: 0.0
+  smart_bias_lr: 0.1
   model:
     darknet_based_model: False
     input_size: [640, 640, 3]
@@ -22,7 +22,6 @@ task:
     decoder:
       version: v4
       type: csp
-      activation: mish
     head:
       smart_bias: true
     detection_generator:
@@ -52,7 +51,7 @@ task:
       objectness_smooth: 
         'all': 1.0
     norm_activation:
-      activation: gelu
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
@@ -110,7 +109,7 @@ trainer:
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
-  validation_interval: 9250
+  validation_interval: 5550
   checkpoint_interval: 1850
   optimizer_config:
     ema:
@@ -127,14 +126,14 @@ trainer:
     optimizer:
       type: sgd_dymow
       sgd_dymow:
-        momentum: 0.9
-        momentum_start: 0.9
+        momentum: 0.937
+        momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
-        weight_decay: 0.0001
+        weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 5550 #learning rate rises from 0 to 0.0013 over 1000 steps
