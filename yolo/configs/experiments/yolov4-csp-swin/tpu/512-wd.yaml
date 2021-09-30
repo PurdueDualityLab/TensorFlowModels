@@ -71,7 +71,7 @@ task:
     seed: 1000
     parser:
       mosaic:
-        mosaic_frequency: 0.6
+        mosaic_frequency: 0.9
         mixup_frequency: 0.0
         mosaic_crop_mode: 'crop'
         mosaic_center: 0.2
@@ -83,7 +83,7 @@ task:
       random_flip: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
+      aug_rand_hue: 0.015
       aug_scale_min: 0.1
       aug_scale_max: 1.9
       aug_rand_translate: 0.1
@@ -91,6 +91,7 @@ task:
       area_thresh: 0.1
       random_pad: False
       use_tie_breaker: True
+      best_match_only: False
       anchor_thresh: 0.213
   validation_data:
     global_batch_size: 8
@@ -102,6 +103,7 @@ task:
       max_num_instances: 200
       letter_box: True
       use_tie_breaker: True
+      best_match_only: False
       anchor_thresh: 0.213
   weight_decay: 0.000
   annotation_file: null
@@ -118,7 +120,7 @@ trainer:
       stepwise:
         boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        values: [0.00131, 0.000131, 0.0000131] 
+        values: [0.00261, 0.000261, 0.0000261] 
     optimizer:
       type: 'adamw'
       adamw:
@@ -132,4 +134,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 5500 #learning rate rises from 0 to 0.0013 over 1000 steps
