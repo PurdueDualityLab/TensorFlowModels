@@ -108,7 +108,7 @@ class SwinTransformerConv(tf.keras.Model):
 
     level = 0 
 
-    embeddings = attention_blocks.PatchEmbed(
+    x = attention_blocks.PatchEmbed(
                         patch_size=self._patch_size, 
                         embed_dimentions=self._embed_dims, 
                         norm_layer=self._norm_layer if self._patch_norm else None, 
@@ -119,8 +119,8 @@ class SwinTransformerConv(tf.keras.Model):
                         bias_regularizer = self._bias_regularizer)(inputs)
     level += int(math.log2(self._patch_size))
     
-    x = tf.keras.layers.Dropout(self._dropout)(embeddings)
     for i in range(self._num_layers):
+      dpr = self._drop_path[sum(self._depths[:i]):sum(self._depths[:i + 1])]
       x_output, x = attention_blocks.SwinTransformerBlock(
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
@@ -130,7 +130,7 @@ class SwinTransformerConv(tf.keras.Model):
           qk_scale=self._qk_scale, 
           dropout=self._dropout, 
           attention_dropout=self._attention_dropout, 
-          drop_path=self._drop_path, 
+          drop_path=dpr, 
           norm_layer=self._norm_layer, 
           downsample='patch_and_merge' if (i < self._num_layers - 1) else None, 
           activation=self._activation, 

@@ -55,6 +55,38 @@ def _get_norm_fn(norm_layer,
   fn = tf.keras.layers.BatchNormalization
   return partial(fn, **kwargs)
 
+def window_partition(x, window_size):
+  """
+  Args:
+    x: (B, H, W, C)
+    window_size (int): window size
+
+  Returns:
+    windows: (num_windows*B, window_size, window_size, C)
+  """
+  _, H, W, C = x.shape
+  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
+  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+  x = tf.reshape(x, [-1, window_size, window_size, C])
+  return x
+
+def window_reverse(x, window_size, H, W):
+  """
+  Args:
+    windows: (num_windows*B, window_size, window_size, C)
+    window_size (int): Window size
+    H (int): Height of image
+    W (int): Width of image
+
+  Returns:
+    x: (B, H, W, C)
+  """
+  _, _, _, C = x.shape
+  x = tf.reshape(x, [-1, H // window_size, W // window_size, window_size, window_size, C])
+  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+  x = tf.reshape(x, [-1, H, W, C])
+  return x
+
 class MLP(tf.keras.layers.Layer):
 
   def __init__(self, 
@@ -91,9 +123,9 @@ class MLP(tf.keras.layers.Layer):
     out_features = self._out_features or input_shape[-1]
 
     self.fc1 = tf.keras.layers.Dense(hidden_features, **self._init_args)
+    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
     self.fc2 = tf.keras.layers.Dense(out_features, **self._init_args)
     self.drop = tf.keras.layers.Dropout(self._dropout)
-    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
     return 
 
   def call(self, x):
@@ -103,38 +135,6 @@ class MLP(tf.keras.layers.Layer):
     x = self.fc2(x)
     x = self.drop(x)
     return x
-
-def window_partition(x, window_size):
-  """
-  Args:
-    x: (B, H, W, C)
-    window_size (int): window size
-
-  Returns:
-    windows: (num_windows*B, window_size, window_size, C)
-  """
-  _, H, W, C = x.shape
-  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, window_size, window_size, C])
-  return x
-
-def window_reverse(x, window_size, H, W):
-  """
-  Args:
-    windows: (num_windows*B, window_size, window_size, C)
-    window_size (int): Window size
-    H (int): Height of image
-    W (int): Width of image
-
-  Returns:
-    x: (B, H, W, C)
-  """
-  _, _, _, C = x.shape
-  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, H, W, C])
-  return x
 
 class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
@@ -192,8 +192,8 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
   
   def build(self, input_shape):
     self.dim = input_shape[-1]
-    head_dims = self.dim/self._num_heads
-    self.scale = self._qk_scale or head_dims ** -5
+    head_dims = self.dim//self._num_heads
+    self.scale = self._qk_scale or head_dims ** -0.5
 
     # biases to apply to each "position" learned 
     num_elements = (2*self._window_size[0] - 1) * (2*self._window_size[1] - 1)
@@ -207,8 +207,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     # get the postions to associate the above bais table with    
     coords_h = np.arange(self._window_size[0])
     coords_w = np.arange(self._window_size[1])
-    coords_matrix = np.meshgrid(coords_h, coords_w, indexing='ij') # 2, Wh, Ww
-    coords = np.stack(coords_matrix)
+    coords = np.stack(np.meshgrid(coords_h, coords_w, indexing='ij')) # 2, Wh, Ww
     coords_flatten = coords.reshape(2, -1) # 2, Wh*Ww
     relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :] # 2, Wh*Ww, Wh*Ww
     relative_coords = relative_coords.transpose([1, 2, 0]) # Wh*Ww, Wh*Ww, 2
@@ -229,6 +228,15 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     self.act = _get_activation_fn(self._attention_activation) # softmax
     return 
   
+  def get_indexed_bias(self):
+    # compute the relative poisiton bias
+    num_elems = self._window_size[0] * self._window_size[1]
+    indexes = tf.reshape(self._relative_positional_indexes, [-1])
+    relative_position_bias = tf.gather(self._realtive_positional_bias_table, indexes)
+    relative_position_bias = tf.reshape(relative_position_bias, [num_elems, num_elems, -1]) # Wh*Ww,Wh*Ww,nH
+    relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
+    return relative_position_bias
+
   def call(self, x, mask = None):
     _, N, C = x.shape
 
@@ -242,18 +250,14 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     attn = tf.matmul(q, k, transpose_b = True)
 
     # compute the relative poisiton bias
-    num_elems = self._window_size[0] * self._window_size[1]
-    indexes = tf.reshape(self._relative_positional_indexes, [-1])
-    relative_position_bias = tf.gather(self._realtive_positional_bias_table, indexes)
-    relative_position_bias = tf.reshape(relative_position_bias, [num_elems, num_elems, -1])
-    relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1))
+    relative_position_bias = self.get_indexed_bias()
     attn = attn + tf.expand_dims(relative_position_bias, axis = 0)
 
     if mask is not None:
       num_windows = mask.shape[0]
       mask = tf.cast(tf.expand_dims(tf.expand_dims(mask, axis = 1), axis = 0), attn.dtype)
-      attn = tf.reshape(attn, [-1, num_windows, self._num_heads, N, N])
-      attn = tf.reshape(attn + mask, [-1, self._num_heads, N, N])
+      attn = tf.reshape(attn, [-1, num_windows, self._num_heads, N, N]) + mask
+      attn = tf.reshape(attn, [-1, self._num_heads, N, N])
       attn = self.act(attn)
     else:
       attn = self.act(attn)
@@ -346,7 +350,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                    dropout=self._dropout, **self._init_args)
   
   def call(self, x, mask_matrix = None, training = None):
-    B, H, W, C = x.shape
+    _, H, W, C = x.shape
   
     # squeeze to [B, H * W, C]
     x = tf.reshape(x, [-1, H * W, C])
@@ -372,13 +376,13 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       attn_mask = None 
     
     # partition windows
-    x_windows = window_partition(shifted_x, self._window_size)
-    x_windows = tf.reshape(x_windows, [-1, self._window_size * self._window_size, C])
+    x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
+    x_windows = tf.reshape(x_windows, [-1, self._window_size * self._window_size, C]) # nW*B, window_size*window_size, C
 
     attn_windows = self.attention_layer(x_windows, mask = attn_mask)
 
-    attn_windows = tf.reshape(attn_windows, [-1, self._window_size, self._window_size, C])
-    shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp)
+    attn_windows = tf.reshape(attn_windows, [-1, self._window_size, self._window_size, C]) # nW*B, window_size*window_size, C
+    shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
 
     if self._shift_size > 0:
       x = tf.roll(shifted_x, shift=[self._shift_size, self._shift_size], axis = [1, 2])
@@ -388,12 +392,14 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     if pad_r > 0 or pad_b > 0:
       x = x[:, :H, :W, :]
 
-    # Feed Forward Network
+    # Squeeze to Vector
     x = tf.reshape(x, [-1, H * W, C])
+
+    # Feed Forward Network
     x = shortcut + self.drop_path(x)
     x = x + self.drop_path(self.mlp(self.norm2(x)))
 
-    # reshape from vector to an acutal image
+    # Reshape from vector to Image
     x = tf.reshape(x, [-1, H, W, C])
     return x
 
@@ -441,12 +447,13 @@ class PatchMerge(tf.keras.layers.Layer):
     x2 = x[:, 0::2, 1::2, :] # B H/2 W/2 C
     x3 = x[:, 1::2, 1::2, :] # B H/2 W/2 C
 
-    x = tf.concat([x0, x1, x2, x3], axis = -1)
-    x = tf.reshape(x, [-1, (H//2) * (W//2), C * 4])
+    x = tf.concat([x0, x1, x2, x3], axis = -1) # B H/2 W/2 4*C
+    x = tf.reshape(x, [-1, (H//2) * (W//2), C * 4]) # B H/2*W/2 4*C
 
     x = self.norm(x)
     x = self.reduce(x)
     
+    # Reshape from vector to Image
     x = tf.reshape(x, [-1, H//2, W//2, C * 2])
     return x
 
@@ -478,6 +485,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._window_size = window_size
     self._shift_size = window_size // 2
 
+    self._norm_layer_key = norm_layer
     self._norm_layer = _get_norm_fn(norm_layer)
     self._downsample = downsample
 
@@ -508,7 +516,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
 
     index_drop_path = isinstance(self._drop_path, List)
     for i in range(self._depth):
-      shift_size = 0 if i % 2 == 0 else self._shift_size
+      shift_size = 0 if i % 2 == 0 else self._window_size // 2
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
       layer = SwinTransformerLayer(self._num_heads, 
                                    shift_size=shift_size, 
@@ -517,7 +525,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       self.layers.append(layer)
     
     if self._downsample == "patch_and_merge":
-      self.downsample = PatchMerge(**self._init_args)
+      self.downsample = PatchMerge(norm_layer=self._norm_layer_key, **self._init_args)
     else:
       self.downsample = None
     
@@ -527,7 +535,8 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     H, W = input_shape[1:-1]
     self.Hp = int(np.ceil(H / self._window_size) * self._window_size)
     self.Wp = int(np.ceil(W / self._window_size) * self._window_size)
-    
+    img_mask = np.zeros((1, self.Hp, self.Wp, 1))
+
     h_slices = (
       slice(0, -self._window_size), 
       slice(-self._window_size, -self._shift_size), 
@@ -538,8 +547,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       slice(-self._window_size, -self._shift_size), 
       slice(-self._shift_size, None)
     )
-
-    img_mask = np.zeros((1, self.Hp, self.Wp, 1))
 
     cnt = 0 
     for h in h_slices: 
@@ -564,7 +571,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     mask_windows = tf.reshape(mask_windows, [-1, self._window_size*self._window_size])
 
     attn_mask = tf.expand_dims(mask_windows, axis = 1) - tf.expand_dims(mask_windows, axis = 2)
-    attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
+    # attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
     attn_mask = tf.where(attn_mask != 0, tf.cast(-100.0, dtype), attn_mask)
     return attn_mask
 

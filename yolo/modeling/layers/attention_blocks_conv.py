@@ -33,8 +33,8 @@ def _get_activation_fn(activation, leaky_alpha = 0.1):
 
 def _get_norm_fn(norm_layer, 
                  axis = -1, 
-                 momentum = 0.97, 
-                 epsilon = 0.0001, 
+                 momentum = 0.99, 
+                 epsilon = 0.001, 
                  moving_mean_initializer='zeros', 
                  moving_variance_initializer='ones'):
   kwargs = dict(
@@ -82,7 +82,7 @@ def window_reverse(x, window_size, H, W):
     x: (B, H, W, C)
   """
   _, _, _, C = x.shape
-  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
+  x = tf.reshape(x, [-1, H // window_size, W // window_size, window_size, window_size, C])
   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
   x = tf.reshape(x, [-1, H, W, C])
   return x
@@ -198,8 +198,8 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
   
   def build(self, input_shape):
     self.dim = input_shape[-1]
-    head_dims = self.dim/self._num_heads
-    self.scale = self._qk_scale or head_dims ** -5
+    head_dims = self.dim//self._num_heads
+    self.scale = self._qk_scale or head_dims ** -0.5
 
     # biases to apply to each "position" learned 
     num_elements = (2*self._window_size[0] - 1) * (2*self._window_size[1] - 1)
@@ -563,7 +563,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     mask_windows = tf.reshape(mask_windows, [-1, self._window_size*self._window_size])
 
     attn_mask = tf.expand_dims(mask_windows, axis = 1) - tf.expand_dims(mask_windows, axis = 2)
-    attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
+    # attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
     attn_mask = tf.where(attn_mask != 0, tf.cast(-100.0, dtype), attn_mask)
     return attn_mask
 

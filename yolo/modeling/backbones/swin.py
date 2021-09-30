@@ -121,6 +121,7 @@ class SwinTransformer(tf.keras.Model):
     
     x = tf.keras.layers.Dropout(self._dropout)(embeddings)
     for i in range(self._num_layers):
+      dpr = self._drop_path[sum(self._depths[:i]):sum(self._depths[:i + 1])]
       x_output, x = attention_blocks.SwinTransformerBlock(
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
@@ -130,7 +131,7 @@ class SwinTransformer(tf.keras.Model):
           qk_scale=self._qk_scale, 
           dropout=self._dropout, 
           attention_dropout=self._attention_dropout, 
-          drop_path=self._drop_path, 
+          drop_path=dpr, 
           norm_layer=self._norm_layer, 
           downsample='patch_and_merge' if (i < self._num_layers - 1) else None, 
           activation=self._activation, 
