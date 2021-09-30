@@ -21,7 +21,6 @@ task:
     decoder:
       version: v4
       type: csp
-      activation: mish
     head:
       smart_bias: true
     detection_generator:
