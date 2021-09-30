@@ -20,7 +20,7 @@ task:
         embed_dims: 96
         num_heads: [3, 6, 12, 24]
         mlp_ratio: 0.5
-        drop_path: 0.2
+        drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: False
         norm_layer: sync_batch_norm

@@ -273,7 +273,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     x = self.proj(x)
     x = self.proj_drop(x)
     return x
-    
+
 class SwinTransformerLayer(tf.keras.layers.Layer):
 
   def __init__(self, 
