@@ -84,12 +84,12 @@ task:
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
       aug_rand_hue: 0.1
-      aug_scale_min: 1.0
-      aug_scale_max: 1.0
-      aug_rand_translate: 0.0 
+      aug_scale_min: 0.1
+      aug_scale_max: 1.9
+      aug_rand_translate: 0.1
       jitter: 0.3
       area_thresh: 0.1
-      random_pad: True
+      random_pad: False
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
