@@ -33,8 +33,8 @@ def _get_activation_fn(activation, leaky_alpha = 0.1):
 
 def _get_norm_fn(norm_layer, 
                  axis = -1, 
-                 momentum = 0.99, 
-                 epsilon = 0.001, 
+                 momentum = 0.97, 
+                 epsilon = 0.0001, 
                  moving_mean_initializer='zeros', 
                  moving_variance_initializer='ones'):
   kwargs = dict(
@@ -86,56 +86,6 @@ def window_reverse(x, window_size, H, W):
   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
   x = tf.reshape(x, [-1, H, W, C])
   return x
-
-
-class MLP(tf.keras.layers.Layer):
-
-  def __init__(self, 
-               hidden_features = None, 
-               out_features = None, 
-               kernel_initializer='VarianceScaling',
-               kernel_regularizer=None,
-               bias_initializer='zeros',
-               bias_regularizer=None,
-               activation = "gelu", 
-               leaky_alpha=0.1,
-               dropout = 0.0, 
-               **kwargs):
-    super().__init__(**kwargs)
-    # features 
-    self._hidden_features = hidden_features
-    self._out_features = out_features
-
-    # init and regularizer
-    self._init_args = dict(
-      kernel_initializer = kernel_initializer,
-      bias_initializer = bias_initializer,
-      kernel_regularizer = kernel_regularizer,
-      bias_regularizer = bias_regularizer,
-    )
-
-    # activation
-    self._activation = activation
-    self._leaky = leaky_alpha
-    self._dropout = dropout
-
-  def build(self, input_shape):
-    hidden_features = self._hidden_features or input_shape[-1]
-    out_features = self._out_features or input_shape[-1]
-
-    self.fc1 = tf.keras.layers.Dense(hidden_features, **self._init_args)
-    self.fc2 = tf.keras.layers.Dense(out_features, **self._init_args)
-    self.drop = tf.keras.layers.Dropout(self._dropout)
-    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
-    return 
-
-  def call(self, x):
-    x = self.fc1(x)
-    x = self.act(x)
-    x = self.drop(x)
-    x = self.fc2(x)
-    x = self.drop(x)
-    return x
 
 class FFN(tf.keras.layers.Layer):
 
@@ -191,70 +141,6 @@ class FFN(tf.keras.layers.Layer):
     x = self.act(x)
     x = self.conv2(x)
     return x
-
-class FFN2(tf.keras.layers.Layer):
-
-  def __init__(self, 
-               hidden_features = None, 
-               out_features = None, 
-               kernel_initializer='VarianceScaling',
-               kernel_regularizer=None,
-               bias_initializer='zeros',
-               bias_regularizer=None,
-               activation = "gelu", 
-               leaky_alpha=0.1,
-               dropout = 0.0, 
-               **kwargs):
-    super().__init__(**kwargs)
-    # features 
-    self._hidden_features = hidden_features
-    self._out_features = out_features
-
-    # init and regularizer
-    self._init_args = dict(
-      kernel_initializer = kernel_initializer,
-      bias_initializer = bias_initializer,
-      kernel_regularizer = kernel_regularizer,
-      bias_regularizer = bias_regularizer,
-    )
-
-    # activation
-    self._activation = activation
-    self._leaky = leaky_alpha
-    self._dropout = dropout
-
-  def build(self, input_shape):
-    hidden_features = self._hidden_features or input_shape[-1]
-    out_features = self._out_features or input_shape[-1]
-
-    self.fc1 = tf.keras.layers.Dense(hidden_features, **self._init_args)
-    self.fc2 = tf.keras.layers.Dense(out_features, **self._init_args)
-    self.conv2 = nn_blocks.ConvBN(
-      filters = out_features, 
-      kernel_size = (3 , 3),
-      **self._init_args
-    )
-
-    self.drop = tf.keras.layers.Dropout(self._dropout)
-    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
-    return 
-
-  def call(self, x):
-    B, H, W, C = x.shape
-
-    x = tf.reshape(x, [-1, H * W, C])
-    x = self.fc1(x)
-    x = self.act(x)
-    x = self.drop(x)
-    x = self.fc2(x)
-    x = self.act(x)
-    x = self.drop(x)
-
-    B, _, C = x.shape
-    x = tf.reshape(x, [-1, H, W, C])
-    x = self.conv2(x)
-    return x
-
 
 class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
@@ -479,6 +365,8 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
     _, Hp, Wp, _ = x.shape
 
+    # <----------Shifted Window Attention Start--------->
+    # Same as Swin
     # cyclic shift
     if self._shift_size > 0:
       shifted_x = tf.roll(x, shift=[-self._shift_size, -self._shift_size], axis = [1, 2])
@@ -490,9 +378,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     # partition windows
     x_windows = window_partition(shifted_x, self._window_size)
     x_windows = tf.reshape(x_windows, [-1, self._window_size * self._window_size, C])
-
     attn_windows = self.attention_layer(x_windows, mask = attn_mask)
-
     attn_windows = tf.reshape(attn_windows, [-1, self._window_size, self._window_size, C])
     shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp)
 
@@ -503,10 +389,12 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
 
     if pad_r > 0 or pad_b > 0:
       x = x[:, :H, :W, :]
+    # <----------Shifted Window Attention Snd--------->
 
-    # Feed Forward Network
+    # shortcut -> should be same as Swin
     x = shortcut + self.drop_path(x)
     
+    # Residual Block as Feed Forward Network
     x = x + self.drop_path(self.ffn(self.norm1(x)))
     x = self.act(x)
     return x
@@ -514,7 +402,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
 class PatchMerge(tf.keras.layers.Layer):
 
   def __init__(self,
-               norm_layer = 'layer_norm',
+               norm_layer = 'batch_norm',
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -527,7 +415,6 @@ class PatchMerge(tf.keras.layers.Layer):
 
     # init and regularizer
     self._init_args = dict(
-      use_bias = False,
       kernel_initializer = kernel_initializer,
       bias_initializer = bias_initializer,
       kernel_regularizer = kernel_regularizer,
@@ -536,14 +423,16 @@ class PatchMerge(tf.keras.layers.Layer):
   
   def build(self, input_shape):
     self._dims = input_shape[-1]
-    self.reduce = tf.keras.layers.Dense(self._dims * 2, **self._init_args)
-    self.norm = self._norm_layer()
+    # self.reduce = tf.keras.layers.Dense(self._dims * 2, **self._init_args)
+    self.conv2 = nn_blocks.ConvBN(
+      filters = self._dims * 2, 
+      kernel_size = (3, 3),
+      **self._init_args
+    )
   
   def call(self, x):
     """Down sample by 2. """
     B, H, W, C = x.shape
-
-    # x = tf.reshape(x, [-1, H, W, C])
 
     # padding 
     pad_input = (H % 2 == 1) or (W % 2 == 1)
@@ -556,12 +445,7 @@ class PatchMerge(tf.keras.layers.Layer):
     x3 = x[:, 1::2, 1::2, :] # B H/2 W/2 C
 
     x = tf.concat([x0, x1, x2, x3], axis = -1)
-    x = tf.reshape(x, [-1, (H//2) * (W//2), C * 4])
-
-    x = self.norm(x)
-    x = self.reduce(x)
-    
-    x = tf.reshape(x, [-1, H//2, W//2, C * 2])
+    x = self.conv2(x)
     return x
 
 class SwinTransformerBlock(tf.keras.layers.Layer):
@@ -592,6 +476,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._window_size = window_size
     self._shift_size = window_size // 2
 
+    self._norm_layer_base = norm_layer
     self._norm_layer = _get_norm_fn(norm_layer)
     self._downsample = downsample
 
@@ -631,7 +516,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       self.layers.append(layer)
     
     if self._downsample == "patch_and_merge":
-      self.downsample = PatchMerge(**self._init_args)
+      self.downsample = PatchMerge(norm_layer=self._norm_layer_base, **self._init_args)
     else:
       self.downsample = None
     
@@ -736,10 +621,6 @@ class PatchEmbed(tf.keras.layers.Layer):
       strides = patch_size, padding = 'same',
       **self._init_args)
 
-    self.norm = None
-    if self._norm_layer is not None:
-      self.norm = self._norm_layer()
-
     if self._absolute_positional_embed:
       patch_resolution=(input_shape[0]//patch_size, input_shape[1]//patch_size)
       self.ape = self.add_weight(
@@ -750,15 +631,13 @@ class PatchEmbed(tf.keras.layers.Layer):
         regularizer = self._bias_regularizer, 
         trainable = True)
 
+    self.norm = None
+    if self._norm_layer is not None:
+      self.norm = self._norm_layer()
   
   def call(self, x):
+    # not sure how or if this stem will work
     x = self.project(x)
-
-    # if self.norm is not None:
-    #   _, H, W, C = x.shape
-    #   x = tf.reshape(x, [-1, H * W, C])
-    #   x = self.norm(x)
-    #   x = tf.reshape(x, [-1, H, W, C])
 
     if self._absolute_positional_embed:
       # B, W, H, C = embeddings.shape
@@ -768,7 +647,6 @@ class PatchEmbed(tf.keras.layers.Layer):
     
     if self.norm is not None:
       x = self.norm(x)
-
     return x
 
 if __name__ == "__main__":

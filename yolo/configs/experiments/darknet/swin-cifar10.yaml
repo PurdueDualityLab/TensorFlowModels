@@ -70,4 +70,4 @@ trainer:
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 10000  # learning rate rises from 0 to 0.1 over 1000 steps
+        warmup_steps: 0  # learning rate rises from 0 to 0.1 over 1000 steps

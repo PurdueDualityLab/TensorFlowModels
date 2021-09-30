@@ -34,6 +34,7 @@ class Swin(hyperparams.Config):
   drop_path: float = 0.1
   absolute_positional_embed: bool = False
   normalize_endpoints: bool = True
+  norm_layer: str = 'layer_norm'
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

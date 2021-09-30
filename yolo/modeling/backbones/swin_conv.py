@@ -42,7 +42,7 @@ class SwinTransformerConv(tf.keras.Model):
                attention_dropout = 0.0, 
                drop_path = 0.1, 
                absolute_positional_embed = False, 
-               norm_layer = 'batch_norm',
+               norm_layer = 'sync_batch_norm',
                patch_norm = True, 
                activation = 'gelu',
                normalize_endpoints = False,
@@ -209,7 +209,8 @@ def build_swin_conv(
       normalize_endpoints=backbone_config.normalize_endpoints,
       absolute_positional_embed=backbone_config.absolute_positional_embed,
       activation=norm_activation_config.activation,
-      kernel_regularizer=l2_regularizer)
+      kernel_regularizer=l2_regularizer, 
+      norm_layer=backbone_config.norm_layer)
   model.summary()
   return model
 

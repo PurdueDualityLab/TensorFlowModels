@@ -6,24 +6,26 @@ runtime:
 task:
   model:
     num_classes: 11
-    input_size: [28, 28, 3]
+    input_size: [224, 224, 3]
     backbone:
       type: 'swin_conv'
       swin_conv:
-        min_level: null
-        max_level: null
-        patch_size: 2
-        embed_dims: 64
-        window_size: [2] 
-        depths: [2]
-        num_heads: [8]
+        min_level: 3
+        max_level: 5
+        patch_size: 4
+        window_size: [7, 7, 7, 7] 
+        depths: [2, 4, 6, 2]
+        # embed_dims: 104
+        # num_heads: [4, 8, 16, 32]
+        embed_dims: 96
+        num_heads: [3, 6, 12, 24]
         mlp_ratio: 0.5
-        dropout: 0.01
-        attention_dropout: 0.01
-        drop_path: 0.01
+        drop_path: 0.2
         absolute_positional_embed: False
+        normalize_endpoints: False
+        norm_layer: sync_batch_norm
     norm_activation:
-      activation: 'gelu'
+      activation: 'mish'
   losses:
     l2_weight_decay: 0.00
     one_hot: true
@@ -33,7 +35,7 @@ task:
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: train
     is_training: true
-    global_batch_size: 64
+    global_batch_size: 32
     dtype: 'float16'
     aug_type: null
     aug_rand_hflip: true
