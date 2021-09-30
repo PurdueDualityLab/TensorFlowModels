@@ -193,7 +193,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
   def build(self, input_shape):
     self.dim = input_shape[-1]
     head_dims = self.dim//self._num_heads
-    self.scale = self._qk_scale or head_dims ** -0.5
+    self.scale = self._qk_scale or head_dims ** -0.5 # x/sqrt(num_heads) = x/sqrt(d_k)
 
     # biases to apply to each "position" learned 
     num_elements = (2*self._window_size[0] - 1) * (2*self._window_size[1] - 1)
