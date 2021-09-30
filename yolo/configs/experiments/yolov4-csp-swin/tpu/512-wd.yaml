@@ -125,7 +125,7 @@ trainer:
         name: AdamWeightDecay
         beta_1: 0.9
         beta_2: 0.999
-        weight_decay_rate: 0.005
+        weight_decay_rate: 0.0005
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
         gradient_clip_norm: 0.0
