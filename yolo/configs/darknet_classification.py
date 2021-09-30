@@ -53,14 +53,24 @@ class ImageClassificationTask(cfg.TaskConfig):
   model: ImageClassificationModel = ImageClassificationModel()
   train_data: imc.DataConfig = imc.DataConfig(
     is_training=True, 
-    aug_policy= common.Augmentation(
-      type = 'autoaug',
-      autoaug = common.AutoAugment(
-          augmentation_name = 'policy_reduced_imagenet', 
-          cutout_const = 100,
-          translate_const = 250,
+    aug_policy=common.Augmentation(
+      type = 'randaug',
+      randaug = common.RandAugment(
+        num_layers=2, 
+        magnitude=10, 
+        cutout_const=40, 
+        translate_const=10, 
+        prob_to_apply=None
       )
-    ))
+
+    # aug_policy= common.Augmentation(
+    #   type = 'autoaug',
+    #   autoaug = common.AutoAugment(
+    #       augmentation_name = 'policy_reduced_imagenet', 
+    #       cutout_const = 100,
+    #       translate_const = 250,
+    #   ))
+  ))
   validation_data: imc.DataConfig = imc.DataConfig(is_training=False)
   evaluation: imc.Evaluation = imc.Evaluation()
   losses: Losses = Losses()
