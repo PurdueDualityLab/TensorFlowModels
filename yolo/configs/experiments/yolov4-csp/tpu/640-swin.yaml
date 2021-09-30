@@ -131,7 +131,7 @@ trainer:
     optimizer:
       type: sgd_dymow
       sgd_dymow:
-        momentum: 0.937
+        momentum: 0.9370
         momentum_start: 0.8
         nesterov: True
         warmup_steps: 5550
