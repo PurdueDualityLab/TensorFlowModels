@@ -20,6 +20,7 @@ from official.common import registry_imports
 import yolo
 from yolo.modeling.backbones import darknet
 from yolo.modeling.backbones import swin
+from yolo.modeling.backbones import swin_conv
 
 from yolo.configs import darknet_classification
 from yolo.configs import yolo

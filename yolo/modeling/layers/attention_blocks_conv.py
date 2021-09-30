@@ -281,7 +281,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                attention_dropout = 0.0, 
                drop_path = 0.0, 
                activation = 'gelu',
-               norm_layer = 'layer_norm',
+               norm_layer = 'batch_norm',
                kernel_initializer='VarianceScaling',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -348,13 +348,13 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
   def call(self, x, mask_matrix = None, training = None):
     B, H, W, C = x.shape
   
-    # squeeze to [B, H * W, C]
-    x = tf.reshape(x, [-1, H * W, C])
+    # # squeeze to [B, H * W, C]
+    # x = tf.reshape(x, [-1, H * W, C])
     
     # save normalsize and reshape
     shortcut = x
-    x = self.norm1(x)
-    x = tf.reshape(x, [-1, H, W, C])
+    # x = self.norm1(x)
+    # x = tf.reshape(x, [-1, H, W, C])
 
     # pad feature maps to multiples of window size
     pad_l = pad_t = 0 
@@ -389,8 +389,9 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       x = x[:, :H, :W, :]
 
     # Feed Forward Network
-    x = tf.reshape(x, [-1, H * W, C])
     x = shortcut + self.drop_path(x)
+    
+    x = tf.reshape(x, [-1, H * W, C])
     x = x + self.drop_path(self.mlp(self.norm2(x)))
 
     # reshape from vector to an acutal image
@@ -462,7 +463,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
                dropout = 0.0, 
                attention_dropout = 0.0, 
                drop_path = 0.0, 
-               norm_layer = 'layer_norm', 
+               norm_layer = 'batch_norm', 
                downsample = 'patch_and_merge',
                activation = 'gelu',
                kernel_initializer='VarianceScaling',
@@ -639,17 +640,22 @@ class PatchEmbed(tf.keras.layers.Layer):
   
   def call(self, x):
     x = self.project(x)
-    if self.norm is not None:
-      _, H, W, C = x.shape
-      x = tf.reshape(x, [-1, H * W, C])
-      x = self.norm(x)
-      x = tf.reshape(x, [-1, H, W, C])
+
+    # if self.norm is not None:
+    #   _, H, W, C = x.shape
+    #   x = tf.reshape(x, [-1, H * W, C])
+    #   x = self.norm(x)
+    #   x = tf.reshape(x, [-1, H, W, C])
 
     if self._absolute_positional_embed:
       # B, W, H, C = embeddings.shape
       # interpolate positonal embeddings for different shapes, cannot do in TF
       absolute_positional_embed = self.ape
       x = x + absolute_positional_embed
+    
+    if self.norm is not None:
+      x = self.norm(x)
+
     return x
 
 if __name__ == "__main__":
