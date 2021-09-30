@@ -6,7 +6,7 @@ runtime:
 task:
   model:
     num_classes: 11
-    input_size: [32, 32, 3]
+    input_size: [28, 28, 3]
     backbone:
       type: 'swin_conv'
       swin_conv:
@@ -29,16 +29,16 @@ task:
     one_hot: true
     label_smoothing: 0.0
   train_data:
-    tfds_name: mnist
+    tfds_name: cifar10
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: train
     is_training: true
     global_batch_size: 64
     dtype: 'float16'
     aug_type: null
-    aug_rand_hflip: false
+    aug_rand_hflip: true
   validation_data:
-    tfds_name: mnist
+    tfds_name: cifar10
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: test
     is_training: false

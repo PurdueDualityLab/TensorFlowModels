@@ -8,8 +8,8 @@ task:
     num_classes: 11
     input_size: [32, 32, 3]
     backbone:
-      type: 'swin_conv'
-      swin_conv:
+      type: 'swin'
+      swin:
         min_level: null
         max_level: null
         patch_size: 2
@@ -17,7 +17,6 @@ task:
         window_size: [2] 
         depths: [2]
         num_heads: [8]
-        mlp_ratio: 0.5
         dropout: 0.01
         attention_dropout: 0.01
         drop_path: 0.01
@@ -29,16 +28,16 @@ task:
     one_hot: true
     label_smoothing: 0.0
   train_data:
-    tfds_name: mnist
+    tfds_name: cifar10
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: train
     is_training: true
     global_batch_size: 64
     dtype: 'float16'
     aug_type: null
-    aug_rand_hflip: false
+    aug_rand_hflip: true
   validation_data:
-    tfds_name: mnist
+    tfds_name: cifar10
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: test
     is_training: false

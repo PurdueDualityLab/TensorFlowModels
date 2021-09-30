@@ -55,6 +55,39 @@ def _get_norm_fn(norm_layer,
   fn = tf.keras.layers.BatchNormalization
   return partial(fn, **kwargs)
 
+def window_partition(x, window_size):
+  """
+  Args:
+    x: (B, H, W, C)
+    window_size (int): window size
+
+  Returns:
+    windows: (num_windows*B, window_size, window_size, C)
+  """
+  _, H, W, C = x.shape
+  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
+  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+  x = tf.reshape(x, [-1, window_size, window_size, C])
+  return x
+
+def window_reverse(x, window_size, H, W):
+  """
+  Args:
+    windows: (num_windows*B, window_size, window_size, C)
+    window_size (int): Window size
+    H (int): Height of image
+    W (int): Width of image
+
+  Returns:
+    x: (B, H, W, C)
+  """
+  _, _, _, C = x.shape
+  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
+  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+  x = tf.reshape(x, [-1, H, W, C])
+  return x
+
+
 class MLP(tf.keras.layers.Layer):
 
   def __init__(self, 
@@ -104,37 +137,124 @@ class MLP(tf.keras.layers.Layer):
     x = self.drop(x)
     return x
 
-def window_partition(x, window_size):
-  """
-  Args:
-    x: (B, H, W, C)
-    window_size (int): window size
+class FFN(tf.keras.layers.Layer):
 
-  Returns:
-    windows: (num_windows*B, window_size, window_size, C)
-  """
-  _, H, W, C = x.shape
-  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, window_size, window_size, C])
-  return x
+  def __init__(self, 
+               hidden_features = None, 
+               out_features = None, 
+               kernel_initializer='VarianceScaling',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               activation = "gelu", 
+               leaky_alpha=0.1,
+               dropout = 0.0, 
+               **kwargs):
+    super().__init__(**kwargs)
+    # features 
+    self._hidden_features = hidden_features
+    self._out_features = out_features
 
-def window_reverse(x, window_size, H, W):
-  """
-  Args:
-    windows: (num_windows*B, window_size, window_size, C)
-    window_size (int): Window size
-    H (int): Height of image
-    W (int): Width of image
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = kernel_initializer,
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
 
-  Returns:
-    x: (B, H, W, C)
-  """
-  _, _, _, C = x.shape
-  x = tf.reshape(x, [-1, H // window_size, window_size, W // window_size, window_size, C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, H, W, C])
-  return x
+    # activation
+    self._activation = activation
+    self._leaky = leaky_alpha
+    self._dropout = dropout
+
+  def build(self, input_shape):
+    hidden_features = self._hidden_features or input_shape[-1]
+    out_features = self._out_features or input_shape[-1]
+
+    self.conv1 = nn_blocks.ConvBN(
+      filters = hidden_features, 
+      kernel_size = (3 , 3),
+      **self._init_args
+    )
+    self.conv2 = nn_blocks.ConvBN(
+      filters = out_features, 
+      kernel_size = (1 , 1),
+      **self._init_args
+    )
+
+    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
+    return 
+
+  def call(self, x):
+    x = self.conv1(x)
+    x = self.act(x)
+    x = self.conv2(x)
+    return x
+
+class FFN2(tf.keras.layers.Layer):
+
+  def __init__(self, 
+               hidden_features = None, 
+               out_features = None, 
+               kernel_initializer='VarianceScaling',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None,
+               activation = "gelu", 
+               leaky_alpha=0.1,
+               dropout = 0.0, 
+               **kwargs):
+    super().__init__(**kwargs)
+    # features 
+    self._hidden_features = hidden_features
+    self._out_features = out_features
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = kernel_initializer,
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
+
+    # activation
+    self._activation = activation
+    self._leaky = leaky_alpha
+    self._dropout = dropout
+
+  def build(self, input_shape):
+    hidden_features = self._hidden_features or input_shape[-1]
+    out_features = self._out_features or input_shape[-1]
+
+    self.fc1 = tf.keras.layers.Dense(hidden_features, **self._init_args)
+    self.fc2 = tf.keras.layers.Dense(out_features, **self._init_args)
+    self.conv2 = nn_blocks.ConvBN(
+      filters = out_features, 
+      kernel_size = (3 , 3),
+      **self._init_args
+    )
+
+    self.drop = tf.keras.layers.Dropout(self._dropout)
+    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
+    return 
+
+  def call(self, x):
+    B, H, W, C = x.shape
+
+    x = tf.reshape(x, [-1, H * W, C])
+    x = self.fc1(x)
+    x = self.act(x)
+    x = self.drop(x)
+    x = self.fc2(x)
+    x = self.act(x)
+    x = self.drop(x)
+
+    B, _, C = x.shape
+    x = tf.reshape(x, [-1, H, W, C])
+    x = self.conv2(x)
+    return x
+
 
 class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
@@ -325,7 +445,6 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                         "or the image will be shifted outside of the partition " 
                         "window. ")
     
-    self.norm1 = self._norm_layer()
     self.attention_layer = WindowedMultiHeadAttention(
         window_size=self._window_size, 
         num_heads=self._num_heads, 
@@ -339,22 +458,19 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
     else:
       self.drop_path = nn_blocks.Identity()
+
+    self.act = _get_activation_fn(self._activation)
     
-    self.norm2 = self._norm_layer()
-    mlp_hidden_dim = int(self._dims * self._mlp_ratio)
-    self.mlp = MLP(hidden_features=mlp_hidden_dim, activation=self._activation, 
+    self.norm1 = self._norm_layer()
+    mlp_hidden_dim = max(int(self._dims * self._mlp_ratio), 1)
+    self.ffn = FFN(hidden_features=mlp_hidden_dim, activation=self._activation, 
                    dropout=self._dropout, **self._init_args)
   
   def call(self, x, mask_matrix = None, training = None):
     B, H, W, C = x.shape
-  
-    # # squeeze to [B, H * W, C]
-    # x = tf.reshape(x, [-1, H * W, C])
     
     # save normalsize and reshape
     shortcut = x
-    # x = self.norm1(x)
-    # x = tf.reshape(x, [-1, H, W, C])
 
     # pad feature maps to multiples of window size
     pad_l = pad_t = 0 
@@ -391,11 +507,8 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     # Feed Forward Network
     x = shortcut + self.drop_path(x)
     
-    x = tf.reshape(x, [-1, H * W, C])
-    x = x + self.drop_path(self.mlp(self.norm2(x)))
-
-    # reshape from vector to an acutal image
-    x = tf.reshape(x, [-1, H, W, C])
+    x = x + self.drop_path(self.ffn(self.norm1(x)))
+    x = self.act(x)
     return x
 
 class PatchMerge(tf.keras.layers.Layer):

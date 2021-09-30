@@ -39,4 +39,4 @@ class Swin(hyperparams.Config):
 class Backbone(backbones.Backbone):
   darknet: Darknet = Darknet()
   swin: Swin = Swin()
-  swin_conv: Swin = Swin()
+  swin_conv: Swin = Swin(mlp_ratio=0.25)
