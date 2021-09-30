@@ -548,7 +548,11 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
         cnt += 1
 
     img_mask = tf.convert_to_tensor(img_mask)
-    self.img_mask = tf.Variable(initial_value=img_mask, trainable=False, name='{}_img_mask'.format(self.name))
+    self.img_mask = img_mask
+    # tf.Variable(
+    #   initial_value=img_mask, 
+    #   trainable=False, 
+    #   name='{}_img_mask'.format(self.name), )
     return 
 
   def _build_mask(self, x_shape, dtype = 'float32'):

@@ -288,6 +288,8 @@ class YoloTask(base_task.Task):
     if not self.task_config.init_checkpoint:
       logging.info("Training from Scratch.")
       return
+    
+    backbone = self.task_config.model.backbone.type
 
     ckpt_dir_or_file = self.task_config.init_checkpoint
     if tf.io.gfile.isdir(ckpt_dir_or_file):
@@ -337,7 +339,9 @@ class YoloTask(base_task.Task):
     opt_factory = optimization.YoloOptimizerFactory(optimizer_config)
     ema = opt_factory._use_ema
     opt_factory._use_ema = False
-    if (self._task_config.model.head.smart_bias):
+
+    opt_type = opt_factory._optimizer_type
+    if (opt_type == 'sgd_dymow'):
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer.set_bias_lr(
           opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))

@@ -65,9 +65,9 @@ task:
               box: [36, 75],   box: [76, 55],   box: [72, 146], 
               box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
-    global_batch_size: 64
+    global_batch_size: 1
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     drop_remainder: true
     seed: 1000
@@ -95,9 +95,9 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 1
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     drop_remainder: true
     parser:
@@ -106,7 +106,7 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint: '../checkpoints/swin-new-e1'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
