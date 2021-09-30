@@ -66,6 +66,8 @@ class ImageClassificationTask(cfg.TaskConfig):
   losses: Losses = Losses()
   gradient_clip_norm: float = 0.0
   logging_dir: Optional[str] = None
+  init_checkpoint: Optional[str] = None
+  init_checkpoint_modules: str = 'all'  # all or backbone
 
 
 @exp_factory.register_config_factory('darknet_classification')

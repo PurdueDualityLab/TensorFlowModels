@@ -33,6 +33,7 @@ class Swin(hyperparams.Config):
   attention_dropout: float = 0.0
   drop_path: float = 0.1
   absolute_positional_embed: bool = False
+  normalize_endpoints: bool = True
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

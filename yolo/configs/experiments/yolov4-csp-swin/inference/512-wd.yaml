@@ -15,9 +15,9 @@ task:
         patch_size: 4
         embed_dims: 96 
         window_size: [7, 7, 7, 7] 
-        depths: [2, 4, 6, 3]
+        depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
-        drop_path: 0.2
+        drop_path: 0.1
         absolute_positional_embed: False
     decoder:
       version: v4
@@ -65,7 +65,7 @@ task:
               box: [36, 75],   box: [76, 55],   box: [72, 146], 
               box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
-    global_batch_size: 1
+    global_batch_size: 4
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
@@ -95,7 +95,7 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 4
     dtype: float32
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
@@ -106,14 +106,14 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: '../checkpoints/swin-new-e1'
+  init_checkpoint: '../checkpoints/swin-partial-1'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
+  steps_per_loop: 1
+  summary_interval: 1
   validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:

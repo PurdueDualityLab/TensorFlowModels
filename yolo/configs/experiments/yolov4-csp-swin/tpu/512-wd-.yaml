@@ -106,11 +106,9 @@ task:
       best_match_only: False
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://cam2-models/darknet/tpu/swin-partial-1'
-  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 500500
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
@@ -133,16 +131,6 @@ trainer:
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
         gradient_clip_norm: 0.0
-    # optimizer:
-    #   type: sgd_dymow
-    #   sgd_dymow:
-    #     momentum: 0.949
-    #     momentum_start: 0.949
-    #     nesterov: True
-    #     warmup_steps: 1000
-    #     weight_decay: 0.0005
-    #     sim_torch: true
-    #     name: SGD
     warmup:
       type: 'linear'
       linear:

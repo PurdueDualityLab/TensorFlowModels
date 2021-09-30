@@ -206,6 +206,7 @@ def build_swin(
       dropout=backbone_config.dropout,
       attention_dropout=backbone_config.attention_dropout,
       drop_path=backbone_config.drop_path,
+      normalize_endpoints=backbone_config.normalize_endpoints,
       absolute_positional_embed=backbone_config.absolute_positional_embed,
       activation=norm_activation_config.activation,
       kernel_regularizer=l2_regularizer)

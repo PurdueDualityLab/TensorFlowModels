@@ -13,12 +13,12 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 128
+        embed_dims: 96
         window_size: [7, 7, 7, 7] 
         depths: [2, 2, 6, 2]
-        # num_heads: [3, 6, 12, 24]
-        num_heads: [4, 8, 16, 32]
-        drop_path: 0.2
+        num_heads: [3, 6, 12, 24]
+        # num_heads: [4, 8, 16, 32]
+        drop_path: 0.1
         absolute_positional_embed: False
     decoder:
       version: v4
@@ -121,7 +121,7 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.001
+        initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
         decay_steps: 555000
@@ -131,7 +131,7 @@ trainer:
         name: AdamWeightDecay
         beta_1: 0.9
         beta_2: 0.999
-        weight_decay_rate: 0.005
+        weight_decay_rate: 0.0005
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
         gradient_clip_norm: 0.0

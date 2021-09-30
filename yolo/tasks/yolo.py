@@ -303,7 +303,10 @@ class YoloTask(base_task.Task):
     elif self.task_config.init_checkpoint_modules == 'backbone':
       ckpt = tf.train.Checkpoint(backbone=model.backbone)
       status = ckpt.restore(ckpt_dir_or_file)
-      status.expect_partial().assert_existing_objects_matched()
+      if backbone == "swin":
+        status.expect_partial()#.assert_existing_objects_matched()
+      else:
+        status.expect_partial().assert_existing_objects_matched()
     elif self.task_config.init_checkpoint_modules == 'decoder':
       ckpt = tf.train.Checkpoint(backbone=model.backbone, decoder=model.decoder)
       status = ckpt.restore(ckpt_dir_or_file)
