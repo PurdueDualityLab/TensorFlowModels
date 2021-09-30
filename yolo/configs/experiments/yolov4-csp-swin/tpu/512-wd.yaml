@@ -20,8 +20,8 @@ task:
         absolute_positional_embed: False
     decoder:
       version: v4
-      type: regular
-      activation: leaky
+      type: csp
+      activation: mish
     head:
       smart_bias: true
     detection_generator:

@@ -13,7 +13,7 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 96 
+        embed_dims: 96
         window_size: [7, 7, 7, 7] 
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
@@ -66,7 +66,7 @@ task:
   train_data:
     global_batch_size: 64
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     shuffle_buffer_size: 10000
     drop_remainder: true
@@ -94,7 +94,7 @@ task:
   validation_data:
     global_batch_size: 8
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     shuffle_buffer_size: 10
     drop_remainder: true
@@ -106,6 +106,8 @@ task:
       best_match_only: True
   weight_decay: 0.000
   annotation_file: null
+  init_checkpoint: '../checkpoints/swin-new-e1'
+  init_checkpoint_modules: 'backbone'
 trainer:
   train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625

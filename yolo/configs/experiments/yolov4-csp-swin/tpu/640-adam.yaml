@@ -13,10 +13,11 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 96 
+        embed_dims: 128
         window_size: [7, 7, 7, 7] 
         depths: [2, 2, 6, 2]
-        num_heads: [3, 6, 12, 24]
+        # num_heads: [3, 6, 12, 24]
+        num_heads: [4, 8, 16, 32]
         drop_path: 0.2
         absolute_positional_embed: False
     decoder:
