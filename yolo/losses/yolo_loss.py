@@ -383,7 +383,8 @@ class DarknetLoss(YoloLossBase):
         # Build a mask based on the true class locations.
         cls_norm_mask = true_class_grid
         # Apply the classes weight to class indexes were one_hot is one.
-        class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer)
+        class_loss *= (
+            (1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer)
 
       # Mask to the class loss and compute the sum over all the objects.
       class_loss = tf.reduce_sum(class_loss, axis=-1)
@@ -400,8 +401,10 @@ class DarknetLoss(YoloLossBase):
           label_smoothing=self._label_smoothing,
           from_logits=True)
       class_loss = loss_utils.apply_mask(ind_mask, class_loss)
-      class_loss = math_ops.divide_no_nan(class_loss, tf.expand_dims(reps, axis = -1))
-      class_loss = tf.cast(tf.reduce_sum(class_loss, axis=(1, 2)), dtype=y_pred.dtype)
+      class_loss = math_ops.divide_no_nan(
+          class_loss, tf.expand_dims(reps, axis = -1))
+      class_loss = tf.cast(
+          tf.reduce_sum(class_loss, axis=(1, 2)), dtype=y_pred.dtype)
 
     # Compute the sigmoid binary cross entropy for the confidence maps.
     bce = tf.reduce_mean(
