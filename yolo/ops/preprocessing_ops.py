@@ -152,7 +152,7 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
     image = tf.image.adjust_saturation(image, deltas)
   if rv > 0.0:
     deltav = random_scale(rv, seed=seed)
-    image *= deltav
+    image *= tf.cast(deltav, image.dtype)
   
   # clip the values of the image between 0.0 and 1.0
   image = tf.clip_by_value(image, 0.0, 1.0)

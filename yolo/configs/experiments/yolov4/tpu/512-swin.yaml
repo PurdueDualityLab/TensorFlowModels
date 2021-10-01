@@ -113,6 +113,7 @@ trainer:
   validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:
+    ema: null
     learning_rate:
       type: stepwise
       stepwise:

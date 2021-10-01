@@ -68,15 +68,16 @@ task:
         mosaic_center: 0.25
         aug_scale_min: 0.1
         aug_scale_max: 1.9
+        jitter: 0.3
       max_num_instances: 200
-      letter_box: True
+      letter_box: False
       random_flip: True
       aug_rand_translate: 0.1
       random_pad: False
   validation_data:
     input_path: 'gs://cam2-datasets/coco/val*'
     parser:
-      letter_box: True
+      letter_box: False
   weight_decay: 0.000
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

@@ -59,7 +59,7 @@ task:
       activation: gelu
       norm_epsilon: 0.0001
       norm_momentum: 0.99
-      use_sync_bn: true
+      use_sync_bn: false
     num_classes: 80
     anchor_boxes:
       anchors_per_scale: 3
@@ -67,8 +67,8 @@ task:
               box: [36, 75],   box: [76, 55],   box: [72, 146], 
               box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
-    global_batch_size: 64
-    dtype: float32
+    global_batch_size: 4
+    dtype: float16
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     drop_remainder: true
@@ -97,8 +97,8 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
-    global_batch_size: 1
-    dtype: float32
+    global_batch_size: 8
+    dtype: float16
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     drop_remainder: true
@@ -108,21 +108,18 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: '../checkpoints/512-wd-baseline-e1'
-  init_checkpoint_modules: 'all'
+  init_checkpoint: '../checkpoints/swin-baseline-3'
+  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
+  steps_per_loop: 10
+  summary_interval: 10
   validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:
-    ema:
-      average_decay: 0.9998
-      trainable_weights_only: False
-      dynamic_decay: True
+    ema: null
     learning_rate:
       type: stepwise
       stepwise:
