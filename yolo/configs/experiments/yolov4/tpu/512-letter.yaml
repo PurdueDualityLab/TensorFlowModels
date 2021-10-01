@@ -59,11 +59,7 @@ task:
               box: [36, 75],   box: [76, 55],   box: [72, 146], 
               box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
-    global_batch_size: 64
-    dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
-    is_training: true
-    seed: 1000
     parser:
       mosaic: 
         mosaic_frequency: 1.0
@@ -75,25 +71,12 @@ task:
       max_num_instances: 200
       letter_box: True
       random_flip: True
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
       aug_rand_translate: 0.1
-      area_thresh: 0.1
       random_pad: False
-      use_tie_breaker: True
-      anchor_thresh: 0.213
   validation_data:
-    global_batch_size: 8
-    dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
-    is_training: false
-    drop_remainder: true
     parser:
-      max_num_instances: 300
       letter_box: True
-      use_tie_breaker: True
-      anchor_thresh: 0.213
   weight_decay: 0.000
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'

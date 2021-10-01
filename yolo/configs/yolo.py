@@ -242,6 +242,7 @@ def yolo_darknet() -> cfg.ExperimentConfig:
   steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
   validation_interval = 5
 
+  max_num_instances = 200
   config = cfg.ExperimentConfig(
       runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
       task=YoloTask(
@@ -259,12 +260,37 @@ def yolo_darknet() -> cfg.ExperimentConfig:
               is_training=True,
               global_batch_size=train_batch_size,
               seed=GLOBAL_SEED, 
-              dtype='float32'),
+              dtype='float32', 
+              parser=Parser(
+                letter_box=False,
+                aug_rand_saturation= 1.5,
+                aug_rand_brightness= 1.5,
+                aug_rand_hue= 0.1,
+                use_tie_breaker=True, 
+                best_match_only=False, 
+                anchor_thresh=0.213,
+                area_thresh=0.1,
+                max_num_instances=max_num_instances, 
+                mosaic=Mosaic(
+                  mosaic_frequency= 0.75,
+                  mixup_frequency= 0.0,
+                  mosaic_crop_mode= 'crop',
+                  mosaic_center= 0.2
+                )
+              )),
           validation_data=DataConfig(
               is_training=False,
               global_batch_size=eval_batch_size, 
               drop_remainder=True, 
-              dtype='float32')),
+              dtype='float32', 
+              parser=Parser(
+                letter_box=False,
+                use_tie_breaker=True, 
+                best_match_only=False, 
+                anchor_thresh=0.213,
+                area_thresh=0.1,
+                max_num_instances=max_num_instances, 
+              ))),
       trainer=cfg.TrainerConfig(
           train_steps=train_epochs * steps_per_epoch,
           validation_steps=COCO_VAL_EXAMPLES // eval_batch_size,
@@ -319,7 +345,7 @@ def yolo_darknet() -> cfg.ExperimentConfig:
 @exp_factory.register_config_factory('scaled_yolo')
 def scaled_yolo() -> cfg.ExperimentConfig:
   """COCO object detection with YOLOv4-csp and v4"""
-  train_batch_size = 256
+  train_batch_size = 128
   eval_batch_size = 8
   train_epochs = 300
   warmup_epochs = 3
@@ -359,6 +385,7 @@ def scaled_yolo() -> cfg.ExperimentConfig:
                 best_match_only=True, 
                 anchor_thresh=4.0,
                 random_pad=False,
+                area_thresh=0.1,
                 max_num_instances=max_num_instances,
                 mosaic=Mosaic(
                   mosaic_crop_mode='scale',
@@ -376,6 +403,7 @@ def scaled_yolo() -> cfg.ExperimentConfig:
                 use_tie_breaker=True, 
                 best_match_only=True, 
                 anchor_thresh=4.0,
+                area_thresh=0.1,
                 max_num_instances=max_num_instances, 
               ))),
       trainer=cfg.TrainerConfig(
