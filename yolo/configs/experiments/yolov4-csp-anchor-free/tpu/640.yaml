@@ -14,8 +14,10 @@ task:
         max_level: 5
         min_level: 3
     decoder:
-      version: v4
-      type: csp
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: csp
     head:
       smart_bias: true
     detection_generator:
