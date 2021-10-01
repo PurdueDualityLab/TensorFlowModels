@@ -720,7 +720,7 @@ class AnchorFreeLoss(ScaledLoss):
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
     """This method is not specific to each loss path, but each loss type."""
-    return loss#/num_replicas_in_sync
+    return loss #/num_replicas_in_sync
 
 class YoloLoss:
   """This class implements the aggregated loss across YOLO model FPN levels."""
