@@ -319,7 +319,7 @@ def yolo_darknet() -> cfg.ExperimentConfig:
 @exp_factory.register_config_factory('scaled_yolo')
 def scaled_yolo() -> cfg.ExperimentConfig:
   """COCO object detection with YOLOv4-csp and v4"""
-  train_batch_size = 64
+  train_batch_size = 256
   eval_batch_size = 8
   train_epochs = 300
   warmup_epochs = 3
