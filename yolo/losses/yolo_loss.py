@@ -14,12 +14,13 @@
 
 """Yolo Loss function."""
 import abc
-import functools
 import collections
+import functools
 
 import tensorflow as tf
-from yolo.ops import loss_utils
+
 from yolo.ops import box_ops
+from yolo.ops import loss_utils
 from yolo.ops import math_ops
 
 
@@ -138,8 +139,8 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
     # Search all predictions against ground truths to find mathcing boxes for
     # each pixel.
-    _, _, iou_max, _ = self._search_pairs(pred_boxes, pred_classes, 
-                                          boxes, classes)
+    _, _, iou_max, _ = self._search_pairs(pred_boxes, pred_classes, boxes,
+                                          classes)
 
     if iou_max is None:
       return true_conf, tf.ones_like(true_conf)
@@ -196,7 +197,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
         predictions.
     """
     (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf, ind_mask,
-     grid_mask) = self._compute_loss(true_counts, inds, y_true, boxes, classes, 
+     grid_mask) = self._compute_loss(true_counts, inds, y_true, boxes, classes,
                                      y_pred)
 
     # Metric compute using done here to save time and resources.
@@ -219,14 +220,14 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
     """The actual logic to apply to the raw model for optimization."""
     ...
 
-  def post_path_aggregation(self, 
-      loss, box_loss, conf_loss, class_loss, ground_truths, predictions): # pylint:disable=unused-argument
+  def post_path_aggregation(self, loss, box_loss, conf_loss, class_loss,
+                            ground_truths, predictions):  # pylint:disable=unused-argument
     """This method allows for post processing of a loss value.
 
     After the loss has been aggregated across all the FPN levels some post
     proceessing may need to occur to poroperly scale the loss. The default
-    behavior is to pass the loss through with no alterations. Passing the 
-    individual losses for each mask will allow for aggeregation of loss across 
+    behavior is to pass the loss through with no alterations. Passing the
+    individual losses for each mask will allow for aggeregation of loss across
     paths for some losses.
 
     Args:
@@ -239,6 +240,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
     Returns:
       loss: `tf.float` scalar for the scaled loss.
+      scale: `tf.float` how much the loss was scaled by.
     """
     return loss, tf.ones_like(loss)
 
@@ -464,7 +466,7 @@ class ScaledLoss(YoloLossBase):
       self._search_pairs = loss_utils.PairWiseSearch(
           iou_type=self._loss_type, any_match=False, min_conf=0.25)
 
-    self._cls_normalizer = self._cls_normalizer * self._classes/80
+    self._cls_normalizer = self._cls_normalizer * self._classes / 80
     return
 
   def _compute_loss(self, true_counts, inds, y_true, boxes, classes, y_pred):
@@ -513,8 +515,8 @@ class ScaledLoss(YoloLossBase):
     # Scale and shift and select the ground truth boxes
     # and predictions to the prediciton domain.
     if self._box_type == "anchor_free":
-      true_box = loss_utils.apply_mask(
-        ind_mask, (scale * self._path_stride * true_box))
+      true_box = loss_utils.apply_mask(ind_mask,
+                                       (scale * self._path_stride * true_box))
     else:
       offset = tf.cast(
           tf.gather_nd(grid_points, inds, batch_dims=1), true_box.dtype)
@@ -578,8 +580,8 @@ class ScaledLoss(YoloLossBase):
     return (loss, box_loss, conf_loss, class_loss, mean_loss, iou, pred_conf,
             ind_mask, grid_mask)
 
-  def post_path_aggregation(self, 
-      loss, box_loss, conf_loss, class_loss, ground_truths, predictions):
+  def post_path_aggregation(self, loss, box_loss, conf_loss, class_loss,
+                            ground_truths, predictions):
     """This method allows for post processing of a loss value.
 
     By default the model will have about 3 FPN levels {3, 4, 5}, on
@@ -588,12 +590,22 @@ class ScaledLoss(YoloLossBase):
     magintude as the model with 3 FPN levels. This helps to prevent gradient
     explosions.
 
+    Args:
+      loss: `tf.float` scalar for the actual loss.
+      box_loss: `tf.float` for the loss on the boxs only.
+      conf_loss: `tf.float` for the loss on the confidences only.
+      class_loss: `tf.float` for the loss on the classes only.
+      ground_truths: `Dict` holding all the ground truth tensors.
+      predictions: `Dict` holding all the predicted values.
+    Returns:
+      loss: `tf.float` scalar for the scaled loss.
+      scale: `tf.float` how much the loss was scaled by.
     """
     scale = tf.stop_gradient(3 / len(list(predictions.keys())))
     return loss * scale, 1/scale
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
-    """this method is not specific to each loss path, but each loss type"""
+    """This method is not specific to each loss path, but each loss type."""
     return loss
 
 class AnchorFreeLoss(ScaledLoss):
@@ -707,8 +719,8 @@ class AnchorFreeLoss(ScaledLoss):
     return loss/num_objs, num_objs
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
-    """this method is not specific to each loss path, but each loss type"""
-    return loss/num_replicas_in_sync
+    """This method is not specific to each loss path, but each loss type."""
+    return loss#/num_replicas_in_sync
 
 class YoloLoss:
   """This class implements the aggregated loss across YOLO model FPN levels."""
@@ -823,8 +835,11 @@ class YoloLoss:
 
       # after computing the loss, scale loss as needed for aggregation
       # across FPN levels
-      loss, scale = self._loss_dict[key].post_path_aggregation(
-          loss, loss_box, loss_conf, loss_class, ground_truth, predictions)
+      loss, scale = self._loss_dict[key].post_path_aggregation(loss, loss_box, 
+                                                               loss_conf, 
+                                                               loss_class, 
+                                                               ground_truth, 
+                                                               predictions)
 
       # after completing the scaling of the loss on each replica, handle
       # scaling the loss for mergeing the loss across replicas

@@ -24,7 +24,6 @@ from official.core import config_definitions
 from official.modeling import performance
 from official.vision.beta.ops import box_ops
 from official.vision.beta.evaluation import coco_evaluator
-from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tfds_factory
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
