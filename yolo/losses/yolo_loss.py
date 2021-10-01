@@ -381,7 +381,7 @@ class DarknetLoss(YoloLossBase):
       # Apply normalization to the class losses.
       if self._cls_normalizer < 1.0:
         # Build a mask based on the true class locations.
-        cls_norm_mask = true_class
+        cls_norm_mask = true_class_grid
         # Apply the classes weight to class indexes were one_hot is one.
         class_loss *= ((1 - cls_norm_mask) + cls_norm_mask * self._cls_normalizer)
 

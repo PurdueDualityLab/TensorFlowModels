@@ -41,6 +41,7 @@ task:
       pre_nms_points: 500
     loss:
       use_scaled_loss: False
+      update_on_repeat: True
       box_loss_type:  
         'all': ciou
       ignore_thresh:
