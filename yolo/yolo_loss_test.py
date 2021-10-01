@@ -37,13 +37,13 @@ python3.8 -m yolo.run_image
 if __name__ == "__main__":
   model_dir='/home/vbanna/Research/checkpoints/yolo/v4-csp'
   task, model, params = load_model(
-      experiment="yolo_custom",
+      experiment="yolo_darknet",
       config_path=[
             "yolo/configs/experiments/yolov4/inference/512.yaml"
             # "yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
             # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
       ],
-      model_dir='')
+      model_dir='../checkpoints/512-wd-baseline-e1')
   
 
   # optimizer = task.create_optimizer(params.trainer.optimizer_config,
