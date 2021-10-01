@@ -1,25 +1,42 @@
-import tensorflow as tf
-import numpy as np
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Preprocessing ops for yolo."""
 import random
 
+import numpy as np
+import tensorflow as tf
 import tensorflow_addons as tfa
+
 from official.vision.beta.ops import box_ops as bbox_ops
 
 PAD_VALUE = 114
 GLOBAL_SEED_SET = False
 
+
 def set_random_seeds(seed=0):
   """Sets all accessible global seeds to properly apply randomization.
 
-  This is not the same as passing the seed as a variable to each call 
-  to tf.random.For more, see the documentation for tf.random on the tensorflow 
-  website https://www.tensorflow.org/api_docs/python/tf/random/set_seed. Note 
-  that passing the seed to each random number generator will not give you the 
+  This is not the same as passing the seed as a variable to each call
+  to tf.random.For more, see the documentation for tf.random on the tensorflow
+  website https://www.tensorflow.org/api_docs/python/tf/random/set_seed. Note
+  that passing the seed to each random number generator will not give you the
   expected behavior if you use more than one generator in a single function.
 
-  Args: 
+  Args:
     seed: `Optional[int]` representing the seed you want to use.
-  """  
+  """
   if seed is not None:
     global GLOBAL_SEED_SET
     random.seed(seed)
@@ -27,20 +44,27 @@ def set_random_seeds(seed=0):
   tf.random.set_seed(seed)
   np.random.seed(seed)
 
-def random_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[]):
-  """A unified function for consistent random number generation. 
-  
+
+def random_uniform_strong(minval,
+                          maxval,
+                          dtype=tf.float32,
+                          seed=None,
+                          shape=None):
+  """A unified function for consistent random number generation.
+
   Equivalent to tf.random.uniform, except that minval and maxval are flipped if
   minval is greater than maxval. Seed Safe random number generator.
-  
+
   Args:
     minval: An `int` for a lower or upper endpoint of the interval from which to
       choose the random number.
     maxval: An `int` for the other endpoint.
     dtype: The output type of the tensor.
-  
+    seed: An `int` used to set the seed.
+    shape: List or 1D tf.Tensor, output shape of the random generator.
+
   Returns:
-    A random tensor of type `dtype` that falls between `minval` and `maxval` 
+    A random tensor of type `dtype` that falls between `minval` and `maxval`
     excluding the larger one.
   """
   if GLOBAL_SEED_SET:
@@ -49,28 +73,29 @@ def random_uniform_strong(minval, maxval, dtype=tf.float32, seed=None, shape=[])
   if minval > maxval:
     minval, maxval = maxval, minval
   return tf.random.uniform(
-      shape=shape, minval=minval, maxval=maxval, seed=seed, dtype=dtype)
+      shape=shape or [], minval=minval, maxval=maxval, seed=seed, dtype=dtype)
 
 
 def random_scale(val, dtype=tf.float32, seed=None):
   """Generates a random number for scaling a parameter by multiplication.
 
-  Generates a random number for the scale. Half of the time, the value is 
-  between [1.0, val) with uniformly distributed probability. In the other half, 
-  the value is the reciprocal of this value. The function is identical to the 
+  Generates a random number for the scale. Half of the time, the value is
+  between [1.0, val) with uniformly distributed probability. In the other half,
+  the value is the reciprocal of this value. The function is identical to the
   one in the original implementation:
   https://github.com/AlexeyAB/darknet/blob/a3714d0a/src/utils.c#L708-L713
-  
+
   Args:
     val: A float representing the maximum scaling allowed.
     dtype: The output type of the tensor.
-    
+    seed: An `int` used to set the seed.
+
   Returns:
     The random scale.
   """
   scale = random_uniform_strong(1.0, val, dtype=dtype, seed=seed)
   do_ret = random_uniform_strong(minval=0, maxval=2, dtype=tf.int32, seed=seed)
-  if (do_ret == 1):
+  if do_ret == 1:
     return scale
   return 1.0 / scale
 
@@ -79,16 +104,16 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
   """Pad or clip the tensor value to a fixed length along a given axis.
 
   Pads a dimension of the tensor to have a maximum number of instances filling
-  additional entries with the `pad_value`. Allows for selection of the padding 
+  additional entries with the `pad_value`. Allows for selection of the padding
   axis.
-   
+
   Args:
     value: An input tensor.
     instances: An `int` representing the maximum number of instances.
-    pad_value: An `int` representing the value used for padding until the 
+    pad_value: An `int` representing the value used for padding until the
       maximum number of instances is obtained.
     pad_axis: An `int` representing the axis index to pad.
-  
+
   Returns:
     The output tensor whose dimensions match the input tensor except with the
     size along the `pad_axis` replaced by `instances`.
@@ -121,15 +146,15 @@ def pad_max_instances(value, instances, pad_value=0, pad_axis=0):
 
 def get_image_shape(image):
   """Consistently gets the width and height of the image.
-  
+
   Gets the shape of the image regardless of if the image is in the
   (batch_size, x, y, c) format or the (x, y, c) format.
-  
+
   Args:
     image: A tensor who has either 3 or 4 dimensions.
-  
+
   Returns:
-    A tuple (height, width), where height is the height of the image 
+    A tuple (height, width), where height is the height of the image
     and width is the width of the image.
   """
   shape = tf.shape(image)
@@ -153,7 +178,7 @@ def _augment_hsv_darknet(image, rh, rs, rv, seed=None):
   if rv > 0.0:
     deltav = random_scale(rv, seed=seed)
     image *= tf.cast(deltav, image.dtype)
-  
+
   # clip the values of the image between 0.0 and 1.0
   image = tf.clip_by_value(image, 0.0, 1.0)
   return image
@@ -183,20 +208,20 @@ def _augment_hsv_torch(image, rh, rs, rv, seed=None):
 
 
 def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
-  """Randomly alters the hue, saturation, and brightness of an image. 
+  """Randomly alters the hue, saturation, and brightness of an image.
 
-  Args: 
+  Args:
     image: `Tensor` of shape [None, None, 3] that needs to be altered.
-    rh: `float32` used to indicate the maximum delta that can be multiplied to 
+    rh: `float32` used to indicate the maximum delta that can be multiplied to
       the hue.
-    rs: `float32` used to indicate the maximum delta that can be multiplied to 
+    rs: `float32` used to indicate the maximum delta that can be multiplied to
       the saturation.
-    rv: `float32` used to indicate the maximum delta that can be multiplied to 
+    rv: `float32` used to indicate the maximum delta that can be multiplied to
       the brightness.
     seed: `Optional[int]` for the seed to use in the random number generation.
-    darknet: `bool` indicating whether the model was originally built in the 
+    darknet: `bool` indicating whether the model was originally built in the
       Darknet or PyTorch library.
-  
+
   Returns:
     The HSV altered image in the same datatype as the input image.
   """
@@ -210,32 +235,32 @@ def image_rand_hsv(image, rh, rs, rv, seed=None, darknet=False):
 
 def mosaic_cut(image, original_width, original_height, width, height, center,
                ptop, pleft, pbottom, pright, shiftx, shifty):
-  """Generates a random center location to use for the mosaic operation. 
-  
-  Given a center location, cuts the input image into a slice that will be 
-  concatenated with other slices with the same center in order to construct 
-  a final mosaicked image. 
-  
-  Args: 
+  """Generates a random center location to use for the mosaic operation.
+
+  Given a center location, cuts the input image into a slice that will be
+  concatenated with other slices with the same center in order to construct
+  a final mosaicked image.
+
+  Args:
     image: `Tensor` of shape [None, None, 3] that needs to be altered.
-    ow: `float` value indicating the original width of the image.
-    oh: `float` value indicating the original height of the image.
-    w: `float` value indicating the final width of the image.
-    h: `float` value indicating the final height of the image.
-    center: `float` value indicating the desired center of the final patched 
+    original_width: `float` value indicating the original width of the image.
+    original_height: `float` value indicating the original height of the image.
+    width: `float` value indicating the final width of the image.
+    height: `float` value indicating the final height of the image.
+    center: `float` value indicating the desired center of the final patched
       image.
     ptop: `float` value indicating the top of the image without padding.
-    pleft: `float` value indicating the left of the image without padding. 
-    pbottom: `float` value indicating the bottom of the image without padding. 
-    pright: `float` value indicating the right of the image without padding. 
-    shiftx: `float` 0.0 or 1.0 value indicating if the image is on the 
-      left or right.
-    shifty: `float` 0.0 or 1.0 value indicating if the image is at the 
-      top or bottom.
-  
+    pleft: `float` value indicating the left of the image without padding.
+    pbottom: `float` value indicating the bottom of the image without padding.
+    pright: `float` value indicating the right of the image without padding.
+    shiftx: `float` 0.0 or 1.0 value indicating if the image is on the left or
+      right.
+    shifty: `float` 0.0 or 1.0 value indicating if the image is at the top or
+      bottom.
+
   Returns:
     image: The cropped image in the same datatype as the input image.
-    crop_info: `float` tensor that is applied to the boxes in order to select 
+    crop_info: `float` tensor that is applied to the boxes in order to select
       the boxes still contained within the image.
   """
 
@@ -312,7 +337,7 @@ def resize_and_jitter_image(image,
                             method=tf.image.ResizeMethod.BILINEAR,
                             seed=None):
   """Resize, Pad, and distort a given input image.
-  
+
   Args:
     image: a `Tensor` of shape [height, width, 3] representing an image.
     desired_size: a `Tensor` or `int` list/tuple of two elements representing
@@ -322,15 +347,13 @@ def resize_and_jitter_image(image,
     letter_box: a `bool` representing if letterboxing should be applied.
     random_pad: a `bool` representing if random padding should be applied.
     crop_only: a `bool` representing if only cropping will be applied.
-    shiftx: a `float` indicating if the image is in the
-      left or right.
-    shifty: a `float` value indicating if the image is in the
-      top or bottom.
+    shiftx: a `float` indicating if the image is in the left or right.
+    shifty: a `float` value indicating if the image is in the top or bottom.
     cut: a `float` value indicating the desired center of the final patched
       image.
     method: function to resize input image to scaled image.
     seed: seed for random scale jittering.
-  
+
   Returns:
     image_: a `Tensor` of shape [height, width, 3] where [height, width]
       equals to `desired_size`.
@@ -347,7 +370,7 @@ def resize_and_jitter_image(image,
   """
 
   def intersection(a, b):
-    """Find the intersection between 2 crops"""
+    """Finds the intersection between 2 crops."""
     minx = tf.maximum(a[0], b[0])
     miny = tf.maximum(a[1], b[1])
     maxx = tf.minimum(a[2], b[2])
@@ -358,7 +381,7 @@ def resize_and_jitter_image(image,
     return [tf.cast(value, dtype) for value in values]
 
   if jitter > 0.5 or jitter < 0:
-    raise Exception('maximum change in aspect ratio must be between 0 and 0.5')
+    raise ValueError('maximum change in aspect ratio must be between 0 and 0.5')
 
   with tf.name_scope('resize_and_jitter_image'):
     # Cast all parameters to a usable float data type.
@@ -384,9 +407,9 @@ def resize_and_jitter_image(image,
         -jitter_height, jitter_height, jitter_height.dtype, seed=seed)
 
     # Letter box the image.
-    if letter_box == True or letter_box is None:
-      (image_aspect_ratio, 
-      input_aspect_ratio) = original_width / original_height, width / height
+    if letter_box:
+      (image_aspect_ratio,
+       input_aspect_ratio) = original_width / original_height, width / height
       distorted_aspect = image_aspect_ratio / input_aspect_ratio
 
       delta_h, delta_w = 0.0, 0.0
@@ -395,13 +418,6 @@ def resize_and_jitter_image(image,
         delta_h = ((original_width / input_aspect_ratio) - original_height) / 2
       else:
         delta_w = ((original_height * input_aspect_ratio) - original_width) / 2
-
-      if letter_box is None:
-        rwidth = original_width + delta_w + delta_w
-        rheight = original_height + delta_h + delta_h
-        if rheight < height and rwidth < width:
-          pullin_h = ((height - rheight) * rheight / height) / 2
-          pullin_w = ((width - rwidth) * rwidth / width) / 2
 
       ptop = ptop - delta_h - pullin_h
       pbottom = pbottom - delta_h - pullin_h
@@ -542,13 +558,13 @@ def _build_transform(image,
 
   # Compute a random prespective change to apply.
   prespective_warp = tf.eye(3)
-  Px = random_uniform_strong(-perspective, perspective, seed=seed)
-  Py = random_uniform_strong(-perspective, perspective, seed=seed)
+  px = random_uniform_strong(-perspective, perspective, seed=seed)
+  py = random_uniform_strong(-perspective, perspective, seed=seed)
   prespective_warp = tf.tensor_scatter_nd_update(prespective_warp,
-                                                 [[2, 0], [2, 1]], [Px, Py])
+                                                 [[2, 0], [2, 1]], [px, py])
   prespective_warp_boxes = tf.tensor_scatter_nd_update(prespective_warp,
                                                        [[2, 0], [2, 1]],
-                                                       [-Px, -Py])
+                                                       [-px, -py])
 
   # Compute a random scaling to apply.
   scale = tf.eye(3, dtype=tf.float32)
@@ -562,30 +578,30 @@ def _build_transform(image,
     # The image is contained within the image and arbitrarily translated to
     # locations with in the image.
     center = center_boxes = tf.eye(3, dtype=tf.float32)
-    Tx = random_uniform_strong(-1, 0, seed=seed) * (cw / s - width)
-    Ty = random_uniform_strong(-1, 0, seed=seed) * (ch / s - height)
+    tx = random_uniform_strong(-1, 0, seed=seed) * (cw / s - width)
+    ty = random_uniform_strong(-1, 0, seed=seed) * (ch / s - height)
   else:
     # The image can be translated outside of the output resolution window
     # but the image is translated relative to the output resolution not the
     # input image resolution.
-    Tx = random_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
-    Ty = random_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
+    tx = random_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
+    ty = random_uniform_strong(0.5 - translate, 0.5 + translate, seed=seed)
 
     # Center and Scale the image such that the window of translation is
     # contained to the output resolution.
     dx, dy = (width - cw / s) / width, (height - ch / s) / height
     sx, sy = 1 - dx, 1 - dy
     bx, by = dx / 2, dy / 2
-    Tx, Ty = bx + (sx * Tx), by + (sy * Ty)
+    tx, ty = bx + (sx * tx), by + (sy * ty)
 
     # Scale the translation to width and height of the image.
-    Tx *= width
-    Ty *= height
+    tx *= width
+    ty *= height
 
   translation = tf.tensor_scatter_nd_update(translation, [[0, 2], [1, 2]],
-                                            [Tx, Ty])
+                                            [tx, ty])
   translation_boxes = tf.tensor_scatter_nd_update(translation, [[0, 2], [1, 2]],
-                                                  [-Tx, -Ty])
+                                                  [-tx, -ty])
 
   # Use repeated matric multiplications to combine all the image transforamtions
   # into a single unified augmentation operation M is applied to the image
@@ -609,27 +625,27 @@ def affine_warp_image(image,
                       random_pad=False,
                       seed=None):
   """Applies random spatial augmentation to the image.
- 
-  Args: 
+
+  Args:
     image: A `Tensor` for the image.
     desired_size: A `tuple` for desired output image size.
     perspective: An `int` for the maximum that can be applied to random
       perspective change.
     degrees: An `int` for the maximum degrees that can be applied to random
       rotation.
-    scale_min: An `int` for the minimum scaling factor that can be
-      applied to random scaling.
-    scale_max: An `int` for the maximum scaling factor that can be
-      applied to random scaling.
+    scale_min: An `int` for the minimum scaling factor that can be applied to
+      random scaling.
+    scale_max: An `int` for the maximum scaling factor that can be applied to
+      random scaling.
     translate: An `int` for the maximum translation that can be applied to
       random translation.
     random_pad: A `bool` for using random padding.
     seed: An `Optional[int]` for the seed to use in random number generation.
- 
+
   Returns:
     image: A `Tensor` representing the augmented image.
     affine_matrix: A `Tensor` representing the augmenting matrix for the image.
-    affine_info: A `List` containing the size of the original image, the desired 
+    affine_info: A `List` containing the size of the original image, the desired
       output_size of the image and the augmenting matrix for the boxes.
   """
 
@@ -661,29 +677,29 @@ def affine_warp_image(image,
   return image, affine_matrix, affine_info
 
 
-# ops for box clipping and cleaning
 def affine_warp_boxes(affine, boxes, output_size, box_history):
-  """Applies random rotation, random perspective change and random translation 
+  """Applies random rotation, random perspective change and random translation.
+
   and random scaling to the boxes.
- 
+
   Args:
-    Mb: A `Tensor` for the augmenting matrix for the boxes.
+    affine: A `Tensor` for the augmenting matrix for the boxes.
     boxes: A `Tensor` for the boxes.
-    output_size: A `list` of two integers, a two-element vector or a tensor 
-      such that all but the last dimensions are `broadcastable` to `boxes`. 
-      The last dimension is 2, which represents [height, width].
+    output_size: A `list` of two integers, a two-element vector or a tensor such
+      that all but the last dimensions are `broadcastable` to `boxes`. The last
+      dimension is 2, which represents [height, width].
     box_history: A `Tensor` for the boxes history, which are the boxes that
-    	undergo the same augmentations as `boxes`, but no clipping was applied.
-    	We can keep track of how much changes are done to the boxes by keeping
-    	track of this tensor.
-  
+      undergo the same augmentations as `boxes`, but no clipping was applied. We
+      can keep track of how much changes are done to the boxes by keeping track
+      of this tensor.
+
   Returns:
     clipped_boxes: A `Tensor` representing the augmented boxes.
     box_history: A `Tensor` representing the augmented box_history.
   """
 
   def _get_corners(box):
-    """Get the corner of each box as a tuple of (x, y) coordinates"""
+    """Get the corner of each box as a tuple of (x, y) coordinates."""
     ymi, xmi, yma, xma = tf.split(box, 4, axis=-1)
     tl = tf.concat([xmi, ymi], axis=-1)
     bl = tf.concat([xmi, yma], axis=-1)
@@ -692,8 +708,7 @@ def affine_warp_boxes(affine, boxes, output_size, box_history):
     return tf.concat([tl, bl, tr, br], axis=-1)
 
   def _corners_to_boxes(corner):
-    """Convert (x, y) corner tuples back into boxes in the format
-    [ymin, xmin, ymax, xmax]"""
+    """Convert (x, y) corners back into boxes [ymin, xmin, ymax, xmax]."""
     corner = tf.reshape(corner, [-1, 4, 2])
     y = corner[..., 1]
     x = corner[..., 0]
@@ -704,8 +719,7 @@ def affine_warp_boxes(affine, boxes, output_size, box_history):
     return tf.stack([y_min, x_min, y_max, x_max], axis=-1)
 
   def _aug_boxes(affine_matrix, box):
-    """Apply an affine transformation matrix M to the boxes to get the 
-    randomly augmented boxes"""
+    """Apply an affine transformation matrix M to the boxes augment boxes."""
     corners = _get_corners(box)
     corners = tf.reshape(corners, [-1, 4, 2])
     z = tf.expand_dims(tf.ones_like(corners[..., 1]), axis=-1)
@@ -732,19 +746,18 @@ def boxes_candidates(clipped_boxes,
                      wh_thr=2,
                      ar_thr=20,
                      area_thr=0.1):
-  """Filters the boxes and keeps the boxes that satisfy thewidth/height and 
-  area constraints.
- 
+  """Filters the boxes that don't satisfy the width/height and area constraints.
+
   Args:
     clipped_boxes: A `Tensor` for the boxes.
     box_history: A `Tensor` for the boxes history, which are the boxes that
-    	undergo the same augmentations as `boxes`, but no clipping was applied.
-    	We can keep track of how much changes are done to the boxes by keeping
-    	track of this tensor.
+      undergo the same augmentations as `boxes`, but no clipping was applied. We
+      can keep track of how much changes are done to the boxes by keeping track
+      of this tensor.
     wh_thr: An `int` for the width/height threshold.
     ar_thr: An `int` for the aspect ratio threshold.
     area_thr: An `int` for the area threshold.
-  
+
   Returns:
     indices[:, 0]: A `Tensor` representing valid boxes after filtering.
   """
@@ -787,7 +800,7 @@ def boxes_candidates(clipped_boxes,
 
 def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
   """Resizes and crops the boxes.
- 
+
   Args:
     boxes: A `Tensor` for the boxes.
     image_scale: A `Tensor` for the scaling factor of the image.
@@ -796,10 +809,10 @@ def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
       dimension is 2, which represents [height, width].
     offset: A `Tensor` for how much translation was applied to the image.
     box_history: A `Tensor` for the boxes history, which are the boxes that
-      undergo the same augmentations as `boxes`, but no clipping was applied.
-      We can keep track of how much changes are done to the boxes by keeping
-      track of this tensor.
-  
+      undergo the same augmentations as `boxes`, but no clipping was applied. We
+      can keep track of how much changes are done to the boxes by keeping track
+      of this tensor.
+
   Returns:
     clipped_boxes: A `Tensor` representing the augmented boxes.
     box_history: A `Tensor` representing the augmented box_history.
@@ -819,23 +832,23 @@ def resize_and_crop_boxes(boxes, image_scale, output_size, offset, box_history):
 
 
 def transform_and_clip_boxes(boxes,
-                infos,
-                affine=None,
-                shuffle_boxes=False,
-                area_thresh=0.1,
-                seed=None,
-                augment=True):
+                             infos,
+                             affine=None,
+                             shuffle_boxes=False,
+                             area_thresh=0.1,
+                             seed=None,
+                             augment=True):
   """Clips and cleans the boxes.
- 
+
   Args:
     boxes: A `Tensor` for the boxes.
-    image_scale: A `list` that contains the information of the image.
+    infos: A `list` that contains the image infos.
     affine: A `list` that contains parameters for resize and crop.
     shuffle_boxes: A `bool` for shuffling the boxes.
     area_thresh: An `int` for the area threshold.
     seed: seed for random number generation.
     augment: A `bool` for clipping the boxes to [0, 1].
-  
+
   Returns:
     boxes: A `Tensor` representing the augmented boxes.
     ind: A `Tensor` valid box indices.
@@ -871,10 +884,8 @@ def transform_and_clip_boxes(boxes,
     # Shift and scale all boxes, and keep track of box history with no
     # box clipping, history is used for removing boxes that have become
     # too small or exit the image area.
-    (
-        boxes,  # Clipped final boxes. 
-        box_history) = resize_and_crop_boxes(
-            boxes, info[2, :], info[1, :], info[3, :], box_history=box_history)
+    (boxes, box_history) = resize_and_crop_boxes(
+        boxes, info[2, :], info[1, :], info[3, :], box_history=box_history)
 
     # Get all the boxes that still remain in the image and store
     # in a bit vector for later use.
@@ -890,10 +901,9 @@ def transform_and_clip_boxes(boxes,
     boxes = bbox_ops.denormalize_boxes(boxes, affine[0])
     box_history = bbox_ops.denormalize_boxes(box_history, affine[0])
 
-    (
-        boxes,  # Clipped final boxes. 
-        box_history) = affine_warp_boxes(
-            affine[2], boxes, affine[1], box_history=box_history)
+    # Clipped final boxes.
+    (boxes, box_history) = affine_warp_boxes(
+        affine[2], boxes, affine[1], box_history=box_history)
 
     # Get all the boxes that still remain in the image and store
     # in a bit vector for later use.

@@ -108,6 +108,7 @@ class YoloFPN(tf.keras.layers.Layer):
       activation: `str`, the activation function to use typically leaky or mish.
       fpn_filter_scale: `int`, scaling factor for the FPN filters.
       use_sync_bn: if True, use synchronized batch normalization.
+      use_separable_conv: `bool` whether to use separable convs.
       norm_momentum: `float`, normalization momentum for the moving average.
       norm_epsilon: `float`, small float added to variance to avoid dividing by
         zero.
@@ -229,7 +230,7 @@ class YoloFPN(tf.keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class YoloPAN(tf.keras.layers.Layer):
-  """YOLO Path Aggregation Network"""
+  """YOLO Path Aggregation Network."""
 
   def __init__(self,
                path_process_len=6,
@@ -259,6 +260,7 @@ class YoloPAN(tf.keras.layers.Layer):
       csp_stack: `bool`, CSPize the FPN.
       activation: `str`, the activation function to use typically leaky or mish.
       use_sync_bn: if True, use synchronized batch normalization.
+      use_separable_conv: `bool` whether to use separable convs.
       norm_momentum: `float`, normalization omentum for the moving average.
       norm_epsilon: `float`, small float added to variance to avoid dividing
         by zero.
@@ -383,7 +385,7 @@ class YoloPAN(tf.keras.layers.Layer):
 
     Args:
       minimum_depth: `int` depth of the smallest branch of the FPN.
-      inputs: `dict[str, tf.InputSpec]` of the shape of input args as a 
+      inputs: `dict[str, tf.InputSpec]` of the shape of input args as a
         dictionary of lists.
 
     Returns:
@@ -439,9 +441,9 @@ class YoloDecoder(tf.keras.Model):
                kernel_regularizer=None,
                bias_regularizer=None,
                **kwargs):
-    """Yolo Decoder initialization function. 
-    
-    A unified model that ties all decoder components into a conditionally build 
+    """Yolo Decoder initialization function.
+
+    A unified model that ties all decoder components into a conditionally build
     YOLO decoder.
 
     Args:
@@ -450,8 +452,8 @@ class YoloDecoder(tf.keras.Model):
       use_fpn: `bool`, use the FPN found in the YoloV4 model.
       use_spatial_attention: `bool`, use the spatial attention module.
       csp_stack: `bool`, CSPize the FPN.
-      fpn_depth: `int`, number of layers ot use in each FPN path
-        if you choose to use an FPN.
+      fpn_depth: `int`, number of layers ot use in each FPN path if you choose
+        to use an FPN.
       fpn_filter_scale: `int`, scaling factor for the FPN filters.
       path_process_len: `int`, number of layers ot use in each Decoder path.
       max_level_process_len: `int`, number of layers ot use in the largest
@@ -459,6 +461,7 @@ class YoloDecoder(tf.keras.Model):
       embed_spp: `bool`, use the SPP found in the YoloV3 and V4 model.
       activation: `str`, the activation function to use typically leaky or mish.
       use_sync_bn: if True, use synchronized batch normalization.
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: `float`, normalization omentum for the moving average.
       norm_epsilon: `float`, small float added to variance to avoid dividing by
         zero.

@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """Contains common building blocks for yolo neural networks."""
 from typing import Callable, List, Tuple
 import tensorflow as tf
+import logging
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
-from absl import logging
 
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
@@ -81,6 +80,7 @@ class ConvBN(tf.keras.layers.Layer):
         bias.
       kernel_regularizer: string to indicate which function to use to
         regularizer weights.
+      use_separable_conv: `bool` wether to use separable convs.
       use_bn: boolean for whether to use batch normalization.
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
@@ -100,20 +100,14 @@ class ConvBN(tf.keras.layers.Layer):
     self._padding = padding
     self._dilation_rate = dilation_rate
 
-    if kernel_initializer == "VarianceScaling":
+    if kernel_initializer == 'VarianceScaling':
       # to match pytorch initialization method
       self._kernel_initializer = tf.keras.initializers.VarianceScaling(
           scale=1 / 3, mode='fan_in', distribution='uniform')
     else:
       self._kernel_initializer = kernel_initializer
 
-    if bias_initializer == "VarianceScaling":
-      # to match pytorch initialization method
-      self._bias_initializer = tf.keras.initializers.VarianceScaling(
-          scale=1 / 3, mode='fan_in', distribution='uniform')
-    else:
-      self._bias_initializer = bias_initializer
-
+    self._bias_initializer = bias_initializer
     self._kernel_regularizer = kernel_regularizer
 
     self._bias_regularizer = bias_regularizer
@@ -148,7 +142,8 @@ class ConvBN(tf.keras.layers.Layer):
     # activation params
     self._activation = activation
     self._leaky_alpha = leaky_alpha
-    self._fuse = False 
+    self._fuse = False
+
     super().__init__(**kwargs)
 
   def build(self, input_shape):
@@ -190,7 +185,7 @@ class ConvBN(tf.keras.layers.Layer):
 
   def fuse(self):
     if self.bn is not None and not self._use_separable_conv:
-      # Fuse convolution and batchnorm 
+      # Fuse convolution and batchnorm, gives me +2 to 3 FPS 2ms latency.
       # layers: https://tehnokv.com/posts/fusing-batchnorm-and-conv/
       if self._fuse:
         return
@@ -237,7 +232,7 @@ class ConvBN(tf.keras.layers.Layer):
         'kernel_regularizer': self._kernel_regularizer,
         'use_bn': self._use_bn,
         'use_sync_bn': self._use_sync_bn,
-        'use_separable_conv': self._use_separable_conv, 
+        'use_separable_conv': self._use_separable_conv,
         'norm_momentum': self._norm_momentum,
         'norm_epsilon': self._norm_epsilon,
         'activation': self._activation,
@@ -288,6 +283,7 @@ class DarkResidual(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics.
         of all batch norm layers to the models global statistics
         (across all input batches).
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: float for moment to use for batch normalization.
       norm_epsilon: float for batch normalization epsilon.
       activation: string or None for activation function to use in layer,
@@ -461,6 +457,7 @@ class CSPTiny(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
         (across all input batches).
+      use_separable_conv: `bool` wether to use separable convs.
       group_id: integer for which group of features to pass through the csp
         tiny stack.
       groups: integer for how many splits there should be in the convolution
@@ -621,6 +618,7 @@ class CSPRoute(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
         (across all input batches).
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: float for moment to use for batch normalization.
       norm_epsilon: float for batch normalization epsilon.
       downsample: down_sample the input.
@@ -755,6 +753,7 @@ class CSPConnect(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global
         statistics (across all input batches).
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: float for moment to use for batch normalization.
       norm_epsilon: float for batch normalization epsilon.
       leaky_alpha: `float`, for leaky alpha value.
@@ -859,9 +858,10 @@ class CSPStack(tf.keras.layers.Layer):
     """CSPStack layer initializer.
 
     Args:
+      filters: filter size for conv layers.
       model_to_wrap: callable Model or a list of callable objects that will
-        process the output of CSPRoute, and be input into CSPConnect.
-        list will be called sequentially.
+        process the output of CSPRoute, and be input into CSPConnect. list will
+        be called sequentially.
       filter_scale: integer dictating (filters//2) or the number of filters in
         the partial feature stack.
       activation: string for activation function to use in layer.
@@ -875,9 +875,10 @@ class CSPStack(tf.keras.layers.Layer):
         regularizer weights.
       downsample: down_sample the input.
       use_bn: boolean for whether to use batch normalization.
-      use_sync_bn: boolean for whether sync batch normalization statistics
-        of all batch norm layers to the models global statistics
-        (across all input batches).
+      use_sync_bn: boolean for whether sync batch normalization statistics of
+        all batch norm layers to the models global statistics (across all input
+        batches).
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: float for moment to use for batch normalization.
       norm_epsilon: float for batch normalization epsilon.
       **kwargs: Keyword Arguments.
@@ -981,6 +982,7 @@ class PathAggregationBlock(tf.keras.layers.Layer):
       use_sync_bn: boolean for whether sync batch normalization statistics
         of all batch norm layers to the models global statistics
         (across all input batches).
+      use_separable_conv: `bool` wether to use separable convs.
       inverted: boolean for inverting the order of the convolutions.
       norm_momentum: float for moment to use for batch normalization.
       norm_epsilon: float for batch normalization epsilon.
@@ -1475,6 +1477,7 @@ class DarkRouteProcess(tf.keras.layers.Layer):
       kernel_regularizer: string to indicate which function to use to
         regularizer weights.
       use_sync_bn: bool if true use the sync batch normalization.
+      use_separable_conv: `bool` wether to use separable convs.
       norm_momentum: batch norm parameter see Tensorflow documentation.
       norm_epsilon: batch norm parameter see Tensorflow documentation.
       block_invert: bool use for switching between the even and odd
@@ -1709,9 +1712,17 @@ class DarkRouteProcess(tf.keras.layers.Layer):
 
 
 class Reorg(tf.keras.layers.Layer):
+  """Splits a high resolution image into 4 lower resolution images.
+
+  Used in YOLOR to process very high resolution inputs efficiently.
+  for example an input image of [1280, 1280, 3] will become [640, 640, 12],
+  the images are sampled in such a way that the spatial resoltion is
+  retained.
+  """
 
   def call(self, x, training=None):
-    return tf.concat([x[..., ::2, ::2, :], 
-                      x[..., 1::2, ::2, :], 
-                      x[..., ::2, 1::2, :], 
-                      x[..., 1::2, 1::2, :]], axis = -1)
+    return tf.concat([
+        x[..., ::2, ::2, :], x[..., 1::2, ::2, :], x[..., ::2, 1::2, :],
+        x[..., 1::2, 1::2, :]
+    ],
+                     axis=-1)

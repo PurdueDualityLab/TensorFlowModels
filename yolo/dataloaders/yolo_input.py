@@ -14,107 +14,107 @@
 
 """Detection Data parser and processing for YOLO."""
 import tensorflow as tf
+
+from official.vision.beta.dataloaders import parser
+from official.vision.beta.dataloaders import utils
+from official.vision.beta.ops import box_ops as bbox_ops
+from official.vision.beta.ops import preprocess_ops
 from yolo.ops import preprocessing_ops
 from yolo.ops import anchor
-from official.vision.beta.ops import preprocess_ops
-from official.vision.beta.ops import box_ops as bbox_ops
-from official.vision.beta.dataloaders import parser, utils
 
 
 class Parser(parser.Parser):
-  """Parse the dataset in to the YOLO model format. """
+  """Parse the dataset in to the YOLO model format."""
 
-  def __init__(
-      self,
-      output_size,
-      anchors,
-      expanded_strides,
-      level_limits=None,
-      max_num_instances=200,
-      area_thresh=0.1,
-      aug_rand_hue=1.0,
-      aug_rand_saturation=1.0,
-      aug_rand_brightness=1.0,
-      letter_box=False,
-      random_pad=True,
-      random_flip=True,
-      jitter=0.0,
-      aug_scale_min=1.0,
-      aug_scale_max=1.0,
-      aug_rand_translate=0.0,
-      aug_rand_perspective=0.0,
-      aug_rand_angle=0.0,
-      anchor_t=4.0,
-      scale_xy=None,
-      best_match_only=False,
-      darknet=False,
-      use_tie_breaker=True,
-      dtype='float32',
-      seed=None):
+  def __init__(self,
+               output_size,
+               anchors,
+               expanded_strides,
+               level_limits=None,
+               max_num_instances=200,
+               area_thresh=0.1,
+               aug_rand_hue=1.0,
+               aug_rand_saturation=1.0,
+               aug_rand_brightness=1.0,
+               letter_box=False,
+               random_pad=True,
+               random_flip=True,
+               jitter=0.0,
+               aug_scale_min=1.0,
+               aug_scale_max=1.0,
+               aug_rand_translate=0.0,
+               aug_rand_perspective=0.0,
+               aug_rand_angle=0.0,
+               anchor_t=4.0,
+               scale_xy=None,
+               best_match_only=False,
+               darknet=False,
+               use_tie_breaker=True,
+               dtype='float32',
+               seed=None):
     """Initializes parameters for parsing annotations in the dataset.
 
     Args:
       output_size: `Tensor` or `List` for [height, width] of output image. The
         output_size should be divided by the largest feature stride 2^max_level.
-      anchors: `Dict[List[Union[int, float]]]` of anchor boxes to be bes used 
-        in each level. 
-      expanded_strides: `Dict[int]` for how much the model scales down the 
-        images at the largest level. For example, level 3 down samples the image 
-        by a factor of 16, in the expanded strides dictionary, we will pass 
-        along {3: 16} indicating that relative to the original image, the 
-        shapes must be reduced by a factor of 16 to compute the loss.
-      level_limits: `List` the box sizes that will be allowed at each FPN 
-        level as is done in the FCOS and YOLOX paper for anchor free box 
-        assignment.
+      anchors: `Dict[List[Union[int, float]]]` of anchor boxes to be bes used in
+        each level.
+      expanded_strides: `Dict[int]` for how much the model scales down the
+        images at the largest level. For example, level 3 down samples the image
+        by a factor of 16, in the expanded strides dictionary, we will pass
+        along {3: 16} indicating that relative to the original image, the shapes
+          must be reduced by a factor of 16 to compute the loss.
+      level_limits: `List` the box sizes that will be allowed at each FPN level
+        as is done in the FCOS and YOLOX paper for anchor free box assignment.
       max_num_instances: `int` for the number of boxes to compute loss on.
-      area_thresh: `float` for the minimum area of a box to allow to pass 
+      area_thresh: `float` for the minimum area of a box to allow to pass
         through for optimization.
-      aug_rand_hue: `float` indicating the maximum scaling value for 
-        hue. saturation will be scaled between 1 - value and 1 + value.
-      aug_rand_saturation: `float` indicating the maximum scaling value for 
+      aug_rand_hue: `float` indicating the maximum scaling value for hue.
+        saturation will be scaled between 1 - value and 1 + value.
+      aug_rand_saturation: `float` indicating the maximum scaling value for
         saturation. saturation will be scaled between 1/value and value.
-      aug_rand_brightness: `float` indicating the maximum scaling value for 
+      aug_rand_brightness: `float` indicating the maximum scaling value for
         brightness. brightness will be scaled between 1/value and value.
-      letter_box: `boolean` indicating whether upon start of the datapipeline 
-        regardless of the preprocessing ops that are used, the aspect ratio of 
-        the images should be preserved.  
-      random_pad: `bool` indiccating wether to use padding to apply random 
+      letter_box: `boolean` indicating whether upon start of the datapipeline
+        regardless of the preprocessing ops that are used, the aspect ratio of
+        the images should be preserved.
+      random_pad: `bool` indiccating wether to use padding to apply random
         translation true for darknet yolo false for scaled yolo.
-      random_flip: `boolean` indicating whether or not to randomly flip the 
-        image horizontally. 
-      jitter: `float` for the maximum change in aspect ratio expected in 
-        each preprocessing step.
-      aug_scale_min: `float` indicating the minimum scaling value for image 
-        scale jitter. 
-      aug_scale_max: `float` indicating the maximum scaling value for image 
+      random_flip: `boolean` indicating whether or not to randomly flip the
+        image horizontally.
+      jitter: `float` for the maximum change in aspect ratio expected in each
+        preprocessing step.
+      aug_scale_min: `float` indicating the minimum scaling value for image
         scale jitter.
-      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum 
+      aug_scale_max: `float` indicating the maximum scaling value for image
+        scale jitter.
+      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum
         amount to randomly translate an image.
-      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
-        how much to prespective warp the image.
-      aug_rand_angle: `float` indicating the maximum angle value for 
-        angle. angle will be changes between 0 and value.
-      anchor_t: `float` indicating the threshold over which an anchor will be 
+      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating how
+        much to prespective warp the image.
+      aug_rand_angle: `float` indicating the maximum angle value for angle.
+        angle will be changes between 0 and value.
+      anchor_t: `float` indicating the threshold over which an anchor will be
         considered for prediction, at zero, all the anchors will be used and at
-        1.0 only the best will be used. for anchor thresholds larger than 1.0 
-        we stop using the IOU for anchor comparison and resort directly to 
-        comparing the width and height, this is used for the scaled models.  
-      scale_xy: dictionary `float` values inidcating how far each pixel can see 
-        outside of its containment of 1.0. a value of 1.2 indicates there is a 
-        20% extended radius around each pixel that this specific pixel can 
-        predict values for a center at. the center can range from 0 - value/2 
-        to 1 + value/2, this value is set in the yolo filter, and resused here. 
-        there should be one value for scale_xy for each level from min_level to 
+        1.0 only the best will be used. for anchor thresholds larger than 1.0 we
+        stop using the IOU for anchor comparison and resort directly to
+        comparing the width and height, this is used for the scaled models.
+      scale_xy: dictionary `float` values inidcating how far each pixel can see
+        outside of its containment of 1.0. a value of 1.2 indicates there is a
+        20% extended radius around each pixel that this specific pixel can
+        predict values for a center at. the center can range from 0 - value/2 to
+        1 + value/2, this value is set in the yolo filter, and resused here.
+        there should be one value for scale_xy for each level from min_level to
         max_level.
-      best_match_only: `boolean` indicating how boxes are selected for 
-        optimization.  
-      darknet: `boolean` indicating which data pipeline to use. Setting to True 
-        swaps the pipeline to output images realtive to Yolov4 and older. 
-      use_tie_breaker: `boolean` indicating whether to use the anchor threshold 
+      best_match_only: `boolean` indicating how boxes are selected for
+        optimization.
+      darknet: `boolean` indicating which data pipeline to use. Setting to True
+        swaps the pipeline to output images realtive to Yolov4 and older.
+      use_tie_breaker: `boolean` indicating whether to use the anchor threshold
         value.
-      dtype: `str` indicating the output datatype of the datapipeline selecting 
+      dtype: `str` indicating the output datatype of the datapipeline selecting
         from {"float32", "float16", "bfloat16"}.
-      seed: `int` the seed for random number generation. 
+      seed: `int` the seed for random number generation.
     """
     for key in anchors:
       # Assert that the width and height is viable
@@ -153,16 +153,16 @@ class Parser(parser.Parser):
     self._dtype = dtype
 
     self._label_builder = anchor.YoloAnchorLabeler(
-      anchors = anchors, 
-      anchor_free_level_limits = level_limits,
-      level_strides=expanded_strides, 
-      center_radius=scale_xy, 
-      max_num_instances=max_num_instances,
-      match_threshold=anchor_t, 
-      best_matches_only=best_match_only,
-      use_tie_breaker=use_tie_breaker, 
-      darknet=darknet, 
-      dtype=dtype)
+        anchors=anchors,
+        anchor_free_level_limits=level_limits,
+        level_strides=expanded_strides,
+        center_radius=scale_xy,
+        max_num_instances=max_num_instances,
+        match_threshold=anchor_t,
+        best_matches_only=best_match_only,
+        use_tie_breaker=use_tie_breaker,
+        darknet=darknet,
+        dtype=dtype)
 
   def _pad_infos_object(self, image):
     """Get a Tensor to pad the info object list."""
@@ -178,7 +178,7 @@ class Parser(parser.Parser):
   def _jitter_scale(self, image, shape, letter_box, jitter, random_pad,
                     aug_scale_min, aug_scale_max, translate, angle,
                     perspective):
-    """Distort and scale each input image"""
+    """Distort and scale each input image."""
     infos = []
     if (aug_scale_min != 1.0 or aug_scale_max != 1.0):
       crop_only = True
@@ -263,8 +263,8 @@ class Parser(parser.Parser):
         darknet=self._darknet or self._level_limits is not None)
 
     # Cast the image to the selcted datatype.
-    image, labels = self._build_label(image, boxes, classes, 
-                                      info, inds, data, is_training=True)
+    image, labels = self._build_label(
+        image, boxes, classes, info, inds, data, is_training=True)
     return image, labels
 
   def _parse_eval_data(self, data):
@@ -291,13 +291,7 @@ class Parser(parser.Parser):
     info = infos[-1]
 
     image, labels = self._build_label(
-        image,
-        boxes,
-        classes,
-        info,
-        inds,
-        data,
-        is_training=False)
+        image, boxes, classes, info, inds, data, is_training=False)
     return image, labels
 
   def set_shape(self, values, pad_axis=0, pad_value=0, inds=None):
@@ -307,12 +301,9 @@ class Parser(parser.Parser):
     vshape = values.get_shape().as_list()
 
     values = preprocessing_ops.pad_max_instances(
-          values,
-          self._max_num_instances,
-          pad_axis=pad_axis,
-          pad_value=pad_value)
+        values, self._max_num_instances, pad_axis=pad_axis, pad_value=pad_value)
 
-    vshape[pad_axis] = self._max_num_instances 
+    vshape[pad_axis] = self._max_num_instances
     values.set_shape(vshape)
     return values
 
@@ -324,7 +315,7 @@ class Parser(parser.Parser):
                    inds,
                    data,
                    is_training=True):
-    """Label construction for both the train and eval data. """
+    """Label construction for both the train and eval data."""
     width = self._image_w
     height = self._image_h
 
@@ -334,11 +325,9 @@ class Parser(parser.Parser):
     image.set_shape(imshape)
     
     labels = dict()
-    (labels['inds'], 
-    labels['upds'], labels['true_conf']) = self._label_builder(gt_boxes, 
-                                                               gt_classes, 
-                                                               width, 
-                                                               height)
+    (labels['inds'], labels['upds'],
+     labels['true_conf']) = self._label_builder(gt_boxes, gt_classes, width,
+                                                height)
 
     # Set/fix the boxes shape.
     boxes = self.set_shape(gt_boxes, pad_axis=0, pad_value=0)
@@ -364,8 +353,8 @@ class Parser(parser.Parser):
           'boxes': gt_boxes,
           'classes': gt_classes,
           'areas': tf.gather(data['groundtruth_area'], inds),
-          'is_crowds': tf.cast(
-            tf.gather(data['groundtruth_is_crowd'], inds), tf.int32),
+          'is_crowds':
+              tf.cast(tf.gather(data['groundtruth_is_crowd'], inds), tf.int32),
       }
       groundtruths['source_id'] = utils.process_source_id(
           groundtruths['source_id'])
@@ -373,5 +362,3 @@ class Parser(parser.Parser):
           groundtruths, self._max_num_instances)
       labels['groundtruths'] = groundtruths
     return image, labels
-
-

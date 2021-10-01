@@ -102,7 +102,7 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
+  init_checkpoint: 'gs://cam2-models/darknet/tpu/swin-baseline-3'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:

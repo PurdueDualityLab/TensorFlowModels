@@ -27,18 +27,18 @@ from official.core import task_factory
 from yolo.run import load_model
 from yolo.utils.run_utils import prep_gpu
 
-prep_gpu()
+# prep_gpu()
 
 
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
-  experiment = "yolo_darknet"
-  # experiment = "scaled_yolo"
+  # experiment = "yolo_darknet"
+  experiment = "scaled_yolo"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-dga.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-letter.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]
 
   config = train_utils.ParseConfigOptions(
       experiment=experiment, config_file=config_path)

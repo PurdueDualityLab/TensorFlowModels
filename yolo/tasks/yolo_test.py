@@ -1,3 +1,7 @@
+from official.modeling.optimization import configs
+from official.common import registry_imports
+from yolo.common import registry_imports
+
 from yolo.tasks import yolo
 import orbit
 from official.core import exp_factory
@@ -5,34 +9,39 @@ from official.modeling import optimization
 
 import tensorflow as tf
 from absl.testing import parameterized
-from yolo.utils.run_utils import prep_gpu
-# try:
-#   prep_gpu()
-# except BaseException:
-#   print("GPUs ready")
+from official.core import train_utils
 
 
 class YoloTaskTest(tf.test.TestCase, parameterized.TestCase):
 
-  @parameterized.parameters(("yolo_v4_coco",))
+  @parameterized.parameters(("scaled_yolo",))
   def test_task(self, config_name):
+    config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
     config = exp_factory.get_exp_config(config_name)
-    config.task.train_data.global_batch_size = 2
+
+    config = train_utils.ParseConfigOptions(
+        experiment=config_name, config_file=config_path)
+    config = train_utils.parse_configuration(config)
+
+    config.trainer.optimizer_config.ema = None
+    config.task.train_data.global_batch_size = 1
+    config.task.validation_data.global_batch_size = 1
 
     task = yolo.YoloTask(config.task)
     model = task.build_model()
     metrics = task.build_metrics(training=False)
     strategy = tf.distribute.get_strategy()
 
-    dataset = orbit.utils.make_distributed_dataset(strategy, task.build_inputs,
+    train = orbit.utils.make_distributed_dataset(strategy, task.build_inputs,
                                                    config.task.train_data)
-
-    iterator = iter(dataset)
-    opt_factory = optimization.OptimizerFactory(config.trainer.optimizer_config)
-    optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
-    logs = task.train_step(next(iterator), model, optimizer, metrics=metrics)
+    test = orbit.utils.make_distributed_dataset(strategy, task.build_inputs,
+                                                   config.task.validation_data)
+    train = iter(train)
+    test = iter(test)
+    optimizer = task.create_optimizer(config.trainer.optimizer_config)
+    logs = task.train_step(next(train), model, optimizer, metrics=metrics)
     self.assertIn("loss", logs)
-    logs = task.validation_step(next(iterator), model, metrics=metrics)
+    logs = task.validation_step(next(test), model, metrics=metrics)
     self.assertIn("loss", logs)
 
 

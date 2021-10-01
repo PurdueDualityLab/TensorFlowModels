@@ -38,9 +38,9 @@ class Mosaic:
                aug_rand_perspective=0.0,
                aug_rand_translate=0.0,
                random_pad=False,
-               random_flip=False, 
+               random_flip=False,
                area_thresh=0.1,
-               pad_value=preprocessing_ops.PAD_VALUE, 
+               pad_value=preprocessing_ops.PAD_VALUE,
                seed=None):
     """Initializes parameters for mosaic.
 
@@ -48,33 +48,35 @@ class Mosaic:
       output_size: `Tensor` or `List` for [height, width] of output image.
       mosaic_frequency: `float` indicating how often to apply mosaic.
       mixup_frequency: `float` indicating how often to apply mixup.
-      letter_box: `boolean` indicating whether upon start of the datapipeline 
-        regardless of the preprocessing ops that are used, the aspect ratio of 
-        the images should be preserved.  
-      jitter: `float` for the maximum change in aspect ratio expected in 
-        each preprocessing step.
-      mosaic_crop_mode: `str` they type of mosaic to apply. The options are 
-        {crop, scale, None}, crop will construct a mosaic by slicing images 
-        togther, scale will create a mosaic by concatnating and shifting the 
-        image, and None will default to scale and apply no post processing to 
-        the created mosaic.  
-      mosaic_center: `float` indicating how much to randomly deviate from the 
+      letter_box: `boolean` indicating whether upon start of the datapipeline
+        regardless of the preprocessing ops that are used, the aspect ratio of
+        the images should be preserved.
+      jitter: `float` for the maximum change in aspect ratio expected in each
+        preprocessing step.
+      mosaic_crop_mode: `str` they type of mosaic to apply. The options are
+        {crop, scale, None}, crop will construct a mosaic by slicing images
+        togther, scale will create a mosaic by concatnating and shifting the
+        image, and None will default to scale and apply no post processing to
+        the created mosaic.
+      mosaic_center: `float` indicating how much to randomly deviate from the
         from the center of the image when creating a mosaic.
-      aug_scale_min: `float` indicating the minimum scaling value for image 
-        scale jitter. 
-      aug_scale_max: `float` indicating the maximum scaling value for image 
+      aug_scale_min: `float` indicating the minimum scaling value for image
         scale jitter.
-      aug_rand_angle: `float` indicating the maximum angle value for 
-        angle. angle will be changes between 0 and value.
-      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum 
+      aug_scale_max: `float` indicating the maximum scaling value for image
+        scale jitter.
+      aug_rand_angle: `float` indicating the maximum angle value for angle.
+        angle will be changes between 0 and value.
+      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating how
+        much to prespective warp the image.
+      aug_rand_translate: `float` ranging from 0 to 1 indicating the maximum
         amount to randomly translate an image.
-      aug_rand_perspective: `float` ranging from 0.000 to 0.001 indicating 
-        how much to prespective warp the image.
-      random_pad: `bool` indiccating wether to use padding to apply random 
+      random_pad: `bool` indiccating wether to use padding to apply random
         translation true for darknet yolo false for scaled yolo.
-      area_thresh: `float` for the minimum area of a box to allow to pass 
+      random_flip: `bool` whether or not to random flip the image.
+      area_thresh: `float` for the minimum area of a box to allow to pass
         through for optimization.
-      seed: `int` the seed for random number generation. 
+      pad_value: `int` padding value.
+      seed: `int` the seed for random number generation.
     """
 
     self._output_size = output_size
@@ -98,7 +100,7 @@ class Mosaic:
     self._random_flip = random_flip
     self._pad_value = pad_value
 
-    self._deterministic = seed != None
+    self._deterministic = seed is not None
     self._seed = seed if seed is not None else random.randint(0, 2**30)
 
   def _generate_cut(self):
@@ -159,7 +161,7 @@ class Mosaic:
       image, boxes, _ = preprocess_ops.random_horizontal_flip(
           image, boxes, seed=self._seed)
 
-    #augment the image without resizing
+    # Augment the image without resizing
     image, infos, crop_points = preprocessing_ops.resize_and_jitter_image(
         image, [self._output_size[0], self._output_size[1]],
         random_pad=False,
@@ -178,16 +180,16 @@ class Mosaic:
         shuffle_boxes=False,
         augment=True,
         seed=self._seed)
-    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)
+    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)  # pylint:disable=unbalanced-tuple-unpacking
     return image, boxes, classes, is_crowd, area, crop_points
 
   def _mosaic_crop_image(self, image, boxes, classes, is_crowd, area):
     """Process a patched image in preperation for final output."""
-    if self._mosaic_crop_mode != "crop":
+    if self._mosaic_crop_mode != 'crop':
       shape = tf.cast(preprocessing_ops.get_image_shape(image), tf.float32)
       center = shape * self._mosaic_center
 
-      # shift the center of the image by applying a translation to the whole 
+      # shift the center of the image by applying a translation to the whole
       # image
       ch = tf.math.round(
           preprocessing_ops.random_uniform_strong(
@@ -204,11 +206,11 @@ class Mosaic:
       inds = box_ops.get_non_empty_box_indices(boxes)
 
       boxes = box_ops.normalize_boxes(boxes, shape[:2])
-      boxes, classes, is_crowd, area = self._select_ind(
-        inds, boxes, classes, is_crowd, area)
+      boxes, classes, is_crowd, area = self._select_ind(inds, boxes, classes,  # pylint:disable=unbalanced-tuple-unpacking
+                                                        is_crowd, area)
 
 
-    # warp and scale the fully stitched sample 
+    # warp and scale the fully stitched sample
     image, _, affine = preprocessing_ops.affine_warp_image(
         image, [self._output_size[0], self._output_size[1]],
         scale_min=self._aug_scale_min,
@@ -223,9 +225,12 @@ class Mosaic:
 
     # clip and clean boxes
     boxes, inds = preprocessing_ops.transform_and_clip_boxes(
-        boxes, None, affine=affine, area_thresh=self._area_thresh, 
+        boxes,
+        None,
+        affine=affine,
+        area_thresh=self._area_thresh,
         seed=self._seed)
-    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)
+    classes, is_crowd, area = self._select_ind(inds, classes, is_crowd, area)  # pylint:disable=unbalanced-tuple-unpacking
     return image, boxes, classes, is_crowd, area, area
 
   # mosaic full frequency doubles model speed
@@ -250,9 +255,9 @@ class Mosaic:
     return sample
 
   def _patch2(self, one, two):
-    """Stitch together 2 images in totality"""
+    """Stitch together 2 images in totality."""
     sample = one
-    sample['image'] = tf.concat([one["image"], two["image"]], axis=-2)
+    sample['image'] = tf.concat([one['image'], two['image']], axis=-2)
 
     sample['groundtruth_boxes'] = tf.concat(
         [one['groundtruth_boxes'], two['groundtruth_boxes']], axis=0)
@@ -266,7 +271,7 @@ class Mosaic:
 
   def _patch(self, one, two):
     """Build the full 4 patch of images from sets of 2 images."""
-    image = tf.concat([one["image"], two["image"]], axis=-3)
+    image = tf.concat([one['image'], two['image']], axis=-3)
     boxes = tf.concat([one['groundtruth_boxes'], two['groundtruth_boxes']],
                       axis=0)
     classes = tf.concat(
@@ -335,12 +340,12 @@ class Mosaic:
 
     if domo >= (1 - self._mixup_frequency):
       sample = one
-      otype = one["image"].dtype
+      otype = one['image'].dtype
 
       r = self._beta(8.0, 8.0)
       sample['image'] = (
-          r * tf.cast(one["image"], tf.float32) +
-          (1 - r) * tf.cast(two["image"], tf.float32))
+          r * tf.cast(one['image'], tf.float32) +
+          (1 - r) * tf.cast(two['image'], tf.float32))
 
       sample['image'] = tf.cast(sample['image'], otype)
       sample['groundtruth_boxes'] = tf.concat(
@@ -398,7 +403,7 @@ class Mosaic:
         deterministic=determ)
 
   def mosaic_fn(self, is_training=True):
-    """Determine which function to apply based on whether model is training"""
+    """Determine which function to apply based on whether model is training."""
     if is_training and self._mosaic_frequency > 0.0:
       return self._apply
     else:
