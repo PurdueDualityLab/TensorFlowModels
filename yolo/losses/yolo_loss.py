@@ -39,7 +39,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
                loss_type='ciou',
                iou_normalizer=1.0,
                cls_normalizer=1.0,
-               obj_normalizer=1.0,
+               object_normalizer=1.0,
                label_smoothing=0.0,
                objectness_smooth=True,
                update_on_repeat=False,
@@ -64,7 +64,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
       iou_normalizer: `float` for how much to scale the loss on the IOU or the
         boxes.
       cls_normalizer: `float` for how much to scale the loss on the classes.
-      obj_normalizer: `float` for how much to scale loss on the detection map.
+      object_normalizer: `float` for how much to scale loss on the detection map.
       label_smoothing: `float` for how much to smooth the loss on the classes.
       objectness_smooth: `float` for how much to smooth the loss on the
         detection map.
@@ -89,7 +89,7 @@ class YoloLossBase(object, metaclass=abc.ABCMeta):
 
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
-    self._obj_normalizer = obj_normalizer
+    self._object_normalizer = object_normalizer
     self._scale_x_y = scale_x_y
     self._max_delta = max_delta
 
@@ -371,6 +371,11 @@ class DarknetLoss(YoloLossBase):
     box_loss = tf.cast(tf.reduce_sum(box_loss, axis=1), dtype=y_pred.dtype)
 
     if self._update_on_repeat:
+      # Converts list of gound truths into a grid where repeated values
+      # are replaced by the most recent value. So some class identities may 
+      # get lost but the loss computation will be more stable. Results are 
+      # more consistent.
+       
       # Compute the sigmoid binary cross entropy for the class maps.
       class_loss = tf.reduce_mean(
           loss_utils.sigmoid_bce(
@@ -393,6 +398,9 @@ class DarknetLoss(YoloLossBase):
       class_loss = tf.cast(
           tf.reduce_sum(class_loss, axis=(1, 2, 3)), dtype=y_pred.dtype)
     else:
+      # Computes the loss while keeping the structure as a list in 
+      # order to ensure all objects are considered. In some cases can 
+      # make training more unstable but may also return higher APs. 
       pred_class = loss_utils.apply_mask(
           ind_mask, tf.gather_nd(pred_class, inds, batch_dims=1))
       class_loss = tf.keras.losses.binary_crossentropy(
@@ -405,6 +413,7 @@ class DarknetLoss(YoloLossBase):
           class_loss, tf.expand_dims(reps, axis = -1))
       class_loss = tf.cast(
           tf.reduce_sum(class_loss, axis=(1, 2)), dtype=y_pred.dtype)
+      class_loss *= self._cls_normalizer
 
     # Compute the sigmoid binary cross entropy for the confidence maps.
     bce = tf.reduce_mean(
@@ -419,7 +428,7 @@ class DarknetLoss(YoloLossBase):
 
     # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
-    conf_loss *= self._obj_normalizer
+    conf_loss *= self._object_normalizer
 
     # Add all the losses together then take the mean over the batches.
     loss = box_loss + class_loss + conf_loss
@@ -560,7 +569,7 @@ class ScaledLoss(YoloLossBase):
     # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
-    conf_loss *= self._obj_normalizer
+    conf_loss *= self._object_normalizer
 
     # Add all the losses together then take the sum over the batches.
     mean_loss = box_loss + class_loss + conf_loss
@@ -675,7 +684,7 @@ class AnchorFreeLoss(ScaledLoss):
     # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
-    conf_loss *= self._obj_normalizer
+    conf_loss *= self._object_normalizer
 
     # Add all the losses together then take the sum over the batches.
     loss = mean_loss = box_loss + class_loss + conf_loss
@@ -714,7 +723,7 @@ class YoloLoss:
                loss_types=None,
                iou_normalizers=None,
                cls_normalizers=None,
-               obj_normalizers=None,
+               object_normalizers=None,
                objectness_smooths=None,
                box_types=None,
                scale_xys=None,
@@ -744,7 +753,7 @@ class YoloLoss:
         or the boxes for each FPN path.
       cls_normalizers: `Dict[float]` for how much to scale the loss on the
         classes for each FPN path.
-      obj_normalizers: `Dict[float]` for how much to scale loss on the detection
+      object_normalizers: `Dict[float]` for how much to scale loss on the detection
         map for each FPN path.
       objectness_smooths: `Dict[float]` for how much to smooth the loss on the
         detection map for each FPN path.
@@ -785,7 +794,7 @@ class YoloLoss:
           loss_type=loss_types[key],
           iou_normalizer=iou_normalizers[key],
           cls_normalizer=cls_normalizers[key],
-          obj_normalizer=obj_normalizers[key],
+          object_normalizer=object_normalizers[key],
           box_type=box_types[key],
           objectness_smooth=objectness_smooths[key],
           max_delta=max_deltas[key],

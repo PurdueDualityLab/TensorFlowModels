@@ -341,7 +341,7 @@ class YoloLoss(object):
                loss_type="ciou",
                iou_normalizer=1.0,
                cls_normalizer=1.0,
-               obj_normalizer=1.0,
+               object_normalizer=1.0,
                objectness_smooth=True,
                use_scaled_loss=False,
                update_on_repeat=False,
@@ -376,7 +376,7 @@ class YoloLoss(object):
       iou_normalizer: `float` for how much to scale the loss on the IOU or the 
         boxes.
       cls_normalizer: `float` for how much to scale the loss on the classes.
-      obj_normalizer: `float` for how much to scale loss on the detection map.
+      object_normalizer: `float` for how much to scale loss on the detection map.
       objectness_smooth: `float` for how much to smooth the loss on the 
         detection map.
       use_reduction_sum: `bool` for whether to use the scaled loss 
@@ -423,7 +423,7 @@ class YoloLoss(object):
 
     self._iou_normalizer = iou_normalizer
     self._cls_normalizer = cls_normalizer
-    self._obj_normalizer = obj_normalizer
+    self._object_normalizer = object_normalizer
     self._scale_x_y = scale_x_y
     self._max_delta = max_delta
 
@@ -613,7 +613,7 @@ class YoloLoss(object):
     # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
     class_loss *= self._cls_normalizer
-    conf_loss *= self._obj_normalizer
+    conf_loss *= self._object_normalizer
 
     # Add all the losses together then take the sum over the batches.
     mean_loss = box_loss + class_loss + conf_loss
@@ -737,7 +737,7 @@ class YoloLoss(object):
 
     # Apply the weights to each loss.
     box_loss *= self._iou_normalizer
-    conf_loss *= self._obj_normalizer
+    conf_loss *= self._object_normalizer
 
     # Add all the losses together then take the mean over the batches.
     loss = box_loss + class_loss + conf_loss

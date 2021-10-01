@@ -34,7 +34,7 @@ task:
         'all': 1.0
       ignore_thresh:
         'all': 0.0
-      obj_normalizer: 
+      object_normalizer: 
         'all': 1.0
       box_type:
         'all': anchor_free

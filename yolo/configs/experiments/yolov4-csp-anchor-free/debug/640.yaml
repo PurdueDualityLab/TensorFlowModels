@@ -36,7 +36,7 @@ task:
         'all': 0.3
       ignore_thresh:
         'all': 0.6
-      obj_normalizer: 
+      object_normalizer: 
         '5': 0.28
         '4': 0.70
         '3': 2.80

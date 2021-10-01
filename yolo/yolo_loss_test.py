@@ -43,22 +43,22 @@ if __name__ == "__main__":
             # "yolo/configs/experiments/yolov4-tiny/inference/640.yaml"
             # "yolo/configs/experiments/yolov4-csp/inference/640.yaml"
       ],
-      model_dir='../checkpoints/512-wd-baseline-e1')
+      model_dir='')
   
 
   # optimizer = task.create_optimizer(params.trainer.optimizer_config,
   #                                   params.runtime)
 
-  # config = params.task
+  config = params.task
   # config.coco91to80 = False
-  # config.train_data.tfds_name = 'coco'
-  # config.validation_data.tfds_name = 'coco'
-  # config.train_data.tfds_split = 'train'
-  # config.validation_data.tfds_split = 'validation'
-  # config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  # config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
-  # config.train_data.input_path = ''
-  # config.validation_data.input_path = ''
+  config.train_data.tfds_name = 'coco'
+  config.validation_data.tfds_name = 'coco'
+  config.train_data.tfds_split = 'train'
+  config.validation_data.tfds_split = 'validation'
+  config.train_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  config.validation_data.tfds_data_dir = '/Users/vishnubanna/tensorflow_datasets'
+  config.train_data.input_path = ''
+  config.validation_data.input_path = ''
 
   train_data = task.build_inputs(params.task.train_data)
   test_data = task.build_inputs(params.task.validation_data)
