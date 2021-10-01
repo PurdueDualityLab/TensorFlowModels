@@ -13,8 +13,10 @@ task:
         max_level: 5
         min_level: 3
     decoder:
-      version: v3
-      type: regular
+      type: yolo_decoder
+      yolo_decoder:
+        version: v3
+        type: regular
     head:
       smart_bias: true
     detection_generator:
@@ -45,15 +47,16 @@ task:
       max_delta:
         'all': 5.0
     norm_activation:
-      activation: leaky
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
-    boxes: ['[12.0, 16.0]' ,  '[19.0, 36.0]'  , '[40.0, 28.0]',
-            '[36.0, 75.0]' ,  '[76.0, 55.0]'  , '[72.0, 146.0]', 
-            '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    anchor_boxes:
+      anchors_per_scale: 3
+      boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
+              box: [36, 75],   box: [76, 55],   box: [72, 146], 
+              box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -62,26 +65,22 @@ task:
     drop_remainder: true
     seed: 1000
     parser:
-      mosaic:
-        mosaic_frequency: 0.85
+      mosaic: 
+        mosaic_frequency: 1.0
         mixup_frequency: 0.0
-        mosaic_crop_mode: 'crop'
-        mosaic_center: 0.2
-        aug_scale_min: 0.2
-        aug_scale_max: 1.6
-        jitter: 0.3
+        mosaic_crop_mode: 'scale'
+        mosaic_center: 0.25
+        aug_scale_min: 0.1
+        aug_scale_max: 1.9
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
-      aug_rand_saturation: 1.5
-      aug_rand_brightness: 1.5
-      aug_rand_hue: 0.1
-      aug_scale_min: 0.1
-      aug_scale_max: 1.9
-      aug_rand_translate: 0.0 
-      jitter: 0.3
+      aug_rand_saturation: 0.7
+      aug_rand_brightness: 0.4
+      aug_rand_hue: 0.015
+      aug_rand_translate: 0.1
       area_thresh: 0.1
-      random_pad: True
+      random_pad: False
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
@@ -91,8 +90,8 @@ task:
     is_training: false
     drop_remainder: true
     parser:
-      max_num_instances: 200
-      letter_box: False
+      max_num_instances: 300
+      letter_box: True
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
@@ -104,7 +103,7 @@ trainer:
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
-  validation_interval: 1850 
+  validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:
     ema:
@@ -118,8 +117,8 @@ trainer:
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.949
         momentum_start: 0.949
         nesterov: True

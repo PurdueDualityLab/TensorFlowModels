@@ -13,10 +13,12 @@ task:
         max_level: 5
         min_level: 3
     decoder:
-      version: v3
-      type: regular
+      type: yolo_decoder
+      yolo_decoder:
+        version: v3
+        type: regular
     head:
-      smart_bias: false
+      smart_bias: true
     detection_generator:
       box_type:
         'all': original
@@ -50,10 +52,11 @@ task:
       norm_momentum: 0.99
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
-    boxes: ['[12.0, 16.0]' ,  '[19.0, 36.0]'  , '[40.0, 28.0]',
-            '[36.0, 75.0]' ,  '[76.0, 55.0]'  , '[72.0, 146.0]', 
-            '[142.0, 110.0]', '[192.0, 243.0]', '[459.0, 401.0]']
+    anchor_boxes:
+      anchors_per_scale: 3
+      boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
+              box: [36, 75],   box: [76, 55],   box: [72, 146], 
+              box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -63,7 +66,7 @@ task:
     seed: 1000
     parser:
       mosaic:
-        mosaic_frequency: 0.85
+        mosaic_frequency: 0.75
         mixup_frequency: 0.0
         mosaic_crop_mode: 'crop'
         mosaic_center: 0.2
@@ -95,37 +98,39 @@ task:
       letter_box: False
       use_tie_breaker: True
       anchor_thresh: 0.213
-  weight_decay: 0.0005
+  weight_decay: 0.000
   init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 300000 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
-  validation_interval: 9250
+  validation_interval: 9250 
   checkpoint_interval: 1850
   optimizer_config:
     ema:
-      average_decay: 0.9999
+      average_decay: 0.9998
       trainable_weights_only: False
       dynamic_decay: True
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [240000, 270000]
+        boundaries: [400000, 450000]
         name: PiecewiseConstantDecay
-        # values: [0.00131, 0.000131, 0.0000131] 
-        values: [0.00131, 0.0009825, 0.000655] #best
+        values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
-      type: sgd
-      sgd:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.949
+        momentum_start: 0.949
         nesterov: True
+        warmup_steps: 1000
+        weight_decay: 0.0005
+        sim_torch: true
         name: SGD
     warmup:
-      type: 'polynomial'
-      polynomial:
-        power: 4
+      type: 'linear'
+      linear:
         warmup_steps: 1000 #learning rate rises from 0 to 0.0013 over 1000 steps

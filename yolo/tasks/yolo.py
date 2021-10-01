@@ -1,8 +1,6 @@
-import tensorflow as tf
-from typing import Optional
-from collections import defaultdict
-
 from absl import logging
+import collections
+
 from official.core import base_task
 from official.core import input_reader
 from official.core import task_factory
@@ -10,25 +8,28 @@ from official.core import config_definitions
 from official.modeling import performance
 from official.vision.beta.ops import box_ops
 from official.vision.beta.evaluation import coco_evaluator
-from yolo.dataloaders import tf_example_decoder
 from official.vision.beta.dataloaders import tfds_detection_decoders
 from official.vision.beta.dataloaders import tf_example_label_map_decoder
 
 from yolo import optimization
 from yolo.ops import mosaic
 from yolo.ops import preprocessing_ops
-from yolo.dataloaders import yolo_input
 from yolo.configs import yolo as exp_cfg
+from yolo.dataloaders import yolo_input
+from yolo.dataloaders import tf_example_decoder
 
-from tensorflow.keras import mixed_precision
+import tensorflow as tf
+from typing import Optional
 
 OptimizationConfig = optimization.OptimizationConfig
 RuntimeConfig = config_definitions.RuntimeConfig
 
 
+
 @task_factory.register_task_cls(exp_cfg.YoloTask)
 class YoloTask(base_task.Task):
   """A single-replica view of training procedure.
+
   YOLO task provides artifacts for training/evalution procedures, including
   loading/iterating over Datasets, initializing the model, calculating the loss,
   post-processing, and customized metrics with reduction.
@@ -41,11 +42,12 @@ class YoloTask(base_task.Task):
     self._model = None
     self._metrics = []
 
+    # globally set the random seed
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     return
 
   def build_model(self):
-    """Build an instance of Yolo"""
+    """Build an instance of Yolo."""
     from yolo.modeling.factory import build_yolo
 
     model_base_cfg = self.task_config.model
@@ -58,11 +60,13 @@ class YoloTask(base_task.Task):
     model, losses = build_yolo(input_specs, model_base_cfg, 
                                l2_regularizer)
 
+    # save for later usage within the task.
     self._loss_fn = losses
     self._model = model
     return model
 
   def get_decoder(self, params):
+    """Get a decoder object to decode the dataset."""
     if params.tfds_name:
       if params.tfds_name in tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP:
         decoder = tfds_detection_decoders.TFDS_ID_TO_DECODER_MAP[
@@ -88,10 +92,12 @@ class YoloTask(base_task.Task):
     """Build input dataset."""
     model = self.task_config.model
 
+    # get anchor boxes dict based on models min and max level
     backbone = model.backbone.get()
     anchor_dict, level_limits = model.anchor_boxes.get(backbone.min_level,
                                                        backbone.max_level)
 
+    # set shared patamters between mosaic and yolo_input
     base_config = dict(
         letter_box=params.parser.letter_box,
         aug_rand_translate=params.parser.aug_rand_translate,
@@ -102,7 +108,10 @@ class YoloTask(base_task.Task):
         seed=params.seed,
     )
 
+    # get the decoder
     decoder = self.get_decoder(params)
+
+    # init Mosaic
     sample_fn = mosaic.Mosaic(
         output_size=model.input_size,
         mosaic_frequency=params.parser.mosaic.mosaic_frequency,
@@ -114,6 +123,7 @@ class YoloTask(base_task.Task):
         aug_scale_max=params.parser.mosaic.aug_scale_max,
         **base_config)
 
+    # init Parser
     parser = yolo_input.Parser(
         output_size=model.input_size,
         anchors=anchor_dict,
@@ -135,6 +145,7 @@ class YoloTask(base_task.Task):
         dtype=params.dtype,
         **base_config)
 
+    # init the dataset reader
     reader = input_reader.InputReader(
         params,
         dataset_fn=tf.data.TFRecordDataset,
@@ -145,10 +156,11 @@ class YoloTask(base_task.Task):
     return dataset
 
   def build_metrics(self, training=True):
+    """Build detection metrics."""
     metrics = []
 
     backbone = self.task_config.model.backbone.get()
-    metric_names = defaultdict(list)
+    metric_names = collections.defaultdict(list)
     for key in range(backbone.min_level, backbone.max_level + 1):
       key = str(key)
       metric_names[key].append('loss')
@@ -173,10 +185,21 @@ class YoloTask(base_task.Task):
     return metrics
 
   def build_losses(self, outputs, labels, aux_losses=None):
+    """Build YOLO losses."""
     return self._loss_fn(labels, outputs)
 
-  ## training ##
   def train_step(self, inputs, model, optimizer, metrics=None):
+    """Train Step. Forward step and backwards propagate the model.
+ 
+    Args:
+      inputs: a dictionary of input tensors.
+      model: the model, forward pass definition.
+      optimizer: the optimizer for this training step.
+      metrics: a nested structure of metrics objects.
+ 
+    Returns:
+      A dictionary of logs.
+    """
     image, label = inputs
 
     with tf.GradientTape(persistent=False) as tape:
@@ -191,7 +214,7 @@ class YoloTask(base_task.Task):
        loss_metrics) = self.build_losses(y_pred['raw_output'], label)
 
       # Scale the loss for numerical stability
-      if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+      if isinstance(optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
         scaled_loss = optimizer.get_scaled_loss(scaled_loss)
 
     # Compute the gradient
@@ -199,7 +222,7 @@ class YoloTask(base_task.Task):
     gradients = tape.gradient(scaled_loss, train_vars)
 
     # Get unscaled loss if we are using the loss scale optimizer on fp16
-    if isinstance(optimizer, mixed_precision.LossScaleOptimizer):
+    if isinstance(optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
       gradients = optimizer.get_unscaled_gradients(gradients)
 
     # Clip the gradients
@@ -218,10 +241,8 @@ class YoloTask(base_task.Task):
         logs.update({m.name: m.result()})
     return logs
 
-  ## evaluation ##
   def _reorg_boxes(self, boxes, num_detections, image):
-    """This function is used to reorganize and clip the predicitions to remove
-    all padding and only take predicitions within the image"""
+    """Scale and Clean boxes prior to Evaluation."""
 
     # Build a prediciton mask to take only the number of detections
     mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
@@ -237,6 +258,16 @@ class YoloTask(base_task.Task):
     return boxes
 
   def validation_step(self, inputs, model, metrics=None):
+    """Validatation step.
+ 
+    Args:
+      inputs: a dictionary of input tensors.
+      model: the keras.Model.
+      metrics: a nested structure of metrics objects.
+      
+    Returns:
+      A dictionary of logs.
+    """
     image, label = inputs
 
     # Step the model once
@@ -272,6 +303,7 @@ class YoloTask(base_task.Task):
     return logs
 
   def aggregate_logs(self, state=None, step_outputs=None):
+    """Get Metric Results."""
     if not state:
       self.coco_metric.reset_states()
       state = self.coco_metric
@@ -280,16 +312,16 @@ class YoloTask(base_task.Task):
     return state
 
   def reduce_aggregated_logs(self, aggregated_logs, global_step=None):
+    """Reduce logs and remove unneeded items. Update with COCO results."""
     res = self.coco_metric.result()
     return res
 
   def initialize(self, model: tf.keras.Model):
     """Loading pretrained checkpoint."""
+
     if not self.task_config.init_checkpoint:
       logging.info("Training from Scratch.")
       return
-    
-    backbone = self.task_config.model.backbone.type
 
     ckpt_dir_or_file = self.task_config.init_checkpoint
     if tf.io.gfile.isdir(ckpt_dir_or_file):
@@ -303,14 +335,11 @@ class YoloTask(base_task.Task):
     elif self.task_config.init_checkpoint_modules == 'backbone':
       ckpt = tf.train.Checkpoint(backbone=model.backbone)
       status = ckpt.restore(ckpt_dir_or_file)
-      if backbone == "swin":
-        status.expect_partial()#.assert_existing_objects_matched()
-      else:
-        status.expect_partial().assert_existing_objects_matched()
+      status.expect_partial().assert_existing_objects_matched()
     elif self.task_config.init_checkpoint_modules == 'decoder':
       ckpt = tf.train.Checkpoint(backbone=model.backbone, decoder=model.decoder)
       status = ckpt.restore(ckpt_dir_or_file)
-      status.expect_partial()  #.assert_existing_objects_matched()
+      status.expect_partial() 
     else:
       assert "Only 'all' or 'backbone' can be used to initialize the model."
 
@@ -318,6 +347,7 @@ class YoloTask(base_task.Task):
                  ckpt_dir_or_file)
 
   def _wrap_optimizer(self, optimizer, runtime_config):
+    """Wraps the optimizer object with the loss scale optimizer."""
     if runtime_config and runtime_config.loss_scale:
       use_float16 = runtime_config.mixed_precision_dtype == "float16"
       optimizer = performance.configure_optimizer(
@@ -344,7 +374,7 @@ class YoloTask(base_task.Task):
     opt_factory._use_ema = False
 
     opt_type = opt_factory._optimizer_type
-    if (opt_type == 'sgd_dymow'):
+    if (opt_type == 'sgd_torch'):
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
       optimizer.set_bias_lr(
           opt_factory.get_bias_lr_schedule(self._task_config.smart_bias_lr))
@@ -355,12 +385,15 @@ class YoloTask(base_task.Task):
     else:
       optimizer = opt_factory.build_optimizer(opt_factory.build_learning_rate())
     opt_factory._use_ema = ema
+
+    if ema:
+      logging.info("EMA is enabled.")
     optimizer = opt_factory.add_ema(optimizer)
     optimizer = self._wrap_optimizer(optimizer, runtime_config)
     return optimizer
 
 
-class ListMetrics(object):
+class ListMetrics:
 
   def __init__(self, metric_names, name="ListMetrics", **kwargs):
     self.name = name

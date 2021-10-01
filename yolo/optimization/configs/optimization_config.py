@@ -41,8 +41,7 @@ class OptimizerConfig(optimization_cfg.OptimizerConfig):
     rmsprop: rmsprop optimizer.
   """
   type: Optional[str] = None
-  sgd_dymow: opt_cfg.SGDMomentumWarmupWConfig = opt_cfg.SGDMomentumWarmupWConfig(
-  )
+  sgd_torch: opt_cfg.SGDTorchConfig = opt_cfg.SGDTorchConfig()
 
 
 @dataclasses.dataclass

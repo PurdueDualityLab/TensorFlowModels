@@ -118,8 +118,8 @@ trainer:
         alpha: 0.05
         decay_steps: 277500
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.9
         momentum_start: 0.9
         nesterov: True

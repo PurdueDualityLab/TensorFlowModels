@@ -166,6 +166,7 @@ class OptimizerFactory:
 
     optimizer_dict['learning_rate'] = lr
 
+    print(self._optimizer_type)
     optimizer = OPTIMIZERS_CLS[self._optimizer_type](**optimizer_dict)
 
     if self._use_ema:

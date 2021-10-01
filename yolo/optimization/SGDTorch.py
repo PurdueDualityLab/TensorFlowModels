@@ -6,7 +6,7 @@ from tensorflow.python.training import gen_training_ops
 import tensorflow as tf
 import logging
 
-__all__ = ['SGD']
+__all__ = ['SGDTorch']
 
 
 def _var_key(var):
@@ -29,8 +29,30 @@ def _var_key(var):
   return var._unique_id
 
 
-class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
-  """Gradient descent (with momentum) optimizer matching Pytorch."""
+class SGDTorch(tf.keras.optimizers.Optimizer):
+  """Optimizer that computes an exponential moving average of the variables.
+
+  Empirically it has been found that using the moving average of the trained
+  parameters of a deep network is better than using its trained parameters
+  directly. This optimizer allows you to compute this moving average and swap
+  the variables at save time so that any code outside of the training loop
+  will use by default the average values instead of the original ones.
+
+  Example of usage for training:
+  ```python
+  opt = tf.keras.optimizers.SGD(learning_rate)
+  opt = ExponentialMovingAverage(opt)
+
+  opt.shadow_copy(model)
+  ```
+
+  At test time, swap the shadow variables to evaluate on the averaged weights:
+  ```python
+  opt.swap_weights()
+  # Test eval the model here
+  opt.swap_weights()
+  ```
+  """
 
   _HAS_AGGREGATE_GRAD = True
 
@@ -42,13 +64,9 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
                warmup_steps=1000,
                nesterov=False,
                sim_torch=False,
-               weight_keys=["kernel"],
-               bias_keys=["bias", "beta"],
                name="SGD",
                **kwargs):
-    super(SGDMomentumWarmupW, self).__init__(name, **kwargs)
-    self._weight_keys = weight_keys
-    self._bias_keys = bias_keys
+    super(SGDTorch, self).__init__(name, **kwargs)
 
     # Create Hyper Params for each group of the LR
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
@@ -120,7 +138,7 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     return value
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(SGDMomentumWarmupW, self)._prepare_local(var_device, var_dtype,
+    super(SGDTorch, self)._prepare_local(var_device, var_dtype,
                                                    apply_state)
     weight_decay = self._get_hyper("weight_decay")
     apply_state[(var_device,
@@ -239,7 +257,7 @@ class SGDMomentumWarmupW(tf.keras.optimizers.Optimizer):
     return self._run_sgd(holder, var, apply_state=apply_state)
 
   def get_config(self):
-    config = super(SGDMomentumWarmupW, self).get_config()
+    config = super(SGDTorch, self).get_config()
     config.update({
         "learning_rate": self._serialize_hyperparameter("learning_rate"),
         "decay": self._initial_decay,

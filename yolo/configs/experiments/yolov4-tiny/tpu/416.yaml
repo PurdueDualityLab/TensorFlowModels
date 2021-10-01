@@ -117,8 +117,8 @@ trainer:
         name: PiecewiseConstantDecay
         values: [0.00261, 0.000261, 0.0000261] 
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.9
         momentum_start: 0.9
         nesterov: True

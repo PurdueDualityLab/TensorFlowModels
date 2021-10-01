@@ -17,62 +17,6 @@
 import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
 
-# static base Yolo Models that do not require configuration
-# similar to a backbone model id.
-
-# this is done greatly simplify the model config
-# the structure is as follows. model version, {v3, v4, v#, ... etc}
-# the model config type {regular, tiny, small, large, ... etc}
-YOLO_MODELS = {
-    "v4":
-        dict(
-            regular=dict(
-                embed_spp=False,
-                use_fpn=True,
-                max_level_process_len=None,
-                path_process_len=6),
-            tiny=dict(
-                embed_spp=False,
-                use_fpn=False,
-                max_level_process_len=2,
-                path_process_len=1),
-            csp=dict(
-                embed_spp=False,
-                use_fpn=True,
-                max_level_process_len=None,
-                csp_stack=5,
-                fpn_depth=5,
-                path_process_len=6),
-            csp_large=dict(
-                embed_spp=False,
-                use_fpn=True,
-                max_level_process_len=None,
-                csp_stack=7,
-                fpn_depth=7,
-                path_process_len=8,
-                fpn_filter_scale=2),
-        ),
-    "v3":
-        dict(
-            regular=dict(
-                embed_spp=False,
-                use_fpn=False,
-                max_level_process_len=None,
-                path_process_len=6),
-            tiny=dict(
-                embed_spp=False,
-                use_fpn=False,
-                max_level_process_len=2,
-                path_process_len=1),
-            spp=dict(
-                embed_spp=True,
-                use_fpn=False,
-                max_level_process_len=2,
-                path_process_len=1),
-        ),
-}
-
-
 class Yolo(tf.keras.Model):
   """The YOLO model class."""
 
@@ -169,7 +113,7 @@ class Yolo(tf.keras.Model):
     return weights, bias, other
   
   def fuse(self):
-    print("fusing")
+    print("Fusing Conv Batch Norm Layers.")
     if not self._fused:
       self._fused = True
       for layer in self.submodules:

@@ -37,7 +37,7 @@ class BaseOptimizerConfig(base_config.Config):
 
 
 @dataclasses.dataclass
-class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
+class SGDTorchConfig(BaseOptimizerConfig):
   """Configuration for SGD optimizer.
 
   The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
@@ -46,6 +46,7 @@ class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
     name: name of the optimizer.
     decay: decay rate for SGD optimizer.
     nesterov: nesterov for SGD optimizer.
+    momentum_start: momentum starting point for SGD optimizer.
     momentum: momentum for SGD optimizer.
   """
   name: str = "SGD"
@@ -56,6 +57,3 @@ class SGDMomentumWarmupWConfig(BaseOptimizerConfig):
   warmup_steps: int = 1000
   weight_decay: float = 0.0
   sim_torch: bool = False
-  weight_keys: List[str] = dataclasses.field(default_factory=lambda: ["kernel"])
-  bias_keys: List[str] = dataclasses.field(
-      default_factory=lambda: ["bias", "beta"])

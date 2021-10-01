@@ -1,73 +1,33 @@
-from official.vision.beta.modeling.backbones import factory
-from yolo.modeling.decoders.yolo_decoder import YoloDecoder
-from yolo.modeling.heads.yolo_head import YoloHead
-from yolo.modeling.layers.detection_generator import YoloLayer
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from yolo.modeling import yolo_model
-from yolo.configs import yolo
+# Lint as: python3
+"""Contains common factory functions yolo neural networks."""
+import tensorflow as tf
+from typing import Mapping, Union
+
 from absl import logging
+from official.vision.beta.modeling.backbones import factory as backbone_factory
+from official.vision.beta.modeling.decoders import factory as decoder_factory
 
-
-def build_yolo_decoder(input_specs, model_config: yolo.Yolo, l2_regularization):
-  activation = (
-      model_config.decoder.activation
-      if model_config.decoder.activation != "same" else
-      model_config.norm_activation.activation)
-
-  if model_config.decoder.version is None:  # custom yolo
-    model = YoloDecoder(
-        input_specs,
-        embed_spp=model_config.decoder.embed_spp,
-        use_fpn=model_config.decoder.use_fpn,
-        fpn_depth=model_config.decoder.fpn_depth,
-        path_process_len=model_config.decoder.path_process_len,
-        max_level_process_len=model_config.decoder.max_level_process_len,
-        activation=activation,
-        use_spatial_attention=model_config.use_sam,
-        use_sync_bn=model_config.norm_activation.use_sync_bn,
-        norm_momentum=model_config.norm_activation.norm_momentum,
-        norm_epsilon=model_config.norm_activation.norm_epsilon,
-        kernel_regularizer=l2_regularization)
-    return model
-
-  if model_config.decoder.type == None:
-    model_config.decoder.type = "regular"
-
-  if model_config.decoder.version not in yolo_model.YOLO_MODELS.keys():
-    raise Exception(
-        "unsupported model version please select from {v3, v4}, \n\n \
-        or specify a custom decoder config using YoloDecoder in you yaml")
-
-  if model_config.decoder.type not in yolo_model.YOLO_MODELS[
-      model_config.decoder.version].keys():
-    raise Exception("unsupported model type please select from \
-        {yolo_model.YOLO_MODELS[model_config.decoder.version].keys()},\
-        \n\n or specify a custom decoder config using YoloDecoder in you yaml")
-
-  base_model = yolo_model.YOLO_MODELS[model_config.decoder.version][
-      model_config.decoder.type]
-
-  cfg_dict = model_config.decoder.as_dict()
-  for key in base_model:
-    if cfg_dict[key] is not None:
-      base_model[key] = cfg_dict[key]
-
-  base_dict = dict(
-      activation=activation,
-      use_spatial_attention=model_config.decoder.use_spatial_attention,
-      use_separable_conv=model_config.decoder.use_separable_conv,
-      use_sync_bn=model_config.norm_activation.use_sync_bn,
-      norm_momentum=model_config.norm_activation.norm_momentum,
-      norm_epsilon=model_config.norm_activation.norm_epsilon,
-      kernel_regularizer=l2_regularization)
-
-  base_model.update(base_dict)
-  model = YoloDecoder(input_specs, **base_model)
-  return model
-
+from yolo.configs import yolo
+from yolo.modeling import yolo_model
+from yolo.modeling.heads import yolo_head
+from yolo.modeling.layers import detection_generator
 
 def build_yolo_detection_generator(model_config: yolo.Yolo, anchor_boxes):
-  model = YoloLayer(
+  model = detection_generator.YoloLayer(
       classes=model_config.num_classes,
       anchors=anchor_boxes,
       iou_thresh=model_config.detection_generator.iou_thresh,
@@ -95,7 +55,7 @@ def build_yolo_detection_generator(model_config: yolo.Yolo, anchor_boxes):
 def build_yolo_head(input_specs, model_config: yolo.Yolo, l2_regularization):
   min_level = min(map(int, input_specs.keys()))
   max_level = max(map(int, input_specs.keys()))
-  head = YoloHead(
+  head = yolo_head.YoloHead(
       min_level=min_level,
       max_level=max_level,
       classes=model_config.num_classes,
@@ -111,12 +71,14 @@ def build_yolo(input_specs, model_config, l2_regularization):
   backbone = model_config.backbone.get()
   anchor_dict, anchor_free = model_config.anchor_boxes.get(backbone.min_level,
                                                            backbone.max_level)
-  backbone = factory.build_backbone(input_specs, 
+  backbone = backbone_factory.build_backbone(input_specs, 
                                     model_config.backbone,
                                     model_config.norm_activation,
                                     l2_regularization)
-  decoder = build_yolo_decoder(backbone.output_specs, model_config,
-                               l2_regularization)
+  decoder = decoder_factory.build_decoder(backbone.output_specs, 
+                                          model_config,
+                                          l2_regularization)
+
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
   detection_generator = build_yolo_detection_generator(model_config,anchor_dict)
 

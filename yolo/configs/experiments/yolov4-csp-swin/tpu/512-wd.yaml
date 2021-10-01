@@ -134,8 +134,8 @@ trainer:
         exclude_from_weight_decay: ['(.)*']
         gradient_clip_norm: 0.0
     # optimizer:
-    #   type: sgd_dymow
-    #   sgd_dymow:
+    #   type: sgd_torch
+    #   sgd_torch:
     #     momentum: 0.949
     #     momentum_start: 0.949
     #     nesterov: True

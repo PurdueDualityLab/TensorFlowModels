@@ -14,9 +14,11 @@ task:
         max_level: 5
         min_level: 3
     decoder:
-      version: v4
-      type: regular
-      activation: leaky
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: regular
+        activation: leaky
     head:
       smart_bias: true
     detection_generator:
@@ -122,8 +124,8 @@ trainer:
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.949
         momentum_start: 0.949
         nesterov: True

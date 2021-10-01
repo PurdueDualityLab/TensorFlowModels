@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Optimizer factory class."""
-from typing import Callable, Union
 
 import gin
-import tensorflow as tf
-import tensorflow_addons.optimizers as tfa_optimizers
-from official.modeling.optimization import configs
 
-from yolo.optimization import SGDMomentumWarmupW
-from yolo.optimization import ema_optimizer
-from official.modeling.optimization import optimizer_factory  #, ema_optimizer
-from official.modeling.optimization import lr_schedule
-from yolo.optimization.configs import optimization_config as opt_cfg
+from yolo.optimization import SGDTorch
+from official.modeling.optimization import ema_optimizer
+from official.modeling.optimization import optimizer_factory
 
 optimizer_factory.OPTIMIZERS_CLS.update({
-    'sgd_dymow': SGDMomentumWarmupW.SGDMomentumWarmupW,
+    'sgd_torch': SGDTorch.SGDTorch,
 })
 
 OPTIMIZERS_CLS = optimizer_factory.OPTIMIZERS_CLS
@@ -68,6 +62,7 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
   """
 
   def get_bias_lr_schedule(self, bias_lr):
+    """Used to build additional learning rate schedules."""
     temp = self._warmup_config.warmup_learning_rate
     self._warmup_config.warmup_learning_rate = bias_lr
     lr = self.build_learning_rate()
@@ -75,68 +70,55 @@ class OptimizerFactory(optimizer_factory.OptimizerFactory):
     return lr
 
   @gin.configurable
-  def build_optimizer(
-      self,
-      lr: Union[tf.keras.optimizers.schedules.LearningRateSchedule, float],
-      postprocessor: Callable[[tf.keras.optimizers.Optimizer],
-                              tf.keras.optimizers.Optimizer] = None):
-    """Build optimizer.
-
-    Builds optimizer from config. It takes learning rate as input, and builds
-    the optimizer according to the optimizer config. Typically, the learning
-    rate built using self.build_lr() is passed as an argument to this method.
-
-    Args:
-      lr: A floating point value, or a
-        tf.keras.optimizers.schedules.LearningRateSchedule instance.
-      postprocessor: An optional function for postprocessing the optimizer. It
-        takes an optimizer and returns an optimizer.
-
-    Returns:
-      tf.keras.optimizers.Optimizer instance.
-    """
-
-    optimizer_dict = self._optimizer_config.as_dict()
-    ## Delete clipnorm and clipvalue if None
-    if optimizer_dict['clipnorm'] is None:
-      del optimizer_dict['clipnorm']
-    if optimizer_dict['clipvalue'] is None:
-      del optimizer_dict['clipvalue']
-
-    optimizer_dict['learning_rate'] = lr
-
-    optimizer = OPTIMIZERS_CLS[self._optimizer_type](**optimizer_dict)
-
-    if self._use_ema:
-      optimizer = ema_optimizer.ExponentialMovingAverage(
-          optimizer, **self._ema_config.as_dict())
-    if postprocessor:
-      optimizer = postprocessor(optimizer)
-    assert isinstance(optimizer, tf.keras.optimizers.Optimizer), (
-        'OptimizerFactory.build_optimizer returning a non-optimizer object: '
-        '{}'.format(optimizer))
-
-    return optimizer
-
-  @gin.configurable
   def add_ema(self, optimizer):
-    """Build optimizer.
-
-    Builds optimizer from config. It takes learning rate as input, and builds
-    the optimizer according to the optimizer config. Typically, the learning
-    rate built using self.build_lr() is passed as an argument to this method.
-
-    Args:
-      lr: A floating point value, or a
-        tf.keras.optimizers.schedules.LearningRateSchedule instance.
-      postprocessor: An optional function for postprocessing the optimizer. It
-        takes an optimizer and returns an optimizer.
-
-    Returns:
-      tf.keras.optimizers.Optimizer instance.
-    """
-
+    """Add EMA to the optimizer independently of the build optimizer method."""
     if self._use_ema:
       optimizer = ema_optimizer.ExponentialMovingAverage(
           optimizer, **self._ema_config.as_dict())
     return optimizer
+
+  # @gin.configurable
+  # def build_optimizer(
+  #     self,
+  #     lr: Union[tf.keras.optimizers.schedules.LearningRateSchedule, float],
+  #     postprocessor: Callable[[tf.keras.optimizers.Optimizer],
+  #                             tf.keras.optimizers.Optimizer] = None):
+  #   """Build optimizer.
+
+  #   Builds optimizer from config. It takes learning rate as input, and builds
+  #   the optimizer according to the optimizer config. Typically, the learning
+  #   rate built using self.build_lr() is passed as an argument to this method.
+
+  #   Args:
+  #     lr: A floating point value, or a
+  #       tf.keras.optimizers.schedules.LearningRateSchedule instance.
+  #     postprocessor: An optional function for postprocessing the optimizer. It
+  #       takes an optimizer and returns an optimizer.
+
+  #   Returns:
+  #     tf.keras.optimizers.Optimizer instance.
+  #   """
+
+  #   optimizer_dict = self._optimizer_config.as_dict()
+  #   ## Delete clipnorm and clipvalue if None
+  #   if optimizer_dict['clipnorm'] is None:
+  #     del optimizer_dict['clipnorm']
+  #   if optimizer_dict['clipvalue'] is None:
+  #     del optimizer_dict['clipvalue']
+
+  #   optimizer_dict['learning_rate'] = lr
+
+  #   optimizer = OPTIMIZERS_CLS[self._optimizer_type](**optimizer_dict)
+
+  #   if self._use_ema:
+  #     optimizer = ema_optimizer.ExponentialMovingAverage(
+  #         optimizer, **self._ema_config.as_dict())
+  #   if postprocessor:
+  #     optimizer = postprocessor(optimizer)
+  #   assert isinstance(optimizer, tf.keras.optimizers.Optimizer), (
+  #       'OptimizerFactory.build_optimizer returning a non-optimizer object: '
+  #       '{}'.format(optimizer))
+
+  #   return optimizer
+
+

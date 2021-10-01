@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 """YOLO configuration definition."""
-from typing import List, Optional
+from typing import List, Optional, Union
 import dataclasses
 from yolo.ops import anchor
 
@@ -25,14 +25,20 @@ from official.vision.beta.configs import common
 from yolo import optimization
 
 from yolo.configs import backbones
+from yolo.configs import decoders
 import numpy as np
 import regex as re
 
-COCO_INPUT_PATH_BASE = 'coco'
-COCO_TRIAN_EXAMPLES = 118287
-COCO_VAL_EXAMPLES = 5000
 MIN_LEVEL = 1
 MAX_LEVEL = 7
+
+def _build_dict(min_level, max_level, value):
+  vals = {str(key): value for key in range(min_level, max_level + 1)}
+  vals["all"] = None
+  return lambda: vals
+
+def _build_path_scales(min_level, max_level):
+  return lambda: {str(key): 2**key for key in range(min_level, max_level + 1)}
 
 @dataclasses.dataclass
 class FPNConfig(hyperparams.Config):
@@ -44,43 +50,23 @@ class FPNConfig(hyperparams.Config):
           values[key] = values["all"]
     return values
 
-# @dataclasses.dataclass
-# class AnchorBoxes(hyperparams.Config):
-#   widths: Optional[List[int]] = None
-#   heights: Optional[List[int]] = None
-#   level_limits: Optional[List[int]] = None
-
-#   def get(self):
-#     if self.level_limits is None:
-#       boxes = [[w, h] for w, h in zip(self.widths, self.heights)]
-#     else:
-#       boxes = [[1.0, 1.0]] * (len(self.level_limits) + 1)
-#     return boxes, self.level_limits
-
-class Box(hyperparams.Config):
-  box: List[int] = dataclasses.field(default=list)
+# pylint: disable=missing-class-docstring
+@dataclasses.dataclass
+class TfExampleDecoder(hyperparams.Config):
+  regenerate_source_id: bool = False
+  coco91_to_80: bool = True 
 
 @dataclasses.dataclass
-class AnchorBoxes(hyperparams.Config):
-  boxes: List[Box] = None
-  level_limits: Optional[List[int]] = None
-  anchors_per_scale: int = 3
+class TfExampleDecoderLabelMap(hyperparams.Config):
+  regenerate_source_id: bool = False
+  label_map: str = ''
 
-  def get(self, min_level, max_level):
-    if self.level_limits is None:
-      boxes = [box.box for box in self.boxes]
-    else:
-      boxes = [[1.0, 1.0]] * ((max_level - min_level) + 1)
-      self.anchors_per_scale = 1
-    
-    anchors_per_level = dict()
-    start = 0
-    for i in range(min_level, max_level + 1):
-      anchors_per_level[str(i)] = boxes[start:start + self.anchors_per_scale]
-      start += self.anchors_per_scale
-    return anchors_per_level, self.level_limits
+@dataclasses.dataclass
+class DataDecoder(hyperparams.OneOfConfig):
+  type: Optional[str] = 'simple_decoder'
+  simple_decoder: TfExampleDecoder = TfExampleDecoder()
+  label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
 
-# dataset parsers
 @dataclasses.dataclass
 class Mosaic(hyperparams.Config):
   mosaic_frequency: float = 0.0
@@ -90,7 +76,6 @@ class Mosaic(hyperparams.Config):
   aug_scale_min: float = 1.0
   aug_scale_max: float = 1.0
   jitter: float = 0.0
-
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):
@@ -113,27 +98,6 @@ class Parser(hyperparams.Config):
   area_thresh: float = 0.1
   mosaic: Mosaic = Mosaic()
 
-
-# pylint: disable=missing-class-docstring
-@dataclasses.dataclass
-class TfExampleDecoder(hyperparams.Config):
-  regenerate_source_id: bool = False
-  coco91_to_80: bool = True 
-
-
-@dataclasses.dataclass
-class TfExampleDecoderLabelMap(hyperparams.Config):
-  regenerate_source_id: bool = False
-  label_map: str = ''
-
-
-@dataclasses.dataclass
-class DataDecoder(hyperparams.OneOfConfig):
-  type: Optional[str] = 'simple_decoder'
-  simple_decoder: TfExampleDecoder = TfExampleDecoder()
-  label_map_decoder: TfExampleDecoderLabelMap = TfExampleDecoderLabelMap()
-
-
 @dataclasses.dataclass
 class DataConfig(cfg.DataConfig):
   """Input config for training."""
@@ -150,41 +114,11 @@ class DataConfig(cfg.DataConfig):
   tfds_download: bool = True
   cache: bool = False
 
-
-@dataclasses.dataclass
-class YoloDecoder(hyperparams.Config):
-  """if the name is specified, or version is specified we ignore 
-  input parameters and use version and name defaults"""
-  version: Optional[str] = None
-  type: Optional[str] = None
-  use_fpn: Optional[bool] = None
-  use_spatial_attention: bool = False
-  use_separable_conv: bool = False
-  csp_stack: Optional[bool] = None
-  fpn_depth: Optional[int] = None
-  fpn_filter_scale: Optional[int] = None
-  path_process_len: Optional[int] = None
-  max_level_process_len: Optional[int] = None
-  embed_spp: Optional[bool] = None
-  activation: Optional[str] = 'same'
-
-
 @dataclasses.dataclass
 class YoloHead(hyperparams.Config):
   """if the name is specified, or version is specified we ignore 
   input parameters and use version and name defaults"""
   smart_bias: bool = True
-
-
-def _build_dict(min_level, max_level, value):
-  vals = {str(key): value for key in range(min_level, max_level + 1)}
-  vals["all"] = None
-  return lambda: vals
-
-
-def _build_path_scales(min_level, max_level):
-  return lambda: {str(key): 2**key for key in range(min_level, max_level + 1)}
-
 
 @dataclasses.dataclass
 class YoloDetectionGenerator(hyperparams.Config):
@@ -199,7 +133,6 @@ class YoloDetectionGenerator(hyperparams.Config):
   nms_thresh: float = 0.6
   max_boxes: int = 200
   pre_nms_points: int = 5000
-
 
 @dataclasses.dataclass
 class YoloLoss(hyperparams.Config):
@@ -224,27 +157,52 @@ class YoloLoss(hyperparams.Config):
   update_on_repeat: bool = True
 
 
+class Box(hyperparams.Config):
+  box: List[int] = dataclasses.field(default=list)
+
+@dataclasses.dataclass
+class AnchorBoxes(hyperparams.Config):
+  boxes: List[Box] = None
+  level_limits: Optional[List[int]] = None
+  anchors_per_scale: int = 3
+
+  def get(self, min_level, max_level):
+    if self.level_limits is None:
+      boxes = [box.box for box in self.boxes]
+    else:
+      boxes = [[1.0, 1.0]] * ((max_level - min_level) + 1)
+      self.anchors_per_scale = 1
+    
+    anchors_per_level = dict()
+    start = 0
+    for i in range(min_level, max_level + 1):
+      anchors_per_level[str(i)] = boxes[start:start + self.anchors_per_scale]
+      start += self.anchors_per_scale
+    return anchors_per_level, self.level_limits
+
 @dataclasses.dataclass
 class Yolo(hyperparams.Config):
   input_size: Optional[List[int]] = dataclasses.field(
       default_factory=lambda: [512, 512, 3])
   backbone: backbones.Backbone = backbones.Backbone(
       type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
-  decoder: YoloDecoder = YoloDecoder(version='v4', type='regular')
+  decoder: decoders.Decoder = decoders.Decoder(
+      type='yolo_decoder', yolo_decoder=decoders.YoloDecoder(
+        version='v4', type='regular'
+      )
+  )
   head: YoloHead = YoloHead()
   detection_generator: YoloDetectionGenerator = YoloDetectionGenerator()
   loss: YoloLoss = YoloLoss()
   norm_activation: common.NormActivation = common.NormActivation(
-      activation='leaky',
+      activation='mish',
       use_sync_bn=True,
       norm_momentum=0.99,
       norm_epsilon=0.001)
-  num_classes: int = 91
+  num_classes: int = 80
   anchor_boxes: AnchorBoxes = AnchorBoxes()
   darknet_based_model: bool = False
 
-
-# model task
 @dataclasses.dataclass
 class YoloTask(cfg.TaskConfig):
   per_category_metrics: bool = False
@@ -252,65 +210,210 @@ class YoloTask(cfg.TaskConfig):
   model: Yolo = Yolo()
   train_data: DataConfig = DataConfig(is_training=True)
   validation_data: DataConfig = DataConfig(is_training=False)
-  weight_decay: float = 5e-4
+  weight_decay: float = 0.0
   annotation_file: Optional[str] = None
-  init_checkpoint_modules: str = None
+  init_checkpoint: Optional[str] = None
+  init_checkpoint_modules: Union[
+      str, List[str]] = 'all'  # all, backbone, and/or decoder
   gradient_clip_norm: float = 0.0
 
 
-@exp_factory.register_config_factory('yolo_custom')
-def yolo_custom() -> cfg.ExperimentConfig:
-  """COCO object detection with YOLO."""
-  train_batch_size = 1
-  eval_batch_size = 1
-  base_default = 1200000
-  num_batches = 1200000 * 64 / train_batch_size
+COCO_INPUT_PATH_BASE = 'coco'
+COCO_TRAIN_EXAMPLES = 118287
+COCO_VAL_EXAMPLES = 5000
+GLOBAL_SEED = 1000
+
+@exp_factory.register_config_factory('yolo')
+def yolo() -> cfg.ExperimentConfig:
+  """Yolo general config."""
+  return cfg.ExperimentConfig(
+      task=YoloTask(),
+      restrictions=[
+          'task.train_data.is_training != None',
+          'task.validation_data.is_training != None'
+      ])
+
+@exp_factory.register_config_factory('yolo_darknet')
+def yolo_darknet() -> cfg.ExperimentConfig:
+  """COCO object detection with YOLOv3 and v4"""
+  train_batch_size = 64
+  eval_batch_size = 8
+  train_epochs = 300
+  steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
+  validation_interval = 5
 
   config = cfg.ExperimentConfig(
-      runtime=cfg.RuntimeConfig(num_gpus=2),
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
       task=YoloTask(
-          model=Yolo(),
+          smart_bias_lr=0.1,
+          init_checkpoint='',
+          init_checkpoint_modules='backbone',
+          annotation_file=None,
+          weight_decay=0.0,
+          model=Yolo(
+              darknet_based_model = True,
+              norm_activation=common.NormActivation(use_sync_bn=True),
+              head=YoloHead(smart_bias=True), 
+              loss=YoloLoss(use_scaled_loss=False, update_on_repeat=True)),
           train_data=DataConfig(
               is_training=True,
               global_batch_size=train_batch_size,
-              parser=Parser(),
-              shuffle_buffer_size=2),
+              seed=GLOBAL_SEED, 
+              dtype='float32'),
           validation_data=DataConfig(
               is_training=False,
-              global_batch_size=eval_batch_size,
-              shuffle_buffer_size=2)),
+              global_batch_size=eval_batch_size, 
+              drop_remainder=True, 
+              dtype='float32')),
       trainer=cfg.TrainerConfig(
-          steps_per_loop=2000,
-          summary_interval=8000,
-          checkpoint_interval=10000,
-          train_steps=num_batches,
-          validation_steps=1000,
-          validation_interval=10,
+          train_steps=train_epochs * steps_per_epoch,
+          validation_steps=COCO_VAL_EXAMPLES // eval_batch_size,
+          validation_interval=validation_interval * steps_per_epoch,
+          steps_per_loop=steps_per_epoch,
+          summary_interval=steps_per_epoch,
+          checkpoint_interval=steps_per_epoch,
           optimizer_config=optimization.OptimizationConfig({
+              'ema':{
+                    'average_decay': 0.9998,
+                    'trainable_weights_only': False,
+                    'dynamic_decay': True,
+              },
               'optimizer': {
-                  'type': 'sgd',
-                  'sgd': {
-                      'momentum': 0.9
+                  'type': 'sgd_torch',
+                  'sgd_torch': {
+                      'momentum': 0.949,
+                      'momentum_start': 0.949,
+                      'nesterov': True,
+                      'warmup_steps': 1000,
+                      'weight_decay': 0.0005,
+                      'sim_torch': True,
                   }
               },
               'learning_rate': {
                   'type': 'stepwise',
                   'stepwise': {
-                      'boundaries': [
-                          int(400000 / base_default * num_batches),
-                          int(450000 / base_default * num_batches)
-                      ],
+                      'boundaries': [240 * steps_per_epoch, 270*steps_per_epoch],
                       'values': [
-                          0.00261 * train_batch_size / 64,
-                          0.000261 * train_batch_size / 64,
-                          0.0000261 * train_batch_size / 64
+                          0.00131 * train_batch_size / 64.0,
+                          0.000131 * train_batch_size / 64.0,
+                          0.0000131 * train_batch_size / 64.0
                       ]
                   }
               },
               'warmup': {
                   'type': 'linear',
                   'linear': {
-                      'warmup_steps': 1000 * 64 // num_batches,
+                      'warmup_steps': 1000,
+                      'warmup_learning_rate': 0
+                  }
+              }
+          })),
+      restrictions=[
+          'task.train_data.is_training != None',
+          'task.validation_data.is_training != None'
+      ])
+
+  return config
+
+
+@exp_factory.register_config_factory('scaled_yolo')
+def scaled_yolo() -> cfg.ExperimentConfig:
+  """COCO object detection with YOLOv4-csp and v4"""
+  train_batch_size = 64
+  eval_batch_size = 8
+  train_epochs = 300
+  warmup_epochs = 3
+  
+  validation_interval = 5
+  steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
+
+  max_num_instances = 300
+
+  config = cfg.ExperimentConfig(
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
+      task=YoloTask(
+          smart_bias_lr=0.1,
+          init_checkpoint_modules=None,
+          annotation_file=None,
+          weight_decay=0.0,
+          model=Yolo(
+            darknet_based_model = False,
+            norm_activation=common.NormActivation(
+              activation='mish',
+              use_sync_bn=True, 
+              norm_epsilon=0.0001, 
+              norm_momentum=0.97),
+            head=YoloHead(smart_bias=True), 
+            loss=YoloLoss(use_scaled_loss=True)),
+          train_data=DataConfig(
+              is_training=True,
+              global_batch_size=train_batch_size,
+              seed=GLOBAL_SEED, 
+              dtype='float32',
+              parser=Parser(
+                aug_rand_saturation = 0.7, 
+                aug_rand_brightness = 0.4,
+                aug_rand_hue = 0.015, 
+                letter_box=True,
+                use_tie_breaker=True, 
+                best_match_only=True, 
+                anchor_thresh=4.0,
+                random_pad=False,
+                max_num_instances=max_num_instances,
+                mosaic=Mosaic(
+                  mosaic_crop_mode='scale',
+                  mosaic_frequency=1.0, 
+                  mixup_frequency=0.0, 
+                ) 
+              )),
+          validation_data=DataConfig(
+              is_training=False,
+              global_batch_size=eval_batch_size, 
+              drop_remainder=True, 
+              dtype='float32', 
+              parser=Parser(
+                letter_box=True,
+                use_tie_breaker=True, 
+                best_match_only=True, 
+                anchor_thresh=4.0,
+                max_num_instances=max_num_instances, 
+              ))),
+      trainer=cfg.TrainerConfig(
+          train_steps=train_epochs * steps_per_epoch,
+          validation_steps=COCO_VAL_EXAMPLES // eval_batch_size,
+          validation_interval=validation_interval * steps_per_epoch,
+          steps_per_loop=steps_per_epoch,
+          summary_interval=steps_per_epoch,
+          checkpoint_interval=steps_per_epoch,
+          optimizer_config=optimization.OptimizationConfig({
+              'ema':{
+                    'average_decay': 0.9999,
+                    'trainable_weights_only': False,
+                    'dynamic_decay': True,
+              },
+              'optimizer': {
+                  'type': 'sgd_torch',
+                  'sgd_torch': {
+                      'momentum': 0.937,
+                      'momentum_start': 0.8,
+                      'nesterov': True,
+                      'warmup_steps': steps_per_epoch * warmup_epochs,
+                      'weight_decay': 0.0005 * train_batch_size/64.0,
+                      'sim_torch': True,
+                  }
+              },
+              'learning_rate': {
+                  'type': 'cosine',
+                  'cosine': {
+                      'initial_learning_rate': 0.01,
+                      'alpha': 0.2, 
+                      'decay_steps': train_epochs * steps_per_epoch,
+                  }
+              },
+              'warmup': {
+                  'type': 'linear',
+                  'linear': {
+                      'warmup_steps': steps_per_epoch * warmup_epochs,
                       'warmup_learning_rate': 0
                   }
               }

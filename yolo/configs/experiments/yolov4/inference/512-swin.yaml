@@ -1,21 +1,30 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  num_gpus: 1
 task:
   smart_bias_lr: 0.0
   model:
     darknet_based_model: True
     input_size: [512, 512, 3]
     backbone:
-      type: 'darknet'
-      darknet:
-        model_id: 'cspdarknet53'
-        max_level: 5
+      type: 'swin'
+      swin:
         min_level: 3
+        max_level: 5
+        patch_size: 4
+        embed_dims: 96 
+        window_size: [7, 7, 7, 7] 
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        drop_path: 0.0
+        absolute_positional_embed: False
     decoder:
-      version: v4
-      type: regular
-      activation: leaky
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: csp
+        activation: leaky
     head:
       smart_bias: true
     detection_generator:
@@ -27,8 +36,9 @@ task:
         '3': 1.2
       max_boxes: 200
       nms_type: greedy
-      iou_thresh: 0.001
-      nms_thresh: 0.60
+      iou_thresh: 0.25
+      nms_thresh: 0.45
+      pre_nms_points: 500
     loss:
       use_scaled_loss: False
       box_loss_type:  
@@ -46,19 +56,20 @@ task:
       max_delta:
         'all': 5.0
     norm_activation:
-      activation: mish
+      activation: gelu
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
     anchor_boxes:
-      widths:  [12, 19, 40, 36, 76,  72, 142, 192, 459]
-      heights: [16, 36, 28, 75, 55, 146, 110, 243, 401]
+      anchors_per_scale: 3
+      boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
+              box: [36, 75],   box: [76, 55],   box: [72, 146], 
+              box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 64
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/train*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     is_training: true
     drop_remainder: true
     seed: 1000
@@ -72,7 +83,7 @@ task:
         aug_scale_max: 1.6
         jitter: 0.3
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       random_flip: True
       aug_rand_saturation: 1.5
       aug_rand_brightness: 1.5
@@ -86,19 +97,19 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 1
     dtype: float32
-    input_path: 'gs://cam2-datasets/coco/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
     is_training: false
     drop_remainder: true
     parser:
       max_num_instances: 200
-      letter_box: False
+      letter_box: True
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
+  init_checkpoint: '../checkpoints/512-wd-baseline-e1'
+  init_checkpoint_modules: 'all'
   annotation_file: null
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
@@ -119,8 +130,8 @@ trainer:
         name: PiecewiseConstantDecay
         values: [0.00131, 0.000131, 0.0000131] 
     optimizer:
-      type: sgd_dymow
-      sgd_dymow:
+      type: sgd_torch
+      sgd_torch:
         momentum: 0.949
         momentum_start: 0.949
         nesterov: True
