@@ -15,8 +15,6 @@
 # ==============================================================================
 """YOLO configuration definition."""
 from typing import List, Optional, Union
-import dataclasses
-from yolo.ops import anchor
 
 from official.core import exp_factory
 from official.modeling import hyperparams
@@ -27,7 +25,7 @@ from yolo import optimization
 from yolo.configs import backbones
 from yolo.configs import decoders
 import numpy as np
-import regex as re
+import dataclasses
 
 MIN_LEVEL = 1
 MAX_LEVEL = 7
