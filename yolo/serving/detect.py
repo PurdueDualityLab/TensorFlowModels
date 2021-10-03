@@ -62,31 +62,33 @@ class DetectionModule:
                                        frame_buffer_size=buffer_size)
       saver.start()
 
-    # try:
+    
     video_stream = video.get_generator()
     print("resolution: {}, {}".format(video.width, video.height))
-    for frames in video_stream:
-      images, preds = self.model_fn(frames)  
-      images = self.drawer(images, preds, scale_boxes=self.scale_boxes, stacked = False)
-      if display:
-        display.put_all(images)
-      
-      if save_file is not None:
-        saver.put_all(images)
-      
-      print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
-        video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
-      ), end="\r")
 
-    if display:
-      display.close()
-    if save_file is not None:
-      saver.close()
-    # except:
-    #   if display:
-    #     display.close()
-    #   if save_file is not None:
-    #     saver.close()
+    try:
+      for frames in video_stream:
+        images, preds = self.model_fn(frames)  
+        images = self.drawer(images, preds, scale_boxes=self.scale_boxes, stacked = False)
+        if display:
+          display.put_all(images)
+        
+        if save_file is not None:
+          saver.put_all(images)
+        
+        print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
+          video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
+        ), end="\r")
+
+      if display:
+        display.close()
+      if save_file is not None:
+        saver.close()
+    except:
+      if display:
+        display.close()
+      if save_file is not None:
+        saver.close()
 
   def image(self, image):
     image = tf.expand_dims(image, axis = 0)

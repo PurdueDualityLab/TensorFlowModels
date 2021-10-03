@@ -14,8 +14,10 @@ task:
         max_level: 5
         min_level: 3
     decoder:
-      version: v4
-      type: tiny
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: tiny
     head:
       smart_bias: true
     detection_generator:
@@ -24,9 +26,9 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: greedy
-      iou_thresh: 0.001
-      nms_thresh: 0.60
+      nms_type: tflite
+      iou_thresh: 0.25
+      nms_thresh: 0.45
     loss:
       use_scaled_loss: true
       update_on_repeat: true
@@ -50,10 +52,11 @@ task:
       norm_momentum: 0.97
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
-    boxes: ["(10, 13)", "(16, 30)", "(33, 23)",
-            "(30, 61)", "(62, 45)", "(59, 119)",
-            "(116, 90)", "(156, 198)", "(373, 326)"]
+    anchor_boxes:
+      anchors_per_scale: 3
+      boxes: [box: [10, 13], box: [16, 30], box: [33, 23],
+              box: [30, 61], box: [62, 45], box: [59, 119],
+              box: [116, 90], box: [156, 198], box: [373, 326]]
   train_data:
     global_batch_size: 64
     dtype: float32
