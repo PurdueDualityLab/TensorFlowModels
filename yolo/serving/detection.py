@@ -28,6 +28,7 @@ class DetectionModule(export_base.ExportModule):
   """Detection Module."""
 
   def _build_model(self):
+    # switch to get shape from config
     input_shape = [self._batch_size] + self._input_image_size + [3]
     input_specs = tf.keras.layers.InputSpec(shape=input_shape)
     model, _ = factory.build_yolo(input_specs=input_specs, 

@@ -52,8 +52,6 @@ def print_mod(model_name="detect.tflite"):
 class TfLiteModel:
 
   def __init__(self, model_name="cache/yolov4_csp/assets/yolov4_csp.tflite"):
-    labels = drawer.get_coco_names()
-
     self._interpreter = tf.lite.Interpreter(model_path=model_name)
     self._interpreter.allocate_tensors()
 
@@ -85,7 +83,7 @@ class TfLiteModel:
     confidences = self._interpreter.get_tensor(self._output_details[2]["index"])
     classes = self._interpreter.get_tensor(self._output_details[3]["index"])
     pred = {"bbox": boxes, "classes": classes, "confidence": confidences}
-    return image_, pred
+    return image/255, pred
 
 
 

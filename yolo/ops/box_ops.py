@@ -50,8 +50,9 @@ def xcycwh_to_yxyx(box: tf.Tensor):
   """
   with tf.name_scope('xcycwh_to_yxyx'):
     xy, wh = tf.split(box, 2, axis=-1)
-    xy_min = xy - wh / 2
-    xy_max = xy + wh / 2
+    wh_shift = wh / tf.fill(tf.shape(wh), tf.cast(2, wh.dtype))
+    xy_min = tf.math.subtract(xy, wh_shift)
+    xy_max = tf.math.add(xy, wh_shift)
     x_min, y_min = tf.split(xy_min, 2, axis=-1)
     x_max, y_max = tf.split(xy_max, 2, axis=-1)
     box = tf.concat([y_min, x_min, y_max, x_max], axis=-1)

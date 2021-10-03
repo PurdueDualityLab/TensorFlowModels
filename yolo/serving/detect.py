@@ -3,6 +3,7 @@ from yolo.serving.utils import video as pyvid
 from yolo.serving.utils import drawer as pydraw
 from yolo.serving.utils import model_fn as pymodel_run
 from yolo.serving.utils import output as pyoutput
+from yolo.serving.utils import tflite_model
 
 import tensorflow as tf
 from skimage import io
@@ -17,7 +18,13 @@ class DetectionModule:
     labels = pydraw.get_coco_names(path=labels_file)
     colors = pydraw.gen_colors_per_class(len(labels))
 
-    self.model_fn = pymodel_run.get_wrapped_model(model, params, include_statistics=True)
+    if isinstance(model, str) and str.endswith(model, ".tflite"):
+      model = tflite_model.TfLiteModel(model_name=model)
+      self.model_fn = pyvid.Statistics(model)
+      self.scale_boxes = True
+    else:
+      self.model_fn = pymodel_run.get_wrapped_model(model, params, include_statistics=True)
+      self.scale_boxes = False
     self.drawer = pydraw.DrawBoxes(labels = labels, colors = colors, thickness=1)
 
   def video(self, 
@@ -55,31 +62,31 @@ class DetectionModule:
                                        frame_buffer_size=buffer_size)
       saver.start()
 
-    try:
-      video_stream = video.get_generator()
-      print("resolution: {}, {}".format(video.width, video.height))
-      for frames in video_stream:
-        images, preds = self.model_fn(frames)  
-        images = self.drawer(images, preds, scale_boxes=False, stacked = False)
-        if display:
-          display.put_all(images)
-        
-        if save_file is not None:
-          saver.put_all(images)
-
-        print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
-          video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
-        ), end="\r")
-
+    # try:
+    video_stream = video.get_generator()
+    print("resolution: {}, {}".format(video.width, video.height))
+    for frames in video_stream:
+      images, preds = self.model_fn(frames)  
+      images = self.drawer(images, preds, scale_boxes=self.scale_boxes, stacked = False)
       if display:
-        display.close()
+        display.put_all(images)
+      
       if save_file is not None:
-        saver.close()
-    except:
-      if display:
-        display.close()
-      if save_file is not None:
-        saver.close()
+        saver.put_all(images)
+      
+      print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
+        video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
+      ), end="\r")
+
+    if display:
+      display.close()
+    if save_file is not None:
+      saver.close()
+    # except:
+    #   if display:
+    #     display.close()
+    #   if save_file is not None:
+    #     saver.close()
 
   def image(self, image):
     image = tf.expand_dims(image, axis = 0)
@@ -142,9 +149,13 @@ if __name__ == "__main__":
 
   # task, model, params = run.load_model(experiment='yolo_custom', config_path=config, model_dir=model_dir)
 
+  # detect = DetectionModule(
+  #   None, 
+  #   "/home/vbanna/Research/TensorFlowModels/cache/yolov4_csp", 
+  #   'yolo/dataloaders/dataset_specs/coco.names')
   detect = DetectionModule(
     None, 
-    "/home/vbanna/Research/TensorFlowModels/cache/yolov4_csp", 
+    "cache/yolov4_csp/assets/yolov4_csp.tflite", 
     'yolo/dataloaders/dataset_specs/coco.names')
   detect.video(
     file_name="../../Videos/soccer.mp4", 

@@ -191,12 +191,13 @@ class GridGenerator:
           tf.tile(tf.expand_dims(x_y, axis=-2), [1, 1, num, 1]), axis=0)
     return x_y
 
-  def _build_anchor_grid(self, anchors, dtype):
+  def _build_anchor_grid(self, width, height, anchors, dtype):
     """Get the transformed anchor boxes for each dimention."""
     with tf.name_scope('anchor_grid'):
       num = tf.shape(anchors)[0]
       anchors = tf.cast(anchors, dtype=dtype)
       anchors = tf.reshape(anchors, [1, 1, 1, num, 2])
+      anchors = tf.tile(anchors, [1, tf.cast(height, tf.int32), tf.cast(width, tf.int32), 1, 1])
     return anchors
 
   def _extend_batch(self, grid, batch_size):
@@ -210,6 +211,7 @@ class GridGenerator:
     grid_points = self._build_grid_points(width, height, self._anchors,
                                           self.dtype)
     anchor_grid = self._build_anchor_grid(
+        width, height,
         tf.cast(self._anchors, self.dtype) /
         tf.cast(self._scale_anchors, self.dtype), self.dtype)
 
@@ -389,6 +391,20 @@ def average_iou(iou):
   return tf.stop_gradient(avg_iou)
 
 
+def _scale_xy(xy, scale_xy):
+  with tf.name_scope("scale_xy"):
+    scale_xy = tf.fill(tf.shape(xy), tf.cast(scale_xy, xy.dtype))
+    p5 = tf.fill(tf.shape(xy), tf.cast(0.5, xy.dtype))
+    ones = tf.ones_like(xy)
+    xy = xy * scale_xy - p5 * (scale_xy - ones)
+  return xy
+
+def _get_scaler(width, height, grid):
+  scaler = tf.convert_to_tensor([height, width, height, width])
+  grid_width = tf.fill(tf.shape(grid[..., 0]), width)
+  grid_height = tf.fill(tf.shape(grid[..., 0]), height)
+  return tf.stack([grid_height, grid_width, grid_height, grid_width], axis = -1), scaler
+
 def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
                  scale_xy):
   """Decodes models boxes applying and exponential to width and height maps."""
@@ -397,7 +413,8 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
   pred_wh = encoded_boxes[..., 2:4]
 
   # build a scaling tensor to get the offset of th ebox relative to the image
-  scaler = tf.convert_to_tensor([height, width, height, width])
+  # scaler = tf.convert_to_tensor([height, width, height, width])
+  grid_scaler, scaler = _get_scaler(width, height, grid_points)
   scale_xy = tf.cast(scale_xy, encoded_boxes.dtype)
 
   # apply the sigmoid
@@ -405,7 +422,7 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 
   # scale the centers and find the offset of each box relative to
   # their center pixel
-  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+  pred_xy = _scale_xy(pred_xy, scale_xy)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
@@ -417,7 +434,7 @@ def _scale_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 
   # build the final predicted box
   scaled_box = tf.concat([box_xy, box_wh], axis=-1)
-  pred_box = scaled_box / scaler
+  pred_box = scaled_box / grid_scaler
 
   # shift scaled boxes
   scaled_box = tf.concat([pred_xy, box_wh], axis=-1)
@@ -461,36 +478,39 @@ def _darknet_boxes(encoded_boxes, width, height, anchor_grid, grid_points,
 def _new_coord_scale_boxes(encoded_boxes, width, height, anchor_grid,
                            grid_points, scale_xy):
   """Decodes models boxes by squaring and scaling the width and height maps."""
-  # split the boxes
-  pred_xy = encoded_boxes[..., 0:2]
-  pred_wh = encoded_boxes[..., 2:4]
+  with tf.name_scope("scale_boxes"):
+    # split the boxes
+    pred_xy = encoded_boxes[..., 0:2]
+    pred_wh = encoded_boxes[..., 2:4]
 
-  # build a scaling tensor to get the offset of th ebox relative to the image
-  scaler = tf.convert_to_tensor([height, width, height, width])
-  scale_xy = tf.cast(scale_xy, pred_xy.dtype)
+    # build a scaling tensor to get the offset of th ebox relative to the image
+    # scaler = tf.convert_to_tensor([height, width, height, width])
+    grid_scaler, scaler = _get_scaler(width, height, grid_points)
+    scale_xy = tf.cast(scale_xy, pred_xy.dtype)
 
-  # apply the sigmoid
-  pred_xy = tf.math.sigmoid(pred_xy)
-  pred_wh = tf.math.sigmoid(pred_wh)
+    # apply the sigmoid
+    pred_xy = tf.math.sigmoid(pred_xy)
+    pred_wh = tf.math.sigmoid(pred_wh)
 
-  # scale the xy offset predictions according to the config
-  pred_xy = pred_xy * scale_xy - 0.5 * (scale_xy - 1)
+    # scale the xy offset predictions according to the config
+    pred_xy = _scale_xy(pred_xy, scale_xy)
 
-  # find the true offset from the grid points and the scaler
-  # where the grid points are the relative offset of each pixel with
-  # in the image
-  box_xy = grid_points + pred_xy
+    # find the true offset from the grid points and the scaler
+    # where the grid points are the relative offset of each pixel with
+    # in the image
+    box_xy = grid_points + pred_xy
 
-  # decode the widht and height of the boxes and correlate them
-  # to the anchor boxes
-  box_wh = (2 * pred_wh)**2 * anchor_grid
+    # decode the widht and height of the boxes and correlate them
+    # to the anchor boxes
+    pred_wh *= tf.fill(tf.shape(pred_wh), tf.cast(2, pred_wh.dtype))
+    box_wh = tf.square(pred_wh) * anchor_grid
 
-  # build the final boxes
-  scaled_box = tf.concat([box_xy, box_wh], axis=-1)
-  pred_box = scaled_box / scaler
+    # build the final boxes
+    scaled_box = tf.concat([box_xy, box_wh], axis=-1)
+    pred_box = scaled_box / grid_scaler
 
-  # shift scaled boxes
-  scaled_box = tf.concat([pred_xy, box_wh], axis=-1)
+    # shift scaled boxes
+    scaled_box = tf.concat([pred_xy, box_wh], axis=-1)
   return (scaler, scaled_box, pred_box)
 
 

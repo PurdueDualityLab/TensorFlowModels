@@ -74,6 +74,9 @@ flags.DEFINE_string('export_checkpoint_subdir', 'checkpoint',
 flags.DEFINE_string('export_saved_model_subdir', 'saved_model',
                     'The subdirectory for saved model.')
 
+"""
+python3.8 -m yolo.serving.export_saved_model --experiment scaled_yolo  --checkpoint_path ../checkpoints/640-baseline-e13/ --config_file yolo/configs/experiments/yolov4-csp/inference/640.yaml  --input_image_size 640,640 --export_checkpoint_subdir checkpoints --export_saved_model_subdir yolov4_csp --export_dir cache
+"""
 
 def main(_):
 
