@@ -39,6 +39,7 @@ task:
       nms_thresh: 0.60
     loss:
       use_scaled_loss: False
+      update_on_repeat: False
       box_loss_type:  
         'all': ciou
       ignore_thresh:
@@ -54,7 +55,7 @@ task:
       max_delta:
         'all': 5.0
     norm_activation:
-      activation: mish
+      activation: gelu
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
