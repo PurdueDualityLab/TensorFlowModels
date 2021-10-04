@@ -106,7 +106,7 @@ def load_model(experiment='yolo_custom', config_path=[], model_dir=''):
                                            params.runtime.loss_scale)
 
   task = task_factory.get_task(params.task, logging_dir=model_dir)
-  model = task.build_model()
+  model = task.build_model(batch_size = None)
 
   if model_dir is not None and model_dir != '':
     optimizer = task.create_optimizer(params.trainer.optimizer_config,
@@ -132,7 +132,7 @@ def load_flags(CFG):
                                            params.runtime.loss_scale)
 
   task = task_factory.get_task(params.task, logging_dir=model_dir)
-  model = task.build_model()
+  model = task.build_model(batch_size = CFG.batch_size)
 
   if model_dir is not None and model_dir != '':
     optimizer = task.create_optimizer(params.trainer.optimizer_config,

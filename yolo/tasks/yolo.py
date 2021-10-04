@@ -61,7 +61,7 @@ class YoloTask(base_task.Task):
     preprocessing_ops.set_random_seeds(seed=params.train_data.seed)
     return
 
-  def build_model(self):
+  def build_model(self, batch_size = None):
     """Build an instance of Yolo."""
     from yolo.modeling.factory import build_yolo
 
@@ -69,7 +69,7 @@ class YoloTask(base_task.Task):
     l2_weight_decay = self.task_config.weight_decay / 2.0
 
     input_size = model_base_cfg.input_size.copy()
-    input_specs = tf.keras.layers.InputSpec(shape=[None] + input_size)
+    input_specs = tf.keras.layers.InputSpec(shape=[batch_size] + input_size)
     l2_regularizer = (
         tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
     model, losses = build_yolo(input_specs, model_base_cfg, 
