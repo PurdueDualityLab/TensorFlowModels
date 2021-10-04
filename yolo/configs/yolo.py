@@ -74,6 +74,7 @@ class Mosaic(hyperparams.Config):
   aug_scale_min: float = 1.0
   aug_scale_max: float = 1.0
   jitter: float = 0.0
+  random_pad: float = False
 
 @dataclasses.dataclass
 class Parser(hyperparams.Config):

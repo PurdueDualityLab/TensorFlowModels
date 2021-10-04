@@ -133,6 +133,7 @@ class YoloTask(base_task.Task):
         mosaic_crop_mode=params.parser.mosaic.mosaic_crop_mode,
         aug_scale_min=params.parser.mosaic.aug_scale_min,
         aug_scale_max=params.parser.mosaic.aug_scale_max,
+        random_pad=params.parser.mosaic.random_pad,
         **base_config)
 
     # init Parser
