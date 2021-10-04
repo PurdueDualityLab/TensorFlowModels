@@ -16,7 +16,7 @@ task:
         window_size: [7, 7, 7, 7] 
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
-        drop_path: 0.0
+        drop_path: 0.1
         absolute_positional_embed: False
     decoder:
       type: yolo_decoder
