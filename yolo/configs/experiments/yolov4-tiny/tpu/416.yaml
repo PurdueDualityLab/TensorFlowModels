@@ -13,8 +13,10 @@ task:
         max_level: 5
         min_level: 4
     decoder:
-      version: v4
-      type: tiny
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: tiny
     head:
       smart_bias: true
     detection_generator:
