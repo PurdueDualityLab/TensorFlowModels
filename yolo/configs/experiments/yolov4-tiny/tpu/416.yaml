@@ -55,8 +55,6 @@ task:
       anchors_per_scale: 3
       boxes: [box: [10, 14], box: [23, 27], box: [37, 58], 
               box: [81, 82], box: [135, 169], box: [344, 319]]
-  init_checkpoint: null
-  init_checkpoint_modules: null
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -99,8 +97,8 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
+  init_checkpoint: null
+  init_checkpoint_modules: null
   annotation_file: null
 trainer:
   train_steps: 2000200 # 160 epochs at 64 batchsize -> 500500 * 64/2
