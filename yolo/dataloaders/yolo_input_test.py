@@ -35,7 +35,7 @@ def test_yolo_input_task():
   # experiment = "yolo_darknet"
   experiment = "scaled_yolo"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-swin-2.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/tpu/512-swin-smooth.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]

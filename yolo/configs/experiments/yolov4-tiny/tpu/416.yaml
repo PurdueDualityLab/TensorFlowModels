@@ -55,6 +55,8 @@ task:
       anchors_per_scale: 3
       boxes: [box: [10, 14], box: [23, 27], box: [37, 58], 
               box: [81, 82], box: [135, 169], box: [344, 319]]
+  init_checkpoint: null
+  init_checkpoint_modules: null
   train_data:
     global_batch_size: 64
     dtype: float32

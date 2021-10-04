@@ -212,7 +212,6 @@ class YoloTask(cfg.TaskConfig):
   init_checkpoint: Optional[str] = None
   init_checkpoint_modules: Union[
       str, List[str]] = 'all'  # all, backbone, and/or decoder
-  gradient_clip_norm: float = 0.0
 
 
 COCO_INPUT_PATH_BASE = 'coco'
