@@ -14,8 +14,10 @@ task:
         max_level: 5
         min_level: 4
     decoder:
-      version: v4
-      type: tiny
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: tiny
     head:
       smart_bias: true
     detection_generator:
@@ -45,7 +47,7 @@ task:
       max_delta:
         'all': 5.0
     norm_activation:
-      activation: tiny
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.99
       use_sync_bn: true
@@ -96,8 +98,6 @@ task:
       use_tie_breaker: True
       anchor_thresh: 0.213
   weight_decay: 0.000
-  init_checkpoint: 'gs://tensorflow2/darknet/cspdarknet53-golden'
-  init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
   train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2

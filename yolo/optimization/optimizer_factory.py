@@ -27,6 +27,24 @@ OPTIMIZERS_CLS = optimizer_factory.OPTIMIZERS_CLS
 LR_CLS = optimizer_factory.LR_CLS
 WARMUP_CLS = optimizer_factory.WARMUP_CLS
 
+def build_learning_rate(lr_type, warmup_type, lr_config, warmup_config):
+  """Build learning rate.
+
+  Builds learning rate from config. Learning rate schedule is built according
+  to the learning rate config. If learning rate type is consant,
+  lr_config.learning_rate is returned.
+
+  Returns:
+    tf.keras.optimizers.schedules.LearningRateSchedule instance. If
+    learning rate type is consant, lr_config.learning_rate is returned.
+  """
+  if lr_type == 'constant':
+    lr = lr_config.learning_rate
+  else:
+    lr = LR_CLS[lr_type](**lr_config.as_dict())
+  if warmup_config:
+    lr = WARMUP_CLS[warmup_type](lr, **warmup_config.as_dict())
+  return lr
 
 class OptimizerFactory(optimizer_factory.OptimizerFactory):
   """Optimizer factory class.
