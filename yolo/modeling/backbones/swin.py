@@ -113,7 +113,8 @@ class SwinTransformer(tf.keras.Model):
                         embed_dimentions=self._embed_dims, 
                         norm_layer=self._norm_layer if self._patch_norm else None, 
                         absolute_positional_embed=self._absolute_positional_embed,
-                        activation=None, kernel_initializer = 'VarianceScaling',
+                        activation=None, 
+                        kernel_initializer = 'VarianceScaling',
                         bias_initializer = self._bias_initializer,
                         kernel_regularizer = self._kernel_regularizer ,
                         bias_regularizer = self._bias_regularizer)(inputs)

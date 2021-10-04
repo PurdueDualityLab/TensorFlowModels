@@ -32,7 +32,7 @@ class ClassificationModel(tf.keras.Model):
       input_specs: tf.keras.layers.InputSpec = layers.InputSpec(
           shape=[None, None, None, 3]),
       dropout_rate: float = 0.0,
-      kernel_initializer: str = 'random_uniform',
+      kernel_initializer: str = 'TruncatedNormal',
       kernel_regularizer: Optional[tf.keras.regularizers.Regularizer] = None,
       bias_regularizer: Optional[tf.keras.regularizers.Regularizer] = None,
       add_head_batch_norm: bool = False,
@@ -62,6 +62,10 @@ class ClassificationModel(tf.keras.Model):
       skip_logits_layer: `bool`, whether to skip the prediction layer.
       **kwargs: keyword arguments to be passed.
     """
+    if kernel_initializer == 'TruncatedNormal':
+      kernel_initializer = tf.keras.initializers.TruncatedNormal(
+                                      mean=0.0, stddev=0.02, seed=None)
+
     if use_sync_bn:
       norm = tf.keras.layers.experimental.SyncBatchNormalization
     else:

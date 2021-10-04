@@ -34,7 +34,7 @@ def _get_activation_fn(activation, leaky_alpha = 0.1):
 def _get_norm_fn(norm_layer, 
                  axis = -1, 
                  momentum = 0.99, 
-                 epsilon = 0.001, 
+                 epsilon = 0.00001, 
                  moving_mean_initializer='zeros', 
                  moving_variance_initializer='ones'):
   kwargs = dict(
@@ -54,6 +54,11 @@ def _get_norm_fn(norm_layer,
     return partial(fn, **kwargs)
   fn = tf.keras.layers.BatchNormalization
   return partial(fn, **kwargs)
+
+def _get_initializer(initializer):
+  if initializer == 'TruncatedNormal':
+    initializer = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.02)
+  return initializer
 
 def window_partition(x, window_size):
   """
@@ -92,7 +97,7 @@ class MLP(tf.keras.layers.Layer):
   def __init__(self, 
                hidden_features = None, 
                out_features = None, 
-               kernel_initializer='VarianceScaling',
+               kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None,
@@ -101,13 +106,14 @@ class MLP(tf.keras.layers.Layer):
                dropout = 0.0, 
                **kwargs):
     super().__init__(**kwargs)
+
     # features 
     self._hidden_features = hidden_features
     self._out_features = out_features
 
     # init and regularizer
     self._init_args = dict(
-      kernel_initializer = kernel_initializer,
+      kernel_initializer = _get_initializer(kernel_initializer),
       bias_initializer = bias_initializer,
       kernel_regularizer = kernel_regularizer,
       bias_regularizer = bias_regularizer,
@@ -151,11 +157,11 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
                qk_scale = None, 
                attention_dropout = 0.0, 
                projection_dropout = 0.0, 
-               kernel_initializer='VarianceScaling',
+               kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
-               relative_bias_initializer='TrucatedNormal', 
+               relative_bias_initializer='TruncatedNormal', 
                attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
                **kwargs):
     super().__init__(**kwargs)
@@ -176,14 +182,10 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     self._attention_activation = attention_activation
 
     # init and regularizer
-    self._relative_bias_initializer = relative_bias_initializer
-    if relative_bias_initializer == "TrucatedNormal":
-      self._relative_bias_initializer = tf.keras.initializers.TruncatedNormal(
-          mean=0.0, stddev=0.02) 
+    self._relative_bias_initializer = _get_initializer(relative_bias_initializer)
     self._relative_bias_regularizer = bias_regularizer
-
     self._init_args = dict(
-      kernel_initializer = kernel_initializer,
+      kernel_initializer = _get_initializer(kernel_initializer),
       bias_initializer = bias_initializer,
       kernel_regularizer = kernel_regularizer,
       bias_regularizer = bias_regularizer,
@@ -286,7 +288,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                drop_path = 0.0, 
                activation = 'gelu',
                norm_layer = 'layer_norm',
-               kernel_initializer='VarianceScaling',
+               kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
@@ -310,7 +312,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
 
     # init and regularizer
     self._init_args = dict(
-      kernel_initializer = kernel_initializer,
+      kernel_initializer = _get_initializer(kernel_initializer),
       bias_initializer = bias_initializer,
       kernel_regularizer = kernel_regularizer,
       bias_regularizer = bias_regularizer,
@@ -407,7 +409,7 @@ class PatchMerge(tf.keras.layers.Layer):
 
   def __init__(self,
                norm_layer = 'layer_norm',
-               kernel_initializer='VarianceScaling',
+               kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
@@ -420,7 +422,7 @@ class PatchMerge(tf.keras.layers.Layer):
     # init and regularizer
     self._init_args = dict(
       use_bias = False,
-      kernel_initializer = kernel_initializer,
+      kernel_initializer = _get_initializer(kernel_initializer),
       bias_initializer = bias_initializer,
       kernel_regularizer = kernel_regularizer,
       bias_regularizer = bias_regularizer,
@@ -472,7 +474,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
                norm_layer = 'layer_norm', 
                downsample = 'patch_and_merge',
                activation = 'gelu',
-               kernel_initializer='VarianceScaling',
+               kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
@@ -556,10 +558,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
 
     img_mask = tf.convert_to_tensor(img_mask)
     self.img_mask = img_mask
-    # tf.Variable(
-    #   initial_value=img_mask, 
-    #   trainable=False, 
-    #   name='{}_img_mask'.format(self.name), )
     return 
 
   def _build_mask(self, x_shape, dtype = 'float32'):
@@ -625,7 +623,7 @@ class PatchEmbed(tf.keras.layers.Layer):
 
     # TF corner pads by default so no need to do it manually
     self.project = nn_blocks.ConvBN(
-      filters =embed_dims, kernel_size = patch_size, 
+      filters = embed_dims, kernel_size = patch_size, 
       strides = patch_size, padding = 'same',
       **self._init_args)
 
@@ -638,8 +636,7 @@ class PatchEmbed(tf.keras.layers.Layer):
       self.ape = self.add_weight(
         name = "absolute_positional_embed", 
         shape = [1, patch_resolution[0], patch_resolution[1], embed_dims],
-        initializer = tf.keras.initializers.TruncatedNormal(
-          mean=0.0, stddev=0.02), 
+        initializer = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.02), 
         regularizer = self._bias_regularizer, 
         trainable = True)
 

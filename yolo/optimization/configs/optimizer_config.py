@@ -16,7 +16,7 @@ from typing import List, Optional
 
 import dataclasses
 from official.modeling.hyperparams import base_config
-from official.modeling.optimization.configs.optimizer_config import BaseOptimizerConfig
+from official.modeling.optimization.configs import optimizer_config 
 
 
 @dataclasses.dataclass
@@ -57,3 +57,47 @@ class SGDTorchConfig(BaseOptimizerConfig):
   warmup_steps: int = 1000
   weight_decay: float = 0.0
   sim_torch: bool = False
+
+
+# class LRconfig(base_config.Config):
+#   learning_rate: optimizer_config.LrConfig = optimizer_config.LrConfig()
+#   warmup: optimizer_config.WarmupConfig = optimizer_config.WarmupConfig()
+
+# @dataclasses.dataclass
+# class SGDGroupConfig(optimizer_config.BaseOptimizerConfig):
+#   """Configuration for SGD optimizer.
+
+#   The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+
+#   Attributes:
+#     name: name of the optimizer.
+#     decay: decay rate for SGD optimizer.
+#     nesterov: nesterov for SGD optimizer.
+#     momentum_start: momentum starting point for SGD optimizer.
+#     momentum: momentum for SGD optimizer.
+#   """
+#   keys: List[str] = []
+#   name: str = "weights"
+#   lr_config: LRconfig = LRconfig()
+#   momentum: float = 0.9
+#   weight_decay: float = 0.0
+
+# @dataclasses.dataclass
+# class GroupSGDConfig(optimizer_config.BaseOptimizerConfig):
+#   """Configuration for SGD optimizer.
+
+#   The attributes for this class matches the arguments of tf.keras.optimizer.SGD.
+
+#   Attributes:
+#     name: name of the optimizer.
+#     decay: decay rate for SGD optimizer.
+#     nesterov: nesterov for SGD optimizer.
+#     momentum_start: momentum starting point for SGD optimizer.
+#     momentum: momentum for SGD optimizer.
+#   """
+#   name: str = "SGD"
+#   nesterov: bool = False
+#   momentum: float = 0.9
+#   weight_decay: float = 0.0
+#   decay: float = 0.0
+#   groups: Optional[List[SGDGroupConfig]] = None

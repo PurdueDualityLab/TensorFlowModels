@@ -30,7 +30,7 @@ except:
     return var._unique_id
 
 
-class GroupOpt(tf.keras.optimizers.Optimizer):
+class GroupSgd(tf.keras.optimizers.Optimizer):
   """Optimizer that simulates the SGD module used in pytorch. 
   
   
@@ -54,34 +54,34 @@ class GroupOpt(tf.keras.optimizers.Optimizer):
   ```
   """
 
-  _HAS_AGGREGATE_GRAD = True
 
   def __init__(self,
                lr = 0.001, # default params if not specified in a group
                momentum = 0.9, # default params if not specified in a group
                weight_decay = 0.01, # default params if not specified in a group
+               nesterov = True,
                groups = None, 
                name="SGD",
                **kwargs):
-    super(GroupOpt, self).__init__(name, **kwargs)
+    super(GroupSgd, self).__init__(name, **kwargs)
 
     # all groups must have the SAME keys.
-    groups = groups or [  #]
-      {
-        "keys": ["kernel", "weights"], # weights
-        "lr": 0.001,
-        "momentum": 0.9,
-        "weight_decay": 0.005,
-        "name": "weights"
-      },
-      {
-        "keys": ["bias", "beta"], # biases
-        "lr": 0.003,
-        # "momentum": 0.1,
-        # "weight_decay": 0.001,
-        "name": "biases"
-      }
-    ]
+    groups = groups or []
+    #   {
+    #     "keys": ["kernel", "weights"], # weights
+    #     "lr": 0.001,
+    #     "momentum": 0.9,
+    #     "weight_decay": 0.005,
+    #     "name": "weights"
+    #   },
+    #   {
+    #     "keys": ["bias", "beta"], # biases
+    #     "lr": 0.003,
+    #     # "momentum": 0.1,
+    #     # "weight_decay": 0.001,
+    #     "name": "biases"
+    #   }
+    # ]
 
     self.others = {
         "keys": ["(.)*"], # required covers anything not in a group.
@@ -92,6 +92,8 @@ class GroupOpt(tf.keras.optimizers.Optimizer):
       }
     groups.append(self.others)
     self.groups = self.set_groups(groups)
+
+    self.nesterov = nesterov
     self._variables_set = False
 
   def set_groups(self, groups):
@@ -171,7 +173,7 @@ class GroupOpt(tf.keras.optimizers.Optimizer):
     return unit
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(GroupOpt, self)._prepare_local(var_device, var_dtype,apply_state)
+    super(GroupSgd, self)._prepare_local(var_device, var_dtype,apply_state)
 
     for group in self.groups.values():
       for key in group["opt_keys"]:
@@ -195,7 +197,6 @@ class GroupOpt(tf.keras.optimizers.Optimizer):
     """Create a momentum variable for each variable."""
     """SGD only"""
     for var in var_list:
-      # check if trainable to support GPU EMA. 
       if var.trainable: 
         self.add_slot(var, "momentum")
 
@@ -204,26 +205,26 @@ class GroupOpt(tf.keras.optimizers.Optimizer):
     dparams = grad
     groups = []
 
-    # # do not update non-trainable weights
-    # if not var.trainable:
-    #   return tf.group(*groups)
+    # do not update non-trainable weights
+    if not var.trainable:
+      return tf.group(*groups)
 
-    # if self._weight_decay:
-    #   dparams += (weight_decay * var)
+    # weight decay
+    dparams = dparams.assign_add(weight_decay * var)
 
-    # if self._momentum:
-    #   momentum_var = self.get_slot(var, "momentum")
-    #   momentum_update = momentum_var.assign(
-    #       momentum * momentum_var + dparams, use_locking=self._use_locking)
-    #   groups.append(momentum_update)
+    # momentum var
+    momentum_var = self.get_slot(var, "momentum")
+    momentum_update = momentum_var.assign(
+        momentum * momentum_var + dparams, use_locking=self._use_locking)
+    groups.append(momentum_update)
 
-    #   if self.nesterov:
-    #     dparams += (momentum * momentum_update)
-    #   else:
-    #     dparams = momentum_update
+    if self.nesterov:
+      dparams = dparams.assign_add(momentum * momentum_update)
+    else:
+      dparams = momentum_update
 
-    # weight_update = var.assign_add(-lr * dparams, use_locking=self._use_locking)
-    # groups.append(weight_update)
+    weight_update = var.assign_add(-lr * dparams, use_locking=self._use_locking)
+    groups.append(weight_update)
     return tf.group(*groups)
 
   def _run_sgd(self, grad, var, apply_state=None):
@@ -255,7 +256,7 @@ if __name__ == "__main__":
       experiment="yolo_darknet",
       config_path=["yolo/configs/experiments/yolov4-tiny/inference/416.yaml"],
       model_dir='')
-  k = GroupOpt()
+  k = GroupSgd()
   # k.search_and_set_variable_groups(model.trainable_variables)
 
   gradients = model.trainable_variables
