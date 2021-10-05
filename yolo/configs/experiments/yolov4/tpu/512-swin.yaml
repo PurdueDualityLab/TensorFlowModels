@@ -111,7 +111,7 @@ task:
   init_checkpoint_modules: 'backbone'
   annotation_file: null
 trainer:
-  train_steps: 500500 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 202813 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 625
   steps_per_loop: 1850
   summary_interval: 1850
@@ -122,16 +122,16 @@ trainer:
     learning_rate:
       type: stepwise
       stepwise:
-        boundaries: [400000, 450000]
+        boundaries: [162250, 182531]
         name: PiecewiseConstantDecay
-        values: [0.0004, 0.00004, 0.000004] 
+        values: [0.0001, 0.00001, 0.000001] 
     optimizer:
       type: 'adamw'
       adamw:
         name: AdamWeightDecay
         beta_1: 0.9
         beta_2: 0.999
-        weight_decay_rate: 0.05
+        weight_decay_rate: 0.005
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
         gradient_clip_norm: 0.0
