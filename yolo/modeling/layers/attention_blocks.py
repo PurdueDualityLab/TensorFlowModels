@@ -14,13 +14,10 @@
 
 # Lint as: python3
 """Contains common building blocks for yolo neural networks."""
-import functools
-from typing import Callable, List, Tuple, Union
+from typing import List
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.ops.control_flow_ops import _summarize_eager
-from official.modeling import activations, tf_utils
-from yolo.modeling.layers import nn_blocks
+from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import nn_layers
 from functools import partial
 
@@ -91,6 +88,11 @@ def window_reverse(x, window_size, H, W):
   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
   x = tf.reshape(x, [-1, H, W, C])
   return x
+
+class Identity(tf.keras.layers.Layer):
+
+  def call(self, inputs):
+    return inputs
 
 class MLP(tf.keras.layers.Layer):
 
@@ -344,7 +346,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     if self._drop_path > 0.0:
       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
     else:
-      self.drop_path = nn_blocks.Identity()
+      self.drop_path = Identity()
     
     self.norm2 = self._norm_layer()
     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
@@ -369,10 +371,10 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
     _, Hp, Wp, _ = x.shape
 
-    # cyclic shift
-    if self._shift_size > 0:
+    # cyclic shift 
+    if self._shift_size != 0:
       shifted_x = tf.roll(x, shift=[-self._shift_size, -self._shift_size], axis = [1, 2])
-      attn_mask = mask_matrix      
+      attn_mask = mask_matrix   
     else:
       shifted_x = x
       attn_mask = None 
@@ -386,7 +388,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     attn_windows = tf.reshape(attn_windows, [-1, self._window_size, self._window_size, C]) # nW*B, window_size*window_size, C
     shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
 
-    if self._shift_size > 0:
+    if self._shift_size != 0:
       x = tf.roll(shifted_x, shift=[self._shift_size, self._shift_size], axis = [1, 2])
     else:
       x = shifted_x
@@ -569,7 +571,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     mask_windows = tf.reshape(mask_windows, [-1, self._window_size*self._window_size])
 
     attn_mask = tf.expand_dims(mask_windows, axis = 1) - tf.expand_dims(mask_windows, axis = 2)
-    # attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
+    attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, dtype), attn_mask)
     attn_mask = tf.where(attn_mask != 0, tf.cast(-100.0, dtype), attn_mask)
     return attn_mask
 
@@ -608,7 +610,6 @@ class PatchEmbed(tf.keras.layers.Layer):
     # init and regularizer
     self._bias_regularizer = bias_regularizer
     self._init_args = dict(
-      use_bn = False,
       activation = activation,
       kernel_initializer = kernel_initializer,
       bias_initializer = kernel_initializer,
@@ -622,9 +623,11 @@ class PatchEmbed(tf.keras.layers.Layer):
     patch_size = self._patch_size
 
     # TF corner pads by default so no need to do it manually
-    self.project = nn_blocks.ConvBN(
-      filters = embed_dims, kernel_size = patch_size, 
-      strides = patch_size, padding = 'same',
+    self.project = tf.keras.layers.Conv2D(
+      filters = embed_dims, 
+      kernel_size = patch_size, 
+      strides = patch_size, 
+      padding = 'same',
       **self._init_args)
 
     self.norm = None

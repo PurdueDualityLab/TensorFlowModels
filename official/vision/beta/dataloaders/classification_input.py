@@ -206,8 +206,8 @@ class Parser(parser.Parser):
       image = tf.io.decode_image(image_bytes, channels=3)
       image.set_shape([None, None, 3])
 
-      # Center crops.
-      image = preprocess_ops.center_crop_image(image)
+      # # Center crops.
+      # image = preprocess_ops.center_crop_image(image)
 
     image = tf.image.resize(
         image, self._output_size, method=tf.image.ResizeMethod.BILINEAR)
