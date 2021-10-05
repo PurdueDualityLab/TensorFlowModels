@@ -61,7 +61,7 @@ class ImageClassificationTask(base_task.Task):
 
     # Restoring checkpoint.
     if self.task_config.init_checkpoint_modules == 'all':
-      ckpt = tf.train.Checkpoint(**model.checkpoint_items)
+      ckpt = tf.train.Checkpoint(model)
       status = ckpt.read(ckpt_dir_or_file)
       status.expect_partial().assert_existing_objects_matched()
     elif self.task_config.init_checkpoint_modules == 'backbone':
@@ -281,6 +281,7 @@ class ImageClassificationTask(base_task.Task):
     elif model.compiled_metrics:
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
+    tf.print(logs)
     return logs
 
   def inference_step(self, inputs: tf.Tensor, model: tf.keras.Model):

@@ -430,8 +430,8 @@ class PatchMerge(tf.keras.layers.Layer):
   
   def build(self, input_shape):
     self._dims = input_shape[-1]
-    self.reduce = tf.keras.layers.Dense(self._dims * 2, **self._init_args)
     self.norm = self._norm_layer()
+    self.reduce = tf.keras.layers.Dense(self._dims * 2, **self._init_args)
   
   def call(self, x):
     """Down sample by 2. """

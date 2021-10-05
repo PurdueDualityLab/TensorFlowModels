@@ -4,8 +4,8 @@ runtime:
   num_gpus: 1
 task:
   model:
-    num_classes: 1001
-    input_size: [512, 512, 3]
+    num_classes: 1000
+    input_size: [224, 224, 3]
     backbone:
       type: 'swin'
       swin:
@@ -16,7 +16,7 @@ task:
         window_size: [7, 7, 7, 7] 
         depths: [2, 2, 6, 2]
         num_heads: [3, 6, 12, 24]
-        drop_path: 0.2
+        drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: False
     norm_activation:
@@ -37,14 +37,14 @@ task:
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: validation
     is_training: false
-    global_batch_size: 1
+    global_batch_size: 50
     dtype: 'float16'
     drop_remainder: true
-  init_checkpoint: '../checkpoints/swin-new-e1'
-  init_checkpoint_modules: 'backbone'
+  init_checkpoint: '../checkpoints/loaded_swin/loaded_swin_ckpt'
+  init_checkpoint_modules: 'all'
 trainer:
   train_steps: 351563  # epochs: 120
-  validation_steps: 48  # size of validation data
+  validation_steps: 5000  # size of validation data
   validation_interval: 1000
   steps_per_loop: 1
   summary_interval: 1

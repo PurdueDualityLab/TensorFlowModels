@@ -169,19 +169,26 @@ class SwinTransformer(tf.keras.Model):
     return self._output_specs
 
   def get_config(self):
-    layer_config = {
-        'min_level': self._min_size,
-        'max_level': self._max_size,
-        'kernel_initializer': self._kernel_initializer,
-        'kernel_regularizer': self._kernel_regularizer,
-        'bias_regularizer': self._bias_regularizer,
-        'norm_momentum': self._norm_momentum,
-        'norm_epsilon': self._norm_epislon,
-        'use_layer_norm': self._use_layer_norm,
-        'use_bn': self._use_bn,
-        'use_sync_bn': self._use_sync_bn,
-        'activation': self._activation,
-    }
+    layer_config = dict(
+      input_specs=self._input_shape,
+      min_level=self._min_level,
+      max_level=self._max_level,
+      embed_dims=self._embed_dims,
+      depths=self._depths,
+      num_heads=self._num_heads, 
+      window_size=self._window_size,
+      patch_size=self._patch_size,
+      mlp_ratio=self._mlp_ratio,
+      qkv_bias=self._qkv_bias,
+      qk_scale=self._qk_scale,
+      dropout=self._dropout,
+      attention_dropout=self._attention_dropout,
+      drop_path=self._drop_path,
+      normalize_endpoints=self._normalize_endpoints,
+      absolute_positional_embed=self._absolute_positional_embed,
+      activation=self._activation,
+      kernel_regularizer=self._kernel_regularizer
+    )
     return layer_config
 
 @factory.register_backbone_builder('swin')

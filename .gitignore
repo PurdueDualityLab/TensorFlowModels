@@ -10,6 +10,7 @@ v4tiny_logs
 yolov4-logs
 yolov4-eval
 cache.zip
+*.pth
 
 # lfs safe in case the demo is run and someone tries to push
 # if critical update needs to be made, then comment the 3 lines bellow or the
