@@ -75,7 +75,7 @@ def get_wrapped_model(model, params, include_statistics = False, undo_infos = Tr
   dtype = params.runtime.mixed_precision_dtype
 
   #fuse the model
-  if hasattr(model, "fuse"):
+  if hasattr(model, "fuse") and params.task.model.backbone.type != "swin":
     model.fuse()
 
   # build the model
@@ -96,7 +96,14 @@ def get_wrapped_model(model, params, include_statistics = False, undo_infos = Tr
       predictions["classes"]) = scale_boxes(predictions["bbox"], 
                                             predictions["classes"], 
                                             image)
-    return image, predictions 
+      return image, predictions 
+    else:
+      (predictions["bbox"], 
+      predictions["classes"]) = scale_boxes(predictions["bbox"], 
+                                            predictions["classes"], 
+                                            pimage)
+      return tf.cast(pimage * 255, tf.uint8), predictions
+
 
   if include_statistics:
     run = pyvid.Statistics(run)

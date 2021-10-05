@@ -18,12 +18,13 @@ class DetectionModule:
     labels = pydraw.get_coco_names(path=labels_file)
     colors = pydraw.gen_colors_per_class(len(labels))
 
+    self._undo_infos = True
     if isinstance(model, str) and str.endswith(model, ".tflite"):
       model = tflite_model.TfLiteModel(model_name=model)
       self.model_fn = pyvid.Statistics(model)
       self.scale_boxes = True
     else:
-      self.model_fn = pymodel_run.get_wrapped_model(model, params, include_statistics=True)
+      self.model_fn = pymodel_run.get_wrapped_model(model, params, include_statistics=True, undo_infos=self._undo_infos)
       self.scale_boxes = False
     self.drawer = pydraw.DrawBoxes(labels = labels, colors = colors, thickness=1)
 
@@ -66,29 +67,29 @@ class DetectionModule:
     video_stream = video.get_generator()
     print("resolution: {}, {}".format(video.width, video.height))
 
-    try:
-      for frames in video_stream:
-        images, preds = self.model_fn(frames)  
-        images = self.drawer(images, preds, scale_boxes=self.scale_boxes, stacked = False)
-        if display:
-          display.put_all(images)
-        
-        if save_file is not None:
-          saver.put_all(images)
-        
-        print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
-          video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
-        ), end="\r")
+    # try:
+    for frames in video_stream:
+      images, preds = self.model_fn(frames)  
+      images = self.drawer(images, preds, scale_boxes=self.scale_boxes, stacked = False, include_heatmap = not self._undo_infos)
+      if display:
+        display.put_all(images)
+      
+      if save_file is not None:
+        saver.put_all(images)
+      
+      print("read FPS: {}, process FPS: {}, model latency: {:0.3f}ms".format(
+        video.fps, self.model_fn.fps * batch_size, self.model_fn.latency * 1000/batch_size
+      ), end="\r")
 
-      if display:
-        display.close()
-      if save_file is not None:
-        saver.close()
-    except:
-      if display:
-        display.close()
-      if save_file is not None:
-        saver.close()
+    if display:
+      display.close()
+    if save_file is not None:
+      saver.close()
+    # except:
+    #   if display:
+    #     display.close()
+    #   if save_file is not None:
+    #     saver.close()
 
   def image(self, image):
     image = tf.expand_dims(image, axis = 0)

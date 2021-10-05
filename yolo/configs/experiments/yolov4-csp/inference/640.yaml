@@ -21,7 +21,8 @@ task:
     head:
       smart_bias: true
     norm_activation:
-      activation: leaky
+      activation: mish
+      use_sync_bn: true
     detection_generator:
       box_type:
         'all': scaled

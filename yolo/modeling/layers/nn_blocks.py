@@ -15,6 +15,8 @@
 """Contains common building blocks for yolo neural networks."""
 from typing import Callable, List, Tuple
 import tensorflow as tf
+from tensorflow.python.eager.context import check_alive
+import tensorflow_addons as tfa
 import logging
 from official.modeling import tf_utils
 from official.vision.beta.ops import spatial_transform_ops
@@ -127,7 +129,9 @@ class ConvBN(tf.keras.layers.Layer):
     else:
       self._conv_base = tf.keras.layers.Conv2D
 
-    if use_sync_bn:
+    if use_sync_bn is None:
+      self._bn_base = tfa.layers.GroupNormalization
+    elif use_sync_bn:
       self._bn_base = tf.keras.layers.experimental.SyncBatchNormalization
     else:
       self._bn_base = tf.keras.layers.BatchNormalization
@@ -162,10 +166,20 @@ class ConvBN(tf.keras.layers.Layer):
         bias_regularizer=self._bias_regularizer)
 
     if self._use_bn:
-      self.bn = self._bn_base(
-          momentum=self._norm_momentum,
-          epsilon=self._norm_epsilon,
-          axis=self._bn_axis)
+      if self._use_sync_bn == None:
+        channels = input_shape[-1]
+        groups = 36
+        if channels / groups != channels // groups:
+          groups = 32
+        self.bn = self._bn_base(
+            groups = groups,
+            epsilon=self._norm_epsilon,
+            axis=self._bn_axis)
+      else:
+        self.bn = self._bn_base(
+            momentum=self._norm_momentum,
+            epsilon=self._norm_epsilon,
+            axis=self._bn_axis)
     else:
       self.bn = None
 
@@ -184,7 +198,7 @@ class ConvBN(tf.keras.layers.Layer):
     return x
 
   def fuse(self):
-    if self.bn is not None and not self._use_separable_conv:
+    if self.bn is not None and not self._use_separable_conv and not isinstance(self.bn, tfa.layers.GroupNormalization):
       # Fuse convolution and batchnorm, gives me +2 to 3 FPS 2ms latency.
       # layers: https://tehnokv.com/posts/fusing-batchnorm-and-conv/
       if self._fuse:

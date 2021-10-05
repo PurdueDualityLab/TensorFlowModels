@@ -78,13 +78,19 @@ class DrawBoxes(object):
     cv2.putText(image, text, (x0, y0 + txt_size[1]), self._font, 0.4, txt_color, thickness=1)
     return True
   
-  def __call__(self, images, results, scale_boxes = True, stacked = True):
+  def __call__(self, images, results, scale_boxes = True, stacked = True, include_heatmap = True):
 
     if hasattr(images, "numpy"):
       images = images.numpy()
 
     boxes = tf.convert_to_tensor(results["bbox"])
     classes = tf.convert_to_tensor(results["classes"])
+
+    heatmaps = "raw_output" in results and include_heatmap
+    if heatmaps:
+      masks = results["raw_output"]
+      masks = {k: tf.cast(tf.math.sigmoid(tf.split(v, v.shape[-1], axis = -1)[4]), tf.float32) for k, v in masks.items()}
+
 
     if scale_boxes:
       boxes, classes = self._scale_boxes(boxes, classes, images)
@@ -106,6 +112,24 @@ class DrawBoxes(object):
     else:
       image = []
       for i, im in enumerate(images):
+        if heatmaps:
+          nkeys = len(masks.keys())
+          im_mask = None
+          alpha = 0.6
+          for k, v in masks.items():
+            if hasattr(v, "numpy"):
+              v = v.numpy()
+            v = cv2.resize(v[i, ..., 0], (im.shape[1], im.shape[0]))
+            v = cv2.applyColorMap((v * 255).astype(np.uint8), cv2.COLORMAP_JET)
+            if im_mask is None:
+              im_mask = v.astype(np.float32)/nkeys 
+            else:
+              im_mask += v.astype(np.float32)/nkeys 
+          im_type = im.dtype 
+          im = im.astype(np.float32)
+          im = im * alpha + im_mask * (1 - alpha)
+          im = im.astype(im_type)
+
         for j in range(boxes[i].shape[0]):
           if not self._draw(im, boxes[i][j], classes[i][j], conf[i][j]):
             break
