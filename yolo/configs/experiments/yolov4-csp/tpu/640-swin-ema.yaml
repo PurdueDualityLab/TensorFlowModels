@@ -80,11 +80,11 @@ task:
       aug_rand_translate: 0.1
       area_thresh: 0.1
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 64
     input_path: 'gs://cam2-datasets/coco/val*'
 trainer:
   train_steps: 295680  # epochs: 120
-  validation_steps: 625  # size of validation data
+  validation_steps: 78  # size of validation data
   validation_interval: 9240
   steps_per_loop: 1848
   summary_interval: 1848
