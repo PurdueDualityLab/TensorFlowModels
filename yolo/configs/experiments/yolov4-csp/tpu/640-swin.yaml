@@ -40,7 +40,6 @@ task:
       nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.6
-      pre_nms_points: 500
     loss:
       use_scaled_loss: true
       update_on_repeat: true
@@ -86,9 +85,9 @@ task:
 trainer:
   train_steps: 295680  # epochs: 120
   validation_steps: 625  # size of validation data
-  validation_interval: 1848
+  validation_interval: 9240
   steps_per_loop: 1848
-  summary_interval: 9240
+  summary_interval: 1848
   checkpoint_interval: 1848
   optimizer_config:
     ema: null
@@ -101,7 +100,7 @@ trainer:
         weight_decay_rate: 0.05
         include_in_weight_decay: ['kernel']
         exclude_from_weight_decay: ['(.)*']
-        gradient_clip_norm: 0.0
+        gradient_clip_norm: 1.0
     learning_rate:
       type: cosine
       cosine:
