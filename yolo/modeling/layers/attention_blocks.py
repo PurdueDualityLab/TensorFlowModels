@@ -239,7 +239,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     relative_position_bias = tf.gather(self._realtive_positional_bias_table, indexes)
     relative_position_bias = tf.reshape(relative_position_bias, [num_elems, num_elems, -1]) # Wh*Ww,Wh*Ww,nH
     relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
-    return relative_position_bias
+    return tf.expand_dims(relative_position_bias, axis = 0)
 
   def call(self, x, mask = None):
     _, N, C = x.shape
@@ -255,7 +255,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
     # compute the relative poisiton bias
     relative_position_bias = self.get_indexed_bias()
-    attn = attn + tf.expand_dims(relative_position_bias, axis = 0)
+    attn = attn + relative_position_bias
 
     if mask is not None:
       num_windows = mask.shape[0]

@@ -647,8 +647,10 @@ class Darknet(tf.keras.Model):
     self._default_dict['name'] = f'{name}_csp_down'
     if self._dilate:
       self._default_dict['dilation_rate'] = config.dilation_rate
+      degrid = int(tf.math.log(float(config.dilation_rate)) / tf.math.log(2.))
     else:
       self._default_dict['dilation_rate'] = 1
+      degrid = 0
 
     # swap/add dialation
     x, x_route = nn_blocks.CSPRoute(
@@ -657,13 +659,26 @@ class Darknet(tf.keras.Model):
         downsample=True,
         **self._default_dict)(
             inputs)
-    
-    print(x.shape, config.output_name, max(config.repetitions, 2), 3 * (2 ** (int(config.output_name) - 2)))
-    _, x = attention_blocks.SwinTransformerBlock(
-        depth=max(config.repetitions, 2), 
-        num_heads=3 * (2 ** (int(config.output_name) - 2)), 
-        window_size=7,
-        downsample=None)(x)
+
+    dilated_reps = config.repetitions - degrid
+    for i in range(dilated_reps):
+      self._default_dict['name'] = f'{name}_{i}'
+      x = nn_blocks.DarkResidual(
+          filters=config.filters // scale_filters,
+          filter_scale=residual_filter_scale,
+          **self._default_dict)(
+              x)
+
+    for i in range(dilated_reps, config.repetitions):
+      self._default_dict['dilation_rate'] = max(
+          1, self._default_dict['dilation_rate'] // 2)
+      self._default_dict[
+          'name'] = f"{name}_{i}_degridded_{self._default_dict['dilation_rate']}"
+      x = nn_blocks.DarkResidual(
+          filters=config.filters // scale_filters,
+          filter_scale=residual_filter_scale,
+          **self._default_dict)(
+              x)
 
     self._default_dict['name'] = f'{name}_csp_connect'
     output = nn_blocks.CSPConnect(

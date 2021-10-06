@@ -7,18 +7,24 @@ task:
   model:
     darknet_based_model: False
     input_size: [640, 640, 3]
+    # backbone:
+    #   type: 'swin'
+    #   swin:
+    #     min_level: 3
+    #     max_level: 5
+    #     patch_size: 4
+    #     embed_dims: 108
+    #     window_size: [8, 8, 8, 8] 
+    #     depths: [2, 4, 6, 2]
+    #     num_heads: [3, 6, 12, 24]
+    #     drop_path: 0.0
+    #     absolute_positional_embed: False
     backbone:
-      type: 'swin'
-      swin:
-        min_level: 3
+      type: 'darknet'
+      darknet:
+        model_id: 'csp-swin'
         max_level: 5
-        patch_size: 4
-        embed_dims: 108
-        window_size: [8, 8, 8, 8] 
-        depths: [2, 4, 6, 2]
-        num_heads: [3, 6, 12, 24]
-        drop_path: 0.0
-        absolute_positional_embed: False
+        min_level: 3
     decoder:
       type: yolo_decoder
       yolo_decoder:
@@ -29,7 +35,7 @@ task:
     norm_activation:
       activation: gelu
       norm_epsilon: 0.0001
-      use_sync_bn: null
+      use_sync_bn: true
     detection_generator:
       box_type:
         'all': scaled
