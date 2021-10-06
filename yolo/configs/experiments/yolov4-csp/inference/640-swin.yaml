@@ -7,24 +7,24 @@ task:
   model:
     darknet_based_model: False
     input_size: [640, 640, 3]
-    # backbone:
-    #   type: 'swin'
-    #   swin:
-    #     min_level: 3
-    #     max_level: 5
-    #     patch_size: 4
-    #     embed_dims: 108
-    #     window_size: [8, 8, 8, 8] 
-    #     depths: [2, 4, 6, 2]
-    #     num_heads: [3, 6, 12, 24]
-    #     drop_path: 0.0
-    #     absolute_positional_embed: False
     backbone:
-      type: 'darknet'
-      darknet:
-        model_id: 'csp-swin'
-        max_level: 5
+      type: 'swin'
+      swin:
         min_level: 3
+        max_level: 5
+        patch_size: 4
+        embed_dims: 96
+        window_size: [7, 7, 7, 7] 
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        drop_path: 0.0
+        absolute_positional_embed: False
+    # backbone:
+    #   type: 'darknet'
+    #   darknet:
+    #     model_id: 'csp-swin'
+    #     max_level: 5
+    #     min_level: 3
     decoder:
       type: yolo_decoder
       yolo_decoder:

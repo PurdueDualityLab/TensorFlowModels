@@ -75,7 +75,7 @@ def get_wrapped_model(model, params, include_statistics = False, undo_infos = Tr
   dtype = params.runtime.mixed_precision_dtype
 
   #fuse the model
-  if hasattr(model, "fuse") and params.task.model.backbone.type != "swin":
+  if hasattr(model, "fuse"):
     model.fuse()
 
   # build the model

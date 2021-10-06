@@ -13,6 +13,7 @@ task:
         model_id: 'altered_cspdarknet53'
         max_level: 5
         min_level: 3
+        use_separable_conv: true
     decoder:
       type: yolo_decoder
       yolo_decoder:

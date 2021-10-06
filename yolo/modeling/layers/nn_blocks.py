@@ -55,6 +55,7 @@ class ConvBN(tf.keras.layers.Layer):
                bias_regularizer=None,
                kernel_regularizer=None,
                use_separable_conv=False,
+               use_bias=None, 
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -115,16 +116,21 @@ class ConvBN(tf.keras.layers.Layer):
     self._bias_regularizer = bias_regularizer
 
     # batch normalization params
+    self._use_bias = use_bias
     self._use_bn = use_bn
-    self._use_separable_conv = use_separable_conv
-    self._use_sync_bn = use_sync_bn
-    self._norm_momentum = norm_momentum
-    self._norm_epsilon = norm_epsilon
 
     ksize = self._kernel_size
     if not isinstance(ksize, List) and not isinstance(ksize, Tuple):
       ksize = [ksize]
-    if use_separable_conv and not all([a == 1 for a in ksize]):
+
+    self._use_separable_conv = use_separable_conv and not all([a == 1 for a in ksize])
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
+
+
+    if self._use_separable_conv:
       self._conv_base = tf.keras.layers.SeparableConv2D
     else:
       self._conv_base = tf.keras.layers.Conv2D
@@ -151,7 +157,10 @@ class ConvBN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
   def build(self, input_shape):
-    use_bias = not self._use_bn
+    if self._use_bias is None:
+      use_bias = not self._use_bn
+    else:
+      use_bias = self._use_bias
 
     self.conv = self._conv_base(
         filters=self._filters,
@@ -198,14 +207,29 @@ class ConvBN(tf.keras.layers.Layer):
     return x
 
   def fuse(self):
-    if self.bn is not None and not self._use_separable_conv and not isinstance(self.bn, tfa.layers.GroupNormalization):
+    if self.bn is not None: # and not self._use_separable_conv:
+      if self._use_bias is None:
+        use_bias = not self._use_bn
+      else:
+        use_bias = self._use_bias
+
       # Fuse convolution and batchnorm, gives me +2 to 3 FPS 2ms latency.
       # layers: https://tehnokv.com/posts/fusing-batchnorm-and-conv/
       if self._fuse:
         return
 
       self._fuse = True
-      conv_weights = self.conv.get_weights()[0]
+
+      if self._use_separable_conv:
+        dw_conv_weights = self.conv.get_weights()[0]
+        conv_weights = self.conv.get_weights()[1]
+      else:
+        conv_weights = self.conv.get_weights()[0]
+
+      if use_bias:
+        conv_bias = self.conv.get_weights()[-1]
+      else:
+        conv_bias = None
       gamma, beta, moving_mean, moving_variance = self.bn.get_weights()
 
       self.conv.use_bias = True 
@@ -222,9 +246,15 @@ class ConvBN(tf.keras.layers.Layer):
 
       b_bn = beta - gamma *  moving_mean/base
       
-      self.conv.set_weights([w_conv, b_bn])
-      del self.bn
+      if conv_bias is not None:
+        b_bn = conv_bias + b_bn
 
+      if self._use_separable_conv:
+        self.conv.set_weights([dw_conv_weights, w_conv, b_bn])
+      else:
+        self.conv.set_weights([w_conv, b_bn])
+
+      del self.bn
       self.trainable = False
       self.conv.trainable = False 
       self.bn = None
