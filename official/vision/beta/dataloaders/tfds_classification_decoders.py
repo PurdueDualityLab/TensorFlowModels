@@ -50,4 +50,5 @@ TFDS_ID_TO_DECODER_MAP = {
     'cifar10': ClassificationDecorder,
     'cifar100': ClassificationDecorder,
     'imagenet2012': ClassificationDecorder,
+    'food101': ClassificationDecorder,
 }

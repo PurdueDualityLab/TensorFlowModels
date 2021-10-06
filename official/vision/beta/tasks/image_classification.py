@@ -281,7 +281,7 @@ class ImageClassificationTask(base_task.Task):
     elif model.compiled_metrics:
       self.process_compiled_metrics(model.compiled_metrics, labels, outputs)
       logs.update({m.name: m.result() for m in model.metrics})
-    tf.print(logs)
+    # tf.print(logs)
     return logs
 
   def inference_step(self, inputs: tf.Tensor, model: tf.keras.Model):

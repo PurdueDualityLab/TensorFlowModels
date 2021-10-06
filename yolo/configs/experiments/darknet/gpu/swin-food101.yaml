@@ -4,13 +4,13 @@ runtime:
   num_gpus: 1
 task:
   model:
-    num_classes: 1000
-    input_size: [224, 224, 3]
+    num_classes: 101
+    input_size: [256, 256, 3]
     backbone:
       type: 'swin'
       swin:
-        min_level: 3
-        max_level: 5
+        min_level: null
+        max_level: null
         patch_size: 4
         embed_dims: 96 
         window_size: [7, 7, 7, 7] 
@@ -26,28 +26,28 @@ task:
     one_hot: true
     label_smoothing: 0.0
   train_data:
-    tfds_name: imagenet2012
+    tfds_name: food101
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: train
     is_training: true
-    global_batch_size: 1
+    global_batch_size: 32
     dtype: 'float16'
   validation_data:
-    tfds_name: imagenet2012
+    tfds_name: food101
     tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     tfds_split: validation
     is_training: false
-    global_batch_size: 50
+    global_batch_size: 32
     dtype: 'float16'
     drop_remainder: true
   # init_checkpoint: '../checkpoints/loaded_swin/loaded_swin_ckpt'
   # init_checkpoint_modules: 'all'
 trainer:
-  train_steps: 351563  # epochs: 120
-  validation_steps: 5000  # size of validation data
+  train_steps: 20000  # epochs: 120
+  validation_steps: 789  # size of validation data
   validation_interval: 1000
-  steps_per_loop: 1
-  summary_interval: 1
+  steps_per_loop: 1000
+  summary_interval: 1000
   checkpoint_interval: 1000
   optimizer_config:
     optimizer:
@@ -57,9 +57,9 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.000
-        decay_steps: 351563
+        initial_learning_rate: 0.001
+        decay_steps: 20000
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 23348  # learning rate rises from 0 to 0.1 over 1000 steps
+        warmup_steps: 1000  # learning rate rises from 0 to 0.1 over 1000 steps
