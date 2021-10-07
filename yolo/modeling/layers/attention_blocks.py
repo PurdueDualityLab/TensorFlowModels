@@ -14,7 +14,8 @@
 
 # Lint as: python3
 """Contains common building blocks for yolo neural networks."""
-from typing import List
+import logging
+from typing import List, Tuple
 from yolo.modeling.layers import nn_blocks
 import tensorflow as tf
 import numpy as np
@@ -98,56 +99,6 @@ class Identity(tf.keras.layers.Layer):
 
   def call(self, inputs):
     return inputs
-
-class MLP(tf.keras.layers.Layer):
-
-  def __init__(self, 
-               hidden_features = None, 
-               out_features = None, 
-               kernel_initializer='TruncatedNormal',
-               kernel_regularizer=None,
-               bias_initializer='zeros',
-               bias_regularizer=None,
-               activation = "gelu", 
-               leaky_alpha=0.1,
-               dropout = 0.0, 
-               **kwargs):
-    super().__init__(**kwargs)
-
-    # features 
-    self._hidden_features = hidden_features
-    self._out_features = out_features
-
-    # init and regularizer
-    self._init_args = dict(
-      kernel_initializer = _get_initializer(kernel_initializer),
-      bias_initializer = bias_initializer,
-      kernel_regularizer = kernel_regularizer,
-      bias_regularizer = bias_regularizer,
-    )
-
-    # activation
-    self._activation = activation
-    self._leaky = leaky_alpha
-    self._dropout = dropout
-
-  def build(self, input_shape):
-    hidden_features = self._hidden_features or input_shape[-1]
-    out_features = self._out_features or input_shape[-1]
-
-    self.fc1 = tf.keras.layers.Dense(hidden_features, **self._init_args)
-    self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
-    self.fc2 = tf.keras.layers.Dense(out_features, **self._init_args)
-    self.drop = tf.keras.layers.Dropout(self._dropout)
-    return 
-
-  def call(self, x):
-    x = self.fc1(x)
-    x = self.act(x)
-    x = self.drop(x)
-    x = self.fc2(x)
-    x = self.drop(x)
-    return x
 
 class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
@@ -415,157 +366,10 @@ class ShiftedWindowMultiHeadAttention(WindowedMultiHeadAttention):
       x = tf.reshape(x, [-1, H, W, C])
     return x
 
-# class LeFFN(tf.keras.layers.Layer):
-
-#   def __init__(self, 
-#                hidden_features = None, 
-#                out_features = None, 
-#                kernel_initializer='TruncatedNormal',
-#                kernel_regularizer=None,
-#                bias_initializer='zeros',
-#                bias_regularizer=None,
-#                activation = "gelu", 
-#                leaky_alpha=0.1,
-#                dropout = 0.0, 
-#                **kwargs):
-#     super().__init__(**kwargs)
-
-#     # features 
-#     self._hidden_features = hidden_features
-#     self._out_features = out_features
-#     self._norm_layer = _get_norm_fn("batch_norm")
-
-#     # init and regularizer
-#     self._init_args = dict(
-#       kernel_initializer = _get_initializer(kernel_initializer),
-#       bias_initializer = bias_initializer,
-#       kernel_regularizer = kernel_regularizer,
-#       bias_regularizer = bias_regularizer,
-#     )
-
-#     # activation
-#     self._activation = activation
-#     self._leaky = leaky_alpha
-#     self._dropout = dropout
-
-#   def build(self, input_shape):
-#     hidden_features = self._hidden_features or input_shape[-1]
-#     out_features = self._out_features or input_shape[-1]
-
-#     self.fc_expand = tf.keras.layers.Dense(hidden_features, **self._init_args)
-#     self.norm_expand = self._norm_layer()
-    
-#     self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), strides = (1, 1), padding = "same", use_bias = False, **self._init_args)
-#     self.norm_spatial_sample = self._norm_layer()
-
-#     self.fc_compress = tf.keras.layers.Dense(out_features, **self._init_args)
-#     self.norm_compress = self._norm_layer()
-
-#     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
-
-#     return 
-
-#   def call(self, x):
-#     _, H, W, C = x.shape
-
-#     x = tf.reshape(x, [-1, H * W, C])
-#     x = self.fc_expand(x)
-#     x = self.norm_expand(x)
-#     x = self.act(x)
-
-#     _, _, C = x.shape
-#     x = tf.reshape(x, [-1, H, W, C])
-#     x = self.dw_spatial_sample(x)
-#     x = self.norm_spatial_sample(x)
-#     x = self.act(x)
-
-#     _, _, _, C = x.shape
-#     x = tf.reshape(x, [-1, H * W, C])
-#     x = self.fc_compress(x)
-#     x = self.norm_compress(x)
-#     x = self.act(x)
-
-#     _, _, C = x.shape
-#     x = tf.reshape(x, [-1, H, W, C])
-#     return x
-
-# class LeFFN(tf.keras.layers.Layer):
-
-#   def __init__(self, 
-#                hidden_features = None, 
-#                out_features = None, 
-#                kernel_initializer='TruncatedNormal',
-#                kernel_regularizer=None,
-#                bias_initializer='zeros',
-#                bias_regularizer=None,
-#                activation = "gelu", 
-#                leaky_alpha=0.1,
-#                dropout = 0.0, 
-#                **kwargs):
-#     super().__init__(**kwargs)
-
-#     # features 
-#     self._hidden_features = hidden_features
-#     self._out_features = out_features
-#     self._norm_layer = _get_norm_fn("batch_norm")
-
-#     # init and regularizer
-#     self._init_args = dict(
-#       kernel_initializer = _get_initializer(kernel_initializer),
-#       bias_initializer = bias_initializer,
-#       kernel_regularizer = kernel_regularizer,
-#       bias_regularizer = bias_regularizer,
-#     )
-
-#     # activation
-#     self._activation = activation
-#     self._leaky = leaky_alpha
-#     self._dropout = dropout
-
-#   def build(self, input_shape):
-#     hidden_features = self._hidden_features or input_shape[-1]
-#     out_features = self._out_features or input_shape[-1]
-
-#     self.fc_expand = tf.keras.layers.Conv2D(hidden_features, (1, 1), strides = (1, 1), padding = "same", **self._init_args)
-#     self.norm_expand = self._norm_layer()
-    
-#     self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), strides = (1, 1), padding = "same", use_bias = False, **self._init_args)
-#     self.norm_spatial_sample = self._norm_layer()
-
-#     self.fc_compress = tf.keras.layers.Dense(out_features, **self._init_args)
-#     self.norm_compress = self._norm_layer()
-
-#     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
-
-#     return 
-
-#   def call(self, x):
-#     _, H, W, C = x.shape
-
-#     # x = tf.reshape(x, [-1, H * W, C])
-#     x = self.fc_expand(x)
-#     x = self.norm_expand(x)
-#     x = self.act(x)
-
-#     # _, _, C = x.shape
-#     # x = tf.reshape(x, [-1, H, W, C])
-#     x = self.dw_spatial_sample(x)
-#     x = self.norm_spatial_sample(x)
-#     x = self.act(x)
-
-#     _, _, _, C = x.shape
-#     x = tf.reshape(x, [-1, H * W, C])
-#     x = self.fc_compress(x)
-#     x = self.norm_compress(x)
-#     x = self.act(x)
-
-#     _, _, C = x.shape
-#     x = tf.reshape(x, [-1, H, W, C])
-#     return x
-
 class LeFFN(tf.keras.layers.Layer):
 
   def __init__(self, 
+               strides = (1, 1), 
                hidden_features = None, 
                out_features = None, 
                kernel_initializer='TruncatedNormal',
@@ -579,6 +383,7 @@ class LeFFN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
     # features 
+    self._strides = strides
     self._hidden_features = hidden_features
     self._out_features = out_features
     self._norm_layer = _get_norm_fn("batch_norm")
@@ -600,7 +405,6 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    # self.fc_expand = tf.keras.layers.Conv2D(hidden_features, (1, 1), strides = (1, 1), padding = "same", **self._init_args)
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
                                       kernel_size = (1, 1), 
                                       strides = (1, 1), 
@@ -608,13 +412,14 @@ class LeFFN(tf.keras.layers.Layer):
                                       activation = None,
                                       use_bias = True,  
                                       **self._init_args)
-    # self.norm_expand = self._norm_layer()
     
-    self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), strides = (1, 1), padding = "same", use_bias = False, **self._init_args)
+    self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), 
+                                                             strides = self._strides, 
+                                                             padding = "same", 
+                                                             use_bias = False, 
+                                                             **self._init_args)
     self.norm_spatial_sample = self._norm_layer()
 
-    # self.fc_compress = tf.keras.layers.Conv2D(out_features, (1, 1), strides = (1, 1), padding = "same", **self._init_args)
-    # self.norm_compress = self._norm_layer()
 
     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
                                         kernel_size = (1, 1), 
@@ -623,35 +428,87 @@ class LeFFN(tf.keras.layers.Layer):
                                         activation = None, 
                                         use_bias = True,  
                                         **self._init_args)
-    # self.norm_compress = self._norm_layer()
 
     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
 
     return 
 
   def call(self, x):
-    _, H, W, C = x.shape
-
-    # x = tf.reshape(x, [-1, H * W, C])
     x = self.fc_expand(x)
-    # x = self.norm_expand(x)
     x = self.act(x)
 
-    # _, _, C = x.shape
-    # x = tf.reshape(x, [-1, H, W, C])
     x = self.dw_spatial_sample(x)
     x = self.norm_spatial_sample(x)
     x = self.act(x)
 
-    # _, _, _, C = x.shape
-    # x = tf.reshape(x, [-1, H * W, C])
     x = self.fc_compress(x)
-    # x = self.norm_compress(x)
     x = self.act(x)
-
-    # _, _, C = x.shape
-    # x = tf.reshape(x, [-1, H, W, C])
     return x
+
+# class LeFFN(tf.keras.layers.Layer):
+
+#   def __init__(self, 
+#                hidden_features = None, 
+#                out_features = None, 
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None,
+#                activation = "gelu", 
+#                leaky_alpha=0.1,
+#                dropout = 0.0, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     # features 
+#     self._hidden_features = hidden_features
+#     self._out_features = out_features
+#     self._norm_layer = _get_norm_fn("batch_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+
+#     # activation
+#     self._activation = activation
+#     self._leaky = leaky_alpha
+#     self._dropout = dropout
+
+#   def build(self, input_shape):
+#     hidden_features = self._hidden_features or input_shape[-1]
+#     out_features = self._out_features or input_shape[-1]
+
+#     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
+#                                       kernel_size = (1, 1), 
+#                                       strides = (1, 1), 
+#                                       padding = "same", 
+#                                       activation = None,
+#                                       use_bias = True,  
+#                                       **self._init_args)
+
+#     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
+#                                         kernel_size = (3, 3), 
+#                                         strides = (1, 1), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_bias = True,  
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+#     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
+
+#     return 
+
+#   def call(self, x):
+#     x = self.fc_expand(x)
+#     x = self.act(x)
+#     x = self.fc_compress(x)
+#     x = self.act(x)
+#     return x
+
 
 class SwinTransformerLayer(tf.keras.layers.Layer):
 
@@ -731,11 +588,10 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                    dropout=self._dropout, **self._init_args)
   
   def call(self, x, mask_matrix = None, training = None):
-    x = self.attention(
-      x, 
-      mask = mask_matrix, 
-      training = training, 
-      flatten = self.prenorm is not None)
+    x = self.attention(x, 
+            mask = mask_matrix, 
+            training = training, 
+            flatten = self.prenorm is not None)
 
     if self.prenorm is not None:
       _, H, W, C = x.shape
@@ -1060,44 +916,45 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
 #     x = tf.reshape(x, [-1, H, W, C])
 #     return x
 
-class PatchMerge(tf.keras.layers.Layer):
+# class PatchMerge(tf.keras.layers.Layer):
 
-  def __init__(self,
-               norm_layer = 'layer_norm',
-               kernel_initializer='TruncatedNormal',
-               kernel_regularizer=None,
-               bias_initializer='zeros',
-               bias_regularizer=None, 
-               **kwargs):
-    super().__init__(**kwargs)
+#   def __init__(self,
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
 
-    #default
-    self._norm_layer = _get_norm_fn("batch_norm")
+#     #default
+#     self._norm_layer = _get_norm_fn("batch_norm")
 
-    # init and regularizer
-    self._init_args = dict(
-      use_bias = False,
-      kernel_initializer = _get_initializer(kernel_initializer),
-      bias_initializer = bias_initializer,
-      kernel_regularizer = kernel_regularizer,
-      bias_regularizer = bias_regularizer,
-    )
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
   
-  def build(self, input_shape):
-    self._dims = input_shape[-1]
-    self.reduce = tf.keras.layers.SeparableConv2D(
-        self._dims * 2,
-        (3, 3), 
-        strides=(2, 2), 
-        padding='same')
-    self.norm = self._norm_layer()
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+#     self.reduce = nn_blocks.ConvBN(filters = self._dims * 2, 
+#                                         kernel_size = (3, 3), 
+#                                         strides = (2, 2), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_bias = False,  
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+    
     
   
-  def call(self, x):
-    """Down sample by 2. """
-    x = self.reduce(x)
-    x = self.norm(x)
-    return x
+#   def call(self, x):
+#     """Down sample by 2. """
+#     x = self.reduce(x)
+#     return x
 
 # class PatchMerge(tf.keras.layers.Layer):
 
@@ -1124,34 +981,124 @@ class PatchMerge(tf.keras.layers.Layer):
   
 #   def build(self, input_shape):
 #     self._dims = input_shape[-1]
-#     self.reduce = tf.keras.layers.SeparableConv2D(
-#         self._dims * 2,
-#         (3, 3), 
-#         strides=(1, 1), 
-#         padding='same')
-#     self.norm = self._norm_layer()
+#     self.reduce = nn_blocks.ConvBN(filters = self._dims * 2, 
+#                                         kernel_size = (3, 3), 
+#                                         strides = (1, 1), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
     
   
 #   def call(self, x):
 #     """Down sample by 2. """
-#     # B, H, W, C = x.shape
-
-
-
-#     # x0 = x[:, 0::2, 0::2, :] # B H/2 W/2 C
-#     # x1 = x[:, 1::2, 0::2, :] # B H/2 W/2 C
-#     # x2 = x[:, 0::2, 1::2, :] # B H/2 W/2 C
-#     # x3 = x[:, 1::2, 1::2, :] # B H/2 W/2 C
-
-#     # x = tf.concat([x0, x1, x2, x3], axis = -1) # B H/2 W/2 4*C
-#     # x = tf.reshape(x, [-1, (H//2) * (W//2), C * 4]) # B H/2*W/2 4*C
-
 #     x = tf.nn.space_to_depth(x, 2)
 #     x = self.reduce(x)
-#     x = self.norm(x)
+#     return x
+
+class PatchMerge(tf.keras.layers.Layer):
+
+  # reprojection and and embedding
+
+  def __init__(self,
+               norm_layer = 'layer_norm',
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+    super().__init__(**kwargs)
+
+    #default
+    self._norm_layer = _get_norm_fn("batch_norm")
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
+  
+  def build(self, input_shape):
+    self._dims = input_shape[-1]
+    self.expand = nn_blocks.ConvBN(filters = self._dims * 2, # point wise token expantion
+                                        kernel_size = (1, 1), 
+                                        strides = (1, 1), 
+                                        padding = "same", 
+                                        activation = None, 
+                                        use_bias = True,  
+                                        use_bn = False, 
+                                        use_separable_conv = True, 
+                                        **self._init_args)
+    self.reduce = tf.keras.layers.DepthwiseConv2D((3, 3), # spatial embedding combination and reduction
+                                                  strides = (2, 2), 
+                                                  padding = "same", 
+                                                  use_bias = False, 
+                                                  **self._init_args)
+    self.norm_reduce = self._norm_layer()
     
-#     # Reshape from vector to Image
-#     # x = tf.reshape(x, [-1, H//2, W//2, C * 2])
+  
+  def call(self, x):
+    """Down sample by 2. """
+    x = self.expand(x)
+    x = self.reduce(x)
+    x = self.norm_reduce(x)
+    return x
+
+# class PatchMerge(tf.keras.layers.Layer):
+
+#   # reprojection and and embedding
+
+#   def __init__(self,
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     #default
+#     # self._norm_layer = _get_norm_fn("batch_norm")
+#     self._norm_layer = _get_norm_fn("layer_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+  
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+#     self.expand = nn_blocks.ConvBN(filters = self._dims * 2, 
+#                                         kernel_size = (1, 1), 
+#                                         strides = (1, 1), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_bias = False,  
+#                                         use_bn = False, 
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+#     self.reduce = tf.keras.layers.DepthwiseConv2D((3, 3), 
+#                                                   strides = (2, 2), 
+#                                                   padding = "same", 
+#                                                   use_bias = False, 
+#                                                   **self._init_args)
+#     self.norm_reduce = self._norm_layer()
+    
+  
+#   def call(self, x):
+#     """Down sample by 2. """
+#     x = self.expand(x)
+#     x = self.reduce(x)
+
+#     _, H, W, C = x.shape
+#     x = tf.reshape(x, [-1, H * W, C])
+#     x = self.norm_reduce(x)
+#     x = tf.reshape(x, [-1, H, W, C])
 #     return x
 
 class SwinTransformerBlock(tf.keras.layers.Layer):
@@ -1314,14 +1261,24 @@ class PatchEmbed(tf.keras.layers.Layer):
     embed_dims = self._embed_dimentions
     patch_size = self._patch_size
 
-    # TF corner pads by default so no need to do it manually
-    self.project = tf.keras.layers.Conv2D(
+    # # TF corner pads by default so no need to do it manually
+    # self.project = tf.keras.layers.Conv2D(
+    #   filters = embed_dims, 
+    #   kernel_size = 7, 
+    #   strides = 2, 
+    #   padding = 'same',
+    #   **self._init_args)
+    # self.norm = self._norm_layer()
+
+    self.project = nn_blocks.ConvBN(
       filters = embed_dims, 
       kernel_size = 7, 
       strides = 2, 
       padding = 'same',
-      **self._init_args)
-    self.norm = self._norm_layer()
+      use_bn = True, 
+      use_bias = True, 
+      **self._init_args
+    )
     
     if self._patch_size == 4:
       self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
@@ -1339,7 +1296,7 @@ class PatchEmbed(tf.keras.layers.Layer):
   
   def call(self, x):
     x = self.project(x) # wh/2
-    x = self.norm(x)
+    # x = self.norm(x)
     if self._patch_size == 4:
       x = self.sample(x) # wh/2
 

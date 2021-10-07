@@ -128,16 +128,12 @@ class ConvBN(tf.keras.layers.Layer):
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-
-
     if self._use_separable_conv:
       self._conv_base = tf.keras.layers.SeparableConv2D
     else:
       self._conv_base = tf.keras.layers.Conv2D
 
-    if use_sync_bn is None:
-      self._bn_base = tfa.layers.GroupNormalization
-    elif use_sync_bn:
+    if use_sync_bn:
       self._bn_base = tf.keras.layers.experimental.SyncBatchNormalization
     else:
       self._bn_base = tf.keras.layers.BatchNormalization
@@ -175,20 +171,10 @@ class ConvBN(tf.keras.layers.Layer):
         bias_regularizer=self._bias_regularizer)
 
     if self._use_bn:
-      if self._use_sync_bn == None:
-        channels = input_shape[-1]
-        groups = 36
-        if channels / groups != channels // groups:
-          groups = 32
-        self.bn = self._bn_base(
-            groups = groups,
-            epsilon=self._norm_epsilon,
-            axis=self._bn_axis)
-      else:
-        self.bn = self._bn_base(
-            momentum=self._norm_momentum,
-            epsilon=self._norm_epsilon,
-            axis=self._bn_axis)
+      self.bn = self._bn_base(
+          momentum=self._norm_momentum,
+          epsilon=self._norm_epsilon,
+          axis=self._bn_axis)
     else:
       self.bn = None
 
