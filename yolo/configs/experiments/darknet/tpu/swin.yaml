@@ -18,6 +18,7 @@ task:
         num_heads: [3, 6, 12, 24]
         drop_path: 0.2
         absolute_positional_embed: False
+        normalize_endpoints: False
     norm_activation:
       activation: 'gelu'
   losses:

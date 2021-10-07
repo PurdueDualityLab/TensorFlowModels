@@ -35,6 +35,7 @@ class Swin(hyperparams.Config):
   absolute_positional_embed: bool = False
   normalize_endpoints: bool = True
   norm_layer: str = 'layer_norm'
+  ignore_shifts: bool =  False
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

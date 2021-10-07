@@ -23,6 +23,8 @@ from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import nn_layers
 from functools import partial
 
+USE_SYNC_BN = True
+
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
     return tf.keras.layers.LeakyReLU(alpha=leaky_alpha)
@@ -32,8 +34,8 @@ def _get_activation_fn(activation, leaky_alpha = 0.1):
 
 def _get_norm_fn(norm_layer, 
                  axis = -1, 
-                 momentum = 0.99, 
-                 epsilon = 0.00001, 
+                 momentum = 0.97, 
+                 epsilon = 0.0001, 
                  moving_mean_initializer='zeros', 
                  moving_variance_initializer='ones'):
   kwargs = dict(
@@ -386,7 +388,11 @@ class LeFFN(tf.keras.layers.Layer):
     self._strides = strides
     self._hidden_features = hidden_features
     self._out_features = out_features
-    self._norm_layer = _get_norm_fn("batch_norm")
+
+    if USE_SYNC_BN:
+      self._norm_layer = _get_norm_fn("sync_batch_norm")
+    else:
+      self._norm_layer = _get_norm_fn("batch_norm")
 
     # init and regularizer
     self._init_args = dict(
@@ -411,6 +417,7 @@ class LeFFN(tf.keras.layers.Layer):
                                       padding = "same", 
                                       activation = None,
                                       use_bias = True,  
+                                      use_sync_bn = USE_SYNC_BN,
                                       **self._init_args)
     
     self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), 
@@ -427,6 +434,7 @@ class LeFFN(tf.keras.layers.Layer):
                                         padding = "same", 
                                         activation = None, 
                                         use_bias = True,  
+                                        use_sync_bn = USE_SYNC_BN,
                                         **self._init_args)
 
     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
@@ -545,8 +553,12 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     self._drop_path = drop_path
 
     self._activation = activation
-    self._norm_layer_key = "batch_norm"
-    self._norm_layer = _get_norm_fn("batch_norm")
+    if USE_SYNC_BN:
+      self._norm_layer_key = "sync_batch_norm"
+      self._norm_layer = _get_norm_fn("sync_batch_norm")
+    else:
+      self._norm_layer_key = "batch_norm"
+      self._norm_layer = _get_norm_fn("batch_norm")
     self._pre_norm_layer_key = pre_norm
     self._pre_norm_layer = _get_norm_fn(pre_norm)
 
@@ -1010,7 +1022,10 @@ class PatchMerge(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
     #default
-    self._norm_layer = _get_norm_fn("batch_norm")
+    if USE_SYNC_BN:
+      self._norm_layer = _get_norm_fn("sync_batch_norm")
+    else:
+      self._norm_layer = _get_norm_fn("batch_norm")
 
     # init and regularizer
     self._init_args = dict(
@@ -1030,6 +1045,7 @@ class PatchMerge(tf.keras.layers.Layer):
                                         use_bias = True,  
                                         use_bn = False, 
                                         use_separable_conv = True, 
+                                        use_sync_bn = USE_SYNC_BN,
                                         **self._init_args)
     self.reduce = tf.keras.layers.DepthwiseConv2D((3, 3), # spatial embedding combination and reduction
                                                   strides = (2, 2), 
@@ -1120,6 +1136,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
+               ignore_shifts = False, 
                **kwargs):
     super().__init__(**kwargs)
 
@@ -1132,10 +1149,10 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._norm_layer_key = norm_layer
     self._norm_layer = _get_norm_fn(norm_layer)
     self._downsample = downsample
+    self._ignore_shifts = ignore_shifts
 
     # init and regularizer
     self._swin_args = dict(
-       window_size=window_size,
        norm_layer=norm_layer,
        mlp_ratio=mlp_ratio,
        qkv_bias=qkv_bias,
@@ -1160,9 +1177,16 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
 
     index_drop_path = isinstance(self._drop_path, List)
     for i in range(self._depth):
-      shift_size = 0 if i % 2 == 0 else self._window_size // 2
+      if self._ignore_shifts:
+        shift_size = 0
+        window_size = self._window_size
+      else:  
+        shift_size = 0 if i % 2 == 0 else self._window_size // 2
+        window_size = self._window_size
+      
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
       layer = SwinTransformerLayer(self._num_heads, 
+                                   window_size=window_size,
                                    shift_size=shift_size, 
                                    drop_path=drop_path, 
                                    **self._swin_args)
@@ -1244,7 +1268,10 @@ class PatchEmbed(tf.keras.layers.Layer):
     self._patch_size = patch_size
     self._embed_dimentions = embed_dimentions
     self._absolute_positional_embed = absolute_positional_embed
-    self._norm_layer = _get_norm_fn("batch_norm")
+    if USE_SYNC_BN:
+      self._norm_layer = _get_norm_fn("sync_batch_norm")
+    else:
+      self._norm_layer = _get_norm_fn("batch_norm")
 
     # init and regularizer
     self._bias_regularizer = bias_regularizer
@@ -1262,20 +1289,13 @@ class PatchEmbed(tf.keras.layers.Layer):
     patch_size = self._patch_size
 
     # # TF corner pads by default so no need to do it manually
-    # self.project = tf.keras.layers.Conv2D(
-    #   filters = embed_dims, 
-    #   kernel_size = 7, 
-    #   strides = 2, 
-    #   padding = 'same',
-    #   **self._init_args)
-    # self.norm = self._norm_layer()
-
     self.project = nn_blocks.ConvBN(
       filters = embed_dims, 
       kernel_size = 7, 
       strides = 2, 
       padding = 'same',
       use_bn = True, 
+      use_sync_bn = USE_SYNC_BN,
       use_bias = True, 
       **self._init_args
     )

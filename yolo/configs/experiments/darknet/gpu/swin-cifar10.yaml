@@ -19,7 +19,7 @@ task:
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: False
-        mlp_ratio: 4
+        mlp_ratio: 2
     norm_activation:
       activation: 'gelu'
   losses:

@@ -36,6 +36,7 @@ class SwinTransformer(tf.keras.Model):
                window_size = 7, 
                patch_size = 4, 
                mlp_ratio = 4, 
+               ignore_shifts = False, 
                qkv_bias = True, 
                qk_scale = None, 
                dropout = 0.0, 
@@ -74,13 +75,18 @@ class SwinTransformer(tf.keras.Model):
     self._mlp_ratio = mlp_ratio
     self._qkv_bias = qkv_bias
     self._qk_scale = qk_scale
+    self._ignore_shifts = ignore_shifts
 
     self._dropout = dropout
     self._attention_dropout = attention_dropout
     stochastic_drops = np.linspace(0, drop_path, num = sum(self._depths))
     self._drop_path = stochastic_drops.tolist()
 
-    self._norm_layer = norm_layer 
+    if attention_blocks.USE_SYNC_BN:
+      self._norm_layer_key = "sync_batch_norm"
+    else:
+      self._norm_layer_key = "batch_norm"
+
     self._absolute_positional_embed=absolute_positional_embed
     self._activation = activation
     self._normalize_endpoints = normalize_endpoints
@@ -111,7 +117,7 @@ class SwinTransformer(tf.keras.Model):
     embeddings = attention_blocks.PatchEmbed(
                         patch_size=self._patch_size, 
                         embed_dimentions=self._embed_dims, 
-                        norm_layer=self._norm_layer if self._patch_norm else None, 
+                        norm_layer=self._norm_layer_key if self._patch_norm else None, 
                         absolute_positional_embed=self._absolute_positional_embed,
                         activation=None, 
                         kernel_initializer = 'VarianceScaling',
@@ -124,6 +130,7 @@ class SwinTransformer(tf.keras.Model):
     for i in range(self._num_layers):
       dpr = self._drop_path[sum(self._depths[:i]):sum(self._depths[:i + 1])]
       x_output, x = attention_blocks.SwinTransformerBlock(
+          ignore_shifts=self._ignore_shifts, 
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
           window_size=self._window_size[i], 
@@ -133,7 +140,7 @@ class SwinTransformer(tf.keras.Model):
           dropout=self._dropout, 
           attention_dropout=self._attention_dropout, 
           drop_path=dpr, 
-          norm_layer=self._norm_layer, 
+          norm_layer=self._norm_layer_key, 
           downsample='patch_and_merge' if (i < self._num_layers - 1) else None, 
           activation=self._activation, 
           **self._init_args)(x)
@@ -152,7 +159,8 @@ class SwinTransformer(tf.keras.Model):
     for i in range(self._min_level, self._max_level + 1):
       x = outputs[str(i)]
       if self._normalize_endpoints:
-        endpoints[str(i)] = attention_blocks._get_norm_fn(self._norm_layer)()(x)
+        # endpoints[str(i)] = attention_blocks._get_norm_fn(self._norm_layer)()(x)
+        endpoints[str(i)] = attention_blocks._get_norm_fn(self._norm_layer_key)()(x)
       else:
         endpoints[str(i)] = x
       output_specs[str(i)] = endpoints[str(i)].get_shape()
@@ -218,7 +226,8 @@ def build_swin(
       normalize_endpoints=backbone_config.normalize_endpoints,
       absolute_positional_embed=backbone_config.absolute_positional_embed,
       activation=norm_activation_config.activation,
-      kernel_regularizer=l2_regularizer)
+      kernel_regularizer=l2_regularizer, 
+      ignore_shifts = backbone_config.ignore_shifts)
   model.summary()
   return model
 
