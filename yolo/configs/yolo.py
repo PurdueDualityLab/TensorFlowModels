@@ -449,3 +449,121 @@ def scaled_yolo() -> cfg.ExperimentConfig:
       ])
 
   return config
+
+@exp_factory.register_config_factory('scaled_yolo_3l_coco')
+def scaled_yolo_3l_coco() -> cfg.ExperimentConfig:
+  """COCO object detection with YOLOv4-csp and v4"""
+  train_batch_size = 128
+  eval_batch_size = 8
+  train_epochs = 300
+  warmup_epochs = 3
+  
+  validation_interval = 5
+  steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
+
+  max_num_instances = 300
+
+  config = cfg.ExperimentConfig(
+      runtime=cfg.RuntimeConfig(mixed_precision_dtype='bfloat16'),
+      task=YoloTask(
+          smart_bias_lr=0.1,
+          init_checkpoint_modules=None,
+          annotation_file=None,
+          weight_decay=0.0,
+          model=Yolo(
+            darknet_based_model = False,
+            norm_activation=common.NormActivation(
+              activation='mish',
+              use_sync_bn=True, 
+              norm_epsilon=0.0001, 
+              norm_momentum=0.97),
+            head=YoloHead(smart_bias=True), 
+            loss=YoloLoss(use_scaled_loss=True), 
+            anchor_boxes={
+              "anchors_per_scale": 3,
+              "boxes": [{"box": [12, 16]},   {"box": [19, 36]},   {"box": [40, 28]}, 
+                        {"box": [36, 75]},   {"box": [76, 55]},   {"box": [72, 146]}, 
+                        {"box": [142, 110]}, {"box": [192, 243]}, {"box": [459, 401]}]
+            }
+            ),
+          train_data=DataConfig(
+              is_training=True,
+              global_batch_size=train_batch_size,
+              seed=GLOBAL_SEED, 
+              dtype='float32',
+              parser=Parser(
+                aug_rand_saturation = 0.7, 
+                aug_rand_brightness = 0.4,
+                aug_rand_hue = 0.015, 
+                letter_box=True,
+                use_tie_breaker=True, 
+                best_match_only=True, 
+                anchor_thresh=4.0,
+                random_pad=False,
+                area_thresh=0.1,
+                max_num_instances=max_num_instances,
+                mosaic=Mosaic(
+                  mosaic_crop_mode='scale',
+                  mosaic_frequency=1.0, 
+                  mixup_frequency=0.0, 
+                ) 
+              )),
+          validation_data=DataConfig(
+              is_training=False,
+              global_batch_size=eval_batch_size, 
+              drop_remainder=True, 
+              dtype='float32', 
+              parser=Parser(
+                letter_box=True,
+                use_tie_breaker=True, 
+                best_match_only=True, 
+                anchor_thresh=4.0,
+                area_thresh=0.1,
+                max_num_instances=max_num_instances, 
+              ))),
+      trainer=cfg.TrainerConfig(
+          train_steps=train_epochs * steps_per_epoch,
+          validation_steps=COCO_VAL_EXAMPLES // eval_batch_size,
+          validation_interval=validation_interval * steps_per_epoch,
+          steps_per_loop=steps_per_epoch,
+          summary_interval=steps_per_epoch,
+          checkpoint_interval=steps_per_epoch,
+          optimizer_config=optimization.OptimizationConfig({
+              'ema':{
+                    'average_decay': 0.9999,
+                    'trainable_weights_only': False,
+                    'dynamic_decay': True,
+              },
+              'optimizer': {
+                  'type': 'sgd_torch',
+                  'sgd_torch': {
+                      'momentum': 0.937,
+                      'momentum_start': 0.8,
+                      'nesterov': True,
+                      'warmup_steps': steps_per_epoch * warmup_epochs,
+                      'weight_decay': 0.0005 * train_batch_size/64.0,
+                      'sim_torch': True,
+                  }
+              },
+              'learning_rate': {
+                  'type': 'cosine',
+                  'cosine': {
+                      'initial_learning_rate': 0.01,
+                      'alpha': 0.2, 
+                      'decay_steps': train_epochs * steps_per_epoch,
+                  }
+              },
+              'warmup': {
+                  'type': 'linear',
+                  'linear': {
+                      'warmup_steps': steps_per_epoch * warmup_epochs,
+                      'warmup_learning_rate': 0
+                  }
+              }
+          })),
+      restrictions=[
+          'task.train_data.is_training != None',
+          'task.validation_data.is_training != None'
+      ])
+
+  return config

@@ -193,7 +193,7 @@ class ConvBN(tf.keras.layers.Layer):
     return x
 
   def fuse(self):
-    if self.bn is not None: # and not self._use_separable_conv:
+    if hasattr(self, "bn") and self.bn is not None: # and not self._use_separable_conv:
       if self._use_bias is None:
         use_bias = not self._use_bn
       else:

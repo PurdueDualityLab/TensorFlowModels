@@ -129,12 +129,18 @@ class SwinTransformer(tf.keras.Model):
     x = tf.keras.layers.Dropout(self._dropout)(embeddings)
     for i in range(self._num_layers):
       dpr = self._drop_path[sum(self._depths[:i]):sum(self._depths[:i + 1])]
+
+      if isinstance(self._mlp_ratio, list):
+        mlp_ratio = self._mlp_ratio[i]
+      else:
+        mlp_ratio = self._mlp_ratio
+      
       x_output, x = attention_blocks.SwinTransformerBlock(
           ignore_shifts=self._ignore_shifts, 
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
           window_size=self._window_size[i], 
-          mlp_ratio=self._mlp_ratio, 
+          mlp_ratio=mlp_ratio, 
           qkv_bias=self._qkv_bias, 
           qk_scale=self._qk_scale, 
           dropout=self._dropout, 

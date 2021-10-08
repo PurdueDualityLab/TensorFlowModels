@@ -14,14 +14,9 @@ from official.core import train_utils
 
 class YoloTaskTest(tf.test.TestCase, parameterized.TestCase):
 
-  @parameterized.parameters(("scaled_yolo",))
+  @parameterized.parameters(("scaled_yolo_3l_coco",))
   def test_task(self, config_name):
-    config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
     config = exp_factory.get_exp_config(config_name)
-
-    config = train_utils.ParseConfigOptions(
-        experiment=config_name, config_file=config_path)
-    config = train_utils.parse_configuration(config)
 
     config.trainer.optimizer_config.ema = None
     config.task.train_data.global_batch_size = 1
