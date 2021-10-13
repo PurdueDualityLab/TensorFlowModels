@@ -25,6 +25,7 @@ from functools import partial
 
 USE_SYNC_BN = True
 SHIFT = True
+ALT_SHIFTS = False
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
@@ -609,6 +610,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                num_heads, 
                window_size = 7, 
                shift_size = 0, 
+               shift = SHIFT, 
                mlp_ratio = 4, 
                qkv_bias = True, 
                qk_scale = None, 
@@ -628,6 +630,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     self._num_heads = num_heads
     self._window_size = window_size
     self._shift_size = shift_size
+    self._shift = shift
     
     self._mlp_ratio = mlp_ratio
     self._qkv_bias = qkv_bias
@@ -666,6 +669,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
       shift_size=self._shift_size, 
       qkv_bias=self._qkv_bias, 
       qk_scale=self._qk_scale, 
+      shift=self._shift,
       attention_dropout=self._attention_dropout, 
       projection_dropout=self._dropout
     )
@@ -826,9 +830,12 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
         window_size = self._window_size
       
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
+
+      shift = SHIFT if not ALT_SHIFTS else shift_size != 0
       layer = SwinTransformerLayer(self._num_heads, 
                                    window_size=window_size,
                                    shift_size=shift_size, 
+                                   shift = shift, 
                                    drop_path=drop_path, 
                                    **self._swin_args)
       self.layers.append(layer)
